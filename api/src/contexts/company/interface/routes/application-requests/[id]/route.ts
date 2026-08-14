@@ -1,27 +1,27 @@
-import { UpdateApplication } from "@/application/application/update-application"
-import { WithdrawApplication } from "@/application/application/withdraw-application"
-import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import { UpdateApplication } from "@/contexts/company/application/application/update-application"
+import { WithdrawApplication } from "@/contexts/company/application/application/withdraw-application"
+import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
+import { ApplicationWorkflowRepository } from "@/contexts/company/infrastructure/application/application-workflow-repository"
 import { canDecideLegacyApplication } from "@/lib/application/can-decide-legacy-application"
 import { resolveRepresentedApprover } from "@/lib/application/resolve-represented-approver"
 import { loadOrResolveWorkflowStepSnapshot } from "@/lib/application/load-or-resolve-workflow-step-snapshot"
 import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { applicationApprovals, applications, applicationTemplates, employees } from "@/schema"
-import { jsonPayloadSchema } from "@/interface/utils/json-payload-schema"
-import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, eq, inArray } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import {
   ForbiddenError,
   ConflictError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 import { zAppApplication, zAppApplicationUpdated } from "@/lib/app-schemas"
 import { z } from "zod"
 

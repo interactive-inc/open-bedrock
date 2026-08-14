@@ -1,6 +1,6 @@
-import { ListLifecycleEvents } from "@/application/employee-lifecycle/list-lifecycle-events"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { PersonnelActionRepository } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
+import { ListLifecycleEvents } from "@/contexts/company/application/employee-lifecycle/list-lifecycle-events"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { PersonnelActionRepository } from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action-repository"
 import { describe, expect, test } from "bun:test"
 
 async function fixture() {

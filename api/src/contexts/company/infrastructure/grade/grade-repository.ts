@@ -1,8 +1,8 @@
-import { Grade } from "@/domain/grade/grade.entity"
+import { Grade } from "@/contexts/company/domain/grade/grade.entity"
 import type { Context } from "@/env"
 import { grades } from "@/schema"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 import { asc, eq } from "drizzle-orm"
 
 export class GradeRepository {

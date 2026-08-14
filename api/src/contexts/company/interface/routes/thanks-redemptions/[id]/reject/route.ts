@@ -1,11 +1,11 @@
-import { DecideRedemption } from "@/application/thanks-points/decide-redemption"
-import { toPositiveInt } from "@/interface/utils/to-positive-int"
+import { DecideRedemption } from "@/contexts/company/application/thanks-points/decide-redemption"
+import { toPositiveInt } from "@/contexts/company/interface/utils/to-positive-int"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { zAppThanksRedemptionDecision } from "@/lib/app-schemas"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { factory } from "@/interface/utils/factory"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 // @authorization permission - 権限キーで判定する
 /** POST /thanks-redemptions/:id/reject — 交換申請を却下する（承認権限が必要） */

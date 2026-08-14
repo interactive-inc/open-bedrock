@@ -1,16 +1,16 @@
-import { CreateWorkAccident } from "@/application/work-accident/create-work-accident"
-import { WorkAccidentRepository } from "@/infrastructure/work-accident/work-accident-repository"
-import { factory } from "@/interface/utils/factory"
+import { CreateWorkAccident } from "@/contexts/company/application/work-accident/create-work-accident"
+import { WorkAccidentRepository } from "@/contexts/company/infrastructure/work-accident/work-accident-repository"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppWorkAccident, zAppWorkAccidentList } from "@/lib/app-schemas"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import {
   BadRequestError,
   ForbiddenError,
   InternalError,
   UnauthorizedError,
-} from "@/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

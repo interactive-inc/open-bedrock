@@ -1,20 +1,20 @@
-import { CreateEmployeeEvent } from "@/application/employee-event/create-employee-event"
-import { canReadEmployeeEventsOf } from "@/interface/routes/employee-events/can-read-employee-events-of"
+import { CreateEmployeeEvent } from "@/contexts/company/application/employee-event/create-employee-event"
+import { canReadEmployeeEventsOf } from "@/contexts/company/interface/routes/employee-events/can-read-employee-events-of"
 import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
-import { resolveTargetEmployeeId } from "@/interface/utils/resolve-target-employee-id"
-import { resolveEmployeeIdFromBody } from "@/interface/utils/resolve-employee-id-from-body"
-import { factory } from "@/interface/utils/factory"
+import { resolveTargetEmployeeId } from "@/contexts/company/interface/utils/resolve-target-employee-id"
+import { resolveEmployeeIdFromBody } from "@/contexts/company/interface/utils/resolve-employee-id-from-body"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEmployeeEvent, zAppEmployeeEventList } from "@/lib/app-schemas"
-import { EmployeeEventRepository } from "@/infrastructure/employee-event/employee-event-repository"
+import { EmployeeEventRepository } from "@/contexts/company/infrastructure/employee-event/employee-event-repository"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import {
@@ -22,7 +22,7 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 import { z } from "zod"
 
 // @authorization owner - 本人のリソースに限定する

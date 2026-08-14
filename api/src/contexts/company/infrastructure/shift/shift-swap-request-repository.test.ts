@@ -1,6 +1,6 @@
-import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
-import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { ShiftSwapRequest } from "@/contexts/company/domain/shift/shift-swap-request.entity"
+import { ShiftSwapRequestRepository } from "@/contexts/company/infrastructure/shift/shift-swap-request-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 function createSwapRequest(props: Parameters<typeof ShiftSwapRequest.create>[0]): ShiftSwapRequest {

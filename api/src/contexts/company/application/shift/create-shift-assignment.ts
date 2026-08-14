@@ -1,12 +1,12 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
+import { ShiftAssignment } from "@/contexts/company/domain/shift/shift-assignment.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
-import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
+import { ShiftAssignmentRepository } from "@/contexts/company/infrastructure/shift/shift-assignment-repository"
+import { ShiftPatternRepository } from "@/contexts/company/infrastructure/shift/shift-pattern-repository"
 
 export type Input = {
   session: Session

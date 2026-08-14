@@ -1,4 +1,4 @@
-import type { ApplicationWorkflowStep } from "@/domain/application/application-workflow"
+import type { ApplicationWorkflowStep } from "@/contexts/company/domain/application/application-workflow"
 import type { Context } from "@/env"
 import { accountEmployeeLinks, accounts } from "@/schema"
 import { eq } from "drizzle-orm"

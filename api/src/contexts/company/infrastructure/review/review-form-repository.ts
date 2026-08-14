@@ -1,4 +1,4 @@
-import { ReviewForm } from "@/domain/review/review-form.entity"
+import { ReviewForm } from "@/contexts/company/domain/review/review-form.entity"
 import type { Context } from "@/env"
 import { reviewCycles, reviewForms } from "@/schema"
 import { and, asc, eq, inArray, ne } from "drizzle-orm"

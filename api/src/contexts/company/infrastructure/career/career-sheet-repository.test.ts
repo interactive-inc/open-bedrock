@@ -1,6 +1,6 @@
-import { CareerSheet } from "@/domain/career/career-sheet.entity"
-import { CareerSheetRepository } from "@/infrastructure/career/career-sheet-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { CareerSheet } from "@/contexts/company/domain/career/career-sheet.entity"
+import { CareerSheetRepository } from "@/contexts/company/infrastructure/career/career-sheet-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("CareerSheetRepository", () => {

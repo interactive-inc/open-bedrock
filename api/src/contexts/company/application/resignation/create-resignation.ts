@@ -1,6 +1,6 @@
-import { Resignation } from "@/domain/resignation/resignation.entity"
+import { Resignation } from "@/contexts/company/domain/resignation/resignation.entity"
 import type { Context } from "@/env"
-import { ResignationRepository } from "@/infrastructure/resignation/resignation-repository"
+import { ResignationRepository } from "@/contexts/company/infrastructure/resignation/resignation-repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

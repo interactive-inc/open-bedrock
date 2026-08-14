@@ -2,7 +2,7 @@ import { periodOf } from "@/lib/thanks-points/period-of"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksPointBudgetRepository } from "@/infrastructure/thanks-points/thanks-point-budget-repository"
+import { ThanksPointBudgetRepository } from "@/contexts/company/infrastructure/thanks-points/thanks-point-budget-repository"
 
 export type BudgetView = {
   period: string

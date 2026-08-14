@@ -1,8 +1,8 @@
-import { createTestToken } from "@/interface/test-helpers/create-test-token"
-import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
-import { loadSchema } from "@/interface/test-helpers/load-schema"
-import { requestWithContext } from "@/interface/test-helpers/request-with-context"
-import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
+import { createTestToken } from "@/contexts/company/interface/test-helpers/create-test-token"
+import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
+import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
+import { requestWithContext } from "@/contexts/company/interface/test-helpers/request-with-context"
+import { seedIamForEmployees } from "@/contexts/company/interface/test-helpers/seed-iam-for-employees"
 import { describe, expect, test } from "bun:test"
 
 const jwtSecret = "lifecycle-verify-bearer-test-secret"

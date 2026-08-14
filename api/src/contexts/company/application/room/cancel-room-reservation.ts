@@ -1,7 +1,7 @@
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RoomReservationRepository } from "@/infrastructure/room/room-reservation-repository"
+import { RoomReservationRepository } from "@/contexts/company/infrastructure/room/room-reservation-repository"
 
 export type Command = {
   reservationId: string

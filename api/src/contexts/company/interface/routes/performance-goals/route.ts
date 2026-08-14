@@ -1,8 +1,8 @@
 import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
-import { listDepartmentEmployeeIds } from "@/interface/utils/list-department-employee-ids"
-import { listReportEmployeeIds } from "@/interface/utils/list-report-employee-ids"
+import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
+import { listReportEmployeeIds } from "@/contexts/company/interface/utils/list-report-employee-ids"
 import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppGoalList } from "@/lib/app-schemas"
 import { goals } from "@/schema"
 import {
@@ -10,8 +10,8 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { and, count, eq, inArray } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import {
@@ -19,7 +19,7 @@ import {
   InternalError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 
 // @authorization permission - 権限キーで判定する
 /**

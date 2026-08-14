@@ -2,9 +2,9 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { AccountRepository } from "@/infrastructure/iam/account-repository"
-import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
+import { AccountRepository } from "@/contexts/company/infrastructure/iam/account-repository"
+import { RoleRepository } from "@/contexts/company/infrastructure/iam/role-repository"
+import { LivePermissionGuardError } from "@/contexts/company/infrastructure/iam/live-permission-guard-error"
 
 export type Command = {
   session: Session

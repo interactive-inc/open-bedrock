@@ -1,8 +1,8 @@
-import { CompanyCalendarDay } from "@/domain/calendar/company-calendar-day.entity"
+import { CompanyCalendarDay } from "@/contexts/company/domain/calendar/company-calendar-day.entity"
 import type { Context } from "@/env"
 import { companyCalendarDays } from "@/schema"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 import { and, asc, count, eq, gte, lte } from "drizzle-orm"
 
 export class CompanyCalendarDayRepository {

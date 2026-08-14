@@ -1,9 +1,9 @@
 import type { Context } from "@/env"
 import type { AccountStatus } from "@/contexts/system/domain/auth/account-status"
-import { LastRootError } from "@/infrastructure/iam/last-root-error"
-import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
-import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
-import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
+import { LastRootError } from "@/contexts/company/infrastructure/iam/last-root-error"
+import { LastRootGuard } from "@/contexts/company/infrastructure/iam/last-root-guard"
+import { LivePermissionGuard } from "@/contexts/company/infrastructure/iam/live-permission-guard"
+import { LivePermissionGuardError } from "@/contexts/company/infrastructure/iam/live-permission-guard-error"
 import { accountEmployeeLinks, accountRoles, accounts, employees, roles } from "@/schema"
 import { eq, inArray, sql } from "drizzle-orm"
 

@@ -1,9 +1,9 @@
 import type { Context } from "@/env"
-import { ApplicationRepository } from "@/infrastructure/application/application-repository"
-import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
-import { WorkflowSql } from "@/infrastructure/application/workflow-sql"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { ApplicationRepository } from "@/contexts/company/infrastructure/application/application-repository"
+import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
+import { ApplicationWorkflowRepository } from "@/contexts/company/infrastructure/application/application-workflow-repository"
+import { WorkflowSql } from "@/contexts/company/infrastructure/application/workflow-sql"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
@@ -17,7 +17,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
 import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"
 import { applicableWorkflowSteps } from "@/lib/application/applicable-workflow-steps"
-import { validateAndNormalizeApplicationPayload } from "@/application/application/validate-application-payload"
+import { validateAndNormalizeApplicationPayload } from "@/contexts/company/application/application/validate-application-payload"
 
 export type ResubmittedApplication = {
   id: number

@@ -1,4 +1,4 @@
-import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
+import { FamilyCareLeave } from "@/contexts/company/domain/family-care-leave/family-care-leave.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("FamilyCareLeave.create", () => {

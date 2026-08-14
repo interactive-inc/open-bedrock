@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { schema } from "@/schema"
-import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
-import { loadSchema } from "@/interface/test-helpers/load-schema"
+import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
+import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
 import { drizzle } from "drizzle-orm/d1"
 
 /**

@@ -1,6 +1,6 @@
 import type { Notification } from "@/contexts/system/domain/notifications/notification.entity"
 import type { Context } from "@/env"
-import { EmployeeNotificationGateway } from "@/infrastructure/company/notifications/employee-notification.gateway"
+import { EmployeeNotificationGateway } from "@/contexts/company/infrastructure/company/notifications/employee-notification.gateway"
 
 export type Command = {
   recipientEmployeeId: number

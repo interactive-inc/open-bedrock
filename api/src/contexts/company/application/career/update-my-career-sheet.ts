@@ -1,8 +1,8 @@
-import { CareerSheet } from "@/domain/career/career-sheet.entity"
+import { CareerSheet } from "@/contexts/company/domain/career/career-sheet.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CareerSheetRepository } from "@/infrastructure/career/career-sheet-repository"
+import { CareerSheetRepository } from "@/contexts/company/infrastructure/career/career-sheet-repository"
 
 export type Command = {
   employeeId: number

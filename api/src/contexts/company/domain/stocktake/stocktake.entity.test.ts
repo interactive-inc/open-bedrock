@@ -1,4 +1,4 @@
-import { Stocktake } from "@/domain/stocktake/stocktake.entity"
+import { Stocktake } from "@/contexts/company/domain/stocktake/stocktake.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("Stocktake.create", () => {

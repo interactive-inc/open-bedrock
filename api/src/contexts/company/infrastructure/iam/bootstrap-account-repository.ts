@@ -1,7 +1,7 @@
 import type { AuditEventRecord } from "@/composition/audit/audit-event"
 import type { IdentitySubject } from "@/contexts/system/domain/identity/identity-subject"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 

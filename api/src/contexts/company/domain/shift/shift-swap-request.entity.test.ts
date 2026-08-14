@@ -1,4 +1,4 @@
-import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
+import { ShiftSwapRequest } from "@/contexts/company/domain/shift/shift-swap-request.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("ShiftSwapRequest.create", () => {

@@ -1,5 +1,5 @@
-import { RecruitmentPosition } from "@/domain/recruitment/recruitment-position.entity"
-import { RecruitmentCandidate } from "@/domain/recruitment/recruitment-candidate.entity"
+import { RecruitmentPosition } from "@/contexts/company/domain/recruitment/recruitment-position.entity"
+import { RecruitmentCandidate } from "@/contexts/company/domain/recruitment/recruitment-candidate.entity"
 import type { Context } from "@/env"
 import { recruitmentCandidates, recruitmentPositions } from "@/schema"
 import { asc, count, desc, eq } from "drizzle-orm"

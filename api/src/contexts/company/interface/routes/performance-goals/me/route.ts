@@ -1,16 +1,16 @@
-import { ListMyGoals } from "@/application/goal/list-my-goals"
-import { factory } from "@/interface/utils/factory"
+import { ListMyGoals } from "@/contexts/company/application/goal/list-my-goals"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppGoalList } from "@/lib/app-schemas"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/interface/lib/errors"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { goals } from "@/schema"
 import { count, eq } from "drizzle-orm"
 

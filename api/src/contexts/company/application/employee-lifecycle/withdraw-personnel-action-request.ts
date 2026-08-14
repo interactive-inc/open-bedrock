@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
@@ -11,7 +11,7 @@ import {
   NotFoundError,
   UnexpectedError,
 } from "@/lib/errors"
-import { PersonnelActionRequestAccess } from "@/application/employee-lifecycle/personnel-action-request-access"
+import { PersonnelActionRequestAccess } from "@/contexts/company/application/employee-lifecycle/personnel-action-request-access"
 
 export class WithdrawPersonnelActionRequest {
   constructor(private readonly c: Context) {}

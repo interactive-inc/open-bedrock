@@ -1,13 +1,13 @@
-import { CancelShiftSwapRequest } from "@/application/shift/cancel-shift-swap-request"
-import { GetShiftSwapRequest } from "@/application/shift/get-shift-swap-request"
+import { CancelShiftSwapRequest } from "@/contexts/company/application/shift/cancel-shift-swap-request"
+import { GetShiftSwapRequest } from "@/contexts/company/application/shift/get-shift-swap-request"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppShiftSwapRequest } from "@/lib/app-schemas"
-import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { validateIntParam } from "@/interface/utils/validate-int-param"
+import type { ShiftSwapRequest } from "@/contexts/company/domain/shift/shift-swap-request.entity"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
 
 /** 交代申請をレスポンス用の snake_case に整形する。 */
 function toResponseBody(swapRequest: ShiftSwapRequest) {

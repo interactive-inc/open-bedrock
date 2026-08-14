@@ -1,6 +1,6 @@
 import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq } from "drizzle-orm"
-import { EvaluationSheet } from "@/domain/evaluation-sheet/evaluation-sheet.entity"
+import { EvaluationSheet } from "@/contexts/company/domain/evaluation-sheet/evaluation-sheet.entity"
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"

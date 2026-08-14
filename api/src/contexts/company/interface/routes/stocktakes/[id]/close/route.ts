@@ -1,12 +1,12 @@
-import { CloseStocktake } from "@/application/stocktake/close-stocktake"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { StocktakeRepository } from "@/infrastructure/stocktake/stocktake-repository"
+import { CloseStocktake } from "@/contexts/company/application/stocktake/close-stocktake"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { StocktakeRepository } from "@/contexts/company/infrastructure/stocktake/stocktake-repository"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppStocktake } from "@/lib/app-schemas"
-import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
+import { validateUuidParam } from "@/contexts/company/interface/utils/validate-uuid-param"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /stocktakes/:id/close — 棚卸しセッションを締める（権限が必要） */

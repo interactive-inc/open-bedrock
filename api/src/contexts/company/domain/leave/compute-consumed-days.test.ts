@@ -1,4 +1,4 @@
-import { computeConsumedDays } from "@/domain/leave/compute-consumed-days"
+import { computeConsumedDays } from "@/contexts/company/domain/leave/compute-consumed-days"
 import { describe, expect, test } from "bun:test"
 
 describe("computeConsumedDays", () => {

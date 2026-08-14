@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test"
-import { CancelCertificateRequest } from "@/application/certificate-request/cancel-certificate-request"
-import { CreateCertificateRequest } from "@/application/certificate-request/create-certificate-request"
-import { GetCertificateRequest } from "@/application/certificate-request/get-certificate-request"
-import { ListMyCertificateRequests } from "@/application/certificate-request/list-my-certificate-requests"
-import { UpdateCertificateRequest } from "@/application/certificate-request/update-certificate-request"
-import { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
+import { CancelCertificateRequest } from "@/contexts/company/application/certificate-request/cancel-certificate-request"
+import { CreateCertificateRequest } from "@/contexts/company/application/certificate-request/create-certificate-request"
+import { GetCertificateRequest } from "@/contexts/company/application/certificate-request/get-certificate-request"
+import { ListMyCertificateRequests } from "@/contexts/company/application/certificate-request/list-my-certificate-requests"
+import { UpdateCertificateRequest } from "@/contexts/company/application/certificate-request/update-certificate-request"
+import { CertificateRequest } from "@/contexts/company/domain/certificate-request/certificate-request.entity"
 import type { Context } from "@/env"
 import { ApplicationError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 
 async function seedRequest(context: Context, requesterId: number): Promise<string> {
   const created = await new CreateCertificateRequest(context).run({

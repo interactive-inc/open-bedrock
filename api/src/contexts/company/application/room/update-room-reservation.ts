@@ -7,9 +7,9 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { RoomReservation } from "@/domain/room/room-reservation.entity"
+import type { RoomReservation } from "@/contexts/company/domain/room/room-reservation.entity"
 import type { Context } from "@/env"
-import { RoomReservationRepository } from "@/infrastructure/room/room-reservation-repository"
+import { RoomReservationRepository } from "@/contexts/company/infrastructure/room/room-reservation-repository"
 
 export type Command = {
   reservationId: string

@@ -1,15 +1,15 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { ApplicationWorkflowStep } from "@/domain/application/application-workflow"
+import type { ApplicationWorkflowStep } from "@/contexts/company/domain/application/application-workflow"
 import type { Context } from "@/env"
-import { prepareApplicationCompletion } from "@/application/application/application-completion-registry"
+import { prepareApplicationCompletion } from "@/contexts/company/application/application/application-completion-registry"
 import {
   ApplicationWorkflowRepository,
   type WorkflowInstance,
   type WorkflowStepSnapshot,
-} from "@/infrastructure/application/application-workflow-repository"
-import { WorkflowSql } from "@/infrastructure/application/workflow-sql"
-import { workflowValidApprovalCountSql } from "@/infrastructure/application/workflow-valid-approval-count-sql"
-import { workflowValidApprovalsSql } from "@/infrastructure/application/workflow-valid-approvals-sql"
+} from "@/contexts/company/infrastructure/application/application-workflow-repository"
+import { WorkflowSql } from "@/contexts/company/infrastructure/application/workflow-sql"
+import { workflowValidApprovalCountSql } from "@/contexts/company/infrastructure/application/workflow-valid-approval-count-sql"
+import { workflowValidApprovalsSql } from "@/contexts/company/infrastructure/application/workflow-valid-approvals-sql"
 import { resolveRepresentedApprover } from "@/lib/application/resolve-represented-approver"
 import { loadOrResolveWorkflowStepSnapshot } from "@/lib/application/load-or-resolve-workflow-step-snapshot"
 import { persistResolvedWorkflowStepSnapshot } from "@/lib/application/persist-resolved-workflow-step-snapshot"

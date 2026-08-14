@@ -2,7 +2,7 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RoleRepository } from "@/infrastructure/iam/role-repository"
+import { RoleRepository } from "@/contexts/company/infrastructure/iam/role-repository"
 import { hasPermissionSuperset } from "@system/application/iam/has-permission-superset"
 
 export type Command = {

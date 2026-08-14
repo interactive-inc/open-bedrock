@@ -1,14 +1,14 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { createAuditEvent } from "@/composition/audit/audit-event"
-import { Application } from "@/domain/application/application.entity"
+import { Application } from "@/contexts/company/domain/application/application.entity"
 import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"
-import { fingerprintPersonnelAction } from "@/application/employee-lifecycle/fingerprint-personnel-action"
-import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
-import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
-import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { fingerprintPersonnelAction } from "@/contexts/company/application/employee-lifecycle/fingerprint-personnel-action"
+import { GetLifecycleState } from "@/contexts/company/application/employee-lifecycle/get-lifecycle-state"
+import { ApplicationWorkflowRepository } from "@/contexts/company/infrastructure/application/application-workflow-repository"
+import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 import {
   ApplicationError,
   ConflictError,

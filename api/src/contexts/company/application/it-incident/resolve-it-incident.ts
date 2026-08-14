@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { ItIncident } from "@/domain/it-incident/it-incident.entity"
+import type { ItIncident } from "@/contexts/company/domain/it-incident/it-incident.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ItIncidentRepository } from "@/infrastructure/it-incident/it-incident-repository"
+import { ItIncidentRepository } from "@/contexts/company/infrastructure/it-incident/it-incident-repository"
 
 export type Command = {
   session: Session

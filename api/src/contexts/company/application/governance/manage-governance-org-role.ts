@@ -1,6 +1,6 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
-import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
+import { GovernanceRepository } from "@/contexts/company/infrastructure/governance/governance-repository"
 import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 import {
   ConflictError,
@@ -10,7 +10,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import { isoDate } from "@/lib/schemas"
-import { prepareGovernanceAudit } from "@/application/governance/governance-audit"
+import { prepareGovernanceAudit } from "@/contexts/company/application/governance/governance-audit"
 
 export class ManageGovernanceOrgRole {
   constructor(private readonly c: Context) {}

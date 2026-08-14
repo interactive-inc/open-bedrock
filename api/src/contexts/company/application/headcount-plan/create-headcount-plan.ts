@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { HeadcountPlan } from "@/domain/headcount-plan/headcount-plan.entity"
+import { HeadcountPlan } from "@/contexts/company/domain/headcount-plan/headcount-plan.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { HeadcountPlanRepository } from "@/infrastructure/headcount-plan/headcount-plan-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { HeadcountPlanRepository } from "@/contexts/company/infrastructure/headcount-plan/headcount-plan-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   session: Session

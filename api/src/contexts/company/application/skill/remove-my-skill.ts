@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EmployeeSkillRepository } from "@/infrastructure/skill/employee-skill-repository"
+import { EmployeeSkillRepository } from "@/contexts/company/infrastructure/skill/employee-skill-repository"
 
 export type Command = {
   employeeId: number

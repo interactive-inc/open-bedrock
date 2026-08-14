@@ -1,6 +1,6 @@
-import { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
-import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { ShiftAssignment } from "@/contexts/company/domain/shift/shift-assignment.entity"
+import { ShiftAssignmentRepository } from "@/contexts/company/infrastructure/shift/shift-assignment-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("ShiftAssignmentRepository", () => {

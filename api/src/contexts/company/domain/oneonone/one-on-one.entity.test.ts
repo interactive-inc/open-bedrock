@@ -1,4 +1,4 @@
-import { OneOnOne } from "@/domain/oneonone/one-on-one.entity"
+import { OneOnOne } from "@/contexts/company/domain/oneonone/one-on-one.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("OneOnOne.create", () => {

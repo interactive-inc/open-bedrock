@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test"
-import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
-import { ClockIn } from "@/application/attendance/clock-in"
-import { ClockOut } from "@/application/attendance/clock-out"
+import { AttendanceRecord } from "@/contexts/company/domain/attendance/attendance-record.entity"
+import { ClockIn } from "@/contexts/company/application/attendance/clock-in"
+import { ClockOut } from "@/contexts/company/application/attendance/clock-out"
 import { ApplicationError, ConflictError } from "@/lib/errors"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
 import type { Context } from "@/env"
 
 async function seedOpenRecord(context: Context, employeeId: number): Promise<AttendanceRecord> {

@@ -1,4 +1,4 @@
-import { NotFoundError } from "@/interface/lib/errors"
+import { NotFoundError } from "@/contexts/company/interface/lib/errors"
 
 /**
  * コード系パスパラメータの最低限検証。空文字と 64 文字超を弾く。

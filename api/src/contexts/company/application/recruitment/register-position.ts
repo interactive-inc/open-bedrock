@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { RecruitmentPosition } from "@/domain/recruitment/recruitment-position.entity"
+import { RecruitmentPosition } from "@/contexts/company/domain/recruitment/recruitment-position.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RecruitmentRepository } from "@/infrastructure/recruitment/recruitment-repository"
+import { RecruitmentRepository } from "@/contexts/company/infrastructure/recruitment/recruitment-repository"
 
 export type Command = {
   session: Session

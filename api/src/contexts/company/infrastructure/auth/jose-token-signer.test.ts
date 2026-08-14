@@ -3,7 +3,7 @@ import {
   ACCESS_TOKEN_AUDIENCE,
   ACCESS_TOKEN_ISSUER,
   JoseTokenSigner,
-} from "@/infrastructure/auth/jose-token-signer"
+} from "@/contexts/company/infrastructure/auth/jose-token-signer"
 import { describe, expect, test } from "bun:test"
 import { jwtVerify } from "jose"
 

@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test"
-import { CancelLifeEvent } from "@/application/life-event/cancel-life-event"
-import { CreateLifeEvent } from "@/application/life-event/create-life-event"
-import { GetLifeEvent } from "@/application/life-event/get-life-event"
-import { ListMyLifeEvents } from "@/application/life-event/list-my-life-events"
-import { UpdateLifeEvent } from "@/application/life-event/update-life-event"
-import { LifeEvent } from "@/domain/life-event/life-event.entity"
+import { CancelLifeEvent } from "@/contexts/company/application/life-event/cancel-life-event"
+import { CreateLifeEvent } from "@/contexts/company/application/life-event/create-life-event"
+import { GetLifeEvent } from "@/contexts/company/application/life-event/get-life-event"
+import { ListMyLifeEvents } from "@/contexts/company/application/life-event/list-my-life-events"
+import { UpdateLifeEvent } from "@/contexts/company/application/life-event/update-life-event"
+import { LifeEvent } from "@/contexts/company/domain/life-event/life-event.entity"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
 
 async function seedEvent(context: Context, employeeId: number): Promise<string> {
   const created = await new CreateLifeEvent(context).run({

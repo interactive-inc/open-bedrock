@@ -1,6 +1,6 @@
-import { Goal } from "@/domain/goal/goal.entity"
-import { GoalRepository } from "@/infrastructure/goal/goal-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { Goal } from "@/contexts/company/domain/goal/goal.entity"
+import { GoalRepository } from "@/contexts/company/infrastructure/goal/goal-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("GoalRepository", () => {

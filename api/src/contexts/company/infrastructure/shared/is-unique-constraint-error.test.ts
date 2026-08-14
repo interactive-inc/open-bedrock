@@ -1,4 +1,4 @@
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
 import { describe, expect, test } from "bun:test"
 
 describe("isUniqueConstraintError", () => {

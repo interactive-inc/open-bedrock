@@ -1,4 +1,4 @@
-import { License } from "@/domain/license/license.entity"
+import { License } from "@/contexts/company/domain/license/license.entity"
 import type { Context } from "@/env"
 import { licenses } from "@/schema"
 import { and, asc, count, eq } from "drizzle-orm"

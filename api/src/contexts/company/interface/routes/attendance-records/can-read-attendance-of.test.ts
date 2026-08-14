@@ -1,7 +1,7 @@
 import { Session } from "@/contexts/company/domain/iam/session"
-import { canReadAttendanceOf } from "@/interface/routes/attendance-records/can-read-attendance-of"
+import { canReadAttendanceOf } from "@/contexts/company/interface/routes/attendance-records/can-read-attendance-of"
 import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
-import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 const self: EmployeeRelation = { isSelf: true, isReport: false, isSameDepartment: false }

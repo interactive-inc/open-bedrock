@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { LifeEvent } from "@/domain/life-event/life-event.entity"
+import { LifeEvent } from "@/contexts/company/domain/life-event/life-event.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { LifeEventRepository } from "@/infrastructure/life-event/life-event-repository"
+import { LifeEventRepository } from "@/contexts/company/infrastructure/life-event/life-event-repository"
 
 export type Action = "approve" | "reject"
 

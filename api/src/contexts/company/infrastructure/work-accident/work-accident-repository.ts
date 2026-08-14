@@ -1,4 +1,4 @@
-import { WorkAccident } from "@/domain/work-accident/work-accident.entity"
+import { WorkAccident } from "@/contexts/company/domain/work-accident/work-accident.entity"
 import type { Context } from "@/env"
 import { workAccidents } from "@/schema"
 import { and, desc, eq } from "drizzle-orm"

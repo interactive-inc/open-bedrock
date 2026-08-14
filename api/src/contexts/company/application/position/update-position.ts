@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { Position } from "@/domain/position/position.entity"
+import { Position } from "@/contexts/company/domain/position/position.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { PositionRepository } from "@/infrastructure/position/position-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { PositionRepository } from "@/contexts/company/infrastructure/position/position-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   session: Session

@@ -1,7 +1,7 @@
-import type { ReviewCycle } from "@/domain/review/review-cycle.entity"
-import type { ReviewForm } from "@/domain/review/review-form.entity"
-import type { ReviewerTypeSummary } from "@/interface/utils/to-reviewer-type-summary"
-import { toReviewerTypeSummary } from "@/interface/utils/to-reviewer-type-summary"
+import type { ReviewCycle } from "@/contexts/company/domain/review/review-cycle.entity"
+import type { ReviewForm } from "@/contexts/company/domain/review/review-form.entity"
+import type { ReviewerTypeSummary } from "@/contexts/company/interface/utils/to-reviewer-type-summary"
+import { toReviewerTypeSummary } from "@/contexts/company/interface/utils/to-reviewer-type-summary"
 
 export type ReviewResultView = {
   cycleId: number

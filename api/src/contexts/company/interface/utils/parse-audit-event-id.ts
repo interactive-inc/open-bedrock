@@ -1,4 +1,4 @@
-import { auditEventNotFound } from "@/interface/utils/audit-event-not-found"
+import { auditEventNotFound } from "@/contexts/company/interface/utils/audit-event-not-found"
 
 const EVENT_ID_MAX_LENGTH = 64
 const EVENT_ID_PATTERN =

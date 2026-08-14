@@ -1,12 +1,12 @@
 import type { Context } from "@/env"
 import { accountRoles, permissions, rolePermissions, roles } from "@/schema"
 import type { RoleRow } from "@/schema"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { LastRootError } from "@/infrastructure/iam/last-root-error"
-import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
-import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
-import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
+import { LastRootError } from "@/contexts/company/infrastructure/iam/last-root-error"
+import { LastRootGuard } from "@/contexts/company/infrastructure/iam/last-root-guard"
+import { LivePermissionGuard } from "@/contexts/company/infrastructure/iam/live-permission-guard"
+import { LivePermissionGuardError } from "@/contexts/company/infrastructure/iam/live-permission-guard-error"
 import { eq } from "drizzle-orm"
 
 export type RoleWithPermissions = {

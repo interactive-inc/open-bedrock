@@ -1,6 +1,6 @@
-import { Resignation } from "@/domain/resignation/resignation.entity"
+import { Resignation } from "@/contexts/company/domain/resignation/resignation.entity"
 import type { Context } from "@/env"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
 import { resignations } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
 

@@ -3,13 +3,13 @@ import {
   parseGovernanceMarkdown,
   type GovernanceReference,
   type ParsedGovernanceMarkdown,
-} from "@/domain/governance/governance-document"
+} from "@/contexts/company/domain/governance/governance-document"
 import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import type { Context } from "@/env"
-import type { GovernanceDocumentRecord } from "@/infrastructure/governance/governance-repository"
-import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
+import type { GovernanceDocumentRecord } from "@/contexts/company/infrastructure/governance/governance-repository"
+import { GovernanceRepository } from "@/contexts/company/infrastructure/governance/governance-repository"
 import { PERMISSION_KEYS } from "@/composition/iam/permission-key.catalog"
-import { prepareGovernanceAudit } from "@/application/governance/governance-audit"
+import { prepareGovernanceAudit } from "@/contexts/company/application/governance/governance-audit"
 import {
   ConflictError,
   ForbiddenError,

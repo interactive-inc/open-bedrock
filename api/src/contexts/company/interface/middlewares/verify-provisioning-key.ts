@@ -1,7 +1,7 @@
 import { timingSafeStringEqual } from "@/contexts/system/infrastructure/auth/timing-safe-string-equal"
 import { isPlaceholderSecret } from "@/lib/config/is-placeholder-secret"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { factory } from "@/interface/utils/factory"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 /**
  * プロビジョニング（外部 identity の同期）専用の machine API キー認証。

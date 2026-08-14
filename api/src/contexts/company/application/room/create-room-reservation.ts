@@ -1,4 +1,4 @@
-import { RoomReservation } from "@/domain/room/room-reservation.entity"
+import { RoomReservation } from "@/contexts/company/domain/room/room-reservation.entity"
 import {
   ConflictError,
   NotFoundError,
@@ -8,8 +8,8 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RoomReservationRepository } from "@/infrastructure/room/room-reservation-repository"
-import { RoomRepository } from "@/infrastructure/room/room-repository"
+import { RoomReservationRepository } from "@/contexts/company/infrastructure/room/room-reservation-repository"
+import { RoomRepository } from "@/contexts/company/infrastructure/room/room-repository"
 
 export type Command = {
   roomId: number

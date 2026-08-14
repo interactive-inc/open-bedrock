@@ -1,7 +1,7 @@
-import { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
+import { ShiftAssignment } from "@/contexts/company/domain/shift/shift-assignment.entity"
 import type { Context } from "@/env"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 import { shiftAssignments } from "@/schema"
 import { and, asc, eq, isNull } from "drizzle-orm"
 

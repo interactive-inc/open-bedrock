@@ -1,7 +1,7 @@
-import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
-import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { OnboardingTemplate } from "@/contexts/company/domain/onboarding/onboarding-template.entity"
+import { OnboardingTemplateRepository } from "@/contexts/company/infrastructure/onboarding/onboarding-template-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("OnboardingTemplateRepository", () => {

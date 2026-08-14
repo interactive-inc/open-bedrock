@@ -1,8 +1,8 @@
 import type {
   GovernanceMetadata,
   GovernanceReference,
-} from "@/domain/governance/governance-document"
-import { zGovernanceMetadata, zProcedureDefinition } from "@/domain/governance/governance-document"
+} from "@/contexts/company/domain/governance/governance-document"
+import { zGovernanceMetadata, zProcedureDefinition } from "@/contexts/company/domain/governance/governance-document"
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"

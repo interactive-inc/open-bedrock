@@ -1,4 +1,4 @@
-import { GoalEvaluation } from "@/domain/goal/goal-evaluation.entity"
+import { GoalEvaluation } from "@/contexts/company/domain/goal/goal-evaluation.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("GoalEvaluation.create", () => {

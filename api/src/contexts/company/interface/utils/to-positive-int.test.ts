@@ -1,4 +1,4 @@
-import { toPositiveInt } from "@/interface/utils/to-positive-int"
+import { toPositiveInt } from "@/contexts/company/interface/utils/to-positive-int"
 import { describe, expect, test } from "bun:test"
 
 describe("toPositiveInt", () => {

@@ -1,4 +1,4 @@
-import { ThanksPointBudget } from "@/domain/thanks-points/thanks-point-budget.entity"
+import { ThanksPointBudget } from "@/contexts/company/domain/thanks-points/thanks-point-budget.entity"
 import { monthlyBudgetPoints } from "@/lib/thanks-points/monthly-budget-points"
 import type { Context } from "@/env"
 import { thanksPointBudgets } from "@/schema"

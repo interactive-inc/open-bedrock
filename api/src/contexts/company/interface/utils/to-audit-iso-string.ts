@@ -1,4 +1,4 @@
-import { auditUnavailable } from "@/interface/utils/audit-unavailable"
+import { auditUnavailable } from "@/contexts/company/interface/utils/audit-unavailable"
 
 /** Converts a repository Unix-second timestamp into the public UTC representation. */
 export function toAuditIsoString(epoch: number): string {

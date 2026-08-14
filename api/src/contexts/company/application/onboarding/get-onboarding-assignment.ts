@@ -2,10 +2,10 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.entity"
+import type { OnboardingAssignment } from "@/contexts/company/domain/onboarding/onboarding-assignment.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { OnboardingAssignmentRepository } from "@/contexts/company/infrastructure/onboarding/onboarding-assignment-repository"
 
 export type Command = {
   assignmentId: number

@@ -1,4 +1,4 @@
-import { EmployeeWorkStyle } from "@/domain/work-style/employee-work-style.entity"
+import { EmployeeWorkStyle } from "@/contexts/company/domain/work-style/employee-work-style.entity"
 import type { Context } from "@/env"
 import { employeeWorkStyles } from "@/schema"
 import { count, desc, eq } from "drizzle-orm"

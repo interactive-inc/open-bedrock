@@ -1,4 +1,4 @@
-import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
+import { ShiftSwapRequest } from "@/contexts/company/domain/shift/shift-swap-request.entity"
 import type { Context } from "@/env"
 import { shiftSwapRequests } from "@/schema"
 import { and, asc, eq, sql } from "drizzle-orm"

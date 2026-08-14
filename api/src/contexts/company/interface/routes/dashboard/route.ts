@@ -1,6 +1,6 @@
-import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { applications, employees, goals, surveys } from "@/schema"
 import { count, eq, gte, sql } from "drizzle-orm"
 

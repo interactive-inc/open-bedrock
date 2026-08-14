@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test"
-import { CancelFamilyCareLeave } from "@/application/family-care-leave/cancel-family-care-leave"
-import { CreateFamilyCareLeave } from "@/application/family-care-leave/create-family-care-leave"
-import { GetFamilyCareLeave } from "@/application/family-care-leave/get-family-care-leave"
-import { ListMyFamilyCareLeaves } from "@/application/family-care-leave/list-my-family-care-leaves"
-import { UpdateFamilyCareLeave } from "@/application/family-care-leave/update-family-care-leave"
-import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
+import { CancelFamilyCareLeave } from "@/contexts/company/application/family-care-leave/cancel-family-care-leave"
+import { CreateFamilyCareLeave } from "@/contexts/company/application/family-care-leave/create-family-care-leave"
+import { GetFamilyCareLeave } from "@/contexts/company/application/family-care-leave/get-family-care-leave"
+import { ListMyFamilyCareLeaves } from "@/contexts/company/application/family-care-leave/list-my-family-care-leaves"
+import { UpdateFamilyCareLeave } from "@/contexts/company/application/family-care-leave/update-family-care-leave"
+import { FamilyCareLeave } from "@/contexts/company/domain/family-care-leave/family-care-leave.entity"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 
 async function seedLeave(context: Context, employeeId: number): Promise<string> {
   const created = await new CreateFamilyCareLeave(context).run({

@@ -1,4 +1,4 @@
-import { RentalReservation } from "@/domain/rental/rental-reservation.entity"
+import { RentalReservation } from "@/contexts/company/domain/rental/rental-reservation.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("RentalReservation.create", () => {

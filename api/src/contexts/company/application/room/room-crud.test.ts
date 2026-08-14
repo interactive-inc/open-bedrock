@@ -1,18 +1,18 @@
 import { describe, expect, test } from "bun:test"
-import { Room } from "@/domain/room/room.entity"
-import { RoomReservation } from "@/domain/room/room-reservation.entity"
-import { RegisterRoom } from "@/application/room/register-room"
-import { GetRoom } from "@/application/room/get-room"
-import { UpdateRoom } from "@/application/room/update-room"
-import { DeleteRoom } from "@/application/room/delete-room"
-import { ListRooms } from "@/application/room/list-rooms"
-import { CreateRoomReservation } from "@/application/room/create-room-reservation"
-import { GetRoomReservation } from "@/application/room/get-room-reservation"
-import { UpdateRoomReservation } from "@/application/room/update-room-reservation"
-import { CancelRoomReservation } from "@/application/room/cancel-room-reservation"
-import { ListMyRoomReservations } from "@/application/room/list-my-room-reservations"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { Room } from "@/contexts/company/domain/room/room.entity"
+import { RoomReservation } from "@/contexts/company/domain/room/room-reservation.entity"
+import { RegisterRoom } from "@/contexts/company/application/room/register-room"
+import { GetRoom } from "@/contexts/company/application/room/get-room"
+import { UpdateRoom } from "@/contexts/company/application/room/update-room"
+import { DeleteRoom } from "@/contexts/company/application/room/delete-room"
+import { ListRooms } from "@/contexts/company/application/room/list-rooms"
+import { CreateRoomReservation } from "@/contexts/company/application/room/create-room-reservation"
+import { GetRoomReservation } from "@/contexts/company/application/room/get-room-reservation"
+import { UpdateRoomReservation } from "@/contexts/company/application/room/update-room-reservation"
+import { CancelRoomReservation } from "@/contexts/company/application/room/cancel-room-reservation"
+import { ListMyRoomReservations } from "@/contexts/company/application/room/list-my-room-reservations"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
 import {
   ConflictError,
   ForbiddenError,
@@ -20,7 +20,7 @@ import {
   UnprocessableError,
   ValidationError,
 } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
 import type { Context } from "@/env"
 
 async function seedRoom(context: Context): Promise<Room> {

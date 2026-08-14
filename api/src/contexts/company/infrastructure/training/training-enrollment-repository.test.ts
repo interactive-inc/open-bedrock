@@ -1,8 +1,8 @@
-import { TrainingCourse } from "@/domain/training/training-course.entity"
-import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
-import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
-import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { TrainingCourse } from "@/contexts/company/domain/training/training-course.entity"
+import { TrainingEnrollment } from "@/contexts/company/domain/training/training-enrollment.entity"
+import { TrainingCourseRepository } from "@/contexts/company/infrastructure/training/training-course-repository"
+import { TrainingEnrollmentRepository } from "@/contexts/company/infrastructure/training/training-enrollment-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import type { Context } from "@/env"
 import { describe, expect, test } from "bun:test"
 

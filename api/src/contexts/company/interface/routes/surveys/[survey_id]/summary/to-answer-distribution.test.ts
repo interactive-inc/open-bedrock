@@ -1,4 +1,4 @@
-import { toAnswerDistribution } from "@/interface/routes/surveys/[survey_id]/summary/to-answer-distribution"
+import { toAnswerDistribution } from "@/contexts/company/interface/routes/surveys/[survey_id]/summary/to-answer-distribution"
 import { describe, expect, test } from "bun:test"
 
 describe("toAnswerDistribution", () => {

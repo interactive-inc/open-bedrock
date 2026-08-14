@@ -1,4 +1,4 @@
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppDepartmentDefinitionList } from "@/lib/app-schemas"
 import { DepartmentRepository } from "@/contexts/company/infrastructure/organization/department-repository"
 import {
@@ -6,9 +6,9 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /department-definitions — 部署マスタ一覧（全認証者。マスタは公開情報） */

@@ -1,6 +1,6 @@
-import type { AuditEventFilters } from "@/infrastructure/company/audit/audit-event-repository"
+import type { AuditEventFilters } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { toStableAuditJson } from "@/contexts/system/application/audit/stable-json"
-import { auditUnavailable } from "@/interface/utils/audit-unavailable"
+import { auditUnavailable } from "@/contexts/company/interface/utils/audit-unavailable"
 
 const FILTER_HASH_PREFIX = "open-karte:audit:filters:v1\0"
 

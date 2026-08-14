@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test"
-import { GetShiftSwapRequest } from "@/application/shift/get-shift-swap-request"
+import { GetShiftSwapRequest } from "@/contexts/company/application/shift/get-shift-swap-request"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
-import { makeTestSession } from "@/interface/test-helpers/make-test-session"
-import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
-import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
+import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
+import { ShiftSwapRequest } from "@/contexts/company/domain/shift/shift-swap-request.entity"
+import { ShiftSwapRequestRepository } from "@/contexts/company/infrastructure/shift/shift-swap-request-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 
 async function createSwapRequest(
   repository: ShiftSwapRequestRepository,

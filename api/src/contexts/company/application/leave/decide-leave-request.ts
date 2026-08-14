@@ -1,6 +1,6 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
-import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
+import { NotifyApprovalResult } from "@/contexts/company/application/notification/notify-approval-result"
+import type { LeaveRequest } from "@/contexts/company/domain/leave/leave-request.entity"
 import { hasLeaveBalanceTracking } from "@/lib/leave/has-balance-tracking"
 import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
 import type { Context } from "@/env"
@@ -12,7 +12,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
+import { LeaveRequestRepository } from "@/contexts/company/infrastructure/leave/leave-request-repository"
 import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
 
 export type Command = {

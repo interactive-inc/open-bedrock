@@ -1,4 +1,4 @@
-import { EmployeeEvent } from "@/domain/employee-event/employee-event.entity"
+import { EmployeeEvent } from "@/contexts/company/domain/employee-event/employee-event.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("EmployeeEvent.create", () => {

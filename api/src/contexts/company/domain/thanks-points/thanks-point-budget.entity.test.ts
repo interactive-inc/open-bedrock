@@ -1,4 +1,4 @@
-import { ThanksPointBudget } from "@/domain/thanks-points/thanks-point-budget.entity"
+import { ThanksPointBudget } from "@/contexts/company/domain/thanks-points/thanks-point-budget.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("ThanksPointBudget.create", () => {

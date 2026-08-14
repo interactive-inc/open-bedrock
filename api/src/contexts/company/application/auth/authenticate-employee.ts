@@ -6,9 +6,9 @@ import { verifyPassword } from "@/lib/auth/verify-password"
 import { isWrappedLegacyHash } from "@/lib/auth/is-wrapped-legacy-hash"
 import type { Context } from "@/env"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
-import { IssueEmployeeSession } from "@/application/auth/issue-employee-session"
-import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
-import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
+import { IssueEmployeeSession } from "@/contexts/company/application/auth/issue-employee-session"
+import { resolveLiveEmployeeAccess } from "@/contexts/company/application/auth/resolve-live-employee-access"
+import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity-repository"
 
 export type Command = {
   email: string

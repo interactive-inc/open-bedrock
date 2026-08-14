@@ -1,4 +1,4 @@
-import type { GoalEvaluation } from "@/domain/goal/goal-evaluation.entity"
+import type { GoalEvaluation } from "@/contexts/company/domain/goal/goal-evaluation.entity"
 
 /**
  * 確定評価（kind=final）が含まれるかを判定する。

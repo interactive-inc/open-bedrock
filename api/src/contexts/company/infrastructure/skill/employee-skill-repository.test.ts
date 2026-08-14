@@ -1,6 +1,6 @@
-import { EmployeeSkill } from "@/domain/skill/employee-skill.entity"
-import { EmployeeSkillRepository } from "@/infrastructure/skill/employee-skill-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { EmployeeSkill } from "@/contexts/company/domain/skill/employee-skill.entity"
+import { EmployeeSkillRepository } from "@/contexts/company/infrastructure/skill/employee-skill-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("EmployeeSkillRepository", () => {

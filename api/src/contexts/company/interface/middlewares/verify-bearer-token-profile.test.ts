@@ -3,11 +3,11 @@ import {
   ACCESS_TOKEN_AUDIENCE,
   ACCESS_TOKEN_ISSUER,
   JoseTokenSigner,
-} from "@/infrastructure/auth/jose-token-signer"
-import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
-import { loadSchema } from "@/interface/test-helpers/load-schema"
-import { requestWithContext } from "@/interface/test-helpers/request-with-context"
-import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
+} from "@/contexts/company/infrastructure/auth/jose-token-signer"
+import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
+import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
+import { requestWithContext } from "@/contexts/company/interface/test-helpers/request-with-context"
+import { seedIamForEmployees } from "@/contexts/company/interface/test-helpers/seed-iam-for-employees"
 import { describe, expect, test } from "bun:test"
 import { SignJWT } from "jose"
 

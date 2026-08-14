@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
+import { OnboardingTemplate } from "@/contexts/company/domain/onboarding/onboarding-template.entity"
 import type { Context } from "@/env"
-import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { OnboardingTemplateRepository } from "@/contexts/company/infrastructure/onboarding/onboarding-template-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   session: Session

@@ -1,8 +1,8 @@
-import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
-import { loadSchema } from "@/interface/test-helpers/load-schema"
-import { createTestToken } from "@/interface/test-helpers/create-test-token"
-import { requestWithContext } from "@/interface/test-helpers/request-with-context"
-import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
+import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
+import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
+import { createTestToken } from "@/contexts/company/interface/test-helpers/create-test-token"
+import { requestWithContext } from "@/contexts/company/interface/test-helpers/request-with-context"
+import { seedIamForEmployees } from "@/contexts/company/interface/test-helpers/seed-iam-for-employees"
 import { describe, expect, test } from "bun:test"
 
 const jwtSecret = "lifecycle-migration-route-test-secret"

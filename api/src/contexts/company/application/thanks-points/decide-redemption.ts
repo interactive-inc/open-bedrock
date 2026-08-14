@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
+import type { ThanksRedemption } from "@/contexts/company/domain/thanks-points/thanks-redemption.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
-import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
+import { ThanksRedemptionRepository } from "@/contexts/company/infrastructure/thanks-points/thanks-redemption-repository"
+import { ThanksRewardRepository } from "@/contexts/company/infrastructure/thanks-points/thanks-reward-repository"
 
 export type Command = {
   session: Session

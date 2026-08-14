@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import {
   ConflictError,
   ForbiddenError,

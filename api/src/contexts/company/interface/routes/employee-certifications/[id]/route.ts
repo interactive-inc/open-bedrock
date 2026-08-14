@@ -1,8 +1,8 @@
-import { DeleteEmployeeCertification } from "@/application/certification/delete-employee-certification"
-import { factory } from "@/interface/utils/factory"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { DeleteEmployeeCertification } from "@/contexts/company/application/certification/delete-employee-certification"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 
 // @authorization permission - 権限キーで判定する
 /** DELETE /employee-certifications/:id — 資格保有記録を削除する。certification:manage が必要。 */

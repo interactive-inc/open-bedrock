@@ -1,7 +1,7 @@
 import {
   zApplicationWorkflow,
   type ApplicationWorkflow,
-} from "@/domain/application/application-workflow"
+} from "@/contexts/company/domain/application/application-workflow"
 
 /**
  * 承認ロールのみ持つ旧定義を、単一の承認ステップからなる現行ワークフローへ変換する

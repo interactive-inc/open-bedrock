@@ -1,4 +1,4 @@
-import { ShiftPattern } from "@/domain/shift/shift-pattern.entity"
+import { ShiftPattern } from "@/contexts/company/domain/shift/shift-pattern.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("ShiftPattern.create", () => {

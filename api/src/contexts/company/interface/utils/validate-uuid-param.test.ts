@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
-import { NotFoundError } from "@/interface/lib/errors"
+import { validateUuidParam } from "@/contexts/company/interface/utils/validate-uuid-param"
+import { NotFoundError } from "@/contexts/company/interface/lib/errors"
 
 describe("validateUuidParam", () => {
   test("returns a valid UUID string as-is", () => {

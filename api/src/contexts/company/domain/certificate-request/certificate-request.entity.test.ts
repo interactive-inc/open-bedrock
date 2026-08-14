@@ -1,4 +1,4 @@
-import { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
+import { CertificateRequest } from "@/contexts/company/domain/certificate-request/certificate-request.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("CertificateRequest.create", () => {

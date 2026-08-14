@@ -1,11 +1,11 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { SalaryRevision } from "@/domain/salary-revision/salary-revision.entity"
+import { SalaryRevision } from "@/contexts/company/domain/salary-revision/salary-revision.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { SalaryRevisionRepository } from "@/infrastructure/salary-revision/salary-revision-repository"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { SalaryRevisionRepository } from "@/contexts/company/infrastructure/salary-revision/salary-revision-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   session: Session

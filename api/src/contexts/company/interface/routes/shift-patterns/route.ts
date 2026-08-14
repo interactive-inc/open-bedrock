@@ -1,13 +1,13 @@
-import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppShiftPatternList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { shiftPatterns } from "@/schema"
 import { count } from "drizzle-orm"
 

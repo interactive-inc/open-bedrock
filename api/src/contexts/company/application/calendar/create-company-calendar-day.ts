@@ -1,11 +1,11 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { CompanyCalendarDay } from "@/domain/calendar/company-calendar-day.entity"
+import { CompanyCalendarDay } from "@/contexts/company/domain/calendar/company-calendar-day.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { CalendarDayKind } from "@/lib/schemas"
 import type { Context } from "@/env"
-import { CompanyCalendarDayRepository } from "@/infrastructure/calendar/company-calendar-day-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { CompanyCalendarDayRepository } from "@/contexts/company/infrastructure/calendar/company-calendar-day-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   session: Session

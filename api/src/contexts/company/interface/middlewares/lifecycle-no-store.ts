@@ -1,4 +1,4 @@
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 /** ライフサイクル系レスポンスにキャッシュ禁止ヘッダを付与する。 */
 export const lifecycleNoStore = factory.createMiddleware(async (c, next) => {

@@ -1,7 +1,7 @@
-import { CareerPosting } from "@/domain/career/career-posting.entity"
-import { CareerPostingRepository } from "@/infrastructure/career/career-posting-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { CareerPosting } from "@/contexts/company/domain/career/career-posting.entity"
+import { CareerPostingRepository } from "@/contexts/company/infrastructure/career/career-posting-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("CareerPostingRepository", () => {

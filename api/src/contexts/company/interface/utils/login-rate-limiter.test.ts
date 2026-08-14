@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { LoginRateLimiter } from "@/interface/utils/login-rate-limiter"
+import { LoginRateLimiter } from "@/contexts/company/interface/utils/login-rate-limiter"
 
 /**
  * KV のインメモリフェイク。get / put / delete の最小実装。

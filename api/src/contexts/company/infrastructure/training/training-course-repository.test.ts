@@ -1,6 +1,6 @@
-import { TrainingCourse } from "@/domain/training/training-course.entity"
-import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { TrainingCourse } from "@/contexts/company/domain/training/training-course.entity"
+import { TrainingCourseRepository } from "@/contexts/company/infrastructure/training/training-course-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("TrainingCourseRepository", () => {

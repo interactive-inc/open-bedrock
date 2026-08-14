@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
+import type { ShiftAssignment } from "@/contexts/company/domain/shift/shift-assignment.entity"
 import type { Context } from "@/env"
-import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
+import { ShiftAssignmentRepository } from "@/contexts/company/infrastructure/shift/shift-assignment-repository"
 
 export type Input = {
   session: Session

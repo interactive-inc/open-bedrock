@@ -1,5 +1,5 @@
 import { Session } from "@/contexts/company/domain/iam/session"
-import { canReadGradeOf } from "@/interface/routes/employee-grades/can-read-grade-of"
+import { canReadGradeOf } from "@/contexts/company/interface/routes/employee-grades/can-read-grade-of"
 import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
 import { describe, expect, test } from "bun:test"
 

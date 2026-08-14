@@ -1,11 +1,11 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { ReviewCycle } from "@/domain/review/review-cycle.entity"
+import type { ReviewCycle } from "@/contexts/company/domain/review/review-cycle.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
-import { ReviewCyclePolicyRepository } from "@/infrastructure/review/review-cycle-policy-repository"
-import { generateReviewForms } from "@/application/review/generate-review-forms"
+import { ReviewCycleRepository } from "@/contexts/company/infrastructure/review/review-cycle-repository"
+import { ReviewCyclePolicyRepository } from "@/contexts/company/infrastructure/review/review-cycle-policy-repository"
+import { generateReviewForms } from "@/contexts/company/application/review/generate-review-forms"
 
 export type Input = {
   session: Session

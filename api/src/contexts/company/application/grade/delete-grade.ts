@@ -2,7 +2,7 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { GradeRepository } from "@/infrastructure/grade/grade-repository"
+import { GradeRepository } from "@/contexts/company/infrastructure/grade/grade-repository"
 
 export type Command = {
   session: Session

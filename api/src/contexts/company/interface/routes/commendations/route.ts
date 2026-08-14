@@ -1,17 +1,17 @@
-import { CreateCommendation } from "@/application/commendation/create-commendation"
-import { factory } from "@/interface/utils/factory"
+import { CreateCommendation } from "@/contexts/company/application/commendation/create-commendation"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppCommendation, zAppCommendationList } from "@/lib/app-schemas"
-import { CommendationRepository } from "@/infrastructure/commendation/commendation-repository"
+import { CommendationRepository } from "@/contexts/company/infrastructure/commendation/commendation-repository"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

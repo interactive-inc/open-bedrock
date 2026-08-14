@@ -1,4 +1,4 @@
-import { ReviewCycle } from "@/domain/review/review-cycle.entity"
+import { ReviewCycle } from "@/contexts/company/domain/review/review-cycle.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("ReviewCycle.create", () => {

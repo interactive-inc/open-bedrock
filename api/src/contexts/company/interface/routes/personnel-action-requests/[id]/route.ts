@@ -1,11 +1,11 @@
-import { PersonnelActionRequestAccess } from "@/application/employee-lifecycle/personnel-action-request-access"
-import { WithdrawPersonnelActionRequest } from "@/application/employee-lifecycle/withdraw-personnel-action-request"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { PersonnelActionRequestAccess } from "@/contexts/company/application/employee-lifecycle/personnel-action-request-access"
+import { WithdrawPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/withdraw-personnel-action-request"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { validateUuidParam } from "@/contexts/company/interface/utils/validate-uuid-param"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ApplicationError, NotFoundError } from "@/lib/errors"
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 // @authorization service - session を application service に渡して判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

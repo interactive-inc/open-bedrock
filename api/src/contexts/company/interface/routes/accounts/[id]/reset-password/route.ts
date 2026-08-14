@@ -1,11 +1,11 @@
 import { ResetAccountPassword } from "@system/application/iam/reset-account-password"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { validateIntParam } from "@/interface/utils/validate-int-param"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する

@@ -1,5 +1,5 @@
-import { canModifyEnrollment } from "@/application/training/can-modify-enrollment"
-import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { canModifyEnrollment } from "@/contexts/company/application/training/can-modify-enrollment"
+import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canModifyEnrollment", () => {

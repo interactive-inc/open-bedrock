@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { AntisocialCheckRepository } from "@/infrastructure/antisocial-check/antisocial-check-repository"
+import { AntisocialCheckRepository } from "@/contexts/company/infrastructure/antisocial-check/antisocial-check-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

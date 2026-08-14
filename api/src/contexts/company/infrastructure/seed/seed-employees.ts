@@ -1,4 +1,4 @@
-import { seedPasswordHash } from "@/infrastructure/seed/seed-password-hash"
+import { seedPasswordHash } from "@/contexts/company/infrastructure/seed/seed-password-hash"
 
 type SeedEmployee = {
   id: number

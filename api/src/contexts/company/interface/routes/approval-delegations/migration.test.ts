@@ -1,4 +1,4 @@
-import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
+import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"

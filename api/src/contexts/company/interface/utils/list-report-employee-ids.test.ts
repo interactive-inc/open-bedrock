@@ -1,6 +1,6 @@
-import { listReportEmployeeIds } from "@/interface/utils/list-report-employee-ids"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { listReportEmployeeIds } from "@/contexts/company/interface/utils/list-report-employee-ids"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 import type { Context } from "@/env"
 

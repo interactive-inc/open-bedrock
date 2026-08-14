@@ -1,9 +1,9 @@
-import { SalaryRevision } from "@/domain/salary-revision/salary-revision.entity"
+import { SalaryRevision } from "@/contexts/company/domain/salary-revision/salary-revision.entity"
 import type { Context } from "@/env"
 import { salaryRevisions } from "@/schema"
 import { count, desc, eq } from "drizzle-orm"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 
 export class SalaryRevisionRepository {
   constructor(private readonly c: Context) {}

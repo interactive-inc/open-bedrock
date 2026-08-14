@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { seedIamForEmployees } from "@/contexts/company/interface/test-helpers/seed-iam-for-employees"
 
 export async function seedIamTestAccount(
   context: Context,

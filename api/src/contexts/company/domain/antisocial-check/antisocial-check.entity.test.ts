@@ -1,4 +1,4 @@
-import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
+import { AntisocialCheck } from "@/contexts/company/domain/antisocial-check/antisocial-check.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("AntisocialCheck.create", () => {

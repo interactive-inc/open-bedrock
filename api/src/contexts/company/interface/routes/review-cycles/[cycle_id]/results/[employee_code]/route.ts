@@ -1,10 +1,10 @@
-import { toReviewCycleStatus } from "@/domain/review/review-cycle-status.value"
-import { ReviewCycle } from "@/domain/review/review-cycle.entity"
-import { ReviewForm } from "@/domain/review/review-form.entity"
-import { toReviewResultView } from "@/interface/routes/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
-import { factory } from "@/interface/utils/factory"
+import { toReviewCycleStatus } from "@/contexts/company/domain/review/review-cycle-status.value"
+import { ReviewCycle } from "@/contexts/company/domain/review/review-cycle.entity"
+import { ReviewForm } from "@/contexts/company/domain/review/review-form.entity"
+import { toReviewResultView } from "@/contexts/company/interface/routes/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppReviewResult } from "@/lib/app-schemas"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { employees, reviewCycles, reviewForms } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
 import {
@@ -12,9 +12,9 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/interface/lib/errors"
-import { validateCodeParam } from "@/interface/utils/validate-code-param"
-import { validateIntParam } from "@/interface/utils/validate-int-param"
+} from "@/contexts/company/interface/lib/errors"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
 
 // @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

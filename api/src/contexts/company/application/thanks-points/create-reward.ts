@@ -1,8 +1,8 @@
-import { ThanksReward } from "@/domain/thanks-points/thanks-reward.entity"
+import { ThanksReward } from "@/contexts/company/domain/thanks-points/thanks-reward.entity"
 import { UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
+import { ThanksRewardRepository } from "@/contexts/company/infrastructure/thanks-points/thanks-reward-repository"
 
 export type Command = {
   name: string

@@ -1,4 +1,4 @@
-import type { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
+import type { FamilyCareLeave } from "@/contexts/company/domain/family-care-leave/family-care-leave.entity"
 import {
   ConflictError,
   ForbiddenError,
@@ -8,7 +8,7 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/family-care-leave-repository"
+import { FamilyCareLeaveRepository } from "@/contexts/company/infrastructure/family-care-leave/family-care-leave-repository"
 
 export type Command = {
   familyCareLeaveId: string

@@ -1,4 +1,4 @@
-import { EmployeeEvent } from "@/domain/employee-event/employee-event.entity"
+import { EmployeeEvent } from "@/contexts/company/domain/employee-event/employee-event.entity"
 import type { Context } from "@/env"
 import { employeeEvents } from "@/schema"
 import { and, count, desc, eq } from "drizzle-orm"

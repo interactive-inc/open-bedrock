@@ -1,16 +1,16 @@
-import { CreateItIncident } from "@/application/it-incident/create-it-incident"
-import { factory } from "@/interface/utils/factory"
+import { CreateItIncident } from "@/contexts/company/application/it-incident/create-it-incident"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { ItIncidentRepository } from "@/infrastructure/it-incident/it-incident-repository"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { ItIncidentRepository } from "@/contexts/company/infrastructure/it-incident/it-incident-repository"
 import { ApplicationError } from "@/lib/errors"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppItIncident, zAppItIncidentList } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 
 export type Props = {
   c: Context

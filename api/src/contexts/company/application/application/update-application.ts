@@ -1,4 +1,4 @@
-import type { Application } from "@/domain/application/application.entity"
+import type { Application } from "@/contexts/company/domain/application/application.entity"
 import type { Context } from "@/env"
 import {
   ConflictError,
@@ -8,10 +8,10 @@ import {
   UnprocessableError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ApplicationRepository } from "@/infrastructure/application/application-repository"
-import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
-import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { validateAndNormalizeApplicationPayload } from "@/application/application/validate-application-payload"
+import { ApplicationRepository } from "@/contexts/company/infrastructure/application/application-repository"
+import { ApplicationWorkflowRepository } from "@/contexts/company/infrastructure/application/application-workflow-repository"
+import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
+import { validateAndNormalizeApplicationPayload } from "@/contexts/company/application/application/validate-application-payload"
 
 export type Command = {
   applicationId: number

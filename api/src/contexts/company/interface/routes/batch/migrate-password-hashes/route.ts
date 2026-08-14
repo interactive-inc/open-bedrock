@@ -1,7 +1,7 @@
 import { MigrateLegacyHashes } from "@/contexts/system/application/batch/migrate-legacy-hashes"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { factory } from "@/interface/utils/factory"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 // @authorization permission - 権限キーで判定する
 /** POST /batch/migrate-password-hashes — 旧形式ハッシュを PBKDF2 ラップに一括移行する */

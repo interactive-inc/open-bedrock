@@ -1,8 +1,8 @@
-import type { Goal } from "@/domain/goal/goal.entity"
+import type { Goal } from "@/contexts/company/domain/goal/goal.entity"
 import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { GoalRepository } from "@/infrastructure/goal/goal-repository"
+import { GoalRepository } from "@/contexts/company/infrastructure/goal/goal-repository"
 
 export type Command = {
   employeeId: number

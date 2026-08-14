@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { EmployeeEvent } from "@/domain/employee-event/employee-event.entity"
+import { EmployeeEvent } from "@/contexts/company/domain/employee-event/employee-event.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { EmployeeEventRepository } from "@/infrastructure/employee-event/employee-event-repository"
+import { EmployeeEventRepository } from "@/contexts/company/infrastructure/employee-event/employee-event-repository"
 
 export type Command = {
   session: Session

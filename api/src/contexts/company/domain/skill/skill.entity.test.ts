@@ -1,4 +1,4 @@
-import { Skill } from "@/domain/skill/skill.entity"
+import { Skill } from "@/contexts/company/domain/skill/skill.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("Skill.fromRow", () => {

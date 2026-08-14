@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
+import { CertificateRequest } from "@/contexts/company/domain/certificate-request/certificate-request.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { CertificateRequestRepository } from "@/infrastructure/certificate-request/certificate-request-repository"
+import { CertificateRequestRepository } from "@/contexts/company/infrastructure/certificate-request/certificate-request-repository"
 
 export type Action = "issue" | "reject"
 

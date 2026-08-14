@@ -1,22 +1,22 @@
-import { CreateOneOnOne } from "@/application/oneonone/create-one-on-one"
-import { listDepartmentEmployeeIds } from "@/interface/utils/list-department-employee-ids"
-import { factory } from "@/interface/utils/factory"
+import { CreateOneOnOne } from "@/contexts/company/application/oneonone/create-one-on-one"
+import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppOneOnOne, zAppOneOnOneList } from "@/lib/app-schemas"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { employees, oneOnOnes } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { aliasedTable, and, count, desc, eq, inArray, or } from "drizzle-orm"

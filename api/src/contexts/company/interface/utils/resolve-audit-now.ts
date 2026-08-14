@@ -1,4 +1,4 @@
-import { auditUnavailable } from "@/interface/utils/audit-unavailable"
+import { auditUnavailable } from "@/contexts/company/interface/utils/audit-unavailable"
 
 /** Resolves the injected clock and rejects invalid dates before event generation. */
 export function resolveAuditNow(value: string | undefined): Date {

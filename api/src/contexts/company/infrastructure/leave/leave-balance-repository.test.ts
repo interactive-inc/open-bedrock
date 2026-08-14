@@ -1,7 +1,7 @@
-import { LeaveBalanceRepository } from "@/infrastructure/leave/leave-balance-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
-import { LeaveBalance } from "@/domain/leave/leave-balance.entity"
+import { LeaveBalanceRepository } from "@/contexts/company/infrastructure/leave/leave-balance-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
+import { LeaveBalance } from "@/contexts/company/domain/leave/leave-balance.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("LeaveBalanceRepository", () => {

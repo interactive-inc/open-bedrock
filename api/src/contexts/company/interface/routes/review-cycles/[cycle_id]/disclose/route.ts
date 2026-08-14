@@ -1,11 +1,11 @@
-import { DiscloseReviewCycle } from "@/application/review/disclose-review-cycle"
-import { factory } from "@/interface/utils/factory"
+import { DiscloseReviewCycle } from "@/contexts/company/application/review/disclose-review-cycle"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppReviewDiscloseResult } from "@/lib/app-schemas"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { validateIntParam } from "@/interface/utils/validate-int-param"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /review-cycles/:cycle_id/disclose — 管理者がサイクル内の全フォームを一括開示 */

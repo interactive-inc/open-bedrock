@@ -1,4 +1,4 @@
-import { toTextAnswers } from "@/interface/routes/surveys/[survey_id]/summary/to-text-answers"
+import { toTextAnswers } from "@/contexts/company/interface/routes/surveys/[survey_id]/summary/to-text-answers"
 import { describe, expect, test } from "bun:test"
 
 describe("toTextAnswers", () => {

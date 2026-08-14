@@ -1,4 +1,4 @@
-import type { Goal } from "@/domain/goal/goal.entity"
+import type { Goal } from "@/contexts/company/domain/goal/goal.entity"
 import type { AppGoalTreeNode } from "@/lib/app-schemas"
 
 export type Props = {

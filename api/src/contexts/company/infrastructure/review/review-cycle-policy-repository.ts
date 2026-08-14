@@ -2,7 +2,7 @@ import {
   defaultReviewCyclePolicy,
   type ReviewCyclePolicy,
   zReviewCyclePolicy,
-} from "@/domain/review/review-cycle-policy"
+} from "@/contexts/company/domain/review/review-cycle-policy"
 import type { Context } from "@/env"
 import { reviewCyclePolicies } from "@/schema"
 import { eq } from "drizzle-orm"

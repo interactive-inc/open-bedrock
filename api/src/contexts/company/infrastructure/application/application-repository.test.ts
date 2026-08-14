@@ -1,7 +1,7 @@
-import { Application } from "@/domain/application/application.entity"
-import { ApplicationApproval } from "@/domain/application/application-approval.entity"
-import { ApplicationRepository } from "@/infrastructure/application/application-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { Application } from "@/contexts/company/domain/application/application.entity"
+import { ApplicationApproval } from "@/contexts/company/domain/application/application-approval.entity"
+import { ApplicationRepository } from "@/contexts/company/infrastructure/application/application-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("ApplicationRepository", () => {

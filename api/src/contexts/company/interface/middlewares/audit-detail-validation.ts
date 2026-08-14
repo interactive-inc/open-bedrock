@@ -1,6 +1,6 @@
-import { parseAuditEventId } from "@/interface/utils/parse-audit-event-id"
-import { throwAuditRouteError } from "@/interface/utils/throw-audit-route-error"
-import { factory } from "@/interface/utils/factory"
+import { parseAuditEventId } from "@/contexts/company/interface/utils/parse-audit-event-id"
+import { throwAuditRouteError } from "@/contexts/company/interface/utils/throw-audit-route-error"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 type AuditDetailValidationInput = {
   in: { param: { event_id: string } }

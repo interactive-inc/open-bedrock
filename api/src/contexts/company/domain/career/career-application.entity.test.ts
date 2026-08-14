@@ -1,4 +1,4 @@
-import { CareerApplication } from "@/domain/career/career-application.entity"
+import { CareerApplication } from "@/contexts/company/domain/career/career-application.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("CareerApplication.create", () => {

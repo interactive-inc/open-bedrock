@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { RecruitmentCandidate } from "@/domain/recruitment/recruitment-candidate.entity"
-import type { CandidateStage } from "@/domain/recruitment/recruitment-candidate.entity"
+import { RecruitmentCandidate } from "@/contexts/company/domain/recruitment/recruitment-candidate.entity"
+import type { CandidateStage } from "@/contexts/company/domain/recruitment/recruitment-candidate.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RecruitmentRepository } from "@/infrastructure/recruitment/recruitment-repository"
+import { RecruitmentRepository } from "@/contexts/company/infrastructure/recruitment/recruitment-repository"
 
 export type Command = {
   session: Session

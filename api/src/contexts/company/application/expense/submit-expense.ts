@@ -1,6 +1,6 @@
-import { Expense } from "@/domain/expense/expense.entity"
+import { Expense } from "@/contexts/company/domain/expense/expense.entity"
 import type { Context } from "@/env"
-import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
+import { ExpenseRepository } from "@/contexts/company/infrastructure/expense/expense-repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ExpenseCategory } from "@/lib/schemas"

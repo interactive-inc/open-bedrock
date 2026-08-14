@@ -1,6 +1,6 @@
-import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
+import { TrainingEnrollment } from "@/contexts/company/domain/training/training-enrollment.entity"
 import type { Context } from "@/env"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
 import { trainingEnrollments } from "@/schema"
 import { and, eq, ne, sql } from "drizzle-orm"
 

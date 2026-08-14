@@ -1,5 +1,5 @@
 import { Session } from "@/contexts/company/domain/iam/session"
-import { canReadWorkStylesOf } from "@/interface/routes/employee-work-styles/can-read-work-styles-of"
+import { canReadWorkStylesOf } from "@/contexts/company/interface/routes/employee-work-styles/can-read-work-styles-of"
 import { describe, expect, test } from "bun:test"
 
 function sessionWith(props: { employeeId: number; permissions: ReadonlyArray<string> }): Session {

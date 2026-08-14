@@ -1,12 +1,12 @@
-import { GetMySkill } from "@/application/skill/get-my-skill"
-import { RemoveMySkill } from "@/application/skill/remove-my-skill"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { GetMySkill } from "@/contexts/company/application/skill/get-my-skill"
+import { RemoveMySkill } from "@/contexts/company/application/skill/remove-my-skill"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppEmployeeSkill } from "@/lib/app-schemas"
-import { validateCodeParam } from "@/interface/utils/validate-code-param"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /employee-skills/me/:skill_code — 本人の登録スキルを1件取得（スキルマスタ結合済み） */

@@ -1,4 +1,4 @@
-import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
+import { ExpenseApproval } from "@/contexts/company/domain/expense/expense-approval.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("ExpenseApproval.create", () => {

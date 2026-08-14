@@ -1,5 +1,5 @@
-import { OnboardingTask } from "@/domain/onboarding/onboarding-task.entity"
-import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
+import { OnboardingTask } from "@/contexts/company/domain/onboarding/onboarding-task.entity"
+import type { OnboardingTemplate } from "@/contexts/company/domain/onboarding/onboarding-template.entity"
 import type { OnboardingAssignmentRow } from "@/schema"
 import { z } from "zod"
 

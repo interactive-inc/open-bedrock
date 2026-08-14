@@ -1,8 +1,8 @@
-import { EmployeeGrade } from "@/domain/grade/employee-grade.entity"
+import { EmployeeGrade } from "@/contexts/company/domain/grade/employee-grade.entity"
 import type { Context } from "@/env"
 import { employeeGrades } from "@/schema"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 import { count, desc, eq } from "drizzle-orm"
 
 export class EmployeeGradeRepository {

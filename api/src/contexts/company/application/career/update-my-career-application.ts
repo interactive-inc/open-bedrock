@@ -1,8 +1,8 @@
-import type { CareerApplication } from "@/domain/career/career-application.entity"
+import type { CareerApplication } from "@/contexts/company/domain/career/career-application.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CareerApplicationRepository } from "@/infrastructure/career/career-application-repository"
+import { CareerApplicationRepository } from "@/contexts/company/infrastructure/career/career-application-repository"
 
 export type Command = {
   applicationId: number

@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ShiftPattern } from "@/domain/shift/shift-pattern.entity"
+import { ShiftPattern } from "@/contexts/company/domain/shift/shift-pattern.entity"
 import type { Context } from "@/env"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
+import { ShiftPatternRepository } from "@/contexts/company/infrastructure/shift/shift-pattern-repository"
 
 export type Input = {
   session: Session

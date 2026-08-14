@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { validateCodeParam } from "@/interface/utils/validate-code-param"
-import { NotFoundError } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { NotFoundError } from "@/contexts/company/interface/lib/errors"
 
 describe("validateCodeParam", () => {
   test("returns a valid code string as-is", () => {

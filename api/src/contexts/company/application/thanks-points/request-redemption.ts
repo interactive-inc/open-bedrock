@@ -1,9 +1,9 @@
-import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
+import { ThanksRedemption } from "@/contexts/company/domain/thanks-points/thanks-redemption.entity"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
-import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
+import { ThanksRedemptionRepository } from "@/contexts/company/infrastructure/thanks-points/thanks-redemption-repository"
+import { ThanksRewardRepository } from "@/contexts/company/infrastructure/thanks-points/thanks-reward-repository"
 
 export type Command = {
   employeeId: number

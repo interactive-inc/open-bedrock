@@ -2,11 +2,11 @@ import { eq, sum } from "drizzle-orm"
 import type {
   EvaluationSheet,
   EvaluationSheetStatus,
-} from "@/domain/evaluation-sheet/evaluation-sheet.entity"
+} from "@/contexts/company/domain/evaluation-sheet/evaluation-sheet.entity"
 import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EvaluationSheetRepository } from "@/infrastructure/evaluation-sheet/evaluation-sheet-repository"
+import { EvaluationSheetRepository } from "@/contexts/company/infrastructure/evaluation-sheet/evaluation-sheet-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { goals } from "@/schema"

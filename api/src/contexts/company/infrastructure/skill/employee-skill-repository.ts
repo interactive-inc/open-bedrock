@@ -1,4 +1,4 @@
-import { EmployeeSkill } from "@/domain/skill/employee-skill.entity"
+import { EmployeeSkill } from "@/contexts/company/domain/skill/employee-skill.entity"
 import type { Context } from "@/env"
 import { employeeSkills } from "@/schema"
 import { and, eq } from "drizzle-orm"

@@ -1,7 +1,7 @@
-import { ReviewForm } from "@/domain/review/review-form.entity"
-import { ReviewFormRepository } from "@/infrastructure/review/review-form-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { ReviewForm } from "@/contexts/company/domain/review/review-form.entity"
+import { ReviewFormRepository } from "@/contexts/company/infrastructure/review/review-form-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("ReviewFormRepository", () => {

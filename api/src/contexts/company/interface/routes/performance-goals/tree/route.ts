@@ -1,10 +1,10 @@
-import { GetGoalTree } from "@/application/goal/get-goal-tree"
-import { factory } from "@/interface/utils/factory"
+import { GetGoalTree } from "@/contexts/company/application/goal/get-goal-tree"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppGoalTree } from "@/lib/app-schemas"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 
 // @authorization service - session を application service に渡して判定する
 /**

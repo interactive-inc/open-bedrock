@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ApplicationRepository } from "@/infrastructure/application/application-repository"
+import { ApplicationRepository } from "@/contexts/company/infrastructure/application/application-repository"
 
 export type Command = {
   applicationId: number

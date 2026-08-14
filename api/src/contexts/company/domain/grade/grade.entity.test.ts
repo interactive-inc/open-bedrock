@@ -1,4 +1,4 @@
-import { Grade } from "@/domain/grade/grade.entity"
+import { Grade } from "@/contexts/company/domain/grade/grade.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("Grade.create", () => {

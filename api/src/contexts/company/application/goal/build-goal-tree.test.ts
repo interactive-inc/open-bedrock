@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { Goal } from "@/domain/goal/goal.entity"
-import { buildGoalTree } from "@/application/goal/build-goal-tree"
-import type { GoalOwnerType } from "@/domain/goal/goal.entity"
+import { Goal } from "@/contexts/company/domain/goal/goal.entity"
+import { buildGoalTree } from "@/contexts/company/application/goal/build-goal-tree"
+import type { GoalOwnerType } from "@/contexts/company/domain/goal/goal.entity"
 
 /** テスト用の目標を組み立てる。 */
 function goal(props: { id: number; ownerType: GoalOwnerType; parentGoalId: number | null }): Goal {

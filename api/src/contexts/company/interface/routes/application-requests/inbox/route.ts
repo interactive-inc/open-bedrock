@@ -1,12 +1,12 @@
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { applications, applicationTemplates, employees } from "@/schema"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { asc, count, desc, eq } from "drizzle-orm"
 
 /** 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。 */
@@ -16,10 +16,10 @@ const SORT_OPTIONS = {
 } as const
 
 type SortKey = keyof typeof SORT_OPTIONS
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppApplicationInboxList } from "@/lib/app-schemas"
-import { InternalError } from "@/interface/lib/errors"
-import { resolveApplicationInboxCondition } from "@/interface/utils/resolve-application-inbox-condition"
+import { InternalError } from "@/contexts/company/interface/lib/errors"
+import { resolveApplicationInboxCondition } from "@/contexts/company/interface/utils/resolve-application-inbox-condition"
 
 // @authorization service - session を application service に渡して判定する
 /**

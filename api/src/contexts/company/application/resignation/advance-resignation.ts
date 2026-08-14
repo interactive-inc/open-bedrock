@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { Resignation } from "@/domain/resignation/resignation.entity"
+import { Resignation } from "@/contexts/company/domain/resignation/resignation.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ResignationRepository } from "@/infrastructure/resignation/resignation-repository"
+import { ResignationRepository } from "@/contexts/company/infrastructure/resignation/resignation-repository"
 
 export type Action = "accept" | "reject"
 

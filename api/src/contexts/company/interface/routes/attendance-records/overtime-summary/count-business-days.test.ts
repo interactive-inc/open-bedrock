@@ -1,4 +1,4 @@
-import { countBusinessDays } from "@/interface/routes/attendance-records/overtime-summary/count-business-days"
+import { countBusinessDays } from "@/contexts/company/interface/routes/attendance-records/overtime-summary/count-business-days"
 import { describe, expect, test } from "bun:test"
 
 describe("countBusinessDays", () => {

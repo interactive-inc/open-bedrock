@@ -1,4 +1,4 @@
-import { NotFoundError } from "@/interface/lib/errors"
+import { NotFoundError } from "@/contexts/company/interface/lib/errors"
 
 /**
  * パスパラメータを正の整数に変換する。不正値（空文字・小数・負値・非数・MAX_SAFE_INTEGER 超）は 404。

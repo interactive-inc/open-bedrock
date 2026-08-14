@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { Document } from "@/domain/document/document.entity"
+import { Document } from "@/contexts/company/domain/document/document.entity"
 import type { Context } from "@/env"
-import { DocumentRepository } from "@/infrastructure/document/document-repository"
+import { DocumentRepository } from "@/contexts/company/infrastructure/document/document-repository"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

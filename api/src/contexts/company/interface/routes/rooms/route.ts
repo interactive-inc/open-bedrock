@@ -1,10 +1,10 @@
-import { ListRooms } from "@/application/room/list-rooms"
-import { RegisterRoom } from "@/application/room/register-room"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { ListRooms } from "@/contexts/company/application/room/list-rooms"
+import { RegisterRoom } from "@/contexts/company/application/room/register-room"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppRoom, zAppRoomList } from "@/lib/app-schemas"
 import { rooms } from "@/schema"
 import { count } from "drizzle-orm"
@@ -13,7 +13,7 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

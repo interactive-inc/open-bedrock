@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
+import { LeaveRequestRepository } from "@/contexts/company/infrastructure/leave/leave-request-repository"
 
 export type Command = {
   leaveRequestId: number

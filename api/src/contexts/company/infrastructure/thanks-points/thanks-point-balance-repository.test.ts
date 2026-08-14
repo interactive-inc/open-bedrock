@@ -1,5 +1,5 @@
-import { ThanksPointBalanceRepository } from "@/infrastructure/thanks-points/thanks-point-balance-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { ThanksPointBalanceRepository } from "@/contexts/company/infrastructure/thanks-points/thanks-point-balance-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { thanks, thanksPointBudgets, thanksRedemptions, thanksRewards } from "@/schema"
 import type { RedemptionStatus } from "@/lib/schemas"
 import { describe, expect, test } from "bun:test"

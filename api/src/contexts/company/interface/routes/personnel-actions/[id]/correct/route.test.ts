@@ -1,9 +1,9 @@
-import { createTestToken } from "@/interface/test-helpers/create-test-token"
+import { createTestToken } from "@/contexts/company/interface/test-helpers/create-test-token"
 import {
   createLifecycleRouteDb,
   lifecycleRouteJwtSecret,
-} from "@/interface/test-helpers/lifecycle-route-fixture"
-import { requestWithContext } from "@/interface/test-helpers/request-with-context"
+} from "@/contexts/company/interface/test-helpers/lifecycle-route-fixture"
+import { requestWithContext } from "@/contexts/company/interface/test-helpers/request-with-context"
 import { describe, expect, test } from "bun:test"
 
 async function adminToken() {

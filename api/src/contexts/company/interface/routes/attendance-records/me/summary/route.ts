@@ -1,14 +1,14 @@
-import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
-import { summarizeAttendance } from "@/interface/routes/attendance-records/me/summary/summarize-attendance"
+import { AttendanceRecord } from "@/contexts/company/domain/attendance/attendance-record.entity"
+import { summarizeAttendance } from "@/contexts/company/interface/routes/attendance-records/me/summary/summarize-attendance"
 import { toBusinessMonth } from "@/lib/to-business-month"
-import { toMonthRange } from "@/interface/routes/attendance-records/to-month-range"
-import { attendanceSummaryQuerySchema } from "@/interface/routes/attendance-records/me/summary/attendance-summary-query"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { factory } from "@/interface/utils/factory"
+import { toMonthRange } from "@/contexts/company/interface/routes/attendance-records/to-month-range"
+import { attendanceSummaryQuerySchema } from "@/contexts/company/interface/routes/attendance-records/me/summary/attendance-summary-query"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppAttendanceSummary } from "@/lib/app-schemas"
 import { attendanceRecords } from "@/schema"
 import { and, asc, eq, gte, lte } from "drizzle-orm"
-import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
+import { BadRequestError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /attendance-records/me/summary — 本人の指定月の勤怠集計（未指定なら現在月） */

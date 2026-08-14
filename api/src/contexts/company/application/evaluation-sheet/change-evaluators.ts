@@ -1,8 +1,8 @@
-import type { EvaluationSheet } from "@/domain/evaluation-sheet/evaluation-sheet.entity"
+import type { EvaluationSheet } from "@/contexts/company/domain/evaluation-sheet/evaluation-sheet.entity"
 import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EvaluationSheetRepository } from "@/infrastructure/evaluation-sheet/evaluation-sheet-repository"
+import { EvaluationSheetRepository } from "@/contexts/company/infrastructure/evaluation-sheet/evaluation-sheet-repository"
 import { employees } from "@/schema"
 import { inArray } from "drizzle-orm"
 

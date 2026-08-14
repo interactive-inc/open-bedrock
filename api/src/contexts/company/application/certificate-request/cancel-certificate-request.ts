@@ -1,7 +1,7 @@
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CertificateRequestRepository } from "@/infrastructure/certificate-request/certificate-request-repository"
+import { CertificateRequestRepository } from "@/contexts/company/infrastructure/certificate-request/certificate-request-repository"
 
 export type Command = {
   certificateRequestId: string

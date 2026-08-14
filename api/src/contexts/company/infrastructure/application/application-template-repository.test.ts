@@ -1,7 +1,7 @@
-import { ApplicationTemplate } from "@/domain/application/application-template.entity"
-import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { ApplicationTemplate } from "@/contexts/company/domain/application/application-template.entity"
+import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("ApplicationTemplateRepository", () => {

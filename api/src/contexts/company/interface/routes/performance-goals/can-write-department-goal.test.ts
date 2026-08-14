@@ -1,7 +1,7 @@
 import { Session } from "@/contexts/company/domain/iam/session"
 import { describe, expect, test } from "bun:test"
-import { canWriteDepartmentGoal } from "@/interface/routes/performance-goals/can-write-department-goal"
-import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { canWriteDepartmentGoal } from "@/contexts/company/interface/routes/performance-goals/can-write-department-goal"
+import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
 
 /**
  * review:administer を持たず goal:evaluate:reports だけを持つマネージャー相当のセッション。

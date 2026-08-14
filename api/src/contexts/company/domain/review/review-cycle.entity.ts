@@ -1,7 +1,7 @@
 import {
   reviewCycleStatusSchema,
   toReviewCycleStatus,
-} from "@/domain/review/review-cycle-status.value"
+} from "@/contexts/company/domain/review/review-cycle-status.value"
 import type { ReviewCycleRow } from "@/schema"
 import { z } from "zod"
 

@@ -1,4 +1,4 @@
-import { EmployeeSkill } from "@/domain/skill/employee-skill.entity"
+import { EmployeeSkill } from "@/contexts/company/domain/skill/employee-skill.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("EmployeeSkill.create", () => {

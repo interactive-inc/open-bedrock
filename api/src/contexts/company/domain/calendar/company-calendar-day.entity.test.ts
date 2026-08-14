@@ -1,4 +1,4 @@
-import { CompanyCalendarDay } from "@/domain/calendar/company-calendar-day.entity"
+import { CompanyCalendarDay } from "@/contexts/company/domain/calendar/company-calendar-day.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("CompanyCalendarDay.create", () => {

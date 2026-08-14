@@ -4,8 +4,8 @@ import { identitySubjectSchema } from "@/contexts/system/domain/identity/identit
 import { accountEmployeeLinks, accountRoles, accounts, identities, roles } from "@/schema"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
-import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
-import { RoleAssignmentGuardError } from "@/infrastructure/iam/role-assignment-guard-error"
+import { LivePermissionGuard } from "@/contexts/company/infrastructure/iam/live-permission-guard"
+import { RoleAssignmentGuardError } from "@/contexts/company/infrastructure/iam/role-assignment-guard-error"
 import { eq } from "drizzle-orm"
 
 export type ProvisionInput = {

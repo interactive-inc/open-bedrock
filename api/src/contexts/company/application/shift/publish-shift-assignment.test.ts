@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import { PublishShiftAssignment } from "@/application/shift/publish-shift-assignment"
-import { UpdateShiftAssignment } from "@/application/shift/update-shift-assignment"
+import { PublishShiftAssignment } from "@/contexts/company/application/shift/publish-shift-assignment"
+import { UpdateShiftAssignment } from "@/contexts/company/application/shift/update-shift-assignment"
 import { ConflictError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
-import { makeTestSession } from "@/interface/test-helpers/make-test-session"
-import { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
-import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
+import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
+import { ShiftAssignment } from "@/contexts/company/domain/shift/shift-assignment.entity"
+import { ShiftAssignmentRepository } from "@/contexts/company/infrastructure/shift/shift-assignment-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 
 async function createAssignment(repository: ShiftAssignmentRepository): Promise<ShiftAssignment> {
   const created = await repository.create(

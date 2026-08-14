@@ -1,10 +1,10 @@
-import { lifecycleSha256 } from "@/application/employee-lifecycle/lifecycle-sha256"
+import { lifecycleSha256 } from "@/contexts/company/application/employee-lifecycle/lifecycle-sha256"
 import {
   loadLegacyLifecycleSnapshot,
   type LegacyLifecycleSnapshot,
-} from "@/application/employee-lifecycle/load-legacy-lifecycle-snapshot"
-import { stableLifecycleJson } from "@/application/employee-lifecycle/stable-lifecycle-json"
-import { validateMigrationInput } from "@/application/employee-lifecycle/validate-migration-input"
+} from "@/contexts/company/application/employee-lifecycle/load-legacy-lifecycle-snapshot"
+import { stableLifecycleJson } from "@/contexts/company/application/employee-lifecycle/stable-lifecycle-json"
+import { validateMigrationInput } from "@/contexts/company/application/employee-lifecycle/validate-migration-input"
 import { personnelActionSummarySchema } from "@/contexts/company/domain/employee-lifecycle/project-personnel-action"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"

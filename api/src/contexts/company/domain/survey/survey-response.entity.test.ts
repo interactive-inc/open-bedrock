@@ -1,4 +1,4 @@
-import { SurveyResponse } from "@/domain/survey/survey-response.entity"
+import { SurveyResponse } from "@/contexts/company/domain/survey/survey-response.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("SurveyResponse.fromRow", () => {

@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { OneOnOneRepository } from "@/infrastructure/oneonone/one-on-one-repository"
+import { OneOnOneRepository } from "@/contexts/company/infrastructure/oneonone/one-on-one-repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

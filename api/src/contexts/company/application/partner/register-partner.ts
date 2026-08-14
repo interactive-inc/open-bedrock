@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { Partner } from "@/domain/partner/partner.entity"
+import { Partner } from "@/contexts/company/domain/partner/partner.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { PartnerRepository } from "@/infrastructure/partner/partner-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { PartnerRepository } from "@/contexts/company/infrastructure/partner/partner-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   session: Session

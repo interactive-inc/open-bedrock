@@ -1,4 +1,4 @@
-import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
+import { TrainingEnrollment } from "@/contexts/company/domain/training/training-enrollment.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("TrainingEnrollment.create", () => {

@@ -1,8 +1,8 @@
-import type { LifeEvent } from "@/domain/life-event/life-event.entity"
+import type { LifeEvent } from "@/contexts/company/domain/life-event/life-event.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { LifeEventRepository } from "@/infrastructure/life-event/life-event-repository"
+import { LifeEventRepository } from "@/contexts/company/infrastructure/life-event/life-event-repository"
 
 export type Command = {
   employeeId: number

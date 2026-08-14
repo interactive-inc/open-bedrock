@@ -1,4 +1,4 @@
-import { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
+import { ShiftAssignment } from "@/contexts/company/domain/shift/shift-assignment.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("ShiftAssignment.create", () => {

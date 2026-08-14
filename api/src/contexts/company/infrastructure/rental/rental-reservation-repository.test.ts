@@ -1,7 +1,7 @@
-import { RentalReservation } from "@/domain/rental/rental-reservation.entity"
-import { RentalReservationRepository } from "@/infrastructure/rental/rental-reservation-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { RentalReservation } from "@/contexts/company/domain/rental/rental-reservation.entity"
+import { RentalReservationRepository } from "@/contexts/company/infrastructure/rental/rental-reservation-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("RentalReservationRepository", () => {

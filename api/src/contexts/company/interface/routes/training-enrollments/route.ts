@@ -1,17 +1,17 @@
 import type { Variables } from "@/env"
 import { codeSchema } from "@/lib/schemas"
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { employees, trainingEnrollments } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { asc, count, eq } from "drizzle-orm"
-import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppTrainingEnrollmentList } from "@/lib/app-schemas"
 import { z } from "zod"
 

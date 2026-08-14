@@ -1,9 +1,9 @@
 import { describe, expect, spyOn, test } from "bun:test"
 import type { AuditEventRecord } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
-import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
+import { RefreshTokenRepository } from "@/contexts/company/infrastructure/auth/refresh-token-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 
 const nowEpoch = 1_767_225_600
 const oldTokenHash = "old-token-hash"

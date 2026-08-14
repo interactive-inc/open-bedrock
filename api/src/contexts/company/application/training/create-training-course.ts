@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { TrainingCourse } from "@/domain/training/training-course.entity"
+import { TrainingCourse } from "@/contexts/company/domain/training/training-course.entity"
 import type { Context } from "@/env"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
+import { TrainingCourseRepository } from "@/contexts/company/infrastructure/training/training-course-repository"
 
 export type Command = {
   session: Session

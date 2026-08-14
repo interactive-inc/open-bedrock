@@ -2,7 +2,7 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
+import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
 
 export type Command = {
   session: Session

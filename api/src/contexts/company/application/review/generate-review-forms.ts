@@ -1,4 +1,4 @@
-import type { ReviewCyclePolicy } from "@/domain/review/review-cycle-policy"
+import type { ReviewCyclePolicy } from "@/contexts/company/domain/review/review-cycle-policy"
 import type { Context } from "@/env"
 import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"

@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { MeetingMinutes } from "@/domain/meeting/meeting-minutes.entity"
+import type { MeetingMinutes } from "@/contexts/company/domain/meeting/meeting-minutes.entity"
 import type { Context } from "@/env"
-import { MeetingMinutesRepository } from "@/infrastructure/meeting/meeting-minutes-repository"
+import { MeetingMinutesRepository } from "@/contexts/company/infrastructure/meeting/meeting-minutes-repository"
 
 export type Command = {
   session: Session

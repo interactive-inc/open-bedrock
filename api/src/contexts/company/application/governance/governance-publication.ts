@@ -1,8 +1,8 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
-import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
-import { GovernanceAccess } from "@/application/governance/governance-access"
-import { resolveGovernanceOrgRole } from "@/application/governance/resolve-governance-org-role"
+import { GovernanceRepository } from "@/contexts/company/infrastructure/governance/governance-repository"
+import { GovernanceAccess } from "@/contexts/company/application/governance/governance-access"
+import { resolveGovernanceOrgRole } from "@/contexts/company/application/governance/resolve-governance-org-role"
 import {
   ConflictError,
   ForbiddenError,
@@ -10,7 +10,7 @@ import {
   UnexpectedError,
   UnprocessableError,
 } from "@/lib/errors"
-import { prepareGovernanceAudit } from "@/application/governance/governance-audit"
+import { prepareGovernanceAudit } from "@/contexts/company/application/governance/governance-audit"
 
 export class GovernancePublication {
   constructor(private readonly c: Context) {}

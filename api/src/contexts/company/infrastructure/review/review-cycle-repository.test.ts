@@ -1,6 +1,6 @@
-import { ReviewCycle } from "@/domain/review/review-cycle.entity"
-import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { ReviewCycle } from "@/contexts/company/domain/review/review-cycle.entity"
+import { ReviewCycleRepository } from "@/contexts/company/infrastructure/review/review-cycle-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("ReviewCycleRepository", () => {

@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import { EmployeeSkill } from "@/domain/skill/employee-skill.entity"
-import { SetMySkill } from "@/application/skill/set-my-skill"
-import { GetMySkill } from "@/application/skill/get-my-skill"
-import { RemoveMySkill } from "@/application/skill/remove-my-skill"
+import { EmployeeSkill } from "@/contexts/company/domain/skill/employee-skill.entity"
+import { SetMySkill } from "@/contexts/company/application/skill/set-my-skill"
+import { GetMySkill } from "@/contexts/company/application/skill/get-my-skill"
+import { RemoveMySkill } from "@/contexts/company/application/skill/remove-my-skill"
 import { ApplicationError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 
 async function seedSkillMaster(db: D1Database, code: string): Promise<void> {
   await seedD1(db, "skill_definitions", [

@@ -1,4 +1,4 @@
-import type { ReviewForm } from "@/domain/review/review-form.entity"
+import type { ReviewForm } from "@/contexts/company/domain/review/review-form.entity"
 
 export type ReviewerTypeSummary = {
   reviewerType: "self" | "manager" | "peer" | "subordinate"

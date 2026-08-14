@@ -1,18 +1,18 @@
-import { CreateHealthCheckup } from "@/application/health-checkup/create-health-checkup"
-import { HealthCheckupRepository } from "@/infrastructure/health-checkup/health-checkup-repository"
-import { factory } from "@/interface/utils/factory"
+import { CreateHealthCheckup } from "@/contexts/company/application/health-checkup/create-health-checkup"
+import { HealthCheckupRepository } from "@/contexts/company/infrastructure/health-checkup/health-checkup-repository"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppHealthCheckup, zAppHealthCheckupList } from "@/lib/app-schemas"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import {
   BadRequestError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/interface/lib/errors"
-import { resolveEmployeeIdFromBody } from "@/interface/utils/resolve-employee-id-from-body"
+} from "@/contexts/company/interface/lib/errors"
+import { resolveEmployeeIdFromBody } from "@/contexts/company/interface/utils/resolve-employee-id-from-body"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

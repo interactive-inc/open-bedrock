@@ -1,4 +1,4 @@
-import type { CompanyNotificationKind } from "@/domain/company/notifications/notification-kind"
+import type { CompanyNotificationKind } from "@/contexts/company/domain/company/notifications/notification-kind"
 
 type SeedNotification = {
   id: number

@@ -1,8 +1,8 @@
-import type { Thanks } from "@/domain/thanks/thanks.entity"
+import type { Thanks } from "@/contexts/company/domain/thanks/thanks.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRepository } from "@/infrastructure/thanks/thanks-repository"
+import { ThanksRepository } from "@/contexts/company/infrastructure/thanks/thanks-repository"
 
 /**
  * 自分が送った感謝の一覧を新しい順で取得する。

@@ -1,15 +1,15 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { canDecideLegacyApplication } from "@/lib/application/can-decide-legacy-application"
-import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
-import { ApplicationApproval } from "@/domain/application/application-approval.entity"
+import { NotifyApprovalResult } from "@/contexts/company/application/notification/notify-approval-result"
+import { ApplicationApproval } from "@/contexts/company/domain/application/application-approval.entity"
 import type { Context } from "@/env"
-import { ApplicationRepository } from "@/infrastructure/application/application-repository"
-import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
+import { ApplicationRepository } from "@/contexts/company/infrastructure/application/application-repository"
+import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
-import { decideWorkflowApplication } from "@/application/application/decide-workflow-application"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { ApplicationWorkflowRepository } from "@/contexts/company/infrastructure/application/application-workflow-repository"
+import { decideWorkflowApplication } from "@/contexts/company/application/application/decide-workflow-application"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 
 export type Command = {
   session: Session

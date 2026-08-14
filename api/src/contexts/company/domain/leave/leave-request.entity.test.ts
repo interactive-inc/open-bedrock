@@ -1,4 +1,4 @@
-import { LeaveRequest } from "@/domain/leave/leave-request.entity"
+import { LeaveRequest } from "@/contexts/company/domain/leave/leave-request.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("LeaveRequest.daysBetween", () => {

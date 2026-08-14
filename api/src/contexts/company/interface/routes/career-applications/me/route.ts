@@ -1,15 +1,15 @@
-import { ListMyCareerApplications } from "@/application/career/list-my-career-applications"
-import { factory } from "@/interface/utils/factory"
+import { ListMyCareerApplications } from "@/contexts/company/application/career/list-my-career-applications"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppCareerApplicationList } from "@/lib/app-schemas"
 import { careerApplications } from "@/schema"
 import { count, eq } from "drizzle-orm"

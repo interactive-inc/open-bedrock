@@ -1,10 +1,10 @@
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
+import { ShiftSwapRequest } from "@/contexts/company/domain/shift/shift-swap-request.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
-import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { ShiftAssignmentRepository } from "@/contexts/company/infrastructure/shift/shift-assignment-repository"
+import { ShiftSwapRequestRepository } from "@/contexts/company/infrastructure/shift/shift-swap-request-repository"
 
 export type Input = {
   requesterEmployeeId: number

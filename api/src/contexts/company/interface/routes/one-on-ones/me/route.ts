@@ -1,16 +1,16 @@
-import { ListMyOneOnOnes } from "@/application/oneonone/list-my-one-on-ones"
-import { factory } from "@/interface/utils/factory"
+import { ListMyOneOnOnes } from "@/contexts/company/application/oneonone/list-my-one-on-ones"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppOneOnOneList } from "@/lib/app-schemas"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { employees, oneOnOnes } from "@/schema"
 import { aliasedTable, count, eq, inArray, or } from "drizzle-orm"
 

@@ -1,4 +1,4 @@
-import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
+import { AttendanceRecord } from "@/contexts/company/domain/attendance/attendance-record.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("AttendanceRecord.create", () => {

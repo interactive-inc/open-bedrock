@@ -1,4 +1,4 @@
-import { canSubmitForm } from "@/application/review/can-submit-form"
+import { canSubmitForm } from "@/contexts/company/application/review/can-submit-form"
 import { describe, expect, test } from "bun:test"
 
 describe("canSubmitForm", () => {

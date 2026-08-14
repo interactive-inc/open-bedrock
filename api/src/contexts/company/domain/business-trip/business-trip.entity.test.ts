@@ -1,4 +1,4 @@
-import { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
+import { BusinessTrip } from "@/contexts/company/domain/business-trip/business-trip.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("BusinessTrip.create", () => {

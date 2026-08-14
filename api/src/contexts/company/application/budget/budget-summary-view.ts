@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { BudgetRepository } from "@/infrastructure/budget/budget-repository"
+import { BudgetRepository } from "@/contexts/company/infrastructure/budget/budget-repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { departments } from "@/schema"

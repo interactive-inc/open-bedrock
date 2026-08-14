@@ -1,4 +1,4 @@
-import { validateLeaveUnit } from "@/domain/leave/validate-leave-unit"
+import { validateLeaveUnit } from "@/contexts/company/domain/leave/validate-leave-unit"
 import { describe, expect, test } from "bun:test"
 
 describe("validateLeaveUnit", () => {

@@ -1,15 +1,15 @@
-import { zReviewCyclePolicy } from "@/domain/review/review-cycle-policy"
-import { ReviewCyclePolicyRepository } from "@/infrastructure/review/review-cycle-policy-repository"
+import { zReviewCyclePolicy } from "@/contexts/company/domain/review/review-cycle-policy"
+import { ReviewCyclePolicyRepository } from "@/contexts/company/infrastructure/review/review-cycle-policy-repository"
 import {
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/interface/lib/errors"
-import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { factory } from "@/interface/utils/factory"
+} from "@/contexts/company/interface/lib/errors"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { reviewCycles } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"

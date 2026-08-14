@@ -1,15 +1,15 @@
-import { Application } from "@/domain/application/application.entity"
+import { Application } from "@/contexts/company/domain/application/application.entity"
 import { NotFoundError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ApplicationRepository } from "@/infrastructure/application/application-repository"
-import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import { ApplicationRepository } from "@/contexts/company/infrastructure/application/application-repository"
+import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { ApplicationWorkflowRepository } from "@/contexts/company/infrastructure/application/application-workflow-repository"
 import { applicableWorkflowSteps } from "@/lib/application/applicable-workflow-steps"
 import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
 import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"
-import { validateAndNormalizeApplicationPayload } from "@/application/application/validate-application-payload"
+import { validateAndNormalizeApplicationPayload } from "@/contexts/company/application/application/validate-application-payload"
 
 export type Command = {
   applicantId: number

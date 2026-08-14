@@ -1,19 +1,19 @@
-import { RegisterEmployee } from "@/application/employee/register-employee"
-import { factory } from "@/interface/utils/factory"
-import { likeKeyword } from "@/interface/utils/like-keyword"
+import { RegisterEmployee } from "@/contexts/company/application/employee/register-employee"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { likeKeyword } from "@/contexts/company/interface/utils/like-keyword"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { resolveEmployeePositionName } from "@/interface/routes/employees/resolve-employee-position-name"
-import { positionRequiresDepartment } from "@/interface/utils/position-requires-department"
-import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { resolveEmployeePositionName } from "@/contexts/company/interface/routes/employees/resolve-employee-position-name"
+import { positionRequiresDepartment } from "@/contexts/company/interface/utils/position-requires-department"
+import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity-repository"
 import { ApplicationError, UnexpectedError, UnprocessableError } from "@/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppEmployee, zAppEmployeeList } from "@/lib/app-schemas"
 import { employees, employeeStatusPeriodVersions } from "@/schema"
 import { zValidator } from "@hono/zod-validator"

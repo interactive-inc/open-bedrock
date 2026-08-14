@@ -1,6 +1,6 @@
-import type { ApplicationWorkflow } from "@/domain/application/application-workflow"
-import { parseApplicationWorkflow } from "@/domain/application/application-workflow"
-import { Application } from "@/domain/application/application.entity"
+import type { ApplicationWorkflow } from "@/contexts/company/domain/application/application-workflow"
+import { parseApplicationWorkflow } from "@/contexts/company/domain/application/application-workflow"
+import { Application } from "@/contexts/company/domain/application/application.entity"
 import type { Context } from "@/env"
 import type { WorkflowStepSnapshotDraft } from "@/lib/application/resolve-workflow-step-snapshot"
 import {
@@ -13,8 +13,8 @@ import {
 import { and, eq } from "drizzle-orm"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
-import { WorkflowRevisionConflictError } from "@/infrastructure/application/workflow-revision-conflict-error"
-import { WorkflowSql } from "@/infrastructure/application/workflow-sql"
+import { WorkflowRevisionConflictError } from "@/contexts/company/infrastructure/application/workflow-revision-conflict-error"
+import { WorkflowSql } from "@/contexts/company/infrastructure/application/workflow-sql"
 
 export type WorkflowInstance = {
   applicationId: number

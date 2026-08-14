@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { CareerPosting } from "@/domain/career/career-posting.entity"
+import type { CareerPosting } from "@/contexts/company/domain/career/career-posting.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CareerPostingRepository } from "@/infrastructure/career/career-posting-repository"
+import { CareerPostingRepository } from "@/contexts/company/infrastructure/career/career-posting-repository"
 
 export type Command = {
   session: Session

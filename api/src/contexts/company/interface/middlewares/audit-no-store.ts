@@ -1,4 +1,4 @@
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 function isAuditResponsePath(path: string): boolean {
   return (

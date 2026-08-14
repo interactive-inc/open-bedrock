@@ -1,4 +1,4 @@
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppEvaluationTemplateList } from "@/lib/app-schemas"
 import { evaluationTemplates } from "@/schema"
 import {
@@ -6,11 +6,11 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { and, asc, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 /**

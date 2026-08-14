@@ -1,4 +1,4 @@
-import { EvaluationTemplate } from "@/domain/evaluation-template/evaluation-template.entity"
+import { EvaluationTemplate } from "@/contexts/company/domain/evaluation-template/evaluation-template.entity"
 import type { Context } from "@/env"
 import { evaluationTemplates } from "@/schema"
 import { and, asc, count, eq } from "drizzle-orm"

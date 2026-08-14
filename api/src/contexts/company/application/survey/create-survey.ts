@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { Survey } from "@/domain/survey/survey.entity"
+import { Survey } from "@/contexts/company/domain/survey/survey.entity"
 import type { Context } from "@/env"
-import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { SurveyRepository } from "@/contexts/company/infrastructure/survey/survey-repository"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

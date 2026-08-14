@@ -1,6 +1,6 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
-import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
+import { OnboardingTemplateRepository } from "@/contexts/company/infrastructure/onboarding/onboarding-template-repository"
 import {
   ApplicationError,
   ForbiddenError,

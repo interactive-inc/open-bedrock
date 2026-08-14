@@ -1,4 +1,4 @@
-import { LeaveBalanceRepository } from "@/infrastructure/leave/leave-balance-repository"
+import { LeaveBalanceRepository } from "@/contexts/company/infrastructure/leave/leave-balance-repository"
 import type { Context } from "@/env"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

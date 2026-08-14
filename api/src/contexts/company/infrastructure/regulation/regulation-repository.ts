@@ -1,8 +1,8 @@
-import { Regulation } from "@/domain/regulation/regulation.entity"
-import { RegulationVersion } from "@/domain/regulation/regulation-version.entity"
+import { Regulation } from "@/contexts/company/domain/regulation/regulation.entity"
+import { RegulationVersion } from "@/contexts/company/domain/regulation/regulation-version.entity"
 import type { Context } from "@/env"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 import { regulations, regulationVersions } from "@/schema"
 import { desc, eq } from "drizzle-orm"
 

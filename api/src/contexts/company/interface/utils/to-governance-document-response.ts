@@ -1,4 +1,4 @@
-import type { GovernanceDocumentRecord } from "@/infrastructure/governance/governance-repository"
+import type { GovernanceDocumentRecord } from "@/contexts/company/infrastructure/governance/governance-repository"
 
 /**
  * 規程ドキュメントレコードを API レスポンス形へ整形する。公開版が無ければ null。

@@ -1,6 +1,6 @@
-import type { SurveyResponse } from "@/domain/survey/survey-response.entity"
+import type { SurveyResponse } from "@/contexts/company/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
-import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { SurveyRepository } from "@/contexts/company/infrastructure/survey/survey-repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

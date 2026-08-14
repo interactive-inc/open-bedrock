@@ -1,7 +1,7 @@
-import { TrainingCourse } from "@/domain/training/training-course.entity"
+import { TrainingCourse } from "@/contexts/company/domain/training/training-course.entity"
 import type { Context } from "@/env"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 import { trainingCourses } from "@/schema"
 import { eq } from "drizzle-orm"
 

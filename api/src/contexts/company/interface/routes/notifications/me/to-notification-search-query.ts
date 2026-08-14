@@ -1,10 +1,10 @@
-import type { NotificationSearchQuery } from "@/interface/routes/notifications/notification-search-query"
+import type { NotificationSearchQuery } from "@/contexts/company/interface/routes/notifications/notification-search-query"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
+} from "@/contexts/company/interface/utils/to-bounded-int"
 
 export type Props = {
   isRead: string | undefined

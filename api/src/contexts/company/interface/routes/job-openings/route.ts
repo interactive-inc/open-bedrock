@@ -1,18 +1,18 @@
-import { RegisterPosition } from "@/application/recruitment/register-position"
-import { factory } from "@/interface/utils/factory"
+import { RegisterPosition } from "@/contexts/company/application/recruitment/register-position"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
-import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppRecruitmentPosition, zAppRecruitmentPositionList } from "@/lib/app-schemas"
-import { RecruitmentRepository } from "@/infrastructure/recruitment/recruitment-repository"
+import { RecruitmentRepository } from "@/contexts/company/infrastructure/recruitment/recruitment-repository"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { InternalError } from "@/interface/lib/errors"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { InternalError } from "@/contexts/company/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

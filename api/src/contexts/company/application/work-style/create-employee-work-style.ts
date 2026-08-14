@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { EmployeeWorkStyle } from "@/domain/work-style/employee-work-style.entity"
+import { EmployeeWorkStyle } from "@/contexts/company/domain/work-style/employee-work-style.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { WorkStyle } from "@/lib/schemas"
 import type { Context } from "@/env"
-import { EmployeeWorkStyleRepository } from "@/infrastructure/work-style/employee-work-style-repository"
+import { EmployeeWorkStyleRepository } from "@/contexts/company/infrastructure/work-style/employee-work-style-repository"
 
 export type Command = {
   session: Session

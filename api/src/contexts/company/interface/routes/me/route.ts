@@ -1,15 +1,15 @@
-import { factory } from "@/interface/utils/factory"
-import { toPrimaryRole } from "@/interface/utils/to-primary-role"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { toPrimaryRole } from "@/contexts/company/interface/utils/to-primary-role"
 import { zAppAuthMe } from "@/lib/app-schemas"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
-import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity-repository"
+import { GetLifecycleState } from "@/contexts/company/application/employee-lifecycle/get-lifecycle-state"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { employees } from "@/schema"
 import { eq } from "drizzle-orm"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /me — 認証済みの本人の社員情報 */

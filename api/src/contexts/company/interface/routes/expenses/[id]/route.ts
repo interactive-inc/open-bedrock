@@ -1,14 +1,14 @@
-import { DeleteExpense } from "@/application/expense/delete-expense"
-import { UpdateExpense } from "@/application/expense/update-expense"
+import { DeleteExpense } from "@/contexts/company/application/expense/delete-expense"
+import { UpdateExpense } from "@/contexts/company/application/expense/update-expense"
 import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
-import type { Expense } from "@/domain/expense/expense.entity"
-import { factory } from "@/interface/utils/factory"
+import type { Expense } from "@/contexts/company/domain/expense/expense.entity"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppExpense, zAppExpenseDetail } from "@/lib/app-schemas"
 import { expenseCategorySchema, isoDate } from "@/lib/schemas"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { employees, expenses } from "@/schema"
 import { eq } from "drizzle-orm"
 import {
@@ -16,7 +16,7 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

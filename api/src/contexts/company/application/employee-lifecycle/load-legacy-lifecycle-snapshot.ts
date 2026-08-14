@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
-import { lifecycleSha256 } from "@/application/employee-lifecycle/lifecycle-sha256"
-import { stableLifecycleJson } from "@/application/employee-lifecycle/stable-lifecycle-json"
+import { lifecycleSha256 } from "@/contexts/company/application/employee-lifecycle/lifecycle-sha256"
+import { stableLifecycleJson } from "@/contexts/company/application/employee-lifecycle/stable-lifecycle-json"
 
 export type LegacyEmployee = {
   id: number

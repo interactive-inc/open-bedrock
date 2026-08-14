@@ -1,4 +1,4 @@
-import { KnowledgeArticle } from "@/domain/knowledge/knowledge-article.entity"
+import { KnowledgeArticle } from "@/contexts/company/domain/knowledge/knowledge-article.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("KnowledgeArticle.create", () => {

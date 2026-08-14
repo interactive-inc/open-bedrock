@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { Decision } from "@/domain/decision/decision.entity"
+import { Decision } from "@/contexts/company/domain/decision/decision.entity"
 import type { Context } from "@/env"
-import { DecisionRepository } from "@/infrastructure/decision/decision-repository"
+import { DecisionRepository } from "@/contexts/company/infrastructure/decision/decision-repository"
 
 export type Command = {
   session: Session

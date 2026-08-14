@@ -1,7 +1,7 @@
-import { OneOnOne } from "@/domain/oneonone/one-on-one.entity"
+import { OneOnOne } from "@/contexts/company/domain/oneonone/one-on-one.entity"
 import type { Context } from "@/env"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 import { oneOnOnes } from "@/schema"
 import { desc, eq, or } from "drizzle-orm"
 

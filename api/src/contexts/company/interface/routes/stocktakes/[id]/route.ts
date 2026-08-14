@@ -1,9 +1,9 @@
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { StocktakeRepository } from "@/infrastructure/stocktake/stocktake-repository"
-import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { StocktakeRepository } from "@/contexts/company/infrastructure/stocktake/stocktake-repository"
+import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppStocktake } from "@/lib/app-schemas"
-import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
+import { validateUuidParam } from "@/contexts/company/interface/utils/validate-uuid-param"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /stocktakes/:id — 棚卸しセッションの詳細（対象資産ごとの確認状況を含む） */

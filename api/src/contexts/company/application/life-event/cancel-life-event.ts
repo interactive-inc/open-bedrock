@@ -1,7 +1,7 @@
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { LifeEventRepository } from "@/infrastructure/life-event/life-event-repository"
+import { LifeEventRepository } from "@/contexts/company/infrastructure/life-event/life-event-repository"
 
 export type Command = {
   lifeEventId: string

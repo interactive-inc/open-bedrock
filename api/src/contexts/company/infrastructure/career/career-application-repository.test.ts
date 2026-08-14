@@ -1,6 +1,6 @@
-import { CareerApplication } from "@/domain/career/career-application.entity"
-import { CareerApplicationRepository } from "@/infrastructure/career/career-application-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { CareerApplication } from "@/contexts/company/domain/career/career-application.entity"
+import { CareerApplicationRepository } from "@/contexts/company/infrastructure/career/career-application-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 /** テスト用: career_postings に open な公募を挿入する。 */

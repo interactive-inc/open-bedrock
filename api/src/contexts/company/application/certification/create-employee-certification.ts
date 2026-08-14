@@ -1,8 +1,8 @@
-import { CertificationRepository } from "@/infrastructure/certification/certification-repository"
-import { EmployeeCertificationRepository } from "@/infrastructure/certification/employee-certification-repository"
+import { CertificationRepository } from "@/contexts/company/infrastructure/certification/certification-repository"
+import { EmployeeCertificationRepository } from "@/contexts/company/infrastructure/certification/employee-certification-repository"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { EmployeeCertification } from "@/domain/certification/employee-certification.entity"
+import type { EmployeeCertification } from "@/contexts/company/domain/certification/employee-certification.entity"
 import type { Context } from "@/env"
 
 /**

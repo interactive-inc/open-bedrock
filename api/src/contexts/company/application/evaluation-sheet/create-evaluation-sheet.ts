@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm"
-import { EvaluationSheet } from "@/domain/evaluation-sheet/evaluation-sheet.entity"
+import { EvaluationSheet } from "@/contexts/company/domain/evaluation-sheet/evaluation-sheet.entity"
 import type { Context } from "@/env"
-import { EvaluationSheetRepository } from "@/infrastructure/evaluation-sheet/evaluation-sheet-repository"
+import { EvaluationSheetRepository } from "@/contexts/company/infrastructure/evaluation-sheet/evaluation-sheet-repository"
 import type { ApplicationError } from "@/lib/errors"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import {

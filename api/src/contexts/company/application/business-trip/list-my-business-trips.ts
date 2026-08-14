@@ -1,6 +1,6 @@
-import type { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
+import type { BusinessTrip } from "@/contexts/company/domain/business-trip/business-trip.entity"
 import type { Context } from "@/env"
-import { BusinessTripRepository } from "@/infrastructure/business-trip/business-trip-repository"
+import { BusinessTripRepository } from "@/contexts/company/infrastructure/business-trip/business-trip-repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

@@ -1,5 +1,5 @@
-import { Thanks, thanksRowSchema } from "@/domain/thanks/thanks.entity"
-import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
+import { Thanks, thanksRowSchema } from "@/contexts/company/domain/thanks/thanks.entity"
+import { parseD1Row } from "@/contexts/company/infrastructure/shared/parse-d1-row"
 import {
   ConflictError,
   ForbiddenError,
@@ -9,11 +9,11 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { periodOf } from "@/lib/thanks-points/period-of"
-import { toNonNegativePoints } from "@/application/thanks/to-non-negative-points"
+import { toNonNegativePoints } from "@/contexts/company/application/thanks/to-non-negative-points"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { EmployeeNotificationGateway } from "@/infrastructure/company/notifications/employee-notification.gateway"
-import { ThanksPointBudgetRepository } from "@/infrastructure/thanks-points/thanks-point-budget-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { EmployeeNotificationGateway } from "@/contexts/company/infrastructure/company/notifications/employee-notification.gateway"
+import { ThanksPointBudgetRepository } from "@/contexts/company/infrastructure/thanks-points/thanks-point-budget-repository"
 
 export type Command = {
   senderEmployeeId: number

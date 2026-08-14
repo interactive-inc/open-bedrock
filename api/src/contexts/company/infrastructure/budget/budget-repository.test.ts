@@ -1,7 +1,7 @@
-import { Budget } from "@/domain/budget/budget.entity"
-import { BudgetRepository } from "@/infrastructure/budget/budget-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { Budget } from "@/contexts/company/domain/budget/budget.entity"
+import { BudgetRepository } from "@/contexts/company/infrastructure/budget/budget-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 function budget(props: { departmentId: number; periodStart: string; periodEnd: string }): Budget {

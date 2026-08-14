@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
+import { ExpenseRepository } from "@/contexts/company/infrastructure/expense/expense-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

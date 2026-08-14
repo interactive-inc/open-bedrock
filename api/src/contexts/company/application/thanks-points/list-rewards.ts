@@ -1,8 +1,8 @@
-import type { ThanksReward } from "@/domain/thanks-points/thanks-reward.entity"
+import type { ThanksReward } from "@/contexts/company/domain/thanks-points/thanks-reward.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
+import { ThanksRewardRepository } from "@/contexts/company/infrastructure/thanks-points/thanks-reward-repository"
 
 /**
  * 交換カタログ一覧を取得する。activeOnly=true なら有効なものだけ（従業員向け）。

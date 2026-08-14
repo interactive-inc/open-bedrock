@@ -1,9 +1,9 @@
-import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
+import { resolveLiveEmployeeAccess } from "@/contexts/company/application/auth/resolve-live-employee-access"
 import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
-import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
-import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
+import { AccountProvisioner } from "@/contexts/company/infrastructure/iam/account-provisioner"
+import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity-repository"
 import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
 
 /** 外部 identity provider は OIDC ブローカー。identity の provider 値に対応する。 */

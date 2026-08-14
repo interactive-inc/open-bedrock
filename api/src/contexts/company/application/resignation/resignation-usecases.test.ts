@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test"
-import { CancelResignation } from "@/application/resignation/cancel-resignation"
-import { CreateResignation } from "@/application/resignation/create-resignation"
-import { GetResignation } from "@/application/resignation/get-resignation"
-import { ListMyResignations } from "@/application/resignation/list-my-resignations"
-import { UpdateResignation } from "@/application/resignation/update-resignation"
-import { Resignation } from "@/domain/resignation/resignation.entity"
+import { CancelResignation } from "@/contexts/company/application/resignation/cancel-resignation"
+import { CreateResignation } from "@/contexts/company/application/resignation/create-resignation"
+import { GetResignation } from "@/contexts/company/application/resignation/get-resignation"
+import { ListMyResignations } from "@/contexts/company/application/resignation/list-my-resignations"
+import { UpdateResignation } from "@/contexts/company/application/resignation/update-resignation"
+import { Resignation } from "@/contexts/company/domain/resignation/resignation.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 
 async function seedResignation(context: Context, employeeId: number): Promise<string> {
   const created = await new CreateResignation(context).run({

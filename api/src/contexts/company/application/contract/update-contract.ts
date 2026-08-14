@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { Contract } from "@/domain/contract/contract.entity"
+import type { Contract } from "@/contexts/company/domain/contract/contract.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ContractRepository } from "@/infrastructure/contract/contract-repository"
+import { ContractRepository } from "@/contexts/company/infrastructure/contract/contract-repository"
 
 export type Command = {
   session: Session

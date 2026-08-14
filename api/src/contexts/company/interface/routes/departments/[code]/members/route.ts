@@ -1,8 +1,8 @@
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
-import { validateCodeParam } from "@/interface/utils/validate-code-param"
-import { MAX_ORG_NODES } from "@/interface/utils/to-bounded-int"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { MAX_ORG_NODES } from "@/contexts/company/interface/utils/to-bounded-int"
 import { zAppOrgDepartmentMemberList } from "@/lib/app-schemas"
 import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 

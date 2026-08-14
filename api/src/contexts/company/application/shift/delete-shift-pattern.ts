@@ -2,7 +2,7 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
+import { ShiftPatternRepository } from "@/contexts/company/infrastructure/shift/shift-pattern-repository"
 
 export type Input = {
   session: Session

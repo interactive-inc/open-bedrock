@@ -1,4 +1,4 @@
-import { ApplicationTemplate } from "@/domain/application/application-template.entity"
+import { ApplicationTemplate } from "@/contexts/company/domain/application/application-template.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("ApplicationTemplate.fromRow", () => {

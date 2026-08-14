@@ -1,4 +1,4 @@
-import { CareerApplication } from "@/domain/career/career-application.entity"
+import { CareerApplication } from "@/contexts/company/domain/career/career-application.entity"
 import type { Context } from "@/env"
 import { careerApplications } from "@/schema"
 import { and, asc, count, eq, sql } from "drizzle-orm"

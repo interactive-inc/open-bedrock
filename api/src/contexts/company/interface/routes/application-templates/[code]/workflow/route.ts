@@ -1,20 +1,20 @@
-import { zApplicationWorkflow } from "@/domain/application/application-workflow"
-import type { ApplicationWorkflow } from "@/domain/application/application-workflow"
-import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
-import { WorkflowRevisionConflictError } from "@/infrastructure/application/workflow-revision-conflict-error"
+import { zApplicationWorkflow } from "@/contexts/company/domain/application/application-workflow"
+import type { ApplicationWorkflow } from "@/contexts/company/domain/application/application-workflow"
+import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
+import { ApplicationWorkflowRepository } from "@/contexts/company/infrastructure/application/application-workflow-repository"
+import { WorkflowRevisionConflictError } from "@/contexts/company/infrastructure/application/workflow-revision-conflict-error"
 import {
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/interface/lib/errors"
-import { validateCodeParam } from "@/interface/utils/validate-code-param"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { factory } from "@/interface/utils/factory"
+} from "@/contexts/company/interface/lib/errors"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ConflictError as ApplicationConflictError } from "@/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import type { Context } from "@/env"

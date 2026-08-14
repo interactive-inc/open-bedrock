@@ -1,4 +1,4 @@
-import type { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
+import type { AttendanceRecord } from "@/contexts/company/domain/attendance/attendance-record.entity"
 
 export type AttendanceSummary = {
   employeeId: number

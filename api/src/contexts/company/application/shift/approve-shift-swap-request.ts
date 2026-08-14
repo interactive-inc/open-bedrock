@@ -3,11 +3,11 @@ import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-pre
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
+import type { ShiftSwapRequest } from "@/contexts/company/domain/shift/shift-swap-request.entity"
 import type { Context } from "@/env"
-import { EmployeeNotificationGateway } from "@/infrastructure/company/notifications/employee-notification.gateway"
-import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
-import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
+import { EmployeeNotificationGateway } from "@/contexts/company/infrastructure/company/notifications/employee-notification.gateway"
+import { ShiftAssignmentRepository } from "@/contexts/company/infrastructure/shift/shift-assignment-repository"
+import { ShiftSwapRequestRepository } from "@/contexts/company/infrastructure/shift/shift-swap-request-repository"
 
 export type Input = {
   session: Session

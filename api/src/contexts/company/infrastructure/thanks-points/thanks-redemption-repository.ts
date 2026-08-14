@@ -1,6 +1,6 @@
-import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
+import { ThanksRedemption } from "@/contexts/company/domain/thanks-points/thanks-redemption.entity"
 import type { Context } from "@/env"
-import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
+import { parseD1Row } from "@/contexts/company/infrastructure/shared/parse-d1-row"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { redemptionStatusSchema } from "@/lib/schemas"

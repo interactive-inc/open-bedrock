@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
+import { FamilyCareLeave } from "@/contexts/company/domain/family-care-leave/family-care-leave.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/family-care-leave-repository"
+import { FamilyCareLeaveRepository } from "@/contexts/company/infrastructure/family-care-leave/family-care-leave-repository"
 
 export type Action = "approve" | "cancel"
 

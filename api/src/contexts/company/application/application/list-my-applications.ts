@@ -1,8 +1,8 @@
-import type { Application } from "@/domain/application/application.entity"
+import type { Application } from "@/contexts/company/domain/application/application.entity"
 import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ApplicationRepository } from "@/infrastructure/application/application-repository"
+import { ApplicationRepository } from "@/contexts/company/infrastructure/application/application-repository"
 
 export type Command = {
   applicantId: number

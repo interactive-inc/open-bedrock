@@ -1,11 +1,11 @@
-import { DeleteMyCareerSheet } from "@/application/career/delete-my-career-sheet"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { DeleteMyCareerSheet } from "@/contexts/company/application/career/delete-my-career-sheet"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { careerSheets } from "@/schema"
 import { eq } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppCareerSheet } from "@/lib/app-schemas"
 
 // @authorization owner - 本人のリソースに限定する

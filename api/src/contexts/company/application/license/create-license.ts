@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { License } from "@/domain/license/license.entity"
+import { License } from "@/contexts/company/domain/license/license.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { LicenseRepository } from "@/infrastructure/license/license-repository"
+import { LicenseRepository } from "@/contexts/company/infrastructure/license/license-repository"
 
 export type Command = {
   session: Session

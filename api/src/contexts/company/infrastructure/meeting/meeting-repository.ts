@@ -1,4 +1,4 @@
-import { Meeting } from "@/domain/meeting/meeting.entity"
+import { Meeting } from "@/contexts/company/domain/meeting/meeting.entity"
 import type { Context } from "@/env"
 import { meetings } from "@/schema"
 import { eq } from "drizzle-orm"

@@ -1,7 +1,7 @@
-import { Partner } from "@/domain/partner/partner.entity"
+import { Partner } from "@/contexts/company/domain/partner/partner.entity"
 import type { Context } from "@/env"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 import { partners } from "@/schema"
 import { eq } from "drizzle-orm"
 

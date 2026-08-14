@@ -1,4 +1,4 @@
-import { Room } from "@/domain/room/room.entity"
+import { Room } from "@/contexts/company/domain/room/room.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("Room.fromRow", () => {

@@ -1,4 +1,4 @@
-import { toMonthRange } from "@/interface/routes/attendance-records/to-month-range"
+import { toMonthRange } from "@/contexts/company/interface/routes/attendance-records/to-month-range"
 import { describe, expect, test } from "bun:test"
 
 describe("toMonthRange", () => {

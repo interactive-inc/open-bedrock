@@ -2,7 +2,7 @@ import type { PersonnelActionSummary } from "@/contexts/company/domain/employee-
 import type { PersonnelActionKind } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { PersonnelActionRepository } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
+import { PersonnelActionRepository } from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action-repository"
 import { ApplicationError, UnavailableError, ValidationError } from "@/lib/errors"
 import { LifecycleCursor } from "@/lib/pagination/lifecycle-cursor"
 import { fingerprintLifecycleFilter } from "@/lib/pagination/fingerprint-lifecycle-filter"

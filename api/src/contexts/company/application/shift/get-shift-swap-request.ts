@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
+import type { ShiftSwapRequest } from "@/contexts/company/domain/shift/shift-swap-request.entity"
 import type { Context } from "@/env"
-import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
+import { ShiftSwapRequestRepository } from "@/contexts/company/infrastructure/shift/shift-swap-request-repository"
 
 export type Input = {
   viewerEmployeeId: number

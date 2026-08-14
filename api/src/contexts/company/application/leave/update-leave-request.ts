@@ -1,7 +1,7 @@
-import { checkLeaveBalanceSufficiency } from "@/application/leave/check-leave-balance-sufficiency"
-import { computeConsumedDays } from "@/domain/leave/compute-consumed-days"
-import { LeaveRequest } from "@/domain/leave/leave-request.entity"
-import { validateLeaveUnit } from "@/domain/leave/validate-leave-unit"
+import { checkLeaveBalanceSufficiency } from "@/contexts/company/application/leave/check-leave-balance-sufficiency"
+import { computeConsumedDays } from "@/contexts/company/domain/leave/compute-consumed-days"
+import { LeaveRequest } from "@/contexts/company/domain/leave/leave-request.entity"
+import { validateLeaveUnit } from "@/contexts/company/domain/leave/validate-leave-unit"
 import type { Context } from "@/env"
 import {
   ConflictError,
@@ -11,7 +11,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
+import { LeaveRequestRepository } from "@/contexts/company/infrastructure/leave/leave-request-repository"
 import type { LeaveType, LeaveUnit } from "@/lib/schemas"
 
 export type Command = {

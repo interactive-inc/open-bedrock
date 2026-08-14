@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { Grade } from "@/domain/grade/grade.entity"
+import { Grade } from "@/contexts/company/domain/grade/grade.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { GradeRepository } from "@/infrastructure/grade/grade-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { GradeRepository } from "@/contexts/company/infrastructure/grade/grade-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   session: Session

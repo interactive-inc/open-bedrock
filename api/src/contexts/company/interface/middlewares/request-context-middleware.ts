@@ -1,4 +1,4 @@
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 const externalRequestIdPattern = /^[A-Za-z0-9._:/-]{1,128}$/
 

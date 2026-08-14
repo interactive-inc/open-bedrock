@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
+import type { OnboardingTemplate } from "@/contexts/company/domain/onboarding/onboarding-template.entity"
 import type { Context } from "@/env"
-import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
+import { OnboardingTemplateRepository } from "@/contexts/company/infrastructure/onboarding/onboarding-template-repository"
 import { lifecycleEffectTemplateBindings } from "@/schema"
 import { eq } from "drizzle-orm"
 

@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { HeadcountPlan } from "@/domain/headcount-plan/headcount-plan.entity"
+import { HeadcountPlan } from "@/contexts/company/domain/headcount-plan/headcount-plan.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { HeadcountPlanRepository } from "@/infrastructure/headcount-plan/headcount-plan-repository"
+import { HeadcountPlanRepository } from "@/contexts/company/infrastructure/headcount-plan/headcount-plan-repository"
 
 export type Command = {
   session: Session

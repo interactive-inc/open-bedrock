@@ -1,4 +1,4 @@
-import type { WorkflowApproverSelector } from "@/domain/application/application-workflow"
+import type { WorkflowApproverSelector } from "@/contexts/company/domain/application/application-workflow"
 import type { Context } from "@/env"
 import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"

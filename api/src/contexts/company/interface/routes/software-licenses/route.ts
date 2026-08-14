@@ -1,16 +1,16 @@
-import { CreateLicense } from "@/application/license/create-license"
-import { factory } from "@/interface/utils/factory"
+import { CreateLicense } from "@/contexts/company/application/license/create-license"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { LicenseRepository } from "@/infrastructure/license/license-repository"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { LicenseRepository } from "@/contexts/company/infrastructure/license/license-repository"
 import { ApplicationError } from "@/lib/errors"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppLicense, zAppLicenseList } from "@/lib/app-schemas"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"

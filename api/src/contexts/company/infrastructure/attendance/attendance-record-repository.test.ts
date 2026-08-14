@@ -1,6 +1,6 @@
-import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
-import { AttendanceRecordRepository } from "@/infrastructure/attendance/attendance-record-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { AttendanceRecord } from "@/contexts/company/domain/attendance/attendance-record.entity"
+import { AttendanceRecordRepository } from "@/contexts/company/infrastructure/attendance/attendance-record-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("AttendanceRecordRepository", () => {

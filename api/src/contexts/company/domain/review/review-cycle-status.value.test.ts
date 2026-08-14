@@ -1,4 +1,4 @@
-import { toReviewCycleStatus } from "@/domain/review/review-cycle-status.value"
+import { toReviewCycleStatus } from "@/contexts/company/domain/review/review-cycle-status.value"
 import { describe, expect, test } from "bun:test"
 
 describe("toReviewCycleStatus", () => {

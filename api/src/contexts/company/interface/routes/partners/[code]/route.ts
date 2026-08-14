@@ -1,10 +1,10 @@
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { partners } from "@/schema"
 import { eq } from "drizzle-orm"
-import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppPartner } from "@/lib/app-schemas"
-import { validateCodeParam } from "@/interface/utils/validate-code-param"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /partners/:code — 取引先 1 件の詳細（台帳は社内公開） */

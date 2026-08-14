@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { RingiRequest } from "@/domain/ringi/ringi-request.entity"
+import { RingiRequest } from "@/contexts/company/domain/ringi/ringi-request.entity"
 
 describe("RingiRequest.create", () => {
   test("builds a pending ringi with an unassigned id and no decision", () => {

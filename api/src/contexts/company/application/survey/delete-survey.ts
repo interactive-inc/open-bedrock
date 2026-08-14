@@ -4,7 +4,7 @@ import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { SurveyRepository } from "@/contexts/company/infrastructure/survey/survey-repository"
 
 export type Command = {
   session: Session

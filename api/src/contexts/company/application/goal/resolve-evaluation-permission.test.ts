@@ -1,6 +1,6 @@
-import { resolveEvaluationPermission } from "@/application/goal/resolve-evaluation-permission"
+import { resolveEvaluationPermission } from "@/contexts/company/application/goal/resolve-evaluation-permission"
 import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
-import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 const noRelation: EmployeeRelation = { isSelf: false, isReport: false, isSameDepartment: false }

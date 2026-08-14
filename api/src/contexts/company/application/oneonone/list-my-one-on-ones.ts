@@ -1,6 +1,6 @@
-import type { OneOnOne } from "@/domain/oneonone/one-on-one.entity"
+import type { OneOnOne } from "@/contexts/company/domain/oneonone/one-on-one.entity"
 import type { Context } from "@/env"
-import { OneOnOneRepository } from "@/infrastructure/oneonone/one-on-one-repository"
+import { OneOnOneRepository } from "@/contexts/company/infrastructure/oneonone/one-on-one-repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

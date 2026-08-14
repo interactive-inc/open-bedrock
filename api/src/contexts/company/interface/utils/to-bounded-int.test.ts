@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { MAX_LIST_OFFSET, toBoundedInt } from "@/interface/utils/to-bounded-int"
+import { MAX_LIST_OFFSET, toBoundedInt } from "@/contexts/company/interface/utils/to-bounded-int"
 
 describe("toBoundedInt", () => {
   test("parses a plain integer string", () => {

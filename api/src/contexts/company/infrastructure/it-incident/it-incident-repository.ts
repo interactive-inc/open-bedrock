@@ -1,4 +1,4 @@
-import { ItIncident } from "@/domain/it-incident/it-incident.entity"
+import { ItIncident } from "@/contexts/company/domain/it-incident/it-incident.entity"
 import type { Context } from "@/env"
 import { itIncidents } from "@/schema"
 import { and, count, desc, eq } from "drizzle-orm"

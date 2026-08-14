@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { Stocktake } from "@/domain/stocktake/stocktake.entity"
+import type { Stocktake } from "@/contexts/company/domain/stocktake/stocktake.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { StocktakeRepository } from "@/infrastructure/stocktake/stocktake-repository"
+import { StocktakeRepository } from "@/contexts/company/infrastructure/stocktake/stocktake-repository"
 
 export type Command = {
   session: Session

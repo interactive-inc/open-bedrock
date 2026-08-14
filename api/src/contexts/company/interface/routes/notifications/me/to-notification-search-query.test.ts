@@ -3,8 +3,8 @@ import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
-} from "@/interface/utils/to-bounded-int"
-import { toNotificationSearchQuery } from "@/interface/routes/notifications/me/to-notification-search-query"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { toNotificationSearchQuery } from "@/contexts/company/interface/routes/notifications/me/to-notification-search-query"
 
 describe("toNotificationSearchQuery", () => {
   describe("limit", () => {

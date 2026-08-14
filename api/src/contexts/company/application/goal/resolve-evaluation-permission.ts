@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { canEvaluateGoalOf } from "@/application/goal/can-evaluate-goal-of"
+import { canEvaluateGoalOf } from "@/contexts/company/application/goal/can-evaluate-goal-of"
 import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
-import type { GoalEvaluationKind } from "@/domain/goal/goal-evaluation.entity"
+import type { GoalEvaluationKind } from "@/contexts/company/domain/goal/goal-evaluation.entity"
 
 export type Forbidden = { reason: "forbidden" }
 

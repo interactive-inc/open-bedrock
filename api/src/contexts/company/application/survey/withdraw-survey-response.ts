@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { SurveyRepository } from "@/contexts/company/infrastructure/survey/survey-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

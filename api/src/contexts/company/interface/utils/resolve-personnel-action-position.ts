@@ -3,9 +3,9 @@ import type { PersonnelActionInput } from "@/contexts/company/domain/employee-li
 import type {
   NonCorrectionWirePersonnelActionInput,
   WirePersonnelActionInput,
-} from "@/interface/utils/wire-personnel-action-input"
-import { PositionRepository } from "@/infrastructure/position/position-repository"
-import { positionRequiresDepartment } from "@/interface/utils/position-requires-department"
+} from "@/contexts/company/interface/utils/wire-personnel-action-input"
+import { PositionRepository } from "@/contexts/company/infrastructure/position/position-repository"
+import { positionRequiresDepartment } from "@/contexts/company/interface/utils/position-requires-department"
 import { ApplicationError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 
 type NonCorrectionPersonnelActionInput = Exclude<

@@ -1,5 +1,5 @@
 import type { HonoEnv } from "@/env"
-import { NotFoundError } from "@/interface/lib/errors"
+import { NotFoundError } from "@/contexts/company/interface/lib/errors"
 import { resolveDisabledRoutePrefixes } from "@/lib/feature/resolve-disabled-route-prefixes"
 import { createMiddleware } from "hono/factory"
 

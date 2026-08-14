@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { RentalReservation } from "@/domain/rental/rental-reservation.entity"
+import { RentalReservation } from "@/contexts/company/domain/rental/rental-reservation.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { RentalReservationRepository } from "@/infrastructure/rental/rental-reservation-repository"
+import { RentalReservationRepository } from "@/contexts/company/infrastructure/rental/rental-reservation-repository"
 
 export type Action = "lend" | "return"
 

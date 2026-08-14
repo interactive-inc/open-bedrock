@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { BusinessTripRepository } from "@/infrastructure/business-trip/business-trip-repository"
+import { BusinessTripRepository } from "@/contexts/company/infrastructure/business-trip/business-trip-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

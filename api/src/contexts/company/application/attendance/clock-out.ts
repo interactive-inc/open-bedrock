@@ -1,6 +1,6 @@
-import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
+import { AttendanceRecord } from "@/contexts/company/domain/attendance/attendance-record.entity"
 import type { Context } from "@/env"
-import { AttendanceRecordRepository } from "@/infrastructure/attendance/attendance-record-repository"
+import { AttendanceRecordRepository } from "@/contexts/company/infrastructure/attendance/attendance-record-repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

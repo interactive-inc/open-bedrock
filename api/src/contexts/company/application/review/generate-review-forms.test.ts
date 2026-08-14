@@ -1,6 +1,6 @@
-import { generateReviewForms } from "@/application/review/generate-review-forms"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { generateReviewForms } from "@/contexts/company/application/review/generate-review-forms"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("generateReviewForms", () => {

@@ -1,6 +1,6 @@
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import {
   applications,
   applicationTemplates,
@@ -10,7 +10,7 @@ import {
   thanksRedemptions,
 } from "@/schema"
 import { and, count, eq, ne } from "drizzle-orm"
-import { resolveApplicationInboxCondition } from "@/interface/utils/resolve-application-inbox-condition"
+import { resolveApplicationInboxCondition } from "@/contexts/company/interface/utils/resolve-application-inbox-condition"
 
 // @authorization permission - 権限キーで判定する
 /**

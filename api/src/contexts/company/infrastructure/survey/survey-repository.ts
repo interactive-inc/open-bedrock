@@ -1,7 +1,7 @@
-import { Survey } from "@/domain/survey/survey.entity"
-import { SurveyResponse } from "@/domain/survey/survey-response.entity"
+import { Survey } from "@/contexts/company/domain/survey/survey.entity"
+import { SurveyResponse } from "@/contexts/company/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
 import { surveyResponses, surveys } from "@/schema"
 import { and, asc, count, eq, sql } from "drizzle-orm"
 

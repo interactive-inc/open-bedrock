@@ -1,7 +1,7 @@
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksPointBalanceRepository } from "@/infrastructure/thanks-points/thanks-point-balance-repository"
+import { ThanksPointBalanceRepository } from "@/contexts/company/infrastructure/thanks-points/thanks-point-balance-repository"
 
 /**
  * 受領残高（もらった点数の累積から交換で引かれた分を差し引いた残り）を参照する。

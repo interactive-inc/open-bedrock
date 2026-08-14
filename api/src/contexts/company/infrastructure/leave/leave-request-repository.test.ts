@@ -1,6 +1,6 @@
-import { LeaveRequest } from "@/domain/leave/leave-request.entity"
-import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { LeaveRequest } from "@/contexts/company/domain/leave/leave-request.entity"
+import { LeaveRequestRepository } from "@/contexts/company/infrastructure/leave/leave-request-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("LeaveRequestRepository", () => {

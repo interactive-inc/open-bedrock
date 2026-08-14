@@ -1,8 +1,8 @@
-import { Position } from "@/domain/position/position.entity"
+import { Position } from "@/contexts/company/domain/position/position.entity"
 import type { Context } from "@/env"
 import { employees, positions } from "@/schema"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 import { asc, eq } from "drizzle-orm"
 
 export class PositionRepository {

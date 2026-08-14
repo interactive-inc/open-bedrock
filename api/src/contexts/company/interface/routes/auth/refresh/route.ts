@@ -1,10 +1,10 @@
-import { RefreshAccessToken } from "@/application/auth/refresh-access-token"
+import { RefreshAccessToken } from "@/contexts/company/application/auth/refresh-access-token"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppAuthToken } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { z } from "zod"
 
 // @authorization public - 未認証で到達してよい

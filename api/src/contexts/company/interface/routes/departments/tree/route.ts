@@ -1,14 +1,14 @@
 import { buildDepartmentTree } from "@/contexts/company/interface/routes/departments/tree/build-department-tree"
 import type { DepartmentTreeNode } from "@/contexts/company/interface/routes/departments/tree/department-tree-node"
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { MAX_ORG_NODES } from "@/interface/utils/to-bounded-int"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { MAX_ORG_NODES } from "@/contexts/company/interface/utils/to-bounded-int"
 import { zAppOrgTreeList } from "@/lib/app-schemas"
 import type { AppOrgTreeNode } from "@/lib/app-schemas"
 import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
-import { InternalError } from "@/interface/lib/errors"
+import { InternalError } from "@/contexts/company/interface/lib/errors"
 
 function toOrgTreeNode(node: DepartmentTreeNode): AppOrgTreeNode {
   return {

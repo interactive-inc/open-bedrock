@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { ApplicationTemplate } from "@/domain/application/application-template.entity"
+import type { ApplicationTemplate } from "@/contexts/company/domain/application/application-template.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { findUnknownApproverRoles } from "@/application/application/validate-approver-roles"
+import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
+import { findUnknownApproverRoles } from "@/contexts/company/application/application/validate-approver-roles"
 
 export type Command = {
   session: Session

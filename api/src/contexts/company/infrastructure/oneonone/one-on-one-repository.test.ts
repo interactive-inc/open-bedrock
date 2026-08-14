@@ -1,7 +1,7 @@
-import { OneOnOne } from "@/domain/oneonone/one-on-one.entity"
-import { OneOnOneRepository } from "@/infrastructure/oneonone/one-on-one-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { OneOnOne } from "@/contexts/company/domain/oneonone/one-on-one.entity"
+import { OneOnOneRepository } from "@/contexts/company/infrastructure/oneonone/one-on-one-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 function createOneOnOne(): OneOnOne {

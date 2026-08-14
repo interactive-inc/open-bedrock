@@ -1,11 +1,11 @@
-import { AdvanceRentalReservation } from "@/application/rental/advance-rental-reservation"
+import { AdvanceRentalReservation } from "@/contexts/company/application/rental/advance-rental-reservation"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppRentalReservation } from "@/lib/app-schemas"
-import { factory } from "@/interface/utils/factory"
-import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { validateUuidParam } from "@/contexts/company/interface/utils/validate-uuid-param"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /rental-reservations/:id/return — 総務・人事が貸与品を返却済みにする */

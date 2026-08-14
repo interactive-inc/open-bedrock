@@ -1,4 +1,4 @@
-import { OnboardingTask } from "@/domain/onboarding/onboarding-task.entity"
+import { OnboardingTask } from "@/contexts/company/domain/onboarding/onboarding-task.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("OnboardingTask.create", () => {

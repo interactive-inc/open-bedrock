@@ -1,14 +1,14 @@
-import { Application } from "@/domain/application/application.entity"
-import { GetApplication } from "@/application/application/get-application"
-import { ListMyApplications } from "@/application/application/list-my-applications"
-import { UpdateApplication } from "@/application/application/update-application"
-import { WithdrawApplication } from "@/application/application/withdraw-application"
+import { Application } from "@/contexts/company/domain/application/application.entity"
+import { GetApplication } from "@/contexts/company/application/application/get-application"
+import { ListMyApplications } from "@/contexts/company/application/application/list-my-applications"
+import { UpdateApplication } from "@/contexts/company/application/application/update-application"
+import { WithdrawApplication } from "@/contexts/company/application/application/withdraw-application"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { ApplicationRepository } from "@/infrastructure/application/application-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { ApplicationRepository } from "@/contexts/company/infrastructure/application/application-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
 import { describe, expect, test } from "bun:test"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 
 async function seedPending(
   repository: ApplicationRepository,

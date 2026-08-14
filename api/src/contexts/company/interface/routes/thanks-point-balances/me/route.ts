@@ -1,10 +1,10 @@
-import { ViewMyBalance } from "@/application/thanks-points/view-my-balance"
+import { ViewMyBalance } from "@/contexts/company/application/thanks-points/view-my-balance"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksBalance } from "@/lib/app-schemas"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { factory } from "@/interface/utils/factory"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 // @authorization owner - 本人のリソースに限定する
 /**

@@ -1,6 +1,6 @@
-import { AuditListQuery } from "@/interface/utils/audit-list-query"
-import { throwAuditRouteError } from "@/interface/utils/throw-audit-route-error"
-import { factory } from "@/interface/utils/factory"
+import { AuditListQuery } from "@/contexts/company/interface/utils/audit-list-query"
+import { throwAuditRouteError } from "@/contexts/company/interface/utils/throw-audit-route-error"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 type AuditListValidationInput = {
   in: {

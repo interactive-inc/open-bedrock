@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 import { NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

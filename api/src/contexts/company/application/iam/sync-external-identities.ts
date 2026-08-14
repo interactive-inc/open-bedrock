@@ -1,9 +1,9 @@
 import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { AuditAction } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
-import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
-import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
+import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity-repository"
+import { AccountProvisioner } from "@/contexts/company/infrastructure/iam/account-provisioner"
 import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
 
 /** 外部 identity provider は OIDC ブローカー。identity の provider 値に対応する。 */

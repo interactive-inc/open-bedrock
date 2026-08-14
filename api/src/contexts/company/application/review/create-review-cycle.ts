@@ -1,14 +1,14 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { ReviewCycle } from "@/domain/review/review-cycle.entity"
+import { ReviewCycle } from "@/contexts/company/domain/review/review-cycle.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
+import { ReviewCycleRepository } from "@/contexts/company/infrastructure/review/review-cycle-repository"
 import {
   defaultReviewCyclePolicy,
   type ReviewCyclePolicy,
-} from "@/domain/review/review-cycle-policy"
-import { ReviewCyclePolicyRepository } from "@/infrastructure/review/review-cycle-policy-repository"
+} from "@/contexts/company/domain/review/review-cycle-policy"
+import { ReviewCyclePolicyRepository } from "@/contexts/company/infrastructure/review/review-cycle-policy-repository"
 
 export type Input = {
   session: Session

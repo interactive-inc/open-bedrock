@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { Regulation } from "@/domain/regulation/regulation.entity"
+import type { Regulation } from "@/contexts/company/domain/regulation/regulation.entity"
 import type { Context } from "@/env"
-import { RegulationRepository } from "@/infrastructure/regulation/regulation-repository"
+import { RegulationRepository } from "@/contexts/company/infrastructure/regulation/regulation-repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

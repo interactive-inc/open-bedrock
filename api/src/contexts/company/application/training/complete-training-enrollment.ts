@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { canCompleteEnrollment } from "@/application/training/can-complete-enrollment"
+import { canCompleteEnrollment } from "@/contexts/company/application/training/can-complete-enrollment"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
+import type { TrainingEnrollment } from "@/contexts/company/domain/training/training-enrollment.entity"
 import type { Context } from "@/env"
-import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
+import { TrainingEnrollmentRepository } from "@/contexts/company/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   enrollmentId: number

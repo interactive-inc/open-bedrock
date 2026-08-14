@@ -1,9 +1,9 @@
-import { RebuildLifecycleProjections } from "@/application/employee-lifecycle/rebuild-lifecycle-projections"
-import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { RebuildLifecycleProjections } from "@/contexts/company/application/employee-lifecycle/rebuild-lifecycle-projections"
+import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 // @authorization permission - 権限キーで判定する
 export const POST = factory.createHandlers(verifyBearer, async (c) => {

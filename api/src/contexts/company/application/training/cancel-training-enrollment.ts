@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { canModifyEnrollment } from "@/application/training/can-modify-enrollment"
+import { canModifyEnrollment } from "@/contexts/company/application/training/can-modify-enrollment"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
+import { TrainingEnrollmentRepository } from "@/contexts/company/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   enrollmentId: number

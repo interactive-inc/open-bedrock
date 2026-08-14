@@ -1,8 +1,8 @@
 import type { AccessTokenView } from "@system/application/auth/access-token-view"
-import { IssueEmployeeSession } from "@/application/auth/issue-employee-session"
-import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
+import { IssueEmployeeSession } from "@/contexts/company/application/auth/issue-employee-session"
+import { resolveLiveEmployeeAccess } from "@/contexts/company/application/auth/resolve-live-employee-access"
 import type { Context } from "@/env"
-import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
+import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity-repository"
 import { ApplicationError, NotFoundError, UnexpectedError } from "@/lib/errors"
 
 /** 外部 identity provider は OIDC ブローカー。identity の provider 値に対応する。 */

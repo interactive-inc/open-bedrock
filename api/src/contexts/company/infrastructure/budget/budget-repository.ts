@@ -1,4 +1,4 @@
-import { Budget } from "@/domain/budget/budget.entity"
+import { Budget } from "@/contexts/company/domain/budget/budget.entity"
 import type { Context } from "@/env"
 import { budgets, employees, expenses } from "@/schema"
 import { and, asc, eq, gte, lte, sum } from "drizzle-orm"

@@ -1,6 +1,6 @@
-import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
-import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/family-care-leave-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { FamilyCareLeave } from "@/contexts/company/domain/family-care-leave/family-care-leave.entity"
+import { FamilyCareLeaveRepository } from "@/contexts/company/infrastructure/family-care-leave/family-care-leave-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { familyCareLeaves } from "@/schema"
 import { describe, expect, test } from "bun:test"
 

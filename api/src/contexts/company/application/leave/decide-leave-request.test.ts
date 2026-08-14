@@ -1,11 +1,11 @@
-import { LeaveRequest } from "@/domain/leave/leave-request.entity"
-import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
+import { LeaveRequest } from "@/contexts/company/domain/leave/leave-request.entity"
+import { DecideLeaveRequest } from "@/contexts/company/application/leave/decide-leave-request"
 import { ForbiddenError, ValidationError } from "@/lib/errors"
-import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { makeTestSession } from "@/interface/test-helpers/make-test-session"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
-import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { LeaveRequestRepository } from "@/contexts/company/infrastructure/leave/leave-request-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 async function seedPendingRequest(

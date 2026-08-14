@@ -4,7 +4,7 @@ import {
   parseRefreshTokenRotationDecision,
 } from "@/contexts/system/domain/auth/refresh-token-rotation-decision"
 import type { RefreshTokenRotationDecision } from "@/contexts/system/domain/auth/refresh-token-rotation-decision"
-import type { AuditDecisionAppendFragment } from "@/infrastructure/company/audit/audit-event-repository"
+import type { AuditDecisionAppendFragment } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { refreshTokens } from "@/schema"
 import { eq } from "drizzle-orm"
 

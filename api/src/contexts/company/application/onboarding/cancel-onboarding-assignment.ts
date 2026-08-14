@@ -2,7 +2,7 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
+import { OnboardingAssignmentRepository } from "@/contexts/company/infrastructure/onboarding/onboarding-assignment-repository"
 
 export type Command = {
   assignmentId: number

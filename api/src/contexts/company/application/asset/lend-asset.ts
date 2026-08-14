@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { Asset } from "@/domain/asset/asset.entity"
+import type { Asset } from "@/contexts/company/domain/asset/asset.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { AssetRepository } from "@/infrastructure/asset/asset-repository"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { AssetRepository } from "@/contexts/company/infrastructure/asset/asset-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 
 export type Command = {
   session: Session

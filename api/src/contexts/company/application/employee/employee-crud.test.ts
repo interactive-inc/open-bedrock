@@ -1,14 +1,14 @@
 import { Session } from "@/contexts/company/domain/iam/session"
-import { DeleteEmployee } from "@/application/employee/delete-employee"
-import { GetEmployee } from "@/application/employee/get-employee"
-import { RegisterEmployee } from "@/application/employee/register-employee"
-import { UpdateEmployee } from "@/application/employee/update-employee"
+import { DeleteEmployee } from "@/contexts/company/application/employee/delete-employee"
+import { GetEmployee } from "@/contexts/company/application/employee/get-employee"
+import { RegisterEmployee } from "@/contexts/company/application/employee/register-employee"
+import { UpdateEmployee } from "@/contexts/company/application/employee/update-employee"
 import { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
-import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
+import { seedIamForEmployees } from "@/contexts/company/interface/test-helpers/seed-iam-for-employees"
 import {
   ApplicationError,
   ConflictError,
@@ -16,7 +16,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/lib/errors"
-import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 async function seedEmployee(

@@ -9,10 +9,10 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { AccountRepository } from "@/infrastructure/iam/account-repository"
+import { AccountRepository } from "@/contexts/company/infrastructure/iam/account-repository"
 import { AccountAuthRepository } from "@system/infrastructure/auth/account-auth-repository"
-import { LastRootError } from "@/infrastructure/iam/last-root-error"
-import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
+import { LastRootError } from "@/contexts/company/infrastructure/iam/last-root-error"
+import { LivePermissionGuardError } from "@/contexts/company/infrastructure/iam/live-permission-guard-error"
 import { hasPermissionSuperset } from "@system/application/iam/has-permission-superset"
 
 export type Command = {

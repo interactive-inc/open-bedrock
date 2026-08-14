@@ -1,4 +1,4 @@
-import type { RentalReservation } from "@/domain/rental/rental-reservation.entity"
+import type { RentalReservation } from "@/contexts/company/domain/rental/rental-reservation.entity"
 import {
   ConflictError,
   ForbiddenError,
@@ -8,7 +8,7 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RentalReservationRepository } from "@/infrastructure/rental/rental-reservation-repository"
+import { RentalReservationRepository } from "@/contexts/company/infrastructure/rental/rental-reservation-repository"
 
 export type Command = {
   reservationId: string

@@ -1,7 +1,7 @@
-import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
+import { AttendanceRecord } from "@/contexts/company/domain/attendance/attendance-record.entity"
 import type { Context } from "@/env"
-import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 import { attendanceRecords } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
 

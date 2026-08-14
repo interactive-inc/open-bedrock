@@ -1,17 +1,17 @@
-import { ListMyThanks } from "@/application/thanks/list-my-thanks"
+import { ListMyThanks } from "@/contexts/company/application/thanks/list-my-thanks"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { toEmployeeNameMap } from "@/interface/utils/to-employee-name-map"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { toEmployeeNameMap } from "@/contexts/company/interface/utils/to-employee-name-map"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { zAppThanksList } from "@/lib/app-schemas"
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { thanks as thanksTable } from "@/schema"
 import { count, eq } from "drizzle-orm"
 

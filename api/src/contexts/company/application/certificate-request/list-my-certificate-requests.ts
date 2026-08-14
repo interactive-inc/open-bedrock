@@ -1,8 +1,8 @@
-import type { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
+import type { CertificateRequest } from "@/contexts/company/domain/certificate-request/certificate-request.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CertificateRequestRepository } from "@/infrastructure/certificate-request/certificate-request-repository"
+import { CertificateRequestRepository } from "@/contexts/company/infrastructure/certificate-request/certificate-request-repository"
 
 export type Command = {
   requesterId: number

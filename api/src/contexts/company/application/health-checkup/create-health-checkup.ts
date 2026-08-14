@@ -1,7 +1,7 @@
-import { HealthCheckupRepository } from "@/infrastructure/health-checkup/health-checkup-repository"
+import { HealthCheckupRepository } from "@/contexts/company/infrastructure/health-checkup/health-checkup-repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { HealthCheckup } from "@/domain/health-checkup/health-checkup.entity"
+import type { HealthCheckup } from "@/contexts/company/domain/health-checkup/health-checkup.entity"
 import type { Context } from "@/env"
 
 /**

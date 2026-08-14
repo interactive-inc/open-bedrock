@@ -1,4 +1,4 @@
-import { EmployeeWorkStyle } from "@/domain/work-style/employee-work-style.entity"
+import { EmployeeWorkStyle } from "@/contexts/company/domain/work-style/employee-work-style.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("EmployeeWorkStyle.create", () => {

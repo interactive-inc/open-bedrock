@@ -1,12 +1,12 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { EmployeeGrade } from "@/domain/grade/employee-grade.entity"
+import { EmployeeGrade } from "@/contexts/company/domain/grade/employee-grade.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { EmployeeGradeRepository } from "@/infrastructure/grade/employee-grade-repository"
-import { GradeRepository } from "@/infrastructure/grade/grade-repository"
-import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { EmployeeGradeRepository } from "@/contexts/company/infrastructure/grade/employee-grade-repository"
+import { GradeRepository } from "@/contexts/company/infrastructure/grade/grade-repository"
+import { ReviewCycleRepository } from "@/contexts/company/infrastructure/review/review-cycle-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   session: Session

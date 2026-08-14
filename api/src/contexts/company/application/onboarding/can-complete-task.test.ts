@@ -1,5 +1,5 @@
-import { canCompleteTask } from "@/application/onboarding/can-complete-task"
-import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { canCompleteTask } from "@/contexts/company/application/onboarding/can-complete-task"
+import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canCompleteTask", () => {

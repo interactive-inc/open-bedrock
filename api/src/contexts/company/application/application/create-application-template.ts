@@ -1,11 +1,11 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { ApplicationTemplate } from "@/domain/application/application-template.entity"
+import { ApplicationTemplate } from "@/contexts/company/domain/application/application-template.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { findUnknownApproverRoles } from "@/application/application/validate-approver-roles"
+import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
+import { findUnknownApproverRoles } from "@/contexts/company/application/application/validate-approver-roles"
 
 export type Command = {
   session: Session

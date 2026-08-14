@@ -1,10 +1,10 @@
-import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
-import { DecideRedemption } from "@/application/thanks-points/decide-redemption"
+import { ThanksRedemption } from "@/contexts/company/domain/thanks-points/thanks-redemption.entity"
+import { DecideRedemption } from "@/contexts/company/application/thanks-points/decide-redemption"
 import { ForbiddenError } from "@/lib/errors"
-import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { makeTestSession } from "@/interface/test-helpers/make-test-session"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { ThanksRedemptionRepository } from "@/contexts/company/infrastructure/thanks-points/thanks-redemption-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
 import { describe, expect, test } from "bun:test"
 
 async function seedPendingRedemption(

@@ -1,4 +1,4 @@
-import { Application } from "@/domain/application/application.entity"
+import { Application } from "@/contexts/company/domain/application/application.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("Application.fromRow", () => {

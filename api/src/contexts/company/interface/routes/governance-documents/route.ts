@@ -1,9 +1,9 @@
-import { GovernanceAccess } from "@/application/governance/governance-access"
-import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
-import { factory } from "@/interface/utils/factory"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { toGovernanceDocumentResponse } from "@/interface/utils/to-governance-document-response"
+import { GovernanceAccess } from "@/contexts/company/application/governance/governance-access"
+import { GovernanceRepository } from "@/contexts/company/infrastructure/governance/governance-repository"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toGovernanceDocumentResponse } from "@/contexts/company/interface/utils/to-governance-document-response"
 
 // @authorization service - session を application service に渡して判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

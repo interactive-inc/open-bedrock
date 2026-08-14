@@ -1,6 +1,6 @@
 import type { AuditEventDetail } from "@/composition/audit/audit-event"
-import { auditUnavailable } from "@/interface/utils/audit-unavailable"
-import { toPublicAuditSummary } from "@/interface/utils/to-public-audit-summary"
+import { auditUnavailable } from "@/contexts/company/interface/utils/audit-unavailable"
+import { toPublicAuditSummary } from "@/contexts/company/interface/utils/to-public-audit-summary"
 import { zAppAuditEventDetail } from "@/lib/app-schemas"
 import type { AppAuditEventDetail } from "@/lib/app-schemas"
 

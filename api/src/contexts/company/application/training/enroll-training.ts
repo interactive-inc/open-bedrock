@@ -6,11 +6,11 @@ import {
   NotFoundError,
   UnexpectedError,
 } from "@/lib/errors"
-import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
+import { TrainingEnrollment } from "@/contexts/company/domain/training/training-enrollment.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
-import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { TrainingCourseRepository } from "@/contexts/company/infrastructure/training/training-course-repository"
+import { TrainingEnrollmentRepository } from "@/contexts/company/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   viewerEmployeeId: number

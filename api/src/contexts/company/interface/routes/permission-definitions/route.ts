@@ -1,7 +1,7 @@
 import { PERMISSION_CATALOG } from "@/composition/iam/permission.catalog"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppPermissionList } from "@/lib/app-schemas"
 
 // @authorization permission - 権限キーで判定する

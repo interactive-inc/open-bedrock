@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { SyncExternalIdentities } from "@/application/iam/sync-external-identities"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { seedIamTestAccount } from "@/interface/test-helpers/seed-iam-test-account"
+import { SyncExternalIdentities } from "@/contexts/company/application/iam/sync-external-identities"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { seedIamTestAccount } from "@/contexts/company/interface/test-helpers/seed-iam-test-account"
 
 const now = new Date("2026-01-01T00:00:00.000Z")
 

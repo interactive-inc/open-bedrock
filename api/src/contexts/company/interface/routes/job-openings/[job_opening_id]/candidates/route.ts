@@ -1,23 +1,23 @@
-import { RegisterCandidate } from "@/application/recruitment/register-candidate"
-import { factory } from "@/interface/utils/factory"
+import { RegisterCandidate } from "@/contexts/company/application/recruitment/register-candidate"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import {
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+} from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppRecruitmentCandidate, zAppRecruitmentCandidateList } from "@/lib/app-schemas"
-import { RecruitmentRepository } from "@/infrastructure/recruitment/recruitment-repository"
+import { RecruitmentRepository } from "@/contexts/company/infrastructure/recruitment/recruitment-repository"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

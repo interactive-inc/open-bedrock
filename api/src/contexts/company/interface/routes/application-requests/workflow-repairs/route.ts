@@ -1,14 +1,14 @@
-import { factory } from "@/interface/utils/factory"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { workflowReachableApprovalCountSql } from "@/infrastructure/application/workflow-reachable-approval-count-sql"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { workflowReachableApprovalCountSql } from "@/contexts/company/infrastructure/application/workflow-reachable-approval-count-sql"
 import { activateDueWorkflowEscalations } from "@/lib/application/activate-due-workflow-escalations"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

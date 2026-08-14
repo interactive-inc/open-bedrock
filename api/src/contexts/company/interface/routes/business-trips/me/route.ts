@@ -1,16 +1,16 @@
-import { ListMyBusinessTrips } from "@/application/business-trip/list-my-business-trips"
+import { ListMyBusinessTrips } from "@/contexts/company/application/business-trip/list-my-business-trips"
 import { ApplicationError } from "@/lib/errors"
 import { zAppBusinessTripList } from "@/lib/app-schemas"
-import { factory } from "@/interface/utils/factory"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/interface/lib/errors"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { businessTrips } from "@/schema"
 import { count, eq } from "drizzle-orm"
 

@@ -1,4 +1,4 @@
-import { workflowValidApprovalsSql } from "@/infrastructure/application/workflow-valid-approvals-sql"
+import { workflowValidApprovalsSql } from "@/contexts/company/infrastructure/application/workflow-valid-approvals-sql"
 
 /**
  * 有効な承認数を数える SQL 断片

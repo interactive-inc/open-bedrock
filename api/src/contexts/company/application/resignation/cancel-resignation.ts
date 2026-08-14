@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { ResignationRepository } from "@/infrastructure/resignation/resignation-repository"
+import { ResignationRepository } from "@/contexts/company/infrastructure/resignation/resignation-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

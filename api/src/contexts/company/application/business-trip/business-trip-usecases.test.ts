@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test"
-import { CancelBusinessTrip } from "@/application/business-trip/cancel-business-trip"
-import { CreateBusinessTrip } from "@/application/business-trip/create-business-trip"
-import { GetBusinessTrip } from "@/application/business-trip/get-business-trip"
-import { ListMyBusinessTrips } from "@/application/business-trip/list-my-business-trips"
-import { UpdateBusinessTrip } from "@/application/business-trip/update-business-trip"
-import { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
+import { CancelBusinessTrip } from "@/contexts/company/application/business-trip/cancel-business-trip"
+import { CreateBusinessTrip } from "@/contexts/company/application/business-trip/create-business-trip"
+import { GetBusinessTrip } from "@/contexts/company/application/business-trip/get-business-trip"
+import { ListMyBusinessTrips } from "@/contexts/company/application/business-trip/list-my-business-trips"
+import { UpdateBusinessTrip } from "@/contexts/company/application/business-trip/update-business-trip"
+import { BusinessTrip } from "@/contexts/company/domain/business-trip/business-trip.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 
 async function seedTrip(context: Context, travelerId: number): Promise<string> {
   const created = await new CreateBusinessTrip(context).run({

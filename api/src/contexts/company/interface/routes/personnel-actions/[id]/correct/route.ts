@@ -1,20 +1,20 @@
-import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
-import { resolvePersonnelActionPosition } from "@/interface/utils/resolve-personnel-action-position"
-import { nonCorrectionWirePersonnelActionInputSchema } from "@/interface/utils/wire-personnel-action-input"
-import { PersonnelActionRepository } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
-import { LifecycleAccess } from "@/interface/utils/lifecycle-access"
-import { lifecycleNoStore } from "@/interface/middlewares/lifecycle-no-store"
-import { personnelActionResponse } from "@/interface/routes/personnel-actions/route"
+import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
+import { resolvePersonnelActionPosition } from "@/contexts/company/interface/utils/resolve-personnel-action-position"
+import { nonCorrectionWirePersonnelActionInputSchema } from "@/contexts/company/interface/utils/wire-personnel-action-input"
+import { PersonnelActionRepository } from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action-repository"
+import { LifecycleAccess } from "@/contexts/company/interface/utils/lifecycle-access"
+import { lifecycleNoStore } from "@/contexts/company/interface/middlewares/lifecycle-no-store"
+import { personnelActionResponse } from "@/contexts/company/interface/routes/personnel-actions/route"
 import {
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ApplicationError, ValidationError } from "@/lib/errors"
-import { factory } from "@/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

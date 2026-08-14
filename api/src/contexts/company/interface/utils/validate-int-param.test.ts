@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { NotFoundError } from "@/interface/lib/errors"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { NotFoundError } from "@/contexts/company/interface/lib/errors"
 
 describe("validateIntParam", () => {
   test("returns a valid positive integer", () => {

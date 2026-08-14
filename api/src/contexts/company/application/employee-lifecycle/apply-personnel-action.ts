@@ -10,15 +10,15 @@ import {
   type PersonnelActionProjection,
 } from "@/contexts/company/domain/employee-lifecycle/project-personnel-action"
 import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
-import { fingerprintPersonnelAction } from "@/application/employee-lifecycle/fingerprint-personnel-action"
-import { stableLifecycleJson } from "@/application/employee-lifecycle/stable-lifecycle-json"
+import { fingerprintPersonnelAction } from "@/contexts/company/application/employee-lifecycle/fingerprint-personnel-action"
+import { stableLifecycleJson } from "@/contexts/company/application/employee-lifecycle/stable-lifecycle-json"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import {
   PersonnelActionRepository,
   type PersonnelActionRecord,
-} from "@/infrastructure/employee-lifecycle/personnel-action-repository"
+} from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {

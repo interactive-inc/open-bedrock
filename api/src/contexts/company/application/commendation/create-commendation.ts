@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { Commendation } from "@/domain/commendation/commendation.entity"
+import { Commendation } from "@/contexts/company/domain/commendation/commendation.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CommendationRepository } from "@/infrastructure/commendation/commendation-repository"
+import { CommendationRepository } from "@/contexts/company/infrastructure/commendation/commendation-repository"
 
 export type Command = {
   session: Session

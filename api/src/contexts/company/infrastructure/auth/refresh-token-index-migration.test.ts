@@ -1,5 +1,5 @@
-import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
-import { loadSchema } from "@/interface/test-helpers/load-schema"
+import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
+import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
 import { refreshTokens } from "@/schema"
 import { describe, expect, test } from "bun:test"
 import { getTableConfig, SQLiteSyncDialect } from "drizzle-orm/sqlite-core"

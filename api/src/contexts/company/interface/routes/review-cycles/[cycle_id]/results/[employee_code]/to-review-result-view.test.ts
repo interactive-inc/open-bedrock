@@ -1,6 +1,6 @@
-import { ReviewCycle } from "@/domain/review/review-cycle.entity"
-import { ReviewForm } from "@/domain/review/review-form.entity"
-import { toReviewResultView } from "@/interface/routes/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
+import { ReviewCycle } from "@/contexts/company/domain/review/review-cycle.entity"
+import { ReviewForm } from "@/contexts/company/domain/review/review-form.entity"
+import { toReviewResultView } from "@/contexts/company/interface/routes/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
 import { describe, expect, test } from "bun:test"
 
 describe("toReviewResultView", () => {

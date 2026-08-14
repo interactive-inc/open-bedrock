@@ -1,6 +1,6 @@
 import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

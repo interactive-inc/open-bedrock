@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { DisciplinaryAction } from "@/domain/disciplinary-action/disciplinary-action.entity"
+import { DisciplinaryAction } from "@/contexts/company/domain/disciplinary-action/disciplinary-action.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { DisciplinaryActionRepository } from "@/infrastructure/disciplinary-action/disciplinary-action-repository"
+import { DisciplinaryActionRepository } from "@/contexts/company/infrastructure/disciplinary-action/disciplinary-action-repository"
 
 export type Command = {
   session: Session

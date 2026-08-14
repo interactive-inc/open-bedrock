@@ -1,4 +1,4 @@
-import { LeaveBalance } from "@/domain/leave/leave-balance.entity"
+import { LeaveBalance } from "@/contexts/company/domain/leave/leave-balance.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("LeaveBalance.decrement", () => {

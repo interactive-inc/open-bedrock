@@ -1,8 +1,8 @@
-import { factory } from "@/interface/utils/factory"
-import { likeKeyword } from "@/interface/utils/like-keyword"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { likeKeyword } from "@/contexts/company/interface/utils/like-keyword"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppSkillList } from "@/lib/app-schemas"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { skills } from "@/schema"
 import { and, count, eq, or } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
@@ -11,7 +11,7 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/interface/utils/to-bounded-int"
+} from "@/contexts/company/interface/utils/to-bounded-int"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

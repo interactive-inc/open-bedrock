@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { Regulation } from "@/domain/regulation/regulation.entity"
-import { RegulationVersion } from "@/domain/regulation/regulation-version.entity"
+import type { Regulation } from "@/contexts/company/domain/regulation/regulation.entity"
+import { RegulationVersion } from "@/contexts/company/domain/regulation/regulation-version.entity"
 import type { Context } from "@/env"
-import { RegulationRepository } from "@/infrastructure/regulation/regulation-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { RegulationRepository } from "@/contexts/company/infrastructure/regulation/regulation-repository"
+import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

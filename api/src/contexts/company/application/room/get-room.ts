@@ -1,8 +1,8 @@
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Room } from "@/domain/room/room.entity"
+import type { Room } from "@/contexts/company/domain/room/room.entity"
 import type { Context } from "@/env"
-import { RoomRepository } from "@/infrastructure/room/room-repository"
+import { RoomRepository } from "@/contexts/company/infrastructure/room/room-repository"
 
 export type Command = {
   roomId: number

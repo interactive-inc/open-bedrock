@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
-import { loadSchema } from "@/interface/test-helpers/load-schema"
-import { requestWithContext } from "@/interface/test-helpers/request-with-context"
+import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
+import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
+import { requestWithContext } from "@/contexts/company/interface/test-helpers/request-with-context"
 import { z } from "zod"
 
 const jwtSecret = "provisioning-route-jwt-secret"

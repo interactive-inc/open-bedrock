@@ -1,6 +1,6 @@
-import { AuditExportRange } from "@/interface/utils/audit-export-range"
-import { throwAuditRouteError } from "@/interface/utils/throw-audit-route-error"
-import { factory } from "@/interface/utils/factory"
+import { AuditExportRange } from "@/contexts/company/interface/utils/audit-export-range"
+import { throwAuditRouteError } from "@/contexts/company/interface/utils/throw-audit-route-error"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 type AuditExportValidationInput = {
   in: {

@@ -1,11 +1,11 @@
-import { ApproveShiftSwapRequest } from "@/application/shift/approve-shift-swap-request"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { ApproveShiftSwapRequest } from "@/contexts/company/application/shift/approve-shift-swap-request"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppShiftSwapRequest } from "@/lib/app-schemas"
-import { validateIntParam } from "@/interface/utils/validate-int-param"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /shift-swap-requests/:id/approve — 特権ロールが保留中の交代申請を承認する */

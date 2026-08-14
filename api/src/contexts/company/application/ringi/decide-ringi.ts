@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
+import { NotifyApprovalResult } from "@/contexts/company/application/notification/notify-approval-result"
 import type { Context } from "@/env"
-import { RingiRequestRepository } from "@/infrastructure/ringi/ringi-request-repository"
+import { RingiRequestRepository } from "@/contexts/company/infrastructure/ringi/ringi-request-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

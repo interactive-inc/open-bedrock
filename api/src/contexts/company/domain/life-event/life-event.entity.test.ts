@@ -1,4 +1,4 @@
-import { LifeEvent } from "@/domain/life-event/life-event.entity"
+import { LifeEvent } from "@/contexts/company/domain/life-event/life-event.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("LifeEvent.create", () => {

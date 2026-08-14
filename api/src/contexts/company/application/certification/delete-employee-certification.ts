@@ -1,4 +1,4 @@
-import { EmployeeCertificationRepository } from "@/infrastructure/certification/employee-certification-repository"
+import { EmployeeCertificationRepository } from "@/contexts/company/infrastructure/certification/employee-certification-repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

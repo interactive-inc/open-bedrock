@@ -1,7 +1,7 @@
-import { Expense } from "@/domain/expense/expense.entity"
-import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
-import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { Expense } from "@/contexts/company/domain/expense/expense.entity"
+import { ExpenseApproval } from "@/contexts/company/domain/expense/expense-approval.entity"
+import { ExpenseRepository } from "@/contexts/company/infrastructure/expense/expense-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("ExpenseRepository", () => {

@@ -3,7 +3,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import type { RoleRow } from "@/schema"
-import { RoleRepository } from "@/infrastructure/iam/role-repository"
+import { RoleRepository } from "@/contexts/company/infrastructure/iam/role-repository"
 
 export type RoleDetail = {
   role: RoleRow
