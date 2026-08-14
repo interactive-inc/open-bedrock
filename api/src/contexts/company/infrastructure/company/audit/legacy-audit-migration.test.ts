@@ -9,15 +9,15 @@ import { join } from "node:path"
 
 const auditEventsMigrationPath = join(
   import.meta.dir,
-  "../../../../migrations/0015_audit_events.sql",
+  "../../../../../../migrations/0015_audit_events.sql",
 )
 const appendGuardMigrationPath = join(
   import.meta.dir,
-  "../../../../migrations/0016_audit_append_guard.sql",
+  "../../../../../../migrations/0016_audit_append_guard.sql",
 )
 const batchDecisionMigrationPath = join(
   import.meta.dir,
-  "../../../../migrations/0017_audit_batch_decisions.sql",
+  "../../../../../../migrations/0017_audit_batch_decisions.sql",
 )
 
 type LegacyRowOverrides = {

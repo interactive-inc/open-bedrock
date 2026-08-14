@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 
-const sourceRoot = new URL("../../", import.meta.url)
+const sourceRoot = new URL("../../../../", import.meta.url)
 
 describe("canonical Account session issuance boundary", () => {
   test("every production access-token signer revalidates the canonical Account", async () => {
@@ -23,8 +23,8 @@ describe("canonical Account session issuance boundary", () => {
     }
 
     expect(signerCallsites.sort()).toEqual([
-      "application/auth/issue-employee-session.ts",
-      "application/auth/refresh-access-token.ts",
+      "contexts/company/application/auth/issue-employee-session.ts",
+      "contexts/company/application/auth/refresh-access-token.ts",
     ])
   })
 })

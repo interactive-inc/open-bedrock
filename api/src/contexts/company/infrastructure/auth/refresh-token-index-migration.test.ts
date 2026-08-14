@@ -6,7 +6,7 @@ import { getTableConfig, SQLiteSyncDialect } from "drizzle-orm/sqlite-core"
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
-const migrationsDirectory = join(import.meta.dir, "../../../migrations")
+const migrationsDirectory = join(import.meta.dir, "../../../../../migrations")
 const activeFamilyMigrationFile = "0018_refresh_token_active_family_index.sql"
 const activeFamilyMigrationPath = join(migrationsDirectory, activeFamilyMigrationFile)
 const activeFamilyIndexName = "idx_refresh_tokens_active_family"

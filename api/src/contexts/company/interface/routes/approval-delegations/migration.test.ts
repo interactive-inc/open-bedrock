@@ -22,7 +22,7 @@ describe("approval delegation timestamp migration", () => {
          '2026-07-03T00:00:00.000Z', NULL);
     `)
     const migration = readFileSync(
-      join(import.meta.dir, "../../../../migrations/0013_canonicalize_delegation_times.sql"),
+      join(import.meta.dir, "../../../../../../migrations/0013_canonicalize_delegation_times.sql"),
       "utf8",
     )
 

@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
 const migrationSql = readFileSync(
-  join(import.meta.dir, "../../../migrations/0123_account_employee_links.sql"),
+  join(import.meta.dir, "../../../../../migrations/0123_account_employee_links.sql"),
   "utf8",
 )
 
