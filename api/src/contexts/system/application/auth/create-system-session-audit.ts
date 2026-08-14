@@ -6,7 +6,7 @@ import type { SessionId } from "@system/domain/auth/session-id"
 
 type Props = Readonly<{
   actorAccountId: AccountId | null
-  action: "auth.session.create" | "auth.session.rotate"
+  action: "auth.session.create" | "auth.session.revoke" | "auth.session.rotate"
   targetId: SessionId | null
   outcome: "succeeded" | "denied"
   reasonCode: "refresh_token_reused" | "session_invalid" | null

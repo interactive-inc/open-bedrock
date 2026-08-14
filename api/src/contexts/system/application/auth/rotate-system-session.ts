@@ -6,6 +6,7 @@ import { resolveAccountSession } from "@system/application/auth/resolve-account-
 import type { SessionRepository } from "@system/application/auth/session-repository"
 import type { SystemSessionAuditContext } from "@system/application/auth/system-session-audit-context"
 import type { SystemSessionMaterialService } from "@system/application/auth/system-session-material-service"
+import type { AccountId } from "@system/domain/auth/account-id"
 import type { SessionId } from "@system/domain/auth/session-id"
 import { SessionRotation } from "@system/domain/auth/session-rotation"
 import { Session } from "@system/domain/auth/session.entity"
@@ -27,6 +28,8 @@ export type RotateSystemSessionCommand = Readonly<{
 export type RotateSystemSessionResult =
   | Readonly<{
       kind: "rotated"
+      accountId: AccountId
+      tokenVersion: number
       rawToken: string
       sessionId: SessionId
       expiresAt: Date
@@ -108,6 +111,8 @@ export class RotateSystemSession {
 
     return Object.freeze({
       kind: "rotated" as const,
+      accountId: successor.accountId,
+      tokenVersion: successor.tokenVersion,
       rawToken,
       sessionId: successor.id,
       expiresAt,
