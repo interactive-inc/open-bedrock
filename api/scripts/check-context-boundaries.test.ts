@@ -3,10 +3,12 @@ import {
   checkContextBoundaries,
   classifyContextModule,
   classifyContextSource,
+  inspectBoundaryBaseline,
   inspectContextSource,
   inspectContextTestDirectory,
   inspectLibSource,
 } from "./check-context-boundaries"
+import { LIB_BOUNDARY_BASELINE } from "./lib-boundary-baseline"
 import { describe, expect, test } from "bun:test"
 
 test("context横断テストを単数形testへ配置する", () => {
@@ -155,8 +157,40 @@ describe("lib boundary", () => {
       expect(inspectLibSource("src/lib/example.ts", source)).not.toEqual([])
     }
   })
+
+  test("新規違反と解消済みbaselineを拒否する", () => {
+    const knownViolation = {
+      file: "src/lib/example.ts",
+      reason: "lib から所有者のある実装へ依存しています: @/contexts/company/domain/example",
+    }
+    const newViolation = {
+      file: "src/lib/new-example.ts",
+      reason: "lib から所有者のある実装へ依存しています: @/api/app",
+    }
+
+    expect(inspectBoundaryBaseline([knownViolation], [knownViolation])).toEqual([])
+    expect(inspectBoundaryBaseline([knownViolation, newViolation], [knownViolation])).toEqual([
+      newViolation,
+    ])
+    expect(inspectBoundaryBaseline([], [knownViolation])).toEqual([
+      {
+        file: knownViolation.file,
+        reason: `解消済みのlib境界baselineを削除してください: ${knownViolation.reason}`,
+      },
+    ])
+  })
 })
 
-test("現在の context-first production source に違反がない", async () => {
+test("現在のcontext・lib sourceに未管理の違反がない", async () => {
   expect(await checkContextBoundaries()).toEqual([])
+})
+
+test("既存lib違反baselineは完全一致かつ重複なしである", () => {
+  expect(LIB_BOUNDARY_BASELINE.length).toBe(26)
+
+  const keys = LIB_BOUNDARY_BASELINE.map((violation) =>
+    JSON.stringify([violation.file, violation.reason]),
+  )
+
+  expect(new Set(keys).size).toBe(keys.length)
 })
