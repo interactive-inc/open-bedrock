@@ -26,6 +26,8 @@ export type IssueSystemSessionCommand = Readonly<{
 export type IssueSystemSessionResult =
   | Readonly<{
       kind: "issued"
+      accountId: AccountId
+      tokenVersion: number
       rawToken: string
       sessionId: SessionId
       expiresAt: Date
@@ -104,6 +106,8 @@ export class IssueSystemSession {
 
     return Object.freeze({
       kind: "issued" as const,
+      accountId: session.accountId,
+      tokenVersion: session.tokenVersion,
       rawToken,
       sessionId: session.id,
       expiresAt,
