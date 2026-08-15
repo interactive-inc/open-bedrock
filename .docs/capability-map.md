@@ -126,7 +126,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - CollectiveBody、構成員、定足数、決議方式
 - 委任可能性と継続責任主体
 
-現行実装には position、grade、governance role、組織責任の一部がある。責任、決裁権限、合議体、判断時 snapshot を一貫して強制するモデルは未完成である。
+現行実装には position、grade、governance role、組織責任の一部と、直属上司、部門責任者、管理系列を時点解決する OrganizationalAuthority resolver がある。resolver は候補 Account と使用した組織投影、営業日、organization revision、根拠を snapshot として返す。汎用的な責任 scope、金額等の条件、合議体を一貫して強制するモデルは未完成である。
 
 ### System との対応
 
@@ -135,7 +135,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - System の Case に対する会社上の判断資格の解決
 - 判断時点の Employment、Membership、ResponsibilityAssignment の snapshot
 
-現行実装には Account と Employee の一対一対応がある。System はopaqueな資格証拠参照とdigestを受け取れるが、それを生成する Company resolver は workflow から未分離である。
+現行実装には Account と Employee の一対一対応と、それを在籍・組織資格と同時に検査する Company resolver がある。request workflow の候補解決はこの resolver を利用し、Company snapshot を証拠へ保存する。ただし返す Account ID は現行互換の整数であり、canonical System Account ID と System Task への接続は未完成である。
 
 ### 雇用事実と人事発令
 
