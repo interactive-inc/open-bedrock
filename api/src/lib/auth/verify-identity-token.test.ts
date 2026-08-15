@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 
-import { createIdentityTestKey } from "@/contexts/company/interface/test-helpers/create-identity-test-key"
-import { createIdentityToken } from "@/contexts/company/interface/test-helpers/create-identity-token"
+import { createIdentityTestKey } from "@/lib/auth/test/create-identity-test-key"
+import { createIdentityToken } from "@/lib/auth/test/create-identity-token"
 import { verifyIdentityToken } from "@/lib/auth/verify-identity-token"
 
 const identityKey = await createIdentityTestKey()
