@@ -1,6 +1,7 @@
 import {
   checkSystemContextBoundary,
   collectSystemSchemaTableNames,
+  discoverSystemCapabilityNames,
   inspectSystemCapabilityCatalog,
   inspectSystemCapabilityRootEntries,
   inspectSystemOwnershipManifest,
@@ -9,6 +10,9 @@ import {
   selectDownstreamContextNames,
 } from "./check-system-context-boundary"
 import { describe, expect, test } from "bun:test"
+import { mkdirSync, mkdtempSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { resolve } from "node:path"
 
 const downstreamContexts = new Set(["care", "company", "warehouse"])
 
@@ -177,6 +181,27 @@ describe("System capability catalog", () => {
   })
 })
 
+describe("discoverSystemCapabilityNames", () => {
+  test("context-first・legacy・混在構成の capability を同じ集合へ統合する", () => {
+    const temporaryRoot = mkdtempSync(resolve(tmpdir(), "system-boundary-"))
+    const contextRoot = resolve(temporaryRoot, "src/contexts/system")
+    const legacyRoot = resolve(temporaryRoot, "src/api")
+
+    try {
+      mkdirSync(resolve(contextRoot, "domain/auth"), { recursive: true })
+      mkdirSync(resolve(legacyRoot, "application/system/batch"), { recursive: true })
+
+      expect(discoverSystemCapabilityNames(contextRoot)).toEqual(new Set(["auth"]))
+      expect(discoverSystemCapabilityNames(legacyRoot)).toEqual(new Set(["batch"]))
+      expect(discoverSystemCapabilityNames([contextRoot, legacyRoot])).toEqual(
+        new Set(["auth", "batch"]),
+      )
+    } finally {
+      rmSync(temporaryRoot, { recursive: true, force: true })
+    }
+  })
+})
+
 describe("selectDownstreamContextNames", () => {
   test("将来追加された sibling context を固定リストなしで検査対象にする", () => {
     expect(
@@ -193,7 +218,7 @@ describe("selectDownstreamContextNames", () => {
 })
 
 describe("inspectSystemSource", () => {
-  test("両プロジェクトの System・共通部品・専用 schema への依存を許可する", () => {
+  test("構成差を越えて System・共通部品・専用 schema への依存を許可する", () => {
     const violations = inspectSystemSource(
       "src/application/system/example.ts",
       [
@@ -201,9 +226,12 @@ describe("inspectSystemSource", () => {
         'import { Account } from "@/api/domain/system/account"',
         'import { Session } from "@system/domain/auth/session"',
         'import { Id } from "@/api/domain/core/identity/id"',
+        'import { SharedId } from "@/lib/identity/id"',
         'import { parse } from "@/infrastructure/shared/parse"',
         'import { users } from "@/schema/system"',
         'import { systemAccounts } from "@/schema/system-core"',
+        'import { contextUsers } from "@/contexts/system/infrastructure/schema/system"',
+        'import { contextAccounts } from "@/contexts/system/infrastructure/schema/system-core"',
         'import { z } from "zod"',
       ].join("\n"),
       downstreamContexts,
@@ -212,14 +240,16 @@ describe("inspectSystemSource", () => {
     expect(violations).toEqual([])
   })
 
-  test("既存および新規の下位 context と composition への依存を拒否する", () => {
+  test("既存および新規の下位 context と API runtime への依存を拒否する", () => {
     const sources = [
       'import { Worker } from "@/domain/company/workforce/worker"',
       'import { Stock } from "@/api/infrastructure/warehouse/stock"',
       'import { Worker } from "@/contexts/company/domain/workforce/worker"',
       'import { Stock } from "@/contexts/warehouse/infrastructure/stock"',
+      'import { compose } from "@/api/iam/compose"',
       'import { compose } from "@/composition/iam/compose"',
       'import { compose } from "@/api/composition/iam/compose"',
+      'import type { Context } from "@/env"',
     ]
 
     for (const source of sources) {
@@ -247,7 +277,9 @@ describe("inspectSystemSource", () => {
     const sources = [
       'import { accounts } from "@/schema"',
       'import { employees } from "@/schema/company"',
-      'import type { Context } from "@/env"',
+      'import { globalAccounts } from "@/api/database/schema"',
+      'import { globalEmployees } from "@/api/database/schema/company"',
+      'import { contextEmployees } from "@/contexts/company/infrastructure/schema/company"',
       'import { Token } from "../../../domain/system/auth/token"',
     ]
 
@@ -266,6 +298,7 @@ describe("inspectSystemSource", () => {
       'import Company = require("@/infrastructure/company/accounts")',
       'type Company = import("@/domain/company/accounts").Account',
       'const schema = require("@/schema")',
+      'const globalSchema = require("@/api/database/schema")',
     ]
 
     for (const source of sources) {
