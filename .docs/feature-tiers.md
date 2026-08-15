@@ -1,50 +1,91 @@
 # 機能区分
 
-すべての機能はシステム層、company-core、company-standard、company-optional のいずれか一つに属する。これは配備時の必須性を表す区分であり、コード上の依存階層は System > Company > 業務コンテキストとする。company-standard と company-optional の各機能は、Company配下へ集約せず独立した業務コンテキストとして所有する。
+すべての能力は System、Company、App、外部連携のいずれか一つが所有する。所有区分と既定の有効状態を同じ軸にしない。
 
-この基盤が持つ業務コンテキストは会社運営の汎用機能に限る。販売、顧客管理、在庫、製造のような業種固有の事業ドメインは、この基盤の上に載る外部のアプリケーションが担う。
+コードは `api/src/contexts/<context>/` 直下へすべてのコンテキストを対等に置く。`system` と `company` 以外の製品内コンテキストは削除可能な App であり、`apps/` という親ディレクトリは作らない。
 
-## システム層
+## System
 
-アカウント、認証、認可、監査、通知、バッチのように、製品の業務内容から独立した基盤。どの社内システムにも必要であり、停止できない。System Account は従業員を参照せず、会社内の Employee との対応は company-core が所有する。
+会社や業務の語彙から独立し、すべてのコンテキストが利用する停止不能な基盤。
 
-## company-core
+- Principal、Account、Identity、認証、session、失効
+- technical permission、role、policy、scope、field policy、職務分離
+- procedure definition、case、task、proposal、decision、human attestation
+- delegation、approval、rejection、差戻し、取消、execution authorization
+- audit、evidence、attachment metadata、版、来歴、訂正、保持、開示制御
+- notification、scheduler、batch、job、idempotency、outbox、inbox、retry
+- API、webhook、import、export、connector、external assertion、reconciliation
+- 設定、機能有効化、health、migration safety、運用診断
 
-会社である限り外せない必須基盤。組織、従業員台帳、アカウント連携、人事発令、申請と承認の骨格が属する。停止すると製品が成立しない。
+System は Employee、Department、LegalEntity、経費、勤怠などの会社・業務語彙を保存しない。業務対象は所有コンテキスト、resource kind、resource ID、版、digest の変更不能な参照として扱う。
 
-## company-standard
+## Company
 
-ほぼ全社が使うが停止できる機能。会計、経費、勤怠、シフト、資産、契約が属する。既定で有効とする。
+一つの deployment で運営する会社の正本。停止すると製品が会社の主体、組織、責任を判断できなくなる。
 
-## company-optional
+- LegalEntity、会社 profile、法域、locale、timezone、通貨、会計年度
+- 事業所、勤務場所、法人、拠点、組織単位の識別
+- Person、Employee、Employment、在籍状態、有効期間
+- OrgUnit、Department、Membership、ReportingRelation
+- Job、Position、Grade、OrganizationalOffice、期間付き割当
+- ResponsibilityAssignment、OrganizationalAuthority、CollectiveBody
+- System Account と Employee の対応
+- 入社、異動、休職、復職、退職、再入社の雇用事実と人事発令
+- System の汎用判断へ会社上の資格と責任主体を提供する解決処理
 
-無くても会社が回る機能。1on1、サンクス、目標管理、ナレッジ、社内公募、人事評価、研修が属する。既定で無効とし、有効化して使う。
+Company は汎用の申請、承認、通知、監査、batch を再実装しない。規程文書、採用、onboarding、勤怠、経費など、会社が無くても会社の同一性が保たれる機能は Company に含めない。
+
+## Apps
+
+業務目的と業務上の不変条件を所有し、削除または無効化できるコンテキスト。App は System と Company だけを利用でき、他の App を直接 import しない。
+
+既定で有効にできる App は attendance、leave、family-care-leave、shift、company-calendar、expense、business-trip、budget、ringi、asset、stocktake、room、rental、software-license、partner、contract、antisocial-check、recruitment、headcount-plan、health-checkup、work-accident、certification、commendation、disciplinary-action、meeting、life-event、work-style とする。
+
+既定で無効にできる App は announcement、knowledge、regulation、governance-document、onboarding、offboarding、certificate-request、goal、performance-review、skill、training、career、one-on-one、survey、thanks、it-incident、compensation-change とする。
+
+既定の有効状態は導入時の利便性であり、価値や依存階層を表さない。既定で有効な App も無効化と削除ができなければならない。
+
+dashboard、inbox、directory、search は複数コンテキストの read model または UI composition とする。業務事実の正本を所有せず、独立 App として扱わない。
+
+## 外部連携
+
+会社運営に必要でも、誤りが金銭損害、法令違反、権利侵害へ直結し、専門製品または専門家が最終責任を持つ能力は製品内に実装しない。
+
+- 総勘定元帳、仕訳、決算、財務諸表、税額計算、税務申告
+- 給与、賞与、源泉徴収、社会保険料、年末調整の計算
+- 送金、決済、清算、銀行残高、法人カード取引の実行
+- 法令適合性、契約解釈、届出義務、電子署名の法的効力の最終判断
+- 本人確認、信用、制裁、反社会的勢力の最終判断
+- 医療判断、労働安全衛生、労務適否の専門判断
+- 販売、CRM、受注、顧客提供、在庫、製造、物流
+
+製品は必要に応じて入力事実、依頼、社内判断、承認済み指示、外部への引渡し、出所付き外部結果、採否、照合、期限、証拠を保持する。外部成功を内部承認で代用せず、通信停止を成功として扱わない。
 
 ## 判定基準
 
-段の判定は「会社一般にとって無くても回るか」で行う。導入済みの会社がその機能を止められるかどうかで判定しない。ある会社が人事評価や研修を制度として持ち実質的に停止できないとしても、会社一般にとって無くても回る以上、その機能は company-optional に属する。
+次の順で所有先を決める。
 
-段の境界は機能すなわちモジュールの粒度で引く。一つの機能を構成する表を複数の段へ割らない。ある表だけが下位の会社にとって不要であることは、その表を切り出す理由にならない。切り出しを検討する場合は表ではなく機能そのものを分ける。
+- 会社や業務を知らずに同じ不変条件を適用できるなら System
+- 会社、従業員、雇用、組織、責任、権限の正本なら Company
+- 無効化しても会社の同一性と System の安全性が保たれるなら App
+- 専門的な最終計算、最終判断、資金移動、事業固有の実行なら外部連携
 
-## 段と外部委譲
+同じ能力を複数の所有先へ分割しない。App の業務 record は App、汎用 case と decision は System、判断者の会社上の資格は Company が所有し、参照と snapshot で接続する。
 
-段は記録の所有の区分であり、責務の内外を決めない。給与、税、会計のような最終計算、法的判定、資金移動の外部委譲は [[product-purpose|製品目的と境界]] に従う。company-standard に属する経費や勤怠も、保持するのは事実の記録、社内判断、外部連携までである。
+## 有効化
 
-## 名前空間との関係
+System と Company は常に有効とする。App は `default` または `opt-in` の有効化設定を持ち、無効な App の route は認証より前に 404 で拒否する。Web は API が返す有効化状態に従い、無効な App の導線を表示しない。
 
-テーブル、URL、CLI コマンドの名前の取り合いは上位の段が勝つ。勾配の規則と個別の名前は [[drafts/namespace-map|名前空間マップ]] に従う。
+現行実装は互換のため `ENABLED_OPTIONAL_FEATURES` と `DISABLED_STANDARD_FEATURES` という旧名を使用する。前者は opt-in App、後者は default App の有効状態を制御する。変数名は所有境界を表さず、App context の分離後に置換する。
 
-## 切替の強制
+## 完成条件
 
-api は環境変数で機能の有効と無効を強制する。無効な機能のルートへのリクエストは認証より前に 404 で拒否される。機能キーとルート接頭辞の対応は `api/src/lib/feature/feature-route-registry.ts` が持つ。
+App は domain、application、infrastructure、interface のうち必要な層を持ち、対象、状態、遷移、認可、失敗、競合、訂正、監査、テストが揃うまで route registry へ登録しない。schema だけ、画面だけ、任意 JSON だけの実装を有効な App として扱わない。
 
-- `ENABLED_OPTIONAL_FEATURES` … 有効化する company-optional 機能。`all` か機能キーのカンマ区切り。未設定・空・`none` は全 company-optional 機能が無効（本書の既定どおり）
-- `DISABLED_STANDARD_FEATURES` … 停止する company-standard 機能のカンマ区切り。`all` で全停止。未設定は全て有効
-
-`api/.dev.vars.example` は `ENABLED_OPTIONAL_FEATURES="all"` を含み、これを写したローカル開発では全機能が有効になる。デプロイ環境では運用者が変数を設定する。未設定の環境は company-optional 機能が無効で動く。
-
-web は `GET /features` で無効な機能キーの一覧を取得し、該当機能をナビゲーションから隠し、該当画面を無効の案内に差し替える。この出し分けは表示のみで、強制は api の 404 が担う。
+App を削除するときは対象 context のディレクトリ、route module 登録、所有 migration、seed、有効化 metadata、利用側の導線だけを削除する。他の App の変更を必要とする依存は追加しない。
 
 ## 現行実装差分
 
-受信箱の集約タブ（サンクス交換の承認など機能別のタブ）は機能の無効化に追従しない。無効な機能のタブは残るが、対応する api が 404 を返すため操作はできない。新機能の設計は、属する区分の明示と、環境変数または設定による切替を含めなければならない。
+現在は System と Company の二コンテキストだけが存在し、App の実装は `api/src/contexts/company` に同居している。申請、承認、委任、判断、ワークフローも Company に残っており、System の汎用基盤へ分離できていない。
+
+受信箱の集約タブは App の無効化に完全には追従しない。無効な App の tab が残る場合も API は 404 で拒否するが、分離完了条件は UI の導線も有効化状態へ追従することである。

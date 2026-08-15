@@ -22,7 +22,7 @@ open-karte は、事実の記録、更新、検索と、それに伴う申請、
 ## 会社モデル
 
 - [製品境界](./product-purpose.md): 所有、調整、外部実現、非対象
-- [[feature-tiers|機能区分]]: システム層と会社レイヤー三段、既定の有効状態、停止可否
+- [[feature-tiers|機能区分]]: System、Company、Apps、外部連携、既定の有効状態
 - [会社メタモデル](./company-model.md): 主体、資源、関係、時間、手続き、記録
 - [記録モデル](./records-model.md): 出来事、状態、主張、判断、版、来歴、訂正
 - [権限モデル](./authority-model.md): 組織上の権限、委任、合議、緊急判断
@@ -55,7 +55,7 @@ flowchart TD
 - [機能](./features.md): domain ごとの実装済み操作
 - [画面](./sitemap.md): Web route と画面責務
 - [状態遷移](./user-flows.md): 主要な操作と状態変化
-- [能力](./capability-map.md): 会社能力、製品責任、実現主体、実装状態
+- [会社の解体図](./capability-map.md): System、Company、Apps、外部連携、実装状態
 - [ロールと権限](./roles-and-permissions.md): permission カタログ、system role、プリセット、scope 判定
 - [用語](./glossary.md): 共有する型と概念
 - [governance](./governance/README.md): 規程、手続き、統制、公開、施行

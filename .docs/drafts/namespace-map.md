@@ -16,24 +16,24 @@ URL と CLI の実装で本書から外れた点が三つある。いずれも�
 
 - リソース名の末尾は複数形にできる可算名詞とする。修飾語は単数形または集合名詞とする
 - 名前に主語を含める。主語のない裸の名前を禁止する
-- 名前空間はシステム、company-core、company-standard、company-optional の優先順で確定する。上位は汎用名を汎用の意味で保持し、下位は上位の汎用名を占有しない
+- 名前空間は System、Company、App の優先順で確定する。上位は汎用名を汎用の意味で保持し、下位は上位の汎用名を占有しない
 - 集合名詞は単独のリソース名にしない。集合名詞に可算の主名詞を補う
 
-## 層と段の定義
+## 所有区分の定義
 
-区分はシステム層と、会社レイヤーを三段に分けた company-core、company-standard、company-optional の四つとする。各段の定義と判定基準は [[feature-tiers|機能区分]] に従う。
+区分は System、Company、App とする。App の `default` と `opt-in` は既定の有効状態であり、所有区分ではない。定義と判定基準は [[feature-tiers|機能区分]] に従う。
 
-### 勾配の規則
+### 優先順位の規則
 
 名前の取り合いは上位が勝つ。上位が汎用名を単独で使い、下位は主語を付けて区別する。
 
-`roles` はシステム層が所有する。company-core の組織上の責任ロールは `governance_org_roles` として主語を持つ。`notifications` はシステム層が所有し、company-optional のサンクス通知は独自の表を持たない。`documents` は company-core の台帳が主語を補い `document_ledger_entries` となる一方、company-standard の規程は `regulations`、company-core の統制文書は `governance_documents` として棲み分ける。
+`roles` は System が所有する。Company の組織上の責任ロールは `governance_org_roles` として主語を持つ。`notifications` は System が所有し、thanks App の通知は独自の表を持たない。System の証拠台帳は `document_ledger_entries`、regulation App は `regulations`、governance-document App は `governance_documents` として棲み分ける。
 
-同じ段の中で名前が競合する場合は、先に存在する概念が汎用名を保つのではなく、両方に主語を付ける。段の勾配は段をまたぐ競合にのみ適用する。
+同じ所有区分の中で名前が競合する場合は、先に存在する概念が汎用名を保つのではなく、両方に主語を付ける。優先順位は所有区分をまたぐ競合にのみ適用する。
 
-段の境界は機能すなわちモジュールの粒度で引く。一つの機能を構成する表を複数の段へ割らない。申請と承認の一群は骨格と多段ワークフローを分けず、まとめて company-core に属する。ある表だけが下位の会社にとって不要であることは、その表を切り出す理由にならない。切り出しを検討する場合は表ではなく機能そのものを分ける。
+所有境界は概念と不変条件で引く。App は申請内容と業務実行を、System は汎用 Case、Task、Decision、approval、ExecutionAuthorization を、Company は判断者の会社上の資格を所有する。別の所有者が持つ表を同じ schema file または context に同居させない。
 
-## システム層のテーブル
+## System のテーブル
 
 製品の業務内容から独立した基盤。停止できない。汎用名を優先して所有する。
 
@@ -49,19 +49,19 @@ URL と CLI の実装で本書から外れた点が三つある。いずれも�
 
 ### 変更しないもの
 
-次はいずれも主語を含む複数形であり、システム層の汎用名として妥当である。
+次はいずれも主語を含む複数形であり、System の汎用名として妥当である。
 
-`accounts`、`identities`、`identity_login_tokens`、`cli_login_states`、`cli_login_codes`、`browser_login_codes`、`refresh_tokens`、`roles`、`role_permissions`、`account_roles`、`audit_events`、`audit_batch_decisions`、`batch_jobs`、`notifications`、`permissions`。
+`accounts`、`identities`、`identity_login_tokens`、`cli_login_states`、`cli_login_codes`、`browser_login_codes`、`refresh_tokens`、`roles`、`role_permissions`、`account_roles`、`audit_events`、`audit_batch_decisions`、`batch_jobs`、`notifications`、`permissions`、`application_requests`、`application_templates`、`application_approvals`、`application_subjects`、`application_completion_bindings`、`application_workflows`、`application_workflow_revisions`、`application_workflow_instances`、`application_workflow_step_snapshots`、`application_workflow_step_candidates`、`application_workflow_approvals`、`application_workflow_events`、`approval_delegations`、`decision_records`、`document_ledger_entries`。
 
-`roles` と `notifications` はシステム層が汎用名を所有する例である。下位の段は主語を付けて区別する。
+`roles`、`notifications`、`application_requests`、`decision_records` は System が汎用名を所有する例である。下位の区分は主語を付けて区別する。
 
 `notifications` の受信者は `recipient_account_id` で Account を参照する。Company の Employee 宛て通知は `account_employee_links` で Account を解決してから作成し、System 側に Employee 識別子を保存しない。
 
-`audit_events` は Account 主体の汎用監査イベントだけを保存する。Employee 文脈は company-core の `audit_event_employee_contexts` が所有する。
+`audit_events` は Principal 主体の汎用監査イベントだけを保存する。Employee 文脈は Company の `audit_event_employee_contexts` が所有する。
 
-システム層は 16 表とする。
+現行 System schema は 16 表である。申請、判断、証拠の表は現在 Company schema に同居しており、System へ移管する。
 
-## company-core のテーブル
+## Company のテーブル
 
 会社である限り外せない必須基盤。停止すると製品が成立しない。
 
@@ -87,15 +87,15 @@ URL と CLI の実装で本書から外れた点が三つある。いずれも�
 
 ### 変更しないもの
 
-`employees`、`account_employee_links`、`audit_event_employee_contexts`、`departments`、`org_departments`、`org_memberships`、`employee_events`、`employee_grades`、`employment_period_versions`、`employee_status_period_versions`、`employee_lifecycle_revisions`、`personnel_actions`、`personnel_action_requests`、`application_templates`、`application_approvals`、`application_subjects`、`application_completion_bindings`、`application_workflows`、`application_workflow_revisions`、`application_workflow_instances`、`application_workflow_step_snapshots`、`application_workflow_step_candidates`、`application_workflow_approvals`、`application_workflow_events`、`lifecycle_effect_template_bindings`、`approval_delegations`、`onboarding_templates`、`onboarding_template_tasks`、`onboarding_assignments`、`onboarding_tasks`、`governance_capabilities`、`governance_org_roles`、`governance_org_role_assignments`、`governance_documents`、`governance_document_versions`、`governance_document_references`、`governance_publication_approvals`、`governance_acknowledgements`、`regulations`、`regulation_versions`、`announcements`、`resignations`、`certificate_requests`。
+`employees`、`account_employee_links`、`audit_event_employee_contexts`、`departments`、`org_departments`、`org_memberships`、`employee_events`、`employee_grades`、`employment_period_versions`、`employee_status_period_versions`、`employee_lifecycle_revisions`、`personnel_actions`、`governance_capabilities`、`governance_org_roles`、`governance_org_role_assignments`。
 
-`governance_org_roles` はシステム層の `roles` と競合しないよう主語を持つ。この分離は既に成立しており維持する。
+`governance_org_roles` は System の `roles` と競合しないよう主語を持つ。この分離は既に成立しており維持する。
 
 `company_audit_event_appends` は Company の監査書き込みを分配後に必ず削除する transaction adapter であり、永続リソースの表数には含めない。`company_audit_events` は System イベントと Company 文脈の互換 view である。
 
-company-core は 52 表とする。
+Company に同居する application workflow、onboarding、governance document、regulation、announcement、resignation request、certificate request の表は、それぞれ System または所有 App へ移管する。Company の最終表数は LegalEntity、Company profile、Office、ResponsibilityAssignment、CollectiveBody の不足を実装してから確定する。
 
-## company-standard のテーブル
+## default App のテーブル
 
 ほぼ全社が使うが停止できる機能。既定で有効とし、設定で停止できる。
 
@@ -111,7 +111,7 @@ company-core は 52 表とする。
 
 `meeting_minutes` を `meeting_minutes_records` にする。`minutes` は複数形専用名詞であり行数と一致しない。行の粒度は開催 1 回分の議事録である。
 
-`recruitment_positions` を `job_openings` にする。`position` の語を company-core の `position_definitions` と共有すると、修飾語でしか区別が付かない。募集枠は役職の定義とは別概念であり、固有の語を与えて衝突自体を消す。`recruitment_candidates` は主語が候補者であり衝突しないため維持する。
+`recruitment_positions` を `job_openings` にする。`position` の語を Company の `position_definitions` と共有すると、修飾語でしか区別が付かない。募集枠は役職の定義とは別概念であり、固有の語を与えて衝突自体を消す。`recruitment_candidates` は主語が候補者であり衝突しないため維持する。
 
 `employee_work_styles` は変更しない。URL 側が主語を欠く `/work-styles` であるため、URL のみ主語を補う。
 
@@ -121,9 +121,9 @@ company-core は 52 表とする。
 
 `job_openings` への改名により `position` の語はシステム全体で `position_definitions` のみが用いる。同じ語を二つの概念が共有する状態を残さない。
 
-company-standard は 41 表とする。
+現行の default App は 41 表を持つ。分離後は各 App が自身の表だけを所有する。
 
-## company-optional のテーブル
+## opt-in App のテーブル
 
 無くても会社が回る機能。既定で無効とし、有効化して使う。上位の汎用名を占有しない。
 
@@ -141,17 +141,17 @@ company-standard は 41 表とする。
 
 `knowledge_articles` は `knowledge` が不可算だが修飾語の位置にあり、主名詞 `articles` が可算である。原則に適合する。
 
-company-optional は 20 表とする。
+現行の opt-in App は 20 表を持つ。分離後は各 App が自身の表だけを所有する。
 
 ### 網羅性
 
-システム層 16、company-core 52、company-standard 41、company-optional 20 の合計は 129 である。System の Drizzle 定義は `api/src/schema/system.ts`、全体の合成は `api/src/schema.ts` に置く。各永続リソース表はいずれか一つの段にのみ属する。分配後に行を残さない `company_audit_event_appends` と互換 view はこの表数に含めない。改名は 21 件、変更なしは 108 件とする。`permissions` を改名しない決定により、改名は 22 件から 21 件になった。
+現行の永続リソース表は合計 129 である。System の Drizzle 定義は `api/src/contexts/system/infrastructure/schema`、全体の合成は `api/src/schema.ts` に置く。分離後は各永続リソース表を一つの context だけが所有する。分配後に行を残さない `company_audit_event_appends` と互換 view は表数に含めない。
 
 ## URL
 
 第一セグメントを複数形リソースに統一する。単数形のドメインディレクトリは、その配下の実体を主名詞として複数形に昇格させる。
 
-URL は段を経路に含めない。`/company-optional/thanks-messages` のような接頭辞を付けると、段の変更が URL の破壊的変更になる。段は設定と権限で表し、経路はリソース名のみで構成する。段の勾配は名前の取り合いにのみ働く。
+URL は所有区分または有効状態を経路に含めない。`/apps/thanks-messages` または `/opt-in/thanks-messages` のような接頭辞を付けず、経路はリソース名だけで構成する。
 
 ### 単数ドメインの是正
 
@@ -263,19 +263,19 @@ CLI の第一セグメントを URL のリソース名と一致させる。単�
 
 ### permissions
 
-`permissions` は改名しない。システム層が汎用名を汎用の意味で所有するという勾配の規則そのものに合致する。`permission_definitions` にすると付与側の `role_permissions` との対称性が崩れ、対称を保つには `role_permissions` を `role_permission_grants` にする必要が生じて改名対象が広がる。定義と実績の分離は `grade_definitions` と `employee_grades` のように同名の衝突がある場合に必要であり、`permissions` にその衝突はない。
+`permissions` は改名しない。System が汎用名を汎用の意味で所有するという優先順位の規則に合致する。`permission_definitions` にすると付与側の `role_permissions` との対称性が崩れ、対称を保つには `role_permissions` を `role_permission_grants` にする必要が生じて改名対象が広がる。定義と実績の分離は `grade_definitions` と `employee_grades` のように同名の衝突がある場合に必要であり、`permissions` にその衝突はない。
 
-### 人事評価と研修の段
+### 人事評価と研修
 
-`review_cycles`、`review_forms`、`review_cycle_policies`、`training_courses`、`training_enrollments` は company-optional とする。会社一般にとって無くても回るためである。人事評価や法定研修を制度として持つ会社で実質的に停止できないことは、段の判定に影響しない。
+`review_cycles`、`review_forms`、`review_cycle_policies` は performance-review App、`training_courses` と `training_enrollments` は training App が所有する。どちらも opt-in とする。
 
-### 申請ワークフローの段
+### 申請ワークフロー
 
-`application_requests` とワークフロー群は、骨格と多段ワークフローを分けず一群まるごと company-core とする。段の境界は機能の粒度で引き、一つの機能内で段を割らない。`application_workflow_step_candidates` や `lifecycle_effect_template_bindings` が単純な承認しか使わない会社にとって不要であることは、これらを切り出す理由にならない。
+`application_requests` とワークフロー群は System が所有する。申請内容は App が所有し、System は対象 context、resource kind、resource ID、version、digest で参照する。Company は判断者の会社上の資格だけを解決する。
 
-### 会議体と意思決定記録の段
+### 会議体と意思決定記録
 
-`decision_records` は company-core とする。`governance_documents` と対になる統制の記録だからである。`meetings` と `meeting_minutes_records` は会議運営の道具であり company-standard とする。
+`decision_records` は System の汎用 Decision record とする。Company の `CollectiveBody` と authority snapshot、governance-document App の対象参照を結合しても、判断記録の同一性は System が所有する。`meetings` と `meeting_minutes_records` は meeting App が所有する。
 
 ### 組織の三重表現の解消方向
 

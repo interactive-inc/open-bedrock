@@ -12,16 +12,71 @@ Claude などの AI から CLI で呼ばれることを前提に設計。
 - この基盤の上に、本の貸し借りや会議室の予約のような業務レベルのアプリを載せられる基盤にする
 - 外部の AI エージェントがここに集まるデータを安全に読み書きし、AI が十分に労働できるためのデータ基盤であることを常に意識する。連携は汎用の API・認証機構として設計し、特定の外部システムを前提にしない
 
-## 機能の区分
+## 会社の解体図
 
-すべての機能はシステム層、company-core、company-standard、company-optional のいずれか一つに属する。定義と判定基準の正本は `.docs/feature-tiers.md`。
+会社に必要なシステム全体を System、Company、Apps、外部連携に分ける。`company-core` という名前は使わず、会社の正本は `company` と呼ぶ。標準と任意は所有境界ではなく App の既定有効状態として表す。詳細と実装状態は `.docs/feature-tiers.md` と `.docs/capability-map.md` に記録する。
 
-- システム層 … アカウント、認証、認可、監査、通知、バッチ。業務内容から独立し、停止できない
-- company-core … 組織、従業員台帳、申請・承認の骨格。会社である限り外せない
-- company-standard … 会計、経費、勤怠、シフト、資産、契約。既定で有効、停止できる
-- company-optional … 1on1、サンクス、目標管理、評価、研修など。既定で無効、有効化して使う
+依存方向は `業務コンテキスト -> company -> system` の一方向とする。すべてを `api/src/contexts/<context>/` 直下へ対等に置き、`apps/` という親ディレクトリは作らない。System は Company と業務語彙を知らず、業務コンテキスト同士も直接依存しない。
 
-新機能の設計時は必ずどの区分かを明示し、必要なものだけ有効化できるよう切り替え（環境変数・設定）を設計に含める。給与・税・労務のような重い計算・法的判定は外部製品の責務とし、ここでは事実の記録と外部連携に留める（境界の正本は `.docs/product-purpose.md`）。
+System は次を所有する。
+
+- Human、Agent、Service、Connector の Principal、Account、Identity、認証、session、失効
+- technical permission、role、policy、scope、field policy、職務分離、緊急アクセス
+- procedure definition、case、task、proposal、decision、human attestation、delegation、approval、rejection、差戻し、取消、execution authorization
+- 変更不能な提案 digest、実行直前の再検査、冪等性、排他、競合検出
+- audit event、evidence、attachment metadata、版、来歴、訂正、保持、開示制御
+- notification、scheduler、batch、job、outbox、inbox、retry、dead letter
+- API、webhook、import、export、connector、external assertion、reconciliation
+- 設定、機能有効化、health、migration safety、運用診断
+
+Company は次を所有する。
+
+- LegalEntity、会社 profile、法域、locale、timezone、通貨、会計年度などの会社文脈
+- 事業所と勤務場所の識別、および法人、拠点、組織単位の区別
+- Person、Employee、Employment、在籍状態と有効期間
+- OrgUnit、Department、Membership、ReportingRelation
+- Job、Position、Grade、OrganizationalOffice と期間付き割当
+- ResponsibilityAssignment、OrganizationalAuthority、CollectiveBody
+- System Account と Employee の対応、および System の汎用判断へ会社上の資格を提供する解決処理
+- 入社、異動、休職、復職、退職、再入社という雇用事実と人事発令
+
+削除可能な業務機能はすべて独立した App コンテキストにする。対象は次のとおり。
+
+- 社内情報: announcement、knowledge、meeting、regulation、governance-document
+- 採用と人事手続き: recruitment、onboarding、offboarding、certificate-request、life-event、work-style、headcount-plan
+- 時間: attendance、leave、family-care-leave、shift、company-calendar、business-trip
+- 社内の金銭手続き: expense、budget、ringi、compensation-change
+- 資源と施設: asset、stocktake、room、rental、software-license
+- 対外管理: partner、contract、antisocial-check
+- 安全と規律: health-checkup、work-accident、disciplinary-action、commendation、it-incident
+- 成長と対話: goal、performance-review、skill、certification、training、career、one-on-one、survey、thanks
+
+dashboard、inbox、directory、search は複数コンテキストの read model または UI composition であり、業務事実の正本を所有するコンテキストにしない。
+
+次は製品内に実装しない。製品は依頼、承認済み指示、外部結果、採否、照合、証跡だけを保持し、将来の API connector で専門製品へ接続する。
+
+- 総勘定元帳、仕訳、決算、財務諸表、税額計算、税務申告
+- 給与、賞与、源泉徴収、社会保険料、年末調整の計算
+- 送金、決済、清算、銀行残高、法人カード取引の実行
+- 法令適合性、契約解釈、届出義務、電子署名の法的効力の最終判断
+- 本人確認、信用、制裁、反社会的勢力、医学的・労務的適否の最終判断
+- 販売、CRM、受注、顧客提供、在庫、製造、物流という事業固有システム
+
+## 完成条件
+
+新しい System 能力、Company 能力、App は次をすべて満たすまで公開しない。schema だけ、画面だけ、任意 JSON だけの実装を機能として数えない。
+
+- 対象、主体、状態、出来事、有効期間、版、source of truth、不変条件が型と制約で定義されている
+- 作成、参照、変更、取消、失敗、競合、訂正、再試行の結果が定義されている
+- technical permission と会社上の authority を合成し、評価不能時は拒否する
+- migration、外部キー、一意制約、transaction、冪等性、同時実行の保護がある
+- 重要な変更に監査、actor chain、理由、証拠、変更前後または再構成可能な履歴がある
+- API の入力と出力を検証し、Web、CLI、AI、callback に同じ application rule を適用する
+- unit、application、repository、route、認可、失敗、再試行のテストがある
+- App は有効化と無効化を強制でき、ディレクトリと route 登録の削除が他の業務コンテキストへ影響しない
+- 外部連携は timeout、重複、順序逆転、部分失敗、再送、照合不能を安全側に処理する
+
+既存機能がこの条件を満たさない場合は `.docs/capability-map.md` で未完成と明示し、完成するまで新しい依存元を増やさない。
 
 ## 公開リポジトリの絶対規範
 
@@ -70,7 +125,7 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 - まず `bun install` を必ず実行する（飛ばすと web が `Module not found: 'zod'` 等の依存解決エラーになる）
 - 初回は `cd api && bun run db:migrate:local` でローカル D1 を作成し、`bun run db:seed:local` で seed を投入する
 - `cd api && bun run setup:dev-vars` で `.dev.vars` を生成する（`JWT_SECRET` と `AUDIT_HMAC_SECRET` をランダムに作る。既存ファイルは上書きしない。`.dev.vars` は gitignore 済み）。api は未設定・16 文字未満・`-change-me` で終わる秘密値を実行時に拒否するので、`.dev.vars.example` をそのままコピーしても動かない
-- `.dev.vars` には `ENABLED_OPTIONAL_FEATURES="all"` も必要（無いと 1on1・サンクス・目標などの company-optional 機能が既定で無効になり API が 404 を返す。正本は `.docs/feature-tiers.md`）
+- `.dev.vars` には `ENABLED_OPTIONAL_FEATURES="all"` も必要（互換用の変数名であり、無いと opt-in App が既定で無効になり API が 404 を返す。正本は `.docs/feature-tiers.md`）
 - リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://bedrock.localhost`、api は `https://api.bedrock.localhost`（実体は `localhost:18787`）。ホスト名の正本は `portless.json`。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
 - ログインは seed の `you+e001@example.com` / `password`（`E001` が admin）。ダッシュボード・従業員一覧まで表示されれば web→api→D1 の通し動作 OK
 

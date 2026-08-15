@@ -1,608 +1,319 @@
-# 製品能力
+# 会社の解体図
 
-open-karte は自社の一般的な業務能力を分類し、製品の責任境界を割り当てる。法律、税、会計、給与計算、決済もモデルから除外せず、実行主体を外部へ割り当てる。
-
-公開 repository には、open-karte 開発元または利用者の自社に固有の事業、戦略、顧客、契約、取引、財務、人事を記録しない。主体と能力は製品モデル上の一般型として扱い、実在組織の事実と結び付けない。
-
-実装状態は route、schema、画面、migration と一致させる。能力の列挙は roadmap または実装約束を意味しない。
-
-## 分類軸
-
-各能力は次の独立した軸を持つ。
-
-- 会社での位置: 中核、隣接、外部必須
-- 製品の役割の値: 定義、所有、調整、強制、記録、参照、連携、非関与
-- 実現主体: open-karte、人間、外部製品、専門家、組合せ
-- 実装状態の値: 実装済み、部分実装、台帳のみ、未実装、非対象
-
-実装状態の「非対象」は会社モデルに存在しないという意味ではない。open-karte がその能力を実行しないという意味で使う。
-
-製品の役割は `・` で複数値を合成できる。`非関与` は単独で使用する。実装の完成度は製品の役割へ混ぜず、実装状態だけで表す。
+会社に必要なシステム全体を System、Company、Apps、外部連携に分ける。会社運営に必要であることと、この製品が内部実装することを同一視しない。
 
 ```mermaid
-flowchart LR
-  Capability["会社能力"] --> Role{"open-karte の役割"}
-  Role --> Define["定義"]
-  Role --> Own["所有"]
-  Role --> Orchestrate["調整"]
-  Role --> Enforce["強制"]
-  Role --> Record["記録"]
-  Role --> Reference["参照"]
-  Role --> Integrate["連携"]
-  Role --> None["非関与"]
-  Orchestrate --> External["外部製品・専門家が実行"]
-  Integrate --> External
-  Record --> External
+flowchart TD
+  Apps["業務コンテキスト"] --> Company["Company"]
+  Company --> System["System"]
+  Apps --> System
+  Apps --> Connectors["外部 connector"]
+  Company --> Connectors
+  Connectors --> External["専門製品と専門家"]
 ```
 
-## 戦略と統治
+依存は業務コンテキストから Company、Company から System への一方向とする。業務コンテキストは System を直接利用してよい。System は Company と業務コンテキストを知らず、業務コンテキスト同士は直接依存しない。
 
-### 経営戦略と全社目標
+## System
 
-- 会社での位置: 隣接
-- 製品の役割: 記録・参照
-- 実現主体: 経営者と外部の戦略管理
-- 実装状態: 部分実装。全社・部門・個人の目標ツリーと経営ダッシュボードは実装済み。経営戦略の策定は実行しない
+System は業務内容と会社組織から独立した、停止不能な実行基盤である。
 
-### 会社統治と法定機関
+### 主体と認証
 
-- 会社での位置: 外部必須
-- 製品の役割: 調整・記録
-- 実現主体: 権限ある人間、合議体、外部専門家
-- 実装状態: 部分実装。governance 文書、role assignment、review、publish、会議体台帳、議事録、意思決定記録はあるが、合議体の定足数と authority enforcement は未完成
+- HumanPrincipal、AgentPrincipal、ServicePrincipal、ConnectorPrincipal
+- Account、Identity、identity binding、外部 IdP
+- password、session、access token、refresh token、失効、rotation
+- machine credential、step-up authentication、credential recovery
 
-## 顧客と提供
+現行実装には Account、Identity、password、外部 identity、session、token rotation がある。Principal kind、Agent、Service、Connector の独立した認証と step-up は未完成である。
 
-### 顧客管理、営業、契約、受注
+### 技術的認可
 
-- 会社での位置: 隣接
-- 製品の役割: 非関与
-- 補足: 社内手続きに必要な取引先参照は別能力として連携できる
-- 実現主体: 外部製品
-- 実装状態: 非対象
+- permission、role、role binding
+- resource scope、field policy、purpose、時間制約
+- 職務分離、緊急アクセス、代理操作の制限
+- request 時と実行直前の再評価
 
-### 製品提供と顧客 support
+現行実装には permission、role、account role と route ごとの認可がある。field policy、共通 scope policy、職務分離、緊急アクセスの一貫した強制は未完成である。
 
-- 会社での位置: 隣接
-- 製品の役割: 非関与
-- 実現主体: 外部製品と事業部門
-- 実装状態: 非対象
+### 案件と判断
 
-## 組織
+- ProcedureDefinition と版
+- Case、Task、Assignment、期限、escalation
+- Proposal と変更不能な payload digest
+- Decision、HumanAttestation、quorum
+- approval、rejection、差戻し、取消、再申請
+- Delegation、代理元、代理先、対象範囲、有効期間
+- ExecutionAuthorization、失効、実行直前の再検査
 
-### 部署、所属、reporting relation
+申請の業務内容は各 App が所有する。System は対象コンテキスト、resource kind、resource ID、resource version、proposal digest を保存し、任意 JSON を業務上の正本にしない。
 
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte と権限ある人間
-- 実装状態: 実装済み。期間付き関係と過去 snapshot の統一は部分的
+現行の application request、workflow、approval、delegation は Company 配下にあり、従業員と組織へ直接依存している。System には汎用の Case、Task、Decision、HumanAttestation、ExecutionAuthorization がないため未完成である。
 
-### 組織計画と要員計画
+### 記録と証拠
 
-- 会社での位置: 中核
-- 製品の役割: 調整・記録
-- 実現主体: 人間と外部 planning 製品
-- 実装状態: 部分実装。年度・部署別の人員計画の記録と実在籍比較は実装済み。外部 planning 連携は未実装
+- audit event、actor chain、request correlation
+- evidence、attachment metadata、content digest、source
+- valid time、recorded time、policy time
+- revision、supersession、correction、retention、legal hold、開示制御
+- 外部 Assertion と社内での acceptance、dispute
 
-### 法人と事業所
+現行実装には追記監査と安定 JSON がある。全 operation の監査、証拠、保持、開示、actor chain、訂正経路は未完成である。
 
-- 会社での位置: 中核
-- 製品の役割: 記録
-- 実現主体: open-karte と外部 master
-- 実装状態: 未実装。自社 profile と LegalEntity record はない
+### 非同期実行と通知
 
-### Deployment と単一法人境界
+- scheduler、batch、job、lease、heartbeat
+- idempotency key、outbox、inbox、retry、dead letter
+- notification message、delivery、既読
+- timeout、重複、順序逆転、部分失敗の回復
 
-- 会社での位置: 中核
-- 製品の役割: 所有・強制
-- 実現主体: 自社と open-karte
-- 実装状態: 部分実装。self-host deployment があり、route と schema に法人 selector と tenant partition はない。自社 profile と LegalEntity record は未実装
+現行実装には batch、通知、限定された outbox がある。汎用 job lifecycle、inbox、dead letter、再実行と照合の統一基盤は未完成である。
 
-### Job、Position、office、cost center
+### 外部接続
 
-- 会社での位置: 中核
-- 製品の役割: 所有・記録
-- 実現主体: open-karte
-- 実装状態: 部分実装。表示項目と role はあり、等級マスタと割当履歴は実装済み。役職マスタと選択入力は実装済み(従業員登録と人事発令が役職マスタの code を参照する)。役職の期間付き履歴は人事発令が持つ。Kind と期間関係の分離が不完全
+- connector identity、接続設定、secret reference
+- command handoff、webhook、callback、import、export
+- external assertion、acceptance、reconciliation、exception case
+- API version、schema version、rate limit、circuit breaking
 
-### Project と外部関係者
+現行実装には個別の外部参照と callback がある。交換可能な connector、共通 outbox、外部結果の照合基盤は未完成である。
 
-- 会社での位置: 中核
-- 製品の役割: 記録・調整
-- 実現主体: open-karte と外部 project 製品
-- 実装状態: 未実装
+### 運用
 
-## 人
+- configuration、feature activation、health、readiness
+- migration safety、seed verification、backup と restore の検証点
+- observability、監査 export、障害診断
+- API、Web、CLI、AI、callback の同一 application rule
 
-### 従業員台帳と directory
+現行実装には health、feature gate、migration、seed 検査、API、Web、CLI がある。すべての operation が同じ入口で提供されているわけではない。
 
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte
-- 実装状態: 実装済み
+## Company
 
-### 採用と候補者
+Company は一つの deployment で運営する会社の同一性、人、組織、責任、権限の正本である。
 
-- 会社での位置: 隣接
-- 製品の役割: 記録・調整
-- 実現主体: open-karte、人間、外部採用製品
-- 実装状態: 部分実装。募集と候補者パイプラインの記録は実装済み。外部採用製品との連携は未実装
+### 会社と法人
 
-### Onboarding
+- LegalEntity、会社 profile、法域
+- locale、timezone、基準日、通貨、会計年度
+- 事業所、勤務場所、法人、拠点、組織単位の区別
+- 外部 master との識別子対応と source
 
-- 会社での位置: 中核
-- 製品の役割: 所有・調整
-- 実現主体: open-karte、人間、外部 connector
-- 実装状態: 実装済み。外部 connector は未実装
+現行実装には明示的な Company profile と LegalEntity record がなく、timezone などは deployment 設定へ分散しているため未完成である。
 
-### 異動、休職、退職、再入社
+### 人と雇用
 
-- 会社での位置: 中核
-- 製品の役割: 所有・調整・記録
-- 実現主体: open-karte と権限ある人間
-- 実装状態: 部分実装。ライフサイクル event と archive はあるが、全関連能力の一貫した projection は継続課題
+- Person、Employee、Employment
+- employee code と不変 ID の分離
+- 雇用開始、在籍状態、休職、復職、終了、再雇用
+- valid time と recorded time を持つ履歴、訂正、重複禁止
 
-### 証明書と life event request
+現行実装には従業員台帳、在籍期間、状態期間、ライフサイクル revision がある。旧来の employee projection と期間モデルが併存しており、正本の統一は未完成である。
 
-- 会社での位置: 中核
-- 製品の役割: 調整・記録
-- 実現主体: open-karte、人間、外部専門 system
-- 実装状態: 部分実装
+### 組織
 
-### 個人設定
+- OrgUnit、Department、OrgUnit kind
+- Membership、ReportingRelation
+- 組織の有効期間、改組、統合、廃止
+- 過去時点の組織 snapshot
 
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte
-- 実装状態: 部分実装
+現行実装には部署、所属、reporting line、期間付き assignment がある。旧組織表と lifecycle projection の統一は未完成である。
 
-### 福利厚生と報酬事実
+### 職務と責任
 
-- 会社での位置: 中核
-- 製品の役割: 記録・参照
-- 実現主体: 外部 provider と open-karte
-- 実装状態: 部分実装
+- Job、Position、Grade、OrganizationalOffice
+- OfficeAssignment、ResponsibilityAssignment
+- OrganizationalAuthority、対象範囲、金額以外の条件、期限
+- CollectiveBody、構成員、定足数、決議方式
+- 委任可能性と継続責任主体
 
-## 時間
+現行実装には position、grade、governance role、組織責任の一部がある。責任、決裁権限、合議体、判断時 snapshot を一貫して強制するモデルは未完成である。
 
-### 勤怠
+### System との対応
 
-- 会社での位置: 中核
-- 製品の役割: 所有・記録
-- 実現主体: open-karte
-- 実装状態: 実装済み。法的適合判断は外部
+- AccountEmployeeLink
+- Principal を Person、Employee、Office と同一視しない対応
+- System の Case に対する会社上の判断資格の解決
+- 判断時点の Employment、Membership、ResponsibilityAssignment の snapshot
 
-### 休暇
+現行実装には Account と Employee の一対一対応がある。汎用 Case に資格 snapshot を返す境界は、workflow が Company 内にあるため未分離である。
 
-- 会社での位置: 中核
-- 製品の役割: 所有・調整
-- 実現主体: open-karte と人間
-- 実装状態: 実装済み。法定付与と適用判断は外部
+### 雇用事実と人事発令
 
-### Shift
+- 入社、異動、昇降格、役職変更、休職、復職、退職、再入社
+- 発令日、発効日、記録日、理由、根拠
+- 訂正、取消、競合検出、projection rebuild
 
-- 会社での位置: 中核
-- 製品の役割: 所有・調整
-- 実現主体: open-karte
-- 実装状態: 実装済み
+現行実装には personnel action と lifecycle revision がある。onboarding task、退職申請、証明書依頼などの手続きは Company の事実ではなく App と System workflow へ分離する。
 
-### 出張
+## Apps
 
-- 会社での位置: 中核
-- 製品の役割: 調整・記録
-- 実現主体: open-karte、人間、外部手配製品
-- 実装状態: 部分実装
+App は業務目的と業務上の不変条件を所有する。すべて `api/src/contexts/` 直下へ独立して置き、削除または無効化できる。
 
-### 労働時間と休暇の法的判断
+### 社内情報
 
-- 会社での位置: 外部必須
-- 製品の役割: 調整・記録
-- 実現主体: 外部労務 system と専門家
-- 実装状態: 非対象。入力事実、依頼、Assessment、採否、期限は体系内に持つ
+- `announcement`: 掲示、公開期間、対象
+- `knowledge`: 社内 knowledge article
+- `meeting`: 会議と議事録
+- `regulation`: 規程、版、施行、確認
+- `governance-document`: 統制文書、review、公開
 
-### Project 工数
+### 採用と人事手続き
 
-- 会社での位置: 隣接
-- 製品の役割: 記録・連携
-- 実現主体: 外部 project 製品または open-karte extension
-- 実装状態: 未実装
+- `recruitment`: 募集、候補者、選考記録
+- `onboarding`: 入社準備 template、assignment、task
+- `offboarding`: 退職申請と退職準備。雇用終了の事実は Company が所有する
+- `certificate-request`: 証明書の発行依頼と引渡し
+- `life-event`: 従業員の届出と確認
+- `work-style`: 勤務形態の申請と記録
+- `headcount-plan`: 組織別の要員計画
 
-## 資源と施設
+### 時間
 
-### 備品台帳、custody、loan
+- `attendance`: 打刻と勤務実績
+- `leave`: 休暇申請と残数記録
+- `family-care-leave`: 育児・介護休業の申請記録
+- `shift`: pattern、assignment、交代依頼
+- `company-calendar`: 稼働日と休日
+- `business-trip`: 出張申請と実績
 
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte
-- 実装状態: 実装済み
+法定付与、残業適法性、労務判断は外部専門製品と専門家が担う。
 
-### 棚卸し
+### 社内の金銭手続き
 
-- 会社での位置: 中核
-- 製品の役割: 所有・記録
-- 実現主体: open-karte と人間
-- 実装状態: 実装済み
+- `expense`: 経費申請、社内承認、外部引渡し
+- `budget`: 部署別の社内予算枠
+- `ringi`: 支出や契約に先立つ社内決裁依頼
+- `compensation-change`: 給与改定の社内提案と発令事実
 
-### 貸与品の request と reservation
+仕訳、税額、給与、支払、銀行残高を正本にしない。
 
-- 会社での位置: 中核
-- 製品の役割: 所有・調整
-- 実現主体: open-karte
-- 実装状態: 部分実装。現在の rental request は資産台帳の確保と同義ではない
+### 資源と施設
 
-### 書籍貸出
+- `asset`: 備品台帳、custody、貸出、返却、廃棄
+- `stocktake`: 棚卸しと差異記録
+- `room`: 会議室と排他予約
+- `rental`: 貸与依頼と返却
+- `software-license`: software entitlement と割当
 
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte domain extension または外部 library 製品
-- 実装状態: 未実装。BookEdition、BookCopy、Loan、HoldRequest を [ドメイン拡張規約](./domain-extension.md) で定義する
+### 対外管理
 
-### 会議室
+- `partner`: 取引先の社内参照台帳
+- `contract`: 契約記録、期限、更新判断
+- `antisocial-check`: 外部 check の依頼、結果主張、社内採否
 
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte
-- 実装状態: 実装済み
+顧客管理、営業、受注、法的契約解釈、本人確認の最終判断を実行しない。
 
-### 駐車場、座席、設備予約
+### 安全と規律
 
-- 会社での位置: 中核
-- 製品の役割: 所有・調整
-- 実現主体: open-karte domain extension または外部 facility 製品
-- 実装状態: 未実装。共通 Reservation と各資源固有 metadata を分ける
+- `health-checkup`: 実施記録と期限
+- `work-accident`: 労災と事故の記録
+- `disciplinary-action`: 懲戒手続きと発令記録
+- `commendation`: 表彰記録
+- `it-incident`: security と IT incident の案件
 
-### 資産保守と software entitlement
+医学的判断、法的判断、労務適否の最終判断を実行しない。
 
-- 会社での位置: 中核
-- 製品の役割: 調整・記録
-- 実現主体: 外部資産管理製品と open-karte
-- 実装状態: 部分実装。ライセンス・SaaS の台帳は実装済み。資産保守は未実装
+### 成長と対話
 
-### 拠点、入退館、物理 security
+- `goal`: 全社、部門、個人の目標
+- `performance-review`: 評価 cycle、form、判断記録
+- `skill`: skill definition と保有記録
+- `certification`: 資格定義と保有記録
+- `training`: course と受講記録
+- `career`: 社内公募、応募、career sheet
+- `one-on-one`: 面談記録
+- `survey`: 調査と回答
+- `thanks`: 感謝 message、point、reward
 
-- 会社での位置: 中核
-- 製品の役割: 調整・記録
-- 実現主体: 外部 access control 製品
-- 実装状態: 未実装
+### 合成表示
 
-## 金銭、調達、契約
+dashboard、inbox、directory、search は複数コンテキストの read model または UI composition とする。独自の業務事実、状態遷移、正本 table を持たない。
 
-### 経費
+### 現行実装
 
-- 会社での位置: 中核
-- 製品の役割: 所有・調整・記録
-- 実現主体: open-karte と外部会計・支払製品
-- 実装状態: 実装済み。支払、仕訳、税務は外部
+独立した App context はまだ存在しない。上記 App の実装は `api/src/contexts/company` に同居しており、機能ごとの domain、application、infrastructure、route の有無と完成度に差がある。
 
-### Budget
+App として分離する際は、既存コードがあることだけで完成扱いにしない。認可、失敗、競合、訂正、監査、無効化、削除可能性、route test を検査し、不足を同じ Task で完成させるか route registry から外す。
 
-- 会社での位置: 中核
-- 製品の役割: 所有・記録
-- 実現主体: open-karte と外部計画製品
-- 実装状態: 実装済み。会計予算の正本ではない
+## 外部連携
 
-### 給与明細と給与改定
+次は会社運営に必要でも、この製品内に実装しない。専門製品または専門家を正本とし、API connector で接続する。
 
-- 会社での位置: 外部必須
-- 製品の役割: 調整・記録・参照
-- 実現主体: 外部給与製品と権限ある人間
-- 実装状態: 部分実装。給与改定の事実記録と閲覧は実装済み。給与明細は schema のみ。給与計算は行わない
+### 会計と税務
 
-### 年末調整
+- 総勘定元帳、勘定科目、仕訳
+- 月次・年次決算、財務諸表
+- 消費税、法人税、地方税などの税額計算
+- 税務申告、電子申告、法定帳票の確定
 
-- 会社での位置: 外部必須
-- 製品の役割: 調整・記録
-- 実現主体: 外部税務・給与製品と専門家
-- 実装状態: 台帳のみ。税額計算と適用判断は行わない
+### 給与と社会保険
 
-### 取引先、契約、購買
+- 給与、賞与、控除、手取りの計算
+- 源泉徴収、住民税、年末調整の計算
+- 社会保険料、労働保険料の計算と届出判断
+- 給与振込と給与明細の法的確定
 
-- 会社での位置: 中核
-- 製品の役割: 調整・記録
-- 実現主体: open-karte、人間、外部契約・購買製品
-- 実装状態: 部分実装。取引先台帳と契約記録は実装済み。購買と発注は未実装
+### 資金移動
 
-### 支払
+- 送金、決済、清算、返金
+- 銀行口座と残高の正本
+- 法人カード取引の実行と確定
+- 資金繰り、与信枠、決済ネットワーク
 
-- 会社での位置: 外部必須
-- 製品の役割: 調整・記録
-- 実現主体: 外部 payment provider と金融機関
-- 実装状態: 未実装。提案、決定、指示、外部 Assertion、reconciliation を扱い、資金移動は行わない
+### 法務と専門判断
 
-### 法人 card と配賦
+- 法令適合性、契約解釈、届出義務の最終判断
+- 電子署名の法的効力判定と認証局
+- 本人確認、信用、制裁、反社会的勢力の最終判断
+- 医学的診断、産業保健、労務適否の最終判断
 
-- 会社での位置: 中核
-- 製品の役割: 調整・記録
-- 実現主体: 外部 card・会計製品
-- 実装状態: 未実装
+### 事業固有システム
 
-### 会計、税務、給与計算
+- 販売、CRM、marketing、受注
+- 顧客向け製品提供と customer support
+- 商品在庫、倉庫、調達、製造、品質、物流
+- 業種固有の production system
 
-- 会社での位置: 外部必須
-- 製品の役割: 調整・記録・参照
-- 実現主体: 外部専門製品と専門家
-- 実装状態: 非対象。input、request、external computation、acceptance、evidence は体系内に持つ
+外部連携では、入力、社内依頼、Decision、ExecutionAuthorization、外部への指示、外部 Assertion、採否、照合、例外、証拠を分離して記録する。内部承認を外部成功として表示してはならない。
 
-## 成長と対話
+## 承認の責任分担
 
-### 目標、評価 cycle、評価
+経費申請を例に責任を分ける。
 
-- 会社での位置: 中核
-- 製品の役割: 所有・調整・記録
-- 実現主体: open-karte と人間
-- 実装状態: 実装済み
+```mermaid
+sequenceDiagram
+  participant Expense as Expense App
+  participant Company
+  participant System
+  participant Human
+  participant Accounting as External accounting
 
-### Skill と training
+  Expense->>Company: 判断時点の会社上の資格を照会
+  Company-->>Expense: 責任主体と資格snapshot
+  Expense->>System: 対象版、digest、資格snapshotを持つCaseを作成
+  System->>Human: Taskを割当
+  Human->>System: HumanAttestationとDecision
+  System-->>Expense: ExecutionAuthorization
+  Expense->>Expense: 実行直前に対象版を検査
+  Expense->>Accounting: connectorへ承認済み指示を引渡し
+  Accounting-->>System: 出所付きAssertion
+  System-->>Expense: 照合結果
+```
 
-- 会社での位置: 中核
-- 製品の役割: 所有・記録
-- 実現主体: open-karte と外部 learning 製品
-- 実装状態: 実装済み。外部 learning 連携は未実装
+System は経費の意味、Employee、Department を知らない。Company は経費 record と workflow state を持たない。Expense App は認証、承認状態、会社組織の正本を複製しない。System から Company を呼ばず、App または API composition が Company の資格 snapshot を取得して System の型へ渡す。
 
-### Career と社内公募
+## 完成の判定
 
-- 会社での位置: 中核
-- 製品の役割: 所有・調整
-- 実現主体: open-karte
-- 実装状態: 実装済み
+能力は次をすべて確認できるまで実装済みとしない。
 
-### 個別面談と survey
+- 対象、主体、関係、状態、出来事、版、有効期間、source of truth が定義されている
+- 不正状態を domain rule または database constraint で拒否する
+- technical permission と会社上の authority を必要な時点で検査し、評価不能を拒否する
+- 取消、訂正、競合、timeout、重複、順序逆転、部分失敗、再試行の結果が定義されている
+- 重要な変更を actor、理由、対象版、証拠とともに再構成できる
+- Web、CLI、AI、callback が同じ application rule を通る
+- unit、application、repository、route、認可、失敗、再試行の test がある
+- App の無効化を API が強制し、削除が他の App の変更を要求しない
+- 外部連携が送信、受理、外部成功、社内採用、照合を分ける
 
-- 会社での位置: 中核
-- 製品の役割: 所有・記録
-- 実現主体: open-karte
-- 実装状態: 実装済み
-
-### 感謝 point
-
-- 会社での位置: 隣接
-- 製品の役割: 所有・調整
-- 実現主体: open-karte と外部 reward provider
-- 実装状態: 実装済み。point は法定通貨、給与、会計残高ではない
-
-## 知識と governance
-
-### 社内 knowledge
-
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte
-- 実装状態: 実装済み
-
-### 規程版、公開、対象、acknowledgement
-
-- 会社での位置: 中核
-- 製品の役割: 調整・記録
-- 実現主体: open-karte と権限ある人間
-- 実装状態: 部分実装。同期、review、publish、acknowledgement はあるが、施行状態、candidate snapshot、合議体、rule enforcement は未完成
-
-### Procedure と Control
-
-- 会社での位置: 中核
-- 製品の役割: 定義・調整・記録
-- 実現主体: open-karte、人間、AI、外部製品
-- 実装状態: 部分実装。Definition の保存と表示はあり、汎用 ProcedureCase と ControlRun への実行 mapping は未完成
-
-## Risk、法務、compliance
-
-### 外部 check request
-
-- 会社での位置: 中核
-- 製品の役割: 調整・記録
-- 実現主体: 外部 check provider と権限ある人間
-- 実装状態: 部分実装。専用 request はあるが、最終判断と一般 connector は未完成
-
-### 法令知識と法的判断
-
-- 会社での位置: 外部必須
-- 製品の役割: 参照・調整・記録
-- 実現主体: 公式 source と外部専門家
-- 実装状態: 非対象。法的結論を自動生成しない
-
-### Data retention、開示、削除
-
-- 会社での位置: 中核
-- 製品の役割: 調整・記録・強制
-- 実現主体: open-karte、人間、外部専門家
-- 実装状態: 未実装
-
-### 労働安全衛生
-
-- 会社での位置: 外部必須
-- 製品の役割: 調整・記録
-- 実現主体: 外部専門家と専門製品
-- 実装状態: 部分実装。健康診断・ストレスチェックの実施記録と労災・事故の記録は実装済み。医学的判断と法的判断は外部
-
-### Risk register、ControlRun、内部 audit
-
-- 会社での位置: 中核
-- 製品の役割: 所有・調整・記録
-- 実現主体: open-karte と人間
-- 実装状態: 未実装。governance metadata の control 宣言は実行記録ではない
-
-### Security と privacy incident
-
-- 会社での位置: 中核
-- 製品の役割: 調整・記録
-- 実現主体: open-karte、人間、外部専門家
-- 実装状態: 部分実装。IT インシデントの発生と解消の記録は実装済み。procedure definition からの実行 case は未実装
-
-### Privacy management
-
-- 会社での位置: 中核
-- 製品の役割: 調整・記録・強制
-- 実現主体: open-karte、人間、外部専門家
-- 実装状態: 部分実装。field-level purpose、retention、data subject request、processing inventory は未完成
-
-## IAM と authority
-
-### Password、session、account
-
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte
-- 実装状態: 実装済み
-
-### Principal kind と外部認証
-
-- 会社での位置: 中核
-- 製品の役割: 所有・連携
-- 実現主体: open-karte と外部 identity provider
-- 実装状態: 部分実装。Human、Agent、Service、Connector の独立 Principal は未実装
-
-### System role と TechnicalPermission
-
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte
-- 実装状態: 部分実装
-
-### Scope、field policy、case assignment
-
-- 会社での位置: 中核
-- 製品の役割: 所有・強制
-- 実現主体: open-karte
-- 実装状態: 部分実装。route ごとの実装を共通 policy へ統合する余地がある
-
-### TaskProxy と職務分離
-
-- 会社での位置: 中核
-- 製品の役割: 所有・強制
-- 実現主体: open-karte
-- 実装状態: 部分実装
-
-### OrganizationalAuthority と HumanAttestation
-
-- 会社での位置: 中核
-- 製品の役割: 調整・記録・強制
-- 実現主体: open-karte と権限ある人間・合議体
-- 実装状態: 未実装。governance role と workflow approval は、ResponsibilityAssignment、判断時 snapshot、継続責任主体を含む概念の一部だけを表す
-
-### Break-glass access
-
-- 会社での位置: 中核
-- 製品の役割: 所有・強制・記録
-- 実現主体: open-karte と独立承認者
-- 実装状態: 未実装
-
-## Workflow と記録
-
-### 汎用 application workflow
-
-- 会社での位置: 中核
-- 製品の役割: 所有・調整
-- 実現主体: open-karte
-- 実装状態: 実装済み
-
-### 専用 request と approval
-
-- 会社での位置: 中核
-- 製品の役割: 所有・調整
-- 実現主体: open-karte
-- 実装状態: 部分実装。domain ごとに汎用 workflow との接続差がある
-
-### Case、Task、Decision、quorum
-
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte
-- 実装状態: 部分実装。workflow instance はあるが、全 domain 共通の case と CollectiveDecision は未完成
-
-### Proposal、HumanAttestation、ExecutionAuthorization
-
-- 会社での位置: 中核
-- 製品の役割: 所有・強制
-- 実現主体: open-karte
-- 実装状態: 未実装
-
-### Business event、audit、provenance
-
-- 会社での位置: 中核
-- 製品の役割: 所有・記録
-- 実現主体: open-karte
-- 実装状態: 部分実装。追記監査はあるが、actor chain と全 domain coverage は継続課題
-
-### Evidence、attachment、signature、retention
-
-- 会社での位置: 中核
-- 製品の役割: 調整・記録
-- 実現主体: open-karte と外部 document・signature 製品
-- 実装状態: 部分実装。evidence metadata はあるが、共通 attachment、電子署名、retention 実行は未完成
-
-## 外部連携と運用
-
-### API、Web、CLI
-
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte
-- 実装状態: 部分実装。全 operation が三提供面で同等ではない
-
-### AI Agent client
-
-- 会社での位置: 中核
-- 製品の役割: 所有・強制
-- 実現主体: open-karte と外部 AI runtime
-- 実装状態: 未実装。CLI 利用は可能だが AgentPrincipal、mandate、attestation chain はない
-
-### Notification
-
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte と外部 notification provider
-- 実装状態: 部分実装。内部通知はあるが、全 domain と外部 provider の統一 contract はない
-
-### 外部承認チャネル
-
-- 会社での位置: 中核
-- 製品の役割: 連携・強制
-- 実現主体: open-karte と外部 messaging provider
-- 実装状態: 未実装。外部 identity mapping、単回 state token、step-up、HumanAttestation callback contract はない
-
-### Metric projection と dashboard
-
-- 会社での位置: 中核
-- 製品の役割: 所有・参照
-- 実現主体: open-karte
-- 実装状態: 部分実装。dashboard はあるが、MetricDefinition、MetricObservation、as-of、provenance、集計と drill-down の共通認可は未実装
-
-### Batch、health、job operation
-
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte
-- 実装状態: 部分実装
-
-### Search、import、export
-
-- 会社での位置: 中核
-- 製品の役割: 所有・連携
-- 実現主体: open-karte
-- 実装状態: 未実装。domain ごとの検索はあるが横断 contract はない
-
-### Connector、outbox、inbox、reconciliation
-
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: open-karte と外部 adapter
-- 実装状態: 未実装。外部参照項目が存在しても、横断 connector、outbox、inbox、reconciliation contract はない
-
-### Self-host platform
-
-- 会社での位置: 中核
-- 製品の役割: 所有
-- 実現主体: 自社と open-karte
-- 実装状態: 実装済み
-
-## 網羅性の点検
-
-新しい能力が見つかったら、機能名を増やす前に次を確認する。
-
-- 会社に必要な能力か、製品が実行する能力か
-- 定義、所有、調整、強制、記録、参照、連携、非関与のどれか
-- 内部、人間、外部製品、専門家の誰が実現するか
-- source of truth はどこか
-- [会社メタモデル](./company-model.md) の既存概念で表せるか
-- [ドメイン拡張規約](./domain-extension.md) に従う固有 extension が必要か
-- 法律、税、支払など外部実現でも、依頼、Decision、Assertion、evidence が体系に残るか
-- AI が提案できる範囲、人間承認、実行境界、監査を説明できるか
+未完成の能力は未完成と表示し、重要な業務判断の正本にせず、新しい依存元を増やさない。
