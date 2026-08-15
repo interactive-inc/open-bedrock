@@ -9,7 +9,7 @@ import { ApplicationWorkflowRepository } from "@/contexts/company/infrastructure
 import { WorkflowSql } from "@/contexts/company/infrastructure/application/workflow-sql"
 import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
-import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
+import { ensureWorkflowStepEscalation } from "@/contexts/company/application/application/workflow/ensure-workflow-step-escalation"
 import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 

@@ -1,4 +1,5 @@
 import type { WorkflowApproverSelector } from "@/contexts/company/domain/application/application-workflow"
+import type { WorkflowApproverMatch } from "@/contexts/company/domain/application/workflow-approver"
 import type { Context } from "@/env"
 import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
@@ -14,18 +15,6 @@ import {
   roles,
 } from "@/schema"
 import { and, eq, isNotNull, isNull } from "drizzle-orm"
-
-export type WorkflowApproverProvenance = {
-  selector_index: number
-  selector: WorkflowApproverSelector
-  evidence: Readonly<Record<string, unknown>>
-}
-
-export type WorkflowApproverMatch = {
-  employeeId: number
-  accountId: number | null
-  provenance: WorkflowApproverProvenance
-}
 
 type OrganizationMembership = {
   employeeCode: string

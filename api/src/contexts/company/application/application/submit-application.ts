@@ -6,9 +6,9 @@ import { ApplicationRepository } from "@/contexts/company/infrastructure/applica
 import { ApplicationTemplateRepository } from "@/contexts/company/infrastructure/application/application-template-repository"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 import { ApplicationWorkflowRepository } from "@/contexts/company/infrastructure/application/application-workflow-repository"
-import { applicableWorkflowSteps } from "@/lib/application/applicable-workflow-steps"
-import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
-import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"
+import { applicableWorkflowSteps } from "@/contexts/company/application/application/workflow/applicable-workflow-steps"
+import { resolveWorkflowStepSnapshot } from "@/contexts/company/application/application/workflow/resolve-workflow-step-snapshot"
+import { UnresolvableWorkflowStepError } from "@/contexts/company/application/application/workflow/unresolvable-workflow-step-error"
 import { validateAndNormalizeApplicationPayload } from "@/contexts/company/application/application/validate-application-payload"
 
 export type Command = {

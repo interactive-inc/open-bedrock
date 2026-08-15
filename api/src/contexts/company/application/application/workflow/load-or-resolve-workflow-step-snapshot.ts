@@ -5,7 +5,7 @@ import type {
   WorkflowStepSnapshot,
 } from "@/contexts/company/infrastructure/application/application-workflow-repository"
 import { ApplicationWorkflowRepository } from "@/contexts/company/infrastructure/application/application-workflow-repository"
-import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
+import { resolveWorkflowStepSnapshot } from "@/contexts/company/application/application/workflow/resolve-workflow-step-snapshot"
 
 export type ResolvedWorkflowStepSnapshot = {
   snapshot: WorkflowStepSnapshot

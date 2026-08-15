@@ -19,9 +19,9 @@ import {
 } from "@/lib/errors"
 import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
 import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
-import { applicableWorkflowSteps } from "@/lib/application/applicable-workflow-steps"
-import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
-import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"
+import { applicableWorkflowSteps } from "@/contexts/company/application/application/workflow/applicable-workflow-steps"
+import { resolveWorkflowStepSnapshot } from "@/contexts/company/application/application/workflow/resolve-workflow-step-snapshot"
+import { UnresolvableWorkflowStepError } from "@/contexts/company/application/application/workflow/unresolvable-workflow-step-error"
 
 export type CreatedPersonnelActionRequest = {
   id: string

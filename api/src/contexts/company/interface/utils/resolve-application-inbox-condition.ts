@@ -1,6 +1,6 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
-import { activateDueWorkflowEscalations } from "@/lib/application/activate-due-workflow-escalations"
+import { activateDueWorkflowEscalations } from "@/contexts/company/application/application/workflow/activate-due-workflow-escalations"
 import { listManagedEmployeeIds } from "@/contexts/company/application/organization/list-managed-employee-ids"
 import { applications, applicationTemplates } from "@/schema"
 import { and, eq, inArray, ne, or, sql, type SQL } from "drizzle-orm"

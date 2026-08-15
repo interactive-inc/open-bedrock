@@ -1,5 +1,5 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { canDecideLegacyApplication } from "@/lib/application/can-decide-legacy-application"
+import { canDecideLegacyApplication } from "@/contexts/company/application/application/workflow/can-decide-legacy-application"
 import { NotifyApprovalResult } from "@/contexts/company/application/notification/notify-approval-result"
 import { ApplicationApproval } from "@/contexts/company/domain/application/application-approval.entity"
 import type { Context } from "@/env"

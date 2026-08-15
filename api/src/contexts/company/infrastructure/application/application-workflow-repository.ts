@@ -2,7 +2,7 @@ import type { ApplicationWorkflow } from "@/contexts/company/domain/application/
 import { parseApplicationWorkflow } from "@/contexts/company/domain/application/application-workflow"
 import { Application } from "@/contexts/company/domain/application/application.entity"
 import type { Context } from "@/env"
-import type { WorkflowStepSnapshotDraft } from "@/lib/application/resolve-workflow-step-snapshot"
+import type { WorkflowStepSnapshotDraft } from "@/contexts/company/domain/application/workflow-step-snapshot"
 import {
   applicationWorkflowApprovals,
   applicationWorkflowInstances,
