@@ -171,6 +171,6 @@ AI の prompt 全文または秘密を監査記録へ保存してはならない
 
 ## 現行実装差分
 
-現行 API は HumanPrincipal 相当の account と employee を中心に認証し、route ごとに Permission、本人関係、組織関係、案件候補を評価する。`AgentPrincipal`、`ConnectorPrincipal`、`ExecutionAuthorization`、`HumanAttestation` の独立表現は未実装である。
+現行 API は HumanPrincipal 相当の account と employee を中心に認証し、route ごとに Permission、本人関係、組織関係、案件候補を評価する。System には `HumanAttestation` と `ExecutionAuthorization` の domain 型と永続化制約があるが、Principal kind、step-up、共通 policy evaluation、application service、repository、Execution Gateway、既存 route からの利用は未実装である。`AgentPrincipal` と `ConnectorPrincipal` の独立した認証も未実装である。
 
-差分は [能力台帳](./capability-map.md)、コード、migration、テストで追跡する。目標型を実装済みとして扱ってはならない。
+System workflow の責任と利用済みと判定する条件は [System workflow](./system-workflow.md) に従う。差分は [能力台帳](./capability-map.md)、コード、migration、テストで追跡する。domain 型または空 table の存在だけで利用経路を実装済みとして扱ってはならない。

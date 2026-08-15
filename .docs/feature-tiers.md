@@ -86,6 +86,6 @@ App を削除するときは対象 context のディレクトリ、route module 
 
 ## 現行実装差分
 
-現在は System と Company の二コンテキストだけが存在し、App の実装は `api/src/contexts/company` に同居している。申請、承認、委任、判断、ワークフローも Company に残っており、System の汎用基盤へ分離できていない。
+現在は System と Company の二コンテキストだけが存在し、App の実装は `api/src/contexts/company` に同居している。System には案件、判断Task、判断証明、委任、実行許可の汎用kernelと永続化制約があるが、既存の申請、承認、委任、判断、ワークフローはまだ Company の実装とtableを使用しており、利用経路の切替は完了していない。
 
 受信箱の集約タブは App の無効化に完全には追従しない。無効な App の tab が残る場合も API は 404 で拒否するが、分離完了条件は UI の導線も有効化状態へ追従することである。
