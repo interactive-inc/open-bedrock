@@ -1,5 +1,5 @@
-import type { AccessTokenView } from "@system/application/auth/access-token-view"
-import { decoyPasswordHash } from "@system/application/auth/decoy-password-hash"
+import type { AccessTokenView } from "@/contexts/company/application/system-compatibility/auth/access-token-view"
+import { decoyPasswordHash } from "@/contexts/company/application/system-compatibility/auth/decoy-password-hash"
 import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { verifyPassword } from "@/lib/auth/verify-password"

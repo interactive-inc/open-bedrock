@@ -61,7 +61,7 @@ import {
   refreshTokens,
   rolePermissions,
   roles,
-} from "@/contexts/system/infrastructure/schema/compatibility/account-schema"
+} from "@/contexts/company/infrastructure/schema/compatibility/account-schema"
 import { systemCoreSchema } from "@/contexts/system/infrastructure/schema/system"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
@@ -93,7 +93,7 @@ export {
   rolePermissions,
   roles,
   systemSchema,
-} from "@/contexts/system/infrastructure/schema/compatibility/account-schema"
+} from "@/contexts/company/infrastructure/schema/compatibility/account-schema"
 export type {
   AccountRoleRow,
   AccountRow,
@@ -110,7 +110,7 @@ export type {
   RefreshTokenRow,
   RolePermissionRow,
   RoleRow,
-} from "@/contexts/system/infrastructure/schema/compatibility/account-schema"
+} from "@/contexts/company/infrastructure/schema/compatibility/account-schema"
 export * from "@/contexts/system/infrastructure/schema/system"
 export { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
 export type {

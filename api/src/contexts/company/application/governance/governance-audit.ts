@@ -6,7 +6,7 @@ import {
 } from "@/contexts/company/application/audit/company-audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
-import type { AuditJsonValue } from "@/contexts/system/application/audit/stable-json"
+import type { AuditJsonValue } from "@/contexts/company/application/system-compatibility/audit/stable-json"
 
 export function prepareGovernanceAudit(props: {
   c: Context
