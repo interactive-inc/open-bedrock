@@ -22,7 +22,11 @@
 import { Glob } from "bun"
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
-import { ROUTE_MODULE_REGISTRY, type RouteModuleRegistration } from "@/api/route-module.registry"
+import {
+  inspectApiRouteModuleRegistry,
+  type ApiRouteModuleRegistration,
+} from "@/api/api-route-module"
+import { ROUTE_MODULE_REGISTRY } from "@/api/route-module.registry"
 
 const SOURCE_ROOT = resolve(import.meta.dir, "../src")
 const APP_PATH = resolve(SOURCE_ROOT, "api/app.ts")
@@ -89,38 +93,20 @@ export function exportedMethods(source: string): Method[] {
 
 /** 明示registryを検査し、同じsourceの二重登録や消失をfail closedにする。 */
 export function assertRouteModuleRegistry(
-  routeModules: ReadonlyArray<RouteModuleRegistration>,
+  routeModules: ReadonlyArray<ApiRouteModuleRegistration>,
 ): void {
-  const contexts = new Set<string>()
+  const violations = inspectApiRouteModuleRegistry(routeModules)
+  if (violations.length > 0) throw new Error(violations.join("\n"))
+
   const routesDirectories = new Set<string>()
-  const importPrefixes = new Set<string>()
 
-  for (const [index, routeModule] of routeModules.entries()) {
-    if (contexts.has(routeModule.context)) {
-      throw new Error(`contextが重複しています: ${routeModule.context}`)
-    }
-    if (routesDirectories.has(routeModule.routesDirectory)) {
-      throw new Error(`routes directoryが重複しています: ${routeModule.routesDirectory}`)
-    }
-    if (importPrefixes.has(routeModule.routeImportPrefix)) {
-      throw new Error(`route import prefixが重複しています: ${routeModule.routeImportPrefix}`)
-    }
-
-    const expectedTier = index === 0 ? "system" : index === 1 ? "company" : "business"
-    if (routeModule.tier !== expectedTier) {
-      throw new Error(
-        `${routeModule.context}のtierは登録順${index + 1}では${expectedTier}である必要があります`,
-      )
-    }
-
+  for (const routeModule of routeModules) {
     const routesRoot = resolve(SOURCE_ROOT, routeModule.routesDirectory)
     if (!existsSync(routesRoot)) {
       throw new Error(`登録されたroutes directoryが存在しません: ${routeModule.routesDirectory}`)
     }
 
-    contexts.add(routeModule.context)
     routesDirectories.add(routeModule.routesDirectory)
-    importPrefixes.add(routeModule.routeImportPrefix)
   }
 
   const contextsRoot = resolve(SOURCE_ROOT, "contexts")
@@ -138,7 +124,7 @@ export function assertRouteModuleRegistry(
 
 /** 明示登録されたroute sourceだけを走査して登録対象を集める。 */
 export async function collectRegistrations(
-  routeModules: ReadonlyArray<RouteModuleRegistration> = ROUTE_MODULE_REGISTRY,
+  routeModules: ReadonlyArray<ApiRouteModuleRegistration> = ROUTE_MODULE_REGISTRY,
 ): Promise<RouteRegistration[]> {
   assertRouteModuleRegistry(routeModules)
 
