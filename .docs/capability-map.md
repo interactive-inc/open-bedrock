@@ -48,7 +48,7 @@ System は業務内容と会社組織から独立した、停止不能な実行�
 
 申請の業務内容は各 App が所有する。System は対象コンテキスト、resource kind、resource ID、resource version、proposal digest を保存し、任意 JSON を業務上の正本にしない。
 
-現行の application request、workflow、approval、delegation は Company 配下にあり、従業員と組織へ直接依存している。System には汎用の Case、Task、Decision、HumanAttestation、ExecutionAuthorization がないため未完成である。
+System には汎用の Case、DecisionTask、候補と除外の資格 snapshot、HumanAttestation、Delegation、ExecutionAuthorization と、quorum、自己判断禁止、append-only証跡、一回実行を強制する永続化制約がある。ProcedureDefinition、Assignment、repository と operation は未実装であり、現行の application request、workflow、approval、delegation は Company 配下で従業員と組織へ直接依存しているため、利用経路の分離は未完成である。
 
 ### 記録と証拠
 
@@ -135,7 +135,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - System の Case に対する会社上の判断資格の解決
 - 判断時点の Employment、Membership、ResponsibilityAssignment の snapshot
 
-現行実装には Account と Employee の一対一対応がある。汎用 Case に資格 snapshot を返す境界は、workflow が Company 内にあるため未分離である。
+現行実装には Account と Employee の一対一対応がある。System はopaqueな資格証拠参照とdigestを受け取れるが、それを生成する Company resolver は workflow から未分離である。
 
 ### 雇用事実と人事発令
 

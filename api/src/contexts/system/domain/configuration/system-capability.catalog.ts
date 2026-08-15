@@ -10,6 +10,7 @@ export const SYSTEM_CAPABILITY_NAMES = [
   "identity",
   "notifications",
   "oauth",
+  "workflow",
 ] as const
 
 export type SystemCapabilityName = (typeof SYSTEM_CAPABILITY_NAMES)[number]

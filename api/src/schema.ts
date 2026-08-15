@@ -62,7 +62,10 @@ import {
   rolePermissions,
   roles,
 } from "@/contexts/company/infrastructure/schema/compatibility/account-schema"
-import { systemCoreSchema } from "@/contexts/system/infrastructure/schema/system"
+import {
+  systemCoreSchema,
+  systemWorkflowSchema,
+} from "@/contexts/system/infrastructure/schema/system"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import {
@@ -1683,6 +1686,7 @@ export const headcountPlans = sqliteTable(
 export type HeadcountPlanRow = InferSelectModel<typeof headcountPlans>
 export const schema = {
   ...systemCoreSchema,
+  ...systemWorkflowSchema,
   accounts,
   accountEmployeeLinks,
   identities,

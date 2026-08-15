@@ -7,13 +7,21 @@
     "http",
     "iam",
     "identity",
-    "notifications"
+    "notifications",
+    "workflow"
   ],
   "forbiddenProductMarkers": ["bedrock"],
   "schemaTables": [
     "systemAccounts",
     "systemAuditEvents",
     "systemBootstrapState",
+    "systemCases",
+    "systemDecisionTaskCandidates",
+    "systemDecisionTaskExclusions",
+    "systemDecisionTasks",
+    "systemDelegations",
+    "systemExecutionAuthorizations",
+    "systemHumanAttestations",
     "systemIamRolePermissions",
     "systemIamRoles",
     "systemIdentityBindings",
@@ -34,6 +42,7 @@
     "idempotency",
     "identity",
     "notifications",
-    "oauth"
+    "oauth",
+    "workflow"
   ]
 }
