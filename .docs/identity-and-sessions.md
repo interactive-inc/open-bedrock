@@ -67,7 +67,7 @@ sequenceDiagram
 
 CLI が broker 用 PKCE verifier や identity token を保持することはない。API は broker state、PKCE verifier、CLI の loopback port と state を 10 分の一時レコードに保存し、callback で原子的に消費する。
 
-loopback に返す code は 60 秒で失効し、D1 には hash と解決済み account ID だけを保存する。`POST /auth/cli/token` は code を原子的に消費し、最新の account 状態と company-core の account・employee 対応を再確認してから session を発行する。
+loopback に返す code は 60 秒で失効し、D1 には hash と解決済み account ID だけを保存する。`POST /auth/cli/token` は code を原子的に消費し、最新の account 状態と Company の account・employee 対応を再確認してから session を発行する。
 
 ## 外部 identity 設定
 
