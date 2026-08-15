@@ -214,7 +214,7 @@ test("現在のcontext・lib sourceに未管理の違反がない", async () => 
 })
 
 test("既存lib違反baselineは完全一致かつ重複なしである", () => {
-  expect(LIB_BOUNDARY_BASELINE.length).toBe(2)
+  expect(LIB_BOUNDARY_BASELINE.length).toBe(0)
 
   const keys = LIB_BOUNDARY_BASELINE.map((violation) =>
     JSON.stringify([violation.file, violation.reason]),
