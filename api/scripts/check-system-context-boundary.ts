@@ -20,12 +20,10 @@ const CONTEXT_FIRST_LAYERS = ["domain", "application", "infrastructure", "interf
 const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"] as const
 const SYSTEM_PATH_MAPPING_LAYERS = [...SYSTEM_SELF_REFERENCE_LAYERS, "interface"] as const
 const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain", "interface"] as const
-const SYSTEM_SCHEMA_PATHS = ["system.ts", "system-core.ts"]
-  .flatMap((file) => [
-    resolve(SYSTEM_CONTEXT_ROOT, "infrastructure/schema", file),
-    resolve(SOURCE_ROOT, "schema", file),
-  ])
-  .filter(existsSync)
+const SYSTEM_SCHEMA_PATHS = [
+  resolve(SYSTEM_CONTEXT_ROOT, "infrastructure/schema"),
+  resolve(SOURCE_ROOT, "schema"),
+].flatMap(discoverSystemSchemaPaths)
 const SYSTEM_IMPLEMENTATION_ROOTS = [SYSTEM_CONTEXT_ROOT, API_SOURCE_ROOT].filter((root) =>
   SYSTEM_SELF_REFERENCE_LAYERS.some((layer) =>
     existsSync(
@@ -82,6 +80,22 @@ const COMPOSITION_MODULE = /^@\/(?:api\/)?composition(?:\/|$)/
 const CONTEXT_MODULE =
   /^@\/contexts\/([^/]+)\/(?:domain|application|infrastructure|interface)(?:\/|$)/
 const SYSTEM_SELF_REFERENCE_MODULE = /^@system\/(application|domain|infrastructure|interface)\/.+$/
+
+/** 配置を固定せず、System所有schemaのproduction TypeScriptを再帰的に列挙する。 */
+export function discoverSystemSchemaPaths(root: string): ReadonlyArray<string> {
+  if (!existsSync(root)) return []
+
+  return readdirSync(root, { withFileTypes: true })
+    .flatMap((entry) => {
+      const entryPath = resolve(root, entry.name)
+
+      if (entry.isDirectory()) return discoverSystemSchemaPaths(entryPath)
+      return entry.isFile() && entry.name.endsWith(".ts") && !entry.name.endsWith(".test.ts")
+        ? [entryPath]
+        : []
+    })
+    .sort((left, right) => left.localeCompare(right))
+}
 
 export type SystemBoundaryViolation = Readonly<{
   file: string

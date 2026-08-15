@@ -2,7 +2,7 @@ import type {
   SystemD1Context,
   SystemDatabaseContext,
 } from "@system/infrastructure/configuration/system-context"
-import { identities } from "@system/infrastructure/schema/system"
+import { identities } from "@system/infrastructure/schema/compatibility/account-schema"
 import { and, eq } from "drizzle-orm"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 

@@ -1,5 +1,5 @@
 import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context"
-import { identities } from "@system/infrastructure/schema/system"
+import { identities } from "@system/infrastructure/schema/compatibility/account-schema"
 import { and, eq, isNotNull, like, not } from "drizzle-orm"
 
 export type LegacySecretIdentity = Readonly<{
