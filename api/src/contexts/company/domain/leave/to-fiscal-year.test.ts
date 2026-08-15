@@ -1,4 +1,4 @@
-import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
+import { toFiscalYear } from "@/contexts/company/domain/leave/to-fiscal-year"
 import { describe, expect, test } from "bun:test"
 
 describe("toFiscalYear", () => {

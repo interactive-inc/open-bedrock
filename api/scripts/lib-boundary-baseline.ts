@@ -15,27 +15,4 @@ export const LIB_BOUNDARY_BASELINE: ReadonlyArray<ContextBoundaryViolation> = [
     reason:
       "lib から所有者のある実装へ依存しています: @/contexts/company/interface/test-helpers/create-identity-token",
   },
-  {
-    file: "src/lib/goal/can-read-goal-of.test.ts",
-    reason: "lib から所有者のある実装へ依存しています: @/contexts/company/domain/iam/session",
-  },
-  {
-    file: "src/lib/goal/can-read-goal-of.test.ts",
-    reason:
-      "lib から所有者のある実装へ依存しています: @/contexts/company/domain/organization/employee-relation",
-  },
-  {
-    file: "src/lib/goal/can-read-goal-of.test.ts",
-    reason:
-      "lib から所有者のある実装へ依存しています: @/contexts/company/interface/test-helpers/make-test-session",
-  },
-  {
-    file: "src/lib/goal/can-read-goal-of.ts",
-    reason: "lib から所有者のある実装へ依存しています: @/contexts/company/domain/iam/session",
-  },
-  {
-    file: "src/lib/goal/can-read-goal-of.ts",
-    reason:
-      "lib から所有者のある実装へ依存しています: @/contexts/company/domain/organization/employee-relation",
-  },
 ]

@@ -8,7 +8,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { periodOf } from "@/lib/thanks-points/period-of"
+import { periodOf } from "@/contexts/company/domain/thanks-points/period-of"
 import { toNonNegativePoints } from "@/contexts/company/application/thanks/to-non-negative-points"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
