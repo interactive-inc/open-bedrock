@@ -9,7 +9,7 @@ import { rateLimitMiddleware } from "@/contexts/company/interface/middlewares/ra
 import { requestContextMiddleware } from "@/contexts/company/interface/middlewares/request-context-middleware"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { auditNoStore } from "@/contexts/company/interface/middlewares/audit-no-store"
-import { toNegotiatedProblemResponse } from "@/contexts/system/interface/lib/to-negotiated-problem-response"
+import { toNegotiatedHttpExceptionResponse } from "@/api/to-negotiated-http-exception-response"
 
 /** CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。 */
 const defaultAllowedOrigins = ["http://localhost:3000", "http://localhost:5173"]
@@ -95,7 +95,7 @@ export const appBase = factory
       // それを尊重して返し、CLI/AI が理由（message）と code を受け取れるようにする。
       // res 未設定の素の HTTPException（401/413/429 等）は従来どおり {error: message} を返す。
       if (error.res) {
-        const negotiated = await toNegotiatedProblemResponse({
+        const negotiated = await toNegotiatedHttpExceptionResponse({
           error,
           accept: c.req.header("accept") ?? null,
         })
