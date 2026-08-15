@@ -12,7 +12,7 @@ const CONTEXTS_ROOT = resolve(SOURCE_ROOT, "contexts")
 const LIB_ROOT = resolve(SOURCE_ROOT, "lib")
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
-const API_ROOT_DIRECTORIES = new Set(["test"])
+const API_ROOT_DIRECTORIES = new Set(["routes", "test"])
 const API_ROOT_FILES = new Set([
   "api-route-module.ts",
   "app-base.ts",

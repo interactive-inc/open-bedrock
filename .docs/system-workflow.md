@@ -190,11 +190,11 @@ domain object の検証だけに依存してはならない。複数 request が
 - System workflow の application service、repository、transaction operation
 - HumanPrincipal kind、step-up、共通 policy evaluation と attestation 作成経路
 - Company の OrganizationalAuthority resolver と時点 snapshot
-- request App が所有する提案正規化、version、digest、completion binding
+- request App の変更不能な template version、request version、canonical proposal digest と System Case の binding
 - Execution Gateway、idempotency、outbox、外部 Assertion との接続
-- 既存 application request、approval、delegation、notification の System workflow への切替
+- request context にある既存 application request、approval、delegation、notification の System workflow への切替
 
-したがって、現行コードは安全な永続化と domain kernel であり、既存申請の実行基盤ではない。既存 route の挙動は従来実装が所有している。
+request App には template、検証済み payload、Employee に特化した subject、personnel action completion binding が存在する。ただし request version と proposal digest がなく、System Case と接続されていない。したがって、現行の System workflow は安全な永続化と domain kernel であり、既存申請の実行基盤ではない。既存 route の挙動は request context の従来実装が所有している。
 
 ## 利用済みの判定
 

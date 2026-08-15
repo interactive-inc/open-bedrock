@@ -2,7 +2,7 @@
 
 HTTP API は Principal、認可境界、resource、command、query、error、callback、client type の不変条件を保持する。
 
-実装済み route は `api/src/app.ts`、入出力は `api/src/interface`、生成 client type は `api/dist/app.d.ts` で確認する。未実装の Principal と実行認可も、実装時に同じ制約を満たす。
+実装済み route は `api/src/contexts/*/interface/routes`、`api/src/api/routes`、生成物の `api/src/api/app.ts`、生成 client type は `api/dist/api/app.d.ts` で確認する。未実装の Principal と実行認可も、実装時に同じ制約を満たす。
 
 認可は permission ベース(deny-by-default)で、権限のないリクエストは 403 を返す。ロールと permission の設計は [ロールと権限](./roles-and-permissions.md) を参照する。
 

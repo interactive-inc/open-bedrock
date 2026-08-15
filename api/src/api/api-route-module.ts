@@ -1,8 +1,8 @@
-export type ApiContextTier = "system" | "company" | "business"
+export type ApiRouteModuleTier = "system" | "company" | "business" | "composition"
 
 export type ApiRouteModuleRegistration = Readonly<{
   context: string
-  tier: ApiContextTier
+  tier: ApiRouteModuleTier
   routesDirectory: string
   routeImportPrefix: string
 }>
@@ -10,16 +10,18 @@ export type ApiRouteModuleRegistration = Readonly<{
 const contextNamePattern = /^[a-z][a-z0-9-]*$/
 
 function expectedRoutesDirectory(context: string): string {
-  return `contexts/${context}/interface/routes`
+  return context === "api" ? "api/routes" : `contexts/${context}/interface/routes`
 }
 
 function expectedRouteImportPrefix(context: string): string {
-  return context === "system"
-    ? "@system/interface/routes"
-    : `@/contexts/${context}/interface/routes`
+  return context === "api"
+    ? "@/api/routes"
+    : context === "system"
+      ? "@system/interface/routes"
+      : `@/contexts/${context}/interface/routes`
 }
 
-/** System > Company > Businessの順序とroute sourceの一意性を検査する。 */
+/** System > Company > Business > API compositionの順序とroute sourceの一意性を検査する。 */
 export function inspectApiRouteModuleRegistry(
   registry: ReadonlyArray<ApiRouteModuleRegistration>,
 ): ReadonlyArray<string> {
@@ -39,7 +41,14 @@ export function inspectApiRouteModuleRegistry(
     }
     contexts.add(module.context)
 
-    const expectedTier = index === 0 ? "system" : index === 1 ? "company" : "business"
+    const expectedTier =
+      index === 0
+        ? "system"
+        : index === 1
+          ? "company"
+          : module.context === "api"
+            ? "composition"
+            : "business"
     if (module.tier !== expectedTier) {
       violations.push(
         `${module.context}のtierは登録順${index + 1}では${expectedTier}である必要があります`,
@@ -66,6 +75,10 @@ export function inspectApiRouteModuleRegistry(
       violations.push(
         `${module.context}のroute import prefixが所有contextと一致しません: ${module.routeImportPrefix}`,
       )
+    }
+
+    if (module.tier === "composition" && index !== registry.length - 1) {
+      violations.push("API compositionのroute sourceはregistryの末尾に置く必要があります")
     }
   }
 

@@ -18,15 +18,7 @@ import {
   applications,
   applicationSubjects,
   applicationTemplates,
-  applicationWorkflowApprovals,
-  applicationWorkflowEvents,
-  applicationWorkflowInstances,
-  applicationWorkflowRevisions,
-  applicationWorkflows,
-  applicationWorkflowStepCandidates,
-  applicationWorkflowStepSnapshots,
-  approvalDelegations,
-} from "@/contexts/company/infrastructure/schema/application"
+} from "@/contexts/request/infrastructure/schema/request"
 import {
   employeeLifecycleRevisions,
   employeeStatusPeriodVersions,
@@ -406,7 +398,7 @@ export {
   applicationWorkflowStepCandidates,
   applicationWorkflowStepSnapshots,
   approvalDelegations,
-} from "@/contexts/company/infrastructure/schema/application"
+} from "@/contexts/request/infrastructure/schema/request"
 export type {
   ApplicationApprovalRow,
   ApplicationCompletionBindingRow,
@@ -421,7 +413,7 @@ export type {
   ApplicationWorkflowStepCandidateRow,
   ApplicationWorkflowStepSnapshotRow,
   ApprovalDelegationRow,
-} from "@/contexts/company/infrastructure/schema/application"
+} from "@/contexts/request/infrastructure/schema/request"
 
 export {
   employeeLifecycleRevisions,

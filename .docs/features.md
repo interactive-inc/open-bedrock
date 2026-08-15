@@ -2,7 +2,7 @@
 
 業務機能は API が保持し、CLI と Web は操作面として利用する。API、Web、CLI の提供範囲は一致を前提としない。
 
-実装状態は `api/src/interface`、`api/src/app.ts`、`cli/app`、`web/app`、migration、test と一致させる。schema だけが存在する給与明細と年末調整は実装済みと扱わず、roadmap 採用も意味しない。
+実装状態は `api/src/contexts/*`、`api/src/api/app.ts`、`api/src/api/routes`、`cli/app`、`web/app`、migration、test と一致させる。schema だけが存在する給与明細と年末調整は実装済みと扱わず、roadmap 採用も意味しない。
 
 ## 認証
 

@@ -2,7 +2,7 @@
 
 テーブル、URL、CLI コマンドの名前を全面的に定める。旧名は温存せず、別名も設けない。
 
-テーブル名、URL、CLI コマンドはいずれも実装済みである。実装の現況は `api/src/interface/routes`、`cli/app`、`.docs/sitemap.md` を正とする。
+テーブル名、URL、CLI コマンドはいずれも実装済みである。実装の現況は `api/src/contexts/*/interface/routes`、`api/src/api/routes`、`cli/app`、`.docs/sitemap.md` を正とする。
 
 URL と CLI の実装で本書から外れた点が三つある。いずれも本書の意図を保ったまま、実装上の制約に合わせたものである。
 

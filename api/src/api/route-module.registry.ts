@@ -10,4 +10,16 @@ export const ROUTE_MODULE_REGISTRY = [
     routesDirectory: "contexts/company/interface/routes",
     routeImportPrefix: "@/contexts/company/interface/routes",
   },
+  {
+    context: "request",
+    tier: "business",
+    routesDirectory: "contexts/request/interface/routes",
+    routeImportPrefix: "@/contexts/request/interface/routes",
+  },
+  {
+    context: "api",
+    tier: "composition",
+    routesDirectory: "api/routes",
+    routeImportPrefix: "@/api/routes",
+  },
 ] as const satisfies ReadonlyArray<ApiRouteModuleRegistration>
