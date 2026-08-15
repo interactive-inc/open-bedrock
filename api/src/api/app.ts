@@ -335,6 +335,7 @@ import * as trainingEnrollmentsRoute from "@/contexts/company/interface/routes/t
 import * as workAccidentsIdCloseRoute from "@/contexts/company/interface/routes/work-accidents/[id]/close/route"
 import * as workAccidentsRoute from "@/contexts/company/interface/routes/work-accidents/route"
 import * as healthRoute from "@system/interface/routes/health/route"
+import * as systemV1HealthRoute from "@system/interface/routes/system/v1/health/route"
 
 export const app = appBase
   .get("/accounts", ...accountsRoute.GET)
@@ -788,6 +789,7 @@ export const app = appBase
   .delete("/surveys/:survey_id", ...surveysSurveyIdRoute.DELETE)
   .post("/surveys/:survey_id/responses", ...surveysSurveyIdResponsesRoute.POST)
   .get("/surveys/:survey_id/summary", ...surveysSurveyIdSummaryRoute.GET)
+  .get("/system/v1/health", ...systemV1HealthRoute.GET)
   .get("/thanks-messages", ...thanksMessagesRoute.GET)
   .post("/thanks-messages", ...thanksMessagesRoute.POST)
   .get("/thanks-messages/me", ...thanksMessagesMeRoute.GET)

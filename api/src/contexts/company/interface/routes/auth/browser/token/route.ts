@@ -1,5 +1,5 @@
 import { IssueEmployeeSession } from "@/contexts/company/application/auth/issue-employee-session"
-import { BrowserLoginCodeRepository } from "@system/infrastructure/auth/browser-login-code-repository"
+import { BrowserLoginCodeRepository } from "@/contexts/company/infrastructure/system-compatibility/auth/browser-login-code-repository"
 import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity-repository"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"

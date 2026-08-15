@@ -1,4 +1,4 @@
-import { ResetAccountPassword } from "@system/application/iam/reset-account-password"
+import { ResetAccountPassword } from "@/contexts/company/application/system-compatibility/iam/reset-account-password"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"

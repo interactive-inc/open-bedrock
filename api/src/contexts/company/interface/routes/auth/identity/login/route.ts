@@ -2,7 +2,7 @@ import { AuthenticateIdentity } from "@/contexts/company/application/auth/authen
 import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
-import { IdentityLoginJtiRepository } from "@system/infrastructure/auth/identity-login-jti-repository"
+import { IdentityLoginJtiRepository } from "@/contexts/company/infrastructure/system-compatibility/auth/identity-login-jti-repository"
 import { ApplicationError, UnavailableError } from "@/lib/errors"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyIdentityToken } from "@/lib/auth/verify-identity-token"
