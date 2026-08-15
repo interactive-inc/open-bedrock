@@ -6,14 +6,10 @@ import ts from "typescript"
 
 const PROJECT_ROOT = resolve(import.meta.dir, "..")
 const SOURCE_ROOT = resolve(PROJECT_ROOT, "src")
-const API_SOURCE_ROOT =
-  existsSync(resolve(SOURCE_ROOT, "contexts/system")) ||
-  existsSync(resolve(SOURCE_ROOT, "domain/system"))
-    ? SOURCE_ROOT
-    : resolve(SOURCE_ROOT, "api")
-const SYSTEM_CONTEXT_ROOT = existsSync(resolve(SOURCE_ROOT, "contexts/system"))
-  ? resolve(SOURCE_ROOT, "contexts/system")
-  : API_SOURCE_ROOT
+const API_SOURCE_ROOT = existsSync(resolve(SOURCE_ROOT, "api"))
+  ? resolve(SOURCE_ROOT, "api")
+  : SOURCE_ROOT
+const SYSTEM_CONTEXT_ROOT = resolve(SOURCE_ROOT, "contexts/system")
 const LEGACY_CONTEXT_LAYERS = [
   "domain",
   "application",
@@ -25,33 +21,37 @@ const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"]
 const SYSTEM_PATH_MAPPING_LAYERS = [...SYSTEM_SELF_REFERENCE_LAYERS, "interface"] as const
 const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain", "interface"] as const
 const SYSTEM_SCHEMA_PATHS = ["system.ts", "system-core.ts"]
-  .map((file) =>
-    SYSTEM_CONTEXT_ROOT.endsWith("contexts/system")
-      ? resolve(SYSTEM_CONTEXT_ROOT, "infrastructure/schema", file)
-      : resolve(SOURCE_ROOT, "schema", file),
-  )
+  .flatMap((file) => [
+    resolve(SYSTEM_CONTEXT_ROOT, "infrastructure/schema", file),
+    resolve(SOURCE_ROOT, "schema", file),
+  ])
   .filter(existsSync)
-const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
-const SYSTEM_CAPABILITY_CATALOG_PATH = resolve(
-  SYSTEM_CONTEXT_ROOT,
-  SYSTEM_CONTEXT_ROOT.endsWith("contexts/system")
-    ? "domain/configuration/system-capability.catalog.ts"
-    : "domain/system/configuration/system-capability.catalog.ts",
+const SYSTEM_IMPLEMENTATION_ROOTS = [SYSTEM_CONTEXT_ROOT, API_SOURCE_ROOT].filter((root) =>
+  SYSTEM_SELF_REFERENCE_LAYERS.some((layer) =>
+    existsSync(
+      isContextFirstSystemRoot(root) ? resolve(root, layer) : resolve(root, layer, "system"),
+    ),
+  ),
 )
+const SYSTEM_SELF_REFERENCE_ROOT = SYSTEM_IMPLEMENTATION_ROOTS.includes(SYSTEM_CONTEXT_ROOT)
+  ? SYSTEM_CONTEXT_ROOT
+  : API_SOURCE_ROOT
+const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
+const SYSTEM_CAPABILITY_CATALOG_PATH = existsSync(
+  resolve(SYSTEM_CONTEXT_ROOT, "domain/configuration/system-capability.catalog.ts"),
+)
+  ? resolve(SYSTEM_CONTEXT_ROOT, "domain/configuration/system-capability.catalog.ts")
+  : resolve(API_SOURCE_ROOT, "domain/system/configuration/system-capability.catalog.ts")
 const SYSTEM_SOURCE_PATHS = [
-  ...CONTEXT_FIRST_LAYERS.map((layer) =>
-    SYSTEM_CONTEXT_ROOT.endsWith("contexts/system")
-      ? resolve(SYSTEM_CONTEXT_ROOT, layer)
-      : resolve(API_SOURCE_ROOT, layer, "system"),
-  ),
+  ...CONTEXT_FIRST_LAYERS.map((layer) => resolve(SYSTEM_CONTEXT_ROOT, layer)),
+  ...LEGACY_CONTEXT_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
   ...SYSTEM_SCHEMA_PATHS,
-] as const
+].filter(existsSync)
 const PRODUCT_NEUTRAL_SYSTEM_SOURCE_PATHS = new Set(
-  PRODUCT_NEUTRAL_SYSTEM_LAYERS.map((layer) =>
-    SYSTEM_CONTEXT_ROOT.endsWith("contexts/system")
-      ? resolve(SYSTEM_CONTEXT_ROOT, layer)
-      : resolve(API_SOURCE_ROOT, layer, "system"),
-  ),
+  PRODUCT_NEUTRAL_SYSTEM_LAYERS.flatMap((layer) => [
+    resolve(SYSTEM_CONTEXT_ROOT, layer),
+    resolve(API_SOURCE_ROOT, layer, "system"),
+  ]),
 )
 const TYPESCRIPT_CONFIG_PATHS = [
   "tsconfig.json",
@@ -74,7 +74,10 @@ const FORBIDDEN_VOCABULARY =
   /\b(announcements?|billing|care|chats?|company|companies|departments?|employees?|employments?|expenses?|facilities|facility|human\s+resources?|leaves?|org|organizations?|personnel|residents?|ringi|shifts?|staff|thanks|tweets?|twit|workforces?)\b/i
 const LAYER_MODULE =
   /^@\/(?:api\/)?(domain|application|infrastructure|interface\/converters)(?:\/(.*))?$/
-const SCHEMA_MODULE = /^@\/schema(?:\/(.*))?$/
+const GLOBAL_SCHEMA_MODULE = /^@\/api\/database\/schema(?:\/|$)/
+const LEGACY_SCHEMA_MODULE = /^@\/schema(?:\/(.*))?$/
+const API_ROOT_MODULE =
+  /^@\/api\/(?:configuration|context(?:-module\.registry)?|help-assets|iam|index|navigation|orchestration)(?:\/|$)/
 const COMPOSITION_MODULE = /^@\/(?:api\/)?composition(?:\/|$)/
 const CONTEXT_MODULE =
   /^@\/contexts\/([^/]+)\/(?:domain|application|infrastructure|interface)(?:\/|$)/
@@ -109,6 +112,10 @@ function isUnknownRecord(value: unknown): value is Readonly<Record<string, unkno
 
 function hasExportModifier(node: ts.Node & { modifiers?: ts.NodeArray<ts.ModifierLike> }): boolean {
   return node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ?? false
+}
+
+function isContextFirstSystemRoot(sourceRoot: string): boolean {
+  return sourceRoot.replaceAll("\\", "/").endsWith("/contexts/system")
 }
 
 /** System schema が所有する exported sqliteTable のシンボル名を構文木から集める。 */
@@ -180,20 +187,23 @@ export function collectSystemSchemaTableNames(file: string, source: string): str
 
 /** application/domain/infrastructure の System 直下にある capability namespace を集める。 */
 export function discoverSystemCapabilityNames(
-  apiSourceRoot = SYSTEM_CONTEXT_ROOT,
+  apiSourceRoots: string | ReadonlyArray<string> = SYSTEM_IMPLEMENTATION_ROOTS,
 ): ReadonlySet<string> {
   const capabilities = new Set<string>()
+  const roots = typeof apiSourceRoots === "string" ? [apiSourceRoots] : apiSourceRoots
 
-  for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
-    const systemRoot = apiSourceRoot.endsWith("contexts/system")
-      ? resolve(apiSourceRoot, layer)
-      : resolve(apiSourceRoot, layer, "system")
+  for (const sourceRoot of roots) {
+    for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
+      const systemRoot = isContextFirstSystemRoot(sourceRoot)
+        ? resolve(sourceRoot, layer)
+        : resolve(sourceRoot, layer, "system")
 
-    if (!existsSync(systemRoot)) continue
+      if (!existsSync(systemRoot)) continue
 
-    for (const entry of readdirSync(systemRoot, { withFileTypes: true })) {
-      if (layer === "infrastructure" && entry.name === "schema") continue
-      if (entry.isDirectory()) capabilities.add(entry.name)
+      for (const entry of readdirSync(systemRoot, { withFileTypes: true })) {
+        if (layer === "infrastructure" && entry.name === "schema") continue
+        if (entry.isDirectory()) capabilities.add(entry.name)
+      }
     }
   }
 
@@ -218,26 +228,29 @@ export function inspectSystemCapabilityRootEntries(
 }
 
 function inspectSystemCapabilityLayout(
-  apiSourceRoot = SYSTEM_CONTEXT_ROOT,
+  apiSourceRoots: string | ReadonlyArray<string> = SYSTEM_IMPLEMENTATION_ROOTS,
 ): SystemBoundaryViolation[] {
   const violations: SystemBoundaryViolation[] = []
+  const roots = typeof apiSourceRoots === "string" ? [apiSourceRoots] : apiSourceRoots
 
-  for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
-    const systemRoot = apiSourceRoot.endsWith("contexts/system")
-      ? resolve(apiSourceRoot, layer)
-      : resolve(apiSourceRoot, layer, "system")
+  for (const sourceRoot of roots) {
+    for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
+      const systemRoot = isContextFirstSystemRoot(sourceRoot)
+        ? resolve(sourceRoot, layer)
+        : resolve(sourceRoot, layer, "system")
 
-    if (!existsSync(systemRoot)) continue
+      if (!existsSync(systemRoot)) continue
 
-    violations.push(
-      ...inspectSystemCapabilityRootEntries(
-        relative(PROJECT_ROOT, systemRoot),
-        readdirSync(systemRoot, { withFileTypes: true }).map((entry) => ({
-          name: entry.name,
-          isDirectory: entry.isDirectory(),
-        })),
-      ),
-    )
+      violations.push(
+        ...inspectSystemCapabilityRootEntries(
+          relative(PROJECT_ROOT, systemRoot),
+          readdirSync(systemRoot, { withFileTypes: true }).map((entry) => ({
+            name: entry.name,
+            isDirectory: entry.isDirectory(),
+          })),
+        ),
+      )
+    }
   }
 
   return violations
@@ -564,12 +577,14 @@ export function selectDownstreamContextNames(
 export function discoverDownstreamContexts(apiSourceRoot = API_SOURCE_ROOT): ReadonlySet<string> {
   const directoryNames: string[] = []
 
-  const contextsRoot = resolve(apiSourceRoot, "contexts")
-  if (existsSync(contextsRoot)) {
+  const contextRoots = new Set([resolve(apiSourceRoot, "contexts")])
+  if (apiSourceRoot === API_SOURCE_ROOT) contextRoots.add(resolve(SOURCE_ROOT, "contexts"))
+
+  for (const contextsRoot of contextRoots) {
+    if (!existsSync(contextsRoot)) continue
+
     for (const entry of readdirSync(contextsRoot, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        directoryNames.push(entry.name)
-      }
+      if (entry.isDirectory()) directoryNames.push(entry.name)
     }
   }
 
@@ -642,12 +657,20 @@ function inspectModuleSpecifier(
     return [{ file, reason: "System の依存境界を迂回する相対 import があります" }]
   }
 
+  if (API_ROOT_MODULE.test(moduleSpecifier)) {
+    return [{ file, reason: `System から API root へ依存しています: ${moduleSpecifier}` }]
+  }
+
   if (moduleSpecifier === "@/env") {
     return [{ file, reason: "System から製品全体の実行時 Context へ依存しています: @/env" }]
   }
 
   if (COMPOSITION_MODULE.test(moduleSpecifier)) {
     return [{ file, reason: `System から composition へ依存しています: ${moduleSpecifier}` }]
+  }
+
+  if (GLOBAL_SCHEMA_MODULE.test(moduleSpecifier)) {
+    return [{ file, reason: `System から全体DB schema合成へ依存しています: ${moduleSpecifier}` }]
   }
 
   if (moduleSpecifier.startsWith("@system/")) {
@@ -666,7 +689,7 @@ function inspectModuleSpecifier(
       : [{ file, reason: `System から下位コンテキストへ依存しています: ${moduleSpecifier}` }]
   }
 
-  const schemaModule = moduleSpecifier.match(SCHEMA_MODULE)
+  const schemaModule = moduleSpecifier.match(LEGACY_SCHEMA_MODULE)
 
   if (schemaModule !== null) {
     const importedPath = schemaModule[1] ?? ""
@@ -825,7 +848,7 @@ function inspectTypeScriptConfig(path: string): SystemBoundaryViolation[] {
   return inspectSystemSelfReferencePathMappings(
     file,
     pathMappings,
-    relative(PROJECT_ROOT, SYSTEM_CONTEXT_ROOT),
+    relative(PROJECT_ROOT, SYSTEM_SELF_REFERENCE_ROOT),
   )
 }
 
