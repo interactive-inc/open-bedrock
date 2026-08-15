@@ -10,12 +10,12 @@ import {
 import { WorkflowSql } from "@/contexts/company/infrastructure/application/workflow-sql"
 import { workflowValidApprovalCountSql } from "@/contexts/company/infrastructure/application/workflow-valid-approval-count-sql"
 import { workflowValidApprovalsSql } from "@/contexts/company/infrastructure/application/workflow-valid-approvals-sql"
-import { resolveRepresentedApprover } from "@/lib/application/resolve-represented-approver"
-import { loadOrResolveWorkflowStepSnapshot } from "@/lib/application/load-or-resolve-workflow-step-snapshot"
-import { persistResolvedWorkflowStepSnapshot } from "@/lib/application/persist-resolved-workflow-step-snapshot"
-import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
-import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
-import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"
+import { resolveRepresentedApprover } from "@/contexts/company/application/application/workflow/resolve-represented-approver"
+import { loadOrResolveWorkflowStepSnapshot } from "@/contexts/company/application/application/workflow/load-or-resolve-workflow-step-snapshot"
+import { persistResolvedWorkflowStepSnapshot } from "@/contexts/company/application/application/workflow/persist-resolved-workflow-step-snapshot"
+import { ensureWorkflowStepEscalation } from "@/contexts/company/application/application/workflow/ensure-workflow-step-escalation"
+import { resolveWorkflowStepSnapshot } from "@/contexts/company/application/application/workflow/resolve-workflow-step-snapshot"
+import { UnresolvableWorkflowStepError } from "@/contexts/company/application/application/workflow/unresolvable-workflow-step-error"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
@@ -23,7 +23,7 @@ import type { ApplicationError } from "@/lib/errors"
 import {
   applicableWorkflowSteps,
   type WorkflowApplicant,
-} from "@/lib/application/applicable-workflow-steps"
+} from "@/contexts/company/application/application/workflow/applicable-workflow-steps"
 
 export type WorkflowDecision = { status: "pending" | "approved" | "rejected" }
 

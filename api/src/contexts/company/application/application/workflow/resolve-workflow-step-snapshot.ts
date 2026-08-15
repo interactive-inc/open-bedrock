@@ -1,34 +1,19 @@
 import type { ApplicationWorkflowStep } from "@/contexts/company/domain/application/application-workflow"
+import type {
+  WorkflowApproverMatch,
+  WorkflowApproverProvenance,
+} from "@/contexts/company/domain/application/workflow-approver"
+import type {
+  WorkflowStepCandidateSnapshot,
+  WorkflowStepSnapshotDraft,
+} from "@/contexts/company/domain/application/workflow-step-snapshot"
 import type { Context } from "@/env"
 import { accountEmployeeLinks, accounts } from "@/schema"
 import { eq } from "drizzle-orm"
-import { dueAt } from "@/lib/application/due-at"
-import { filterLiveWorkflowAccounts } from "@/lib/application/filter-live-workflow-accounts"
-import {
-  resolveWorkflowApproverMatches,
-  type WorkflowApproverMatch,
-  type WorkflowApproverProvenance,
-} from "@/lib/application/resolve-workflow-approver-matches"
-import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"
-
-export type WorkflowStepCandidateSnapshot = {
-  employeeId: number
-  accountId: number
-  source: "primary" | "escalation"
-  selectorsJson: string
-  eligibleFrom: string | null
-  resolvedAt: string
-}
-
-export type WorkflowStepSnapshotDraft = {
-  requiredApprovals: number
-  activatedAt: string
-  dueAt: string | null
-  escalatedAt: string | null
-  resolutionReason: "activation" | "legacy_backfill" | "manual_repair"
-  resolutionId: string
-  candidates: ReadonlyArray<WorkflowStepCandidateSnapshot>
-}
+import { dueAt } from "@/contexts/company/application/application/workflow/due-at"
+import { filterLiveWorkflowAccounts } from "@/contexts/company/application/application/workflow/filter-live-workflow-accounts"
+import { resolveWorkflowApproverMatches } from "@/contexts/company/application/application/workflow/resolve-workflow-approver-matches"
+import { UnresolvableWorkflowStepError } from "@/contexts/company/application/application/workflow/unresolvable-workflow-step-error"
 
 export async function resolveWorkflowStepSnapshot(props: {
   c: Context

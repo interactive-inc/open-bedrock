@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { approvalDelegations } from "@/schema"
 import { and, asc, eq, gt, inArray, isNull, lte, or } from "drizzle-orm"
-import { filterLiveWorkflowAccounts } from "@/lib/application/filter-live-workflow-accounts"
+import { filterLiveWorkflowAccounts } from "@/contexts/company/application/application/workflow/filter-live-workflow-accounts"
 
 /**
  * 操作者が候補本人か、有効な委任を受けているかを判定し、代表する承認者を返す。

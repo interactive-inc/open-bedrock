@@ -4,7 +4,7 @@ import { ApplicationRepository } from "@/contexts/company/infrastructure/applica
 import { ApplicationWorkflowRepository } from "@/contexts/company/infrastructure/application/application-workflow-repository"
 import { WorkflowSql } from "@/contexts/company/infrastructure/application/workflow-sql"
 import { workflowReachableApprovalCountSql } from "@/contexts/company/infrastructure/application/workflow-reachable-approval-count-sql"
-import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
+import { ensureWorkflowStepEscalation } from "@/contexts/company/application/application/workflow/ensure-workflow-step-escalation"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
