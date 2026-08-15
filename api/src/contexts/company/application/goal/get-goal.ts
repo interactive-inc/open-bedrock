@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Goal } from "@/contexts/company/domain/goal/goal.entity"
 import type { Context } from "@/env"
-import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
+import { canReadGoalOf } from "@/contexts/company/domain/goal/can-read-goal-of"
 import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

@@ -2,8 +2,8 @@ import { LeaveBalanceRepository } from "@/contexts/company/infrastructure/leave/
 import type { Context } from "@/env"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { hasLeaveBalanceTracking } from "@/lib/leave/has-balance-tracking"
-import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
+import { hasLeaveBalanceTracking } from "@/contexts/company/domain/leave/has-balance-tracking"
+import { toFiscalYear } from "@/contexts/company/domain/leave/to-fiscal-year"
 import type { LeaveType } from "@/lib/schemas"
 
 /** 残高管理対象の種別のみ、申請時点で残数が足りるか確認する。対象外の種別は常に null（許可）。 */

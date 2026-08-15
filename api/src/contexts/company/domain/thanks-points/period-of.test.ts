@@ -1,4 +1,4 @@
-import { periodOf } from "@/lib/thanks-points/period-of"
+import { periodOf } from "@/contexts/company/domain/thanks-points/period-of"
 import { describe, expect, test } from "bun:test"
 
 describe("periodOf", () => {

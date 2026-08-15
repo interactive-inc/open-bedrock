@@ -1,7 +1,6 @@
 import { Session } from "@/contexts/company/domain/iam/session"
-import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
+import { canReadGoalOf } from "@/contexts/company/domain/goal/can-read-goal-of"
 import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
-import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 function sessionWith(permissions: ReadonlyArray<string>): Session {
@@ -24,27 +23,27 @@ const stranger: EmployeeRelation = { isSelf: false, isReport: false, isSameDepar
 
 describe("canReadGoalOf", () => {
   test("self is always allowed", () => {
-    expect(canReadGoalOf(makeTestSession("member"), self)).toBe(true)
+    expect(canReadGoalOf(sessionWith([]), self)).toBe(true)
   })
 
   test("hr (goal:read:all) reads a stranger", () => {
-    expect(canReadGoalOf(makeTestSession("hr"), stranger)).toBe(true)
+    expect(canReadGoalOf(sessionWith(["goal:read:all"]), stranger)).toBe(true)
   })
 
   test("manager (goal:read:reports) reads a report", () => {
-    expect(canReadGoalOf(makeTestSession("manager"), report)).toBe(true)
+    expect(canReadGoalOf(sessionWith(["goal:read:reports"]), report)).toBe(true)
   })
 
   test("manager cannot read a stranger", () => {
-    expect(canReadGoalOf(makeTestSession("manager"), stranger)).toBe(false)
+    expect(canReadGoalOf(sessionWith(["goal:read:reports"]), stranger)).toBe(false)
   })
 
   test("manager cannot read a same-department non-report (no department key)", () => {
-    expect(canReadGoalOf(makeTestSession("manager"), sameDept)).toBe(false)
+    expect(canReadGoalOf(sessionWith(["goal:read:reports"]), sameDept)).toBe(false)
   })
 
   test("member cannot read a report", () => {
-    expect(canReadGoalOf(makeTestSession("member"), report)).toBe(false)
+    expect(canReadGoalOf(sessionWith([]), report)).toBe(false)
   })
 
   test("goal:read:department holder reads same department only", () => {

@@ -1,4 +1,4 @@
-import { maxPointsPerThanks } from "@/lib/thanks-points/monthly-budget-points"
+import { maxPointsPerThanks } from "@/contexts/company/domain/thanks-points/monthly-budget-points"
 
 /**
  * 感謝に添えるポイントを検証する。0 はメッセージのみの感謝として許容する。

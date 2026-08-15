@@ -1,4 +1,4 @@
-import { periodOf } from "@/lib/thanks-points/period-of"
+import { periodOf } from "@/contexts/company/domain/thanks-points/period-of"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
