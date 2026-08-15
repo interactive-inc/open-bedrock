@@ -208,13 +208,15 @@ describe("route module registry", () => {
       assertRouteModuleRegistry([
         {
           context: "system",
+          tier: "system",
           routesDirectory: "contexts/system/interface/routes",
-          importPrefix: "@/one",
+          routeImportPrefix: "@/one",
         },
         {
           context: "system",
+          tier: "company",
           routesDirectory: "contexts/company/interface/routes",
-          importPrefix: "@/two",
+          routeImportPrefix: "@/two",
         },
       ]),
     ).toThrow("contextが重複しています: system")
@@ -225,11 +227,25 @@ describe("route module registry", () => {
       assertRouteModuleRegistry([
         {
           context: "missing",
+          tier: "system",
           routesDirectory: "contexts/missing/interface/routes",
-          importPrefix: "@/contexts/missing/interface/routes",
+          routeImportPrefix: "@/contexts/missing/interface/routes",
         },
       ]),
     ).toThrow("登録されたroutes directoryが存在しません")
+  })
+
+  test("System > Company > businessと異なるtier順を拒否する", () => {
+    expect(() =>
+      assertRouteModuleRegistry([
+        {
+          context: "system",
+          tier: "company",
+          routesDirectory: "contexts/system/interface/routes",
+          routeImportPrefix: "@system/interface/routes",
+        },
+      ]),
+    ).toThrow("systemのtierは登録順1ではsystemである必要があります")
   })
 })
 
