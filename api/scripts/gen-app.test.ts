@@ -226,8 +226,20 @@ describe("route module registry", () => {
     expect(() =>
       assertRouteModuleRegistry([
         {
-          context: "missing",
+          context: "system",
           tier: "system",
+          routesDirectory: "contexts/system/interface/routes",
+          routeImportPrefix: "@system/interface/routes",
+        },
+        {
+          context: "company",
+          tier: "company",
+          routesDirectory: "contexts/company/interface/routes",
+          routeImportPrefix: "@/contexts/company/interface/routes",
+        },
+        {
+          context: "missing",
+          tier: "business",
           routesDirectory: "contexts/missing/interface/routes",
           routeImportPrefix: "@/contexts/missing/interface/routes",
         },
