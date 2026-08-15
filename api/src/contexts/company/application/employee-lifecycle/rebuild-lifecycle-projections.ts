@@ -1,4 +1,4 @@
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import { containsDate } from "@/contexts/company/domain/employee-lifecycle/contains-date"
 import type { LifecycleSchedule } from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
 import type { Context } from "@/env"

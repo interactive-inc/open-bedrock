@@ -1,4 +1,4 @@
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { RefreshTokenRepository } from "@/contexts/company/infrastructure/auth/refresh-token-repository"
 import { assertAuditHmacSecret } from "@/lib/audit/assert-audit-hmac-secret"

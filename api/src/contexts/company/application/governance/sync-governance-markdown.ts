@@ -8,7 +8,7 @@ import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import type { Context } from "@/env"
 import type { GovernanceDocumentRecord } from "@/contexts/company/infrastructure/governance/governance-repository"
 import { GovernanceRepository } from "@/contexts/company/infrastructure/governance/governance-repository"
-import { PERMISSION_KEYS } from "@/composition/iam/permission-key.catalog"
+import { PERMISSION_KEYS } from "@/contexts/company/domain/iam/permission-key.catalog"
 import { prepareGovernanceAudit } from "@/contexts/company/application/governance/governance-audit"
 import {
   ConflictError,

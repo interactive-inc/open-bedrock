@@ -36,7 +36,7 @@ export type AuditClientName = z.infer<typeof auditClientNameSchema>
 export type AuditRequestContext = z.infer<typeof auditRequestContextSchema>
 
 /** Company監査表へ投影するrequest文脈付きrecord。System永続化モデルとは共有しない。 */
-export type SystemAuditEventRecord = Readonly<{
+export type CompanyAuditRecord = Readonly<{
   eventId: string
   requestId: string
   actorAccountId: number | null
@@ -54,7 +54,7 @@ export type SystemAuditEventRecord = Readonly<{
   createdAt: number
 }>
 
-export type SystemAuditEventInput = Readonly<{
+export type CompanyAuditRecordInput = Readonly<{
   actorAccountId: number | null
   action: string
   target: Readonly<{ type: string; id: string | null }>
@@ -67,7 +67,7 @@ export type SystemAuditEventInput = Readonly<{
   now: Date
 }>
 
-export type SystemAuditEventSummary = Readonly<{
+export type CompanyAuditSummary = Readonly<{
   eventId: string
   requestId: string
   actorAccountId: number | null
@@ -80,7 +80,7 @@ export type SystemAuditEventSummary = Readonly<{
   createdAt: number
 }>
 
-export type SystemAuditEventDetail = SystemAuditEventSummary &
+export type CompanyAuditDetail = CompanyAuditSummary &
   Readonly<{
     authorizationJson: string | null
     beforeJson: string | null
@@ -112,10 +112,10 @@ function serializeOptionalProjection(value: AuditJsonValue | undefined): string 
 }
 
 /** Account を主体とする汎用の append-only 監査エンベロープを生成する。 */
-export function createSystemAuditEvent(
-  input: SystemAuditEventInput,
+export function createCompanyAuditRecord(
+  input: CompanyAuditRecordInput,
   context: AuditRequestContext,
-): SystemAuditEventRecord {
+): CompanyAuditRecord {
   const eventInput = parseManagedValue(
     eventEnvelopeSchema,
     input,

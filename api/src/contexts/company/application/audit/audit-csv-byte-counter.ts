@@ -1,6 +1,10 @@
-import type { AuditEventDetail } from "@/composition/audit/audit-event"
+import type { AuditEventDetail } from "@/contexts/company/application/audit/company-audit-event"
 import { PayloadTooLargeError } from "@/lib/errors"
-import { AUDIT_CSV_HEADER, AUDIT_CSV_MAX_BYTES, toAuditCsvRow } from "@/lib/audit/to-audit-csv-row"
+import {
+  AUDIT_CSV_HEADER,
+  AUDIT_CSV_MAX_BYTES,
+  toAuditCsvRow,
+} from "@/contexts/company/application/audit/to-audit-csv-row"
 
 const UTF8_ENCODER = new TextEncoder()
 

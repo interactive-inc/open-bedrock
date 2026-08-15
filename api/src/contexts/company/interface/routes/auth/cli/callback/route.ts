@@ -1,5 +1,5 @@
 import { ResolveCliIdentity } from "@/contexts/company/application/auth/resolve-cli-identity"
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import type { HonoEnv } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { CliLoginCodeRepository } from "@system/infrastructure/auth/cli-login-code-repository"

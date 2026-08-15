@@ -1,4 +1,4 @@
-import type { PermissionKey } from "@/composition/iam/permission-key.catalog"
+import type { PermissionKey } from "@/contexts/company/domain/iam/permission-key.catalog"
 
 type PermissionEntry = {
   key: PermissionKey

@@ -3,13 +3,41 @@ import {
   checkContextBoundaries,
   classifyContextModule,
   classifyContextSource,
+  inspectApiRootPath,
   inspectBoundaryBaseline,
   inspectContextSource,
   inspectContextTestDirectory,
+  inspectLegacyRuntimeRootPath,
   inspectLibSource,
 } from "./check-context-boundaries"
 import { LIB_BOUNDARY_BASELINE } from "./lib-boundary-baseline"
 import { describe, expect, test } from "bun:test"
+
+describe("API root structure", () => {
+  test("HTTP compositionと横断testだけを許可する", () => {
+    expect(inspectApiRootPath("src/api/app-base.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/app.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/route-module.registry.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/test/app.test.ts")).toEqual([])
+  })
+
+  test("機能実装とDDD mini-treeの流入を拒否する", () => {
+    expect(inspectApiRootPath("src/api/accounts/delete-account.ts")).not.toEqual([])
+    expect(inspectApiRootPath("src/api/test/domain/entity.ts")).toEqual([
+      {
+        file: "src/api/test/domain/entity.ts",
+        reason: "API rootにDDD layer domain を作らず、所有contextへ配置してください",
+      },
+    ])
+  })
+})
+
+test("所有者不明のcomposition・platform rootへの再配置を拒否する", () => {
+  expect(inspectLegacyRuntimeRootPath("src/composition/iam/catalog.ts")).not.toEqual([])
+  expect(inspectLegacyRuntimeRootPath("src/platform/database.ts")).not.toEqual([])
+  expect(inspectLegacyRuntimeRootPath("src/api/app.ts")).toEqual([])
+  expect(inspectLegacyRuntimeRootPath("src/lib/time/clock.ts")).toEqual([])
+})
 
 test("context横断テストを単数形testへ配置する", () => {
   expect(

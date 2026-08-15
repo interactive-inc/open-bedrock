@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
+import type { AuditEventDetail } from "@/contexts/company/application/audit/company-audit-event"
+import { toAuditCsv } from "@/contexts/company/application/audit/to-audit-csv"
+import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/application/audit/to-audit-csv-row"
 import { PayloadTooLargeError } from "@/lib/errors"
-import { toAuditCsv } from "@/lib/audit/to-audit-csv"
-import { AUDIT_CSV_MAX_BYTES } from "@/lib/audit/to-audit-csv-row"
-import type { AuditEventDetail } from "@/composition/audit/audit-event"
 
 function detail(overrides: Partial<AuditEventDetail> = {}): AuditEventDetail {
   return {

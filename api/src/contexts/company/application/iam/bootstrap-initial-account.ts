@@ -1,4 +1,4 @@
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
 import type { Context } from "@/env"
 import { BootstrapAccountRepository } from "@/contexts/company/infrastructure/iam/bootstrap-account-repository"

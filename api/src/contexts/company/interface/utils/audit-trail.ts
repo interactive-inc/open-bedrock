@@ -1,6 +1,6 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { AuditEventInput } from "@/composition/audit/audit-event"
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import type { AuditEventInput } from "@/contexts/company/application/audit/company-audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import type { Context } from "@/env"
 import type { AuditEventFilters } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"

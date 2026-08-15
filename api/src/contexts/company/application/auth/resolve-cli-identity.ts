@@ -1,5 +1,5 @@
 import { resolveLiveEmployeeAccess } from "@/contexts/company/application/auth/resolve-live-employee-access"
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { AccountProvisioner } from "@/contexts/company/infrastructure/iam/account-provisioner"

@@ -1,5 +1,5 @@
-import { createAuditEvent } from "@/composition/audit/audit-event"
-import type { AuditAction } from "@/composition/audit/audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
+import type { AuditAction } from "@/contexts/company/application/audit/company-audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity-repository"

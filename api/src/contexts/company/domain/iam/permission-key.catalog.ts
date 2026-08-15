@@ -1,7 +1,7 @@
 import { COMPANY_PERMISSION_KEYS } from "@/contexts/company/domain/iam/company-permission-key.catalog"
 import { SYSTEM_PERMISSION_KEYS } from "@/contexts/system/domain/iam/system-permission-key.catalog"
-import { LEGACY_BUSINESS_PERMISSION_KEYS } from "@/composition/iam/legacy-business-permission-key.catalog"
-import { SYSTEM_CAPABILITY_PERMISSION_KEYS } from "@/composition/iam/system-capability-permission-key.catalog"
+import { LEGACY_BUSINESS_PERMISSION_KEYS } from "@/contexts/company/domain/iam/legacy-business-permission-key.catalog"
+import { SYSTEM_CAPABILITY_PERMISSION_KEYS } from "@/contexts/company/domain/iam/system-capability-permission-key.catalog"
 import { z } from "zod"
 
 /** 各bounded contextが所有する権限語彙を、APIとDB投影のために合成する。 */

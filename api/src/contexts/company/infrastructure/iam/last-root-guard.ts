@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/lib/auth/effective-root-permissions"
+import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/contexts/company/domain/iam/effective-root-permission-key.catalog"
 
 /**
  * D1 batch 内で、操作後にログイン可能な実効管理者が 0 件になる場合だけ SQLite の評価エラーを

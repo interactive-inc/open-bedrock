@@ -1,13 +1,16 @@
 import { describe, expect, test } from "bun:test"
-import type { AuditEventDetail, AuditEventRecord } from "@/composition/audit/audit-event"
+import type {
+  AuditEventDetail,
+  AuditEventRecord,
+} from "@/contexts/company/application/audit/company-audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
 import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
 import { AuditCursor } from "@/lib/audit/audit-cursor"
-import { toAuditCsv } from "@/lib/audit/to-audit-csv"
-import { AUDIT_CSV_MAX_BYTES } from "@/lib/audit/to-audit-csv-row"
+import { toAuditCsv } from "@/contexts/company/application/audit/to-audit-csv"
+import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/application/audit/to-audit-csv-row"
 import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
 import { schema } from "@/schema"
 import { drizzle } from "drizzle-orm/d1"

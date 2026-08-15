@@ -1,5 +1,5 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import { containsDate } from "@/contexts/company/domain/employee-lifecycle/contains-date"
 import type {
   LifecycleSchedule,
