@@ -15,6 +15,7 @@ import { describe, expect, test } from "bun:test"
 
 describe("API root structure", () => {
   test("HTTP compositionと横断testだけを許可する", () => {
+    expect(inspectApiRootPath("src/api/api-route-module.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/app-base.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/app.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/read-http-exception-problem.ts")).toEqual([])
