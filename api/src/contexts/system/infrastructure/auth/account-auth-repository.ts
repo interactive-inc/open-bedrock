@@ -6,7 +6,7 @@ import {
   permissions,
   rolePermissions,
   roles,
-} from "@system/infrastructure/schema/system"
+} from "@system/infrastructure/schema/compatibility/account-schema"
 import { eq, inArray } from "drizzle-orm"
 
 export type ResolvedAccount = {
