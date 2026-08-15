@@ -95,15 +95,22 @@ export function assertRouteModuleRegistry(
   const routesDirectories = new Set<string>()
   const importPrefixes = new Set<string>()
 
-  for (const routeModule of routeModules) {
+  for (const [index, routeModule] of routeModules.entries()) {
     if (contexts.has(routeModule.context)) {
       throw new Error(`contextが重複しています: ${routeModule.context}`)
     }
     if (routesDirectories.has(routeModule.routesDirectory)) {
       throw new Error(`routes directoryが重複しています: ${routeModule.routesDirectory}`)
     }
-    if (importPrefixes.has(routeModule.importPrefix)) {
-      throw new Error(`import prefixが重複しています: ${routeModule.importPrefix}`)
+    if (importPrefixes.has(routeModule.routeImportPrefix)) {
+      throw new Error(`route import prefixが重複しています: ${routeModule.routeImportPrefix}`)
+    }
+
+    const expectedTier = index === 0 ? "system" : index === 1 ? "company" : "business"
+    if (routeModule.tier !== expectedTier) {
+      throw new Error(
+        `${routeModule.context}のtierは登録順${index + 1}では${expectedTier}である必要があります`,
+      )
     }
 
     const routesRoot = resolve(SOURCE_ROOT, routeModule.routesDirectory)
@@ -113,7 +120,7 @@ export function assertRouteModuleRegistry(
 
     contexts.add(routeModule.context)
     routesDirectories.add(routeModule.routesDirectory)
-    importPrefixes.add(routeModule.importPrefix)
+    importPrefixes.add(routeModule.routeImportPrefix)
   }
 
   const contextsRoot = resolve(SOURCE_ROOT, "contexts")
@@ -165,7 +172,7 @@ export async function collectRegistrations(
       }
       seenAlias.set(alias, file)
 
-      const module = `${routeModule.importPrefix}/${file.replace(/\.ts$/, "")}`
+      const module = `${routeModule.routeImportPrefix}/${file.replace(/\.ts$/, "")}`
       const url = toUrl(file)
       for (const method of methods) {
         registrations.push({ module, url, method, alias })

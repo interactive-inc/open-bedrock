@@ -2,7 +2,6 @@
 export const systemContextModule = {
   context: "system",
   tier: "system",
-  routePrefixes: ["/auth", "/health", "/internal", "/oauth", "/system"],
   routesDirectory: "contexts/system/interface/routes",
-  importPrefix: "@system/interface/routes",
+  routeImportPrefix: "@system/interface/routes",
 } as const
