@@ -13,7 +13,13 @@ const LIB_ROOT = resolve(SOURCE_ROOT, "lib")
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
 const API_ROOT_DIRECTORIES = new Set(["test"])
-const API_ROOT_FILES = new Set(["app-base.ts", "app.ts", "route-module.registry.ts"])
+const API_ROOT_FILES = new Set([
+  "app-base.ts",
+  "app.ts",
+  "read-http-exception-problem.ts",
+  "route-module.registry.ts",
+  "to-negotiated-http-exception-response.ts",
+])
 const LAYER_FIRST_PLATFORM_DIRECTORIES = new Set([
   "lib",
   "middlewares",
