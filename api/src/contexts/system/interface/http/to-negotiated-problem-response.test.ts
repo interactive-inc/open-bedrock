@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { toNegotiatedProblemResponse } from "@system/interface/lib/to-negotiated-problem-response"
+import { toNegotiatedProblemResponse } from "@system/interface/http/to-negotiated-problem-response"
 
 describe("toNegotiatedProblemResponse", () => {
   const props = {

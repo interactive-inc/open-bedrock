@@ -1,7 +1,7 @@
 import type { HTTPException } from "hono/http-exception"
 import { acceptsSystemProblemDetails } from "@system/domain/http/accepts-system-problem-details"
 import { isSystemProblemStatus } from "@system/domain/http/is-system-problem-status"
-import { toNegotiatedProblemResponse } from "@system/interface/lib/to-negotiated-problem-response"
+import { toNegotiatedProblemResponse } from "@system/interface/http/to-negotiated-problem-response"
 import { readHttpExceptionProblem } from "@/api/read-http-exception-problem"
 
 type Props = Readonly<{ error: HTTPException; accept: string | null }>
