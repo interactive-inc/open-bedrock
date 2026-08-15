@@ -14,9 +14,9 @@ import {
   UnprocessableError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
-import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"
-import { applicableWorkflowSteps } from "@/lib/application/applicable-workflow-steps"
+import { resolveWorkflowStepSnapshot } from "@/contexts/company/application/application/workflow/resolve-workflow-step-snapshot"
+import { UnresolvableWorkflowStepError } from "@/contexts/company/application/application/workflow/unresolvable-workflow-step-error"
+import { applicableWorkflowSteps } from "@/contexts/company/application/application/workflow/applicable-workflow-steps"
 import { validateAndNormalizeApplicationPayload } from "@/contexts/company/application/application/validate-application-payload"
 
 export type ResubmittedApplication = {

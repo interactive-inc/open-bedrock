@@ -1,4 +1,4 @@
-import { filterLiveWorkflowAccounts } from "@/lib/application/filter-live-workflow-accounts"
+import { filterLiveWorkflowAccounts } from "@/contexts/company/application/application/workflow/filter-live-workflow-accounts"
 import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 

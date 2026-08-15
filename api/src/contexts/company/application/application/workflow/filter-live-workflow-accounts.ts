@@ -1,10 +1,9 @@
 import type { Context } from "@/env"
+import type { WorkflowAccount } from "@/contexts/company/domain/application/workflow-approver"
 import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { ApplicationError } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-
-export type WorkflowAccount = { employeeId: number; accountId: number }
 
 /** Active account and live employment are both required for an approval candidate. */
 export async function filterLiveWorkflowAccounts(

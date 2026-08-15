@@ -6,7 +6,7 @@ import {
 } from "@/contexts/company/interface/lib/errors"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { workflowReachableApprovalCountSql } from "@/contexts/company/infrastructure/application/workflow-reachable-approval-count-sql"
-import { activateDueWorkflowEscalations } from "@/lib/application/activate-due-workflow-escalations"
+import { activateDueWorkflowEscalations } from "@/contexts/company/application/application/workflow/activate-due-workflow-escalations"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

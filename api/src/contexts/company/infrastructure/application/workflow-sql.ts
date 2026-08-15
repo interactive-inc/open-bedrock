@@ -1,4 +1,4 @@
-import type { WorkflowStepSnapshotDraft } from "@/lib/application/resolve-workflow-step-snapshot"
+import type { WorkflowStepSnapshotDraft } from "@/contexts/company/domain/application/workflow-step-snapshot"
 import { workflowValidApprovalCountSql } from "@/contexts/company/infrastructure/application/workflow-valid-approval-count-sql"
 
 type WorkflowCandidate = WorkflowStepSnapshotDraft["candidates"][number]
