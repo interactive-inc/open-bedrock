@@ -3,15 +3,15 @@ import {
   auditClientNameSchema,
   auditOutcomeSchema,
   auditRequestContextSchema,
-  createSystemAuditEvent,
-} from "@/composition/audit/system-audit-event"
+  createCompanyAuditRecord,
+} from "@/contexts/company/application/audit/company-audit-record"
 import type {
   AuditClientName,
   AuditOutcome,
-  SystemAuditEventDetail,
-  SystemAuditEventRecord,
-  SystemAuditEventSummary,
-} from "@/composition/audit/system-audit-event"
+  CompanyAuditDetail,
+  CompanyAuditRecord,
+  CompanyAuditSummary,
+} from "@/contexts/company/application/audit/company-audit-record"
 import type { AuditJsonValue } from "@/contexts/system/application/audit/stable-json"
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
@@ -103,10 +103,9 @@ export type AuditEventInput = Readonly<{
   now: Date
 }>
 
-export type AuditEventRecord = SystemAuditEventRecord & Readonly<{ actorEmployeeId: number | null }>
-export type AuditEventSummary = SystemAuditEventSummary &
-  Readonly<{ actorEmployeeId: number | null }>
-export type AuditEventDetail = SystemAuditEventDetail & Readonly<{ actorEmployeeId: number | null }>
+export type AuditEventRecord = CompanyAuditRecord & Readonly<{ actorEmployeeId: number | null }>
+export type AuditEventSummary = CompanyAuditSummary & Readonly<{ actorEmployeeId: number | null }>
+export type AuditEventDetail = CompanyAuditDetail & Readonly<{ actorEmployeeId: number | null }>
 
 const actorIdSchema = z.number().int().safe().positive().nullable()
 const eventEnvelopeSchema = z.strictObject({
@@ -181,7 +180,7 @@ export function createAuditEvent(
     "audit_invalid_outcome",
   )
 
-  const record = createSystemAuditEvent(
+  const record = createCompanyAuditRecord(
     {
       actorAccountId: eventInput.actorAccountId,
       action,

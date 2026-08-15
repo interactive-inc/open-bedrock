@@ -3,7 +3,7 @@ import { resolveAccountSession } from "@system/application/auth/resolve-account-
 import { zAccountId } from "@system/domain/auth/account-id"
 import { getAccountSessionRejection } from "@/contexts/system/domain/auth/get-account-session-rejection"
 import type { RefreshTokenRotationDecision } from "@/contexts/system/domain/auth/refresh-token-rotation-decision"
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import type { AuditDecisionAppendFragment } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"

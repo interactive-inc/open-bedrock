@@ -1,5 +1,5 @@
 import { AuthenticateEmployee } from "@/contexts/company/application/auth/authenticate-employee"
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { ApplicationError, UnavailableError } from "@/lib/errors"

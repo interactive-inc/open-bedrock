@@ -1,6 +1,6 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { GetLifecycleState } from "@/contexts/company/application/employee-lifecycle/get-lifecycle-state"
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"

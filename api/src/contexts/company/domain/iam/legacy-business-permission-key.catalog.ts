@@ -1,6 +1,6 @@
 /**
  * context移行前の停止可能な業務機能が所有する権限。
- * 各業務contextへ移すまでAPI compositionで一時的に合成する。
+ * 各業務contextへ移すまでCompanyのrole vocabularyへ一時的に合成する。
  */
 export const LEGACY_BUSINESS_PERMISSION_KEYS = [
   "expense:approve",

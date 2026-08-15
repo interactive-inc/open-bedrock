@@ -3,7 +3,7 @@ import {
   createAuditEvent,
   type AuditAction,
   type AuditTargetType,
-} from "@/composition/audit/audit-event"
+} from "@/contexts/company/application/audit/company-audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import type { AuditJsonValue } from "@/contexts/system/application/audit/stable-json"

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test"
-import { PERMISSION_CATALOG } from "@/composition/iam/permission.catalog"
+import { PERMISSION_CATALOG } from "@/contexts/company/domain/iam/permission.catalog"
 import {
   PERMISSION_KEYS,
   PERMISSION_KEYS_BY_CONTEXT,
-} from "@/composition/iam/permission-key.catalog"
+} from "@/contexts/company/domain/iam/permission-key.catalog"
 
 describe("permission key ownership", () => {
   test("assigns every key to exactly one context and one metadata entry", () => {

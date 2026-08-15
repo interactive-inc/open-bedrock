@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { app } from "@/api/app"
-import type { AuditEventDetail } from "@/composition/audit/audit-event"
+import type { AuditEventDetail } from "@/contexts/company/application/audit/company-audit-event"
 import type { Bindings } from "@/env"
 import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
 import { createTestToken } from "@/contexts/company/interface/test-helpers/create-test-token"
@@ -8,8 +8,8 @@ import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schem
 import { requestWithContext } from "@/contexts/company/interface/test-helpers/request-with-context"
 import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { seedIamForEmployees } from "@/contexts/company/interface/test-helpers/seed-iam-for-employees"
-import { toAuditCsv } from "@/lib/audit/to-audit-csv"
-import { AUDIT_CSV_MAX_BYTES } from "@/lib/audit/to-audit-csv-row"
+import { toAuditCsv } from "@/contexts/company/application/audit/to-audit-csv"
+import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/application/audit/to-audit-csv-row"
 
 const jwtSecret = "audit-export-route-test-secret"
 const now = "2026-01-03T00:00:00.000Z"

@@ -48,7 +48,9 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 
 ディレクトリの構成は以下のとおり。
 
-- `api/src/` … domain / application / infrastructure / interface の4層。interface は `routes/` 配下に Next.js App Router 記法でルートを定義し（`routes/<URLパス>/route.ts`、URL とディレクトリを一致させる。動的セグメント `[param]`）、`app.ts` が `:param` に対応づけて登録する。`app.ts` は `bun run gen:app` の生成物なので手で編集しない（後述）。同一 URL に別メソッドを足す場合は `create-route.ts` のような `<動詞>-route.ts` を同ディレクトリに並置する。ルート横断のコードは内容を表す名前のディレクトリに置く（`middlewares/`、`utils/`、`test-helpers/` など。`shared/` のような中身のわからない名前は禁止）。API レスポンスは `lib/app-schemas.ts` の zApp スキーマで parse してから返す（1 ファイル 1 スキーマ規約の例外として集約）
+- `api/src/contexts/<context>/` … contextごとの domain / application / infrastructure / interface の4層。interface は `routes/` 配下に Next.js App Router 記法でルートを定義し（`routes/<URLパス>/route.ts`、URL とディレクトリを一致させる。動的セグメント `[param]`）、`api/src/api/app.ts` が `:param` に対応づけて登録する。`app.ts` は `bun run gen:app` の生成物なので手で編集しない（後述）。同一 URL に別メソッドを足す場合は `create-route.ts` のような `<動詞>-route.ts` を同ディレクトリに並置する。ルート横断のコードは内容を表す名前のディレクトリに置く（`middlewares/`、`utils/`、`test-helpers/` など。`shared/` のような中身のわからない名前は禁止）。API レスポンスは `lib/app-schemas.ts` の zApp スキーマで parse してから返す（1 ファイル 1 スキーマ規約の例外として集約）
+- `api/src/api/` … HTTP runtimeのcomposition root。手書きmiddleware、context route registry、生成app、複数層を横断するtestだけを置く。Domainや業務実装は置かない
+- `api/src/lib/` … context中立で、context・API root・DB所有schemaへ依存しない技術部品だけを置く
 - `cli/app/` … コマンド群。`<command>/.../route.ts` で定義し、`cli/app/index.ts` が POST ルートとして集約する。ルート追加時は index.ts への登録を忘れない（未登録だと catch-all に落ちて使用不可）。共通処理は `cli/lib/`
 - `web/app/(app|auth)/` … ルートグループ。ルート直下は `page.tsx` / `actions.ts` などの規約ファイルのみ。画面コンポーネントは各ルートの `_components/`、表示用純関数は `_lib/` に collocation する。`components/ui` は shadcn 生成物（直接編集しない）、独自コンポーネントは別ファイルでラップする
 - `web/lib/api/` … API クライアント関数（1 関数 1 ファイル）。`api/app` の型（`api/dist/api/app.d.ts`）で型付けされる。レスポンスの手書き型は `web/lib/api/types/` に置く（api と疎結合に保つため z.infer を参照せず同形を手書きする）
