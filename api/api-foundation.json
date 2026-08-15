@@ -2,9 +2,9 @@
   "version": 1,
   "files": {
     "scripts/check-api-foundation.ts": "2a23f2cd66b9725b99510dba1bb1dfe6321a741bbae72d05271e031d8d3d3513",
-    "src/api/api-route-module.ts": "36e7e3a5fccb27a05129e480eabf64200a3094eaf2ee44b553fe939ef1cb74fc",
+    "src/api/api-route-module.ts": "0b70a34f4f63ec8a94d5c412cf91618027e887aef5d8493e3d2a2fe10cdda06c",
     "src/api/read-http-exception-problem.ts": "a8e7d572cf2a19fa960007d90c54314c07c7bd7ec63fb2cf4ac449644a0b992f",
-    "src/api/test/api-route-module.test.ts": "8f3e2e0ff77c0fc6e716a36843a3565d6376c40f41d34a937fa732e783dbcc07",
+    "src/api/test/api-route-module.test.ts": "faaf5f610958e5ab26a13d955b45f5ebfd01ff10d23c770a659abee5ee038ed7",
     "src/api/test/to-negotiated-http-exception-response.test.ts": "a96a46d40b5d70175455986a2be88ec6a8ff467b575e67b7a6c8baccd6a6d49b",
     "src/api/to-negotiated-http-exception-response.ts": "7839885e5aad1a072222c31888182eec8ed085a7eda52ad1dc5c322af51a2f42"
   }

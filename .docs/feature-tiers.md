@@ -39,13 +39,15 @@ Company は汎用の申請、承認、通知、監査、batch を再実装しな
 
 業務目的と業務上の不変条件を所有し、削除または無効化できるコンテキスト。App は System と Company だけを利用でき、他の App を直接 import しない。
 
-既定で有効にできる App は attendance、leave、family-care-leave、shift、company-calendar、expense、business-trip、budget、ringi、asset、stocktake、room、rental、software-license、partner、contract、antisocial-check、recruitment、headcount-plan、health-checkup、work-accident、certification、commendation、disciplinary-action、meeting、life-event、work-style とする。
+`request` は template に基づく汎用的な社内依頼を所有する App である。他の App が利用する workflow library ではなく、個別 App は自分の提案を所有して System workflow へ接続する。
+
+既定で有効にできる App は request、attendance、leave、family-care-leave、shift、company-calendar、expense、business-trip、budget、ringi、asset、stocktake、room、rental、software-license、partner、contract、antisocial-check、recruitment、headcount-plan、health-checkup、work-accident、certification、commendation、disciplinary-action、meeting、life-event、work-style とする。
 
 既定で無効にできる App は announcement、knowledge、regulation、governance-document、onboarding、offboarding、certificate-request、goal、performance-review、skill、training、career、one-on-one、survey、thanks、it-incident、compensation-change とする。
 
 既定の有効状態は導入時の利便性であり、価値や依存階層を表さない。既定で有効な App も無効化と削除ができなければならない。
 
-dashboard、inbox、directory、search は複数コンテキストの read model または UI composition とする。業務事実の正本を所有せず、独立 App として扱わない。
+dashboard、inbox、directory、search は複数コンテキストの read model または UI composition とする。業務事実の正本を所有せず、独立 App として扱わない。複数 context を集約する HTTP route は API composition root に置く。
 
 ## 外部連携
 
@@ -86,6 +88,8 @@ App を削除するときは対象 context のディレクトリ、route module 
 
 ## 現行実装差分
 
-現在は System と Company の二コンテキストだけが存在し、App の実装は `api/src/contexts/company` に同居している。System には案件、判断Task、判断証明、委任、実行許可の汎用kernelと永続化制約があるが、既存の申請、承認、委任、判断、ワークフローはまだ Company の実装とtableを使用しており、利用経路の切替は完了していない。
+現在は System、Company、request の三コンテキストが存在する。request は申請 template、payload、subject、completion binding、従来の申請 workflow と route を Company から分離している。System には案件、判断Task、判断証明、委任、実行許可の汎用kernelと永続化制約があるが、request の従来 workflow はまだ System kernel を使用しておらず、利用経路の切替は完了していない。
+
+request 以外の App 実装は `api/src/contexts/company` に同居している。`/inbox/counts` は request を含む複数機能の read model なので、どの context の正本にもせず `api/src/api/routes` が合成する。
 
 受信箱の集約タブは App の無効化に完全には追従しない。無効な App の tab が残る場合も API は 404 で拒否するが、分離完了条件は UI の導線も有効化状態へ追従することである。

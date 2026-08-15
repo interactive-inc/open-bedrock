@@ -44,6 +44,7 @@ Company は次を所有する。
 
 削除可能な業務機能はすべて独立した App コンテキストにする。対象は次のとおり。
 
+- 汎用手続き: request。個別 App の共通 workflow library にはせず、request 自身の template と提案だけを所有する
 - 社内情報: announcement、knowledge、meeting、regulation、governance-document
 - 採用と人事手続き: recruitment、onboarding、offboarding、certificate-request、life-event、work-style、headcount-plan
 - 時間: attendance、leave、family-care-leave、shift、company-calendar、business-trip
@@ -106,7 +107,7 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 ディレクトリの構成は以下のとおり。
 
 - `api/src/contexts/<context>/` … contextごとの domain / application / infrastructure / interface の4層。interface は `routes/` 配下に Next.js App Router 記法でルートを定義し（`routes/<URLパス>/route.ts`、URL とディレクトリを一致させる。動的セグメント `[param]`）、`api/src/api/app.ts` が `:param` に対応づけて登録する。`app.ts` は `bun run gen:app` の生成物なので手で編集しない（後述）。同一 URL に別メソッドを足す場合は `create-route.ts` のような `<動詞>-route.ts` を同ディレクトリに並置する。ルート横断のコードは内容を表す名前のディレクトリに置く（`middlewares/`、`utils/`、`test-helpers/` など。`shared/` のような中身のわからない名前は禁止）。API レスポンスは `lib/app-schemas.ts` の zApp スキーマで parse してから返す（1 ファイル 1 スキーマ規約の例外として集約）
-- `api/src/api/` … HTTP runtimeのcomposition root。手書きmiddleware、context route registry、生成app、複数層を横断するtestだけを置く。Domainや業務実装は置かない
+- `api/src/api/` … HTTP runtimeのcomposition root。手書きmiddleware、route registry、生成app、複数contextを正本なしで集約するroute、複数層を横断するtestだけを置く。Domainや業務実装は置かない
 - `api/src/lib/` … context中立で、context・API root・DB所有schemaへ依存しない技術部品だけを置く
 - `cli/app/` … コマンド群。`<command>/.../route.ts` で定義し、`cli/app/index.ts` が POST ルートとして集約する。ルート追加時は index.ts への登録を忘れない（未登録だと catch-all に落ちて使用不可）。共通処理は `cli/lib/`
 - `web/app/(app|auth)/` … ルートグループ。ルート直下は `page.tsx` / `actions.ts` などの規約ファイルのみ。画面コンポーネントは各ルートの `_components/`、表示用純関数は `_lib/` に collocation する。`components/ui` は shadcn 生成物（直接編集しない）、独自コンポーネントは別ファイルでラップする
@@ -149,7 +150,7 @@ web↔api クライアントの約束:
 
 ## ルート登録と認可の機械検査
 
-`api/src/api/app.ts` は生成物であり、手で編集しない。ルートを足すときは `src/api/route-module.registry.ts` に登録済みのcontext配下へ置き、`cd api && bun run gen:app` を実行する。生成器は登録された `routes/` だけを走査して `export const GET|POST|PUT|PATCH|DELETE` を登録し、静的パスを動的パスより先に並べる（Hono は同じ形の候補を登録順で解決するため、`/expenses/me` が `/expenses/:id` より後ろにあると食われる）。middleware・エラーハンドラは手書きの `src/api/app-base.ts` が持つ。`/health` はSystem contextのrouteとして明示登録する。
+`api/src/api/app.ts` は生成物であり、手で編集しない。単一contextのルートは `src/api/route-module.registry.ts` に登録済みのcontext配下へ置く。複数contextのread modelだけを合成するルートは `src/api/routes` へ置き、正本や状態遷移を持たせない。変更後は `cd api && bun run gen:app` を実行する。生成器は登録された `routes/` だけを走査して `export const GET|POST|PUT|PATCH|DELETE` を登録し、静的パスを動的パスより先に並べる（Hono は同じ形の候補を登録順で解決するため、`/expenses/me` が `/expenses/:id` より後ろにあると食われる）。middleware・エラーハンドラは手書きの `src/api/app-base.ts` が持つ。`/health` はSystem contextのrouteとして明示登録する。
 
 `bun run gen:app:check` が生成物と `routes/` のズレを検出する。登録漏れ＝ルート消失は、実装があるのに到達できず、テストも「そのルートを呼ばない」だけで緑のまま通るため、規約ではなく検査で防ぐ。
 

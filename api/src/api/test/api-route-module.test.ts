@@ -20,7 +20,7 @@ const validRegistry = [
 ] as const satisfies ReadonlyArray<ApiRouteModuleRegistration>
 
 describe("inspectApiRouteModuleRegistry", () => {
-  test("accepts a System > Company > Business registry", () => {
+  test("accepts a System > Company > Business > API composition registry", () => {
     expect(
       inspectApiRouteModuleRegistry([
         ...validRegistry,
@@ -30,8 +30,34 @@ describe("inspectApiRouteModuleRegistry", () => {
           routesDirectory: "contexts/example/interface/routes",
           routeImportPrefix: "@/contexts/example/interface/routes",
         },
+        {
+          context: "api",
+          tier: "composition",
+          routesDirectory: "api/routes",
+          routeImportPrefix: "@/api/routes",
+        },
       ]),
     ).toEqual([])
+  })
+
+  test("requires API composition to be the final route source", () => {
+    expect(
+      inspectApiRouteModuleRegistry([
+        ...validRegistry,
+        {
+          context: "api",
+          tier: "composition",
+          routesDirectory: "api/routes",
+          routeImportPrefix: "@/api/routes",
+        },
+        {
+          context: "example",
+          tier: "business",
+          routesDirectory: "contexts/example/interface/routes",
+          routeImportPrefix: "@/contexts/example/interface/routes",
+        },
+      ]),
+    ).toContain("API compositionのroute sourceはregistryの末尾に置く必要があります")
   })
 
   test("rejects duplicate contexts and route sources", () => {

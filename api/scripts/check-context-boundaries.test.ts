@@ -21,6 +21,7 @@ describe("API root structure", () => {
     expect(inspectApiRootPath("src/api/read-http-exception-problem.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/route-module.registry.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/to-negotiated-http-exception-response.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/routes/inbox/counts/route.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/test/app.test.ts")).toEqual([])
   })
 
