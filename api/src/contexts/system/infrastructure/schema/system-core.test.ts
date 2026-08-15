@@ -1,20 +1,15 @@
-import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
 import { systemCoreSchema } from "@/contexts/system/infrastructure/schema/system-core"
 import { describe, expect, test } from "bun:test"
 import { Database } from "bun:sqlite"
 import { readFileSync } from "node:fs"
-import { fileURLToPath } from "node:url"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
 
-const migrationSql = readFileSync(
-  fileURLToPath(new URL("../../../../../migrations/0126_system_core.sql", import.meta.url)),
-  "utf8",
-)
+const schemaSql = readFileSync(new URL("./system-core.sql", import.meta.url), "utf8")
 
 function createDatabase(): Database {
   const database = new Database(":memory:")
-  database.exec(loadSchema())
   database.exec("PRAGMA foreign_keys = ON")
+  database.exec(schemaSql)
   return database
 }
 
@@ -35,9 +30,9 @@ function insertRole(database: Database): void {
   )
 }
 
-describe("0126 canonical System core schema", () => {
+describe("canonical System core schema", () => {
   test("D1 remote parserがcommentを空statementに分割しない", () => {
-    const comments = migrationSql.match(/\/\*[\s\S]*?\*\/|--[^\n]*/g) ?? []
+    const comments = schemaSql.match(/\/\*[\s\S]*?\*\/|--[^\n]*/g) ?? []
     const triggerMarkers = comments.filter((comment) =>
       comment.includes("DDL-only test harnesses skip compound triggers"),
     )
@@ -46,7 +41,34 @@ describe("0126 canonical System core schema", () => {
     expect(comments.filter((comment) => comment.includes(";"))).toEqual([])
   })
 
-  test("Drizzle declarationとmigrationのtable・columnを一致させ、System外FKを持たない", () => {
+  test("既存tableとdataを変更せず、空のSystem tableだけを追加する", () => {
+    const database = new Database(":memory:")
+    database.exec("PRAGMA foreign_keys = ON")
+    database.exec(`
+      CREATE TABLE legacy_sentinel (
+        id TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      );
+      INSERT INTO legacy_sentinel (id, value) VALUES ('existing', 'preserved');
+    `)
+
+    database.exec(schemaSql)
+
+    expect(database.query("SELECT id, value FROM legacy_sentinel").all()).toEqual([
+      { id: "existing", value: "preserved" },
+    ])
+
+    for (const table of Object.values(systemCoreSchema).map((entry) => getTableConfig(entry))) {
+      expect(
+        database.query<{ count: number }, []>(`SELECT count(*) AS count FROM ${table.name}`).get(),
+      ).toEqual({ count: 0 })
+    }
+
+    expect(database.query("PRAGMA foreign_key_check").all()).toEqual([])
+    database.close()
+  })
+
+  test("Drizzle declarationとcanonical DDLのtable・columnを一致させ、System外FKを持たない", () => {
     const database = createDatabase()
     const declaredTables = Object.values(systemCoreSchema)
       .map((table) => getTableConfig(table))
