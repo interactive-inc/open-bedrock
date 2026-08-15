@@ -1,4 +1,4 @@
-import { maxRewardPointCost } from "@/lib/thanks-points/monthly-budget-points"
+import { maxRewardPointCost } from "@/contexts/company/domain/thanks-points/monthly-budget-points"
 import type { ThanksRewardRow } from "@/schema"
 import { z } from "zod"
 

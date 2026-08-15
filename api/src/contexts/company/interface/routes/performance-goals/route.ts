@@ -1,4 +1,4 @@
-import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
+import { canReadGoalOf } from "@/contexts/company/domain/goal/can-read-goal-of"
 import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/contexts/company/interface/utils/list-report-employee-ids"
 import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"

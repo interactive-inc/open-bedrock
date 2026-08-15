@@ -1,4 +1,4 @@
-import { toFormStatus } from "@/lib/review/to-form-status"
+import { toFormStatus } from "@/contexts/company/domain/review/to-form-status"
 import { describe, expect, test } from "bun:test"
 
 describe("toFormStatus", () => {

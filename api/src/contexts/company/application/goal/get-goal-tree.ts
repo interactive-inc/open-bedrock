@@ -5,7 +5,7 @@ import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { GoalRepository } from "@/contexts/company/infrastructure/goal/goal-repository"
 import { buildGoalTree } from "@/contexts/company/application/goal/build-goal-tree"
-import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
+import { canReadGoalOf } from "@/contexts/company/domain/goal/can-read-goal-of"
 import type { AppGoalTreeNode } from "@/lib/app-schemas"
 import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
 

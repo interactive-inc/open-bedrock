@@ -1,4 +1,4 @@
-import { toAnswers } from "@/lib/review/to-answers"
+import { toAnswers } from "@/contexts/company/domain/review/to-answers"
 import { describe, expect, test } from "bun:test"
 
 describe("toAnswers", () => {

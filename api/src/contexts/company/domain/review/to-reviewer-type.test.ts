@@ -1,4 +1,4 @@
-import { toReviewerType } from "@/lib/review/to-reviewer-type"
+import { toReviewerType } from "@/contexts/company/domain/review/to-reviewer-type"
 import { describe, expect, test } from "bun:test"
 
 describe("toReviewerType", () => {

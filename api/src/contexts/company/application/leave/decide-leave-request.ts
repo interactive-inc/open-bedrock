@@ -1,8 +1,8 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { NotifyApprovalResult } from "@/contexts/company/application/notification/notify-approval-result"
 import type { LeaveRequest } from "@/contexts/company/domain/leave/leave-request.entity"
-import { hasLeaveBalanceTracking } from "@/lib/leave/has-balance-tracking"
-import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
+import { hasLeaveBalanceTracking } from "@/contexts/company/domain/leave/has-balance-tracking"
+import { toFiscalYear } from "@/contexts/company/domain/leave/to-fiscal-year"
 import type { Context } from "@/env"
 import {
   ConflictError,

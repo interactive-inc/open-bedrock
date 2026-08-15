@@ -1,4 +1,4 @@
-import { toAnswers } from "@/lib/review/to-answers"
+import { toAnswers } from "@/contexts/company/domain/review/to-answers"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,

@@ -1,4 +1,4 @@
-import { hasLeaveBalanceTracking } from "@/lib/leave/has-balance-tracking"
+import { hasLeaveBalanceTracking } from "@/contexts/company/domain/leave/has-balance-tracking"
 import { describe, expect, test } from "bun:test"
 
 describe("hasLeaveBalanceTracking", () => {

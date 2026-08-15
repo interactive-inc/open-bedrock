@@ -1,4 +1,4 @@
-import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
+import { toFiscalYear } from "@/contexts/company/domain/leave/to-fiscal-year"
 import { canReadLeaveOf } from "@/contexts/company/interface/routes/leave-requests/can-read-leave-of"
 import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
 import { factory } from "@/contexts/company/interface/utils/factory"
