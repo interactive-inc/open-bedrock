@@ -84,6 +84,13 @@ WHEN NEW.status IN ('rejected', 'returned') AND (
     SELECT 1 FROM system_decision_tasks
     WHERE case_id = NEW.id AND outcome IS NULL
   )
+  OR (
+    NEW.status = 'returned'
+    AND EXISTS (
+      SELECT 1 FROM system_decision_tasks
+      WHERE case_id = NEW.id AND outcome = 'rejected'
+    )
+  )
 )
 BEGIN
   SELECT RAISE(ABORT, 'system case decision requires matching task evidence');

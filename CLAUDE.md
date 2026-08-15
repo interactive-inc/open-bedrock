@@ -29,6 +29,8 @@ System は次を所有する。
 - API、webhook、import、export、connector、external assertion、reconciliation
 - 設定、機能有効化、health、migration safety、運用診断
 
+案件、判断、委任、実行許可の責任分担、不変条件、現行実装差分は `.docs/system-workflow.md` に従う。
+
 Company は次を所有する。
 
 - LegalEntity、会社 profile、法域、locale、timezone、通貨、会計年度などの会社文脈
@@ -164,7 +166,7 @@ web↔api クライアントの約束:
 
 宣言を要求するのは、認可の判断がルートファイルの中にあるとは限らないため。実際には権限キーの直接判定、専用 middleware、application service への委譲、本人限定の絞り込みに分かれており、ルートファイルを grep する検査は誤検知が大半になる。
 
-**この検査が保証するのは「認可の方針を書き忘れていない」ことだけである。** 宣言が実態と合っているかは検査しない（`permission` と書いて中身が素通しでも通る）。つまり棚卸しであって認可の強制ではない。認可の正本は各 handler と application service のコードで、その正しさはレビューとテストで見る。「検査が緑だから安全」とは読まないこと。`authenticated` と `public` は意図的に緩いという表明なので、付けるときは理由を確認する。
+この検査が保証するのは「認可の方針を書き忘れていない」ことだけである。宣言が実態と合っているかは検査しない（`permission` と書いて中身が素通しでも通る）。つまり棚卸しであって認可の強制ではない。認可の正本は各 handler と application service のコードで、その正しさはレビューとテストで見る。「検査が緑だから安全」とは読まないこと。`authenticated` と `public` は意図的に緩いという表明なので、付けるときは理由を確認する。
 
 これらの検査（gen:app:check、lint:route-authorization、lint:system-boundary、verify-seed）は `bun run check`（api）に組み込んである。`lint:system-boundary` はシステム層（`src/domain/system` ほか）が、自動検出した下位 context の語彙・モジュールや混在 schema へ依存していないことを TypeScript AST で検査する。`verify-seed` は migration と `seeds/*.sql` を in-memory SQLite に適用し、schema 変更への seed の追従漏れを検出する。
 

@@ -56,7 +56,7 @@ describe("Decision", () => {
     if (decision instanceof Error) throw decision
 
     expect(decision.outcome).toBe("approved")
-    expect(decision.attestationIds).toEqual(["attestation-1", "attestation-2"])
+    expect(decision.attestationIds).toEqual([first.id, second.id])
     expect(Object.isFrozen(decision.attestationIds)).toBe(true)
   })
 })

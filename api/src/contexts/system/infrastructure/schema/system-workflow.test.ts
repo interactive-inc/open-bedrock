@@ -39,13 +39,13 @@ function insertCase(database: Database, id: string = "case-1"): void {
 
 function insertTask(
   database: Database,
-  props: Readonly<{ caseId?: string; requiredApprovals?: number }> = {},
+  props: Readonly<{ caseId?: string; taskKey?: string; requiredApprovals?: number }> = {},
 ): void {
   database.run(
     `INSERT INTO system_decision_tasks
        (case_id, task_key, round, required_approvals, proposal_digest, opened_at)
-     VALUES (?, 'review', 1, ?, ?, 100)`,
-    [props.caseId ?? "case-1", props.requiredApprovals ?? 1, digest],
+     VALUES (?, ?, 1, ?, ?, 100)`,
+    [props.caseId ?? "case-1", props.taskKey ?? "review", props.requiredApprovals ?? 1, digest],
   )
 }
 
@@ -54,6 +54,7 @@ function insertCandidate(
   props: Readonly<{
     accountId: string
     caseId?: string
+    taskKey?: string
     source?: "primary" | "escalation"
     eligibleFrom?: number | null
   }>,
@@ -63,9 +64,10 @@ function insertCandidate(
        (case_id, task_key, round, candidate_account_id, source,
         evidence_context, evidence_kind, evidence_id, evidence_version,
         eligibility_digest, eligible_from, resolved_at)
-     VALUES (?, 'review', 1, ?, ?, 'authority', 'qualification', ?, '1', ?, ?, 100)`,
+     VALUES (?, ?, 1, ?, ?, 'authority', 'qualification', ?, '1', ?, ?, 100)`,
     [
       props.caseId ?? "case-1",
+      props.taskKey ?? "review",
       props.accountId,
       props.source ?? "primary",
       `evidence-${props.accountId}`,
@@ -85,16 +87,18 @@ function insertAttestation(
     action?: "approve" | "reject" | "return"
     decidedAt?: number
     caseId?: string
+    taskKey?: string
   }>,
 ): void {
   database.run(
     `INSERT INTO system_human_attestations
        (id, case_id, task_key, round, actor_account_id, represented_account_id,
         delegation_id, action, proposal_digest, comment, decided_at)
-     VALUES (?, ?, 'review', 1, ?, ?, ?, ?, ?, NULL, ?)`,
+     VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, NULL, ?)`,
     [
       props.id,
       props.caseId ?? "case-1",
+      props.taskKey ?? "review",
       props.actorAccountId,
       props.representedAccountId ?? props.actorAccountId,
       props.delegationId ?? null,
@@ -313,6 +317,54 @@ describe("System workflow schema", () => {
         "UPDATE system_cases SET status = 'approved', updated_at = 151 WHERE id = 'case-1'",
       ),
     ).toThrow()
+    database.close()
+  })
+
+  test("複数Taskの否定判断ではCase全体のrejectをreturnより優先する", () => {
+    const database = createDatabase()
+    for (const accountId of ["creator", "rejector", "returner"]) {
+      insertAccount(database, accountId)
+    }
+    insertCase(database)
+    insertTask(database, { taskKey: "risk-review" })
+    insertTask(database, { taskKey: "content-review" })
+    insertCandidate(database, { accountId: "rejector", taskKey: "risk-review" })
+    insertCandidate(database, { accountId: "returner", taskKey: "content-review" })
+    insertAttestation(database, {
+      id: "rejection",
+      actorAccountId: "rejector",
+      taskKey: "risk-review",
+      action: "reject",
+    })
+    insertAttestation(database, {
+      id: "return",
+      actorAccountId: "returner",
+      taskKey: "content-review",
+      action: "return",
+    })
+    database.run(
+      `UPDATE system_decision_tasks
+       SET outcome = 'rejected', closed_at = 120
+       WHERE case_id = 'case-1' AND task_key = 'risk-review' AND round = 1`,
+    )
+    database.run(
+      `UPDATE system_decision_tasks
+       SET outcome = 'returned', closed_at = 120
+       WHERE case_id = 'case-1' AND task_key = 'content-review' AND round = 1`,
+    )
+
+    expect(() =>
+      database.run(
+        "UPDATE system_cases SET status = 'returned', updated_at = 120 WHERE id = 'case-1'",
+      ),
+    ).toThrow()
+    database.run(
+      "UPDATE system_cases SET status = 'rejected', updated_at = 120 WHERE id = 'case-1'",
+    )
+
+    expect(database.query("SELECT status FROM system_cases WHERE id = 'case-1'").get()).toEqual({
+      status: "rejected",
+    })
     database.close()
   })
 

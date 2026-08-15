@@ -59,7 +59,7 @@ sequenceDiagram
 - expiry
 - proposal digest
 
-表示内容と実行 payload は同じ正規表現から生成する。別々に生成してはならない。一項目でも変更した場合は新しい digest と承認を要求する。
+表示内容と実行 payload は同じ正規化表現から生成する。別々に生成してはならない。一項目でも変更した場合は新しい digest と承認を要求する。
 
 ## リスク分類
 
@@ -93,7 +93,7 @@ schema 検証、不変条件、差分、simulation、dry run を判定根拠に�
 - callback の署名、timestamp、nonce、body digest、replay、重複を検査する
 - 一回限りの state token を proposal ID、revision、digest、対象 HumanPrincipal、channel、expiry へ結ぶ
 - callback の表示値または actor 情報を正本として使用せず、API が Proposal と候補者を再取得する
-- Proposal の効果、差分、対象、外部送信、期限を同じ正規表現から表示する
+- Proposal の効果、差分、対象、外部送信、期限を同じ正規化表現から表示する
 - チャネルの identity assurance が RiskPolicy の要求を満たさない場合は、HumanPrincipal の再認証と step-up が可能な Web 提供面へ移す
 - 表示上限または改変により承認対象全体を提示できない場合は、チャネル内で承認させず Web 提供面へ移す
 - 承認、却下、差戻し、棄権の結果と失敗理由を API の応答から表示する
@@ -155,4 +155,4 @@ flowchart LR
 
 ## 現行実装差分
 
-AI 自動化の実装状態は [能力台帳](./capability-map.md) に記録し、API、CLI、Web、テストと一致させる。独立した AgentPrincipal、HumanAttestation、ExecutionAuthorization、Execution Gateway が存在しない経路を、安全要件へ適合済みとしてはならない。
+AI 自動化の実装状態は [能力台帳](./capability-map.md) に記録し、API、CLI、Web、テストと一致させる。System には HumanAttestation と ExecutionAuthorization の domain 型と永続化制約があるが、独立した AgentPrincipal、application service、repository、Execution Gateway、既存 route からの利用は未実装である。必要な構成要素を通らない経路を、安全要件へ適合済みとしてはならない。
