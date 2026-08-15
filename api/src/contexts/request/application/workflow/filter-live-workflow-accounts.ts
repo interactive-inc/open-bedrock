@@ -4,6 +4,7 @@ import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructu
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { ApplicationError } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 /** Active account and live employment are both required for an approval candidate. */
 export async function filterLiveWorkflowAccounts(
@@ -17,16 +18,16 @@ export async function filterLiveWorkflowAccounts(
       `SELECT DISTINCT link.employee_id AS employee_id, account.id AS account_id,
                        employee.status AS legacy_status
          FROM json_each(?1) AS candidate_json
-         INNER JOIN accounts AS account
+         INNER JOIN system_accounts AS account
            ON account.id = json_extract(candidate_json.value, '$.accountId')
          INNER JOIN account_employee_links AS link
-           ON link.account_id = account.id
+           ON CAST(link.account_id AS TEXT) = account.id
           AND link.employee_id = json_extract(candidate_json.value, '$.employeeId')
          INNER JOIN employees AS employee ON employee.id = link.employee_id
          WHERE account.status = 'active'`,
     )
       .bind(JSON.stringify(candidates))
-      .all<{ employee_id: number; account_id: number; legacy_status: string }>()
+      .all<{ employee_id: number; account_id: AccountId; legacy_status: string }>()
     const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
     if (migrationStatus instanceof ApplicationError) return migrationStatus
 

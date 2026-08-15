@@ -24,6 +24,7 @@ import {
   applicableWorkflowSteps,
   type WorkflowApplicant,
 } from "@/contexts/request/application/workflow/applicable-workflow-steps"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 export type WorkflowDecision = { status: "pending" | "approved" | "rejected" }
 
@@ -35,7 +36,7 @@ export async function decideWorkflowApplication(props: {
   applicant: WorkflowApplicant
   payload: unknown
   actorEmployeeId: number
-  actorAccountId: number
+  actorAccountId: AccountId
   session: Session
   action: "approve" | "reject"
   comment: string | null
@@ -213,7 +214,7 @@ async function loadWorkflowResolutionContext(props: {
 async function resolveStepAuthorization(props: {
   c: Context
   actorEmployeeId: number
-  actorAccountId: number
+  actorAccountId: AccountId
   session: Session
   templateCode: string
   createdAt: string
@@ -259,7 +260,7 @@ async function persistApproval(props: {
   templateCode: string
   applicantEmployeeId: number
   actorEmployeeId: number
-  actorAccountId: number
+  actorAccountId: AccountId
   session: Session
   representedApprover: number
   delegationId: number | null
@@ -633,7 +634,7 @@ async function rejectStep(props: {
   instance: WorkflowInstance
   templateCode: string
   actorEmployeeId: number
-  actorAccountId: number
+  actorAccountId: AccountId
   representedApprover: number
   delegationId: number | null
   comment: string | null
@@ -669,7 +670,7 @@ function approvalInsert(
     instance: WorkflowInstance
     templateCode: string
     actorEmployeeId: number
-    actorAccountId: number
+    actorAccountId: AccountId
     representedApprover: number
     delegationId: number | null
     comment: string | null
@@ -695,16 +696,24 @@ function approvalInsert(
        )
        AND EXISTS (
          SELECT 1
+         FROM system_accounts actor_account
+         INNER JOIN account_employee_links actor_link
+           ON CAST(actor_link.account_id AS TEXT) = actor_account.id
+          AND actor_link.employee_id = ?4
+         WHERE actor_account.id = ?5 AND actor_account.status = 'active'
+       )
+       AND EXISTS (
+         SELECT 1
          FROM application_workflow_step_snapshots snapshot
          INNER JOIN application_workflow_step_candidates candidate
            ON candidate.application_id = snapshot.application_id
           AND candidate.step_key = snapshot.step_key
           AND candidate.round = snapshot.round
           AND candidate.resolution_id = snapshot.resolution_id
-         INNER JOIN accounts candidate_account
+         INNER JOIN system_accounts candidate_account
            ON candidate_account.id = candidate.candidate_account_id
          INNER JOIN account_employee_links candidate_link
-           ON candidate_link.account_id = candidate_account.id
+           ON CAST(candidate_link.account_id AS TEXT) = candidate_account.id
           AND candidate_link.employee_id = candidate.candidate_employee_id
          INNER JOIN employees candidate_employee
            ON candidate_employee.id = candidate.candidate_employee_id

@@ -8,6 +8,7 @@ import { createTestContext } from "@/contexts/company/interface/test-helpers/cre
 import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
 import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
+import { zAccountId } from "@system/domain/auth/account-id"
 
 const approvalStep = {
   key: "approval",
@@ -32,6 +33,7 @@ async function setup(workflow: ApplicationWorkflow) {
     { id: 6, code: "E006", name: "Delegate B", status: "active" },
   ])
   await seedD1(db, "accounts", [
+    { id: 1, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
     { id: 2, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
     { id: 3, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
     { id: 4, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
@@ -61,7 +63,7 @@ async function setup(workflow: ApplicationWorkflow) {
     templateId: template.id,
     definition: workflow,
     expectedRevision: 0,
-    updatedByAccountId: 1,
+    updatedByAccountId: zAccountId.parse("1"),
     updatedAt: "2026-01-01T00:00:00.000Z",
   })
   if (saved instanceof Error) throw saved
@@ -323,6 +325,40 @@ describe("workflow delegation security", () => {
          WHERE id = 2`,
       )
       .run()
+
+    const result = await decide(setupResult.context, setupResult.applicationId, 4)
+
+    await expectNoApproval(result, setupResult.db, setupResult.applicationId)
+  })
+
+  test("does not accept a delegated vote from an inactive canonical actor account", async () => {
+    const setupResult = await setup({ version: 1, steps: [approvalStep] })
+    await seedDelegation(setupResult.db, { id: 411 })
+    await setupResult.db
+      .prepare(
+        `UPDATE system_accounts
+         SET status = 'locked', token_version = token_version + 1, updated_at = updated_at + 1
+         WHERE id = '4'`,
+      )
+      .run()
+
+    const result = await decide(setupResult.context, setupResult.applicationId, 4)
+
+    await expectNoApproval(result, setupResult.db, setupResult.applicationId)
+  })
+
+  test("revalidates the canonical actor account at the approval write boundary", async () => {
+    const setupResult = await setup({ version: 1, steps: [approvalStep] })
+    await seedDelegation(setupResult.db, { id: 412 })
+    setupResult.context.env.DB = beforeNextBatch(setupResult.context.env.DB, () =>
+      setupResult.db
+        .prepare(
+          `UPDATE system_accounts
+           SET status = 'locked', token_version = token_version + 1, updated_at = updated_at + 1
+           WHERE id = '4'`,
+        )
+        .run(),
+    )
 
     const result = await decide(setupResult.context, setupResult.applicationId, 4)
 

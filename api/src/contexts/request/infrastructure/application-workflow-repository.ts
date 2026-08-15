@@ -15,6 +15,7 @@ import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-pre
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { WorkflowRevisionConflictError } from "@/contexts/request/infrastructure/workflow-revision-conflict-error"
 import { WorkflowSql } from "@/contexts/request/infrastructure/workflow-sql"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 export type WorkflowInstance = {
   applicationId: number
@@ -29,7 +30,7 @@ export type ApplicationWorkflowDefinitionRecord = {
   definition: ApplicationWorkflow
   revision: number
   updatedAt: string
-  updatedByAccountId: number | null
+  updatedByAccountId: AccountId | null
 }
 
 export type WorkflowStepSnapshot = {
@@ -44,7 +45,7 @@ export type WorkflowStepSnapshot = {
   resolutionId: string
   candidates: ReadonlyArray<{
     employeeId: number
-    accountId: number
+    accountId: AccountId
     source: string
     selectorsJson: string
     eligibleFrom: string | null
@@ -98,7 +99,7 @@ export class ApplicationWorkflowRepository {
     templateId: number
     definition: ApplicationWorkflow
     expectedRevision: number
-    updatedByAccountId: number
+    updatedByAccountId: AccountId
     updatedAt: string
   }): Promise<ApplicationWorkflowDefinitionRecord | WorkflowRevisionConflictError | Error> {
     const nextRevision = props.expectedRevision === 0 ? 1 : props.expectedRevision + 1
@@ -109,10 +110,16 @@ export class ApplicationWorkflowRepository {
           `INSERT INTO application_workflows
                (template_id, definition_json, updated_at, revision, updated_by_account_id)
              SELECT ?1, ?2, ?5, CASE WHEN ?3 = 0 THEN 1 ELSE ?3 + 1 END, ?4
-             WHERE ?3 = 0
+             WHERE (
+               ?3 = 0
                 OR EXISTS (
                   SELECT 1 FROM application_workflows WHERE template_id = ?1
                 )
+             )
+               AND EXISTS (
+                 SELECT 1 FROM system_accounts
+                 WHERE id = ?4 AND status = 'active'
+               )
              ON CONFLICT(template_id) DO UPDATE SET
                definition_json = excluded.definition_json,
                updated_at = excluded.updated_at,

@@ -20,9 +20,12 @@ export function workflowReachableApprovalCountSql(props: {
      AND candidate.step_key = snapshot.step_key
      AND candidate.round = snapshot.round
      AND candidate.resolution_id = snapshot.resolution_id
-    INNER JOIN accounts candidate_account
+    INNER JOIN system_accounts candidate_account
       ON candidate_account.id = candidate.candidate_account_id
      AND candidate_account.status = 'active'
+    INNER JOIN account_employee_links candidate_link
+      ON CAST(candidate_link.account_id AS TEXT) = candidate_account.id
+     AND candidate_link.employee_id = candidate.candidate_employee_id
     INNER JOIN employees candidate_employee
       ON candidate_employee.id = candidate.candidate_employee_id
      AND candidate_employee.status <> 'retired'
