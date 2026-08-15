@@ -451,15 +451,15 @@ describe("workflow repair routes", () => {
            WHERE application_id = ?1 AND step_key = 'manager' AND round = 2`,
         )
         .bind(applicationId)
-        .first<{ candidate_employee_id: number; candidate_account_id: number }>(),
-    ).toEqual({ candidate_employee_id: 2, candidate_account_id: 2 })
+        .first<{ candidate_employee_id: number; candidate_account_id: string }>(),
+    ).toEqual({ candidate_employee_id: 2, candidate_account_id: "2" })
     expect(
       await db
         .prepare(
           "SELECT event_type, actor_account_id, details_json FROM application_workflow_events",
         )
         .first(),
-    ).toMatchObject({ event_type: "reassigned", actor_account_id: 1 })
+    ).toMatchObject({ event_type: "reassigned", actor_account_id: "1" })
     expect(
       await db
         .prepare("SELECT COUNT(*) AS total FROM application_workflow_approvals WHERE round = 1")

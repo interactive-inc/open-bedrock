@@ -79,7 +79,9 @@ Company は Account と Employee の一対一対応を所有する。候補 Empl
 
 Account の認証状態や session は System の正本であり、Company snapshot だけで判断を許可しない。候補 snapshot 作成後に Account が停止された場合、System は HumanAttestation の書込み境界で再検査して拒否する。Company snapshot は資格を固定し、System の live guard を置き換えない。
 
-現行の Company 対応 table と request workflow table は整数 Account ID を使う。resolver の `accountId` もこの互換 ID である。canonical System Account ID は opaque string なので、現行結果を新しい System Task へ直接渡してはならない。schema と backfill を完了し、対応の完全性を検証してから切り替える。
+現行の Company 対応 table と Session は整数 Account ID を使うが、resolver は対応する active な `system_accounts` を同じ解決内で確認し、opaque string の canonical System Account ID を返す。request workflow の候補、actor、更新者、委任作成者もこの canonical ID へ移行済みである。旧整数と canonical ID の接続規則、live guard、migration の保証は [Workflow Account identity](./workflow-account-identity.md) に定める。
+
+Company の旧対応 table が残ることは、System Account ID を整数として扱ってよい理由にならない。整数は Company 内部の互換キー、文字列は context 境界を越える認証主体の正本である。Company は両者と Employee の対応を検証するが、System は旧整数または Employee を解釈しない。
 
 ## request との接続
 
@@ -162,7 +164,7 @@ Company 自体を持たない製品では、この resolver を登録しない�
 - legacy と lifecycle の証拠を同じ保証として表示する
 - Account に対応しない Employee ID を System 候補として渡す
 - snapshot 作成時の Account 有効性だけで判断時の再検査を省く
-- request の互換整数 Account ID を canonical System Account ID とみなす
+- legacy Session の整数 Account ID を各呼び出し側で独自に文字列化する
 
 矛盾が必要に見える場合は例外を足さず、会社上の責任、対象 scope、評価時点、Account 対応、System の判断規則のどれが欠けているかを特定する。
 
@@ -172,6 +174,6 @@ Company 自体を持たない製品では、この resolver を登録しない�
 
 `api/src/contexts/request/application/workflow/resolve-workflow-approver-matches.ts` は request selector から Company criterion への adapter である。候補列挙、在籍判定、組織探索、Account 対応を持たず、Company の証拠を request の候補 snapshot へ変換する。
 
-現行実装は Company 資格候補の責任移動と時点 snapshot を実装した。ただし `legacy_account_role`、整数 Account ID、legacy 組織投影が残る。ResponsibilityAssignment の汎用 scope、canonical System Account ID、System Task への cutover が完了するまでは最終形ではない。
+現行実装は Company 資格候補の責任移動、時点 snapshot、canonical System Account ID への接続を実装した。ただし `legacy_account_role`、旧整数の Company 対応 table、legacy 組織投影が残る。ResponsibilityAssignment の汎用 scope と System Task への cutover が完了するまでは最終形ではない。
 
-request の初期候補解決以外には、判断時の候補 Account 再検査、委任、手動修復のために Company infrastructure を読む互換経路が残る。これらを Company resolver に逆流させず、canonical System Account と System HumanAttestation への切替で除去する。
+request の初期候補解決以外には、判断時の Employee 対応と在籍の再検査、委任、手動修復のために Company infrastructure を読む互換経路が残る。Account 状態の正本は canonical `system_accounts` へ切替済みである。残る Company table 参照を Company の公開 live guard へ移し、System HumanAttestation へ切り替えるまで、request 全体が System workflow 利用済みとは扱わない。

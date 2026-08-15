@@ -9,6 +9,7 @@ import { createTestContext } from "@/contexts/company/interface/test-helpers/cre
 import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
 import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
+import { zAccountId } from "@system/domain/auth/account-id"
 
 const workflow: ApplicationWorkflow = {
   version: 1,
@@ -52,6 +53,7 @@ describe("conditional application workflow payload", () => {
       { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E002" },
     ])
     await seedD1(db, "accounts", [
+      { id: 1, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
       { id: 2, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
       { id: 3, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
     ])
@@ -87,7 +89,7 @@ describe("conditional application workflow payload", () => {
       templateId: template.id,
       definition: workflow,
       expectedRevision: 0,
-      updatedByAccountId: 1,
+      updatedByAccountId: zAccountId.parse("1"),
       updatedAt: "2026-01-01T00:00:00.000Z",
     })
     if (saved instanceof Error) throw saved
