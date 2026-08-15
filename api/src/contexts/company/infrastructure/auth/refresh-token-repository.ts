@@ -123,7 +123,7 @@ export class RefreshTokenRepository {
              WHERE EXISTS (
                SELECT 1
                FROM system_accounts AS canonical_account
-               WHERE canonical_account.id = CAST(?1 AS TEXT)
+               WHERE canonical_account.id = ?8
                  AND canonical_account.status = 'active'
                  AND canonical_account.token_version = ?4
              )
@@ -137,6 +137,7 @@ export class RefreshTokenRepository {
             props.nowEpoch + REFRESH_TOKEN_TTL_SECONDS,
             props.userAgent,
             props.nowEpoch,
+            String(props.accountId),
           ),
         prepareRefreshTokenCreateInvariant(db, props),
         ...auditStatements,
