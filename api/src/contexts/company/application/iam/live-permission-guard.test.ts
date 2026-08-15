@@ -4,7 +4,7 @@ import { RevokeAccountRole } from "@/contexts/company/application/iam/revoke-acc
 import { SetAccountStatus } from "@/contexts/company/application/iam/set-account-status"
 import { UpdateRole } from "@/contexts/company/application/iam/update-role"
 import type { Context } from "@/env"
-import { AccountAuthRepository } from "@system/infrastructure/auth/account-auth-repository"
+import { AccountAuthRepository } from "@/contexts/company/infrastructure/system-compatibility/auth/account-auth-repository"
 import { AccountEmployeeLinkRepository } from "@/contexts/company/infrastructure/employee/account-employee-link-repository"
 import { RoleRepository } from "@/contexts/company/infrastructure/iam/role-repository"
 import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"

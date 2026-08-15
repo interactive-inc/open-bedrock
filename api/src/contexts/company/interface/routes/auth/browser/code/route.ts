@@ -1,4 +1,4 @@
-import { BrowserLoginCodeRepository } from "@system/infrastructure/auth/browser-login-code-repository"
+import { BrowserLoginCodeRepository } from "@/contexts/company/infrastructure/system-compatibility/auth/browser-login-code-repository"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { factory } from "@/contexts/company/interface/utils/factory"
