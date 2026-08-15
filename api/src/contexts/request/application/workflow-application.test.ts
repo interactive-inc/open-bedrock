@@ -477,7 +477,16 @@ describe("configured application workflow", () => {
           {
             selector_index: 0,
             selector: { type: "employee", employee_code: "E002" },
-            evidence: { type: "employee_code", employee_code: "E002" },
+            evidence: {
+              type: "employee_code",
+              employee_code: "E002",
+              authority_snapshot: {
+                schema_version: 1,
+                source: "legacy",
+                as_of: "2026-01-01",
+                organization_revision: null,
+              },
+            },
           },
         ],
       ],
@@ -487,7 +496,16 @@ describe("configured application workflow", () => {
           {
             selector_index: 1,
             selector: { type: "employee", employee_code: "E003" },
-            evidence: { type: "employee_code", employee_code: "E003" },
+            evidence: {
+              type: "employee_code",
+              employee_code: "E003",
+              authority_snapshot: {
+                schema_version: 1,
+                source: "legacy",
+                as_of: "2026-01-01",
+                organization_revision: null,
+              },
+            },
           },
         ],
       ],

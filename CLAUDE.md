@@ -42,6 +42,8 @@ Company は次を所有する。
 - System Account と Employee の対応、および System の汎用判断へ会社上の資格を提供する解決処理
 - 入社、異動、休職、復職、退職、再入社という雇用事実と人事発令
 
+判断資格 resolver の入力、時点 snapshot、Account 対応、fail closed 条件、System と App への接続は `.docs/company-organizational-authority.md` に従う。
+
 削除可能な業務機能はすべて独立した App コンテキストにする。対象は次のとおり。
 
 - 汎用手続き: request。個別 App の共通 workflow library にはせず、request 自身の template と提案だけを所有する

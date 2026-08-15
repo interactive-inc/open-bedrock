@@ -57,6 +57,7 @@ flowchart TD
 - [状態遷移](./user-flows.md): 主要な操作と状態変化
 - [会社の解体図](./capability-map.md): System、Company、Apps、外部連携、実装状態
 - [System workflow](./system-workflow.md): 案件、判断、委任、実行許可、責任境界
+- [Company organizational authority](./company-organizational-authority.md): 判断資格、時点 snapshot、Account 対応、System と App への接続
 - [Request context](./request-context.md): 提案、版、digest、System と Company への接続、削除可能性
 - [ロールと権限](./roles-and-permissions.md): permission カタログ、system role、プリセット、scope 判定
 - [用語](./glossary.md): 共有する型と概念

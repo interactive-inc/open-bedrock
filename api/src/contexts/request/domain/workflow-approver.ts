@@ -13,6 +13,6 @@ export type WorkflowApproverProvenance = Readonly<{
 
 export type WorkflowApproverMatch = Readonly<{
   employeeId: number
-  accountId: number | null
+  accountId: number
   provenance: WorkflowApproverProvenance
 }>
