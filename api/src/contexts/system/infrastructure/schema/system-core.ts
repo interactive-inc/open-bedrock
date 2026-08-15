@@ -1,4 +1,5 @@
 import type { AccountStatus } from "@system/domain/auth/account-status"
+import type { AccountId } from "@system/domain/auth/account-id"
 import type { IdentityProvider } from "@system/domain/identity/identity-provider"
 import type { SystemAuditOutcome } from "@system/domain/audit/system-audit-event"
 import { sql } from "drizzle-orm"
@@ -17,7 +18,7 @@ import {
 export const systemAccounts = sqliteTable(
   "system_accounts",
   {
-    id: text("id").primaryKey(),
+    id: text("id").primaryKey().$type<AccountId>(),
     status: text("status").notNull().$type<AccountStatus>(),
     tokenVersion: integer("token_version").notNull().default(0),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),

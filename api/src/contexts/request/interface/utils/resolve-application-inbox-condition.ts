@@ -7,6 +7,7 @@ import {
   applicationTemplates,
 } from "@/contexts/request/infrastructure/schema/request"
 import { and, eq, inArray, ne, or, sql, type SQL } from "drizzle-orm"
+import { resolveActiveSystemAccountId } from "@/contexts/request/application/system-compatibility/to-system-account-id"
 
 /**
  * 申請受信箱の一覧・件数で共有する適格性条件を組み立てる。
@@ -29,6 +30,8 @@ export async function resolveApplicationInboxCondition(props: {
       : await listManagedEmployeeIds(props.c, props.session.employeeId)
 
   if (managedEmployeeIds instanceof Error) return managedEmployeeIds
+  const actorAccountId = await resolveActiveSystemAccountId(props.c, props.session.accountId)
+  if (actorAccountId instanceof Error) return actorAccountId
 
   const legacyRoleScope = sql`(
     ${applicationTemplates.approverRoles} = '[]'
@@ -78,8 +81,8 @@ export async function resolveApplicationInboxCondition(props: {
         FROM employees candidate_employee
         INNER JOIN account_employee_links candidate_link
           ON candidate_link.employee_id = candidate_employee.id
-        INNER JOIN accounts candidate_account
-          ON candidate_account.id = candidate_link.account_id
+        INNER JOIN system_accounts candidate_account
+          ON candidate_account.id = CAST(candidate_link.account_id AS TEXT)
         WHERE candidate_employee.id = candidate.candidate_employee_id
           AND candidate_employee.status <> 'retired'
           AND candidate_account.id = candidate.candidate_account_id
@@ -87,7 +90,7 @@ export async function resolveApplicationInboxCondition(props: {
       )
       AND (
         (candidate.candidate_employee_id = ${props.session.employeeId}
-          AND candidate.candidate_account_id = ${props.session.accountId})
+          AND candidate.candidate_account_id = ${actorAccountId})
         OR (
           EXISTS (
             SELECT 1 FROM json_each(workflow_instance.definition_json, '$.steps') step

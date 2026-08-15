@@ -20,6 +20,7 @@ import { z } from "zod"
 import type { Context } from "@/env"
 import { roles } from "@/contexts/company/infrastructure/schema/compatibility/account-schema"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { resolveActiveSystemAccountId } from "@/contexts/request/application/system-compatibility/to-system-account-id"
 
 async function validateReferences(c: Context, workflow: ApplicationWorkflow) {
   const [roleRows, employeeRows] = await Promise.all([
@@ -104,12 +105,16 @@ export const PUT = factory.createHandlers(
       )
     }
     await validateReferences(c, workflow)
+    const actorAccountId = await resolveActiveSystemAccountId(c, session.accountId)
+    if (actorAccountId instanceof Error) {
+      throw new InternalError("failed to resolve canonical workflow actor")
+    }
 
     const saved = await new ApplicationWorkflowRepository(c).saveDefinition({
       templateId: template.id ?? 0,
       definition: workflow,
       expectedRevision: body.expected_revision,
-      updatedByAccountId: session.accountId,
+      updatedByAccountId: actorAccountId,
       updatedAt: c.env.NOW ?? new Date().toISOString(),
     })
 

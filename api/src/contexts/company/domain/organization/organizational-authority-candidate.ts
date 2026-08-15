@@ -28,12 +28,12 @@ export type OrganizationalAuthorityQualification = Readonly<{
 }>
 
 /**
- * Company の資格を満たし、有効な Account と一意に対応した Employee。
- * accountId は canonical System Account 移行前の互換 ID であり、System へ直接渡さない。
+ * Company の資格を満たし、有効な canonical System Account と一意に対応した Employee。
+ * Company 固有の Employee ID は資格証拠、Account ID は判断主体の正本を表す。
  */
 export type OrganizationalAuthorityCandidate = Readonly<{
   employeeId: number
-  accountId: number
+  accountId: AccountId
   qualification: OrganizationalAuthorityQualification
 }>
 
@@ -42,3 +42,4 @@ export type OrganizationalAuthorityCandidateResolution = Readonly<{
   snapshot: OrganizationalAuthoritySnapshot
   candidates: ReadonlyArray<OrganizationalAuthorityCandidate>
 }>
+import type { AccountId } from "@system/domain/auth/account-id"

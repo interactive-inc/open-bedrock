@@ -1,6 +1,7 @@
 import { filterLiveWorkflowAccounts } from "@/contexts/request/application/workflow/filter-live-workflow-accounts"
 import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
+import { zAccountId } from "@system/domain/auth/account-id"
 
 describe("filterLiveWorkflowAccounts", () => {
   test("uses lifecycle state after verification and still requires an active account", async () => {
@@ -32,10 +33,10 @@ describe("filterLiveWorkflowAccounts", () => {
 
     expect(
       await filterLiveWorkflowAccounts(context, [
-        { employeeId: 1, accountId: 11 },
-        { employeeId: 2, accountId: 12 },
-        { employeeId: 3, accountId: 13 },
+        { employeeId: 1, accountId: zAccountId.parse("11") },
+        { employeeId: 2, accountId: zAccountId.parse("12") },
+        { employeeId: 3, accountId: zAccountId.parse("13") },
       ]),
-    ).toEqual([{ employeeId: 1, accountId: 11 }])
+    ).toEqual([{ employeeId: 1, accountId: zAccountId.parse("11") }])
   })
 })

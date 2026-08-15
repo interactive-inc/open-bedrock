@@ -186,12 +186,14 @@ domain object の検証だけに依存してはならない。複数 request が
 
 Company には、営業日、組織投影、organization revision、根拠を固定する OrganizationalAuthority resolver がある。これは System の構成要素ではなく、request から利用される独立した Company 能力である。
 
+Company resolver と request の既存 workflow actor、candidate、更新者、委任作成者は canonical System Account ID へ統一済みである。保存済み履歴の移行、外部キー、live guard、legacy Session adapter の責任は [Workflow Account identity](./workflow-account-identity.md) に定める。この接続は主体IDの準備を完了するが、既存判断をSystem Taskが実行していることまでは意味しない。
+
 現行の System workflow には次が存在しない。
 
 - ProcedureDefinition と版、および必要 Task を完全に生成したことの証明
 - System workflow の application service、repository、transaction operation
 - HumanPrincipal kind、step-up、共通 policy evaluation と attestation 作成経路
-- Company の資格候補を canonical System Account ID と opaque evidence reference へ変換する接続
+- Company の資格証拠を opaque evidence reference または digest として System Task へ渡す接続
 - request App の変更不能な template version、request version、canonical proposal digest と System Case の binding
 - Execution Gateway、idempotency、outbox、外部 Assertion との接続
 - request context にある既存 application request、approval、delegation、notification の System workflow への切替

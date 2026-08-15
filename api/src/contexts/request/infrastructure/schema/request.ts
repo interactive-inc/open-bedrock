@@ -1,6 +1,8 @@
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 import { check, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import type { AccountId } from "@system/domain/auth/account-id"
+import { systemAccounts } from "@system/infrastructure/schema/system-core"
 
 /**
  * 申請テンプレート（種類・カテゴリ・入力スキーマ・承認ロール）。
@@ -99,7 +101,9 @@ export const applicationWorkflows = sqliteTable("application_workflows", {
   definitionJson: text("definition_json").notNull(),
   updatedAt: text("updated_at").notNull(),
   revision: integer("revision").notNull().default(1),
-  updatedByAccountId: integer("updated_by_account_id"),
+  updatedByAccountId: text("updated_by_account_id")
+    .$type<AccountId>()
+    .references(() => systemAccounts.id, { onDelete: "restrict" }),
 })
 
 export type ApplicationWorkflowRow = InferSelectModel<typeof applicationWorkflows>
@@ -110,7 +114,9 @@ export const applicationWorkflowRevisions = sqliteTable(
     templateId: integer("template_id").notNull(),
     revision: integer("revision").notNull(),
     definitionJson: text("definition_json").notNull(),
-    updatedByAccountId: integer("updated_by_account_id"),
+    updatedByAccountId: text("updated_by_account_id")
+      .$type<AccountId>()
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
     createdAt: text("created_at").notNull(),
   },
   (table) => [primaryKey({ columns: [table.templateId, table.revision] })],
@@ -156,7 +162,10 @@ export const applicationWorkflowStepCandidates = sqliteTable(
     stepKey: text("step_key").notNull(),
     round: integer("round").notNull(),
     candidateEmployeeId: integer("candidate_employee_id").notNull(),
-    candidateAccountId: integer("candidate_account_id").notNull(),
+    candidateAccountId: text("candidate_account_id")
+      .notNull()
+      .$type<AccountId>()
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
     source: text("source").notNull(),
     selectorsJson: text("selectors_json").notNull(),
     resolutionId: text("resolution_id").notNull(),
@@ -188,7 +197,9 @@ export const applicationWorkflowApprovals = sqliteTable(
     stepKey: text("step_key").notNull(),
     round: integer("round").notNull().default(1),
     approverId: integer("approver_id").notNull(),
-    approverAccountId: integer("approver_account_id"),
+    approverAccountId: text("approver_account_id")
+      .$type<AccountId>()
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
     representedApproverId: integer("represented_approver_id").notNull(),
     delegationId: integer("delegation_id"),
     action: text("action").notNull(),
@@ -215,7 +226,9 @@ export const applicationWorkflowEvents = sqliteTable(
     stepKey: text("step_key").notNull(),
     round: integer("round").notNull(),
     eventType: text("event_type").notNull(),
-    actorAccountId: integer("actor_account_id"),
+    actorAccountId: text("actor_account_id")
+      .$type<AccountId>()
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
     occurredAt: text("occurred_at").notNull(),
     detailsJson: text("details_json").notNull(),
   },
@@ -238,7 +251,9 @@ export const approvalDelegations = sqliteTable("approval_delegations", {
   templateCode: text("template_code"),
   startsAt: text("starts_at").notNull(),
   endsAt: text("ends_at").notNull(),
-  createdByAccountId: integer("created_by_account_id"),
+  createdByAccountId: text("created_by_account_id")
+    .$type<AccountId>()
+    .references(() => systemAccounts.id, { onDelete: "restrict" }),
   cancelledAt: text("cancelled_at"),
   createdAt: text("created_at").notNull(),
 })

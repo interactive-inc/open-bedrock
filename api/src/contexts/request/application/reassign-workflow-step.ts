@@ -15,6 +15,8 @@ import {
   UnprocessableError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { resolveActiveSystemAccountId } from "@/contexts/request/application/system-compatibility/to-system-account-id"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 export type ReassignedWorkflowStep = {
   status: "pending"
@@ -39,6 +41,12 @@ export class ReassignWorkflowStep {
       command.session.hasPermission("application_template:manage") === false
     ) {
       return new ForbiddenError("cannot repair application workflows", "forbidden")
+    }
+    const actorAccountId = await resolveActiveSystemAccountId(this.c, command.session.accountId)
+    if (actorAccountId instanceof Error) {
+      return new UnexpectedError("failed to resolve canonical workflow actor", {
+        cause: actorAccountId,
+      })
     }
 
     const application = await new ApplicationRepository(this.c).findById(command.applicationId)
@@ -153,20 +161,21 @@ export class ReassignWorkflowStep {
       )
     }
 
-    let accounts: D1Result<{ id: number; employee_id: number }>
+    let accounts: D1Result<{ id: AccountId; employee_id: number }>
     try {
       const placeholders = candidateEmployeeIds.map((_, index) => `?${index + 1}`).join(", ")
       accounts = await this.c.env.DB.prepare(
-        `SELECT account.id, employee.id AS employee_id
-         FROM accounts account
-         INNER JOIN account_employee_links link ON link.account_id = account.id
+        `SELECT system_account.id, employee.id AS employee_id
+         FROM system_accounts system_account
+         INNER JOIN account_employee_links link
+           ON CAST(link.account_id AS TEXT) = system_account.id
          INNER JOIN employees employee ON employee.id = link.employee_id
          WHERE employee.id IN (${placeholders}) AND employee.status <> 'retired'
-           AND account.status = 'active'
-         ORDER BY employee.id, account.id`,
+           AND system_account.status = 'active'
+         ORDER BY employee.id, system_account.id`,
       )
         .bind(...candidateEmployeeIds)
-        .all<{ id: number; employee_id: number }>()
+        .all<{ id: AccountId; employee_id: number }>()
     } catch (error) {
       return new UnexpectedError("failed to resolve repair candidate accounts", { cause: error })
     }
@@ -198,7 +207,7 @@ export class ReassignWorkflowStep {
             selector: { type: "manual_repair" },
             evidence: {
               type: "workflow_reassignment",
-              actor_account_id: command.session.accountId,
+              actor_account_id: actorAccountId,
               reason: command.reason,
             },
           },
@@ -233,6 +242,11 @@ export class ReassignWorkflowStep {
           stepKey: instance.currentStepKey,
           round: instance.currentRound,
         }),
+        activeWorkflowActorGuard({
+          db: this.c.env.DB,
+          actorAccountId,
+          actorEmployeeId: command.session.employeeId,
+        }),
         repairCandidatesStillActiveGuard({
           db: this.c.env.DB,
           candidateEmployeeIds,
@@ -252,7 +266,7 @@ export class ReassignWorkflowStep {
           command.applicationId,
           instance.currentStepKey,
           round,
-          command.session.accountId,
+          actorAccountId,
           command.reassignedAt,
           JSON.stringify({
             candidate_employee_ids: candidateEmployeeIds,
@@ -308,6 +322,25 @@ export class ReassignWorkflowStep {
       candidateEmployeeIds,
     }
   }
+}
+
+function activeWorkflowActorGuard(props: {
+  db: D1Database
+  actorAccountId: AccountId
+  actorEmployeeId: number
+}): D1PreparedStatement {
+  return props.db
+    .prepare(
+      `SELECT CASE WHEN EXISTS (
+         SELECT 1
+         FROM system_accounts account
+         INNER JOIN account_employee_links link
+           ON CAST(link.account_id AS TEXT) = account.id
+          AND link.employee_id = ?2
+         WHERE account.id = ?1 AND account.status = 'active'
+       ) THEN 1 ELSE json_extract('', '$') END AS ok`,
+    )
+    .bind(props.actorAccountId, props.actorEmployeeId)
 }
 
 async function loadReachableApprovalCount(props: {
@@ -369,8 +402,8 @@ function repairCandidatesStillActiveGuard(props: {
          SELECT COUNT(DISTINCT employee.id)
          FROM employees employee
          INNER JOIN account_employee_links link ON link.employee_id = employee.id
-         INNER JOIN accounts account
-           ON account.id = link.account_id AND account.status = 'active'
+         INNER JOIN system_accounts account
+           ON account.id = CAST(link.account_id AS TEXT) AND account.status = 'active'
          WHERE employee.status <> 'retired' AND employee.id IN (${placeholders})
        ) = ?${expectedParameter} THEN 1 ELSE json_extract('', '$') END AS ok`,
     )

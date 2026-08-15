@@ -6,6 +6,7 @@ import { canDecideLegacyApplication } from "@/contexts/request/application/workf
 import { resolveRepresentedApprover } from "@/contexts/request/application/workflow/resolve-represented-approver"
 import { loadOrResolveWorkflowStepSnapshot } from "@/contexts/request/application/workflow/load-or-resolve-workflow-step-snapshot"
 import { ensureWorkflowStepEscalation } from "@/contexts/request/application/workflow/ensure-workflow-step-escalation"
+import { resolveActiveSystemAccountId } from "@/contexts/request/application/system-compatibility/to-system-account-id"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import {
@@ -166,6 +167,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       )
       if (step !== undefined) {
         const now = c.env.NOW ?? new Date().toISOString()
+        const actorAccountId = await resolveActiveSystemAccountId(c, session.accountId)
+        if (actorAccountId instanceof Error) {
+          throw new InternalError("failed to resolve canonical workflow actor")
+        }
         const isCurrentPendingStep =
           row.application.status === "pending" &&
           row.application.currentStep === workflowInstance.currentStepKey
@@ -207,7 +212,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
           const represented = await resolveRepresentedApprover({
             c,
             actorEmployeeId: session.employeeId,
-            actorAccountId: session.accountId,
+            actorAccountId,
             candidateAccounts: eligibleCandidates.map((candidate) => ({
               employeeId: candidate.employeeId,
               accountId: candidate.accountId,
@@ -237,7 +242,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
             snapshot?.candidates.some(
               (candidate) =>
                 candidate.employeeId === session.employeeId &&
-                candidate.accountId === session.accountId,
+                candidate.accountId === actorAccountId,
             ) ?? false
           const wasRecordedParticipant = recordedApprovals.some(
             (approval) =>

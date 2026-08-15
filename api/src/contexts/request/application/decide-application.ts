@@ -10,6 +10,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { ApplicationWorkflowRepository } from "@/contexts/request/infrastructure/application-workflow-repository"
 import { decideWorkflowApplication } from "@/contexts/request/application/decide-workflow-application"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { resolveActiveSystemAccountId } from "@/contexts/request/application/system-compatibility/to-system-account-id"
 
 export type Command = {
   session: Session
@@ -86,6 +87,13 @@ export class DecideApplication {
         return new UnexpectedError("workflow applicant not found")
       }
 
+      const actorAccountId = await resolveActiveSystemAccountId(this.c, command.session.accountId)
+      if (actorAccountId instanceof Error) {
+        return new UnexpectedError("failed to resolve canonical workflow actor", {
+          cause: actorAccountId,
+        })
+      }
+
       const decision = await decideWorkflowApplication({
         c: this.c,
         instance: workflowInstance,
@@ -101,7 +109,7 @@ export class DecideApplication {
         },
         payload: existing.payload,
         actorEmployeeId: command.approverId,
-        actorAccountId: command.session.accountId,
+        actorAccountId,
         session: command.session,
         action: command.action,
         comment: command.comment,

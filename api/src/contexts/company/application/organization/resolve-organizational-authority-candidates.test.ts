@@ -2,6 +2,7 @@ import { resolveOrganizationalAuthorityCandidates } from "@/contexts/company/app
 import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { ConflictError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
+import { zAccountId } from "@system/domain/auth/account-id"
 
 describe("resolveOrganizationalAuthorityCandidates", () => {
   test("returns only live linked accounts with a fixed legacy snapshot", async () => {
@@ -52,7 +53,7 @@ describe("resolveOrganizationalAuthorityCandidates", () => {
       candidates: [
         {
           employeeId: 1,
-          accountId: 11,
+          accountId: zAccountId.parse("11"),
           qualification: {
             criterionIndex: 0,
             evidence: {
@@ -60,6 +61,7 @@ describe("resolveOrganizationalAuthorityCandidates", () => {
               department_code: "D001",
               employee_code: "E002",
               manager_employee_code: "E001",
+              system_account_id: "11",
             },
           },
         },

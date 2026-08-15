@@ -1,6 +1,7 @@
 import {
   BadRequestError,
   ConflictError,
+  InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/contexts/company/interface/lib/errors"
@@ -16,8 +17,10 @@ import {
   applicationTemplates,
 } from "@/contexts/request/infrastructure/schema/request"
 import { zValidator } from "@hono/zod-validator"
-import { and, asc, eq, or } from "drizzle-orm"
+import { and, asc, eq, or, sql } from "drizzle-orm"
 import { z } from "zod"
+import { systemAccounts } from "@system/infrastructure/schema/system-core"
+import { resolveActiveSystemAccountId } from "@/contexts/request/application/system-compatibility/to-system-account-id"
 
 const zDelegation = z.object({
   delegate_employee_code: z.string().min(1).max(64),
@@ -87,6 +90,13 @@ export const POST = factory.createHandlers(
         accounts,
         and(eq(accounts.id, accountEmployeeLinks.accountId), eq(accounts.status, "active")),
       )
+      .innerJoin(
+        systemAccounts,
+        and(
+          sql`${systemAccounts.id} = CAST(${accounts.id} AS TEXT)`,
+          eq(systemAccounts.status, "active"),
+        ),
+      )
       .where(eq(employees.code, body.delegate_employee_code))
       .limit(1)
       .then((rows) => rows.at(0))
@@ -109,6 +119,10 @@ export const POST = factory.createHandlers(
     }
 
     const createdAt = c.env.NOW ?? new Date().toISOString()
+    const actorAccountId = await resolveActiveSystemAccountId(c, session.accountId)
+    if (actorAccountId instanceof Error) {
+      throw new InternalError("failed to resolve canonical delegation actor")
+    }
     const created = await c.env.DB.prepare(
       `INSERT INTO approval_delegations
          (delegator_employee_id, delegate_employee_id, template_code, starts_at, ends_at,
@@ -127,6 +141,14 @@ export const POST = factory.createHandlers(
              OR existing.template_code = ?3
            )
        )
+       AND EXISTS (
+         SELECT 1
+         FROM system_accounts actor_account
+         INNER JOIN account_employee_links actor_link
+           ON CAST(actor_link.account_id AS TEXT) = actor_account.id
+          AND actor_link.employee_id = ?1
+         WHERE actor_account.id = ?6 AND actor_account.status = 'active'
+       )
        RETURNING id, template_code, starts_at, ends_at, created_at`,
     )
       .bind(
@@ -135,7 +157,7 @@ export const POST = factory.createHandlers(
         body.template_code,
         startsAt,
         endsAt,
-        session.accountId,
+        actorAccountId,
         createdAt,
       )
       .first<{

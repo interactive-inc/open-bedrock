@@ -191,10 +191,10 @@ describe("application template workflow route", () => {
         `SELECT revision, updated_by_account_id FROM application_workflow_revisions
          WHERE template_id = 1 ORDER BY revision`,
       )
-      .all<{ revision: number; updated_by_account_id: number }>()
+      .all<{ revision: number; updated_by_account_id: string }>()
     expect(actors.results).toEqual([
-      { revision: 1, updated_by_account_id: 1 },
-      { revision: 2, updated_by_account_id: 20 },
+      { revision: 1, updated_by_account_id: "1" },
+      { revision: 2, updated_by_account_id: "20" },
     ])
   })
 
@@ -257,10 +257,10 @@ describe("application template workflow route", () => {
       .first<{
         definition_json: string
         revision: number
-        updated_by_account_id: number
+        updated_by_account_id: string
       }>()
     expect(current?.revision).toBe(2)
-    expect(current?.updated_by_account_id).toBe(winner?.actorAccountId)
+    expect(current?.updated_by_account_id).toBe(String(winner?.actorAccountId))
     expect(JSON.parse(current?.definition_json ?? "{}").steps[0]?.name).toBe(winner?.name)
 
     const revisions = await db
@@ -272,12 +272,12 @@ describe("application template workflow route", () => {
       .all<{
         revision: number
         definition_json: string
-        updated_by_account_id: number
+        updated_by_account_id: string
       }>()
     expect(revisions.results.map((revision) => revision.revision)).toEqual([1, 2])
     expect(revisions.results.map((revision) => revision.updated_by_account_id)).toEqual([
-      1,
-      winner?.actorAccountId,
+      "1",
+      String(winner?.actorAccountId),
     ])
     expect(JSON.parse(revisions.results[0]?.definition_json ?? "{}").steps[0]?.name).toBe("Manager")
     expect(JSON.parse(revisions.results[1]?.definition_json ?? "{}").steps[0]?.name).toBe(
@@ -328,10 +328,10 @@ describe("application template workflow route", () => {
       .first<{
         definition_json: string
         revision: number
-        updated_by_account_id: number
+        updated_by_account_id: string
       }>()
     expect(current?.revision).toBe(1)
-    expect(current?.updated_by_account_id).toBe(1)
+    expect(current?.updated_by_account_id).toBe("1")
     expect(JSON.parse(current?.definition_json ?? "{}").steps[0]?.name).toBe("Manager")
   })
 })

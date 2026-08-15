@@ -12,6 +12,7 @@ import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-
 import { ensureWorkflowStepEscalation } from "@/contexts/request/application/workflow/ensure-workflow-step-escalation"
 import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
+import { zAccountId } from "@system/domain/auth/account-id"
 
 const firstStep = {
   key: "manager",
@@ -33,22 +34,26 @@ async function setup(workflow: ApplicationWorkflow) {
     { id: 3, code: "E003", name: "Director", status: "active" },
     { id: 4, code: "E004", name: "Delegate", status: "active" },
     { id: 5, code: "E005", name: "Applicant", status: "active" },
+    { id: 99, code: "E099", name: "Workflow administrator", status: "active" },
   ])
   await seedD1(db, "org_memberships", [
     { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E002" },
     { department_code: "HQ", employee_code: "E002", manager_employee_code: "E003" },
   ])
   await seedD1(db, "accounts", [
+    { id: 1, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
     { id: 2, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
     { id: 3, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
     { id: 4, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
     { id: 5, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
+    { id: 99, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
   ])
   await seedD1(db, "account_employee_links", [
     { account_id: 2, employee_id: 2 },
     { account_id: 3, employee_id: 3 },
     { account_id: 4, employee_id: 4 },
     { account_id: 5, employee_id: 5 },
+    { account_id: 99, employee_id: 99 },
   ])
 
   const template = await new ApplicationTemplateRepository(context).create(
@@ -68,7 +73,7 @@ async function setup(workflow: ApplicationWorkflow) {
     templateId: template.id,
     definition: workflow,
     expectedRevision: 0,
-    updatedByAccountId: 1,
+    updatedByAccountId: zAccountId.parse("1"),
     updatedAt: "2026-01-01T00:00:00.000Z",
   })
   if (saved instanceof Error) throw saved
@@ -149,7 +154,7 @@ describe("configured application workflow", () => {
       resolutionId: "large-resolution",
       candidates: Array.from({ length: 100 }, (_, index) => ({
         employeeId: index + 1,
-        accountId: index + 1,
+        accountId: zAccountId.parse(String(index + 1)),
         source: "primary" as const,
         selectorsJson: "[]",
         eligibleFrom: null,
@@ -362,7 +367,7 @@ describe("configured application workflow", () => {
     if (approvals instanceof Error) throw approvals
     expect(approvals[0]).toMatchObject({
       approverId: 4,
-      approverAccountId: 4,
+      approverAccountId: "4",
       representedApproverId: 2,
       delegationId: 1,
     })
@@ -381,7 +386,7 @@ describe("configured application workflow", () => {
     if (approvals instanceof Error) throw approvals
     expect(approvals[0]).toMatchObject({
       approverId: 2,
-      approverAccountId: 2,
+      approverAccountId: "2",
       representedApproverId: 2,
       delegationId: null,
     })
@@ -480,6 +485,7 @@ describe("configured application workflow", () => {
             evidence: {
               type: "employee_code",
               employee_code: "E002",
+              system_account_id: "2",
               authority_snapshot: {
                 schema_version: 1,
                 source: "legacy",
@@ -499,6 +505,7 @@ describe("configured application workflow", () => {
             evidence: {
               type: "employee_code",
               employee_code: "E003",
+              system_account_id: "3",
               authority_snapshot: {
                 schema_version: 1,
                 source: "legacy",
@@ -711,7 +718,7 @@ describe("configured application workflow", () => {
         candidates: [
           {
             employeeId: 2,
-            accountId: 2,
+            accountId: zAccountId.parse("2"),
             source: "primary",
             selectorsJson: "[]",
             eligibleFrom: null,
@@ -776,8 +783,8 @@ describe("configured application workflow", () => {
          WHERE application_id = ?1 AND event_type = 'reassigned'`,
       )
       .bind(setupResult.applicationId)
-      .first<{ actor_account_id: number; details_json: string }>()
-    expect(event?.actor_account_id).toBe(99)
+      .first<{ actor_account_id: string; details_json: string }>()
+    expect(event?.actor_account_id).toBe("99")
     expect(JSON.parse(event?.details_json ?? "{}")).toMatchObject({
       candidate_employee_ids: [3],
       previous_round: 1,
@@ -979,7 +986,7 @@ describe("configured application workflow", () => {
       candidates: [
         {
           employeeId,
-          accountId: employeeId,
+          accountId: zAccountId.parse(String(employeeId)),
           source: "primary" as const,
           selectorsJson: "[]",
           eligibleFrom: null,

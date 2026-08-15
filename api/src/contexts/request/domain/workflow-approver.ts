@@ -1,8 +1,9 @@
 import type { WorkflowApproverSelector } from "@/contexts/request/domain/application-workflow"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 export type WorkflowAccount = Readonly<{
   employeeId: number
-  accountId: number
+  accountId: AccountId
 }>
 
 export type WorkflowApproverProvenance = Readonly<{
@@ -13,6 +14,6 @@ export type WorkflowApproverProvenance = Readonly<{
 
 export type WorkflowApproverMatch = Readonly<{
   employeeId: number
-  accountId: number
+  accountId: AccountId
   provenance: WorkflowApproverProvenance
 }>

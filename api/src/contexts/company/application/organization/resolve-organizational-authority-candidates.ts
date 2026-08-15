@@ -16,10 +16,12 @@ import {
   orgDepartments,
   orgMemberships,
 } from "@/contexts/company/infrastructure/schema/organization"
+import { systemAccounts } from "@system/infrastructure/schema/system-core"
+import type { AccountId } from "@system/domain/auth/account-id"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { and, eq, isNotNull, isNull } from "drizzle-orm"
+import { and, eq, isNotNull, isNull, sql } from "drizzle-orm"
 
 type EmployeeRow = Readonly<{
   id: number
@@ -50,7 +52,7 @@ type OrganizationProjection = Readonly<{
 
 type PreliminaryCandidate = Readonly<{
   employeeId: number
-  accountId: number | null
+  legacyAccountId: number | null
   criterionIndex: number
   evidence: Readonly<Record<string, unknown>>
 }>
@@ -298,7 +300,7 @@ function organizationCandidates(props: {
       if (employeeId !== undefined) {
         result.push({
           employeeId,
-          accountId: null,
+          legacyAccountId: null,
           criterionIndex,
           evidence: { type: "employee_code", employee_code: criterion.employeeCode },
         })
@@ -315,7 +317,7 @@ function organizationCandidates(props: {
         if (employeeId !== undefined) {
           result.push({
             employeeId,
-            accountId: null,
+            legacyAccountId: null,
             criterionIndex,
             evidence: membership.evidence,
           })
@@ -334,7 +336,7 @@ function organizationCandidates(props: {
         if (employeeId !== undefined) {
           result.push({
             employeeId,
-            accountId: null,
+            legacyAccountId: null,
             criterionIndex,
             evidence: department.evidence,
           })
@@ -350,7 +352,7 @@ function organizationCandidates(props: {
         if (employeeId !== undefined) {
           result.push({
             employeeId,
-            accountId: null,
+            legacyAccountId: null,
             criterionIndex,
             evidence: department.evidence,
           })
@@ -389,7 +391,7 @@ function organizationCandidates(props: {
       if (employeeId !== undefined) {
         result.push({
           employeeId,
-          accountId: null,
+          legacyAccountId: null,
           criterionIndex,
           evidence: { type: "management_chain", path: current.path },
         })
@@ -437,11 +439,11 @@ async function legacyRoleCandidates(props: {
         if (row.employeeId === null) continue
         result.push({
           employeeId: row.employeeId,
-          accountId: row.accountId,
+          legacyAccountId: row.accountId,
           criterionIndex,
           evidence: {
             type: "account_role",
-            account_id: row.accountId,
+            legacy_account_id: row.accountId,
             role_id: row.roleId,
             role_key: criterion.roleKey,
           },
@@ -457,34 +459,41 @@ async function legacyRoleCandidates(props: {
 
 function materializeCandidates(props: {
   preliminary: ReadonlyArray<PreliminaryCandidate>
-  accountRows: ReadonlyArray<{ id: number; employeeId: number | null }>
+  accountRows: ReadonlyArray<{
+    legacyId: number
+    systemId: AccountId
+    employeeId: number | null
+  }>
   liveEmployeeIds: ReadonlySet<number>
   subjectEmployeeId: number | null
 }): ReadonlyArray<OrganizationalAuthorityCandidate> {
-  const accountsByEmployee = new Map<number, number[]>()
+  const accountsByEmployee = new Map<number, Array<{ legacyId: number; systemId: AccountId }>>()
   for (const account of props.accountRows) {
     if (account.employeeId === null || !props.liveEmployeeIds.has(account.employeeId)) continue
     const accountIds = accountsByEmployee.get(account.employeeId) ?? []
-    accountIds.push(account.id)
+    accountIds.push({ legacyId: account.legacyId, systemId: account.systemId })
     accountsByEmployee.set(account.employeeId, accountIds)
   }
 
   return props.preliminary.flatMap((candidate) => {
     if (candidate.employeeId === props.subjectEmployeeId) return []
-    const activeAccountIds = accountsByEmployee.get(candidate.employeeId) ?? []
-    const eligibleAccountIds =
-      candidate.accountId === null
-        ? activeAccountIds
-        : activeAccountIds.includes(candidate.accountId)
-          ? [candidate.accountId]
+    const activeAccounts = accountsByEmployee.get(candidate.employeeId) ?? []
+    const eligibleAccounts =
+      candidate.legacyAccountId === null
+        ? activeAccounts
+        : activeAccounts.some((account) => account.legacyId === candidate.legacyAccountId)
+          ? activeAccounts.filter((account) => account.legacyId === candidate.legacyAccountId)
           : []
 
-    return eligibleAccountIds.map((accountId) => ({
+    return eligibleAccounts.map((account) => ({
       employeeId: candidate.employeeId,
-      accountId,
+      accountId: account.systemId,
       qualification: {
         criterionIndex: candidate.criterionIndex,
-        evidence: candidate.evidence,
+        evidence: {
+          ...candidate.evidence,
+          system_account_id: account.systemId,
+        },
       },
     }))
   })
@@ -529,10 +538,15 @@ export async function resolveOrganizationalAuthorityCandidates(props: {
     const roleCandidates = await legacyRoleCandidates({ c: props.c, criteria: props.criteria })
     if (roleCandidates instanceof ApplicationError) return roleCandidates
     const accountRows = await props.c.var.database
-      .select({ id: accounts.id, employeeId: accountEmployeeLinks.employeeId })
+      .select({
+        legacyId: accounts.id,
+        systemId: systemAccounts.id,
+        employeeId: accountEmployeeLinks.employeeId,
+      })
       .from(accounts)
       .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
-      .where(eq(accounts.status, "active"))
+      .innerJoin(systemAccounts, sql`${systemAccounts.id} = CAST(${accounts.id} AS TEXT)`)
+      .where(and(eq(accounts.status, "active"), eq(systemAccounts.status, "active")))
     const resolvedSnapshot: OrganizationalAuthoritySnapshot = {
       ...snapshot,
       organizationRevision: organization.organizationRevision,

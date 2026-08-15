@@ -2,6 +2,7 @@ import type { Context } from "@/env"
 import { approvalDelegations } from "@/contexts/request/infrastructure/schema/request"
 import { and, asc, eq, gt, inArray, isNull, lte, or } from "drizzle-orm"
 import { filterLiveWorkflowAccounts } from "@/contexts/request/application/workflow/filter-live-workflow-accounts"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 /**
  * 操作者が候補本人か、有効な委任を受けているかを判定し、代表する承認者を返す。
@@ -10,8 +11,8 @@ import { filterLiveWorkflowAccounts } from "@/contexts/request/application/workf
 export async function resolveRepresentedApprover(props: {
   c: Context
   actorEmployeeId: number
-  actorAccountId: number
-  candidateAccounts: ReadonlyArray<{ employeeId: number; accountId: number }>
+  actorAccountId: AccountId
+  candidateAccounts: ReadonlyArray<{ employeeId: number; accountId: AccountId }>
   templateCode: string
   now: string
   allowDelegation: boolean
@@ -73,7 +74,7 @@ export async function resolveRepresentedApprover(props: {
 
 async function loadActiveCandidateAccounts(props: {
   c: Context
-  candidateAccounts: ReadonlyArray<{ employeeId: number; accountId: number }>
-}): Promise<ReadonlyArray<{ employeeId: number; accountId: number }> | Error> {
+  candidateAccounts: ReadonlyArray<{ employeeId: number; accountId: AccountId }>
+}): Promise<ReadonlyArray<{ employeeId: number; accountId: AccountId }> | Error> {
   return filterLiveWorkflowAccounts(props.c, props.candidateAccounts)
 }

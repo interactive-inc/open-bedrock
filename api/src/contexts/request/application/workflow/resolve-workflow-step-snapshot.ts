@@ -98,24 +98,27 @@ function candidateRows(props: {
   eligibleFrom: string | null
   resolvedAt: string
 }): ReadonlyArray<WorkflowStepCandidateSnapshot> {
-  const provenanceByCandidate = new Map<string, Array<WorkflowApproverProvenance>>()
+  const candidatesByEmployee = new Map<
+    number,
+    Map<WorkflowApproverMatch["accountId"], Array<WorkflowApproverProvenance>>
+  >()
 
   for (const match of props.matches) {
-    const key = `${match.employeeId}:${match.accountId}`
-    const provenance = provenanceByCandidate.get(key) ?? []
+    const candidatesByAccount = candidatesByEmployee.get(match.employeeId) ?? new Map()
+    const provenance = candidatesByAccount.get(match.accountId) ?? []
     provenance.push(match.provenance)
-    provenanceByCandidate.set(key, provenance)
+    candidatesByAccount.set(match.accountId, provenance)
+    candidatesByEmployee.set(match.employeeId, candidatesByAccount)
   }
 
-  return [...provenanceByCandidate.entries()].map(([key, provenance]) => {
-    const separator = key.indexOf(":")
-    return {
-      employeeId: Number(key.slice(0, separator)),
-      accountId: Number(key.slice(separator + 1)),
+  return [...candidatesByEmployee.entries()].flatMap(([employeeId, candidatesByAccount]) =>
+    [...candidatesByAccount.entries()].map(([accountId, provenance]) => ({
+      employeeId,
+      accountId,
       source: props.source,
       selectorsJson: JSON.stringify(provenance),
       eligibleFrom: props.eligibleFrom,
       resolvedAt: props.resolvedAt,
-    }
-  })
+    })),
+  )
 }

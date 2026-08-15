@@ -1,6 +1,8 @@
+import type { AccountId } from "@system/domain/auth/account-id"
+
 export type WorkflowStepCandidateSnapshot = Readonly<{
   employeeId: number
-  accountId: number
+  accountId: AccountId
   source: "primary" | "escalation"
   selectorsJson: string
   eligibleFrom: string | null
