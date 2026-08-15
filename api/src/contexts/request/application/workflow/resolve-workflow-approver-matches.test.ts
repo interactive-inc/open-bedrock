@@ -15,6 +15,13 @@ describe("resolveWorkflowApproverMatches", () => {
         (2, 'E002', 'Direct Manager', 'retired'),
         (5, 'E005', 'Applicant', 'active'),
         (9, 'E009', 'Legacy Manager', 'active');
+      INSERT INTO accounts (id, status, created_at, updated_at) VALUES
+        (1, 'active', 0, 0),
+        (2, 'active', 0, 0),
+        (5, 'active', 0, 0),
+        (9, 'active', 0, 0);
+      INSERT INTO account_employee_links (account_id, employee_id) VALUES
+        (1, 1), (2, 2), (5, 5), (9, 9);
       INSERT INTO org_memberships
         (department_code, employee_code, manager_employee_code)
       VALUES ('D001', 'E005', 'E009');
@@ -42,6 +49,7 @@ describe("resolveWorkflowApproverMatches", () => {
       VALUES ('responsibility-1', 1, 'D001', 'department_manager', 1,
               '2025-01-01', NULL, 0, 'fixture', 1);
       UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
+      UPDATE organization_lifecycle_states SET revision = 7, updated_at = 1 WHERE id = 1;
     `)
 
     const matches = await resolveWorkflowApproverMatches({
@@ -53,6 +61,7 @@ describe("resolveWorkflowApproverMatches", () => {
         { type: "management_chain" },
         { type: "target_department_manager" },
       ],
+      resolvedAt: "2026-01-01T00:00:00.000Z",
       targetDepartmentCode: "D001",
     })
 
@@ -69,6 +78,14 @@ describe("resolveWorkflowApproverMatches", () => {
       [2, 1],
       [3, 1],
     ])
+    expect(
+      (matches as Exclude<typeof matches, Error>)[0]?.provenance.evidence.authority_snapshot,
+    ).toEqual({
+      schema_version: 1,
+      source: "lifecycle",
+      as_of: "2026-01-01",
+      organization_revision: 7,
+    })
     expect(JSON.stringify(matches)).not.toContain("E009")
   })
 })

@@ -172,10 +172,14 @@ request の domain entity は request の Drizzle schema 型へ依存しない�
 
 現行の template と request は、変更不能な template version、request version、canonical proposal digest をまだ持たない。`application_requests.payload` は検証後の JSON だが、System Case の digest と結ばれていない。`application_subjects` は Employee と prospective Employee に特化し、opaque な context、kind、ID、version 参照ではない。
 
-現行の workflow、approval、delegation table と application service は request context 内の互換実装であり、System workflow kernel を利用していない。候補は Company の Employee と組織から request 内で解決され、汎用 OrganizationalAuthority resolver と版付き evidence snapshot にはなっていない。
+現行の workflow、approval、delegation table と application service は request context 内の互換実装であり、System workflow kernel を利用していない。workflow selector は request の薄い adapter から Company の OrganizationalAuthority resolver へ渡される。Company は指定時点の在籍、組織、Account 対応を解決し、組織投影の出典、営業日、organization revision、使用根拠を snapshot として返す。初期候補を解決する adapter と step activation は Company table を読まず、その snapshot を候補証拠へ保存する。
+
+Company resolver の現行 Account ID は整数の互換値であり、canonical System Account ID ではない。`role` selector も Company Responsibility ではなく Account role を使う互換条件である。そのため、候補解決の所有境界と時点 snapshot は実装済みだが、System Task へ安全に渡せる最終資格モデルではない。
+
+判断時の候補 Account 再検査、委任、手動修復には、request から Company の Account、Employee、対応 table を読む互換経路が残る。初期候補 resolver の分離を request 全体の Company infrastructure 非依存と読み替えない。これらは canonical System Account と HumanAttestation へ切り替えるまでの未完成差分である。
 
 現行の personnel action completion は request から Company の application operation を利用し、revision と payload fingerprint を検査して同一 batch で適用する。これは許可された request から Company への依存である。一方、汎用 ExecutionAuthorization、request version、proposal digest には未接続なので、System workflow 利用済みとは扱わない。
 
 現行 route は Company の認証 middleware、session、HTTP error、test helper を利用する。依存方向は request から Company なので逆依存ではないが、System の共通認証と API 共通部品への分離は未完成である。
 
-以上から、現行実装は request の所有境界と削除方向を確立し、従来挙動をその境界へ移した状態である。System workflow との完全な接続、版と digest、Company 資格 resolver、旧 workflow table の廃止が完了するまでは、最終的な安全性を満たしたとは表示しない。
+以上から、現行実装は request の所有境界と削除方向、Company 資格 resolver への依存方向を確立し、従来挙動をその境界へ移した状態である。System workflow との完全な接続、版と digest、Company Responsibility scope、canonical Account ID、旧 workflow table の廃止が完了するまでは、最終的な安全性を満たしたとは表示しない。

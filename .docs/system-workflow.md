@@ -184,12 +184,14 @@ domain object の検証だけに依存してはならない。複数 request が
 - monotonic lifecycle、自己判断禁止、候補と除外の固定、quorum、代理 scope、append-only、一回実行を強制する database 制約
 - canonical DDL、migration、Drizzle schema の対応と、それらの一致を検査する test
 
+Company には、営業日、組織投影、organization revision、根拠を固定する OrganizationalAuthority resolver がある。これは System の構成要素ではなく、request から利用される独立した Company 能力である。
+
 現行の System workflow には次が存在しない。
 
 - ProcedureDefinition と版、および必要 Task を完全に生成したことの証明
 - System workflow の application service、repository、transaction operation
 - HumanPrincipal kind、step-up、共通 policy evaluation と attestation 作成経路
-- Company の OrganizationalAuthority resolver と時点 snapshot
+- Company の資格候補を canonical System Account ID と opaque evidence reference へ変換する接続
 - request App の変更不能な template version、request version、canonical proposal digest と System Case の binding
 - Execution Gateway、idempotency、outbox、外部 Assertion との接続
 - request context にある既存 application request、approval、delegation、notification の System workflow への切替
