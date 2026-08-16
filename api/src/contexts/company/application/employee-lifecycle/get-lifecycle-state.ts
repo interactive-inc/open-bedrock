@@ -1,10 +1,21 @@
 import type { Context } from "@/env"
+import { ReadWorkforceState } from "@/contexts/company/application/workforce/read-workforce-state"
+import { isCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import {
   EmployeeLifecycleReadRepository,
   type EmployeeLifecycleState,
 } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { ApplicationError, NotFoundError, UnavailableError, ValidationError } from "@/lib/errors"
+import { EmployeeLifecycleWorkforceRepository } from "@/contexts/company/infrastructure/workforce/employee-lifecycle-workforce.repository"
+import { toEmployeeLifecycleState } from "@/contexts/company/infrastructure/workforce/to-employee-lifecycle-state"
+import {
+  ApplicationError,
+  NotFoundError,
+  UnexpectedError,
+  UnavailableError,
+  ValidationError,
+} from "@/lib/errors"
 import { isoDate } from "@/lib/schemas"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 
@@ -42,14 +53,51 @@ export class GetLifecycleState {
       return new ValidationError("as_of が不正です", "personnel_action_invalid_transition")
     }
 
+    if (!isCalendarDate(asOf)) {
+      return new ValidationError("as_of が不正です", "personnel_action_invalid_transition")
+    }
+
+    const workforce = await new ReadWorkforceState(
+      new EmployeeLifecycleWorkforceRepository(this.c),
+    ).execute({ employeeId: toWorkforceEmployeeId(props.employeeId), asOf })
+
+    if (workforce.kind === "not_found") {
+      return new NotFoundError("従業員が見つかりません", "employee_not_found")
+    }
+    if (workforce.kind === "unavailable") {
+      return new UnexpectedError("基準日現在の人事状態を取得できません", {
+        cause: workforce.cause,
+      })
+    }
+    if (workforce.kind === "invalid_schedule") {
+      return new UnavailableError(
+        "人事ライフサイクルの保存状態が不正です",
+        "lifecycle_projection_mismatch",
+        { cause: workforce.error },
+      )
+    }
+
     const states = await new EmployeeLifecycleReadRepository(this.c).findStatesAt(
       [props.employeeId],
       asOf,
     )
     if (states instanceof ApplicationError) return states
-    return (
-      states.get(props.employeeId) ??
-      new NotFoundError("従業員が見つかりません", "employee_not_found")
-    )
+    const projection = states.get(props.employeeId)
+    if (projection === undefined) {
+      return new UnavailableError(
+        "人事ライフサイクルの表示状態を解決できません",
+        "lifecycle_projection_mismatch",
+      )
+    }
+
+    const state = toEmployeeLifecycleState({ workforce: workforce.state, projection })
+
+    return state instanceof Error
+      ? new UnavailableError(
+          "人事ライフサイクルの表示状態が共通状態と一致しません",
+          "lifecycle_projection_mismatch",
+          { cause: state },
+        )
+      : state
   }
 }
