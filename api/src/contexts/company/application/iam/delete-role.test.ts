@@ -1,8 +1,8 @@
 import { DeleteRole } from "@/contexts/company/application/iam/delete-role"
 import { RoleRepository } from "@/contexts/company/infrastructure/iam/role-repository"
-import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
-import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
-import { seedIamForEmployees } from "@/contexts/company/interface/test-helpers/seed-iam-for-employees"
+import { createTestContext } from "@/api/test/support/create-test-context"
+import { makeTestSession } from "@/api/test/support/make-test-session"
+import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 

@@ -9,7 +9,7 @@ import { resolveAuditNow } from "@/contexts/company/interface/utils/resolve-audi
 import { toAuditIsoString } from "@/contexts/company/interface/utils/to-audit-iso-string"
 import { AuditTrail } from "@/contexts/company/interface/utils/audit-trail"
 import type { AuditEventFilters } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
-import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { createTestContext } from "@/api/test/support/create-test-context"
 import type { AppAuditEventDetail, AppAuditEventPage } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import type { InferRequestType, InferResponseType } from "hono/client"

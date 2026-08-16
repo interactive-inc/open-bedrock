@@ -1,5 +1,5 @@
 import { GetLifecycleState } from "@/contexts/company/application/employee-lifecycle/get-lifecycle-state"
-import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { createTestContext } from "@/api/test/support/create-test-context"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 

@@ -4,7 +4,8 @@ import { LastRootError } from "@/contexts/company/infrastructure/iam/last-root-e
 import { LastRootGuard } from "@/contexts/company/infrastructure/iam/last-root-guard"
 import { LivePermissionGuard } from "@/contexts/company/infrastructure/iam/live-permission-guard"
 import { LivePermissionGuardError } from "@/contexts/company/infrastructure/iam/live-permission-guard-error"
-import { accountEmployeeLinks, accountRoles, accounts, employees, roles } from "@/schema"
+import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
+import { accountRoles, accounts, roles } from "@/api/legacy-system/adapters/schema/system"
 import { eq, inArray, sql } from "drizzle-orm"
 
 export type AccountSummary = {

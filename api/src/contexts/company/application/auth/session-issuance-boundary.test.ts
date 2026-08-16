@@ -11,7 +11,13 @@ describe("canonical Account session issuance boundary", () => {
       cwd: sourceRoot.pathname,
       onlyFiles: true,
     })) {
-      if (path.endsWith(".test.ts") || path.includes("/test-helpers/")) continue
+      if (
+        path.endsWith(".test.ts") ||
+        path.startsWith("api/test/") ||
+        path.includes("/test-helpers/")
+      ) {
+        continue
+      }
 
       const source = await Bun.file(new URL(path, sourceRoot)).text()
 

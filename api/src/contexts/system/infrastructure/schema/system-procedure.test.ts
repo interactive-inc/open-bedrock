@@ -3,6 +3,7 @@ import { Database } from "bun:sqlite"
 import { readFileSync } from "node:fs"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
 import { systemProcedureSchema } from "@system/infrastructure/schema/system-procedure"
+import { readReleasedSystemMigration } from "@system/infrastructure/schema/read-released-system-migration.test-support"
 
 const coreSchemaSql = readFileSync(new URL("./system-core.sql", import.meta.url), "utf8")
 const workflowSchemaSql = readFileSync(new URL("./system-workflow.sql", import.meta.url), "utf8")
@@ -55,10 +56,7 @@ function insertProposal(database: Database): void {
 
 describe("System procedure schema", () => {
   test("released migrationをcanonical DDLと完全一致させる", () => {
-    const releasedMigrationSql = readFileSync(
-      new URL("../../../../../migrations/0132_system_procedure.sql", import.meta.url),
-      "utf8",
-    )
+    const releasedMigrationSql = readReleasedSystemMigration("system_procedure")
 
     expect(releasedMigrationSql).toBe(procedureSchemaSql)
   })

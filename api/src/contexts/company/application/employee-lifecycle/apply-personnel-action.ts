@@ -19,8 +19,8 @@ import {
   PersonnelActionRepository,
   type PersonnelActionRecord,
 } from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action-repository"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,

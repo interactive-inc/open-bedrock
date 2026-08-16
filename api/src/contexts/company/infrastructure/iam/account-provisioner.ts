@@ -1,9 +1,15 @@
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@/contexts/system/domain/identity/identity-provider"
 import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
-import { accountEmployeeLinks, accountRoles, accounts, identities, roles } from "@/schema"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
+import { accountEmployeeLinks } from "@/contexts/company/infrastructure/schema/employee"
+import {
+  accountRoles,
+  accounts,
+  identities,
+  roles,
+} from "@/api/legacy-system/adapters/schema/system"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { LivePermissionGuard } from "@/contexts/company/infrastructure/iam/live-permission-guard"
 import { RoleAssignmentGuardError } from "@/contexts/company/infrastructure/iam/role-assignment-guard-error"
 import { eq } from "drizzle-orm"

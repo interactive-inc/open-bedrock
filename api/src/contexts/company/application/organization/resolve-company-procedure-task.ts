@@ -9,7 +9,7 @@ import {
   permissions,
   rolePermissions,
   roles,
-} from "@/contexts/company/infrastructure/schema/compatibility/account-schema"
+} from "@/api/legacy-system/adapters/schema/system"
 import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
 import type { Context } from "@/env"
 import type { StartSystemProcedureTask } from "@system/application/workflow/start-system-procedure"

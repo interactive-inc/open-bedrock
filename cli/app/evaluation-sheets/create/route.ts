@@ -28,9 +28,7 @@ export default factory.createHandlers(
 
     if (!query.period) throw new UsageError("--period が必要です")
 
-    const employeeId = toFiniteNumber(query["employee-id"])
-
-    if (employeeId === null) throw new UsageError("--employee-id は数値で指定してください")
+    const employeeId = toFiniteNumber(query["employee-id"], "--employee-id")
 
     const client = await createClient()
 
@@ -38,12 +36,14 @@ export default factory.createHandlers(
       json: {
         employee_id: employeeId,
         period: query.period,
-        template_id: query["template-id"] ? toFiniteNumber(query["template-id"]) : undefined,
+        template_id: query["template-id"]
+          ? toFiniteNumber(query["template-id"], "--template-id")
+          : undefined,
         primary_evaluator_id: query["primary-evaluator-id"]
-          ? (toFiniteNumber(query["primary-evaluator-id"]) ?? undefined)
+          ? toFiniteNumber(query["primary-evaluator-id"], "--primary-evaluator-id")
           : undefined,
         secondary_evaluator_id: query["secondary-evaluator-id"]
-          ? toFiniteNumber(query["secondary-evaluator-id"])
+          ? toFiniteNumber(query["secondary-evaluator-id"], "--secondary-evaluator-id")
           : undefined,
       },
     })

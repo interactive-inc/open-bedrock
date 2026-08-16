@@ -6,11 +6,7 @@ import type {
 } from "@/contexts/company/domain/organization/organizational-authority-candidate"
 import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import {
-  accounts,
-  accountRoles,
-  roles,
-} from "@/contexts/company/infrastructure/schema/compatibility/account-schema"
+import { accounts, accountRoles, roles } from "@/api/legacy-system/adapters/schema/system"
 import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
 import {
   orgDepartments,

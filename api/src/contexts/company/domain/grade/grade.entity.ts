@@ -1,4 +1,4 @@
-import type { GradeRow } from "@/schema"
+import type { GradeRow } from "@/contexts/company/infrastructure/schema/grade"
 import { z } from "zod"
 
 const zProps = z.object({

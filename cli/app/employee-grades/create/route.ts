@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock employee-grades create --employee-id <id> --grade-id <id> --effective-date <YYYY-MM-DD> [--reason <r>] [--review-cycle-id <id>]`
+export const help = `bedrock employee-grades create --employee-id <id> --grade-id <id> --effective-date <YYYY-MM-DD> [--reason <r>]`
 
 export default factory.createHandlers(
   zValidator(
@@ -16,7 +16,6 @@ export default factory.createHandlers(
       "grade-id": z.string().optional(),
       "effective-date": z.string().optional(),
       reason: z.string().optional(),
-      "review-cycle-id": z.string().optional(),
     }),
   ),
   async (c) => {
@@ -27,8 +26,6 @@ export default factory.createHandlers(
     if (!query["employee-id"] || !query["grade-id"] || !query["effective-date"])
       throw new UsageError("--employee-id, --grade-id, --effective-date が必要です")
 
-    const reviewCycleId = query["review-cycle-id"]
-
     const client = await createClient()
 
     const response = await client["employee-grades"].$post({
@@ -37,8 +34,6 @@ export default factory.createHandlers(
         grade_id: toFiniteNumber(query["grade-id"], "--grade-id"),
         effective_date: query["effective-date"],
         reason: query.reason ?? null,
-        review_cycle_id:
-          reviewCycleId === undefined ? null : toFiniteNumber(reviewCycleId, "--review-cycle-id"),
       },
     })
 

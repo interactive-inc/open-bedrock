@@ -1,8 +1,13 @@
 import type { Context } from "@/env"
-import { accountRoles, permissions, rolePermissions, roles } from "@/schema"
-import type { RoleRow } from "@/schema"
-import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
+import {
+  accountRoles,
+  permissions,
+  rolePermissions,
+  roles,
+} from "@/api/legacy-system/adapters/schema/system"
+import type { RoleRow } from "@/api/legacy-system/adapters/schema/system"
+import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { LastRootError } from "@/contexts/company/infrastructure/iam/last-root-error"
 import { LastRootGuard } from "@/contexts/company/infrastructure/iam/last-root-guard"
 import { LivePermissionGuard } from "@/contexts/company/infrastructure/iam/live-permission-guard"

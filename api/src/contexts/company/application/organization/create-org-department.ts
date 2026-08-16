@@ -4,7 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import type { Context } from "@/env"
 import { OrgDepartmentRepository } from "@/contexts/company/infrastructure/organization/org-department-repository"
-import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
   session: Session

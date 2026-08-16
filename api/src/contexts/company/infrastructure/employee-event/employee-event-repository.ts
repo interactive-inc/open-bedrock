@@ -1,6 +1,6 @@
 import { EmployeeEvent } from "@/contexts/company/domain/employee-event/employee-event.entity"
 import type { Context } from "@/env"
-import { employeeEvents } from "@/schema"
+import { employeeEvents } from "@/contexts/company/infrastructure/schema/employee-event"
 import { and, count, desc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 

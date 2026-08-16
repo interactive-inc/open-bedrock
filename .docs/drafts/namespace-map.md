@@ -59,7 +59,7 @@ URL と CLI の実装で本書から外れた点が三つある。いずれも�
 
 `audit_events` は Principal 主体の汎用監査イベントだけを保存する。Employee 文脈は Company の `audit_event_employee_contexts` が所有する。
 
-現行 System schema は 16 表である。申請、判断、証拠の表は現在 Company schema に同居しており、System へ移管する。
+Systemの認証、監査、通知、申請、判断、証拠のschemaはSystem contextが所有する。旧HTTP契約が使用するSystem tableも互換schemaとしてSystemへ移管済みであり、Company schemaには同居させない。
 
 ## Company のテーブル
 
