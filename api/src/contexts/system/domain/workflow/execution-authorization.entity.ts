@@ -71,6 +71,18 @@ export class ExecutionAuthorization {
     return new ExecutionAuthorization(parsed.data)
   }
 
+  get grantedAt(): Date {
+    return new Date(this.#grantedAtEpochMilliseconds)
+  }
+
+  get expiresAt(): Date {
+    return new Date(this.#expiresAtEpochMilliseconds)
+  }
+
+  get usedAt(): Date | null {
+    return this.#usedAtEpochMilliseconds === null ? null : new Date(this.#usedAtEpochMilliseconds)
+  }
+
   use(
     proposalDigest: ProposalDigest,
     at: Date,

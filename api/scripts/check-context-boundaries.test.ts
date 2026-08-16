@@ -9,6 +9,7 @@ import {
   inspectContextTestDirectory,
   inspectLegacyRuntimeRootPath,
   inspectLibSource,
+  inspectRetiredContextPath,
 } from "./check-context-boundaries"
 import { LIB_BOUNDARY_BASELINE } from "./lib-boundary-baseline"
 import { describe, expect, test } from "bun:test"
@@ -53,6 +54,12 @@ test("context横断テストを単数形testへ配置する", () => {
   expect(inspectContextTestDirectory("src/contexts/system/infrastructure/example.test.ts")).toEqual(
     [],
   )
+})
+
+test("Systemへ統合したrequest contextの再導入を拒否する", () => {
+  expect(inspectRetiredContextPath("src/contexts/request/domain/request.ts")).not.toEqual([])
+  expect(inspectRetiredContextPath("src/contexts/system/domain/workflow/proposal.ts")).toEqual([])
+  expect(inspectRetiredContextPath("src/contexts/company/application/procedure.ts")).toEqual([])
 })
 
 describe("context path classification", () => {

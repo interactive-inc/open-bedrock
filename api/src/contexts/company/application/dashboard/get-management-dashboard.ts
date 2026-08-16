@@ -4,7 +4,6 @@ import type { ApplicationError } from "@/lib/errors"
 import { toManagementDashboardRanges } from "@/contexts/company/application/dashboard/to-management-dashboard-ranges"
 import type { AppManagementDashboard } from "@/lib/app-schemas"
 import {
-  applications,
   attendanceRecords,
   employeeEvents,
   employees,
@@ -13,6 +12,7 @@ import {
   leaveRequests,
   reviewCycles,
 } from "@/schema"
+import { systemCases } from "@system/infrastructure/schema/system-workflow"
 import { and, count, eq, gte, like, sql } from "drizzle-orm"
 
 /**
@@ -80,8 +80,8 @@ export class GetManagementDashboard {
           .where(eq(reviewCycles.status, "open")),
         database
           .select({ total: count() })
-          .from(applications)
-          .where(eq(applications.status, "pending")),
+          .from(systemCases)
+          .where(eq(systemCases.status, "pending")),
       ])
 
       const departmentRows = await database

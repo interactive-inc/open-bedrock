@@ -267,48 +267,23 @@ async function createTestDb(): Promise<D1Database> {
     },
   ])
 
-  // 申請テンプレートと申請(pending 2 / approved 1)。
-  await seedD1(db, "application_templates", [
-    {
-      id: 1,
-      code: "T1",
-      name: "Tmpl",
-      category: "general",
-      description: null,
-      schema_json: "{}",
-      approver_roles: "[]",
-    },
-  ])
-
-  await seedD1(db, "application_requests", [
-    {
-      id: 1,
-      template_id: 1,
-      applicant_id: 2,
-      status: "pending",
-      current_step: null,
-      payload: "{}",
-      created_at: "2026-06-01T00:00:00.000Z",
-    },
-    {
-      id: 2,
-      template_id: 1,
-      applicant_id: 3,
-      status: "pending",
-      current_step: null,
-      payload: "{}",
-      created_at: "2026-06-02T00:00:00.000Z",
-    },
-    {
-      id: 3,
-      template_id: 1,
-      applicant_id: 2,
-      status: "approved",
-      current_step: null,
-      payload: "{}",
-      created_at: "2026-06-03T00:00:00.000Z",
-    },
-  ])
+  // System Case(pending 2 / approved 1)。
+  await seedD1(
+    db,
+    "system_cases",
+    ["pending", "pending", "approved"].map((status, index) => ({
+      id: `management-dashboard-case-${index + 1}`,
+      subject_context: "system",
+      subject_kind: "dashboard-example",
+      subject_id: String(index + 1),
+      subject_version: "1",
+      proposal_digest: "a".repeat(64),
+      created_by_account_id: "1",
+      status,
+      created_at: Date.parse(`2026-06-0${index + 1}T00:00:00Z`),
+      updated_at: Date.parse(`2026-06-0${index + 1}T00:00:00Z`),
+    })),
+  )
 
   return db
 }

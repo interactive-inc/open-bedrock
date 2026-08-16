@@ -46,7 +46,7 @@ Company は次を所有する。
 
 削除可能な業務機能はすべて独立した App コンテキストにする。対象は次のとおり。
 
-- 汎用手続き: request。個別 App の共通 workflow library にはせず、request 自身の template と提案だけを所有する
+- 汎用手続き: System の ProcedureDefinition、Proposal、Case として所有する。独立した request コンテキストは作らない
 - 社内情報: announcement、knowledge、meeting、regulation、governance-document
 - 採用と人事手続き: recruitment、onboarding、offboarding、certificate-request、life-event、work-style、headcount-plan
 - 時間: attendance、leave、family-care-leave、shift、company-calendar、business-trip

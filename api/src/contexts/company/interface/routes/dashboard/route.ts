@@ -1,7 +1,8 @@
 import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { applications, employees, goals, surveys } from "@/schema"
+import { employees, goals, surveys } from "@/schema"
+import { systemCases } from "@system/infrastructure/schema/system-workflow"
 import { count, eq, gte, sql } from "drizzle-orm"
 
 /**
@@ -38,6 +39,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const now = c.env.NOW ?? new Date().toISOString()
   const monthLabels = buildMonthLabels(now)
   const windowStart = `${monthLabels[0]}-01T00:00:00`
+  const windowStartDate = new Date(`${windowStart}Z`)
 
   const [
     employeeRows,
@@ -53,8 +55,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     c.var.database.select({ total: count() }).from(goals).where(eq(goals.status, "in_progress")),
     c.var.database
       .select({ total: count() })
-      .from(applications)
-      .where(eq(applications.status, "pending")),
+      .from(systemCases)
+      .where(eq(systemCases.status, "pending")),
     c.var.database.select({ total: count() }).from(surveys).where(eq(surveys.status, "open")),
     // 部署別従業員数
     c.var.database
@@ -69,12 +71,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     // 申請月別推移（直近 6 か月）
     c.var.database
       .select({
-        month: sql<string>`substr(${applications.createdAt}, 1, 7)`,
+        month: sql<string>`strftime('%Y-%m', ${systemCases.createdAt} / 1000, 'unixepoch')`,
         total: count(),
       })
-      .from(applications)
-      .where(gte(applications.createdAt, windowStart))
-      .groupBy(sql`substr(${applications.createdAt}, 1, 7)`),
+      .from(systemCases)
+      .where(gte(systemCases.createdAt, windowStartDate))
+      .groupBy(sql`strftime('%Y-%m', ${systemCases.createdAt} / 1000, 'unixepoch')`),
   ])
 
   // 部署別内訳（dept_name が null の行は "未所属" にまとめる）

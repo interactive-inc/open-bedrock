@@ -31,6 +31,15 @@ export async function seedIamForEmployees(
 
     await db
       .prepare(
+        `INSERT OR IGNORE INTO system_accounts
+           (id, status, token_version, created_at, updated_at)
+         VALUES (?1, 'active', 0, 0, 0)`,
+      )
+      .bind(String(employee.id))
+      .run()
+
+    await db
+      .prepare(
         `INSERT OR IGNORE INTO account_employee_links (account_id, employee_id)
          VALUES (?1, ?1)`,
       )

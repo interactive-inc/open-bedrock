@@ -111,3 +111,8 @@ export const appBase = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
+
+/** 生成routeを型計算可能な単位へ分割して合成するための空のHono appを作る。 */
+export function createRouteApp() {
+  return factory.createApp()
+}
