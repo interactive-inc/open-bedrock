@@ -16,6 +16,17 @@ import { systemProposalQuery } from "@/api/routes/application-requests/lib/syste
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+type WorkflowRepair = {
+  id: number
+  template_code: string
+  template_name: string
+  applicant_name: string | null
+  step_key: string
+  round: number
+  reason: "snapshot_missing" | "inactive_candidates"
+  started_at: string
+}
+
 // @authorization permission - workflow監査とtemplate管理の両権限を要求する
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -58,7 +69,7 @@ export const GET = factory.createHandlers(
       at: now,
     })
     if (pending instanceof Error) throw new InternalError("failed to inspect workflow tasks")
-    const repairs = []
+    const repairs: WorkflowRepair[] = []
     for (const proposal of pending.proposals) {
       if (proposal.currentTaskKey === null || proposal.currentTaskRound === null) continue
       const tasks = await query.listTasks(proposal.caseId)
