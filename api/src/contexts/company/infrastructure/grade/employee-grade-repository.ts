@@ -1,8 +1,8 @@
 import { EmployeeGrade } from "@/contexts/company/domain/grade/employee-grade.entity"
 import type { Context } from "@/env"
-import { employeeGrades } from "@/schema"
-import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
+import { employeeGrades } from "@/contexts/company/infrastructure/schema/grade"
+import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { count, desc, eq } from "drizzle-orm"
 
 export class EmployeeGradeRepository {
@@ -52,7 +52,6 @@ export class EmployeeGradeRepository {
           effectiveDate: employeeGrade.effectiveDate,
           reason: employeeGrade.reason,
           createdAt: employeeGrade.createdAt,
-          reviewCycleId: employeeGrade.reviewCycleId,
         })
         .returning()
 

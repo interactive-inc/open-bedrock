@@ -9,6 +9,6 @@ describe("versioned System health route", () => {
     const response = await app.request("/system/v1/health")
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ status: "ok" })
+    expect(await response.text()).toBe('{"status":"ok"}')
   })
 })

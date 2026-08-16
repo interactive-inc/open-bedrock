@@ -1,4 +1,4 @@
-import type { EmployeeEventRow } from "@/schema"
+import type { EmployeeEventRow } from "@/contexts/company/infrastructure/schema/employee-event"
 import { z } from "zod"
 
 const zProps = z.object({

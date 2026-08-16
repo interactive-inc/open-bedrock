@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test"
 import { Database } from "bun:sqlite"
 import { readFileSync } from "node:fs"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
+import { readReleasedSystemMigration } from "@system/infrastructure/schema/read-released-system-migration.test-support"
 
 const coreSchemaSql = readFileSync(new URL("./system-core.sql", import.meta.url), "utf8")
 const workflowSchemaSql = readFileSync(new URL("./system-workflow.sql", import.meta.url), "utf8")
@@ -111,10 +112,7 @@ function insertAttestation(
 
 describe("System workflow schema", () => {
   test("released migrationをcanonical DDLと完全一致させる", () => {
-    const releasedMigrationSql = readFileSync(
-      new URL("../../../../../migrations/0130_system_workflow.sql", import.meta.url),
-      "utf8",
-    )
+    const releasedMigrationSql = readReleasedSystemMigration("system_workflow")
 
     expect(releasedMigrationSql).toBe(workflowSchemaSql)
   })

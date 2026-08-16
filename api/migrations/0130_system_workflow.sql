@@ -33,6 +33,7 @@ CREATE INDEX system_cases_creator_idx
 CREATE INDEX system_cases_status_idx
   ON system_cases (status, updated_at);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_cases_monotonic_lifecycle
 BEFORE UPDATE ON system_cases
 WHEN
@@ -57,6 +58,7 @@ BEGIN
   SELECT RAISE(ABORT, 'system case lifecycle is not monotonic');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_cases_approved_tasks
 BEFORE UPDATE OF status ON system_cases
 WHEN NEW.status = 'approved' AND (
@@ -73,6 +75,7 @@ BEGIN
   SELECT RAISE(ABORT, 'system case approval requires approved tasks');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_cases_negative_decision_evidence
 BEFORE UPDATE OF status ON system_cases
 WHEN NEW.status IN ('rejected', 'returned') AND (
@@ -96,6 +99,7 @@ BEGIN
   SELECT RAISE(ABORT, 'system case decision requires matching task evidence');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_cases_cancelled_tasks
 BEFORE UPDATE OF status ON system_cases
 WHEN NEW.status = 'cancelled' AND EXISTS (
@@ -106,6 +110,7 @@ BEGIN
   SELECT RAISE(ABORT, 'system case cancellation requires closed tasks');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_cases_execution_evidence
 BEFORE UPDATE OF status ON system_cases
 WHEN NEW.status = 'executed' AND (
@@ -122,6 +127,7 @@ BEGIN
   SELECT RAISE(ABORT, 'system case execution requires consumed authorizations');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_cases_prevent_delete
 BEFORE DELETE ON system_cases
 BEGIN
@@ -160,6 +166,7 @@ CREATE INDEX system_decision_tasks_open_idx
   ON system_decision_tasks (due_at, opened_at)
   WHERE closed_at IS NULL;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_decision_tasks_valid_insert
 BEFORE INSERT ON system_decision_tasks
 WHEN
@@ -192,6 +199,7 @@ BEGIN
   SELECT RAISE(ABORT, 'decision task requires matching pending case');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_decision_tasks_monotonic_lifecycle
 BEFORE UPDATE ON system_decision_tasks
 WHEN
@@ -210,6 +218,7 @@ BEGIN
   SELECT RAISE(ABORT, 'decision task lifecycle is not monotonic');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_decision_tasks_approved_quorum
 BEFORE UPDATE OF outcome ON system_decision_tasks
 WHEN NEW.outcome = 'approved' AND (
@@ -234,6 +243,7 @@ BEGIN
   SELECT RAISE(ABORT, 'decision task approval requires quorum');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_decision_tasks_negative_evidence
 BEFORE UPDATE OF outcome ON system_decision_tasks
 WHEN NEW.outcome IN ('rejected', 'returned') AND NOT EXISTS (
@@ -251,6 +261,7 @@ BEGIN
   SELECT RAISE(ABORT, 'decision task outcome requires matching attestation');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_decision_tasks_prevent_delete
 BEFORE DELETE ON system_decision_tasks
 BEGIN
@@ -295,6 +306,7 @@ CREATE UNIQUE INDEX system_decision_task_candidates_account_uniq
 CREATE INDEX system_decision_task_candidates_account_idx
   ON system_decision_task_candidates (candidate_account_id, resolved_at);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_decision_task_candidates_valid_insert
 BEFORE INSERT ON system_decision_task_candidates
 WHEN
@@ -329,12 +341,14 @@ BEGIN
   SELECT RAISE(ABORT, 'invalid decision task candidate');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_decision_task_candidates_prevent_update
 BEFORE UPDATE ON system_decision_task_candidates
 BEGIN
   SELECT RAISE(ABORT, 'decision task candidate is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_decision_task_candidates_prevent_delete
 BEFORE DELETE ON system_decision_task_candidates
 BEGIN
@@ -357,6 +371,7 @@ CREATE TABLE system_decision_task_exclusions (
 CREATE INDEX system_decision_task_exclusions_account_idx
   ON system_decision_task_exclusions (excluded_account_id);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_decision_task_exclusions_valid_insert
 BEFORE INSERT ON system_decision_task_exclusions
 WHEN
@@ -394,12 +409,14 @@ BEGIN
   SELECT RAISE(ABORT, 'invalid decision task exclusion');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_decision_task_exclusions_prevent_update
 BEFORE UPDATE ON system_decision_task_exclusions
 BEGIN
   SELECT RAISE(ABORT, 'decision task exclusion is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_decision_task_exclusions_prevent_delete
 BEFORE DELETE ON system_decision_task_exclusions
 BEGIN
@@ -451,6 +468,7 @@ CREATE INDEX system_delegations_delegator_idx
 CREATE INDEX system_delegations_delegate_idx
   ON system_delegations (delegate_account_id, starts_at);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_delegations_monotonic_lifecycle
 BEFORE UPDATE ON system_delegations
 WHEN
@@ -470,6 +488,7 @@ BEGIN
   SELECT RAISE(ABORT, 'delegation lifecycle is not monotonic');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_delegations_prevent_delete
 BEFORE DELETE ON system_delegations
 BEGIN
@@ -513,6 +532,7 @@ CREATE UNIQUE INDEX system_human_attestations_represented_uniq
 CREATE INDEX system_human_attestations_decided_idx
   ON system_human_attestations (decided_at);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_human_attestations_valid_insert
 BEFORE INSERT ON system_human_attestations
 WHEN
@@ -575,12 +595,14 @@ BEGIN
   SELECT RAISE(ABORT, 'invalid human attestation');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_human_attestations_prevent_update
 BEFORE UPDATE ON system_human_attestations
 BEGIN
   SELECT RAISE(ABORT, 'human attestation is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_human_attestations_prevent_delete
 BEFORE DELETE ON system_human_attestations
 BEGIN
@@ -618,6 +640,7 @@ CREATE UNIQUE INDEX system_execution_authorizations_case_operation_uniq
 CREATE INDEX system_execution_authorizations_grantee_idx
   ON system_execution_authorizations (granted_to_account_id, granted_at);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_execution_authorizations_valid_insert
 BEFORE INSERT ON system_execution_authorizations
 WHEN NOT EXISTS (
@@ -631,6 +654,7 @@ BEGIN
   SELECT RAISE(ABORT, 'execution authorization requires approved case');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_execution_authorizations_single_use
 BEFORE UPDATE ON system_execution_authorizations
 WHEN
@@ -654,6 +678,7 @@ BEGIN
   SELECT RAISE(ABORT, 'execution authorization is single use');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_execution_authorizations_prevent_delete
 BEFORE DELETE ON system_execution_authorizations
 BEGIN

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
+import { createTestContext } from "@/api/test/support/create-test-context"
+import { seedD1 } from "@/api/test/support/seed-d1"
 import { listManagedEmployeeIds } from "@/contexts/company/application/organization/list-managed-employee-ids"
 import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
 

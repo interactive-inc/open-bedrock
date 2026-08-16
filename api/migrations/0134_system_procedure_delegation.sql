@@ -10,6 +10,7 @@ CREATE TABLE system_delegation_procedure_scopes (
 CREATE UNIQUE INDEX system_delegation_procedure_scopes_pair_uniq
   ON system_delegation_procedure_scopes (delegation_id, procedure_key);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_delegation_procedure_scopes_valid_insert
 BEFORE INSERT ON system_delegation_procedure_scopes
 WHEN NOT EXISTS (
@@ -24,12 +25,14 @@ BEGIN
   SELECT RAISE(ABORT, 'procedure scope requires an otherwise global delegation');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_delegation_procedure_scopes_prevent_update
 BEFORE UPDATE ON system_delegation_procedure_scopes
 BEGIN
   SELECT RAISE(ABORT, 'delegation procedure scope is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_delegation_procedure_scopes_prevent_delete
 BEFORE DELETE ON system_delegation_procedure_scopes
 BEGIN
@@ -100,18 +103,21 @@ SELECT
 
 DROP TABLE system_delegation_backfill_guard;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_delegation_numbers_prevent_update
 BEFORE UPDATE ON system_delegation_numbers
 BEGIN
   SELECT RAISE(ABORT, 'delegation number is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_delegation_numbers_prevent_delete
 BEFORE DELETE ON system_delegation_numbers
 BEGIN
   SELECT RAISE(ABORT, 'delegation number is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_human_attestations_procedure_delegation
 BEFORE INSERT ON system_human_attestations
 WHEN NEW.delegation_id IS NOT NULL

@@ -1,9 +1,9 @@
-import { createTestToken } from "@/contexts/company/interface/test-helpers/create-test-token"
+import { createTestToken } from "@/api/test/support/create-test-token"
 import {
   createLifecycleRouteDb,
   lifecycleRouteJwtSecret,
-} from "@/contexts/company/interface/test-helpers/lifecycle-route-fixture"
-import { requestWithContext } from "@/contexts/company/interface/test-helpers/request-with-context"
+} from "@/api/test/support/lifecycle-route-fixture"
+import { requestWithContext } from "@/api/test/support/request-with-context"
 import { describe, expect, test } from "bun:test"
 
 const action = {

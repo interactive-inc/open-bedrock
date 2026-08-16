@@ -1,5 +1,5 @@
 import { resolveOrganizationalAuthorityCandidates } from "@/contexts/company/application/organization/resolve-organizational-authority-candidates"
-import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { createTestContext } from "@/api/test/support/create-test-context"
 import { ConflictError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 import { zAccountId } from "@system/domain/auth/account-id"

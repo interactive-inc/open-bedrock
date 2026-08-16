@@ -1,5 +1,6 @@
 import type { Context } from "@/env"
-import { employees, orgMemberships } from "@/schema"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { orgMemberships } from "@/contexts/company/infrastructure/schema/organization"
 import { eq } from "drizzle-orm"
 
 export type Props = {

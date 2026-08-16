@@ -1,15 +1,14 @@
 import { describe, expect, test } from "bun:test"
 import { seedGrades } from "@/contexts/company/infrastructure/seed/seed-grades"
 import { seedEmployeeGrades } from "@/contexts/company/infrastructure/seed/seed-employee-grades"
-import { seedReviewCycles } from "@/contexts/company/infrastructure/seed/seed-review-cycles"
 import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
 import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships"
-import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
-import { createTestToken } from "@/contexts/company/interface/test-helpers/create-test-token"
-import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
-import { requestWithContext } from "@/contexts/company/interface/test-helpers/request-with-context"
-import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
-import { seedIamForEmployees } from "@/contexts/company/interface/test-helpers/seed-iam-for-employees"
+import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
+import { createTestToken } from "@/api/test/support/create-test-token"
+import { loadSchema } from "@/api/test/support/load-schema"
+import { requestWithContext } from "@/api/test/support/request-with-context"
+import { seedD1 } from "@/api/test/support/seed-d1"
+import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
 
 const assignmentResponseSchema = z.object({
@@ -19,7 +18,6 @@ const assignmentResponseSchema = z.object({
   effective_date: z.string(),
   reason: z.string().nullable(),
   created_at: z.string(),
-  review_cycle_id: z.number().nullable(),
 })
 
 const jwtSecret = "grade-assignments-route-test-secret"
@@ -63,18 +61,6 @@ async function createTestDb(): Promise<D1Database> {
       rank: grade.rank,
       description: grade.description,
       created_at: grade.createdAt,
-    })),
-  )
-
-  await seedD1(
-    db,
-    "review_cycles",
-    seedReviewCycles.map((cycle) => ({
-      id: cycle.id,
-      title: cycle.title,
-      period: cycle.period,
-      status: cycle.status,
-      due_date: cycle.dueDate,
     })),
   )
 
@@ -247,50 +233,6 @@ describe("POST /employee-grades", () => {
       expect(parsed.data.employee_id).toBe(9)
       expect(parsed.data.grade_id).toBe(2)
     }
-  })
-
-  test("links an assignment to an existing review cycle", async () => {
-    const response = await requestWithContext({
-      db: await createTestDb(),
-      jwtSecret,
-      path: "/employee-grades",
-      token: await tokenFor(1, "root"),
-      method: "POST",
-      body: {
-        employee_id: 9,
-        grade_id: 2,
-        effective_date: "2026-04-01",
-        review_cycle_id: 1,
-      },
-    })
-
-    expect(response.status).toBe(201)
-
-    const parsed = assignmentResponseSchema.safeParse(await response.json())
-
-    expect(parsed.success).toBe(true)
-
-    if (parsed.success) {
-      expect(parsed.data.review_cycle_id).toBe(1)
-    }
-  })
-
-  test("unknown review_cycle_id is 404", async () => {
-    const response = await requestWithContext({
-      db: await createTestDb(),
-      jwtSecret,
-      path: "/employee-grades",
-      token: await tokenFor(1, "root"),
-      method: "POST",
-      body: {
-        employee_id: 9,
-        grade_id: 2,
-        effective_date: "2026-04-01",
-        review_cycle_id: 999,
-      },
-    })
-
-    expect(response.status).toBe(404)
   })
 
   test("member without grade:manage is forbidden", async () => {

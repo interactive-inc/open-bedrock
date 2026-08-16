@@ -5,8 +5,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { EmployeeGradeRepository } from "@/contexts/company/infrastructure/grade/employee-grade-repository"
 import { GradeRepository } from "@/contexts/company/infrastructure/grade/grade-repository"
-import { ReviewCycleRepository } from "@/contexts/company/infrastructure/review/review-cycle-repository"
-import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
   session: Session
@@ -15,7 +14,6 @@ export type Command = {
   effectiveDate: string
   reason: string | null
   createdAt: string
-  reviewCycleId: number | null
 }
 
 /**
@@ -41,18 +39,6 @@ export class CreateEmployeeGrade {
       return new NotFoundError("grade not found", "grade_not_found")
     }
 
-    if (command.reviewCycleId !== null) {
-      const cycle = await new ReviewCycleRepository(this.c).findById(command.reviewCycleId)
-
-      if (cycle instanceof Error) {
-        return new UnexpectedError("failed to find review cycle", { cause: cycle })
-      }
-
-      if (cycle === null) {
-        return new NotFoundError("review cycle not found", "review_cycle_not_found")
-      }
-    }
-
     const repository = new EmployeeGradeRepository(this.c)
 
     const employeeGrade = EmployeeGrade.create({
@@ -61,7 +47,6 @@ export class CreateEmployeeGrade {
       effectiveDate: command.effectiveDate,
       reason: command.reason,
       createdAt: command.createdAt,
-      reviewCycleId: command.reviewCycleId,
     })
 
     const created = await repository.create(employeeGrade)

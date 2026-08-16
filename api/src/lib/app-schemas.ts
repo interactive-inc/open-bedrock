@@ -1071,7 +1071,6 @@ export const zAppEmployeeGrade = z.object({
   effective_date: z.string(),
   reason: z.string().nullable(),
   created_at: z.string(),
-  review_cycle_id: z.number().nullable(),
 })
 
 export type AppEmployeeGrade = z.infer<typeof zAppEmployeeGrade>

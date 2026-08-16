@@ -1,7 +1,8 @@
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@/contexts/system/domain/identity/identity-provider"
 import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
-import { accountEmployeeLinks, accounts, employees, identities } from "@/schema"
+import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
+import { accounts, identities } from "@/api/legacy-system/adapters/schema/system"
 import { and, asc, eq, inArray, isNotNull, like, not, sql } from "drizzle-orm"
 
 export type PasswordIdentity = {

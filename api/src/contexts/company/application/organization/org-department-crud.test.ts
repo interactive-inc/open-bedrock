@@ -12,9 +12,9 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/lib/errors"
-import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
-import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
-import { makeTestSession } from "@/contexts/company/interface/test-helpers/make-test-session"
+import { expectApplicationError } from "@/api/test/support/expect-application-error"
+import { createTestContext } from "@/api/test/support/create-test-context"
+import { makeTestSession } from "@/api/test/support/make-test-session"
 import type { Context } from "@/env"
 
 async function seedDepartment(context: Context, code: string): Promise<OrgDepartment> {

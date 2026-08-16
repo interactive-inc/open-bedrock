@@ -1,5 +1,5 @@
-import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
-import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
+import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
+import { loadSchema } from "@/api/test/support/load-schema"
 import {
   employeeLifecycleRevisions,
   employeeStatusPeriodVersions,
@@ -12,8 +12,8 @@ import {
   orgResponsibilityPeriodVersions,
   personnelActionRequests,
   personnelActions,
-  schema,
-} from "@/schema"
+} from "@/contexts/company/infrastructure/schema/employee-lifecycle"
+import { schema } from "@/schema"
 import { describe, expect, test } from "bun:test"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
 import { existsSync, readFileSync, readdirSync } from "node:fs"

@@ -5,7 +5,7 @@ import {
 } from "@/contexts/system/domain/auth/refresh-token-rotation-decision"
 import type { RefreshTokenRotationDecision } from "@/contexts/system/domain/auth/refresh-token-rotation-decision"
 import type { AuditDecisionAppendFragment } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
-import { refreshTokens } from "@/schema"
+import { refreshTokens } from "@/api/legacy-system/adapters/schema/system"
 import { eq } from "drizzle-orm"
 
 const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60

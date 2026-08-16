@@ -19,7 +19,7 @@ flowchart LR
   API --> KV[("KV・rate limit bindings")]
 ```
 
-実装されている route は `api/src/contexts/*/interface/routes` と `api/src/api/routes` から生成される `api/src/api/app.ts` で確認する。System の Drizzle schema は `api/src/contexts/system/infrastructure/schema`、Company と未分離 App を含む合成 schema は `api/src/schema.ts` にある。DB スキーマの正は手書きの `api/migrations/*.sql` で、drizzle-kit generate による再生成は行わない。一意・部分インデックス（二重登録・TOCTOU 防止）は ORM からの可視性とドリフト検知のため Drizzle schema にも同期させ、性能用の非一意インデックスは migration のみに持つ。インデックスを追加・変更する際は migration を正として更新し、一意・部分インデックスは所有コンテキストの schema にも反映する。
+実装されている route は `api/src/contexts/*/interface/routes` と `api/src/api/routes` から生成される `api/src/api/app.ts` で確認する。Drizzle schema の定義は各所有コンテキストの `infrastructure/schema` に置き、`api/src/schema.ts` は database middleware と migration 検査へ渡す再export専用の合成点とする。コンテキストから合成schemaへ逆依存してはならない。DB スキーマの正は手書きの `api/migrations/*.sql` で、drizzle-kit generate による再生成は行わない。一意・部分インデックス（二重登録・TOCTOU 防止）は ORM からの可視性とドリフト検知のため Drizzle schema にも同期させ、性能用の非一意インデックスは migration のみに持つ。インデックスを追加・変更する際は migration を正として更新し、一意・部分インデックスは所有コンテキストの schema にも反映する。
 
 ## migration の命名
 

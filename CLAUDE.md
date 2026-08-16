@@ -56,6 +56,8 @@ Company は次を所有する。
 - 安全と規律: health-checkup、work-accident、disciplinary-action、commendation、it-incident
 - 成長と対話: goal、performance-review、skill、certification、training、career、one-on-one、survey、thanks
 
+機能名とbounded contextは必ずしも一対一にしない。同じ不変条件とtransactionを共有する部署予算と経費、棚卸しと資産、評価接続目標と評価、契約と取引先、会議上の判断記録と会議、感謝pointと感謝messageは、それぞれ `expense`、`asset`、`performance-review`、`partner`、`meeting`、`thanks` が所有する。業務context間の直接依存を許可して見かけだけ分離しない。
+
 dashboard、inbox、directory、search は複数コンテキストの read model または UI composition であり、業務事実の正本を所有するコンテキストにしない。
 
 次は製品内に実装しない。製品は依頼、承認済み指示、外部結果、採否、照合、証跡だけを保持し、将来の API connector で専門製品へ接続する。

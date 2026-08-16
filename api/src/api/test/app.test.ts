@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { app } from "@/api/app"
 import type { Bindings } from "@/env"
-import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
-import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
+import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
+import { loadSchema } from "@/api/test/support/load-schema"
 
 const jwtSecret = "app-cors-test-secret"
 

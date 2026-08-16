@@ -1,9 +1,9 @@
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import type { Context } from "@/env"
-import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
-import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
+import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
+import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import {
   orgDepartments,
   orgMemberships,

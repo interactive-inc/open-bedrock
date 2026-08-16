@@ -2,7 +2,7 @@ import {
   resolveActiveSystemAccountId,
   toSystemAccountId,
 } from "@/contexts/company/application/iam/to-system-account-id"
-import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 import { zAccountId } from "@system/domain/auth/account-id"
 

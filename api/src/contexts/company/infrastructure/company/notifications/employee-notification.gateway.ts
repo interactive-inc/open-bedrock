@@ -1,8 +1,8 @@
 import type { CompanyNotificationKind } from "@/contexts/company/domain/company/notifications/notification-kind"
-import { Notification } from "@/contexts/company/domain/system-compatibility/notifications/notification.entity"
+import { Notification } from "@/api/legacy-system/model/notifications/legacy-notification.entity"
 import type { Context } from "@/env"
 import { AccountEmployeeLinkRepository } from "@/contexts/company/infrastructure/employee/account-employee-link-repository"
-import { NotificationRepository } from "@/contexts/company/infrastructure/system-compatibility/notifications/notification-repository"
+import { NotificationRepository } from "@/api/legacy-system/adapters/notifications/notification-repository"
 
 export type EmployeeNotification = Readonly<{
   recipientEmployeeId: number

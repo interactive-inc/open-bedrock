@@ -16,6 +16,7 @@ CREATE TABLE system_procedure_definitions (
 CREATE INDEX system_procedure_definitions_status_idx
   ON system_procedure_definitions (status, updated_at);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_procedure_definitions_monotonic_lifecycle
 BEFORE UPDATE ON system_procedure_definitions
 WHEN
@@ -40,6 +41,7 @@ BEGIN
   SELECT RAISE(ABORT, 'system procedure lifecycle is not monotonic');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_procedure_definitions_prevent_delete
 BEFORE DELETE ON system_procedure_definitions
 BEGIN
@@ -55,12 +57,14 @@ CREATE TABLE system_procedure_numbers (
 CREATE UNIQUE INDEX system_procedure_numbers_key_uniq
   ON system_procedure_numbers (procedure_key);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_procedure_numbers_prevent_update
 BEFORE UPDATE ON system_procedure_numbers
 BEGIN
   SELECT RAISE(ABORT, 'system procedure number is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_procedure_numbers_prevent_delete
 BEFORE DELETE ON system_procedure_numbers
 BEGIN
@@ -89,6 +93,7 @@ CREATE TABLE system_procedure_definition_revisions (
 CREATE INDEX system_procedure_definition_revisions_creator_idx
   ON system_procedure_definition_revisions (created_by_account_id, created_at);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_procedure_definition_revisions_valid_insert
 BEFORE INSERT ON system_procedure_definition_revisions
 WHEN NOT EXISTS (
@@ -100,12 +105,14 @@ BEGIN
   SELECT RAISE(ABORT, 'invalid system procedure revision');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_procedure_definition_revisions_prevent_update
 BEFORE UPDATE ON system_procedure_definition_revisions
 BEGIN
   SELECT RAISE(ABORT, 'system procedure revision is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_procedure_definition_revisions_prevent_delete
 BEFORE DELETE ON system_procedure_definition_revisions
 BEGIN
@@ -126,12 +133,14 @@ CREATE INDEX system_proposal_series_definition_idx
 CREATE INDEX system_proposal_series_creator_idx
   ON system_proposal_series (created_by_account_id, created_at);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_proposal_series_prevent_update
 BEFORE UPDATE ON system_proposal_series
 BEGIN
   SELECT RAISE(ABORT, 'system proposal series is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_proposal_series_prevent_delete
 BEFORE DELETE ON system_proposal_series
 BEGIN
@@ -169,6 +178,7 @@ CREATE INDEX system_proposals_definition_idx
 CREATE INDEX system_proposals_creator_idx
   ON system_proposals (created_by_account_id, created_at);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_proposals_valid_insert
 BEFORE INSERT ON system_proposals
 WHEN
@@ -200,12 +210,14 @@ BEGIN
   SELECT RAISE(ABORT, 'invalid system proposal');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_proposals_prevent_update
 BEFORE UPDATE ON system_proposals
 BEGIN
   SELECT RAISE(ABORT, 'system proposal is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_proposals_prevent_delete
 BEFORE DELETE ON system_proposals
 BEGIN
@@ -221,12 +233,14 @@ CREATE TABLE system_proposal_numbers (
 CREATE UNIQUE INDEX system_proposal_numbers_series_uniq
   ON system_proposal_numbers (series_id);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_proposal_numbers_prevent_update
 BEFORE UPDATE ON system_proposal_numbers
 BEGIN
   SELECT RAISE(ABORT, 'system proposal number is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_proposal_numbers_prevent_delete
 BEFORE DELETE ON system_proposal_numbers
 BEGIN
@@ -244,6 +258,7 @@ CREATE TABLE system_proposal_cases (
 CREATE UNIQUE INDEX system_proposal_cases_case_uniq
   ON system_proposal_cases (case_id);
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_proposal_cases_valid_insert
 BEFORE INSERT ON system_proposal_cases
 WHEN NOT EXISTS (
@@ -267,12 +282,14 @@ BEGIN
   SELECT RAISE(ABORT, 'system proposal case does not match');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_proposal_cases_prevent_update
 BEFORE UPDATE ON system_proposal_cases
 BEGIN
   SELECT RAISE(ABORT, 'system proposal case is immutable');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_proposal_cases_prevent_delete
 BEFORE DELETE ON system_proposal_cases
 BEGIN

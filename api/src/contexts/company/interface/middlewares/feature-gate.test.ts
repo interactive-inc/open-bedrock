@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
-import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
-import { requestWithContext } from "@/contexts/company/interface/test-helpers/request-with-context"
+import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
+import { loadSchema } from "@/api/test/support/load-schema"
+import { requestWithContext } from "@/api/test/support/request-with-context"
 
 const jwtSecret = "feature-gate-test-secret"
 

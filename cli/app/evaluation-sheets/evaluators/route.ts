@@ -31,17 +31,11 @@ export default factory.createHandlers(
 
     if (!query["expected-revision"]) throw new UsageError("--expected-revision が必要です")
 
-    const primaryEvaluatorId = toFiniteNumber(query["primary-evaluator-id"])
-
-    if (primaryEvaluatorId === null) {
-      throw new UsageError("--primary-evaluator-id は数値で指定してください")
-    }
-
-    const expectedRevision = toFiniteNumber(query["expected-revision"])
-
-    if (expectedRevision === null) {
-      throw new UsageError("--expected-revision は数値で指定してください")
-    }
+    const primaryEvaluatorId = toFiniteNumber(
+      query["primary-evaluator-id"],
+      "--primary-evaluator-id",
+    )
+    const expectedRevision = toFiniteNumber(query["expected-revision"], "--expected-revision")
 
     const client = await createClient()
 
@@ -50,7 +44,7 @@ export default factory.createHandlers(
       json: {
         primary_evaluator_id: primaryEvaluatorId,
         secondary_evaluator_id: query["secondary-evaluator-id"]
-          ? toFiniteNumber(query["secondary-evaluator-id"])
+          ? toFiniteNumber(query["secondary-evaluator-id"], "--secondary-evaluator-id")
           : undefined,
         expected_revision: expectedRevision,
       },

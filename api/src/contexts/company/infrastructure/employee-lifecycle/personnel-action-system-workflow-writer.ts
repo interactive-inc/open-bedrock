@@ -5,7 +5,7 @@ import type {
 } from "@system/application/workflow/system-workflow-writer"
 import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer"
 import type { Context } from "@/env"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 
 export type PersonnelActionSystemAssociation = Readonly<{
   id: string

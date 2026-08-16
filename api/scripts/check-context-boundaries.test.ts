@@ -4,26 +4,31 @@ import {
   classifyContextModule,
   classifyContextSource,
   inspectApiRootPath,
+  inspectCompanyRootPath,
   inspectBoundaryBaseline,
+  inspectCompanyAreaPath,
   inspectContextSource,
   inspectContextTestDirectory,
   inspectLegacyRuntimeRootPath,
   inspectLibSource,
   inspectRetiredContextPath,
+  inspectRouteOwnershipPath,
 } from "./check-context-boundaries"
 import { LIB_BOUNDARY_BASELINE } from "./lib-boundary-baseline"
 import { describe, expect, test } from "bun:test"
 
 describe("API root structure", () => {
-  test("HTTP compositionと横断testだけを許可する", () => {
+  test("HTTP composition・横断test・System互換adapterだけを許可する", () => {
     expect(inspectApiRootPath("src/api/api-route-module.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/app-base.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/app.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/database-middleware.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/read-http-exception-problem.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/route-module.registry.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/to-negotiated-http-exception-response.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/routes/inbox/counts/route.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/test/app.test.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/legacy-system/adapters/auth/repository.ts")).toEqual([])
   })
 
   test("機能実装とDDD mini-treeの流入を拒否する", () => {
@@ -72,6 +77,10 @@ describe("context path classification", () => {
       context: "company",
       layer: "application",
     })
+    expect(classifyContextSource("src/api/legacy-system/model/auth/account.ts")).toEqual({
+      context: "system",
+      layer: "domain",
+    })
     expect(classifyContextSource("src/infrastructure/care/repository.ts")).toEqual({
       context: "care",
       layer: "infrastructure",
@@ -93,6 +102,10 @@ describe("context path classification", () => {
     expect(classifyContextModule("@system/application/auth/login")).toEqual({
       context: "system",
       layer: "application",
+    })
+    expect(classifyContextModule("@/api/legacy-system/adapters/auth/repository")).toEqual({
+      context: "system",
+      layer: "infrastructure",
     })
     expect(classifyContextModule("@/infrastructure/shared/parse-d1-row")).toBeNull()
     expect(classifyContextModule("@/interface/utils/factory")).toBeNull()
@@ -132,6 +145,7 @@ describe("context dependency matrix", () => {
       "src/contexts/care/application/example.ts",
       [
         'import type { Account } from "@system/domain/auth/account"',
+        'import { LegacyAccount } from "@/api/legacy-system/model/auth/account"',
         'import type { Employee } from "@/contexts/company/domain/employee"',
         'import { parse } from "@/lib/parse"',
         'import { z } from "zod"',
@@ -156,23 +170,53 @@ describe("context dependency matrix", () => {
     }
   })
 
-  test("経過措置: #1178 の一括移動が済むまで company の @/schema 依存だけを許容する", () => {
+  test("Companyから全体schema・API rootへの移行時例外を残さない", () => {
     expect(
       inspectContextSource(
         "src/contexts/company/infrastructure/example.ts",
         'import { users } from "@/schema"',
       ),
-    ).toEqual([])
+    ).not.toEqual([])
     expect(
       inspectContextSource(
-        "src/contexts/company/interface/test-helpers/request-with-context.ts",
+        "src/contexts/company/interface/utils/request-with-context.ts",
         'import { app } from "@/api/app"',
+      ),
+    ).not.toEqual([])
+  })
+})
+
+describe("ownership manifest", () => {
+  test("Company直下に一時testや互換directoryを残さない", () => {
+    expect(inspectCompanyRootPath("src/contexts/company/domain/employee/employee.ts")).toEqual([])
+    expect(
+      inspectCompanyRootPath(
+        "src/contexts/company/test/system-compatibility/account-backfill.test.ts",
+      ),
+    ).not.toEqual([])
+  })
+
+  test("Company直下をcoreとSystem adapterの明示領域へ限定する", () => {
+    expect(
+      inspectCompanyAreaPath("src/contexts/company/domain/employee/employee.entity.ts"),
+    ).toEqual([])
+    expect(
+      inspectCompanyAreaPath("src/contexts/company/application/notification/send-notification.ts"),
+    ).toEqual([])
+    expect(
+      inspectCompanyAreaPath("src/contexts/company/domain/expense/expense.entity.ts"),
+    ).not.toEqual([])
+  })
+
+  test("業務routeを宣言済みcontextへ固定する", () => {
+    expect(
+      inspectRouteOwnershipPath(
+        "src/contexts/expense/interface/routes/department-budgets/route.ts",
       ),
     ).toEqual([])
     expect(
-      inspectContextSource(
-        "src/contexts/company/infrastructure/example.ts",
-        'import { app } from "@/api/app"',
+      inspectRouteOwnershipPath(
+        "src/contexts/company/interface/routes/department-budgets/route.ts",
       ),
     ).not.toEqual([])
   })

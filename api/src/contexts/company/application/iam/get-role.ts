@@ -2,7 +2,7 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import type { RoleRow } from "@/schema"
+import type { RoleRow } from "@/api/legacy-system/adapters/schema/system"
 import { RoleRepository } from "@/contexts/company/infrastructure/iam/role-repository"
 
 export type RoleDetail = {

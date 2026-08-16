@@ -3,7 +3,10 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/to-system-account-id"
 import { systemProposalQuery } from "@/api/routes/application-requests/lib/system-application-operation"
-import { expenses, leaveRequests, shiftSwapRequests, thanksRedemptions } from "@/schema"
+import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
+import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
+import { shiftSwapRequests } from "@/contexts/shift/infrastructure/schema/shift"
+import { thanksRedemptions } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { and, count, eq, ne } from "drizzle-orm"
 
 // @authorization permission - 権限キーで判定する

@@ -237,7 +237,9 @@ dashboard、inbox、directory、search は複数コンテキストの read model
 
 汎用手続きと approval delegation は `api/src/contexts/system` にあり、Company の資格 resolver と最上位の `api/src/api/routes` が既存 HTTP 契約へ合成する。Company の人事変更申請は Company が業務 subject と発令事実を所有し、System の Proposal、Case、Task、ExecutionAuthorization と原子的に接続する。`api/src/contexts/request` は存在せず、境界検査が再導入を拒否する。
 
-独立 App へ分けるべき上記の業務実装は、なお `api/src/contexts/company` に同居している。機能ごとの domain、application、infrastructure、route の有無と完成度に差があり、これは次の Company 整理で解消する対象である。
+上記の業務実装はCompanyから独立したbounded contextへ分離済みである。単一所有のdomain、application、infrastructure、schema、seed、routeは所有contextへ置き、複数contextを読むread modelとSystem・Companyの接続routeだけをAPI compositionへ置く。部署予算と経費、棚卸しと資産、評価接続目標と評価は、それぞれ同じ不変条件を共有するため一つのbounded contextが所有する。
+
+`api/context-ownership.json` がCompanyの許可領域、旧areaからbounded contextへの写像、route所有者、API composition routeを固定する。境界検査はSystemから下位への依存、Companyから業務への依存、業務同士の依存、Companyへの非コア領域の再流入、route所有者のずれを拒否する。
 
 App として分離する際は、既存コードがあることだけで完成扱いにしない。認可、失敗、競合、訂正、監査、無効化、削除可能性、route test を検査し、不足を同じ Task で完成させるか route registry から外す。
 

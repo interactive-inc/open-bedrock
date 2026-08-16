@@ -49,6 +49,12 @@ template に基づく汎用的な社内手続きは System が所有するため
 
 dashboard、inbox、directory、search は複数コンテキストの read model または UI composition とする。業務事実の正本を所有せず、独立 App として扱わない。複数 context を集約する HTTP route は API composition root に置く。
 
+### Bounded context の単位
+
+画面上の機能名と bounded context を機械的に一対一にはしない。同じ不変条件と transaction を共有し、片方だけを残すと意味が壊れる能力は一つの所有者へまとめる。現行実装では、部署予算を `expense`、棚卸しを `asset`、評価シートへ接続する目標を `performance-review`、契約を `partner`、会議上の判断記録を `meeting`、感謝pointを `thanks` が所有する。これは業務context間の直接依存を例外化しないための境界である。
+
+一方、routeの有効化は能力単位で維持できる。物理的に削除するときは所有context全体を削除するか、同じcontext内の集約を独立させる設計変更を先に行う。別contextのtableを直接読むだけの見かけ上の分離は行わない。
+
 ## 外部連携
 
 会社運営に必要でも、誤りが金銭損害、法令違反、権利侵害へ直結し、専門製品または専門家が最終責任を持つ能力は製品内に実装しない。
@@ -78,7 +84,7 @@ dashboard、inbox、directory、search は複数コンテキストの read model
 
 System と Company は常に有効とする。App は `default` または `opt-in` の有効化設定を持ち、無効な App の route は認証より前に 404 で拒否する。Web は API が返す有効化状態に従い、無効な App の導線を表示しない。
 
-現行実装は互換のため `ENABLED_OPTIONAL_FEATURES` と `DISABLED_STANDARD_FEATURES` という旧名を使用する。前者は opt-in App、後者は default App の有効状態を制御する。変数名は所有境界を表さず、App context の分離後に置換する。
+現行実装は互換のため `ENABLED_OPTIONAL_FEATURES` と `DISABLED_STANDARD_FEATURES` という旧名を使用する。前者は opt-in App、後者は default App の有効状態を制御する。変数名は所有境界を表さない。
 
 ## 完成条件
 
@@ -90,6 +96,8 @@ App を削除するときは対象 context のディレクトリ、route module 
 
 現在の汎用手続きは System の ProcedureDefinition、Proposal、Case、Task、HumanAttestation、Delegation、ExecutionAuthorization を正本とする。既存の application request HTTP 契約は API composition が System と Company の資格解決へ接続し、独立した `request` コンテキストと旧 runtime table は削除済みである。
 
-独立させるべき App 実装はなお `api/src/contexts/company` に同居している。`/inbox/counts` は System 手続きと複数業務の read model なので、どの context の正本にもせず `api/src/api/routes` が合成する。
+業務実装のdomain、application、infrastructure、schema、seed、単一所有routeはCompanyから各bounded contextへ分離済みである。Companyには会社の人、雇用、組織、職務、責任、Account対応と、Systemへ接続するCompany adapterだけを置く。旧System互換実装もSystemへ移し、Companyから業務contextへの依存と業務context間の直接依存は境界検査で拒否する。
+
+`/dashboard`、`/inbox/counts`、認証、通知、監査、Account管理など、SystemとCompanyまたは複数業務contextを合成するrouteは `api/src/api/routes` が所有する。route総数とURLは生成検査で固定し、単一所有routeは `api/context-ownership.json` の所有者と実配置を一致させる。
 
 受信箱の集約タブは App の無効化に完全には追従しない。無効な App の tab が残る場合も API は 404 で拒否するが、分離完了条件は UI の導線も有効化状態へ追従することである。

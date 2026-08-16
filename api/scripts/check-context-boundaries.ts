@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs"
 import { relative, resolve } from "node:path"
 import process from "node:process"
 import ts from "typescript"
+import { z } from "zod"
 import { LIB_BOUNDARY_BASELINE } from "./lib-boundary-baseline"
 
 const PROJECT_ROOT = resolve(import.meta.dir, "..")
@@ -10,14 +11,16 @@ const SOURCE_ROOT = resolve(PROJECT_ROOT, "src")
 const API_ROOT = resolve(SOURCE_ROOT, "api")
 const CONTEXTS_ROOT = resolve(SOURCE_ROOT, "contexts")
 const LIB_ROOT = resolve(SOURCE_ROOT, "lib")
+const OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "context-ownership.json")
 const RETIRED_CONTEXT_NAMES = new Set(["request"])
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
-const API_ROOT_DIRECTORIES = new Set(["routes", "test"])
+const API_ROOT_DIRECTORIES = new Set(["legacy-system", "routes", "test"])
 const API_ROOT_FILES = new Set([
   "api-route-module.ts",
   "app-base.ts",
   "app.ts",
+  "database-middleware.ts",
   "read-http-exception-problem.ts",
   "route-module.registry.ts",
   "to-negotiated-http-exception-response.ts",
@@ -30,23 +33,29 @@ const LAYER_FIRST_PLATFORM_DIRECTORIES = new Set([
   "test-helpers",
   "utils",
 ])
+const LEGACY_SYSTEM_LAYER_BY_DIRECTORY = {
+  adapters: "infrastructure",
+  model: "domain",
+  "use-cases": "application",
+} as const satisfies Readonly<Record<string, ContextLayer>>
+
+const ownershipManifest = z
+  .strictObject({
+    companyCoreAreas: z.array(z.string().min(1)),
+    companySystemAdapterAreas: z.array(z.string().min(1)),
+    companyAreasByLayer: z.strictObject({
+      domain: z.array(z.string().min(1)),
+      application: z.array(z.string().min(1)),
+      infrastructure: z.array(z.string().min(1)),
+      interface: z.array(z.string().min(1)),
+    }),
+    businessAreaOwners: z.record(z.string(), z.string().min(1)),
+    routeOwners: z.record(z.string(), z.string().min(1)),
+    apiCompositionRoutePrefixes: z.array(z.string().min(1)),
+  })
+  .parse(JSON.parse(readFileSync(OWNERSHIP_MANIFEST_PATH, "utf8")))
 
 export type ContextLayer = (typeof CONTEXT_LAYERS)[number]
-
-/**
- * #1178 で legacy 4層を contexts/company へ一括移動した経過措置。
- * company の schema 分割（後続 Issue）が完了し、contexts/company から
- * @/schema への import が無くなった時点でこの許容を削除する。
- */
-const TRANSITIONAL_MIXED_SCHEMA_CONTEXTS = new Set(["company"])
-
-/**
- * 同じく #1178 の経過措置。API root を組み立てる test-helper を
- * context に閉じた合成へ置き換えた時点でこの許容を削除する。
- */
-const TRANSITIONAL_API_ROOT_IMPORTERS = new Set([
-  "src/contexts/company/interface/test-helpers/request-with-context.ts",
-])
 
 export type ContextSource = Readonly<{
   context: string
@@ -58,7 +67,94 @@ export type ContextBoundaryViolation = Readonly<{
   reason: string
 }>
 
-/** API rootをHTTP runtimeの合成責務に限定する。 */
+/** Company直下をDDDの4層だけに限定し、一時testや互換directoryの残存を拒否する。 */
+export function inspectCompanyRootPath(file: string): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+  const match = normalized.match(/(?:^|\/)src\/contexts\/company\/([^/]+)/)
+  if (match === null) return []
+
+  const rootDirectory = match[1]
+  return rootDirectory !== undefined && isContextLayer(rootDirectory)
+    ? []
+    : [{ file, reason: `Company直下のDDD layerではありません: ${rootDirectory ?? "unknown"}` }]
+}
+
+/** Company直下へ置ける領域をmanifestの明示リストへ限定する。 */
+export function inspectCompanyAreaPath(file: string): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+  const match = normalized.match(
+    /(?:^|\/)src\/contexts\/company\/(domain|application|infrastructure|interface)\/([^/]+)/,
+  )
+  if (match === null) return []
+
+  const layer = match[1]
+  const area = match[2]
+  if (layer === undefined || area === undefined || !isContextLayer(layer)) return []
+
+  return ownershipManifest.companyAreasByLayer[layer].includes(area)
+    ? []
+    : [{ file, reason: `Company ${layer} の許可領域ではありません: ${area}` }]
+}
+
+/** 単一context routeをmanifestで宣言した所有者の下へ固定する。 */
+export function inspectRouteOwnershipPath(file: string): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+  const match = normalized.match(
+    /(?:^|\/)src\/contexts\/([^/]+)\/interface\/routes\/([^/]+)(?:\/|$)/,
+  )
+  if (match === null) return []
+
+  const actualOwner = match[1]
+  const routePrefix = match[2]
+  if (actualOwner === undefined || routePrefix === undefined) return []
+
+  const expectedOwner = ownershipManifest.routeOwners[routePrefix]
+  return expectedOwner === undefined || expectedOwner === actualOwner
+    ? []
+    : [
+        {
+          file,
+          reason: `route ${routePrefix} の所有者は ${expectedOwner} です: ${actualOwner}`,
+        },
+      ]
+}
+
+/** manifestの所有contextとroute directoryが実在することを検査する。 */
+export function inspectOwnershipManifest(): ContextBoundaryViolation[] {
+  const violations: ContextBoundaryViolation[] = []
+  const owners = new Set(Object.values(ownershipManifest.businessAreaOwners))
+
+  for (const owner of owners) {
+    if (!existsSync(resolve(CONTEXTS_ROOT, owner))) {
+      violations.push({
+        file: "context-ownership.json",
+        reason: `business area の所有contextが存在しません: ${owner}`,
+      })
+    }
+  }
+
+  for (const [routePrefix, owner] of Object.entries(ownershipManifest.routeOwners)) {
+    if (!existsSync(resolve(CONTEXTS_ROOT, owner, "interface", "routes", routePrefix))) {
+      violations.push({
+        file: "context-ownership.json",
+        reason: `route所有directoryが存在しません: ${owner}/${routePrefix}`,
+      })
+    }
+  }
+
+  for (const routePrefix of ownershipManifest.apiCompositionRoutePrefixes) {
+    if (!existsSync(resolve(API_ROOT, "routes", routePrefix))) {
+      violations.push({
+        file: "context-ownership.json",
+        reason: `API composition routeが存在しません: ${routePrefix}`,
+      })
+    }
+  }
+
+  return violations
+}
+
+/** API rootをHTTP runtimeの合成責務と製品固有の互換adapterに限定する。 */
 export function inspectApiRootPath(file: string): ContextBoundaryViolation[] {
   const normalized = file.replaceAll("\\", "/")
   const match = normalized.match(/(?:^|\/)src\/api\/(.+)$/)
@@ -160,6 +256,15 @@ export function classifyContextSource(file: string): ContextSource | null {
       : null
   }
 
+  const legacySystem = normalized.match(
+    /(?:^|\/)src\/api\/legacy-system\/(model|use-cases|adapters)(?:\/|$)/,
+  )
+
+  if (legacySystem !== null) {
+    const directory = legacySystem[1] as keyof typeof LEGACY_SYSTEM_LAYER_BY_DIRECTORY
+    return { context: "system", layer: LEGACY_SYSTEM_LAYER_BY_DIRECTORY[directory] }
+  }
+
   const layerFirst = normalized.match(
     /(?:^|\/)src\/(?:api\/)?(domain|application|infrastructure|interface)\/([^/]+)(?:\/|$)/,
   )
@@ -187,6 +292,15 @@ export function classifyContextModule(moduleSpecifier: string): ContextSource | 
     const layer = systemReference[1]
 
     return layer !== undefined && isContextLayer(layer) ? { context: "system", layer } : null
+  }
+
+  const legacySystemReference = moduleSpecifier.match(
+    /^@\/api\/legacy-system\/(model|use-cases|adapters)(?:\/|$)/,
+  )
+
+  if (legacySystemReference !== null) {
+    const directory = legacySystemReference[1] as keyof typeof LEGACY_SYSTEM_LAYER_BY_DIRECTORY
+    return { context: "system", layer: LEGACY_SYSTEM_LAYER_BY_DIRECTORY[directory] }
   }
 
   const contextFirst = moduleSpecifier.match(
@@ -290,18 +404,15 @@ function inspectModuleDependency(
   }
 
   if (moduleSpecifier === "@/schema" || moduleSpecifier.startsWith("@/schema/")) {
-    if (TRANSITIONAL_MIXED_SCHEMA_CONTEXTS.has(source.context)) return []
-
     return [{ file, reason: `context外の schema へ依存しています: ${moduleSpecifier}` }]
   }
 
   if (
     moduleSpecifier === "@/api" ||
     (moduleSpecifier.startsWith("@/api/") &&
-      !/^@\/api\/(?:domain|application|infrastructure|interface)\//.test(moduleSpecifier))
+      !/^@\/api\/(?:domain|application|infrastructure|interface)\//.test(moduleSpecifier) &&
+      !/^@\/api\/legacy-system\/(?:model|use-cases|adapters)\//.test(moduleSpecifier))
   ) {
-    if (TRANSITIONAL_API_ROOT_IMPORTERS.has(file.replaceAll("\\", "/"))) return []
-
     return [{ file, reason: `contextから API root へ依存しています: ${moduleSpecifier}` }]
   }
 
@@ -385,7 +496,7 @@ export function inspectLibSource(file: string, sourceText: string): ContextBound
 
 /** 移行済みのcontext-first sourceと中立libを自動検査する。 */
 export async function collectContextBoundaryViolations(): Promise<ContextBoundaryViolation[]> {
-  const violations: ContextBoundaryViolation[] = []
+  const violations: ContextBoundaryViolation[] = [...inspectOwnershipManifest()]
 
   if (existsSync(API_ROOT)) {
     for await (const file of new Glob("**/*.{ts,tsx}").scan(API_ROOT)) {
@@ -411,6 +522,9 @@ export async function collectContextBoundaryViolations(): Promise<ContextBoundar
 
       violations.push(...inspectRetiredContextPath(projectRelativePath))
       violations.push(...inspectContextTestDirectory(projectRelativePath))
+      violations.push(...inspectCompanyRootPath(projectRelativePath))
+      violations.push(...inspectCompanyAreaPath(projectRelativePath))
+      violations.push(...inspectRouteOwnershipPath(projectRelativePath))
 
       if (/\.(?:test|spec)\.tsx?$/.test(file)) continue
 

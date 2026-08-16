@@ -10,7 +10,7 @@
     "notifications",
     "workflow"
   ],
-  "forbiddenProductMarkers": ["bedrock"],
+  "forbiddenProductMarkers": ["bedrock", "productx", "productc", "producth", "inta"],
   "schemaTables": [
     "systemAccounts",
     "systemAuditEvents",
