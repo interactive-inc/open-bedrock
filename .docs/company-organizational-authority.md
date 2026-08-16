@@ -8,11 +8,11 @@ Organizational Authority は、会社のある時点において、誰がどの�
 
 直属上司、部門責任者、管理系列、兼務、在籍状態、Account と Employee の対応は会社という存在を構成する事実である。これらを System が解釈すると、System が Employee、Department、Employment、Responsibility を知ることになり、会社を持たない製品や異なる組織モデルで再利用できなくなる。
 
-これらを request が解釈すると、request を削除したときに他の App が判断候補を解決できなくなる。expense、leave、contract などが同じ組織資格を必要とするたびに request の schema と workflow へ依存し、request が削除可能な App ではなくなる。
+これらを個別 App または System が解釈すると、expense、leave、contract などが同じ組織資格を必要とするたびに組織規則が複製される。資格解決を Company に一元化し、呼び出し側は Company の公開条件と snapshot だけを利用する。
 
 Company が返す結果を単なる Employee 一覧にすると、判断基盤へ渡す前に呼び出し側が Account 対応、有効状態、自己除外を再実装する。呼び出し側ごとに候補集合が変わり、同じ責任を指定しても異なる判断者が選ばれる。そのため Company の公開 operation は、有効な Employee と有効な Account の対応まで確認した候補と、評価根拠の snapshot を同時に返す。
 
-Company は request template、申請状態、proposal payload、Case、Task、Decision を知らない。Company に渡すのは、Company が理解できる資格条件、subject Employee、対象部門、解決時刻だけである。
+Company は ProcedureDefinition、申請状態、Proposal body、Case、Task、Decision を知らない。Company に渡すのは、Company が理解できる資格条件、subject Employee、対象部門、解決時刻だけである。
 
 ## Technical Permission との分離
 
@@ -55,7 +55,7 @@ snapshot は次を持つ。
 - どの入力条件から得たかを示す criterion index
 - 所属、上司、責任、管理系列、互換 role のうち実際に使った証拠
 
-criterion index は、Company が request の selector を保存するための値ではない。呼び出し側が自分の条件と Company の証拠を対応付けるための相関値である。request は index を元の selector へ戻し、Company snapshot と共に候補証拠へ保存する。
+criterion index は、Company が呼び出し側の selector を保存するための値ではない。呼び出し側が自分の条件と Company の証拠を対応付けるための相関値である。呼び出し側は index を元の selector へ戻し、Company snapshot と共に System の候補証拠へ保存する。
 
 候補集合は意思決定の正本ではない。Company の組織事実から導いた変更不能な入力 snapshot であり、System Task が受理した時点から過去の組織変更で書き換えない。
 
@@ -71,7 +71,7 @@ resolver は lifecycle 投影を読む前に organization revision を固定し�
 
 legacy 投影には全体を固定する organization revision がない。そのため snapshot の revision は null とし、使用した所属、部門、上司を値として候補証拠へ保存する。これは移行中の再構成能力であり、完全な履歴正本ではない。legacy 投影を使った判断を lifecycle と同じ保証で表示してはならない。
 
-`resolvedAt` と `asOf` は用途が違う。`resolvedAt` は候補解決を実行した instant、`asOf` は会社の勤務・組織規則を評価した営業日である。request の候補 row は `resolvedAt` を持ち、Company の authority snapshot は `asOf` を持つことで両方を失わない。
+`resolvedAt` と `asOf` は用途が違う。`resolvedAt` は候補解決を実行した instant、`asOf` は会社の勤務・組織規則を評価した営業日である。System の候補 row は `resolvedAt` を持ち、Company の authority snapshot は `asOf` を持つことで両方を失わない。
 
 ## Account との対応
 
@@ -79,30 +79,30 @@ Company は Account と Employee の一対一対応を所有する。候補 Empl
 
 Account の認証状態や session は System の正本であり、Company snapshot だけで判断を許可しない。候補 snapshot 作成後に Account が停止された場合、System は HumanAttestation の書込み境界で再検査して拒否する。Company snapshot は資格を固定し、System の live guard を置き換えない。
 
-現行の Company 対応 table と Session は整数 Account ID を使うが、resolver は対応する active な `system_accounts` を同じ解決内で確認し、opaque string の canonical System Account ID を返す。request workflow の候補、actor、更新者、委任作成者もこの canonical ID へ移行済みである。旧整数と canonical ID の接続規則、live guard、migration の保証は [Workflow Account identity](./workflow-account-identity.md) に定める。
+現行の Company 対応 table と Session は整数 Account ID を使うが、resolver は対応する active な `system_accounts` を同じ解決内で確認し、opaque string の canonical System Account ID を返す。System workflow の候補、actor、更新者、委任作成者はこの canonical ID を使う。旧整数と canonical ID の接続規則、live guard、migration の保証は [Workflow Account identity](./workflow-account-identity.md) に定める。
 
 Company の旧対応 table が残ることは、System Account ID を整数として扱ってよい理由にならない。整数は Company 内部の互換キー、文字列は context 境界を越える認証主体の正本である。Company は両者と Employee の対応を検証するが、System は旧整数または Employee を解釈しない。
 
-## request との接続
+## 呼び出し側との接続
 
-request は workflow selector を Company の条件へ変換する adapter を持つ。この adapter は Company table、Employment、Department、Account role を読まない。Company の解決結果を元 selector と対応付け、authority snapshot を証拠へ加えるだけである。
+API composition または業務 App は、procedure selector を Company の条件へ変換する adapter を持つ。この adapter は Company table、Employment、Department、Account role を読まない。Company の解決結果を元 selector と対応付け、authority snapshot を System の候補証拠へ加えるだけである。
 
 ```mermaid
 flowchart LR
-  Request["request selector and subject"] -->|"Company criteria and resolvedAt"| Company["Company authority resolver"]
-  Company -->|"candidate Account and evidence snapshot"| Request
-  Request -->|"proposal reference and candidate snapshot"| System["System Case and Task"]
+  Caller["procedure selector and subject"] -->|"Company criteria and resolvedAt"| Company["Company authority resolver"]
+  Company -->|"candidate Account and evidence snapshot"| Caller
+  Caller -->|"proposal reference and candidate snapshot"| System["System Case and Task"]
 ```
 
-同じ step に複数条件があり、同じ Account が複数の根拠で候補になる場合、request は一つの候補へまとめつつ、すべての根拠を保存する。required approvals は Account 行数ではなく、自己除外後の一意な候補 Employee 数を基準にする現行仕様を維持する。
+同じ step に複数条件があり、同じ Account が複数の根拠で候補になる場合、adapter は一つの候補へまとめつつ、すべての根拠を保存する。required approvals は Account 行数ではなく、自己除外後の一意な候補 Employee 数を基準にする現行仕様を維持する。
 
-一つの step の primary 条件と escalation 条件は、一回の Company resolver 呼出しで解決する。二回に分けると途中の組織変更で異なる organization revision が混ざり、同じ step snapshot が一つの会社時点を表さなくなる。request は一つの解決結果を primary と escalation に分類し、selector index だけを各配列内の index へ戻す。
+一つの step の primary 条件と escalation 条件は、一回の Company resolver 呼出しで解決する。二回に分けると途中の組織変更で異なる organization revision が混ざり、同じ step snapshot が一つの会社時点を表さなくなる。adapter は一つの解決結果を primary と escalation に分類し、selector index だけを各配列内の index へ戻す。
 
 組織変更後に既存 Task の候補を再解決しない。再解決が必要な場合は新しい round と resolution ID を作り、旧候補、旧証拠、旧判断を残す。legacy backfill も backfill 実行時刻を明示し、当初から存在した snapshot のように扱わない。
 
 ## System との接続
 
-System は Company resolver を呼ばない。System から Company への依存を作らないため、request または最上位の API composition が Company を呼び、検証済み候補を System command へ渡す。
+System は Company resolver を呼ばない。System から Company への依存を作らないため、業務 App または最上位の API composition が Company を呼び、検証済み候補を System command へ渡す。
 
 System が保存する候補は canonical Account ID、候補 snapshot の出典、証拠参照、解決時刻である。Employee ID、部署 code、role key、上司 path は System の判断規則に使わない。詳細な Company 証拠を System table に複製する必要がある場合も opaque evidence reference または digest とし、System が中身を解釈しない。
 
@@ -123,7 +123,7 @@ System は候補 snapshot を受け取っても、作成者本人、除外 Accou
 - selector の Employee code または対象部門が存在しない
 - subject 本人しか候補にならない
 
-存在しない条件を管理者、現在の上司、最上位 role で補わない。候補ゼロは Company resolver の正常な結果であり、request が unresolvable step として提出または遷移を拒否する。
+存在しない条件を管理者、現在の上司、最上位 role で補わない。候補ゼロは Company resolver の正常な結果であり、呼び出し側が unresolvable step として提出または遷移を拒否する。
 
 上司循環は対象 subject の探索が偶然終了しても許容しない。循環を含む組織投影は管理系列の意味を一意にできないため、解決全体を conflict とする。
 
@@ -140,11 +140,11 @@ Company の Organizational Authority が十分であるとは、あらゆる会�
 
 判断対象の内容、必要人数、判断結果、委任、実行許可はこの十分性に含めない。それらは App と System の責任である。Company がそれらまで持つと、会社事実と手続きが再び結合する。
 
-会社ごとの決裁規程に、金額帯、地域、法人、事業、職務分掌、職務分離が必要なら、Company の ResponsibilityDefinition、ResponsibilityAssignment、AuthorityScope として追加する。request template の自由文字列 role や System permission を増やして代用しない。
+会社ごとの決裁規程に、金額帯、地域、法人、事業、職務分掌、職務分離が必要なら、Company の ResponsibilityDefinition、ResponsibilityAssignment、AuthorityScope として追加する。ProcedureDefinition の自由文字列 role や System permission を増やして代用しない。
 
 ## 削除と変更
 
-request を削除しても Company resolver は残る。他の App は自分の条件を Company の資格条件へ変換し、直接利用できる。Company はどの App が呼んだかを知る必要がない。
+個別 App を削除しても Company resolver は残る。他の App は自分の条件を Company の資格条件へ変換し、直接利用できる。Company はどの App が呼んだかを知る必要がない。
 
 組織モデルを変更するときは、Company の resolver と証拠 schema version を変更する。保存済み snapshot の意味を上書きせず、新しい schema version で新しい round を解決する。過去 snapshot を現在の resolver で再計算し、一致しないから無効とみなしてはならない。
 
@@ -155,8 +155,8 @@ Company 自体を持たない製品では、この resolver を登録しない�
 次の状態は責任境界と矛盾する。
 
 - System が Employee、Department、Responsibility、role key を解釈する
-- request が Company の組織、在籍、Account table を直接読んで候補を作る
-- Company が request selector、template、申請状態、Case status を保存する
+- API composition または業務 App が Company の組織、在籍、Account table を直接読んで候補を作る
+- Company が procedure selector、Proposal body、申請状態、Case status を保存する
 - Technical Permission だけで対象範囲を決める
 - 組織資格だけで API 操作能力または本人性を満たしたと扱う
 - resolver が暗黙の現在時刻で再試行し、別の候補を返す
@@ -172,8 +172,8 @@ Company 自体を持たない製品では、この resolver を登録しない�
 
 `api/src/contexts/company/application/organization/resolve-organizational-authority-candidates.ts` が資格候補を解決し、Company domain の criterion、snapshot、candidate 型だけを公開する。legacy 組織投影と検証済み lifecycle 投影を切り替え、同じ解決内では一つの `asOf` と organization revision を使う。
 
-`api/src/contexts/request/application/workflow/resolve-workflow-approver-matches.ts` は request selector から Company criterion への adapter である。候補列挙、在籍判定、組織探索、Account 対応を持たず、Company の証拠を request の候補 snapshot へ変換する。
+`api/src/contexts/company/application/organization/resolve-company-procedure-task.ts` は procedure selector から Company criterion への adapter である。候補列挙、在籍判定、組織探索、Account 対応を自分では実装せず、Company resolver の証拠を System Task の候補 snapshot へ変換する。
 
-現行実装は Company 資格候補の責任移動、時点 snapshot、canonical System Account ID への接続を実装した。ただし `legacy_account_role`、旧整数の Company 対応 table、legacy 組織投影が残る。ResponsibilityAssignment の汎用 scope と System Task への cutover が完了するまでは最終形ではない。
+現行実装は Company 資格候補の責任、時点 snapshot、canonical System Account ID、System Task への接続を実装した。ただし `legacy_account_role`、旧整数の Company 対応 table、legacy 組織投影が残る。ResponsibilityAssignment の汎用 scope が完成するまでは最終形ではない。
 
-request の初期候補解決以外には、判断時の Employee 対応と在籍の再検査、委任、手動修復のために Company infrastructure を読む互換経路が残る。Account 状態の正本は canonical `system_accounts` へ切替済みである。残る Company table 参照を Company の公開 live guard へ移し、System HumanAttestation へ切り替えるまで、request 全体が System workflow 利用済みとは扱わない。
+判断時の Employee 対応と在籍の再検査は Company の公開 resolver を経由し、Account 状態の正本は canonical `system_accounts` である。System HumanAttestation は Company table を直接読まず、API composition が Company の live な主体対応と System の候補資格を合成する。

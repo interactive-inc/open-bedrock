@@ -14,7 +14,7 @@ DB_NAME="bedrock"
 SEEDS_DIR="$(cd "$(dirname "$0")/../seeds" && pwd)"
 
 # 依存順。employee（employees）と org（departments 等）を先に。
-ORDER=(employee org employee-lifecycle)
+ORDER=(employee org iam employee-lifecycle application approval-delegation personnel-action)
 
 apply() {
   local file="$1"

@@ -32,6 +32,13 @@ const SOURCE_ROOT = resolve(import.meta.dir, "../src")
 const APP_PATH = resolve(SOURCE_ROOT, "api/app.ts")
 
 const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const
+const ROUTES_PER_TYPE_PART = 48
+const TYPE_HEAVY_ROUTE_PREFIXES = [
+  "/application-requests",
+  "/application-templates",
+  "/approval-delegations",
+  "/personnel-action-requests",
+] as const
 type Method = (typeof METHODS)[number]
 
 export type RouteRegistration = {
@@ -316,25 +323,69 @@ export function renderApp(registrations: readonly RouteRegistration[]): string {
     .map(([module, alias]) => `import * as ${alias} from "${module}"`)
     .join("\n")
 
-  const chain = sorted.map(renderRegistration).join("\n")
+  const routeParts: RouteRegistration[][] = []
+  let currentPart: RouteRegistration[] = []
+  const flushCurrentPart = () => {
+    if (currentPart.length === 0) return
+    routeParts.push(currentPart)
+    currentPart = []
+  }
+  for (const registration of sorted) {
+    const typeHeavy = TYPE_HEAVY_ROUTE_PREFIXES.some((prefix) =>
+      registration.url.startsWith(prefix),
+    )
+    if (typeHeavy) {
+      flushCurrentPart()
+      routeParts.push([registration])
+      continue
+    }
+    currentPart.push(registration)
+    if (currentPart.length === ROUTES_PER_TYPE_PART) flushCurrentPart()
+  }
+  flushCurrentPart()
+  const partDefinitions = routeParts.map((part, index) => renderRoutePart(part, index)).join("\n\n")
+  const appChain = routeParts.map((_, index) => `  .route("/", routePart${index})`).join("\n")
+  const clientPartTypes = routeParts
+    .map(
+      (_, index) => `type ApiClientPart${index} = ReturnType<typeof hc<typeof routePart${index}>>`,
+    )
+    .join("\n")
+  const clientType = routeParts.map((_, index) => `ApiClientPart${index}`).join(" &\n  ")
 
   return `${HEADER}
 import { hc } from "hono/client"
-import { appBase } from "@/api/app-base"
+import { appBase, createRouteApp } from "@/api/app-base"
 ${imports}
 
+${partDefinitions}
+
 export const app = appBase
-${chain}
+${appChain}
 
 export type AppType = typeof app
 
 /**
- * hc の型計算を api 側（型解決できる環境）で済ませた Client 型。
+ * routeを小さなHono appへ分割し、hc の型計算を再帰上限内で済ませた Client 型。
  * web/cli はこの型と AppType を type-only で import し、自前の hc<AppType>() に渡す。
  * 実行時に app 本体（全ルート）を消費側のバンドルへ引き込まないよう、ファクトリは置かない。
  */
-export type ApiClient = ReturnType<typeof hc<AppType>>
+${clientPartTypes}
+export type ApiClient = ${clientType}
 `
+}
+
+function renderRoutePart(part: readonly RouteRegistration[], index: number): string {
+  const only = part.length === 1 ? part[0] : undefined
+  if (only === undefined) {
+    return `const routePart${index} = createRouteApp()\n${part.map(renderRegistration).join("\n")}`
+  }
+
+  const method = only.method.toLowerCase()
+  const prefix = `const routePart${index} = createRouteApp().${method}(`
+  const oneLine = `${prefix}"${only.url}", ...${only.alias}.${only.method})`
+  if (oneLine.length <= 100) return oneLine
+
+  return `${prefix}\n  "${only.url}",\n  ...${only.alias}.${only.method},\n)`
 }
 
 // import されたとき（テスト等）に app.ts を書き換えないよう、実行はエントリ時に限る。

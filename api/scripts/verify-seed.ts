@@ -35,7 +35,15 @@ const schema = readdirSync(migrationsDir)
 db.exec(schema)
 
 /** seeds を依存順（employee → org → 残り）に 1 ファイルずつ適用。 */
-const order = ["employee", "org", "employee-lifecycle"]
+const order = [
+  "employee",
+  "org",
+  "iam",
+  "employee-lifecycle",
+  "application",
+  "approval-delegation",
+  "personnel-action",
+]
 
 const seedFiles = readdirSync(seedsDir)
   .filter((file) => file.endsWith(".sql"))
