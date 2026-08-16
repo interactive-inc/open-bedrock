@@ -111,6 +111,37 @@ describe("SendNotification", () => {
     expect(result instanceof Error ? result : result.notification).toBeInstanceOf(Notification)
   })
 
+  test("does not send to an Employee whose linked System Account is suspended", async () => {
+    const { context, db } = createTestContext()
+
+    await seedEmployee(db, "E002", 2)
+    await db
+      .prepare(
+        `UPDATE accounts
+         SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+         WHERE id = 2`,
+      )
+      .run()
+
+    const result = await new SendNotification(context).run({
+      session: makeTestSession("root"),
+      recipientEmployeeCode: "E002",
+      kind: "announcement",
+      title: "Should not be delivered",
+      body: null,
+      sourceDomain: "test",
+      sourceId: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    expectApplicationError(result, UnexpectedError, "unexpected")
+    expect(
+      await db
+        .prepare("SELECT COUNT(*) AS total FROM notifications WHERE recipient_account_id = 2")
+        .first<number>("total"),
+    ).toBe(0)
+  })
+
   test("rejects member role with notification_forbidden", async () => {
     const { context } = createTestContext()
 
