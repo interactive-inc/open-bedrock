@@ -1,4 +1,4 @@
-import type { PositionRow } from "@/schema"
+import type { PositionRow } from "@/contexts/company/infrastructure/schema/position"
 import { z } from "zod"
 
 const zProps = z.object({

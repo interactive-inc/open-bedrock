@@ -5,6 +5,19 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { toFiniteNumber } from "@/lib/to-finite-number"
 
+const evaluationSheetStatusSchema = z.enum([
+  "approved",
+  "rejected",
+  "archived",
+  "draft",
+  "pending_approval",
+  "self_eval",
+  "primary_eval",
+  "secondary_eval",
+  "finalized",
+  "reopened",
+])
+
 export const help = `bedrock evaluation-sheets transition --id <sheet-id> --status <s> --expected-revision <n> [--note <text>]
 
 statuses:
@@ -17,7 +30,7 @@ export default factory.createHandlers(
     z.object({
       help: z.string().optional(),
       id: z.string().optional(),
-      status: z.string().optional(),
+      status: evaluationSheetStatusSchema.optional(),
       "expected-revision": z.string().optional(),
       note: z.string().optional(),
     }),
@@ -33,11 +46,7 @@ export default factory.createHandlers(
 
     if (!query["expected-revision"]) throw new UsageError("--expected-revision が必要です")
 
-    const expectedRevision = toFiniteNumber(query["expected-revision"])
-
-    if (expectedRevision === null) {
-      throw new UsageError("--expected-revision は数値で指定してください")
-    }
+    const expectedRevision = toFiniteNumber(query["expected-revision"], "--expected-revision")
 
     const client = await createClient()
 

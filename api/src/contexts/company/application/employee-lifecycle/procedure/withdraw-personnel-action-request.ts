@@ -3,8 +3,8 @@ import { PersonnelActionRequestAccess } from "@/contexts/company/application/emp
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import type { Context } from "@/env"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,

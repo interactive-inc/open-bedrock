@@ -19,7 +19,8 @@ import {
   UnauthorizedError,
 } from "@/contexts/company/interface/lib/errors"
 import { zAppEmployee, zAppEmployeeList } from "@/lib/app-schemas"
-import { employees, employeeStatusPeriodVersions } from "@/schema"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { employeeStatusPeriodVersions } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, exists, inArray, isNull, lte, or, sql } from "drizzle-orm"

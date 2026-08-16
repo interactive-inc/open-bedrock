@@ -1,4 +1,4 @@
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import type { ExecutionAuthorization } from "@system/domain/workflow/execution-authorization.entity"
 import type { ProposalDigest } from "@system/domain/workflow/system-case-reference"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context"

@@ -3,9 +3,9 @@ import { restoreEmployee } from "@/contexts/company/infrastructure/employee/empl
 import type { Context } from "@/env"
 import { LastRootError } from "@/contexts/company/infrastructure/iam/last-root-error"
 import { LastRootGuard } from "@/contexts/company/infrastructure/iam/last-root-guard"
-import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/contexts/company/infrastructure/shared/unique-constraint-error"
-import { employees } from "@/schema"
+import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 

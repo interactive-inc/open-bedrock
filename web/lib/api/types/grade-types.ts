@@ -32,7 +32,6 @@ export type EmployeeGradeResponse = {
   effective_date: string
   reason: string | null
   created_at: string
-  review_cycle_id: number | null
 }
 
 /** GET /employee-grades のクエリ。employee_code で対象を指定する。 */
@@ -40,11 +39,10 @@ export type EmployeeGradeSearchQuery = {
   employeeCode: string
 }
 
-/** POST /employee-grades のリクエストボディ。reason・review_cycle_id は未指定可。 */
+/** POST /employee-grades のリクエストボディ。reason は未指定可。 */
 export type EmployeeGradeCreateRequest = {
   employee_id: number
   grade_id: number
   effective_date: string
   reason?: string
-  review_cycle_id?: number | null
 }

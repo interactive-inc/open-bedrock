@@ -13,7 +13,7 @@ import { AuditCursor } from "@/lib/audit/audit-cursor"
 import type { AuditCursorAnchor, AuditCursorPosition } from "@/lib/audit/audit-cursor"
 import { AuditCsvByteCounter } from "@/contexts/company/application/audit/audit-csv-byte-counter"
 import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/application/audit/to-audit-csv-row"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
 import { z } from "zod"
 

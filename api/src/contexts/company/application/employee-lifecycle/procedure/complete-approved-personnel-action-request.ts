@@ -3,7 +3,7 @@ import { PersonnelActionRequestAccess } from "@/contexts/company/application/emp
 import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/to-system-account-id"
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { ApplicationError, ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { ExecutionAuthorization } from "@system/domain/workflow/execution-authorization.entity"
 import { proposalDigestSchema } from "@system/domain/workflow/system-case-reference"

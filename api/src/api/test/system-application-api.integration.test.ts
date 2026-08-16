@@ -1,10 +1,10 @@
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
-import { createTestToken } from "@/contexts/company/interface/test-helpers/create-test-token"
+import { createTestToken } from "@/api/test/support/create-test-token"
 import {
   createLifecycleRouteDb,
   lifecycleRouteJwtSecret,
-} from "@/contexts/company/interface/test-helpers/lifecycle-route-fixture"
-import { requestWithContext } from "@/contexts/company/interface/test-helpers/request-with-context"
+} from "@/api/test/support/lifecycle-route-fixture"
+import { requestWithContext } from "@/api/test/support/request-with-context"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { ProcedureDefinition } from "@system/domain/workflow/procedure-definition.entity"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure-repository"

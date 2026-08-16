@@ -1,7 +1,7 @@
 import { Session } from "@/contexts/company/domain/iam/session"
 import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
 import type { Context } from "@/env"
-import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { createTestContext } from "@/api/test/support/create-test-context"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 

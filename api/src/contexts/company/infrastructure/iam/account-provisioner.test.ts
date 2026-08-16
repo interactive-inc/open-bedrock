@@ -1,7 +1,7 @@
 import { AccountProvisioner } from "@/contexts/company/infrastructure/iam/account-provisioner"
-import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
-import { replaceAccountRolesWithPermissionSets } from "@/contexts/company/interface/test-helpers/replace-account-roles-with-permission-sets"
-import { seedIamTestAccount } from "@/contexts/company/interface/test-helpers/seed-iam-test-account"
+import { createTestContext } from "@/api/test/support/create-test-context"
+import { replaceAccountRolesWithPermissionSets } from "@/api/test/support/replace-account-roles-with-permission-sets"
+import { seedIamTestAccount } from "@/api/test/support/seed-iam-test-account"
 import { describe, expect, test } from "bun:test"
 
 async function countRows(db: D1Database, table: string): Promise<number> {

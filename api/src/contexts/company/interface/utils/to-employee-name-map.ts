@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { employees } from "@/schema"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { inArray } from "drizzle-orm"
 
 /** 社員 id の配列から id→氏名 の Map を作る。 */

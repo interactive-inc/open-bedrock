@@ -1,0 +1,50 @@
+import type { Session } from "@/contexts/company/domain/iam/session"
+import { CompanyCalendarDay } from "@/contexts/company-calendar/domain/calendar/company-calendar-day.entity"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
+import type { CalendarDayKind } from "@/lib/schemas"
+import type { Context } from "@/env"
+import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/calendar/company-calendar-day-repository"
+import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+
+export type Command = {
+  session: Session
+  calendarDate: string
+  kind: CalendarDayKind
+  name: string | null
+  createdAt: string
+}
+
+/**
+ * 権限と同一日の重複を確認し、会社カレンダーに 1 日を記録する。
+ */
+export class CreateCompanyCalendarDay {
+  constructor(private readonly c: Context) {}
+
+  async run(command: Command): Promise<CompanyCalendarDay | ApplicationError> {
+    if (command.session.hasPermission("calendar:manage") === false) {
+      return new ForbiddenError("cannot manage calendar", "forbidden")
+    }
+
+    const repository = new CompanyCalendarDayRepository(this.c)
+
+    const day = CompanyCalendarDay.create({
+      calendarDate: command.calendarDate,
+      kind: command.kind,
+      name: command.name,
+      createdAt: command.createdAt,
+    })
+
+    const created = await repository.create(day)
+
+    if (created instanceof UniqueConstraintError) {
+      return new ConflictError("calendar date already exists", "calendar_date_conflict")
+    }
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create calendar day", { cause: created })
+    }
+
+    return created
+  }
+}

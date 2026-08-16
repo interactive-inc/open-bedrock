@@ -1,7 +1,7 @@
 import { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
-import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
-import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
+import { createTestContext } from "@/api/test/support/create-test-context"
+import { seedD1 } from "@/api/test/support/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("EmployeeRepository", () => {

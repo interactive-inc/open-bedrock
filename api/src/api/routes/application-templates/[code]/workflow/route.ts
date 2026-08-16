@@ -23,7 +23,7 @@ import { toHttpException } from "@/contexts/company/interface/lib/to-http-except
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import type { Context } from "@/env"
-import { roles } from "@/contexts/company/infrastructure/schema/compatibility/account-schema"
+import { roles } from "@/api/legacy-system/adapters/schema/system"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { ConflictError as ApplicationConflictError } from "@/lib/errors"
 

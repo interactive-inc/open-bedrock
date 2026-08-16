@@ -126,7 +126,7 @@ commands:
   grade-definitions update                    等級を更新 (--id --code --name --rank [--description])
   grade-definitions delete                    等級を削除 (--id)
   employee-grades list                        等級の割当履歴 (--employee-id)
-  employee-grades create                      等級の割当を記録 (--employee-id --grade-id --effective-date [--reason --review-cycle-id])
+  employee-grades create                      等級の割当を記録 (--employee-id --grade-id --effective-date [--reason])
   position-definitions list                   役職マスタ一覧
   position-definitions create                 役職を作成 (--code --name --rank [--description])
   position-definitions update                 役職を更新 (--id --code --name --rank [--description])

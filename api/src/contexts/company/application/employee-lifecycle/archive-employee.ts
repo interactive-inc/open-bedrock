@@ -6,8 +6,8 @@ import { AuditEventRepository } from "@/contexts/company/infrastructure/company/
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 import { LastRootGuard } from "@/contexts/company/infrastructure/iam/last-root-guard"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,
