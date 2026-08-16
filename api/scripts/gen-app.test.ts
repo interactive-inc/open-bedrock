@@ -309,13 +309,16 @@ describe("renderApp", () => {
 
   test("middleware は app-base.ts から引き継ぐ", async () => {
     const rendered = renderApp(await collectRegistrations())
-    expect(rendered).toContain('import { appBase } from "@/api/app-base"')
+    expect(rendered).toContain('import { appBase, createRouteApp } from "@/api/app-base"')
+    expect(rendered).toContain("const routePart0 = createRouteApp()")
     expect(rendered).toContain("export const app = appBase")
+    expect(rendered).toContain('.route("/", routePart0)')
   })
 
   test("hc の型を export する", async () => {
     const rendered = renderApp(await collectRegistrations())
     expect(rendered).toContain("export type AppType = typeof app")
-    expect(rendered).toContain("export type ApiClient = ReturnType<typeof hc<AppType>>")
+    expect(rendered).toContain("type ApiClientPart0 = ReturnType<typeof hc<typeof routePart0>>")
+    expect(rendered).toContain("export type ApiClient = ApiClientPart0 &")
   })
 })

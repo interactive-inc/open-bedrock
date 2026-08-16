@@ -10,6 +10,7 @@ const SOURCE_ROOT = resolve(PROJECT_ROOT, "src")
 const API_ROOT = resolve(SOURCE_ROOT, "api")
 const CONTEXTS_ROOT = resolve(SOURCE_ROOT, "contexts")
 const LIB_ROOT = resolve(SOURCE_ROOT, "lib")
+const RETIRED_CONTEXT_NAMES = new Set(["request"])
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
 const API_ROOT_DIRECTORIES = new Set(["routes", "test"])
@@ -118,6 +119,22 @@ export function inspectContextTestDirectory(file: string): ContextBoundaryViolat
         {
           file,
           reason: "context横断テストは複数形 tests ではなく単数形 test に配置してください",
+        },
+      ]
+    : []
+}
+
+/** Systemへ吸収した汎用概念を独立contextとして再導入させない。 */
+export function inspectRetiredContextPath(file: string): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+  const match = normalized.match(/(?:^|\/)src\/contexts\/([^/]+)(?:\/|$)/)
+  const contextName = match?.[1]
+
+  return contextName !== undefined && RETIRED_CONTEXT_NAMES.has(contextName)
+    ? [
+        {
+          file,
+          reason: `${contextName} contextは廃止済みです。汎用手続はSystem、資格はCompany、業務payloadは所有contextへ配置してください`,
         },
       ]
     : []
@@ -392,6 +409,7 @@ export async function collectContextBoundaryViolations(): Promise<ContextBoundar
       const path = resolve(CONTEXTS_ROOT, file)
       const projectRelativePath = relative(PROJECT_ROOT, path)
 
+      violations.push(...inspectRetiredContextPath(projectRelativePath))
       violations.push(...inspectContextTestDirectory(projectRelativePath))
 
       if (/\.(?:test|spec)\.tsx?$/.test(file)) continue

@@ -11,12 +11,6 @@ export const ROUTE_MODULE_REGISTRY = [
     routeImportPrefix: "@/contexts/company/interface/routes",
   },
   {
-    context: "request",
-    tier: "business",
-    routesDirectory: "contexts/request/interface/routes",
-    routeImportPrefix: "@/contexts/request/interface/routes",
-  },
-  {
     context: "api",
     tier: "composition",
     routesDirectory: "api/routes",

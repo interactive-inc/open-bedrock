@@ -13,13 +13,6 @@ import type {
 } from "@/lib/schemas"
 import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
 import {
-  applicationApprovals,
-  applicationCompletionBindings,
-  applications,
-  applicationSubjects,
-  applicationTemplates,
-} from "@/contexts/request/infrastructure/schema/request"
-import {
   employeeLifecycleRevisions,
   employeeStatusPeriodVersions,
   employmentPeriodVersions,
@@ -56,6 +49,8 @@ import {
 } from "@/contexts/company/infrastructure/schema/compatibility/account-schema"
 import {
   systemCoreSchema,
+  systemProcedureDelegationSchema,
+  systemProcedureSchema,
   systemWorkflowSchema,
 } from "@/contexts/system/infrastructure/schema/system"
 import { sql } from "drizzle-orm"
@@ -383,37 +378,6 @@ export const onboardingTasks = sqliteTable("onboarding_tasks", {
 })
 
 export type OnboardingTaskRow = InferSelectModel<typeof onboardingTasks>
-
-export {
-  applicationApprovals,
-  applicationCompletionBindings,
-  applications,
-  applicationSubjects,
-  applicationTemplates,
-  applicationWorkflowApprovals,
-  applicationWorkflowEvents,
-  applicationWorkflowInstances,
-  applicationWorkflowRevisions,
-  applicationWorkflows,
-  applicationWorkflowStepCandidates,
-  applicationWorkflowStepSnapshots,
-  approvalDelegations,
-} from "@/contexts/request/infrastructure/schema/request"
-export type {
-  ApplicationApprovalRow,
-  ApplicationCompletionBindingRow,
-  ApplicationRow,
-  ApplicationSubjectRow,
-  ApplicationTemplateRow,
-  ApplicationWorkflowApprovalRow,
-  ApplicationWorkflowEventRow,
-  ApplicationWorkflowInstanceRow,
-  ApplicationWorkflowRevisionRow,
-  ApplicationWorkflowRow,
-  ApplicationWorkflowStepCandidateRow,
-  ApplicationWorkflowStepSnapshotRow,
-  ApprovalDelegationRow,
-} from "@/contexts/request/infrastructure/schema/request"
 
 export {
   employeeLifecycleRevisions,
@@ -1678,6 +1642,8 @@ export const headcountPlans = sqliteTable(
 export type HeadcountPlanRow = InferSelectModel<typeof headcountPlans>
 export const schema = {
   ...systemCoreSchema,
+  ...systemProcedureSchema,
+  ...systemProcedureDelegationSchema,
   ...systemWorkflowSchema,
   accounts,
   accountEmployeeLinks,
@@ -1714,9 +1680,6 @@ export const schema = {
   onboardingTemplateTasks,
   onboardingAssignments,
   onboardingTasks,
-  applicationTemplates,
-  applications,
-  applicationApprovals,
   personnelActions,
   employmentPeriodVersions,
   employeeStatusPeriodVersions,
@@ -1725,8 +1688,6 @@ export const schema = {
   employeeLifecycleRevisions,
   organizationLifecycleState,
   personnelActionRequests,
-  applicationSubjects,
-  applicationCompletionBindings,
   lifecycleMigrationState,
   lifecycleOutbox,
   lifecycleEffectTemplateBindings,

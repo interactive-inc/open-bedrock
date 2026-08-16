@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test"
-import { seedApplications } from "@/contexts/company/infrastructure/seed/seed-applications"
 import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
 import { seedGoals } from "@/contexts/company/infrastructure/seed/seed-goals"
 import { seedSurveys } from "@/contexts/company/infrastructure/seed/seed-surveys"
@@ -63,15 +62,18 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "application_requests",
-    seedApplications.map((application) => ({
-      id: application.id,
-      template_id: application.templateId,
-      applicant_id: application.applicantId,
-      status: application.status,
-      current_step: application.currentStep,
-      payload: JSON.stringify(application.payload),
-      created_at: application.createdAt,
+    "system_cases",
+    ["pending", "pending", "approved", "rejected", "pending"].map((status, index) => ({
+      id: `dashboard-case-${index + 1}`,
+      subject_context: "system",
+      subject_kind: "dashboard-example",
+      subject_id: String(index + 1),
+      subject_version: "1",
+      proposal_digest: "a".repeat(64),
+      created_by_account_id: "1",
+      status,
+      created_at: Date.parse(`2026-05-${String(index + 1).padStart(2, "0")}T00:00:00Z`),
+      updated_at: Date.parse(`2026-05-${String(index + 1).padStart(2, "0")}T00:00:00Z`),
     })),
   )
 

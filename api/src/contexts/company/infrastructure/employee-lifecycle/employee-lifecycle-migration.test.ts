@@ -1,8 +1,6 @@
 import { createD1TestDatabase } from "@/contexts/company/interface/test-helpers/d1-test-database"
 import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
 import {
-  applicationCompletionBindings,
-  applicationSubjects,
   employeeLifecycleRevisions,
   employeeStatusPeriodVersions,
   employmentPeriodVersions,
@@ -54,6 +52,7 @@ function schemaBeforeLifecycle(): string {
   return migrationFiles()
     .filter(
       (file) =>
+        file <= "0035_application.sql" &&
         file !== migrationFile &&
         file !== applicationBindingMigrationFile &&
         file !== personnelActionTemplateMigrationFile &&
@@ -138,8 +137,6 @@ describe("employee lifecycle migration", () => {
         "employee_lifecycle_revisions",
         "organization_lifecycle_states",
         "personnel_action_requests",
-        "application_subjects",
-        "application_completion_bindings",
         "lifecycle_migration_states",
         "lifecycle_outbox_entries",
         "lifecycle_effect_template_bindings",
@@ -356,8 +353,6 @@ describe("employee lifecycle migration", () => {
       employeeLifecycleRevisions,
       organizationLifecycleState,
       personnelActionRequests,
-      applicationSubjects,
-      applicationCompletionBindings,
       lifecycleMigrationState,
       lifecycleOutbox,
       lifecycleEffectTemplateBindings,

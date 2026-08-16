@@ -18,6 +18,10 @@ INSERT INTO accounts (id, status, token_version, created_at, updated_at) VALUES
   (13, 'active', 0, 0, 0),
   (16, 'active', 0, 0, 0);
 
+INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
+SELECT CAST(id AS TEXT), status, token_version, created_at, updated_at
+FROM accounts;
+
 INSERT INTO account_employee_links (account_id, employee_id) VALUES
   (1, 1),
   (2, 2),

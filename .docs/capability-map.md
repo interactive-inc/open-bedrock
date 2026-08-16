@@ -46,9 +46,9 @@ System は業務内容と会社組織から独立した、停止不能な実行�
 - Delegation、代理元、代理先、対象範囲、有効期間
 - ExecutionAuthorization、失効、実行直前の再検査
 
-申請の業務内容は各 App が所有する。System は対象コンテキスト、resource kind、resource ID、resource version、proposal digest を保存し、任意 JSON を業務上の正本にしない。
+専用業務の内容は各 App が所有する。System は対象コンテキスト、resource kind、resource ID、resource version、proposal digest を保存し、任意 JSON を業務上の正本にしない。特定業務の正本を必要としない汎用手続きだけは、版付きの正規化済み Proposal body として System が所有する。
 
-System には汎用の Case、DecisionTask、候補と除外の資格 snapshot、HumanAttestation、Delegation、ExecutionAuthorization と、quorum、自己判断禁止、append-only証跡、一回実行を強制する永続化制約がある。ProcedureDefinition、Assignment、repository と operation は未実装であり、現行の application request、workflow、approval、delegation は request context の互換実装を利用している。request から System workflow への利用経路の切替は未完成である。
+System には版付き ProcedureDefinition と Proposal、Case、DecisionTask、候補と除外の資格 snapshot、HumanAttestation、Delegation、ExecutionAuthorization がある。公開、提出、編集、判断、取消、再割当、委任、参照の application service と repository、および quorum、自己判断禁止、append-only 証跡、一回実行を強制する永続化制約がある。application request の HTTP 契約はこの System workflow を直接使用し、旧 request model は削除済みである。
 
 ### 記録と証拠
 
@@ -135,7 +135,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - System の Case に対する会社上の判断資格の解決
 - 判断時点の Employment、Membership、ResponsibilityAssignment の snapshot
 
-現行実装には Account と Employee の一対一対応と、それを在籍・組織資格と同時に検査する Company resolver がある。request workflow の候補解決はこの resolver を利用し、Company snapshot を証拠へ保存する。ただし返す Account ID は現行互換の整数であり、canonical System Account ID と System Task への接続は未完成である。
+現行実装には Account と Employee の一対一対応と、それを在籍・組織資格、active な canonical System Account と同時に検査する Company resolver がある。System workflow の候補解決はこの resolver を利用し、Company snapshot を証拠へ保存する。Company 内部の整数 Account ID は互換境界に閉じ、System Task へは opaque な文字列 ID を渡す。
 
 ### 雇用事実と人事発令
 
@@ -159,9 +159,7 @@ App は業務目的と業務上の不変条件を所有する。すべて `api/s
 
 ### 汎用手続き
 
-- `request`: template に基づく社内依頼、提案 payload、subject、completion binding
-
-request は System workflow の共通 library ではない。個別 App は request を import せず、自分の提案を所有して System へ接続する。責任境界と現行差分は [Request context](./request-context.md) に従う。
+template に基づく汎用手続きは App ではなく System の ProcedureDefinition、Proposal、Case として提供する。Employee、経費、休暇、契約など固有の正本または実行規則が必要になった時点で、専用 App または Company がその業務事実を所有し、opaque な subject と digest で System へ接続する。独立した `request` コンテキストは作らない。
 
 ### 採用と人事手続き
 
@@ -237,9 +235,9 @@ dashboard、inbox、directory、search は複数コンテキストの read model
 
 ### 現行実装
 
-独立した App context として `api/src/contexts/request` が存在する。template、application request、payload 検証、subject、completion binding、従来 workflow、approval delegation と関連 route を所有する。従来 workflow は System workflow へ未接続であり、version と proposal digest も未実装なので、最終モデルの完成とは扱わない。
+汎用手続きと approval delegation は `api/src/contexts/system` にあり、Company の資格 resolver と最上位の `api/src/api/routes` が既存 HTTP 契約へ合成する。Company の人事変更申請は Company が業務 subject と発令事実を所有し、System の Proposal、Case、Task、ExecutionAuthorization と原子的に接続する。`api/src/contexts/request` は存在せず、境界検査が再導入を拒否する。
 
-request 以外の上記 App 実装は `api/src/contexts/company` に同居しており、機能ごとの domain、application、infrastructure、route の有無と完成度に差がある。
+独立 App へ分けるべき上記の業務実装は、なお `api/src/contexts/company` に同居している。機能ごとの domain、application、infrastructure、route の有無と完成度に差があり、これは次の Company 整理で解消する対象である。
 
 App として分離する際は、既存コードがあることだけで完成扱いにしない。認可、失敗、競合、訂正、監査、無効化、削除可能性、route test を検査し、不足を同じ Task で完成させるか route registry から外す。
 

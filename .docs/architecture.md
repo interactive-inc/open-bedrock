@@ -19,7 +19,7 @@ flowchart LR
   API --> KV[("KV・rate limit bindings")]
 ```
 
-実装されている route は `api/src/contexts/*/interface/routes` と `api/src/api/routes` から生成される `api/src/api/app.ts` で確認する。System の Drizzle schema は `api/src/contexts/system/infrastructure/schema`、request の Drizzle schema は `api/src/contexts/request/infrastructure/schema`、Company と未分離 App を含む合成 schema は `api/src/schema.ts` にある。DB スキーマの正は手書きの `api/migrations/*.sql` で、drizzle-kit generate による再生成は行わない。一意・部分インデックス（二重登録・TOCTOU 防止）は ORM からの可視性とドリフト検知のため Drizzle schema にも同期させ、性能用の非一意インデックスは migration のみに持つ。インデックスを追加・変更する際は migration を正として更新し、一意・部分インデックスは所有コンテキストの schema にも反映する。
+実装されている route は `api/src/contexts/*/interface/routes` と `api/src/api/routes` から生成される `api/src/api/app.ts` で確認する。System の Drizzle schema は `api/src/contexts/system/infrastructure/schema`、Company と未分離 App を含む合成 schema は `api/src/schema.ts` にある。DB スキーマの正は手書きの `api/migrations/*.sql` で、drizzle-kit generate による再生成は行わない。一意・部分インデックス（二重登録・TOCTOU 防止）は ORM からの可視性とドリフト検知のため Drizzle schema にも同期させ、性能用の非一意インデックスは migration のみに持つ。インデックスを追加・変更する際は migration を正として更新し、一意・部分インデックスは所有コンテキストの schema にも反映する。
 
 ## migration の命名
 
@@ -58,7 +58,7 @@ API、Web、CLI、AI に法人 selector を設けない。全社共通の table 
 
 業務上の依存方向は `業務 → Company → System` とする。System は Account、Identity、Session、IAM、監査エンベロープ、通知エンベロープ、汎用 batch を所有し、Employee、組織、雇用、個別業務を参照しない。Company は Account と Employee の対応を `account_employee_links` で所有し、業務は Company の語彙を使って System の機能へ接続する。
 
-System の実装は `api/src/contexts/system`、Company は `api/src/contexts/company`、request App は `api/src/contexts/request` に置く。これらから上位コンテキストへの import、相対 import による境界の迂回、上位コンテキストの語彙の混入は `bun run --filter api lint:system-boundary` と `bun run --filter api lint:context-boundaries` で検査する。HTTP の既存契約で Employee 識別子を返す必要がある場合は Company または最上位の API composition で変換し、System の entity と schema には持ち込まない。
+System の実装は `api/src/contexts/system`、Company は `api/src/contexts/company`、削除可能な業務は `api/src/contexts/<app>` に置く。汎用手続きは System が所有し、独立した `request` コンテキストは作らない。これらから上位コンテキストへの import、相対 import による境界の迂回、上位コンテキストの語彙の混入、および `contexts/request` の再導入は `bun run --filter api lint:system-boundary` と `bun run --filter api lint:context-boundaries` で検査する。HTTP の既存契約で Employee 識別子を返す必要がある場合は Company または最上位の API composition で変換し、System の entity と schema には持ち込まない。
 
 System の監査イベントは `audit_events` に Account 主体の汎用エンベロープとして保存する。Employee 文脈は Company の `audit_event_employee_contexts` が所有し、Company の監査 adapter が `company_audit_events` view で読み取り、`company_audit_event_appends` の一時行を同一 transaction 内で System イベントと Employee 文脈へ分配する。System の監査 repository は Company の view、table、語彙を参照しない。
 

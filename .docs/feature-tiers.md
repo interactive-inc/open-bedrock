@@ -17,7 +17,7 @@
 - API、webhook、import、export、connector、external assertion、reconciliation
 - 設定、機能有効化、health、migration safety、運用診断
 
-System は Employee、Department、LegalEntity、経費、勤怠などの会社・業務語彙を保存しない。業務対象は所有コンテキスト、resource kind、resource ID、版、digest の変更不能な参照として扱う。
+System は Employee、Department、LegalEntity、経費、勤怠などの会社・業務語彙を保存しない。専用業務の対象は所有コンテキスト、resource kind、resource ID、版、digest の変更不能な参照として扱う。特定業務の正本を必要としない汎用手続きは、System の版付き Proposal body として扱う。
 
 ## Company
 
@@ -39,9 +39,9 @@ Company は汎用の申請、承認、通知、監査、batch を再実装しな
 
 業務目的と業務上の不変条件を所有し、削除または無効化できるコンテキスト。App は System と Company だけを利用でき、他の App を直接 import しない。
 
-`request` は template に基づく汎用的な社内依頼を所有する App である。他の App が利用する workflow library ではなく、個別 App は自分の提案を所有して System workflow へ接続する。
+template に基づく汎用的な社内手続きは System が所有するため、`request` App は設けない。個別 App は自分の業務提案と実行規則を所有し、System workflow へ接続する。
 
-既定で有効にできる App は request、attendance、leave、family-care-leave、shift、company-calendar、expense、business-trip、budget、ringi、asset、stocktake、room、rental、software-license、partner、contract、antisocial-check、recruitment、headcount-plan、health-checkup、work-accident、certification、commendation、disciplinary-action、meeting、life-event、work-style とする。
+既定で有効にできる App は attendance、leave、family-care-leave、shift、company-calendar、expense、business-trip、budget、ringi、asset、stocktake、room、rental、software-license、partner、contract、antisocial-check、recruitment、headcount-plan、health-checkup、work-accident、certification、commendation、disciplinary-action、meeting、life-event、work-style とする。
 
 既定で無効にできる App は announcement、knowledge、regulation、governance-document、onboarding、offboarding、certificate-request、goal、performance-review、skill、training、career、one-on-one、survey、thanks、it-incident、compensation-change とする。
 
@@ -88,8 +88,8 @@ App を削除するときは対象 context のディレクトリ、route module 
 
 ## 現行実装差分
 
-現在は System、Company、request の三コンテキストが存在する。request は申請 template、payload、subject、completion binding、従来の申請 workflow と route を Company から分離している。System には案件、判断Task、判断証明、委任、実行許可の汎用kernelと永続化制約があるが、request の従来 workflow はまだ System kernel を使用しておらず、利用経路の切替は完了していない。
+現在の汎用手続きは System の ProcedureDefinition、Proposal、Case、Task、HumanAttestation、Delegation、ExecutionAuthorization を正本とする。既存の application request HTTP 契約は API composition が System と Company の資格解決へ接続し、独立した `request` コンテキストと旧 runtime table は削除済みである。
 
-request 以外の App 実装は `api/src/contexts/company` に同居している。`/inbox/counts` は request を含む複数機能の read model なので、どの context の正本にもせず `api/src/api/routes` が合成する。
+独立させるべき App 実装はなお `api/src/contexts/company` に同居している。`/inbox/counts` は System 手続きと複数業務の read model なので、どの context の正本にもせず `api/src/api/routes` が合成する。
 
 受信箱の集約タブは App の無効化に完全には追従しない。無効な App の tab が残る場合も API は 404 で拒否するが、分離完了条件は UI の導線も有効化状態へ追従することである。

@@ -3,7 +3,24 @@
 // middleware・エラーハンドラは手書きの api/app-base.ts が持つ。
 
 import { hc } from "hono/client"
-import { appBase } from "@/api/app-base"
+import { appBase, createRouteApp } from "@/api/app-base"
+import * as applicationRequestsIdApproveRoute from "@/api/routes/application-requests/[id]/approve/route"
+import * as applicationRequestsIdReassignWorkflowStepRoute from "@/api/routes/application-requests/[id]/reassign-workflow-step/route"
+import * as applicationRequestsIdRejectRoute from "@/api/routes/application-requests/[id]/reject/route"
+import * as applicationRequestsIdResubmitRoute from "@/api/routes/application-requests/[id]/resubmit/route"
+import * as applicationRequestsIdRoute from "@/api/routes/application-requests/[id]/route"
+import * as applicationRequestsAdminRoute from "@/api/routes/application-requests/admin/route"
+import * as applicationRequestsInboxRoute from "@/api/routes/application-requests/inbox/route"
+import * as applicationRequestsMeRoute from "@/api/routes/application-requests/me/route"
+import * as applicationRequestsRoute from "@/api/routes/application-requests/route"
+import * as applicationRequestsSubmitRoute from "@/api/routes/application-requests/submit-route"
+import * as applicationRequestsWorkflowRepairsRoute from "@/api/routes/application-requests/workflow-repairs/route"
+import * as applicationTemplatesCodeRoute from "@/api/routes/application-templates/[code]/route"
+import * as applicationTemplatesCodeWorkflowRoute from "@/api/routes/application-templates/[code]/workflow/route"
+import * as applicationTemplatesCreateRoute from "@/api/routes/application-templates/create-route"
+import * as applicationTemplatesRoute from "@/api/routes/application-templates/route"
+import * as approvalDelegationsIdRoute from "@/api/routes/approval-delegations/[id]/route"
+import * as approvalDelegationsRoute from "@/api/routes/approval-delegations/route"
 import * as inboxCountsRoute from "@/api/routes/inbox/counts/route"
 import * as accountsIdResetPasswordRoute from "@/contexts/company/interface/routes/accounts/[id]/reset-password/route"
 import * as accountsIdRolesRoleKeyRoute from "@/contexts/company/interface/routes/accounts/[id]/roles/[roleKey]/route"
@@ -214,6 +231,8 @@ import * as performanceGoalsMeRoute from "@/contexts/company/interface/routes/pe
 import * as performanceGoalsRoute from "@/contexts/company/interface/routes/performance-goals/route"
 import * as performanceGoalsTreeRoute from "@/contexts/company/interface/routes/performance-goals/tree/route"
 import * as permissionDefinitionsRoute from "@/contexts/company/interface/routes/permission-definitions/route"
+import * as personnelActionRequestsIdRoute from "@/contexts/company/interface/routes/personnel-action-requests/[id]/route"
+import * as personnelActionRequestsRoute from "@/contexts/company/interface/routes/personnel-action-requests/route"
 import * as personnelActionsIdCorrectRoute from "@/contexts/company/interface/routes/personnel-actions/[id]/correct/route"
 import * as personnelActionsRoute from "@/contexts/company/interface/routes/personnel-actions/route"
 import * as positionDefinitionsIdRoute from "@/contexts/company/interface/routes/position-definitions/[id]/route"
@@ -315,29 +334,10 @@ import * as trainingEnrollmentsMeRoute from "@/contexts/company/interface/routes
 import * as trainingEnrollmentsRoute from "@/contexts/company/interface/routes/training-enrollments/route"
 import * as workAccidentsIdCloseRoute from "@/contexts/company/interface/routes/work-accidents/[id]/close/route"
 import * as workAccidentsRoute from "@/contexts/company/interface/routes/work-accidents/route"
-import * as applicationRequestsIdApproveRoute from "@/contexts/request/interface/routes/application-requests/[id]/approve/route"
-import * as applicationRequestsIdReassignWorkflowStepRoute from "@/contexts/request/interface/routes/application-requests/[id]/reassign-workflow-step/route"
-import * as applicationRequestsIdRejectRoute from "@/contexts/request/interface/routes/application-requests/[id]/reject/route"
-import * as applicationRequestsIdResubmitRoute from "@/contexts/request/interface/routes/application-requests/[id]/resubmit/route"
-import * as applicationRequestsIdRoute from "@/contexts/request/interface/routes/application-requests/[id]/route"
-import * as applicationRequestsAdminRoute from "@/contexts/request/interface/routes/application-requests/admin/route"
-import * as applicationRequestsInboxRoute from "@/contexts/request/interface/routes/application-requests/inbox/route"
-import * as applicationRequestsMeRoute from "@/contexts/request/interface/routes/application-requests/me/route"
-import * as applicationRequestsRoute from "@/contexts/request/interface/routes/application-requests/route"
-import * as applicationRequestsSubmitRoute from "@/contexts/request/interface/routes/application-requests/submit-route"
-import * as applicationRequestsWorkflowRepairsRoute from "@/contexts/request/interface/routes/application-requests/workflow-repairs/route"
-import * as applicationTemplatesCodeRoute from "@/contexts/request/interface/routes/application-templates/[code]/route"
-import * as applicationTemplatesCodeWorkflowRoute from "@/contexts/request/interface/routes/application-templates/[code]/workflow/route"
-import * as applicationTemplatesCreateRoute from "@/contexts/request/interface/routes/application-templates/create-route"
-import * as applicationTemplatesRoute from "@/contexts/request/interface/routes/application-templates/route"
-import * as approvalDelegationsIdRoute from "@/contexts/request/interface/routes/approval-delegations/[id]/route"
-import * as approvalDelegationsRoute from "@/contexts/request/interface/routes/approval-delegations/route"
-import * as personnelActionRequestsIdRoute from "@/contexts/request/interface/routes/personnel-action-requests/[id]/route"
-import * as personnelActionRequestsRoute from "@/contexts/request/interface/routes/personnel-action-requests/route"
 import * as healthRoute from "@system/interface/routes/health/route"
 import * as systemV1HealthRoute from "@system/interface/routes/system/v1/health/route"
 
-export const app = appBase
+const routePart0 = createRouteApp()
   .get("/accounts", ...accountsRoute.GET)
   .post("/accounts/:id/reset-password", ...accountsIdResetPasswordRoute.POST)
   .post("/accounts/:id/roles", ...accountsIdRolesRoute.POST)
@@ -355,32 +355,111 @@ export const app = appBase
   .get("/antisocial-checks/:id", ...antisocialChecksIdRoute.GET)
   .put("/antisocial-checks/:id", ...antisocialChecksIdRoute.PUT)
   .delete("/antisocial-checks/:id", ...antisocialChecksIdRoute.DELETE)
-  .get("/application-requests", ...applicationRequestsRoute.GET)
-  .post("/application-requests", ...applicationRequestsSubmitRoute.POST)
-  .get("/application-requests/admin", ...applicationRequestsAdminRoute.GET)
-  .get("/application-requests/inbox", ...applicationRequestsInboxRoute.GET)
-  .get("/application-requests/me", ...applicationRequestsMeRoute.GET)
-  .get("/application-requests/workflow-repairs", ...applicationRequestsWorkflowRepairsRoute.GET)
-  .get("/application-requests/:id", ...applicationRequestsIdRoute.GET)
-  .put("/application-requests/:id", ...applicationRequestsIdRoute.PUT)
-  .delete("/application-requests/:id", ...applicationRequestsIdRoute.DELETE)
-  .post("/application-requests/:id/approve", ...applicationRequestsIdApproveRoute.POST)
-  .post(
-    "/application-requests/:id/reassign-workflow-step",
-    ...applicationRequestsIdReassignWorkflowStepRoute.POST,
-  )
-  .post("/application-requests/:id/reject", ...applicationRequestsIdRejectRoute.POST)
-  .post("/application-requests/:id/resubmit", ...applicationRequestsIdResubmitRoute.POST)
-  .get("/application-templates", ...applicationTemplatesRoute.GET)
-  .post("/application-templates", ...applicationTemplatesCreateRoute.POST)
-  .get("/application-templates/:code", ...applicationTemplatesCodeRoute.GET)
-  .put("/application-templates/:code", ...applicationTemplatesCodeRoute.PUT)
-  .delete("/application-templates/:code", ...applicationTemplatesCodeRoute.DELETE)
-  .get("/application-templates/:code/workflow", ...applicationTemplatesCodeWorkflowRoute.GET)
-  .put("/application-templates/:code/workflow", ...applicationTemplatesCodeWorkflowRoute.PUT)
-  .get("/approval-delegations", ...approvalDelegationsRoute.GET)
-  .post("/approval-delegations", ...approvalDelegationsRoute.POST)
-  .delete("/approval-delegations/:id", ...approvalDelegationsIdRoute.DELETE)
+
+const routePart1 = createRouteApp().get("/application-requests", ...applicationRequestsRoute.GET)
+
+const routePart2 = createRouteApp().post(
+  "/application-requests",
+  ...applicationRequestsSubmitRoute.POST,
+)
+
+const routePart3 = createRouteApp().get(
+  "/application-requests/admin",
+  ...applicationRequestsAdminRoute.GET,
+)
+
+const routePart4 = createRouteApp().get(
+  "/application-requests/inbox",
+  ...applicationRequestsInboxRoute.GET,
+)
+
+const routePart5 = createRouteApp().get(
+  "/application-requests/me",
+  ...applicationRequestsMeRoute.GET,
+)
+
+const routePart6 = createRouteApp().get(
+  "/application-requests/workflow-repairs",
+  ...applicationRequestsWorkflowRepairsRoute.GET,
+)
+
+const routePart7 = createRouteApp().get(
+  "/application-requests/:id",
+  ...applicationRequestsIdRoute.GET,
+)
+
+const routePart8 = createRouteApp().put(
+  "/application-requests/:id",
+  ...applicationRequestsIdRoute.PUT,
+)
+
+const routePart9 = createRouteApp().delete(
+  "/application-requests/:id",
+  ...applicationRequestsIdRoute.DELETE,
+)
+
+const routePart10 = createRouteApp().post(
+  "/application-requests/:id/approve",
+  ...applicationRequestsIdApproveRoute.POST,
+)
+
+const routePart11 = createRouteApp().post(
+  "/application-requests/:id/reassign-workflow-step",
+  ...applicationRequestsIdReassignWorkflowStepRoute.POST,
+)
+
+const routePart12 = createRouteApp().post(
+  "/application-requests/:id/reject",
+  ...applicationRequestsIdRejectRoute.POST,
+)
+
+const routePart13 = createRouteApp().post(
+  "/application-requests/:id/resubmit",
+  ...applicationRequestsIdResubmitRoute.POST,
+)
+
+const routePart14 = createRouteApp().get("/application-templates", ...applicationTemplatesRoute.GET)
+
+const routePart15 = createRouteApp().post(
+  "/application-templates",
+  ...applicationTemplatesCreateRoute.POST,
+)
+
+const routePart16 = createRouteApp().get(
+  "/application-templates/:code",
+  ...applicationTemplatesCodeRoute.GET,
+)
+
+const routePart17 = createRouteApp().put(
+  "/application-templates/:code",
+  ...applicationTemplatesCodeRoute.PUT,
+)
+
+const routePart18 = createRouteApp().delete(
+  "/application-templates/:code",
+  ...applicationTemplatesCodeRoute.DELETE,
+)
+
+const routePart19 = createRouteApp().get(
+  "/application-templates/:code/workflow",
+  ...applicationTemplatesCodeWorkflowRoute.GET,
+)
+
+const routePart20 = createRouteApp().put(
+  "/application-templates/:code/workflow",
+  ...applicationTemplatesCodeWorkflowRoute.PUT,
+)
+
+const routePart21 = createRouteApp().get("/approval-delegations", ...approvalDelegationsRoute.GET)
+
+const routePart22 = createRouteApp().post("/approval-delegations", ...approvalDelegationsRoute.POST)
+
+const routePart23 = createRouteApp().delete(
+  "/approval-delegations/:id",
+  ...approvalDelegationsIdRoute.DELETE,
+)
+
+const routePart24 = createRouteApp()
   .get("/assets", ...assetsRoute.GET)
   .post("/assets", ...assetsRegisterRoute.POST)
   .get("/assets/holdings", ...assetsHoldingsRoute.GET)
@@ -435,6 +514,8 @@ export const app = appBase
   .get("/career-applications/:id", ...careerApplicationsIdRoute.GET)
   .put("/career-applications/:id", ...careerApplicationsIdRoute.PUT)
   .delete("/career-applications/:id", ...careerApplicationsIdRoute.DELETE)
+
+const routePart25 = createRouteApp()
   .get("/career-postings", ...careerPostingsRoute.GET)
   .post("/career-postings", ...careerPostingsRoute.POST)
   .get("/career-postings/:posting_id", ...careerPostingsPostingIdRoute.GET)
@@ -483,6 +564,8 @@ export const app = appBase
   .put("/departments/:code", ...departmentsCodeRoute.PUT)
   .delete("/departments/:code", ...departmentsCodeRoute.DELETE)
   .get("/departments/:code/members", ...departmentsCodeMembersRoute.GET)
+
+const routePart26 = createRouteApp()
   .get("/directory/employees", ...directoryEmployeesRoute.GET)
   .get("/disciplinary-actions", ...disciplinaryActionsRoute.GET)
   .post("/disciplinary-actions", ...disciplinaryActionsRoute.POST)
@@ -531,6 +614,8 @@ export const app = appBase
   .delete("/expenses/:id", ...expensesIdRoute.DELETE)
   .post("/expenses/:id/approve", ...expensesIdApproveRoute.POST)
   .post("/expenses/:id/reject", ...expensesIdRejectRoute.POST)
+
+const routePart27 = createRouteApp()
   .post("/family-care-leaves", ...familyCareLeavesRoute.POST)
   .get("/family-care-leaves/admin", ...familyCareLeavesAdminRoute.GET)
   .get("/family-care-leaves/me", ...familyCareLeavesMeRoute.GET)
@@ -588,6 +673,8 @@ export const app = appBase
   .put("/knowledge-articles/:id", ...knowledgeArticlesIdRoute.PUT)
   .delete("/knowledge-articles/:id", ...knowledgeArticlesIdRoute.DELETE)
   .get("/leave-balances", ...leaveBalancesRoute.GET)
+
+const routePart28 = createRouteApp()
   .get("/leave-balances/me", ...leaveBalancesMeRoute.GET)
   .get("/leave-requests", ...leaveRequestsRoute.GET)
   .post("/leave-requests", ...leaveRequestsRoute.POST)
@@ -639,6 +726,8 @@ export const app = appBase
   .post("/onboarding-tasks/:id/complete", ...onboardingTasksIdCompleteRoute.POST)
   .post("/onboarding-tasks/:id/uncomplete", ...onboardingTasksIdUncompleteRoute.POST)
   .get("/onboarding-templates", ...onboardingTemplatesRoute.GET)
+
+const routePart29 = createRouteApp()
   .post("/onboarding-templates", ...onboardingTemplatesRoute.POST)
   .get("/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.GET)
   .put("/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.PUT)
@@ -674,10 +763,28 @@ export const app = appBase
   .delete("/performance-goals/:goal_id", ...performanceGoalsGoalIdRoute.DELETE)
   .post("/performance-goals/:goal_id/evaluations", ...performanceGoalsGoalIdEvaluationsRoute.POST)
   .get("/permission-definitions", ...permissionDefinitionsRoute.GET)
-  .get("/personnel-action-requests", ...personnelActionRequestsRoute.GET)
-  .post("/personnel-action-requests", ...personnelActionRequestsRoute.POST)
-  .get("/personnel-action-requests/:id", ...personnelActionRequestsIdRoute.GET)
-  .delete("/personnel-action-requests/:id", ...personnelActionRequestsIdRoute.DELETE)
+
+const routePart30 = createRouteApp().get(
+  "/personnel-action-requests",
+  ...personnelActionRequestsRoute.GET,
+)
+
+const routePart31 = createRouteApp().post(
+  "/personnel-action-requests",
+  ...personnelActionRequestsRoute.POST,
+)
+
+const routePart32 = createRouteApp().get(
+  "/personnel-action-requests/:id",
+  ...personnelActionRequestsIdRoute.GET,
+)
+
+const routePart33 = createRouteApp().delete(
+  "/personnel-action-requests/:id",
+  ...personnelActionRequestsIdRoute.DELETE,
+)
+
+const routePart34 = createRouteApp()
   .post("/personnel-actions", ...personnelActionsRoute.POST)
   .post("/personnel-actions/:id/correct", ...personnelActionsIdCorrectRoute.POST)
   .get("/position-definitions", ...positionDefinitionsRoute.GET)
@@ -729,6 +836,8 @@ export const app = appBase
   .get("/ringi-requests/admin", ...ringiRequestsAdminRoute.GET)
   .get("/ringi-requests/inbox", ...ringiRequestsInboxRoute.GET)
   .get("/ringi-requests/me", ...ringiRequestsMeRoute.GET)
+
+const routePart35 = createRouteApp()
   .post("/ringi-requests/:id/approve", ...ringiRequestsIdApproveRoute.POST)
   .post("/ringi-requests/:id/reject", ...ringiRequestsIdRejectRoute.POST)
   .get("/roles", ...rolesRoute.GET)
@@ -777,6 +886,8 @@ export const app = appBase
   .post("/stocktakes", ...stocktakesRoute.POST)
   .get("/stocktakes/:id", ...stocktakesIdRoute.GET)
   .post("/stocktakes/:id/assets/:code/check", ...stocktakesIdAssetsCodeCheckRoute.POST)
+
+const routePart36 = createRouteApp()
   .post("/stocktakes/:id/close", ...stocktakesIdCloseRoute.POST)
   .get("/surveys", ...surveysRoute.GET)
   .post("/surveys", ...surveysCreateRoute.POST)
@@ -820,11 +931,123 @@ export const app = appBase
   .post("/work-accidents", ...workAccidentsRoute.POST)
   .post("/work-accidents/:id/close", ...workAccidentsIdCloseRoute.POST)
 
+export const app = appBase
+  .route("/", routePart0)
+  .route("/", routePart1)
+  .route("/", routePart2)
+  .route("/", routePart3)
+  .route("/", routePart4)
+  .route("/", routePart5)
+  .route("/", routePart6)
+  .route("/", routePart7)
+  .route("/", routePart8)
+  .route("/", routePart9)
+  .route("/", routePart10)
+  .route("/", routePart11)
+  .route("/", routePart12)
+  .route("/", routePart13)
+  .route("/", routePart14)
+  .route("/", routePart15)
+  .route("/", routePart16)
+  .route("/", routePart17)
+  .route("/", routePart18)
+  .route("/", routePart19)
+  .route("/", routePart20)
+  .route("/", routePart21)
+  .route("/", routePart22)
+  .route("/", routePart23)
+  .route("/", routePart24)
+  .route("/", routePart25)
+  .route("/", routePart26)
+  .route("/", routePart27)
+  .route("/", routePart28)
+  .route("/", routePart29)
+  .route("/", routePart30)
+  .route("/", routePart31)
+  .route("/", routePart32)
+  .route("/", routePart33)
+  .route("/", routePart34)
+  .route("/", routePart35)
+  .route("/", routePart36)
+
 export type AppType = typeof app
 
 /**
- * hc の型計算を api 側（型解決できる環境）で済ませた Client 型。
+ * routeを小さなHono appへ分割し、hc の型計算を再帰上限内で済ませた Client 型。
  * web/cli はこの型と AppType を type-only で import し、自前の hc<AppType>() に渡す。
  * 実行時に app 本体（全ルート）を消費側のバンドルへ引き込まないよう、ファクトリは置かない。
  */
-export type ApiClient = ReturnType<typeof hc<AppType>>
+type ApiClientPart0 = ReturnType<typeof hc<typeof routePart0>>
+type ApiClientPart1 = ReturnType<typeof hc<typeof routePart1>>
+type ApiClientPart2 = ReturnType<typeof hc<typeof routePart2>>
+type ApiClientPart3 = ReturnType<typeof hc<typeof routePart3>>
+type ApiClientPart4 = ReturnType<typeof hc<typeof routePart4>>
+type ApiClientPart5 = ReturnType<typeof hc<typeof routePart5>>
+type ApiClientPart6 = ReturnType<typeof hc<typeof routePart6>>
+type ApiClientPart7 = ReturnType<typeof hc<typeof routePart7>>
+type ApiClientPart8 = ReturnType<typeof hc<typeof routePart8>>
+type ApiClientPart9 = ReturnType<typeof hc<typeof routePart9>>
+type ApiClientPart10 = ReturnType<typeof hc<typeof routePart10>>
+type ApiClientPart11 = ReturnType<typeof hc<typeof routePart11>>
+type ApiClientPart12 = ReturnType<typeof hc<typeof routePart12>>
+type ApiClientPart13 = ReturnType<typeof hc<typeof routePart13>>
+type ApiClientPart14 = ReturnType<typeof hc<typeof routePart14>>
+type ApiClientPart15 = ReturnType<typeof hc<typeof routePart15>>
+type ApiClientPart16 = ReturnType<typeof hc<typeof routePart16>>
+type ApiClientPart17 = ReturnType<typeof hc<typeof routePart17>>
+type ApiClientPart18 = ReturnType<typeof hc<typeof routePart18>>
+type ApiClientPart19 = ReturnType<typeof hc<typeof routePart19>>
+type ApiClientPart20 = ReturnType<typeof hc<typeof routePart20>>
+type ApiClientPart21 = ReturnType<typeof hc<typeof routePart21>>
+type ApiClientPart22 = ReturnType<typeof hc<typeof routePart22>>
+type ApiClientPart23 = ReturnType<typeof hc<typeof routePart23>>
+type ApiClientPart24 = ReturnType<typeof hc<typeof routePart24>>
+type ApiClientPart25 = ReturnType<typeof hc<typeof routePart25>>
+type ApiClientPart26 = ReturnType<typeof hc<typeof routePart26>>
+type ApiClientPart27 = ReturnType<typeof hc<typeof routePart27>>
+type ApiClientPart28 = ReturnType<typeof hc<typeof routePart28>>
+type ApiClientPart29 = ReturnType<typeof hc<typeof routePart29>>
+type ApiClientPart30 = ReturnType<typeof hc<typeof routePart30>>
+type ApiClientPart31 = ReturnType<typeof hc<typeof routePart31>>
+type ApiClientPart32 = ReturnType<typeof hc<typeof routePart32>>
+type ApiClientPart33 = ReturnType<typeof hc<typeof routePart33>>
+type ApiClientPart34 = ReturnType<typeof hc<typeof routePart34>>
+type ApiClientPart35 = ReturnType<typeof hc<typeof routePart35>>
+type ApiClientPart36 = ReturnType<typeof hc<typeof routePart36>>
+export type ApiClient = ApiClientPart0 &
+  ApiClientPart1 &
+  ApiClientPart2 &
+  ApiClientPart3 &
+  ApiClientPart4 &
+  ApiClientPart5 &
+  ApiClientPart6 &
+  ApiClientPart7 &
+  ApiClientPart8 &
+  ApiClientPart9 &
+  ApiClientPart10 &
+  ApiClientPart11 &
+  ApiClientPart12 &
+  ApiClientPart13 &
+  ApiClientPart14 &
+  ApiClientPart15 &
+  ApiClientPart16 &
+  ApiClientPart17 &
+  ApiClientPart18 &
+  ApiClientPart19 &
+  ApiClientPart20 &
+  ApiClientPart21 &
+  ApiClientPart22 &
+  ApiClientPart23 &
+  ApiClientPart24 &
+  ApiClientPart25 &
+  ApiClientPart26 &
+  ApiClientPart27 &
+  ApiClientPart28 &
+  ApiClientPart29 &
+  ApiClientPart30 &
+  ApiClientPart31 &
+  ApiClientPart32 &
+  ApiClientPart33 &
+  ApiClientPart34 &
+  ApiClientPart35 &
+  ApiClientPart36

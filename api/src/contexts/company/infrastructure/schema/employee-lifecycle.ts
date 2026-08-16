@@ -212,9 +212,13 @@ export const personnelActionRequests = sqliteTable(
   {
     id: text("id").primaryKey(),
     applicationId: integer("application_id").notNull().unique(),
+    systemProposalSeriesId: text("system_proposal_series_id").unique(),
     targetEmployeeId: integer("target_employee_id"),
+    subjectSnapshotJson: text("subject_snapshot_json"),
+    targetDepartmentCode: text("target_department_code"),
     kind: text("kind").notNull().$type<Exclude<PersonnelActionKind, "legacy_baseline">>(),
     payloadJson: text("payload_json").notNull(),
+    payloadFingerprint: text("payload_fingerprint"),
     requestedByEmployeeId: integer("requested_by_employee_id").notNull(),
     baseEmployeeRevision: integer("base_employee_revision"),
     baseOrganizationRevision: integer("base_organization_revision"),

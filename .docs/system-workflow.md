@@ -2,7 +2,7 @@
 
 System workflow は、業務上の提案を変更不能な対象版へ固定し、誰がどの資格で何を判断したかを記録し、その判断から限定された実行許可を生成する。経費、休暇、人事、契約、AI 提案の意味は所有せず、それらに共通する案件、判断、代理、実行の安全性だけを所有する。
 
-System workflow が Company や特定 App の語彙を所有すると、組織制度または業務機能を変えるたびに基盤を変更する必要が生じる。System workflow が業務 payload を所有すると、App を削除しても System にその schema と履歴解釈が残る。System は opaque な対象参照、digest、Account、資格証拠参照だけを受け取り、意味のある事実を所有元へ残す。
+System workflow が Company や特定 App の語彙を所有すると、組織制度または業務機能を変えるたびに基盤を変更する必要が生じる。System は汎用手続きの変更不能な Proposal body を所有できるが、それを Employee、経費、休暇などの業務事実の正本にはしない。専用 App の提案では opaque な対象参照、digest、Account、資格証拠参照を受け取り、意味のある事実と実行規則を所有元へ残す。
 
 System workflow の責任は [会社の解体図](./capability-map.md)、会社上の判断資格は [権限と意思決定モデル](./authority-model.md)、技術的な操作許可は [認可モデル](./authorization-model.md)、AI による提案と実行は [AI 自動化](./automation-model.md)、外部副作用は [外部連携](./integration-model.md) に従う。
 
@@ -149,7 +149,7 @@ operation key は、App が提供する一つの application operation を識別
 
 System Case を executed にできるのは、その Case に発行されたすべての ExecutionAuthorization が消費済みの場合だけである。外部送信が必要な場合、消費済みは送信要求を一度引き渡したことを表し、外部成功を表さない。外部結果は Assertion と照合状態で別に記録する。
 
-現行実装には application operation、repository、Execution Gateway、outbox との接続がない。domain 型と database 制約だけを、業務副作用が安全に実行される保証として使用してはならない。
+現行実装では Company の人事発令だけが、限定された operation key、対象 revision、payload fingerprint、ExecutionAuthorization の消費、Company 更新を同じ D1 batch へ置いている。他の内部業務と外部 connector にはこの実行接続がない。domain 型と database 制約だけを、未接続の業務副作用が安全に実行される保証として使用してはならない。
 
 ## 取消と再割当
 
@@ -167,7 +167,7 @@ append-only は誤りを消せないことを意味しない。誤りを元記�
 
 ## 並行実行と失敗
 
-domain object の検証だけに依存してはならない。複数 request が同時に同じ Task を判断し、同じ ExecutionAuthorization を使えるため、database の foreign key、unique index、check、trigger と transaction でも同じ不変条件を強制する。
+domain object の検証だけに依存してはならない。複数 command が同時に同じ Task を判断し、同じ ExecutionAuthorization を使えるため、database の foreign key、unique index、check、trigger と transaction でも同じ不変条件を強制する。
 
 不変条件違反、参照切れ、競合、期限切れ、認可失敗は fail closed とする。正しい行だけを部分保存して成功扱いせず、application operation 全体を rollback する。
 
@@ -179,38 +179,42 @@ domain object の検証だけに依存してはならない。複数 request が
 
 現行の System workflow には次が存在する。
 
-- `SystemCase`、`DecisionTask`、`Decision`、`HumanAttestation`、`Delegation`、`ExecutionAuthorization` の domain 型
-- opaque な対象版、proposal digest、候補、除外、資格証拠参照を持つ System table
+- 版付き `ProcedureDefinition`、`Proposal`、`SystemCase`、`DecisionTask`、`Decision`、`HumanAttestation`、`Delegation`、`ExecutionAuthorization` の domain 型
+- 汎用 Proposal body、opaque な対象版、proposal digest、候補、除外、資格証拠参照を持つ System table
 - monotonic lifecycle、自己判断禁止、候補と除外の固定、quorum、代理 scope、append-only、一回実行を強制する database 制約
+- Procedure の公開、提案開始、判断、取消、再割当、委任、参照、実行許可の application service と D1 repository
 - canonical DDL、migration、Drizzle schema の対応と、それらの一致を検査する test
+- 従来の application request HTTP 契約を System Proposal と Case へ直接接続する API composition route
 
-Company には、営業日、組織投影、organization revision、根拠を固定する OrganizationalAuthority resolver がある。これは System の構成要素ではなく、request から利用される独立した Company 能力である。
+Company には、営業日、組織投影、organization revision、根拠を固定する OrganizationalAuthority resolver がある。これは System の構成要素ではなく、API composition または業務 App から利用される独立した Company 能力である。
 
-Company resolver と request の既存 workflow actor、candidate、更新者、委任作成者は canonical System Account ID へ統一済みである。保存済み履歴の移行、外部キー、live guard、legacy Session adapter の責任は [Workflow Account identity](./workflow-account-identity.md) に定める。この接続は主体IDの準備を完了するが、既存判断をSystem Taskが実行していることまでは意味しない。
+Company resolver が返す候補、workflow actor、定義更新者、委任作成者は canonical System Account ID へ統一されている。legacy Session からの変換は Company 境界の一箇所に閉じ、System は整数 Account ID または Employee ID を解釈しない。責任は [Workflow Account identity](./workflow-account-identity.md) に定める。
 
-現行の System workflow には次が存在しない。
+Company の人事変更申請は、Company が業務 subject と payload fingerprint を所有し、同じ D1 batch で System Proposal、Case、最初の Task と対応を作る。最終承認後は一回限りの ExecutionAuthorization と Company の発令事実を同じ batch で確定する。対象 revision が競合した場合は Case を approved のまま保ち、業務事実を上書きせず、安全に再試行できる。
 
-- ProcedureDefinition と版、および必要 Task を完全に生成したことの証明
-- System workflow の application service、repository、transaction operation
+旧 `application_requests`、旧 workflow、旧 approval、旧 delegation の runtime model は削除済みである。移行時に proposal digest を安全に再構成できない旧 runtime data または System 対応のない人事申請が一件でもあれば、削除 migration は fail closed で停止する。
+
+現行の System workflow に残る不足は次である。
+
 - HumanPrincipal kind、step-up、共通 policy evaluation と attestation 作成経路
-- Company の資格証拠を opaque evidence reference または digest として System Task へ渡す接続
-- request App の変更不能な template version、request version、canonical proposal digest と System Case の binding
-- Execution Gateway、idempotency、outbox、外部 Assertion との接続
-- request context にある既存 application request、approval、delegation、notification の System workflow への切替
+- すべての内部業務に対する共通 Execution Gateway と idempotency 契約
+- 外部 connector に対する outbox、Assertion、照合の接続
+- Company の汎用 Responsibility scope と職務分離 policy
+- Principal 単位の同一人物性と、複数 Account による quorum 水増しを拒否する共通契約
 
-request App には template、検証済み payload、Employee に特化した subject、personnel action completion binding が存在する。ただし request version と proposal digest がなく、System Case と接続されていない。したがって、現行の System workflow は安全な永続化と domain kernel であり、既存申請の実行基盤ではない。既存 route の挙動は request context の従来実装が所有している。
+これらは System 手続きへの切替不足ではなく、今後追加する基盤能力である。現行の汎用申請と人事変更申請は System workflow を正本として利用し、独立した `request` コンテキストを必要としない。
 
 ## 利用済みの判定
 
 ある App を System workflow 利用済みとして扱えるのは、次がすべて成立する場合だけである。
 
-- App が業務 payload、schema、version、正規化、digest、業務状態を所有している
+- 専用 App は業務 payload、schema、version、正規化、digest、業務状態を所有し、汎用手続きは System Proposal の版付き body として完結している
 - Company が判断時点の資格と同一人物性を解決し、版付き証拠 snapshot を返している
 - System application service が認証、permission、候補、除外、quorum、digest、期限を一つの経路で検査している
 - ProcedureDefinition から必要な Task が漏れなく生成されたことを検査できる
 - Case、Task、attestation、Decision、ExecutionAuthorization の保存と業務側の状態更新が定義済み transaction 境界にある
 - 実行時に対象 version、業務状態、authority、permission、digest、期限を再検査している
-- 同時判断、重複 request、失効、取消、差戻し、再申請、通知失敗、外部 timeout の結果が test されている
+- 同時判断、重複提出、失効、取消、差戻し、再申請、通知失敗、外部 timeout の結果が test されている
 - Web、CLI、AI、callback が同じ application service を通る
 - 旧 workflow との backfill または切替で、欠落、重複、孤児、digest 不一致がない
 - System が Company または App の module と語彙へ依存せず、App の削除が他の App の変更を要求しない
