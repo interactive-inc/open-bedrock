@@ -1,4 +1,5 @@
 import { isCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { isCanonicalEmployee } from "@/contexts/company/domain/workforce/is-canonical-employee"
 import {
   periodContainsDate,
   workforcePeriodContainsPeriod,
@@ -85,15 +86,7 @@ function findEmployment(
 
 function validateEmployee(schedule: WorkforceSchedule): WorkforceInvariantViolation | null {
   const { employee } = schedule
-  if (
-    employee.officialName.length < 1 ||
-    employee.officialName.length > 200 ||
-    employee.officialName.trim() !== employee.officialName ||
-    (employee.employeeCode !== null &&
-      (employee.employeeCode.length < 1 ||
-        employee.employeeCode.length > 64 ||
-        employee.employeeCode.trim() !== employee.employeeCode))
-  ) {
+  if (!isCanonicalEmployee(employee)) {
     return violation("invalid_employee", "employee profile is not canonical")
   }
 
