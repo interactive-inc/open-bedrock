@@ -4,6 +4,11 @@ export type WorkflowApproverSelector =
   | { type: "direct_manager" }
   | { type: "department_manager" }
   | { type: "target_department_manager" }
+  | {
+      type: "responsibility"
+      responsibility_type: string
+      organization_unit_code: string | null
+    }
   | { type: "management_chain" }
 
 export type WorkflowCondition = {

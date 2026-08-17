@@ -74,7 +74,7 @@ describe("lifecycle organization authority", () => {
     })
   })
 
-  test("fails closed for a corrupt cycle and excludes archived departments", async () => {
+  test("fails closed for a corrupt cycle and rejects archiving a department with live relations", async () => {
     const { context, db } = await organizationFixture()
     await db.exec(`
       INSERT INTO employee_org_assignment_period_versions
@@ -88,12 +88,8 @@ describe("lifecycle organization authority", () => {
     expect(cyclic).toBeInstanceOf(ApplicationError)
     expect((cyclic as ApplicationError).code).toBe("manager_cycle")
 
-    await db.prepare("UPDATE org_departments SET archived_at = 1 WHERE code = 'D001'").run()
-    const archived = await resolveLifecycleOrganizationAuthority(context, 1, 2, "2026-06-01")
-    expect(archived).toEqual({
-      directManager: false,
-      departmentManager: false,
-      managementChain: false,
-    })
+    expect(
+      db.prepare("UPDATE org_departments SET archived_at = 1 WHERE code = 'D001'").run(),
+    ).rejects.toThrow("organization change leaves an orphan")
   })
 })

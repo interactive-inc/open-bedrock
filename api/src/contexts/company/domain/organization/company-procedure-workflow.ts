@@ -6,12 +6,23 @@ const code = z
   .max(100)
   .regex(/^[a-zA-Z0-9_-]+$/)
 
+const responsibilityType = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[A-Z][A-Z0-9_]*$/)
+
 export const zWorkflowApproverSelector = z.discriminatedUnion("type", [
   z.object({ type: z.literal("role"), role_key: code }),
   z.object({ type: z.literal("employee"), employee_code: code }),
   z.object({ type: z.literal("direct_manager") }),
   z.object({ type: z.literal("department_manager") }),
   z.object({ type: z.literal("target_department_manager") }),
+  z.object({
+    type: z.literal("responsibility"),
+    responsibility_type: responsibilityType,
+    organization_unit_code: code.nullable().default(null),
+  }),
   z.object({ type: z.literal("management_chain") }),
 ])
 

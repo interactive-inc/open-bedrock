@@ -11,11 +11,10 @@ import type {
   WorkforcePeriodVersion,
   WorkforceSchedule,
 } from "@/contexts/company/domain/workforce/workforce-schedule"
+import { isOrgResponsibilityType } from "@/contexts/company/domain/workforce/workforce-schedule"
 import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
-import type {
-  EmployeeId,
-  OrganizationUnitId,
-} from "@/contexts/company/domain/workforce/workforce-id"
+import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
+import type { OrganizationUnitPeriod } from "@/contexts/company/domain/workforce/organization-unit"
 
 export const workforceInvariantCodes = [
   "invalid_employee",
@@ -31,6 +30,7 @@ export const workforceInvariantCodes = [
   "assignment_overlap",
   "self_manager",
   "responsibility_outside_employment",
+  "invalid_responsibility",
   "responsibility_without_assignment",
   "responsibility_overlap",
   "manager_not_active",
@@ -48,12 +48,17 @@ export type WorkforceInvariantViolation = Readonly<{
 
 export type ValidateWorkforceSchedulesProps = Readonly<{
   schedules: ReadonlyArray<WorkforceSchedule>
-  activeOrganizationUnitIds: ReadonlySet<OrganizationUnitId>
+  organizationUnitPeriods: ReadonlyArray<OrganizationUnitPeriod>
 }>
 
 export type ValidateWorkforceLifecycleSchedulesProps = Readonly<{
   schedules: ReadonlyArray<WorkforceLifecycleSchedule>
-  activeOrganizationUnitIds: ReadonlySet<OrganizationUnitId>
+  organizationUnitPeriods: ReadonlyArray<OrganizationUnitPeriod>
+}>
+
+export type ValidateWorkforceLifecycleScheduleProps = Readonly<{
+  schedule: WorkforceLifecycleSchedule
+  organizationUnitPeriods: ReadonlyArray<OrganizationUnitPeriod>
 }>
 
 function violation(code: WorkforceInvariantCode, message: string): WorkforceInvariantViolation {
@@ -180,7 +185,7 @@ function validateEmploymentAndStatuses(
 
 function validateAssignments(
   schedule: WorkforceLifecycleSchedule,
-  activeOrganizationUnitIds: ReadonlySet<OrganizationUnitId>,
+  organizationUnitPeriods: ReadonlyArray<OrganizationUnitPeriod>,
 ): WorkforceInvariantViolation | null {
   const assignments = active(schedule.assignments)
   for (const assignment of assignments) {
@@ -188,7 +193,14 @@ function validateAssignments(
     if (employment === undefined || !workforcePeriodContainsPeriod(employment, assignment)) {
       return violation("assignment_outside_employment", "assignment is outside its employment")
     }
-    if (!activeOrganizationUnitIds.has(assignment.organizationUnitId)) {
+    if (
+      !organizationUnitPeriods.some(
+        (unit) =>
+          !unit.isVoid &&
+          unit.organizationUnitId === assignment.organizationUnitId &&
+          workforcePeriodContainsPeriod(unit, assignment),
+      )
+    ) {
       return violation(
         "inactive_organization_unit",
         "assignment uses an inactive organization unit",
@@ -221,11 +233,21 @@ function validateAssignments(
 
 function validateResponsibilities(
   schedules: ReadonlyArray<WorkforceLifecycleSchedule>,
-  activeOrganizationUnitIds: ReadonlySet<OrganizationUnitId>,
+  organizationUnitPeriods: ReadonlyArray<OrganizationUnitPeriod>,
 ): WorkforceInvariantViolation | null {
   const responsibilities = schedules.flatMap((schedule) => active(schedule.responsibilities))
   for (const responsibility of responsibilities) {
-    if (!activeOrganizationUnitIds.has(responsibility.organizationUnitId)) {
+    if (!isOrgResponsibilityType(responsibility.responsibilityType)) {
+      return violation("invalid_responsibility", "responsibility type is not canonical")
+    }
+    if (
+      !organizationUnitPeriods.some(
+        (unit) =>
+          !unit.isVoid &&
+          unit.organizationUnitId === responsibility.organizationUnitId &&
+          workforcePeriodContainsPeriod(unit, responsibility),
+      )
+    ) {
       return violation(
         "inactive_organization_unit",
         "responsibility uses an inactive organization unit",
@@ -264,6 +286,7 @@ function validateResponsibilities(
       responsibilities.some(
         (candidate) =>
           candidate.periodId !== responsibility.periodId &&
+          candidate.employeeId === responsibility.employeeId &&
           candidate.organizationUnitId === responsibility.organizationUnitId &&
           candidate.responsibilityType === responsibility.responsibilityType &&
           workforcePeriodsOverlap(candidate, responsibility),
@@ -368,17 +391,26 @@ export function validateWorkforceLifecycleSchedules(
     }
     employeeIds.add(schedule.employeeId)
 
-    const result =
-      validateLifecycleOwner(schedule) ??
-      validatePeriodVersions(schedule) ??
-      validateEmploymentAndStatuses(schedule) ??
-      validateAssignments(schedule, props.activeOrganizationUnitIds)
+    const result = validateWorkforceLifecycleSchedule({
+      schedule,
+      organizationUnitPeriods: props.organizationUnitPeriods,
+    })
     if (result !== null) return result
   }
 
+  return validateManagers(props.schedules)
+}
+
+/** 単一Employeeだけで閉じる不変条件を検証し、未取得の上長scheduleを欠損扱いしない。 */
+export function validateWorkforceLifecycleSchedule(
+  props: ValidateWorkforceLifecycleScheduleProps,
+): WorkforceInvariantViolation | null {
   return (
-    validateResponsibilities(props.schedules, props.activeOrganizationUnitIds) ??
-    validateManagers(props.schedules)
+    validateLifecycleOwner(props.schedule) ??
+    validatePeriodVersions(props.schedule) ??
+    validateEmploymentAndStatuses(props.schedule) ??
+    validateAssignments(props.schedule, props.organizationUnitPeriods) ??
+    validateResponsibilities([props.schedule], props.organizationUnitPeriods)
   )
 }
 
@@ -408,6 +440,6 @@ export function validateWorkforceSchedules(
       assignments: schedule.assignments,
       responsibilities: schedule.responsibilities,
     })),
-    activeOrganizationUnitIds: props.activeOrganizationUnitIds,
+    organizationUnitPeriods: props.organizationUnitPeriods,
   })
 }

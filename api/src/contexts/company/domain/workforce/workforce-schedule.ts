@@ -14,8 +14,12 @@ export type EmploymentStatus = (typeof employmentStatuses)[number]
 export const orgAssignmentTypes = ["PRIMARY", "CONCURRENT"] as const
 export type OrgAssignmentType = (typeof orgAssignmentTypes)[number]
 
-export const orgResponsibilityTypes = ["MANAGER"] as const
-export type OrgResponsibilityType = (typeof orgResponsibilityTypes)[number]
+export type OrgResponsibilityType = string
+
+/** Company responsibility codeは表示名やSystem roleではなく、安定した大文字tokenで表す。 */
+export function isOrgResponsibilityType(value: string): value is OrgResponsibilityType {
+  return /^[A-Z][A-Z0-9_]{0,63}$/.test(value)
+}
 
 /** revisionごとに追記される半開有効期間 [startsOn, endsOn)。 */
 export type WorkforcePeriodVersion = Readonly<{

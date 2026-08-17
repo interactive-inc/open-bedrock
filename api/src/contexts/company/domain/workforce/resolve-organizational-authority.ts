@@ -18,6 +18,7 @@ import type {
   OrgResponsibilityPeriod,
   WorkforcePeriodVersion,
 } from "@/contexts/company/domain/workforce/workforce-schedule"
+import { isOrgResponsibilityType } from "@/contexts/company/domain/workforce/workforce-schedule"
 import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
 
 type CandidateEvidence = Readonly<{
@@ -55,6 +56,7 @@ function compareResponsibilities(
   return (
     left.employeeId.localeCompare(right.employeeId) ||
     left.organizationUnitId.localeCompare(right.organizationUnitId) ||
+    left.responsibilityType.localeCompare(right.responsibilityType) ||
     left.periodId.localeCompare(right.periodId)
   )
 }
@@ -102,6 +104,7 @@ function responsibilityEvidence(
   return {
     employeeId: responsibility.employeeId,
     organizationUnitId: responsibility.organizationUnitId,
+    responsibilityType: responsibility.responsibilityType,
     responsibilityPeriodId: responsibility.periodId,
     responsibilityRevision: responsibility.revision,
     asOf,
@@ -166,7 +169,7 @@ function validateProjection(
         state.employmentId === null ||
         responsibility.employeeId !== state.employeeId ||
         responsibility.employmentId !== state.employmentId ||
-        responsibility.responsibilityType !== "MANAGER" ||
+        !isOrgResponsibilityType(responsibility.responsibilityType) ||
         !isCanonicalPeriod(responsibility) ||
         responsibility.isVoid ||
         !periodContainsDate(responsibility, projection.snapshot.asOf) ||
@@ -192,6 +195,12 @@ function validateProjection(
   for (const criterion of projection.criteria) {
     if (criterion.kind === "employee" && !statesByEmployee.has(criterion.employeeId)) {
       return invalid("organizational_authority_employee_reference_missing")
+    }
+    if (
+      criterion.kind === "responsibility" &&
+      !isOrgResponsibilityType(criterion.responsibilityType)
+    ) {
+      return invalid("organizational_authority_period_invalid")
     }
   }
   for (const state of projection.states) {
@@ -269,7 +278,11 @@ function resolveCriterion(props: {
       },
     ]
   }
-  if (props.subjectEmployeeId === null && props.criterion.kind !== "target_organization_manager") {
+  if (
+    props.subjectEmployeeId === null &&
+    props.criterion.kind !== "target_organization_manager" &&
+    props.criterion.kind !== "responsibility"
+  ) {
     return []
   }
 
@@ -305,7 +318,9 @@ function resolveCriterion(props: {
     return subjectAssignments.flatMap((assignment) =>
       responsibilities
         .filter(
-          (responsibility) => responsibility.organizationUnitId === assignment.organizationUnitId,
+          (responsibility) =>
+            responsibility.responsibilityType === "MANAGER" &&
+            responsibility.organizationUnitId === assignment.organizationUnitId,
         )
         .map(
           (responsibility): CandidateEvidence => ({
@@ -324,7 +339,11 @@ function resolveCriterion(props: {
     const targetOrganizationUnitId = props.criterion.organizationUnitId
 
     return responsibilities
-      .filter((responsibility) => responsibility.organizationUnitId === targetOrganizationUnitId)
+      .filter(
+        (responsibility) =>
+          responsibility.responsibilityType === "MANAGER" &&
+          responsibility.organizationUnitId === targetOrganizationUnitId,
+      )
       .map(
         (responsibility): CandidateEvidence => ({
           employeeId: responsibility.employeeId,
@@ -332,6 +351,26 @@ function resolveCriterion(props: {
             kind: "organization_manager",
             scope: "target",
             subjectAssignment: null,
+            responsibility: responsibilityEvidence(responsibility, props.asOf),
+          },
+        }),
+      )
+  }
+
+  const criterion = props.criterion
+  if (criterion.kind === "responsibility") {
+    return responsibilities
+      .filter(
+        (responsibility) =>
+          responsibility.responsibilityType === criterion.responsibilityType &&
+          (criterion.organizationUnitId === null ||
+            responsibility.organizationUnitId === criterion.organizationUnitId),
+      )
+      .map(
+        (responsibility): CandidateEvidence => ({
+          employeeId: responsibility.employeeId,
+          evidence: {
+            kind: "responsibility",
             responsibility: responsibilityEvidence(responsibility, props.asOf),
           },
         }),

@@ -18,6 +18,9 @@ import { makeTestSession } from "@/api/test/support/make-test-session"
 import type { Context } from "@/env"
 
 async function seedDepartment(context: Context, code: string): Promise<OrgDepartment> {
+  await context.env.DB.prepare(
+    "INSERT OR IGNORE INTO departments (id, name) VALUES (100, 'Department')",
+  ).run()
   const result = await new CreateOrgDepartment(context).run({
     session: makeTestSession("root"),
     department: {
@@ -38,7 +41,10 @@ async function seedDepartment(context: Context, code: string): Promise<OrgDepart
 
 describe("CreateOrgDepartment", () => {
   test("creates a department for an admin", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+    await context.env.DB.prepare(
+      "INSERT INTO departments (id, name) VALUES (1, 'Development')",
+    ).run()
 
     const result = await new CreateOrgDepartment(context).run({
       session: makeTestSession("root"),
@@ -58,6 +64,29 @@ describe("CreateOrgDepartment", () => {
     }
 
     expect(result.code).toBe("DEV")
+    expect(
+      await db
+        .prepare(
+          `SELECT unit.id, period.code, period.official_name, operation.status
+             FROM organization_units unit
+             JOIN organization_unit_period_versions period
+               ON period.organization_unit_id = unit.id
+             JOIN organization_change_operations operation
+               ON operation.id = period.recorded_by_action_id
+            WHERE unit.id = 'department:DEV'`,
+        )
+        .first<{
+          id: string
+          code: string
+          official_name: string
+          status: string
+        }>(),
+    ).toEqual({
+      id: "department:DEV",
+      code: "DEV",
+      official_name: "Development",
+      status: "COMPLETED",
+    })
   })
 
   test("rejects non-admin with forbidden", async () => {
@@ -111,10 +140,29 @@ describe("CreateOrgDepartment", () => {
     expectApplicationError(result, ConflictError, "lifecycle_action_required")
   })
 
+  test("rejects a missing department master before writing an organization unit", async () => {
+    const { context } = createTestContext()
+    const result = await new CreateOrgDepartment(context).run({
+      session: makeTestSession("root"),
+      department: {
+        code: "DEV",
+        departmentId: 999,
+        parentCode: null,
+        managerEmployeeCode: null,
+        order: 1,
+      },
+    })
+
+    expectApplicationError(result, NotFoundError, "department_not_found")
+  })
+
   test("creates a child department with a parent", async () => {
     const { context } = createTestContext()
 
     await seedDepartment(context, "CORP")
+    await context.env.DB.prepare(
+      "INSERT INTO departments (id, name) VALUES (2, 'Development')",
+    ).run()
 
     const result = await new CreateOrgDepartment(context).run({
       session: makeTestSession("root"),
@@ -173,6 +221,11 @@ describe("UpdateOrgDepartment", () => {
 
     expect(result.managerEmployeeCode).toBeNull()
     expect(result.order).toBe(5)
+    expect(
+      await context.env.DB.prepare(
+        "SELECT revision FROM organization_lifecycle_states WHERE id = 1",
+      ).first<number>("revision"),
+    ).toBe(2)
   })
 
   test("requires a personnel action to change the department responsibility", async () => {
@@ -253,12 +306,37 @@ describe("DeleteOrgDepartment", () => {
         .prepare("SELECT archived_at IS NOT NULL FROM org_departments WHERE code = 'DEV'")
         .first<number>("archived_at IS NOT NULL"),
     ).toBe(1)
+    expect(
+      await db
+        .prepare(
+          `SELECT revision, is_void
+             FROM organization_unit_period_versions
+            WHERE period_id = 'department:DEV:compatibility'
+            ORDER BY revision DESC LIMIT 1`,
+        )
+        .first<{ revision: number; is_void: number }>(),
+    ).toEqual({ revision: 2, is_void: 1 })
+    expect(
+      await db
+        .prepare("SELECT revision FROM organization_lifecycle_states WHERE id = 1")
+        .first<number>("revision"),
+    ).toBe(3)
   })
 
   test("rejects a department with a current or future lifecycle assignment", async () => {
     const { context, db } = createTestContext()
     await seedDepartment(context, "DEV")
     await db.exec(`
+      INSERT INTO employees (id, code, name, status) VALUES (1, 'E001', 'Employee', 'active');
+      INSERT INTO employment_period_versions
+        (period_id, revision, employee_id, starts_on, ends_on, is_void,
+         recorded_by_action_id, recorded_at)
+      VALUES ('fixture-employment', 1, 1, '2025-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO employee_status_period_versions
+        (period_id, revision, employment_period_id, employee_id, status, starts_on,
+         ends_on, is_void, recorded_by_action_id, recorded_at)
+      VALUES ('fixture-status', 1, 'fixture-employment', 1, 'active',
+              '2025-01-01', NULL, 0, 'fixture', 1);
       INSERT INTO employee_org_assignment_period_versions
         (period_id, revision, employment_period_id, employee_id, department_code,
          assignment_type, position_title, manager_employee_id, starts_on, ends_on,

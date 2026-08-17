@@ -111,12 +111,23 @@ describe("GetLifecycleState", () => {
          ends_on, is_void, recorded_by_action_id, recorded_at)
       VALUES ('status-1', 1, 'employment-1', 1, 'active', '2026-01-01',
               NULL, 0, 'action-1', 1);
-      INSERT INTO employee_org_assignment_period_versions
-        (period_id, revision, employment_period_id, employee_id, department_code,
+      INSERT INTO departments (id, name) VALUES (1, 'Hidden projection');
+      INSERT INTO org_departments (code, department_id, sort_order)
+      VALUES ('HIDDEN', 1, 1);
+      INSERT INTO organization_change_operations
+        (id, expected_revision, change_count, applied_count,
+         resulting_revision, status, recorded_at)
+      SELECT 'canonical-assignment', revision, 1, 0, revision + 1, 'PENDING', 1
+      FROM organization_lifecycle_states WHERE id = 1;
+      INSERT INTO organization_assignment_period_versions
+        (period_id, revision, employment_id, employee_id, organization_unit_id,
          assignment_type, position_title, manager_employee_id, starts_on, ends_on,
          is_void, recorded_by_action_id, recorded_at)
-      VALUES ('assignment-1', 1, 'employment-1', 1, 'MISSING', 'primary', NULL,
-              NULL, '2026-01-01', NULL, 0, 'action-1', 1);
+      VALUES ('canonical-assignment-period', 1, 'employment:employment-1', 'employee:1',
+              'department:HIDDEN', 'PRIMARY', NULL, NULL, '2026-01-01', NULL,
+              0, 'canonical-assignment', 1);
+      UPDATE organization_change_operations SET status = 'COMPLETED'
+      WHERE id = 'canonical-assignment';
       UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
     `)
 

@@ -3,7 +3,7 @@ import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { departments } from "@/contexts/company/infrastructure/schema/organization"
-import { asc } from "drizzle-orm"
+import { asc, eq } from "drizzle-orm"
 
 export class DepartmentRepository {
   constructor(private readonly c: Context) {}
@@ -34,6 +34,20 @@ export class DepartmentRepository {
       return rows.length
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to count departments")
+    }
+  }
+
+  async findById(id: number): Promise<Department | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(departments)
+        .where(eq(departments.id, id))
+        .limit(1)
+      const row = rows[0]
+      return row === undefined ? null : { id: row.id, name: row.name }
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load department")
     }
   }
 

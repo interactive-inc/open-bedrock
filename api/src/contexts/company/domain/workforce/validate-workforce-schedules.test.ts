@@ -7,6 +7,7 @@ import type {
   WorkforceLifecycleSchedule,
   WorkforceSchedule,
 } from "@/contexts/company/domain/workforce/workforce-schedule"
+import type { OrganizationUnitPeriod } from "@/contexts/company/domain/workforce/organization-unit"
 import {
   validateWorkforceLifecycleSchedules,
   validateWorkforceSchedules,
@@ -74,6 +75,27 @@ function responsibility(employmentPeriod: EmploymentPeriod): OrgResponsibilityPe
   }
 }
 
+function organizationUnitPeriods(): ReadonlyArray<OrganizationUnitPeriod> {
+  return [
+    {
+      ...period("organization-period-root"),
+      organizationUnitId: rootUnitId,
+      code: "ROOT",
+      officialName: "Company",
+      kind: "COMPANY",
+      parentOrganizationUnitId: null,
+    },
+    {
+      ...period("organization-period-branch"),
+      organizationUnitId: branchUnitId,
+      code: "BRANCH",
+      officialName: "Branch",
+      kind: "DEPARTMENT",
+      parentOrganizationUnitId: rootUnitId,
+    },
+  ]
+}
+
 function fixture(): [WorkforceSchedule, WorkforceSchedule] {
   const managerEmployment = employment(managerId, "manager")
   const memberEmployment = employment(memberId, "member")
@@ -118,7 +140,7 @@ function fixture(): [WorkforceSchedule, WorkforceSchedule] {
 function validate(schedules: ReadonlyArray<WorkforceSchedule>) {
   return validateWorkforceSchedules({
     schedules,
-    activeOrganizationUnitIds: new Set([rootUnitId, branchUnitId]),
+    organizationUnitPeriods: organizationUnitPeriods(),
   })
 }
 
@@ -142,7 +164,7 @@ describe("validateWorkforceSchedules", () => {
     expect(
       validateWorkforceLifecycleSchedules({
         schedules,
-        activeOrganizationUnitIds: new Set([rootUnitId, branchUnitId]),
+        organizationUnitPeriods: organizationUnitPeriods(),
       }),
     ).toBeNull()
   })
@@ -190,6 +212,14 @@ describe("validateWorkforceSchedules", () => {
     const [manager, member] = fixture()
     expect(validate([{ ...manager, assignments: [] }, member])).toEqual(
       expect.objectContaining({ code: "responsibility_without_assignment" }),
+    )
+  })
+
+  test("rejects a responsibility with a non-canonical code", () => {
+    const [manager, member] = fixture()
+    const invalid = { ...manager.responsibilities[0]!, responsibilityType: "people ops" }
+    expect(validate([{ ...manager, responsibilities: [invalid] }, member])).toEqual(
+      expect.objectContaining({ code: "invalid_responsibility" }),
     )
   })
 

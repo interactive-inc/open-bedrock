@@ -136,6 +136,11 @@ describe("employee lifecycle migration", () => {
         "employee_org_responsibility_period_versions",
         "employee_lifecycle_revisions",
         "organization_lifecycle_states",
+        "organization_change_operations",
+        "organization_units",
+        "organization_unit_period_versions",
+        "organization_assignment_period_versions",
+        "organization_responsibility_period_versions",
         "personnel_action_requests",
         "lifecycle_migration_states",
         "lifecycle_outbox_entries",
@@ -152,7 +157,7 @@ describe("employee lifecycle migration", () => {
       await db
         .prepare("SELECT revision FROM organization_lifecycle_states WHERE id = 1")
         .first<number>("revision"),
-    ).toBe(0)
+    ).toBe(1)
   })
 
   test("upgrades legacy rows without deleting or rewriting current-state columns", async () => {

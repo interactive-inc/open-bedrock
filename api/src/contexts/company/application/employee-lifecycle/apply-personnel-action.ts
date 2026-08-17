@@ -12,6 +12,14 @@ import {
 import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import { fingerprintPersonnelAction } from "@/contexts/company/application/employee-lifecycle/fingerprint-personnel-action"
 import { stableLifecycleJson } from "@/contexts/company/application/employee-lifecycle/stable-lifecycle-json"
+import {
+  ValidateOrganizationChange,
+  type OrganizationChangeSet,
+  type WorkforceSnapshotReadPort,
+} from "@/contexts/company/application/workforce/apply-organization-change"
+import { toWorkforceLifecycleSchedules } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
@@ -19,6 +27,8 @@ import {
   PersonnelActionRepository,
   type PersonnelActionRecord,
 } from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action-repository"
+import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
+import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
@@ -201,6 +211,214 @@ function mutationStatement(
   }
 }
 
+function organizationMutations(
+  mutations: ReadonlyArray<LifecycleVersionMutation>,
+): ReadonlyArray<LifecycleVersionMutation> {
+  return mutations.filter(
+    (mutation) => mutation.periodType === "assignment" || mutation.periodType === "responsibility",
+  )
+}
+
+function orderedMutations(
+  mutations: ReadonlyArray<LifecycleVersionMutation>,
+): ReadonlyArray<LifecycleVersionMutation> {
+  const order = { employment: 0, status: 1, assignment: 2, responsibility: 3 } as const
+  return mutations.toSorted((left, right) => {
+    const typeOrder = order[left.periodType] - order[right.periodType]
+    if (typeOrder !== 0) return typeOrder
+
+    // 訂正では競合する新旧期間を一つのoperation内で差し替える。
+    // DBの各statementでも不変条件を保てるよう、無効化、既存期間更新、新規期間の順にする。
+    const phase = (mutation: LifecycleVersionMutation): number => {
+      if (mutation.after.isVoid) return 0
+      if (mutation.before !== null) return 1
+      return 2
+    }
+    const phaseOrder = phase(left) - phase(right)
+    if (phaseOrder !== 0) return phaseOrder
+
+    if (left.after.periodId === right.after.periodId) {
+      return left.after.revision - right.after.revision
+    }
+    return 0
+  })
+}
+
+function containsPeriod(
+  container: Readonly<{ startsOn: string; endsOn: string | null }>,
+  period: Readonly<{ startsOn: string; endsOn: string | null }>,
+): boolean {
+  return (
+    container.startsOn <= period.startsOn &&
+    (container.endsOn === null || (period.endsOn !== null && period.endsOn <= container.endsOn))
+  )
+}
+
+function canonicalOrganizationChange(props: {
+  actionId: string
+  expectedRevision: number
+  businessDate: string
+  recordedAt: number
+  projection: PersonnelActionProjection
+}): OrganizationChangeSet | ApplicationError {
+  try {
+    const operationId = restoreWorkforceId("personnel_action", props.actionId)
+    const assignments: OrganizationChangeSet["assignments"][number][] = []
+    const responsibilities: OrganizationChangeSet["responsibilities"][number][] = []
+
+    for (const mutation of props.projection.mutations) {
+      if (mutation.periodType === "assignment") {
+        const period = mutation.after
+        assignments.push({
+          periodId: restoreWorkforceId("period", `assignment-period:${period.periodId}`),
+          revision: period.revision,
+          employmentId: restoreWorkforceId("employment", `employment:${period.employmentPeriodId}`),
+          employeeId: restoreWorkforceId("employee", `employee:${period.employeeId}`),
+          organizationUnitId: restoreWorkforceId(
+            "organization_unit",
+            `department:${period.departmentCode}`,
+          ),
+          assignmentType: period.assignmentType === "primary" ? "PRIMARY" : "CONCURRENT",
+          positionTitle: period.positionTitle,
+          managerEmployeeId:
+            period.managerEmployeeId === null
+              ? null
+              : restoreWorkforceId("employee", `employee:${period.managerEmployeeId}`),
+          startsOn: restoreCalendarDate(period.startsOn),
+          endsOn: period.endsOn === null ? null : restoreCalendarDate(period.endsOn),
+          isVoid: period.isVoid,
+          recordedByActionId: operationId,
+          recordedAt: props.recordedAt,
+        })
+        continue
+      }
+      if (mutation.periodType !== "responsibility") continue
+
+      const period = mutation.after
+      const employment = props.projection.schedule.employments.find(
+        (candidate) =>
+          candidate.employeeId === period.employeeId && containsPeriod(candidate, period),
+      )
+      if (employment === undefined) {
+        return new ValidationError(
+          "組織責務に対応する雇用期間がありません",
+          "personnel_action_invalid_transition",
+        )
+      }
+      responsibilities.push({
+        periodId: restoreWorkforceId("period", `responsibility-period:${period.periodId}`),
+        revision: period.revision,
+        employmentId: restoreWorkforceId("employment", `employment:${employment.periodId}`),
+        employeeId: restoreWorkforceId("employee", `employee:${period.employeeId}`),
+        organizationUnitId: restoreWorkforceId(
+          "organization_unit",
+          `department:${period.departmentCode}`,
+        ),
+        responsibilityType: "MANAGER",
+        startsOn: restoreCalendarDate(period.startsOn),
+        endsOn: period.endsOn === null ? null : restoreCalendarDate(period.endsOn),
+        isVoid: period.isVoid,
+        recordedByActionId: operationId,
+        recordedAt: props.recordedAt,
+      })
+    }
+
+    return {
+      operationId,
+      expectedRevision: props.expectedRevision,
+      asOf: restoreCalendarDate(props.businessDate),
+      recordedAt: props.recordedAt,
+      organizationUnits: [],
+      unitPeriods: [],
+      assignments,
+      responsibilities,
+    }
+  } catch (cause) {
+    return new ValidationError(
+      "組織変更を共通形式へ変換できません",
+      "personnel_action_invalid_transition",
+      { cause },
+    )
+  }
+}
+
+async function validateCanonicalOrganizationChange(
+  c: Context,
+  props: Parameters<typeof canonicalOrganizationChange>[0] &
+    Readonly<{
+      prospectiveEmployee?: Readonly<{ id: number; code: string; name: string }>
+    }>,
+): Promise<ApplicationError | null> {
+  const change = canonicalOrganizationChange(props)
+  if (change instanceof ApplicationError) return change
+
+  const currentWorkforce = new OrganizationWorkforceSnapshotRepository(c)
+  const prospectiveEmployee = props.prospectiveEmployee
+  const workforce: WorkforceSnapshotReadPort =
+    prospectiveEmployee === undefined
+      ? currentWorkforce
+      : {
+          async readAllSnapshot() {
+            const current = await currentWorkforce.readAllSnapshot()
+            if (!current.ok) return current
+
+            const employeeId = restoreWorkforceId("employee", `employee:${prospectiveEmployee.id}`)
+            const lifecycle = toWorkforceLifecycleSchedules([props.projection.schedule]).find(
+              (schedule) => schedule.employeeId === employeeId,
+            )
+            if (lifecycle === undefined) {
+              return {
+                ok: false as const,
+                cause: new Error("prospective employee lifecycle was not projected"),
+              }
+            }
+
+            // 採用確定前のEmployeeはDB snapshotにまだ存在しない。
+            // 同一transactionで追加するprofile・雇用・状態だけを検証前snapshotへ補い、
+            // 所属と責務はOrganizationChangeSetを一度だけ適用して検証する。
+            return {
+              ok: true as const,
+              schedules: [
+                ...current.schedules,
+                {
+                  employee: {
+                    id: employeeId,
+                    officialName: prospectiveEmployee.name,
+                    employeeCode: prospectiveEmployee.code,
+                    email: null,
+                    phone: null,
+                  },
+                  employments: lifecycle.employments,
+                  statuses: lifecycle.statuses,
+                  assignments: [],
+                  responsibilities: [],
+                  accountLink: null,
+                },
+              ],
+            }
+          },
+        }
+
+  const result = await new ValidateOrganizationChange({
+    organization: new OrganizationUnitReadRepository(c.var.database),
+    workforce,
+  }).execute(change)
+  if (result.kind === "valid") return null
+  if (result.kind === "conflict") {
+    return new ConflictError("組織情報が更新されています", "personnel_action_stale")
+  }
+  if (result.kind === "invalid") {
+    return new ValidationError(
+      "人事発令後の組織状態が不正です",
+      "personnel_action_invalid_transition",
+      { cause: result.error },
+    )
+  }
+  return new UnavailableError("組織変更を安全に検証できません", "organization_change_unavailable", {
+    cause: result.cause,
+  })
+}
+
 function toSafeAuditState(
   state: CurrentLifecycleProjection,
   employeeRevision: number,
@@ -239,8 +457,9 @@ type PersistenceProps = {
 function preparePersistenceStatements(c: Context, props: PersistenceProps): D1PreparedStatement[] {
   const db = c.env.DB
   const nextEmployeeRevision = props.revisions.employeeRevision + 1
-  const nextOrganizationRevision =
-    props.revisions.organizationRevision + (props.projection.affectsOrganization ? 1 : 0)
+  const canonicalMutations = organizationMutations(props.projection.mutations)
+  const persistenceMutations = orderedMutations(props.projection.mutations)
+  const nextOrganizationRevision = props.revisions.organizationRevision + canonicalMutations.length
   const before = currentProjection(props.scheduleBefore, props.businessDate, props.employeeCodes)
   const after = currentProjection(
     props.projection.schedule,
@@ -295,6 +514,24 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
     )
   }
 
+  if (props.projection.affectsOrganization) {
+    statements.push(
+      db
+        .prepare(
+          `INSERT INTO organization_change_operations
+             (id, expected_revision, change_count, applied_count,
+              resulting_revision, status, recorded_at)
+           VALUES (?1, ?2, ?3, 0, ?2 + ?3, 'PENDING', ?4)`,
+        )
+        .bind(
+          props.action.id,
+          props.revisions.organizationRevision,
+          canonicalMutations.length,
+          props.action.recordedAt,
+        ),
+    )
+  }
+
   statements.push(
     db
       .prepare(
@@ -311,19 +548,6 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
       .bind(props.action.recordedAt, props.action.employeeId, props.revisions.employeeRevision),
     abortWhenPreviousStatementChangedNoRows(db),
   )
-
-  if (props.projection.affectsOrganization) {
-    statements.push(
-      db
-        .prepare(
-          `UPDATE organization_lifecycle_states
-           SET revision = revision + 1, updated_at = ?1
-           WHERE id = 1 AND revision = ?2`,
-        )
-        .bind(props.action.recordedAt, props.revisions.organizationRevision),
-      abortWhenPreviousStatementChangedNoRows(db),
-    )
-  }
 
   statements.push(
     db
@@ -350,7 +574,7 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
         stableLifecycleJson(props.action.summary),
       ),
     abortWhenPreviousStatementChangedNoRows(db),
-    ...props.projection.mutations.map((mutation) => mutationStatement(db, mutation)),
+    ...persistenceMutations.map((mutation) => mutationStatement(db, mutation)),
     db
       .prepare(
         `UPDATE employees
@@ -371,6 +595,19 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
       .bind(after.departmentCode, after.positionTitle, after.status, props.action.employeeId),
     abortWhenPreviousStatementChangedNoRows(db),
   )
+
+  if (props.projection.affectsOrganization) {
+    statements.push(
+      db
+        .prepare(
+          `UPDATE organization_change_operations
+           SET status = 'COMPLETED'
+           WHERE id = ?1 AND status = 'PENDING'`,
+        )
+        .bind(props.action.id),
+      abortWhenPreviousStatementChangedNoRows(db),
+    )
+  }
 
   if (props.projection.affectsOrganization) {
     const currentAssignments = props.projection.schedule.assignments.filter((assignment) =>
@@ -576,6 +813,16 @@ export class ApplyPersonnelAction {
     ) {
       return new ConflictError("組織情報が更新されています", "personnel_action_stale")
     }
+    if (projected.affectsOrganization) {
+      const validation = await validateCanonicalOrganizationChange(this.c, {
+        actionId,
+        expectedRevision: loadedRevisions.organizationRevision,
+        businessDate,
+        recordedAt,
+        projection: projected,
+      })
+      if (validation !== null) return validation
+    }
 
     const action: PersonnelActionRecord = {
       id: actionId,
@@ -758,6 +1005,24 @@ export class ApplyPersonnelAction {
       command.expectedOrganizationRevision !== loadedRevisions.organizationRevision
     ) {
       return new ConflictError("組織情報が更新されています", "personnel_action_stale")
+    }
+    if (projected.affectsOrganization) {
+      const validation = await validateCanonicalOrganizationChange(this.c, {
+        actionId,
+        expectedRevision: loadedRevisions.organizationRevision,
+        businessDate,
+        recordedAt,
+        projection: projected,
+        prospectiveEmployee:
+          command.employeeId === null && command.input.kind === "hire"
+            ? {
+                id: allocatedEmployeeId,
+                code: command.input.employeeCode,
+                name: command.input.employeeName,
+              }
+            : undefined,
+      })
+      if (validation !== null) return validation
     }
     const action: PersonnelActionRecord = {
       id: actionId,
