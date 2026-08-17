@@ -2,7 +2,7 @@ import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "
 import type { ApplicationError } from "@/lib/errors"
 import { ShiftSwapRequest } from "@/contexts/shift/domain/shift-swap-request.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company-compatibility/infrastructure/employee/employee-repository"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment-repository"
 import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/shift-swap-request-repository"
 

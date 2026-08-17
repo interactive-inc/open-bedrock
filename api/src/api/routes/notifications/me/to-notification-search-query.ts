@@ -4,7 +4,7 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
 
 export type Props = {
   isRead: string | undefined

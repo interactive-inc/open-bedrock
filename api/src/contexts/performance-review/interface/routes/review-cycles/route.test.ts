@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
 import { seedReviewCycles } from "@/contexts/performance-review/infrastructure/seed/seed-review-cycles"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"

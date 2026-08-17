@@ -1,27 +1,27 @@
 import { CreateLeaveRequest } from "@/contexts/leave/application/create-leave-request"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/contexts/company/interface/lib/errors"
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import { zAppLeaveRequest, zAppLeaveRequestAdminList } from "@/lib/app-schemas"
 import { canReadLeaveOf } from "@/contexts/leave/interface/routes/leave-requests/can-read-leave-of"
-import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
-import { listReportEmployeeIds } from "@/contexts/company/interface/utils/list-report-employee-ids"
-import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { listDepartmentEmployeeIds } from "@/contexts/company-compatibility/interface/utils/list-department-employee-ids"
+import { listReportEmployeeIds } from "@/contexts/company-compatibility/interface/utils/list-report-employee-ids"
+import { resolveEmployeeRelation } from "@/contexts/company-compatibility/application/organization/resolve-employee-relation"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { isoDate, leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, count, desc, eq, inArray } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"

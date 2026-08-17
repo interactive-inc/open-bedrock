@@ -4,15 +4,15 @@ import { toAnswerDistribution } from "@/contexts/survey/interface/routes/surveys
 import { toAnswersList } from "@/contexts/survey/interface/routes/surveys/[survey_id]/summary/to-answers-list"
 import { toTextAnswers } from "@/contexts/survey/interface/routes/surveys/[survey_id]/summary/to-text-answers"
 import { SurveyResponse } from "@/contexts/survey/domain/survey-response.entity"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import {
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+} from "@/contexts/company-compatibility/interface/lib/errors"
+import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
 import { zAppSurveySummary } from "@/lib/app-schemas"
 import { surveyResponses, surveys } from "@/contexts/survey/infrastructure/schema/survey"
 import { count, eq } from "drizzle-orm"

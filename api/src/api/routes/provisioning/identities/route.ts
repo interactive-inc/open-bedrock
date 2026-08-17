@@ -1,11 +1,11 @@
-import { SyncExternalIdentities } from "@/contexts/company/application/iam/sync-external-identities"
+import { SyncExternalIdentities } from "@/contexts/company-compatibility/application/iam/sync-external-identities"
 import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyProvisioningKey } from "@/contexts/company/interface/middlewares/verify-provisioning-key"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyProvisioningKey } from "@/contexts/company-compatibility/interface/middlewares/verify-provisioning-key"
 import { zAppProvisioningSummary } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { z } from "zod"
 
 const identityInputSchema = z.object({

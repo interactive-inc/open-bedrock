@@ -1,10 +1,10 @@
 import { ArchiveMeeting } from "@/contexts/meeting/application/archive-meeting"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { validateCodeParam } from "@/contexts/company-compatibility/interface/utils/validate-code-param"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { zAppMeeting } from "@/lib/app-schemas"
 
 // @authorization service - session を application service に渡して判定する

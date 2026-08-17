@@ -2,11 +2,14 @@ import { GetCareerApplication } from "@/contexts/career/application/get-career-a
 import { UpdateMyCareerApplication } from "@/contexts/career/application/update-my-career-application"
 import { WithdrawCareerApplication } from "@/contexts/career/application/withdraw-career-application"
 import type { CareerApplication } from "@/contexts/career/domain/career-application.entity"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { BadRequestError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import {
+  BadRequestError,
+  UnauthorizedError,
+} from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { zAppCareerApplication } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

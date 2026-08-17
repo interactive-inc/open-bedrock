@@ -1,15 +1,18 @@
 import { CreateBudget } from "@/contexts/expense/application/budget/create-budget"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppBudget, zAppBudgetList } from "@/lib/app-schemas"
 import { isoDate } from "@/lib/schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { budgets } from "@/contexts/expense/infrastructure/schema/budget"
-import { departments } from "@/contexts/company/infrastructure/schema/organization"
+import { departments } from "@/contexts/company-compatibility/infrastructure/schema/organization"
 import { and, asc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  UnauthorizedError,
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

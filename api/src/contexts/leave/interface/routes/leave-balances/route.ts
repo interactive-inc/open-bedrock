@@ -1,13 +1,13 @@
 import { toFiscalYear } from "@/contexts/leave/domain/to-fiscal-year"
 import { canReadLeaveOf } from "@/contexts/leave/interface/routes/leave-requests/can-read-leave-of"
-import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { resolveEmployeeRelation } from "@/contexts/company-compatibility/application/organization/resolve-employee-relation"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import { zAppLeaveBalanceList } from "@/lib/app-schemas"
 import { leaveBalances } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, eq } from "drizzle-orm"

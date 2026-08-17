@@ -1,10 +1,13 @@
 import { GovernancePublication } from "@/contexts/governance/application/governance-publication"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError, NotFoundError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { parseGovernanceCode } from "@/contexts/company/interface/utils/parse-governance-code"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import {
+  UnauthorizedError,
+  NotFoundError,
+} from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { parseGovernanceCode } from "@/contexts/company-compatibility/interface/utils/parse-governance-code"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する
 export const POST = factory.createHandlers(verifyBearer, async (c) => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
 import { seedSurveyResponses } from "@/contexts/survey/infrastructure/seed/seed-survey-responses"
 import { seedSurveys } from "@/contexts/survey/infrastructure/seed/seed-surveys"
 import { databaseMiddleware } from "@/api/database-middleware"
@@ -15,7 +15,7 @@ import * as surveyDetailRoute from "@/contexts/survey/interface/routes/surveys/[
 import * as surveyResponseCreateRoute from "@/contexts/survey/interface/routes/surveys/[survey_id]/responses/route"
 import * as surveySummaryRoute from "@/contexts/survey/interface/routes/surveys/[survey_id]/summary/route"
 import type { Bindings } from "@/env"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { z } from "zod"
 
 const surveyResponseSchema = z.object({

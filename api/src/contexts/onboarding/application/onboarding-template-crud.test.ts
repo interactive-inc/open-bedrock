@@ -10,7 +10,7 @@ import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructu
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { makeTestSession } from "@/api/test/support/make-test-session"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 

@@ -1,17 +1,17 @@
 import { UpdatePosition } from "@/contexts/recruitment/application/update-position"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import {
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+} from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { zAppRecruitmentPosition } from "@/lib/app-schemas"
 import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/recruitment-repository"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

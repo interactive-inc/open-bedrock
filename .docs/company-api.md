@@ -1,68 +1,83 @@
 # Company API
 
-Company の公開契約は、Employee profile、指定時点の Workforce state、指定時点の組織 snapshot、原子的な組織変更で構成する。保存table、整数ID、旧部署投影、画面名、個別Appの語彙は契約へ含めない。
+`/company/v1` は、会社の同一性、人、雇用、組織、責務、Account対応、人事発令を公開するportableな正本である。保存table、Drizzle型、旧整数ID、画面名、個別Appの語彙は契約へ含めない。実装は `api/src/contexts/company` に閉じ、HTTP runtimeとの接続だけを `api/src/api` が持つ。
 
-すべての operation は Bearer認証を要求する。Company migration が `verified` でない場合は旧投影へ戻らず、`company_migration_incomplete` で停止する。これにより同じAPIがdeploymentごとに異なる正本を読む状態を許さない。移行時に確定した`baseline_on`より前の履歴はcanonical Companyの事実ではないため、推測せず`company_as_of_before_baseline`で拒否する。migrationに記録した会社timezoneとruntime設定が一致しない場合も、営業日の意味が変わったまま履歴を解決せずunavailableにする。
+## 共通前提
 
-## Employee directory
+全operationは認証済みAccountを要求する。API compositionは製品固有のpermissionを、Companyが理解する`company:read`、`company:write`、`company:admin`へ写像する。Company serviceはAccount ID、Employee ID、許可されたorganization ID、capabilityだけを受け取り、session、role、JWT、Hono middlewareを知らない。
 
-`GET /company/v1/employees` は `employee_id` queryを一個以上、最大百個まで受け取る。同じquery名を繰り返して複数IDを指定する。
+Company dataを扱うrequestは`x-company-organization-id`を必須とする。IDは1から255文字の空白を含まないopaque文字列であり、呼び出し側は接頭辞や内部値を分解しない。Actorのorganization scopeに含まれないIDはfail closedで拒否する。
 
-Employee IDはopaque文字列である。呼び出し側は接頭辞や内部の数値を分解しない。応答は指定順の `employees` と、見つからなかった `missing_employee_ids` を分ける。見つからないIDを黙って別のEmployeeへ解決しない。
+read responseは`organizationId`、`organizationRevision`、`resources`を返し、同じatomic D1 batchでrevisionとresourceを固定する。`effective_on`または互換aliasの`as_of`を一つだけ指定できる。両方を異なる値で指定したrequest、実在しない暦日、100件を超えるID、重複IDはbad requestである。
 
-このoperationは氏名、employee code、連絡先を横断して返すため、`employee:lifecycle:read:all` を要求する。Account role名からこのpermissionを推測しない。
+writeは次のheaderを必須とする。
 
-## Workforce state
+- `x-company-organization-id`: 変更対象organization
+- `Idempotency-Key`: commandのopaque ID
+- `If-Match`: 直前に読んだorganization revision
 
-`GET /company/v1/employees/:employee_id/workforce-state` は `as_of` を必須とする。応答はEmployee ID、Employment status、Employment ID、主務、兼務、Responsibilityと、その解決に使ったorganization revisionを返す。
+bodyは`reason`と1件以上100件以下の`resources`を持つ。Actor Account IDと記録時刻はbodyから受け取らずserverが設定する。全resourceは同じorganizationに属し、同じcommand内で`type + id`を重複させない。
 
-本人は自分の状態を読める。本人以外は`employee:read`に加え、全社読取permission、直属上司、対象組織のMANAGER責務、管理系列のいずれかを必要とする。Technical Permissionだけで対象範囲を拡大せず、Account roleを会社資格へ変換しない。対象範囲を確認できない場合は存在を隠してnot foundにする。
+## Resource envelope
 
-組織資格のsnapshotとWorkforce stateのorganization revisionが一致しない場合はconflictにする。権限だけを古い組織で評価し、状態だけを新しい組織で返すことはない。
+すべてのCompany resourceは次を持つ。
 
-## Organization snapshot
+- `organizationId`: 所有organization
+- `type`: Companyが定義する判別可能な種別
+- `id`: 種別内で安定したopaque ID
+- `revision`: resourceごとに1から連続するrevision
+- `state`: `active`または`void`
+- `effectiveFrom`、`effectiveTo`: 実在暦日の半開区間
+- `attributes`: JSON object。深さ、件数、数値、必須属性をCompany Domainが検証する
 
-`GET /company/v1/organization-snapshots` は `as_of` を必須とする。応答は一つのorganization revision、指定日に有効なOrgUnit、Assignment、Responsibilityを返す。
+resource種別は`legal-entity`、`company-profile`、`person`、`employee`、`employment`、`organization-unit`、`assignment`、`reporting-relation`、`position`、`grade`、`responsibility`、`collective-body`、`organizational-authority`、`account-employee-link`、`personnel-action`である。
 
-OrgUnitは親OrgUnit IDを持つフラットな集合として返す。木構造はこの親参照から決定的に構成でき、同じ事実を入れ子とフラット配列へ二重に表現しない。廃止済み、void、指定日に無効なperiodは含めない。
+JSON envelopeはCompany coreの版・期間・原子性を一つに揃えるためのものであり、任意の業務をEAVとして保存する逃げ道ではない。新しい意味、不変条件、機微情報、App固有事実は所有contextの型、validator、schemaへ追加する。
 
-全社の所属と責務を一括で返すため、`employee:lifecycle:read:all` を要求する。snapshot取得中にorganization revisionが変わった場合は結果を返さない。
+## Endpoints
 
-## Organization change
+- `GET /company/v1/capabilities`: API versionと実装済みCompany capability
+- `GET|POST /company/v1/profile`: LegalEntityと会社profile
+- `GET|POST /company/v1/people`: Person
+- `GET|POST /company/v1/employees`: Employee
+- `GET|POST /company/v1/employments`: Employment
+- `GET /company/v1/organization-snapshots`: OrgUnit、Assignment、ReportingRelation、OrganizationalAuthority
+- `POST /company/v1/organization-changes`: 組織変更を一つのcommandとして適用
+- `GET|POST /company/v1/definitions`: Position、Grade、Responsibility、CollectiveBody
+- `GET|POST /company/v1/account-employee-links`: System AccountとEmployeeの対応
+- `GET|POST /company/v1/personnel-actions`: 人事発令
 
-`POST /company/v1/organization-changes` は次を一つのcommandとして受け取る。
+GETは`id` queryを繰り返して最大100件へ絞れる。`effective_on`を指定したreadはappend-only revisionからその日に有効な最新訂正を選び、将来発効の変更を過去へ混ぜない。`void`が発効した後はresourceを返さない。日付を省略したreadはcurrent headだけを返す。
 
-- `operation_id`
-- `expected_revision`
-- `as_of`
-- `recorded_at`
-- 変更理由`reason`
-- 根拠を指す`evidence_references`
-- 新しいOrgUnit identity
-- OrgUnit period version
-- Assignment period version
-- Responsibility period version
+POSTはendpointが所有するresource種別以外を拒否する。例えば`/people`からEmployeeを書いたり、`/organization-changes`からPositionを書いたりできない。
 
-各periodにoperation IDと記録時刻を重複入力させず、最上位の値を全periodへ適用する。actor Account IDはrequest bodyから受け取らず、検証済みsessionからserverが設定する。理由と根拠参照は必須であり、根拠参照はcontext、kind、opaque ID、versionを持つ。呼び出し側が主体を詐称したり、同じ変更内で異なる記録主体や記録時刻を混ぜたりする余地を作らない。
+## Revision、訂正、取消
 
-`Idempotency-Key` headerは`operation_id`と同じ値を必須とする。operationはactor、理由、根拠参照を含む入力全体のSHA-256 fingerprintへ結び付ける。同じoperation IDと同じ内容の再送は保存済みrevisionを`replayed: true`で返し、periodを追加しない。同じoperation IDを異なる主体、理由、根拠または変更内容へ再利用した場合は`organization_operation_conflict`で拒否する。
+organization revisionは一つのcommandにつき必ず1増える。resource revisionも既存値の次でなければならない。staleな`If-Match`は`company_revision_conflict`、staleなresource revisionは`company_resource_conflict`として区別する。
 
-変更には`employee:lifecycle:apply`と、指定時点で有効な`PEOPLE_OPERATIONS` Responsibilityの両方を要求する。一方だけでは実行できない。Responsibility保持者に対応するactiveなSystem Accountがない場合も拒否する。
+訂正は同じresource IDへ次のrevisionを追記する。将来変更は新しい`effectiveFrom`を持つrevisionを追記する。取消は`state: void`の次revisionを、取消が発効する日付とともに追記する。既存revisionをUPDATEまたはDELETEしない。
 
-Applicationは変更後の全OrgUnit、全Workforce schedule、期間、revision、参照、循環、監査入力をwrite前に検証する。DBはexpected revision、operation fingerprint、連続period revision、追記専用、全件完了を再検査する。actor、理由、根拠参照、fingerprintはoperationと同じatomic batchで保存し、後から更新できない。成功応答は全変更が同じbatchで確定した場合だけ返す。
+`Idempotency-Key`はactor、expected revision、理由、全resourceを含むcanonical JSONのSHA-256 fingerprintへ結び付ける。同じkeyと同じcommandの再送は保存済みrevisionを`replayed: true`で返す。同じkeyを異なるcommandへ再利用すると`company_command_conflict`で拒否する。
+
+resource revision、current head、command receipt、organization revisionは一つのD1 atomic batchで保存する。DB triggerもexpected revision、resource revisionの連続性、append-only、receipt不変性を再検査する。
 
 ## Error contract
 
-形式不正と`Idempotency-Key`不一致はbad request、baselineより前の`as_of`と変更後の会社事実が不正な場合はunprocessable、stale organization revisionとoperation ID再利用はconflict、認証不足はunauthorized、permissionまたはResponsibility不足はforbiddenとなる。
+errorは`application/problem+json`で、`type`、`title`、`status`、機械判定用`code`、`detail`を持つ。
 
-移行未完了、snapshot不整合、途中revision変更、保存層障害は、旧投影や部分結果で補わずunavailableにする。error responseは機械判定用の`code`を持つ。revision conflictだけは再読込判断に必要な`actual_organization_revision`も返す。
+- 400: organization、query、JSON、precondition headerが不正
+- 401: 認証済みactorがない
+- 403: organization scopeまたはCompany capabilityがない
+- 409: organization revision、resource revision、idempotency keyの競合
+- 422: resource、期間、属性、command invariantが不正
+- 503: DB binding、snapshot、保存層が利用不能
 
-## Compatibility
+評価不能時に旧projection、部分結果、暗黙のorganization、現在日、最上位roleへfallbackしない。
 
-既存のemployee、department、personnel action APIは既存clientのwire互換を保つadapterである。新しい統合はCompany APIを使い、整数Employee ID、旧Department row、Account role、現在値だけのemployee列を正本として扱わない。
+## Storage と移行
 
-Personnel Actionによる所属と責務の変更は同じCompany validatorとorganization operationを通る。旧projectionが必要な期間もcanonical transactionからだけ派生し、旧wireとCompany APIを別々にwriteしてはならない。
+portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本とし、各製品のmigrationへ同じ内容をコピーする。`company_organizations`がorganization revision、`company_resource_revisions`がappend-only履歴、`company_resource_heads`がcurrent projection、`company_command_receipts`が安全な再送を所有する。
 
-旧wireが表現できないOrgUnit kind、opaque ID、任意Responsibility、過去時点snapshotを旧形式へ縮退してはならない。その能力を必要とするclientはCompany APIへ移行する。
+旧storageからの移行はCompany context外の製品別backfillが行う。backfillはcanonical organizationがrevision 0のときだけbaseline revision 1を作り、既存canonical dataを旧storageで上書きしない。旧APIと旧tableは`company-compatibility`という削除予定adapterに隔離し、新しい依存元を追加しない。
 
-認証には移行を実行するAccount自身が必要なので、migrationが未完了の間だけSystemの認証control planeは旧Employeeのactive状態をログイン可否のbootstrapに使える。これはmigration endpointへ到達するための限定例外であり、Company API、組織上の対象範囲、判断候補、業務認可へ旧組織事実を使う許可ではない。migrationが`verified`になった後は認証もcanonical Workforce stateだけを使う。
+`company-context.manifest.json`と`company-context.lock.json`は`api/src/contexts/company`全体のpathとhashを固定する。CIでlock不一致を拒否し、Domain、Application、Infrastructure、Interface、testの一部だけが製品ごとに変わる状態を許さない。

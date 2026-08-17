@@ -1,11 +1,14 @@
 import { CreateEvaluationSheet } from "@/contexts/performance-review/application/evaluation-sheet/create-evaluation-sheet"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEvaluationSheet } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  UnauthorizedError,
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import { z } from "zod"
 
 // @authorization permission - evaluation:administer で判定する

@@ -1,15 +1,15 @@
 import { ListMyResignations } from "@/contexts/resignation/application/list-my-resignations"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { zAppResignationList } from "@/lib/app-schemas"
 import { resignations } from "@/contexts/resignation/infrastructure/schema/resignation"
 import { count, eq } from "drizzle-orm"

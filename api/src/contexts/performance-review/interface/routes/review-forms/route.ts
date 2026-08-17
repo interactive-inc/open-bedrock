@@ -1,19 +1,19 @@
 import { filterFormsForSubjectViewer } from "@/contexts/performance-review/interface/routes/review-forms/filter-forms-for-subject-viewer"
 import { toReviewerTypeSummary } from "@/contexts/performance-review/interface/lib/to-reviewer-type-summary"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
 import { zAppReviewResult } from "@/lib/app-schemas"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import {
   BadRequestError,
   ForbiddenError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form-repository"
 
 // @authorization permission - 権限キーで判定する

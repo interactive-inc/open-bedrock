@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
 import type { AntisocialCheck } from "@/contexts/antisocial-check/domain/antisocial-check.entity"
 import type { Context } from "@/env"
 import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/antisocial-check-repository"

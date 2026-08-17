@@ -1,11 +1,11 @@
 import { AdvanceLifeEvent } from "@/contexts/life-event/application/advance-life-event"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { zAppLifeEvent } from "@/lib/app-schemas"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { validateUuidParam } from "@/contexts/company/interface/utils/validate-uuid-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { validateUuidParam } from "@/contexts/company-compatibility/interface/utils/validate-uuid-param"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /life-events/:id/reject — 人事がライフイベント届出を却下する */

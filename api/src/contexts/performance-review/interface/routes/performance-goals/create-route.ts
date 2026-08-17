@@ -1,17 +1,17 @@
 import { CreateGoal } from "@/contexts/performance-review/application/goal/create-goal"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppGoal } from "@/lib/app-schemas"
 import { canWriteDepartmentGoal } from "@/contexts/performance-review/interface/routes/performance-goals/can-write-department-goal"
 import { resolveEmployeeDepartmentCode } from "@/contexts/performance-review/interface/routes/performance-goals/resolve-employee-department-code"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import { z } from "zod"
 
 // @authorization permission - 権限キーで判定する

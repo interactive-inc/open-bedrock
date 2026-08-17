@@ -1,18 +1,18 @@
 import { SendThanks } from "@/contexts/thanks/application/send-thanks"
 import { Thanks } from "@/contexts/thanks/domain/thanks.entity"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { toEmployeeNameMap } from "@/contexts/company/interface/utils/to-employee-name-map"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { toEmployeeNameMap } from "@/contexts/company-compatibility/interface/utils/to-employee-name-map"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { zAppThanks, zAppThanksList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { thanks as thanksTable } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { zValidator } from "@hono/zod-validator"
 import { count, desc } from "drizzle-orm"

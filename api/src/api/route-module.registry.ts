@@ -1,7 +1,9 @@
 import { systemContextModule } from "@system/interface/module"
+import { companyContextModule } from "@/contexts/company/interface/module"
 import type { ApiRouteModuleRegistration } from "@/api/api-route-module"
 
 const BUSINESS_CONTEXTS: ReadonlyArray<string> = [
+  "company-compatibility",
   "announcement",
   "antisocial-check",
   "asset",
@@ -57,12 +59,7 @@ const businessContextModules: ReadonlyArray<ApiRouteModuleRegistration> = BUSINE
 /** APIへ公開するコンテキストのroute sourceを明示する。 */
 export const ROUTE_MODULE_REGISTRY = [
   systemContextModule,
-  {
-    context: "company",
-    tier: "company",
-    routesDirectory: "contexts/company/interface/routes",
-    routeImportPrefix: "@/contexts/company/interface/routes",
-  },
+  companyContextModule,
   ...businessContextModules,
   {
     context: "api",

@@ -4,11 +4,13 @@ import { cors } from "hono/cors"
 import { secureHeaders } from "hono/secure-headers"
 import { contextStorage } from "hono/context-storage"
 import { databaseMiddleware } from "@/api/database-middleware"
-import { featureGate } from "@/contexts/company/interface/middlewares/feature-gate"
-import { rateLimitMiddleware } from "@/contexts/company/interface/middlewares/rate-limit-middleware"
-import { requestContextMiddleware } from "@/contexts/company/interface/middlewares/request-context-middleware"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { auditNoStore } from "@/contexts/company/interface/middlewares/audit-no-store"
+import { featureGate } from "@/contexts/company-compatibility/interface/middlewares/feature-gate"
+import { rateLimitMiddleware } from "@/contexts/company-compatibility/interface/middlewares/rate-limit-middleware"
+import { requestContextMiddleware } from "@/contexts/company-compatibility/interface/middlewares/request-context-middleware"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { auditNoStore } from "@/contexts/company-compatibility/interface/middlewares/audit-no-store"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import type { CompanyCapability } from "@/contexts/company/application/core/company-resource.service"
 import { toNegotiatedHttpExceptionResponse } from "@/api/to-negotiated-http-exception-response"
 
 /** CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。 */
@@ -61,6 +63,37 @@ const globalBodyLimitExceptAuditExport = factory.createMiddleware(async (c, next
   await globalBodyLimit(c, next)
 })
 
+const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
+  const session = c.var.session
+  if (session === null) throw new HTTPException(401, { message: "authentication required" })
+
+  const capabilities: CompanyCapability[] = []
+  if (
+    session.hasPermission("system:admin") ||
+    session.hasPermission("employee:read") ||
+    session.hasPermission("org:manage")
+  ) {
+    capabilities.push("company:read")
+  }
+  if (
+    session.hasPermission("system:admin") ||
+    session.hasPermission("employee:create") ||
+    session.hasPermission("employee:update") ||
+    session.hasPermission("org:manage")
+  ) {
+    capabilities.push("company:write")
+  }
+  if (session.hasPermission("system:admin")) capabilities.push("company:admin")
+
+  c.set("companyActor", {
+    accountId: `account:${session.accountId}`,
+    employeeId: `employee:${session.employeeId}`,
+    organizationIds: ["organization:default"],
+    capabilities,
+  })
+  await next()
+})
+
 /**
  * 全ルート共通の土台。middleware・エラーハンドラだけを持ち、context routeは載せない。
  * context routeの登録は生成物である app.ts が行う（`bun run gen:app`）。
@@ -89,6 +122,8 @@ export const appBase = factory
   .use("*", nowProductionGuardMiddleware)
   .use("*", featureGate)
   .use("*", databaseMiddleware)
+  .use("/company/v1/*", verifyBearer)
+  .use("/company/v1/*", companyActorMiddleware)
   .onError(async (error, c) => {
     if (error instanceof HTTPException) {
       // toHttpException 経由の例外は res に {error, code} の JSON を積んでいる。

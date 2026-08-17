@@ -1,10 +1,10 @@
 # ロールと権限
 
-実装の正は System と Company の permission key catalog、Company の metadata catalog、migrations の seed。認可の概念モデルは [認可モデル](./authorization-model.md) を参照する。
+実装の正は System のtechnical permission key catalog、各Appのpermission metadata、migrations のseedである。認可の概念モデルは [認可モデル](./authorization-model.md) を参照する。
 
 ## 仕組み
 
-- permission が認可の正。"domain:action" または "domain:action:scope" 形式の機械可読キーで、System は api/src/contexts/system/domain/iam、Company は api/src/contexts/company/domain/iam が所有する。現在の全機能を束ねる catalog は Company の role vocabulary として同じ Company IAM に置く
+- permission がAPI操作能力の正。"domain:action" または "domain:action:scope" 形式の機械可読キーはSystemまたは所有Appが定義し、Company上の職位、所属、責務と混ぜない。API compositionだけが検証済みpermissionをportable Companyの`company:read`、`company:write`、`company:admin`へ写像する
 - ロールは permission を集めた集合であり、動的に作成・編集できる(web の /system/roles、karte roles、POST /iam/roles)
 - アカウントには複数ロールを割り当てられ、実効権限は全ロールの和集合
 - 判定は deny-by-default(fail-closed)。未知のキーや解決失敗は常に拒否
@@ -55,7 +55,7 @@ evaluation:administer はスコープなしの管理権限。評価シート(MBO
 
 - 新しいドメインを作るときは、必ず所有 context に can- ヘルパーを permission キーで実装し、ロール文字列で判定しない
 - web の出し分けも /auth/me の permissions を使う(web/lib 配下の can- ヘルパー)。ロール名での判定は動的ロールに追従できないため禁止
-- permission を追加したら所有する context の key catalog、Company IAM の metadata catalog、migration の seed に書く。ownership test が重複と欠落を拒否し、起動時の subset チェックが DB 投影との乖離を検出する
+- permission を追加したら所有する context のkey catalog、System IAMのmetadata catalog、migrationのseedに書く。ownership testが重複と欠落を拒否し、起動時のsubset checkがDB投影との乖離を検出する
 - 機微項目は従業員台帳のカラムに追加せず、別資源のドメインに分離して権限を貼る。等級は grade ドメインの割当履歴として持ち、権限が無ければ API も画面も見えない
 - 役職マスタの管理 `position:manage` は grade:manage と同じく hr と root に付与する(0028_position_master_permission.sql)。マスタ一覧の閲覧に専用 permission は設けず、全認証者が読める。役職の割当履歴は持たず、期間付き履歴は人事発令に一元化する
 

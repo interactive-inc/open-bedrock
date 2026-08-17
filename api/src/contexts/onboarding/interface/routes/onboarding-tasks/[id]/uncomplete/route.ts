@@ -1,11 +1,11 @@
 import { UncompleteOnboardingTask } from "@/contexts/onboarding/application/uncomplete-onboarding-task"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { zAppOnboardingTask } from "@/lib/app-schemas"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /onboarding-tasks/:id/uncomplete — タスクの完了を取り消す（本人か特権ロール） */

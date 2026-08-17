@@ -1,4 +1,4 @@
-import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
+import { createCompanyProcedureDecisionPolicy } from "@/contexts/company-compatibility/domain/organization/company-procedure-decision-policy"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import {
   createLifecycleRouteDb,

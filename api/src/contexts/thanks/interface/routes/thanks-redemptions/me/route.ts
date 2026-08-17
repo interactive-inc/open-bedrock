@@ -2,16 +2,16 @@ import { ListMyRedemptions } from "@/contexts/thanks/application/thanks-points/l
 import type { ThanksRedemption } from "@/contexts/thanks/domain/thanks-points/thanks-redemption.entity"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksRedemptionList } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { thanksRedemptions } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { count, eq } from "drizzle-orm"
 

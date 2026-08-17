@@ -1,7 +1,7 @@
 import { Budget } from "@/contexts/expense/domain/budget/budget.entity"
 import type { Context } from "@/env"
 import { budgets } from "@/contexts/expense/infrastructure/schema/budget"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { and, asc, eq, gte, lte, sum } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"

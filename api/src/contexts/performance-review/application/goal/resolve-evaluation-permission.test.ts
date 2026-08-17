@@ -1,5 +1,5 @@
 import { resolveEvaluationPermission } from "@/contexts/performance-review/application/goal/resolve-evaluation-permission"
-import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
+import type { EmployeeRelation } from "@/contexts/company-compatibility/domain/organization/employee-relation"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { describe, expect, test } from "bun:test"
 

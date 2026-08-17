@@ -1,7 +1,7 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
 import type { AttendanceSearchQuery } from "@/contexts/attendance/interface/routes/attendance-records/attendance-search-query"
 import { canReadAttendanceOf } from "@/contexts/attendance/interface/routes/attendance-records/can-read-attendance-of"
-import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
+import type { EmployeeRelation } from "@/contexts/company-compatibility/domain/organization/employee-relation"
 import { ForbiddenError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

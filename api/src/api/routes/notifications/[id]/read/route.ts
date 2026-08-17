@@ -1,11 +1,11 @@
 import { MarkNotificationRead } from "@/api/legacy-system/use-cases/notifications/mark-notification-read"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { zAppNotification } from "@/lib/app-schemas"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 
 // @authorization owner - 本人のリソースに限定する
 /** POST /notifications/:id/read — 本人宛ての通知を既読にする */

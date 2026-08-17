@@ -279,7 +279,7 @@ describe("inspectSystemSource", () => {
       'import { employees } from "@/schema/company"',
       'import { globalAccounts } from "@/api/database/schema"',
       'import { globalEmployees } from "@/api/database/schema/company"',
-      'import { contextEmployees } from "@/contexts/company/infrastructure/schema/company"',
+      'import { contextEmployees } from "@/contexts/company-compatibility/infrastructure/schema/company"',
       'import { Token } from "../../../domain/system/auth/token"',
     ]
 

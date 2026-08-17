@@ -1,11 +1,11 @@
 import { AdvanceCertificateRequest } from "@/contexts/certificate-request/application/advance-certificate-request"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { zAppCertificateRequest } from "@/lib/app-schemas"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { validateUuidParam } from "@/contexts/company/interface/utils/validate-uuid-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { validateUuidParam } from "@/contexts/company-compatibility/interface/utils/validate-uuid-param"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /certificate-requests/:id/issue — 人事が証明書発行依頼を発行済みにする */

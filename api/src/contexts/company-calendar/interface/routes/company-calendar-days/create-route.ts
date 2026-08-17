@@ -1,12 +1,12 @@
 import { CreateCompanyCalendarDay } from "@/contexts/company-calendar/application/calendar/create-company-calendar-day"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppCompanyCalendarDay } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { calendarDayKindSchema, isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する

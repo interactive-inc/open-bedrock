@@ -1,17 +1,17 @@
-import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/to-system-account-id"
+import { resolveActiveSystemAccountId } from "@/contexts/company-compatibility/application/iam/to-system-account-id"
 import {
   resolveActiveCompanyAccountParticipant,
   resolveCompanyAccountParticipants,
   resolveSystemAccountIdsForEmployees,
-} from "@/contexts/company/application/iam/resolve-company-account-participants"
-import { resolveCompanyProcedureTask } from "@/contexts/company/application/organization/resolve-company-procedure-task"
+} from "@/contexts/company-compatibility/application/iam/resolve-company-account-participants"
+import { resolveCompanyProcedureTask } from "@/contexts/company-compatibility/application/organization/resolve-company-procedure-task"
 import {
   parseCompanyProcedureDecisionPolicy,
   type CompanyProcedureDecisionPolicy,
-} from "@/contexts/company/domain/organization/company-procedure-decision-policy"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
-import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
-import { PersonnelActionRequestAccess } from "@/contexts/company/application/employee-lifecycle/procedure/personnel-action-request-access"
+} from "@/contexts/company-compatibility/domain/organization/company-procedure-decision-policy"
+import { EmployeeRepository } from "@/contexts/company-compatibility/infrastructure/employee/employee-repository"
+import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company-compatibility/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
+import { PersonnelActionRequestAccess } from "@/contexts/company-compatibility/application/employee-lifecycle/procedure/personnel-action-request-access"
 import type { Context } from "@/env"
 import {
   ApplicationError,

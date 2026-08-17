@@ -112,6 +112,13 @@ describe("inspectRouteFile", () => {
     expect(violations[0]?.reason).toContain("verifyBearer を通っていません")
   })
 
+  test("API compositionでglobal bearerを通すrouteはhandler内の重複guardを要求しない", () => {
+    const source =
+      "// @authorization service - application serviceがscopeを判定する\n" +
+      "export const GET = factory.createHandlers(handler)\n"
+    expect(inspectRouteFile("company/v1/employees/route.ts", source, true)).toEqual([])
+  })
+
   // import 文に verifyBearer があるだけでは通さない（handler 本体を見る）。
   test("import だけで handler が素通しなら検出する", () => {
     const importOnly =
@@ -186,7 +193,7 @@ describe("checkRouteAuthorization", () => {
     ).toBe(true)
     expect(
       routeFiles.some((routeFile) =>
-        routeFile.file.endsWith("company/interface/routes/departments/route.ts"),
+        routeFile.file.endsWith("company/interface/routes/company/v1/employees/route.ts"),
       ),
     ).toBe(true)
   })

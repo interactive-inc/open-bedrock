@@ -1,16 +1,16 @@
 import { UpdateReward } from "@/contexts/thanks/application/thanks-points/update-reward"
-import { toPositiveInt } from "@/contexts/company/interface/utils/to-positive-int"
+import { toPositiveInt } from "@/contexts/company-compatibility/interface/utils/to-positive-int"
 import { rewardPointCostSchema } from "@/contexts/thanks/domain/thanks-points/thanks-reward.entity"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksReward } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import {
   BadRequestError,
   ForbiddenError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+} from "@/contexts/company-compatibility/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

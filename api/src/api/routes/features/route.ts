@@ -1,6 +1,6 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { zAppFeatureAvailability } from "@/lib/app-schemas"
 import { resolveDisabledFeatureKeys } from "@/lib/feature/resolve-disabled-feature-keys"
 

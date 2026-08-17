@@ -1,12 +1,12 @@
 import { CheckStocktakeItem } from "@/contexts/asset/application/stocktake/check-stocktake-item"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
-import { validateUuidParam } from "@/contexts/company/interface/utils/validate-uuid-param"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { validateCodeParam } from "@/contexts/company-compatibility/interface/utils/validate-code-param"
+import { validateUuidParam } from "@/contexts/company-compatibility/interface/utils/validate-uuid-param"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する

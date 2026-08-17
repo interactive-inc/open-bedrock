@@ -296,6 +296,28 @@ schema 関手 `F: S_old -> S_new` に対し、instance pullback `Δ_F: Inst(S_ne
 
 ## データベース写像
 
+### Portable Company kernel
+
+実装上のCompany kernelは、会社そのものを成立させる有限個のresource種別と、すべてに共通する時間・版・来歴の規則を組み合わせる。
+
+resource種別はLegalEntity、CompanyProfile、Person、Employee、Employment、OrgUnit、Assignment、ReportingRelation、Position、Grade、Responsibility、CollectiveBody、OrganizationalAuthority、AccountEmployeeLink、PersonnelActionに閉じる。この集合で、誰が会社と関係し、いつ雇用され、どこに所属し、誰へ報告し、どの職位・等級・責務・組織資格を持ち、どのSystem Accountから行為するかを表せる。
+
+勤怠、休暇、採用選考、評価、給与計算、経費、施設運営をここへ足さない。これらはCompany resourceを参照するが、独自の状態機械、法制度、機微性、停止可能性を持つAppである。Companyがそれらを所有すると、一つのAppを削除するだけで会社基盤のmigration、API、認可、releaseを変更することになり、境界の価値が失われる。
+
+各resourceに共通するのはopaque ID、organization、resource revision、organization revision、active/void、半開有効期間、recorded time、actor、reason、command fingerprintである。共通部分を一つのkernelへ置く理由は、Employeeだけが訂正可能でOrgUnitは上書き、Positionだけが現在値という不整合を防ぐためである。
+
+attributes JSONはこの共通envelopeの可変部である。ただし、Company Domainが認識するresource type、必須属性、JSON深さ、件数、有限数、文字列長を検証する。JSONを理由に型や不変条件を省略してはならない。新しい属性が参照整合性、排他、機微性、状態遷移を持つなら、専用value、validator、schema制約、API testを追加する。Company外の業務objectをresource typeへ追加してはならない。
+
+current headとappend-only revisionを分ける。headは現在値を安価に読むprojectionで、履歴の正本ではない。時点readはrevision列から指定日に有効な最新訂正を選ぶ。これにより、将来発効の異動を登録しても今日の組織図へ混ぜず、取消後も取消前の時点を再構成できる。
+
+resource revisionだけでは複数resourceをまたぐ変更の途中状態を防げないため、organization revisionを別に持つ。一つのcommandはorganization revisionを一つだけ進め、全resource revision、head、receipt、organization revisionを同じatomic batchで確定する。readもorganization revisionとresourceを同じatomic batchで固定する。この対称性が、書き込みだけ原子的でも読み取りが新旧混在する欠陥を防ぐ。
+
+Idempotency-Keyは単なる重複防止キーではなく、actor、expected revision、reason、resource集合のcanonical JSON fingerprintへ結び付ける。同じ意図のretryだけを再生と認め、同じkeyで内容を差し替える操作をconflictにする。organization revision競合、resource revision競合、key再利用を別の結果にすることで、clientは再読込、入力修正、運用調査を区別できる。
+
+Systemとの境界では、CompanyはAccountの存在をopaque IDとして参照するだけで、Identity、credential、session、technical roleを持たない。SystemもEmployeeやOrganizationを参照しない。API compositionが認証済みactorとtechnical permissionをCompany capabilityへ写像し、Companyはorganization scopeとcapabilityを再検査する。
+
+このkernelが「会社の全業務」を実装したとは主張しない。会社の全業務が安全に接続できる、変更可能で削除可能な土台を実装したと主張する。完全性はApp数ではなく、新しいAppがPerson、Employee、Employment、OrgUnit、Responsibility、System判断を二重定義せず接続できることで判定する。
+
 - 共通 ID、Principal、Party、時間、来歴、外部参照だけを共有する
 - Book の ISBN、著者、版は図書ドメインが所有する
 - ParkingSpace の車高、充電設備、区画種別は駐車ドメインが所有する

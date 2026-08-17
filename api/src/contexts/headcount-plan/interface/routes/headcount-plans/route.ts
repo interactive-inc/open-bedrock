@@ -1,20 +1,20 @@
 import { CreateHeadcountPlan } from "@/contexts/headcount-plan/application/create-headcount-plan"
-import { readActiveHeadcount } from "@/contexts/company/application/organization/read-active-headcount"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { readActiveHeadcount } from "@/contexts/company-compatibility/application/organization/read-active-headcount"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+} from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { zAppHeadcountPlan, zAppHeadcountPlanList } from "@/lib/app-schemas"
 import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/headcount-plan-repository"
 import { zValidator } from "@hono/zod-validator"

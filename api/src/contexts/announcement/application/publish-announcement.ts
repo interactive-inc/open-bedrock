@@ -1,10 +1,13 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
 import type { Announcement } from "@/contexts/announcement/domain/announcement.entity"
 import type { Context } from "@/env"
 import { AnnouncementRepository } from "@/contexts/announcement/infrastructure/announcement-repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
+import {
+  accountEmployeeLinks,
+  employees,
+} from "@/contexts/company-compatibility/infrastructure/schema/employee"
 import { notifications } from "@/api/legacy-system/adapters/schema/system"
 import { eq } from "drizzle-orm"
 
