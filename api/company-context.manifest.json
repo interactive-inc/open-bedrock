@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "coverage": "workforce-foundation",
+  "sourceRoots": [
+    "src/contexts/company/application/workforce",
+    "src/contexts/company/domain/workforce"
+  ],
+  "implementedCapabilities": [
+    "account-employee-link",
+    "employee-directory",
+    "organization-authority",
+    "organization-change",
+    "organization-snapshot",
+    "workforce-state"
+  ],
+  "targetCapabilities": [
+    "account-employee-link",
+    "collective-body",
+    "company-profile",
+    "employee",
+    "employment",
+    "grade",
+    "legal-entity",
+    "organization",
+    "organizational-authority",
+    "person",
+    "personnel-action",
+    "position",
+    "responsibility"
+  ]
+}
