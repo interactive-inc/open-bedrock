@@ -127,7 +127,7 @@ function toCriteria(props: Props): CanonicalCriteria | Error {
   const indexes: number[] = []
 
   for (const [criterionIndex, criterion] of props.criteria.entries()) {
-    if (criterion.kind === "legacy_account_role") continue
+    if (criterion.kind === "legacy_account_role" || criterion.kind === "responsibility") continue
     if (criterion.kind === "employee") {
       const resolvedEmployeeId = employeeIdsByCode.get(criterion.employeeCode)
       if (resolvedEmployeeId === undefined) {
@@ -364,6 +364,9 @@ function legacyEvidence(props: {
       props.evidenceByPeriodId.get(props.evidence.responsibility.responsibilityPeriodId) ??
       new Error("authority responsibility evidence is missing")
     )
+  }
+  if (props.evidence.kind === "responsibility") {
+    return new Error("legacy authority projection does not support generic responsibility")
   }
 
   const path: Readonly<Record<string, unknown>>[] = []

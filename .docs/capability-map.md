@@ -107,7 +107,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - 雇用開始、在籍状態、休職、復職、終了、再雇用
 - valid time と recorded time を持つ履歴、訂正、重複禁止
 
-現行実装には従業員台帳、在籍期間、状態期間、ライフサイクル revision がある。旧来の employee projection と期間モデルが併存しており、正本の統一は未完成である。
+現行実装には従業員台帳、在籍期間、状態期間、ライフサイクル revision がある。Company の判断と組織変更は期間モデルを正本にし、旧 employee 現在値は既存 wire の表示 projection として同じ transaction で更新する。
 
 ### 組織
 
@@ -116,7 +116,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - 組織の有効期間、改組、統合、廃止
 - 過去時点の組織 snapshot
 
-現行実装には部署、所属、reporting line、期間付き assignment がある。旧組織表と lifecycle projection の統一は未完成である。
+現行実装には opaque OrgUnit identity、名称・kind・親子関係の period version、期間付き Assignment、organization revision、atomic change operation がある。単一 root、code 重複、親期間、循環、主務重複、上司在籍、部分適用を Domain と DB の両方で拒否する。旧部署表と membership は既存 wire の互換 projection に限定し、検証済み lifecycle の判断正本には使わない。
 
 ### 職務と責任
 
@@ -126,7 +126,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - CollectiveBody、構成員、定足数、決議方式
 - 委任可能性と継続責任主体
 
-現行実装には position、grade、governance role、組織責任の一部と、直属上司、部門責任者、管理系列を時点解決する OrganizationalAuthority resolver がある。resolver は候補 Account と使用した組織投影、営業日、organization revision、根拠を snapshot として返す。汎用的な責任 scope、金額等の条件、合議体を一貫して強制するモデルは未完成である。
+現行実装には position、grade、governance role、期間付きの汎用 Responsibility と、直属上司、部門責任者、任意責務、管理系列を時点解決する OrganizationalAuthority resolver がある。resolver は候補 Account と使用した組織投影、営業日、organization revision、根拠を snapshot として返す。Account role は操作権限に限定し、workflow 未定義や旧 role selector を会社上の資格として補完しない。法人、地域、金額等の条件 scope と合議体を一貫して強制するモデルは未完成である。
 
 ### System との対応
 
@@ -143,7 +143,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - 発令日、発効日、記録日、理由、根拠
 - 訂正、取消、競合検出、projection rebuild
 
-現行実装には personnel action と lifecycle revision がある。onboarding task、退職申請、証明書依頼などの手続きは Company の事実ではなく App と System workflow へ分離する。
+現行実装には personnel action と lifecycle revision がある。所属と責務を変える発令は共通 `OrganizationChangeSet` validator を通り、発令、organization operation、period version、互換 projection、監査を一つの batch で確定する。訂正は同じ period の連続 revision として検証し、expected Employee revision と expected organization revision のどちらが stale でも全体を拒否する。onboarding task、退職申請、証明書依頼などの手続きは Company の事実ではなく App と System workflow へ分離する。
 
 ## Apps
 

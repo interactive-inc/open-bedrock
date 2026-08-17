@@ -8,6 +8,7 @@ import {
 } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeLifecycleWorkforceRepository } from "@/contexts/company/infrastructure/workforce/employee-lifecycle-workforce.repository"
+import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
 import { toEmployeeLifecycleState } from "@/contexts/company/infrastructure/workforce/to-employee-lifecycle-state"
 import {
   ApplicationError,
@@ -57,9 +58,10 @@ export class GetLifecycleState {
       return new ValidationError("as_of が不正です", "personnel_action_invalid_transition")
     }
 
-    const workforce = await new ReadWorkforceState(
-      new EmployeeLifecycleWorkforceRepository(this.c),
-    ).execute({ employeeId: toWorkforceEmployeeId(props.employeeId), asOf })
+    const workforce = await new ReadWorkforceState({
+      workforce: new EmployeeLifecycleWorkforceRepository(this.c),
+      organization: new OrganizationUnitReadRepository(this.c.var.database),
+    }).execute({ employeeId: toWorkforceEmployeeId(props.employeeId), asOf })
 
     if (workforce.kind === "not_found") {
       return new NotFoundError("従業員が見つかりません", "employee_not_found")
@@ -75,6 +77,11 @@ export class GetLifecycleState {
         "lifecycle_projection_mismatch",
         { cause: workforce.error },
       )
+    }
+    if (workforce.kind === "invalid_organization") {
+      return new UnavailableError("会社組織の保存状態が不正です", "lifecycle_projection_mismatch", {
+        cause: workforce.error,
+      })
     }
 
     const states = await new EmployeeLifecycleReadRepository(this.c).findStatesAt(

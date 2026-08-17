@@ -2,6 +2,7 @@ import { createTestToken } from "@/api/test/support/create-test-token"
 import {
   createLifecycleRouteDb,
   lifecycleRouteJwtSecret,
+  readOrganizationRevision,
 } from "@/api/test/support/lifecycle-route-fixture"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { describe, expect, test } from "bun:test"
@@ -9,6 +10,7 @@ import { describe, expect, test } from "bun:test"
 describe("GET /employees/:code/lifecycle-state", () => {
   test("returns the strict as-of state and revisions", async () => {
     const db = await createLifecycleRouteDb()
+    const organizationRevision = await readOrganizationRevision(db)
     const response = await requestWithContext({
       db,
       jwtSecret: lifecycleRouteJwtSecret,
@@ -28,7 +30,7 @@ describe("GET /employees/:code/lifecycle-state", () => {
       status: "active",
       archived: false,
       employee_revision: 0,
-      organization_revision: 0,
+      organization_revision: organizationRevision,
       primary_assignment: {
         department_code: "D003",
         department_name: "開発部",

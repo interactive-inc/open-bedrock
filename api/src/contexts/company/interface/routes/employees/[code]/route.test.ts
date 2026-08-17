@@ -11,6 +11,7 @@ import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
+import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments"
 import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments"
 import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships"
 import { seedPositions } from "@/contexts/company/infrastructure/seed/seed-positions"
@@ -72,6 +73,12 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "departments",
+    seedDepartments.map((department) => ({ id: department.id, name: department.name })),
+  )
 
   await seedD1(
     db,

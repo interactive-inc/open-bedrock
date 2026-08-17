@@ -1,5 +1,4 @@
 import type {
-  OrganizationalAuthorityCandidate,
   OrganizationalAuthorityCandidateResolution,
   OrganizationalAuthorityCriterion,
   OrganizationalAuthoritySnapshot,
@@ -12,25 +11,18 @@ import {
   type WorkforceAuthorityEmployeeRow,
   type WorkforceAuthorityOrganizationProjection,
 } from "@/contexts/company/infrastructure/workforce/resolve-workforce-organizational-authority"
-import { accounts, accountRoles, roles } from "@/api/legacy-system/adapters/schema/system"
+import { resolveCanonicalOrganizationAuthority } from "@/contexts/company/infrastructure/workforce/resolve-canonical-organization-authority"
+import { accounts } from "@/api/legacy-system/adapters/schema/system"
 import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
 import {
   orgDepartments,
   orgMemberships,
 } from "@/contexts/company/infrastructure/schema/organization"
 import { systemAccounts } from "@system/infrastructure/schema/system-core"
-import type { AccountId } from "@system/domain/auth/account-id"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { and, eq, isNotNull, isNull, sql } from "drizzle-orm"
-
-type PreliminaryCandidate = Readonly<{
-  employeeId: number
-  legacyAccountId: number | null
-  criterionIndex: number
-  evidence: Readonly<Record<string, unknown>>
-}>
+import { and, eq, isNull, sql } from "drizzle-orm"
 
 async function resolveSnapshot(
   c: Context,
@@ -216,97 +208,6 @@ async function loadOrganizationProjection(props: {
   }
 }
 
-async function legacyRoleCandidates(props: {
-  c: Context
-  criteria: ReadonlyArray<OrganizationalAuthorityCriterion>
-}): Promise<ReadonlyArray<PreliminaryCandidate> | ApplicationError> {
-  const result: PreliminaryCandidate[] = []
-
-  try {
-    for (const [criterionIndex, criterion] of props.criteria.entries()) {
-      if (criterion.kind !== "legacy_account_role") continue
-      const rows = await props.c.var.database
-        .select({
-          accountId: accounts.id,
-          employeeId: accountEmployeeLinks.employeeId,
-          roleId: roles.id,
-        })
-        .from(accounts)
-        .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
-        .innerJoin(accountRoles, eq(accountRoles.accountId, accounts.id))
-        .innerJoin(roles, eq(roles.id, accountRoles.roleId))
-        .where(
-          and(
-            eq(roles.key, criterion.roleKey),
-            eq(accounts.status, "active"),
-            isNotNull(accountEmployeeLinks.employeeId),
-          ),
-        )
-
-      for (const row of rows) {
-        if (row.employeeId === null) continue
-        result.push({
-          employeeId: row.employeeId,
-          legacyAccountId: row.accountId,
-          criterionIndex,
-          evidence: {
-            type: "account_role",
-            legacy_account_id: row.accountId,
-            role_id: row.roleId,
-            role_key: criterion.roleKey,
-          },
-        })
-      }
-    }
-
-    return result
-  } catch (cause) {
-    return new UnexpectedError("互換 Account role から判断候補を解決できません", { cause })
-  }
-}
-
-function materializeCandidates(props: {
-  preliminary: ReadonlyArray<PreliminaryCandidate>
-  accountRows: ReadonlyArray<{
-    legacyId: number
-    systemId: AccountId
-    employeeId: number | null
-  }>
-  liveEmployeeIds: ReadonlySet<number>
-  subjectEmployeeId: number | null
-}): ReadonlyArray<OrganizationalAuthorityCandidate> {
-  const accountsByEmployee = new Map<number, Array<{ legacyId: number; systemId: AccountId }>>()
-  for (const account of props.accountRows) {
-    if (account.employeeId === null || !props.liveEmployeeIds.has(account.employeeId)) continue
-    const accountIds = accountsByEmployee.get(account.employeeId) ?? []
-    accountIds.push({ legacyId: account.legacyId, systemId: account.systemId })
-    accountsByEmployee.set(account.employeeId, accountIds)
-  }
-
-  return props.preliminary.flatMap((candidate) => {
-    if (candidate.employeeId === props.subjectEmployeeId) return []
-    const activeAccounts = accountsByEmployee.get(candidate.employeeId) ?? []
-    const eligibleAccounts =
-      candidate.legacyAccountId === null
-        ? activeAccounts
-        : activeAccounts.some((account) => account.legacyId === candidate.legacyAccountId)
-          ? activeAccounts.filter((account) => account.legacyId === candidate.legacyAccountId)
-          : []
-
-    return eligibleAccounts.map((account) => ({
-      employeeId: candidate.employeeId,
-      accountId: account.systemId,
-      qualification: {
-        criterionIndex: candidate.criterionIndex,
-        evidence: {
-          ...candidate.evidence,
-          system_account_id: account.systemId,
-        },
-      },
-    }))
-  })
-}
-
 /**
  * 指定時点の Company 組織・責任・Account 対応から判断候補と証拠 snapshot を解決する。
  * request、System、業務 App の語彙は解釈しない。評価不能、循環、revision 不整合は fail closed。
@@ -330,6 +231,33 @@ export async function resolveOrganizationalAuthorityCandidates(props: {
         archivedAt: employees.archivedAt,
       })
       .from(employees)
+
+    if (snapshot.source === "lifecycle") {
+      const canonicalResolution = await resolveCanonicalOrganizationAuthority({
+        c: props.c,
+        subjectEmployeeId: props.subjectEmployeeId,
+        criteria: props.criteria,
+        employeeRows,
+        targetDepartmentCode: props.targetDepartmentCode ?? null,
+        asOf: snapshot.asOf,
+      })
+      if (canonicalResolution instanceof ApplicationError) return canonicalResolution
+      if (canonicalResolution.snapshot.organizationRevision === null) {
+        return new UnexpectedError("正規組織 snapshot に revision がありません")
+      }
+
+      const finalOrganizationRevision = await readOrganizationRevision(props.c)
+      if (finalOrganizationRevision instanceof ApplicationError) return finalOrganizationRevision
+      if (finalOrganizationRevision !== canonicalResolution.snapshot.organizationRevision) {
+        return revisionConflict()
+      }
+
+      return {
+        snapshot: canonicalResolution.snapshot,
+        candidates: canonicalResolution.candidates,
+      }
+    }
+
     const organization = await loadOrganizationProjection({
       c: props.c,
       employeeRows,
@@ -337,8 +265,6 @@ export async function resolveOrganizationalAuthorityCandidates(props: {
     })
     if (organization instanceof ApplicationError) return organization
 
-    const roleCandidates = await legacyRoleCandidates({ c: props.c, criteria: props.criteria })
-    if (roleCandidates instanceof ApplicationError) return roleCandidates
     const accountRows = await props.c.var.database
       .select({
         legacyId: accounts.id,
@@ -387,15 +313,7 @@ export async function resolveOrganizationalAuthorityCandidates(props: {
 
     return {
       snapshot: resolvedSnapshot,
-      candidates: [
-        ...workforceResolution.candidates,
-        ...materializeCandidates({
-          preliminary: roleCandidates,
-          accountRows,
-          liveEmployeeIds: organization.liveEmployeeIds,
-          subjectEmployeeId: props.subjectEmployeeId,
-        }),
-      ],
+      candidates: workforceResolution.candidates,
     }
   } catch (cause) {
     return new UnexpectedError("組織上の判断資格を解決できません", { cause })

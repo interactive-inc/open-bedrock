@@ -15,7 +15,8 @@ function makeDepartment(code: string, parentCode: string | null): OrgDepartment 
 
 describe("OrgDepartmentRepository.create", () => {
   test("creates a root department without a parent", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+    await db.prepare("INSERT INTO departments (id, name) VALUES (1, 'Department')").run()
 
     const repository = new OrgDepartmentRepository(context)
 
@@ -29,7 +30,8 @@ describe("OrgDepartmentRepository.create", () => {
   })
 
   test("creates a child atomically when the parent exists", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+    await db.prepare("INSERT INTO departments (id, name) VALUES (1, 'Department')").run()
 
     const repository = new OrgDepartmentRepository(context)
 
@@ -45,7 +47,8 @@ describe("OrgDepartmentRepository.create", () => {
   })
 
   test("returns parent_not_found when the parent does not exist (no orphan row)", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+    await db.prepare("INSERT INTO departments (id, name) VALUES (1, 'Department')").run()
 
     const repository = new OrgDepartmentRepository(context)
 

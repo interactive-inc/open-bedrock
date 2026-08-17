@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
+import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments"
 import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments"
 import { seedShiftAssignments } from "@/contexts/shift/infrastructure/seed/seed-shift-assignments"
 import { seedShiftPatterns } from "@/contexts/shift/infrastructure/seed/seed-shift-patterns"
@@ -43,6 +44,12 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "departments",
+    seedDepartments.map((department) => ({ id: department.id, name: department.name })),
+  )
 
   await seedD1(
     db,

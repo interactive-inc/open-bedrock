@@ -4,6 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import type { Context } from "@/env"
 import { OrgDepartmentRepository } from "@/contexts/company/infrastructure/organization/org-department-repository"
+import { DepartmentRepository } from "@/contexts/company/infrastructure/organization/department-repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -45,6 +46,16 @@ export class CreateOrgDepartment {
 
     if (existing !== null) {
       return new ConflictError("department code already exists", "department_code_conflict")
+    }
+
+    const departmentMaster = await new DepartmentRepository(this.c).findById(
+      command.department.departmentId,
+    )
+    if (departmentMaster instanceof Error) {
+      return new UnexpectedError("failed to find department master", { cause: departmentMaster })
+    }
+    if (departmentMaster === null) {
+      return new NotFoundError("department master not found", "department_not_found")
     }
 
     const department = OrgDepartment.create({

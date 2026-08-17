@@ -2,6 +2,7 @@ import { createTestToken } from "@/api/test/support/create-test-token"
 import {
   createLifecycleRouteDb,
   lifecycleRouteJwtSecret,
+  readOrganizationRevision,
 } from "@/api/test/support/lifecycle-route-fixture"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { describe, expect, test } from "bun:test"
@@ -25,18 +26,16 @@ async function token(employeeId: number) {
 
 async function prepareDb(): Promise<D1Database> {
   const db = await createLifecycleRouteDb()
-  await db
-    .prepare(
-      `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
-       SELECT 1, id, 1, 0 FROM roles WHERE key = 'hr'`,
-    )
-    .run()
-  await db
-    .prepare(
-      `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
-       SELECT 6, id, 1, 0 FROM roles WHERE key = 'hr'`,
-    )
-    .run()
+  // roleはAPI操作能力だけを付与する。候補資格はfixtureのCompany責務から解決する。
+  for (const accountId of [1, 6]) {
+    await db
+      .prepare(
+        `INSERT OR IGNORE INTO account_roles (account_id, role_id, granted_by, granted_at)
+         SELECT ?1, id, 1, 0 FROM roles WHERE key = 'hr'`,
+      )
+      .bind(accountId)
+      .run()
+  }
   return db
 }
 
@@ -53,7 +52,7 @@ async function createRequest(db: D1Database): Promise<{
     body: {
       action,
       base_employee_revision: 0,
-      base_organization_revision: 0,
+      base_organization_revision: await readOrganizationRevision(db),
     },
     now: "2026-01-01T00:00:00.000Z",
   })
@@ -72,7 +71,7 @@ describe("POST /personnel-action-requests", () => {
       target_employee_code: "E005",
       kind: "position_changed",
       status: "pending",
-      current_step: "hr_approval",
+      current_step: "people_operations_approval",
     })
     expect(
       await db.prepare("SELECT COUNT(*) FROM personnel_actions").first<number>("COUNT(*)"),
@@ -388,7 +387,7 @@ describe("POST /personnel-action-requests", () => {
       body: {
         action: hire,
         base_employee_revision: 0,
-        base_organization_revision: 0,
+        base_organization_revision: await readOrganizationRevision(db),
       },
     })
     expect(requested.status).toBe(201)
@@ -471,7 +470,7 @@ describe("POST /personnel-action-requests", () => {
           managerEmployeeCode: null,
         },
         base_employee_revision: 0,
-        base_organization_revision: 0,
+        base_organization_revision: await readOrganizationRevision(db),
       },
     })
     expect(response.status).toBe(422)

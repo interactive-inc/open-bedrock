@@ -8,6 +8,8 @@ import {
   type WorkforceInvariantCode,
   type WorkforceInvariantViolation,
 } from "@/contexts/company/domain/workforce/validate-workforce-schedules"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
 import { ApplicationError, ConflictError } from "@/lib/errors"
 
 type ValidateLifecycleSchedulesProps = {
@@ -85,6 +87,10 @@ const legacyConflictByInvariant: Readonly<Record<WorkforceInvariantCode, LegacyC
     message: "部署責任者が対象部署に所属していません",
     code: "assignment_period_conflict",
   },
+  invalid_responsibility: {
+    message: "組織責務の識別子が不正です",
+    code: "lifecycle_projection_mismatch",
+  },
   responsibility_overlap: {
     message: "同じ部署の責任期間が重複しています",
     code: "assignment_period_conflict",
@@ -119,7 +125,20 @@ export function validateLifecycleSchedules(
   try {
     const violation = validateWorkforceLifecycleSchedules({
       schedules: toWorkforceLifecycleSchedules(props.schedules),
-      activeOrganizationUnitIds: new Set(props.departments.map(toWorkforceOrganizationUnitId)),
+      organizationUnitPeriods: props.departments.map((department) => ({
+        periodId: restoreWorkforceId("period", `legacy-department-period:${department}`),
+        revision: 1,
+        organizationUnitId: toWorkforceOrganizationUnitId(department),
+        code: department,
+        officialName: department,
+        kind: "DEPARTMENT" as const,
+        parentOrganizationUnitId: null,
+        startsOn: restoreCalendarDate("0001-01-01"),
+        endsOn: null,
+        isVoid: false,
+        recordedByActionId: restoreWorkforceId("personnel_action", "legacy-department-validation"),
+        recordedAt: 0,
+      })),
     })
 
     return violation === null ? undefined : toLegacyConflict(violation)

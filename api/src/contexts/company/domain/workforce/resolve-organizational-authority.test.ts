@@ -65,11 +65,13 @@ function assignment(props: {
 function responsibility(props: {
   employeeId: EmployeeId
   organizationUnitId: OrganizationUnitId
+  responsibilityType?: string
 }): OrgResponsibilityPeriod {
+  const responsibilityType = props.responsibilityType ?? "MANAGER"
   return {
     periodId: restoreWorkforceId(
       "period",
-      `responsibility-${props.employeeId}-${props.organizationUnitId}`,
+      `responsibility-${props.employeeId}-${props.organizationUnitId}-${responsibilityType}`,
     ),
     revision: 4,
     startsOn,
@@ -80,7 +82,7 @@ function responsibility(props: {
     employmentId: restoreWorkforceId("employment", `employment-${props.employeeId}`),
     employeeId: props.employeeId,
     organizationUnitId: props.organizationUnitId,
-    responsibilityType: "MANAGER",
+    responsibilityType,
   }
 }
 
@@ -136,6 +138,11 @@ function baseProjection(
       organizationUnitId: financeId,
       responsibilities: [
         responsibility({ employeeId: executiveId, organizationUnitId: financeId }),
+        responsibility({
+          employeeId: executiveId,
+          organizationUnitId: financeId,
+          responsibilityType: "PEOPLE_OPERATIONS",
+        }),
       ],
     }),
     state({
@@ -180,6 +187,11 @@ describe("resolveOrganizationalAuthority", () => {
       { kind: "subject_organization_manager" },
       { kind: "target_organization_manager", organizationUnitId: financeId },
       { kind: "management_chain" },
+      {
+        kind: "responsibility",
+        responsibilityType: "PEOPLE_OPERATIONS",
+        organizationUnitId: null,
+      },
       { kind: "employee", employeeId: organizationManagerId },
     ]
     const result = resolveOrganizationalAuthority(baseProjection({ criteria }))
@@ -245,8 +257,22 @@ describe("resolveOrganizationalAuthority", () => {
           },
         },
         {
+          employeeId: executiveId,
+          qualification: {
+            criterionIndex: 4,
+            evidence: {
+              kind: "responsibility",
+              responsibility: {
+                employeeId: executiveId,
+                organizationUnitId: financeId,
+                responsibilityType: "PEOPLE_OPERATIONS",
+              },
+            },
+          },
+        },
+        {
           employeeId: organizationManagerId,
-          qualification: { criterionIndex: 4, evidence: { kind: "employee" } },
+          qualification: { criterionIndex: 5, evidence: { kind: "employee" } },
         },
       ],
     })

@@ -191,9 +191,12 @@ describe("ApplyPersonnelAction", () => {
     }
 
     expectCode(await new ApplyPersonnelAction(context).run(command), "personnel_action_stale")
+    const currentOrganizationRevision = await db
+      .prepare("SELECT revision FROM organization_lifecycle_states WHERE id = 1")
+      .first<number>("revision")
     const applied = await new ApplyPersonnelAction(context).run({
       ...command,
-      expectedOrganizationRevision: 0,
+      expectedOrganizationRevision: currentOrganizationRevision,
     })
 
     expect(applied).not.toBeInstanceOf(ApplicationError)
@@ -201,7 +204,7 @@ describe("ApplyPersonnelAction", () => {
       await db
         .prepare("SELECT revision FROM organization_lifecycle_states WHERE id = 1")
         .first<number>("revision"),
-    ).toBe(1)
+    ).toBe((currentOrganizationRevision ?? 0) + 2)
     expect(
       await db.prepare("SELECT dept_name FROM employees WHERE id = 1").first<string>("dept_name"),
     ).toBe("Sales")

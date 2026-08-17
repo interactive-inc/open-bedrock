@@ -1,6 +1,7 @@
 import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
 import type { WorkforceStateAt } from "@/contexts/company/domain/workforce/resolve-workforce-state"
 import type { AccountEmployeeLink } from "@/contexts/company/domain/workforce/workforce-schedule"
+import type { OrgResponsibilityType } from "@/contexts/company/domain/workforce/workforce-schedule"
 import type {
   EmployeeId,
   OrganizationUnitId,
@@ -15,6 +16,11 @@ export type OrganizationalAuthorityCriterion =
   | Readonly<{
       kind: "target_organization_manager"
       organizationUnitId: OrganizationUnitId
+    }>
+  | Readonly<{
+      kind: "responsibility"
+      responsibilityType: OrgResponsibilityType
+      organizationUnitId: OrganizationUnitId | null
     }>
   | Readonly<{ kind: "management_chain" }>
 
@@ -44,6 +50,7 @@ export type OrganizationalAuthorityManagementEdgeEvidence =
 export type OrganizationalAuthorityResponsibilityEvidence = Readonly<{
   employeeId: EmployeeId
   organizationUnitId: OrganizationUnitId
+  responsibilityType: OrgResponsibilityType
   responsibilityPeriodId: WorkforcePeriodId
   responsibilityRevision: number
   asOf: CalendarDate
@@ -60,6 +67,10 @@ export type OrganizationalAuthorityEvidence =
       kind: "organization_manager"
       scope: "subject" | "target"
       subjectAssignment: OrganizationalAuthorityAssignmentEvidence | null
+      responsibility: OrganizationalAuthorityResponsibilityEvidence
+    }>
+  | Readonly<{
+      kind: "responsibility"
       responsibility: OrganizationalAuthorityResponsibilityEvidence
     }>
   | Readonly<{

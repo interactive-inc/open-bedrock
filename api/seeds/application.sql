@@ -16,19 +16,19 @@ INSERT INTO system_procedure_definition_revisions
 VALUES
   ('paid_leave', 1, '有給休暇申請', 'attendance', '有給休暇の取得を申請します',
    '{"fields":[{"id":"start_date","label":"開始日","type":"date","required":true,"description":null,"options":null},{"id":"end_date","label":"終了日","type":"date","required":true,"description":null,"options":null},{"id":"reason","label":"理由","type":"text","required":false,"description":null,"options":null}]}',
-   '{"schemaVersion":1,"qualificationContext":"company","approverRoles":["manager","root"],"workflow":null,"workflowRevision":0}',
+   '{"schemaVersion":1,"qualificationContext":"company","approverRoles":[],"workflow":{"version":1,"steps":[{"key":"manager_approval","name":"Manager approval","approvers":[{"type":"management_chain"}],"approval_mode":"any","condition_mode":"all","conditions":[],"due_days":null,"escalation_approvers":[],"rejection_behavior":"reject","allow_delegation":true}]},"workflowRevision":1}',
    NULL, 'system:migration', 0),
   ('expense', 1, '経費精算申請', 'accounting', '立て替えた経費の精算を申請します',
    '{"fields":[{"id":"amount","label":"金額","type":"number","required":true,"description":null,"options":null},{"id":"category","label":"内訳","type":"text","required":true,"description":null,"options":null},{"id":"note","label":"備考","type":"text","required":false,"description":null,"options":null}]}',
-   '{"schemaVersion":1,"qualificationContext":"company","approverRoles":["manager","root"],"workflow":null,"workflowRevision":0}',
+   '{"schemaVersion":1,"qualificationContext":"company","approverRoles":[],"workflow":{"version":1,"steps":[{"key":"manager_approval","name":"Manager approval","approvers":[{"type":"management_chain"}],"approval_mode":"any","condition_mode":"all","conditions":[],"due_days":null,"escalation_approvers":[],"rejection_behavior":"reject","allow_delegation":true}]},"workflowRevision":1}',
    NULL, 'system:migration', 0),
   ('remote_work', 1, '在宅勤務申請', 'attendance', '在宅勤務の事前申請をします',
    '{"fields":[{"id":"date","label":"対象日","type":"date","required":true,"description":null,"options":null},{"id":"reason","label":"理由","type":"text","required":false,"description":null,"options":null}]}',
-   '{"schemaVersion":1,"qualificationContext":"company","approverRoles":["manager"],"workflow":null,"workflowRevision":0}',
+   '{"schemaVersion":1,"qualificationContext":"company","approverRoles":[],"workflow":{"version":1,"steps":[{"key":"manager_approval","name":"Manager approval","approvers":[{"type":"management_chain"}],"approval_mode":"any","condition_mode":"all","conditions":[],"due_days":null,"escalation_approvers":[],"rejection_behavior":"reject","allow_delegation":true}]},"workflowRevision":1}',
    NULL, 'system:migration', 0),
   ('equipment', 1, '備品購入申請', 'general_affairs', '業務用備品の購入を申請します',
    '{"fields":[{"id":"item","label":"品目","type":"text","required":true,"description":null,"options":null},{"id":"amount","label":"金額","type":"number","required":true,"description":null,"options":null},{"id":"reason","label":"理由","type":"text","required":false,"description":null,"options":null}]}',
-   '{"schemaVersion":1,"qualificationContext":"company","approverRoles":["manager","root"],"workflow":null,"workflowRevision":0}',
+   '{"schemaVersion":1,"qualificationContext":"company","approverRoles":[],"workflow":{"version":1,"steps":[{"key":"manager_approval","name":"Manager approval","approvers":[{"type":"management_chain"}],"approval_mode":"any","condition_mode":"all","conditions":[],"due_days":null,"escalation_approvers":[],"rejection_behavior":"reject","allow_delegation":true}]},"workflowRevision":1}',
    NULL, 'system:migration', 0);
 
 INSERT INTO system_proposal_series (id, procedure_key, created_by_account_id, created_at) VALUES

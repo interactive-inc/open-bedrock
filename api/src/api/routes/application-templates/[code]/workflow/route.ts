@@ -23,22 +23,19 @@ import { toHttpException } from "@/contexts/company/interface/lib/to-http-except
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import type { Context } from "@/env"
-import { roles } from "@/api/legacy-system/adapters/schema/system"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { ConflictError as ApplicationConflictError } from "@/lib/errors"
 
 async function validateReferences(c: Context, workflow: ApplicationWorkflow): Promise<void> {
-  const [roleRows, employeeRows] = await Promise.all([
-    c.var.database.select({ key: roles.key }).from(roles),
-    c.var.database.select({ code: employees.code }).from(employees),
-  ])
-  const roleKeys = new Set(roleRows.map((row) => row.key))
+  const employeeRows = await c.var.database.select({ code: employees.code }).from(employees)
   const employeeCodes = new Set(employeeRows.map((row) => row.code))
 
   for (const step of workflow.steps) {
     for (const selector of [...step.approvers, ...step.escalation_approvers]) {
-      if (selector.type === "role" && !roleKeys.has(selector.role_key)) {
-        throw new UnprocessableEntityError(`unknown role in workflow: ${selector.role_key}`)
+      if (selector.type === "role") {
+        throw new UnprocessableEntityError(
+          "Account role selectors are not Company authority; use a responsibility selector",
+        )
       }
       if (selector.type === "employee" && !employeeCodes.has(selector.employee_code)) {
         throw new UnprocessableEntityError(

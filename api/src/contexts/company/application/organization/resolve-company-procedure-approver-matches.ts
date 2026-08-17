@@ -16,6 +16,12 @@ function toCompanyCriterion(selector: WorkflowApproverSelector): OrganizationalA
       return { kind: "department_manager" }
     case "target_department_manager":
       return { kind: "target_department_manager" }
+    case "responsibility":
+      return {
+        kind: "responsibility",
+        responsibilityType: selector.responsibility_type,
+        organizationUnitCode: selector.organization_unit_code,
+      }
     case "management_chain":
       return { kind: "management_chain" }
   }
