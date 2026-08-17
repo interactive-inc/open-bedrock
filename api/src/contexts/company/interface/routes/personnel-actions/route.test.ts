@@ -2,6 +2,7 @@ import { createTestToken } from "@/api/test/support/create-test-token"
 import {
   createLifecycleRouteDb,
   lifecycleRouteJwtSecret,
+  readOrganizationRevision,
 } from "@/api/test/support/lifecycle-route-fixture"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { describe, expect, test } from "bun:test"
@@ -16,12 +17,6 @@ const action = {
   changeType: "promotion",
 }
 
-const body = {
-  action,
-  expected_employee_revision: 0,
-  expected_organization_revision: 0,
-}
-
 async function token(employeeId: number, role: string) {
   return createTestToken(lifecycleRouteJwtSecret, {
     employeeId,
@@ -34,6 +29,11 @@ describe("POST /personnel-actions", () => {
   test("applies once and returns 200 for an identical idempotent replay", async () => {
     const db = await createLifecycleRouteDb()
     const admin = await token(1, "root")
+    const body = {
+      action,
+      expected_employee_revision: 0,
+      expected_organization_revision: await readOrganizationRevision(db),
+    }
     const props = {
       db,
       jwtSecret: lifecycleRouteJwtSecret,
@@ -68,7 +68,11 @@ describe("POST /personnel-actions", () => {
       path: "/personnel-actions",
       method: "POST",
       token: await token(5, "member"),
-      body,
+      body: {
+        action,
+        expected_employee_revision: 0,
+        expected_organization_revision: await readOrganizationRevision(db),
+      },
       headers: { "Idempotency-Key": "member-denied-1" },
     })
     expect(denied.status).toBe(403)
@@ -78,13 +82,18 @@ describe("POST /personnel-actions", () => {
         .first<string>("action"),
     ).toBe("employee.lifecycle.denied")
 
+    const missingKeyDb = await createLifecycleRouteDb()
     const missingKey = await requestWithContext({
-      db: await createLifecycleRouteDb(),
+      db: missingKeyDb,
       jwtSecret: lifecycleRouteJwtSecret,
       path: "/personnel-actions",
       method: "POST",
       token: await token(1, "root"),
-      body,
+      body: {
+        action,
+        expected_employee_revision: 0,
+        expected_organization_revision: await readOrganizationRevision(missingKeyDb),
+      },
     })
     expect(missingKey.status).toBe(400)
   })

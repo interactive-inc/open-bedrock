@@ -9,6 +9,14 @@ import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 
 export const lifecycleRouteJwtSecret = "lifecycle-route-test-secret"
 
+export async function readOrganizationRevision(db: D1Database): Promise<number> {
+  const revision = await db
+    .prepare("SELECT revision FROM organization_lifecycle_states WHERE id = 1")
+    .first<number>("revision")
+  if (revision === null) throw new Error("organization lifecycle revision is missing")
+  return revision
+}
+
 export async function createLifecycleRouteDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
   await seedD1(
@@ -89,6 +97,23 @@ export async function createLifecycleRouteDb(): Promise<D1Database> {
        starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
     VALUES ('responsibility-4', 1, 'D003', 'department_manager', 4,
             '2025-01-01', NULL, 0, 'fixture', 1);
+    INSERT INTO organization_change_operations
+      (id, expected_revision, change_count, applied_count,
+       resulting_revision, status, recorded_at)
+    SELECT 'fixture-people-operations', revision, 2, 0, revision + 2, 'PENDING', 1
+    FROM organization_lifecycle_states WHERE id = 1;
+    INSERT INTO organization_responsibility_period_versions
+      (period_id, revision, employment_id, employee_id, organization_unit_id,
+       responsibility_type, starts_on, ends_on, is_void,
+       recorded_by_action_id, recorded_at) VALUES
+      ('responsibility-period:people-operations:1', 1, 'employment:employment-1',
+       'employee:1', 'department:D001', 'PEOPLE_OPERATIONS', '2025-01-01', NULL, 0,
+       'fixture-people-operations', 1),
+      ('responsibility-period:people-operations:6', 1, 'employment:employment-6',
+       'employee:6', 'department:D004', 'PEOPLE_OPERATIONS', '2025-01-01', NULL, 0,
+       'fixture-people-operations', 1);
+    UPDATE organization_change_operations SET status = 'COMPLETED'
+    WHERE id = 'fixture-people-operations';
     UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
   `)
   return db

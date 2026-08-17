@@ -2,6 +2,7 @@ import { createTestToken } from "@/api/test/support/create-test-token"
 import {
   createLifecycleRouteDb,
   lifecycleRouteJwtSecret,
+  readOrganizationRevision,
 } from "@/api/test/support/lifecycle-route-fixture"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { describe, expect, test } from "bun:test"
@@ -21,7 +22,7 @@ async function retireE5(db: D1Database) {
     body: {
       action: { kind: "retired", employeeCode: "E005", retirementOn: "2025-12-31" },
       expected_employee_revision: 0,
-      expected_organization_revision: 0,
+      expected_organization_revision: await readOrganizationRevision(db),
     },
     now: "2026-01-01T00:00:00.000Z",
   })

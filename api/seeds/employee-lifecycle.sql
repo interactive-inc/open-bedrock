@@ -97,10 +97,67 @@ SELECT
 FROM org_departments AS organization
 INNER JOIN employees AS manager ON manager.code = organization.manager_employee_code;
 
+-- 判断資格はtechnical roleではなくCompanyの期間付き責務を正本にする。
+WITH people_operations AS (
+  SELECT
+    employee.id AS employee_id,
+    organization.code AS department_code
+  FROM employees AS employee
+  JOIN org_departments AS organization ON organization.department_id = employee.dept_id
+  WHERE employee.code = 'E003' AND employee.status IN ('active', 'leave')
+)
+INSERT INTO organization_change_operations (
+  id, expected_revision, change_count, applied_count,
+  resulting_revision, status, recorded_at
+)
+SELECT
+  'seed-people-operations',
+  state.revision,
+  count(*),
+  0,
+  state.revision + count(*),
+  'PENDING',
+  1767225600
+FROM organization_lifecycle_states AS state
+CROSS JOIN people_operations
+WHERE state.id = 1
+GROUP BY state.revision
+HAVING count(*) > 0;
+
+WITH people_operations AS (
+  SELECT
+    employee.id AS employee_id,
+    organization.code AS department_code
+  FROM employees AS employee
+  JOIN org_departments AS organization ON organization.department_id = employee.dept_id
+  WHERE employee.code = 'E003' AND employee.status IN ('active', 'leave')
+)
+INSERT INTO organization_responsibility_period_versions (
+  period_id, revision, employment_id, employee_id, organization_unit_id,
+  responsibility_type, starts_on, ends_on, is_void,
+  recorded_by_action_id, recorded_at
+)
+SELECT
+  'responsibility-period:people-operations:' || employee_id,
+  1,
+  'employment:seed-employment-' || employee_id,
+  'employee:' || employee_id,
+  'department:' || department_code,
+  'PEOPLE_OPERATIONS',
+  '2026-01-01',
+  NULL,
+  0,
+  'seed-people-operations',
+  1767225600
+FROM people_operations
+ORDER BY employee_id;
+
+UPDATE organization_change_operations
+SET status = 'COMPLETED'
+WHERE id = 'seed-people-operations';
+
 INSERT INTO employee_lifecycle_revisions (employee_id, revision, updated_at)
 SELECT id, 0, 1767225600 FROM employees;
-
-UPDATE organization_lifecycle_states SET revision = 0, updated_at = 1767225600 WHERE id = 1;
 
 UPDATE lifecycle_migration_states
 SET status = 'verified',

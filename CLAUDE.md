@@ -44,6 +44,8 @@ Company は次を所有する。
 
 判断資格 resolver の入力、時点 snapshot、Account 対応、fail closed 条件、System と App への接続は `.docs/company-organizational-authority.md` に従う。
 
+Account role と technical permission は API 操作能力だけに使う。会社上の判断資格は期間付き Assignment と Responsibility から解決し、workflow 未定義、旧 role selector、候補ゼロを最上位 role や管理者で補完しない。
+
 削除可能な業務機能はすべて独立した App コンテキストにする。対象は次のとおり。
 
 - 汎用手続き: System の ProcedureDefinition、Proposal、Case として所有する。独立した request コンテキストは作らない

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
+import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -39,6 +40,12 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "departments",
+    seedDepartments.map((department) => ({ id: department.id, name: department.name })),
+  )
 
   await seedD1(
     db,
@@ -389,7 +396,8 @@ describe("GET /directory/employees", () => {
   test("uses current lifecycle state for visibility, department filters, and position", async () => {
     const db = await createTestDb()
     await db.exec(`
-      INSERT INTO departments (id, name) VALUES (4, 'Sales');
+      INSERT INTO departments (id, name) VALUES (7, 'Sales');
+      UPDATE org_departments SET department_id = 7 WHERE code = 'D004';
       INSERT INTO employment_period_versions
         (period_id, revision, employee_id, starts_on, ends_on, is_void,
          recorded_by_action_id, recorded_at) VALUES

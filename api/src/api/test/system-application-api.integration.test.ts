@@ -22,8 +22,24 @@ async function token(employeeId: number): Promise<string> {
 async function createDb(): Promise<D1Database> {
   const db = await createLifecycleRouteDb()
   const policy = createCompanyProcedureDecisionPolicy({
-    approverRoles: ["root"],
-    workflow: null,
+    approverRoles: [],
+    workflow: {
+      version: 1,
+      steps: [
+        {
+          key: "manager_approval",
+          name: "Manager approval",
+          approvers: [{ type: "management_chain" }],
+          approval_mode: "any",
+          condition_mode: "all",
+          conditions: [],
+          due_days: null,
+          escalation_approvers: [],
+          rejection_behavior: "reject",
+          allow_delegation: true,
+        },
+      ],
+    },
   })
   if (policy instanceof Error) throw policy
   const definition = ProcedureDefinition.create({
@@ -135,7 +151,7 @@ describe("System application API composition", () => {
     ).toBe("approved")
   })
 
-  test("edits by appending a proposal revision and withdraws by closing the Case", async () => {
+  test("freezes a proposal after candidate resolution and lets the owner withdraw it", async () => {
     const db = await createDb()
     const number = await submit(db, "first")
     const edited = await request(db, 5, `/application-requests/${number}`, {
@@ -143,8 +159,7 @@ describe("System application API composition", () => {
       body: { payload: { reason: "second" } },
       at: "2026-01-01T00:01:00.000Z",
     })
-    expect(edited.status).toBe(200)
-    expect(await edited.json()).toMatchObject({ id: number, payload: { reason: "second" } })
+    expect(edited.status).toBe(409)
     expect(
       await db
         .prepare(
@@ -154,7 +169,7 @@ describe("System application API composition", () => {
         )
         .bind(number)
         .first<number>("count(*)"),
-    ).toBe(2)
+    ).toBe(1)
     const withdrawn = await request(db, 5, `/application-requests/${number}`, {
       method: "DELETE",
       at: "2026-01-01T00:02:00.000Z",

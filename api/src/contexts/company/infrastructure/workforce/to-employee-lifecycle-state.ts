@@ -53,6 +53,8 @@ export function toEmployeeLifecycleState(props: Props): EmployeeLifecycleState |
   const responsibilityDepartmentCodes: string[] = []
 
   for (const responsibility of props.workforce.responsibilities) {
+    // 旧wireのdepartment codesは部門管理責務だけを表す。
+    if (responsibility.responsibilityType !== "MANAGER") continue
     const departmentCode = toLifecycleStorageId(
       String(responsibility.organizationUnitId),
       "department:",

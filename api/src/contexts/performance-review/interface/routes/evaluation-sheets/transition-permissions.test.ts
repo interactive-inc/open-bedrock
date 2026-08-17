@@ -1352,7 +1352,6 @@ describe("lifecycle evaluator validation", () => {
     subjectAssignmentStartsOn?: string
     subjectAssignmentEndsOn?: string | null
     managerArchivedAt?: number | null
-    departmentArchivedAt?: number | null
   }): Promise<D1Database> {
     const db = await createLifecycleRouteDb()
 
@@ -1382,13 +1381,6 @@ describe("lifecycle evaluator validation", () => {
       await db
         .prepare("UPDATE employees SET archived_at = ?1 WHERE id = 4")
         .bind(opts.managerArchivedAt)
-        .run()
-    }
-
-    if (opts?.departmentArchivedAt !== undefined) {
-      await db
-        .prepare("UPDATE org_departments SET archived_at = ?1 WHERE code = 'D003'")
-        .bind(opts.departmentArchivedAt)
         .run()
     }
 
@@ -1491,21 +1483,11 @@ describe("lifecycle evaluator validation", () => {
     expect(body.code).toBe("evaluator_archived")
   })
 
-  test("archived department: evaluator_department_archived", async () => {
-    // D003 (employee 4 の所属部門) を archived に設定
-    const db = await createLifecycleMboDb({ departmentArchivedAt: 1 })
+  test("active assignments prevent archiving their department", async () => {
+    const db = await createLifecycleMboDb()
 
-    const res = await requestWithContext({
-      db,
-      jwtSecret,
-      path: "/evaluation-sheets",
-      token: await tokenFor(1),
-      method: "POST",
-      body: { employee_id: 5, period: "2026-H1", primary_evaluator_id: 4 },
-    })
-
-    expect(res.status).toBe(400)
-    const body = (await res.json()) as { code: string }
-    expect(body.code).toBe("evaluator_department_archived")
+    expect(
+      db.prepare("UPDATE org_departments SET archived_at = 1 WHERE code = 'D003'").run(),
+    ).rejects.toThrow("organization change leaves an orphan assignment")
   })
 })
