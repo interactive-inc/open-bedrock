@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { FormField, FormFieldType, FormSchema } from "@/lib/application/form-schema"
 import { emptyFormSchema } from "@/lib/application/empty-form-schema"
 import { toFormFieldTypeLabel } from "@/lib/application/to-form-field-type-label"
+import { toPersistedFormSchema } from "@/lib/application/to-persisted-form-schema"
 import { withMovedItem } from "@/lib/array/with-moved-item"
 
 /**
@@ -61,7 +62,11 @@ export function FormBuilder(props: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <input type="hidden" name={props.name} value={JSON.stringify(schema)} />
+      <input
+        type="hidden"
+        name={props.name}
+        value={JSON.stringify(toPersistedFormSchema(schema))}
+      />
 
       {schema.fields.length === 0 ? (
         <EmptyState
@@ -126,10 +131,12 @@ export function FormBuilder(props: Props) {
                     onChange={(event) => {
                       const nextType = event.target.value as FormFieldType
 
+                      // 種類を切り替えても選択肢は編集中 state に保持し、選択式へ戻したら復元する。
+                      // 保存形からは toPersistedFormSchema が選択式以外の options を除外する
                       updateField(index, {
                         ...field,
                         type: nextType,
-                        options: nextType === "select" ? (field.options ?? [""]) : null,
+                        options: nextType === "select" ? (field.options ?? [""]) : field.options,
                       })
                     }}
                   >
