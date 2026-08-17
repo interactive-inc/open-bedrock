@@ -78,4 +78,48 @@ describe("FormBuilder", () => {
     expect(screen.getByRole("button", { name: "項目 1 を並べ替え（上下キーで移動）" })).toBeTruthy()
     expect(screen.getByRole("button", { name: "項目 2 を並べ替え（上下キーで移動）" })).toBeTruthy()
   })
+
+  test("restores entered options after switching the field type away and back", () => {
+    const selectField: FormField = {
+      id: "field_3",
+      label: "希望する備品",
+      type: "select",
+      required: false,
+      description: null,
+      options: ["椅子", "机"],
+    }
+
+    const rendered = render(
+      <FormBuilder name="form_schema" initialSchema={{ fields: [selectField] }} />,
+    )
+
+    const typeSelect = screen.getByLabelText("項目の種類")
+
+    fireEvent.change(typeSelect, { target: { value: "text" } })
+
+    fireEvent.change(typeSelect, { target: { value: "select" } })
+
+    expect(toHiddenValue(rendered.container)).toBe(JSON.stringify({ fields: [selectField] }))
+  })
+
+  test("persists options as null for non-select fields", () => {
+    const selectField: FormField = {
+      id: "field_3",
+      label: "希望する備品",
+      type: "select",
+      required: false,
+      description: null,
+      options: ["椅子", "机"],
+    }
+
+    const rendered = render(
+      <FormBuilder name="form_schema" initialSchema={{ fields: [selectField] }} />,
+    )
+
+    fireEvent.change(screen.getByLabelText("項目の種類"), { target: { value: "text" } })
+
+    expect(toHiddenValue(rendered.container)).toBe(
+      JSON.stringify({ fields: [{ ...selectField, type: "text", options: null }] }),
+    )
+  })
 })
