@@ -31,7 +31,8 @@ async function setupActiveEmployee(): Promise<{ context: Context; db: D1Database
        operation_id, payload_fingerprint, summary_json)
     VALUES ('baseline-action', 1, 'legacy_baseline', '2026-01-01', 1, NULL,
             NULL, 'migration', NULL, NULL, 'baseline-operation',
-            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '{}');
+            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            '{"kind":"legacy_baseline","eventOn":"2026-01-01","department":{"code":"D001","name":"Product"},"positionTitle":"Member","managerEmployeeCode":null,"status":"active"}');
     INSERT INTO employment_period_versions
       (period_id, revision, employee_id, starts_on, ends_on, is_void,
        recorded_by_action_id, recorded_at)

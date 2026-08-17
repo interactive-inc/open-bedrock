@@ -6,6 +6,7 @@ import { createTestContext } from "@/api/test/support/create-test-context"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { seedD1 } from "@/api/test/support/seed-d1"
+import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
 import { describe, expect, test } from "bun:test"
 
 async function seedPendingRequest(
@@ -36,17 +37,22 @@ async function seedPendingRequest(
 
 async function seedManagerRelationship(db: D1Database): Promise<void> {
   await seedD1(db, "employees", [
-    { id: 2, code: "E002", name: "Manager", status: "active" },
-    { id: 5, code: "E005", name: "Member", status: "active" },
+    { id: 2, code: "E002", name: "Manager", dept_id: 3, status: "active" },
+    { id: 5, code: "E005", name: "Member", dept_id: 3, status: "active" },
   ])
 
   await seedD1(db, "org_memberships", [
     {
-      department_code: "TEAM",
+      department_code: "D003",
       employee_code: "E005",
       manager_employee_code: "E002",
     },
   ])
+
+  await verifyCompanyMigrationFixture({
+    db,
+    departments: [{ id: 3, code: "D003", name: "Team", managerEmployeeCode: "E002" }],
+  })
 }
 
 describe("DecideLeaveRequest", () => {
@@ -139,8 +145,9 @@ describe("DecideLeaveRequest", () => {
     expectApplicationError(result, ForbiddenError, "self_approval")
   })
 
-  test("allows hr role to decide", async () => {
-    const { context } = createTestContext()
+  test("allows hr role with current manager authority to decide", async () => {
+    const { context, db } = createTestContext()
+    await seedManagerRelationship(db)
 
     const repository = new LeaveRequestRepository(context)
 

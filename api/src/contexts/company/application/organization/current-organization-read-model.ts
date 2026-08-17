@@ -29,7 +29,7 @@ export type CurrentOrganizationDepartment = {
 }
 
 export type CurrentOrganizationReadModel = {
-  source: "lifecycle" | "legacy"
+  source: "lifecycle"
   asOf: string | null
   departments: ReadonlyArray<CurrentOrganizationDepartment>
   employeesByCode: ReadonlyMap<string, CurrentOrganizationEmployee>

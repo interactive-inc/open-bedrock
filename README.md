@@ -100,6 +100,7 @@ api のルートを変更したら `cd api && bun run build:types` で型を再�
 - `architecture.md` … ワークスペース構成・レイヤ・認証・セキュリティ
 - `company-model.md` … 会社を表現する三層モデルと共通概念
 - `capability-map.md` … 会社能力の網羅分類と現在の実装範囲
+- `company-api.md` … Companyの公開resource、時点snapshot、原子的変更と失敗契約
 - `authorization-model.md` … システム権限・組織関係・案件割当を合成する認可規範
 - `features.md` … 利用者視点の機能一覧
 - `sitemap.md` / `user-flows.md` … web の画面と導線

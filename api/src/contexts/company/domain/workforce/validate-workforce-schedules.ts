@@ -119,6 +119,14 @@ function validateLifecycleOwner(
 function validatePeriodVersions(
   schedule: WorkforceLifecycleSchedule,
 ): WorkforceInvariantViolation | null {
+  if (
+    schedule.baselineState !== undefined &&
+    (!isCalendarDate(schedule.baselineState.asOf) ||
+      (schedule.baselineState.status !== "PRE_HIRE" &&
+        schedule.baselineState.status !== "TERMINATED"))
+  ) {
+    return violation("invalid_period", "workforce baseline state is not canonical")
+  }
   const periods = [
     ...schedule.employments,
     ...schedule.statuses,

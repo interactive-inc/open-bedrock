@@ -9,6 +9,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
 import { z } from "zod"
 
 const goalResponseSchema = z.object({
@@ -79,6 +80,8 @@ async function createTestDb(): Promise<D1Database> {
       created_at: evaluation.createdAt,
     })),
   )
+
+  await verifyStandardCompanyMigration(db)
 
   return db
 }

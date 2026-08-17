@@ -12,6 +12,7 @@ import { ReviewCycleRepository } from "@/contexts/performance-review/infrastruct
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { makeTestSession } from "@/api/test/support/make-test-session"
+import { verifyCompanyMigration } from "@/api/test/support/verify-company-migration"
 
 async function seedCycle(context: Context, status: "draft" | "open" | "closed"): Promise<number> {
   const created = await new ReviewCycleRepository(context).create(
@@ -210,7 +211,8 @@ describe("DeleteReviewCycle", () => {
 
 describe("SetReviewCycleStatus", () => {
   test("transitions draft to open", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+    await verifyCompanyMigration(db)
 
     const cycleId = await seedCycle(context, "draft")
 

@@ -7,6 +7,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
 import { z } from "zod"
 
 const jwtSecret = "shift-swap-admin-route-test-secret"
@@ -63,6 +64,8 @@ async function createTestDb(): Promise<D1Database> {
       approved_at: swap.approvedAt,
     })),
   )
+
+  await verifyStandardCompanyMigration(db)
 
   return db
 }

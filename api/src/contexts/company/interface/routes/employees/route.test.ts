@@ -9,6 +9,7 @@ import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments"
 import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships"
+import { verifyCompanyMigration } from "@/api/test/support/verify-company-migration"
 import { z } from "zod"
 
 const jwtSecret = "employee-route-test-secret"
@@ -22,7 +23,7 @@ const employeeResponseSchema = z.object({
   status: z.string(),
 })
 
-async function createTestDb(): Promise<D1Database> {
+async function createTestDb(verified = true): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
   await seedD1(
@@ -67,6 +68,8 @@ async function createTestDb(): Promise<D1Database> {
       manager_employee_code: membership.managerEmployeeCode,
     })),
   )
+
+  if (verified) await verifyCompanyMigration(db)
 
   return db
 }
@@ -266,17 +269,27 @@ describe("GET /employees", () => {
     expect(response.status).toBe(401)
   })
 
-  test("returns 422 when as_of is given but lifecycle data is not verified", async () => {
-    const response = await request("/employees?as_of=2026-01-01", await adminToken())
+  test("fails closed when lifecycle data is not verified", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(false),
+      jwtSecret,
+      path: "/employees?as_of=2026-01-01",
+      token: await adminToken(),
+    })
 
-    expect(response.status).toBe(422)
-    expect(await response.json()).toMatchObject({ code: "lifecycle_migration_incomplete" })
+    expect(response.status).toBe(503)
+    expect(await response.json()).toMatchObject({ code: "company_migration_incomplete" })
   })
 
-  test("keeps serving the legacy path with 200 when as_of is omitted", async () => {
-    const response = await request("/employees", await adminToken())
+  test("does not fall back when as_of is omitted", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(false),
+      jwtSecret,
+      path: "/employees",
+      token: await adminToken(),
+    })
 
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(503)
   })
 
   test("honors as_of instead of rejecting it once lifecycle data is verified", async () => {
@@ -284,7 +297,7 @@ describe("GET /employees", () => {
     // 後なら retired になる。as_of が本当に読まれていることを日付の差で確かめる。
     // 認証者 E001 は現在時点でも在籍していないと 401 になるため、終了日を持たせない。
     async function verifiedDb(): Promise<D1Database> {
-      const db = await createTestDb()
+      const db = await createTestDb(false)
       await db.exec(`
         INSERT INTO employment_period_versions
           (period_id, revision, employee_id, starts_on, ends_on, is_void,
@@ -296,7 +309,9 @@ describe("GET /employees", () => {
            ends_on, is_void, recorded_by_action_id, recorded_at) VALUES
           ('status-1', 1, 'employment-1', 1, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
           ('status-5', 1, 'employment-5', 5, 'active', '2025-01-01', '2026-04-01', 0, 'fixture', 1);
-        UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
+        UPDATE lifecycle_migration_states
+        SET status = 'verified', baseline_on = '2025-01-01', company_time_zone = 'Asia/Tokyo'
+        WHERE id = 1;
       `)
       return db
     }
@@ -340,8 +355,10 @@ describe("GET /employees", () => {
       .object({ data: z.array(employeeResponseSchema), total: z.number() })
       .parse(await response.json())
 
-    expect(new Set(body.data.map((employee) => employee.code))).toEqual(new Set(["E004", "E005"]))
-    expect(body.total).toBe(2)
+    expect(new Set(body.data.map((employee) => employee.code))).toEqual(
+      new Set(["E004", "E005", "E006"]),
+    )
+    expect(body.total).toBe(3)
   })
 
   test("returns 401 with an invalid bearer token", async () => {
@@ -394,7 +411,7 @@ describe("GET /directory/employees", () => {
   })
 
   test("uses current lifecycle state for visibility, department filters, and position", async () => {
-    const db = await createTestDb()
+    const db = await createTestDb(false)
     await db.exec(`
       INSERT INTO departments (id, name) VALUES (7, 'Sales');
       UPDATE org_departments SET department_id = 7 WHERE code = 'D004';
@@ -414,7 +431,9 @@ describe("GET /directory/employees", () => {
          is_void, recorded_by_action_id, recorded_at) VALUES
         ('assignment-5', 1, 'employment-5', 5, 'D004', 'primary', 'Account Lead', NULL, '2025-01-01', NULL, 0, 'fixture', 1),
         ('assignment-6', 1, 'employment-6', 6, 'D003', 'primary', 'Engineer', NULL, '2027-01-01', NULL, 0, 'fixture', 1);
-      UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
+      UPDATE lifecycle_migration_states
+      SET status = 'verified', baseline_on = '2025-01-01', company_time_zone = 'Asia/Tokyo'
+      WHERE id = 1;
     `)
 
     const response = await requestWithContext({

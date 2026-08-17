@@ -1,7 +1,8 @@
 import type { Context } from "@/env"
-import { buildEmployeeCodeMap } from "@/contexts/company/infrastructure/organization/build-employee-code-map"
-import { buildMembershipMap } from "@/contexts/company/infrastructure/organization/build-membership-map"
-import { isReportOf } from "@/contexts/company/domain/organization/is-report-of"
+import { readCanonicalOrganizationState } from "@/contexts/company/application/organization/read-canonical-organization-state"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
+import { listReportWorkforceEmployeeIds } from "@/contexts/company/domain/workforce/resolve-employee-management-authority"
+import { toStorageEmployeeId } from "@/contexts/company/infrastructure/workforce/to-storage-employee-id"
 
 export type Props = {
   c: Context
@@ -9,50 +10,21 @@ export type Props = {
 }
 
 /**
- * viewer の配下(再帰)にあたる従業員 id の一覧を org_memberships から解決する。
- * 直属に限らずレポートライン全体を対象にする。循環は isReportOf の visited で防ぐ。
+ * viewer の配下(再帰)にあたる従業員 id をcanonical Company snapshotから解決する。
  * viewer 自身は含めない。
  */
 export async function listReportEmployeeIds(props: Props): Promise<Array<number> | Error> {
-  const codesById = await buildEmployeeCodeMap(props.c)
+  const snapshot = await readCanonicalOrganizationState(props.c)
+  if (snapshot instanceof Error) return snapshot
 
-  if (codesById instanceof Error) {
-    return codesById
+  const storageIds: number[] = []
+  for (const employeeId of listReportWorkforceEmployeeIds({
+    states: snapshot.employees,
+    actorEmployeeId: toWorkforceEmployeeId(props.viewerEmployeeId),
+  })) {
+    const storageId = toStorageEmployeeId(employeeId)
+    if (storageId instanceof Error) return storageId
+    storageIds.push(storageId)
   }
-
-  const viewerCode = codesById.get(props.viewerEmployeeId) ?? null
-
-  if (viewerCode === null) {
-    return []
-  }
-
-  const memberships = await buildMembershipMap(props.c)
-
-  if (memberships instanceof Error) {
-    return memberships
-  }
-
-  const reportEmployeeIds: Array<number> = []
-
-  for (const entry of codesById.entries()) {
-    const employeeId = entry[0]
-
-    const employeeCode = entry[1]
-
-    if (employeeId === props.viewerEmployeeId) {
-      continue
-    }
-
-    const isReport = isReportOf({
-      memberships,
-      targetEmployeeCode: employeeCode,
-      viewerEmployeeCode: viewerCode,
-    })
-
-    if (isReport) {
-      reportEmployeeIds.push(employeeId)
-    }
-  }
-
-  return reportEmployeeIds
+  return storageIds.toSorted((left, right) => left - right)
 }

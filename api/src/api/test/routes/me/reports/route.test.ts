@@ -9,6 +9,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyCompanyMigration } from "@/api/test/support/verify-company-migration"
 import { z } from "zod"
 
 const myReportResponseSchema = z.object({
@@ -74,6 +75,8 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+
+  await verifyCompanyMigration(db)
 
   return db
 }

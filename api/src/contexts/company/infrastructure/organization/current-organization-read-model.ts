@@ -1,33 +1,70 @@
-import type { Context } from "@/env"
-import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { ApplicationError } from "@/lib/errors"
-import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import {
-  departments,
-  orgDepartments,
-  orgMemberships,
-} from "@/contexts/company/infrastructure/schema/organization"
 import type {
   CurrentOrganizationEmployee,
   CurrentOrganizationReadModel,
 } from "@/contexts/company/application/organization/current-organization-read-model"
+import { ReadCompanyReadiness } from "@/contexts/company/application/workforce/read-company-readiness"
+import { ReadOrganizationWorkforceState } from "@/contexts/company/application/workforce/read-organization-workforce-state"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import type { WorkforceStateAt } from "@/contexts/company/domain/workforce/resolve-workforce-state"
+import type {
+  EmployeeId,
+  OrganizationUnitId,
+} from "@/contexts/company/domain/workforce/workforce-id"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { departments, orgDepartments } from "@/contexts/company/infrastructure/schema/organization"
+import { CompanyReadinessRepository } from "@/contexts/company/infrastructure/workforce/company-readiness.repository"
+import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
+import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
+import type { Context } from "@/env"
+import { UnavailableError } from "@/lib/errors"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { asc, eq, isNull } from "drizzle-orm"
 
+type EmployeeCompatibilityRow = Readonly<{
+  id: number
+  code: string | null
+  name: string
+  archivedAt: number | null
+}>
+
+function activeStatus(state: WorkforceStateAt): "active" | "leave" | null {
+  if (state.status === "ACTIVE") return "active"
+  if (state.status === "ON_LEAVE") return "leave"
+  return null
+}
+
+/** canonical snapshotを、旧department wireが表現できる範囲だけへ写像する。 */
 export async function loadCurrentOrganizationReadModel(
   c: Context,
 ): Promise<CurrentOrganizationReadModel | Error> {
   try {
-    const [departmentRows, employeeRows, migrationStatus] = await Promise.all([
+    const readiness = await new ReadCompanyReadiness(
+      new CompanyReadinessRepository(c.env.DB),
+    ).execute(c.env.COMPANY_TIME_ZONE)
+    if (readiness.kind !== "ready") {
+      return new UnavailableError(
+        "Company migrationが完了していません",
+        readiness.kind === "incomplete"
+          ? "company_migration_incomplete"
+          : "company_migration_unavailable",
+        readiness.kind === "unavailable" ? { cause: readiness.cause } : undefined,
+      )
+    }
+
+    const businessDate = resolveCompanyBusinessDate({
+      now: c.env.NOW ?? new Date().toISOString(),
+      timeZone: c.env.COMPANY_TIME_ZONE,
+    })
+    if (typeof businessDate !== "string") return businessDate
+
+    const [compatibilityDepartments, employeeRows, snapshot] = await Promise.all([
       c.var.database
         .select({
           code: orgDepartments.code,
           departmentId: orgDepartments.departmentId,
           name: departments.name,
-          parentCode: orgDepartments.parentCode,
           order: orgDepartments.sortOrder,
-          legacyManagerEmployeeCode: orgDepartments.managerEmployeeCode,
         })
         .from(orgDepartments)
         .innerJoin(departments, eq(departments.id, orgDepartments.departmentId))
@@ -38,132 +75,121 @@ export async function loadCurrentOrganizationReadModel(
           id: employees.id,
           code: employees.code,
           name: employees.name,
-          status: employees.status,
-          position: employees.position,
           archivedAt: employees.archivedAt,
         })
         .from(employees)
-        .orderBy(asc(employees.code)),
-      new EmployeeLifecycleRepository(c).migrationStatus(),
+        .orderBy(asc(employees.id)),
+      new ReadOrganizationWorkforceState({
+        organization: new OrganizationUnitReadRepository(c.var.database),
+        workforce: new OrganizationWorkforceSnapshotRepository(c),
+      }).execute(restoreCalendarDate(businessDate)),
     ])
-    if (migrationStatus instanceof ApplicationError) return migrationStatus
-
-    const currentDepartments = departmentRows.map((department) => ({
-      code: department.code,
-      departmentId: department.departmentId,
-      name: department.name,
-      parentCode: department.parentCode,
-      order: department.order,
-    }))
-    const departmentCodes = new Set(currentDepartments.map((department) => department.code))
-
-    if (migrationStatus !== "verified") {
-      const memberships = await c.var.database
-        .select()
-        .from(orgMemberships)
-        .orderBy(asc(orgMemberships.departmentCode), asc(orgMemberships.employeeCode))
-      const membershipsByEmployee = new Map<string, Array<(typeof memberships)[number]>>()
-      for (const membership of memberships) {
-        if (!departmentCodes.has(membership.departmentCode)) continue
-        const current = membershipsByEmployee.get(membership.employeeCode) ?? []
-        current.push(membership)
-        membershipsByEmployee.set(membership.employeeCode, current)
-      }
-      const employeesByCode = new Map<string, CurrentOrganizationEmployee>()
-      for (const employee of employeeRows) {
-        if (employee.archivedAt !== null || employee.status === "retired") continue
-        // code=null（外部プロビジョニング）の従業員は組織メンバーシップを持たず、組織図に載らない。
-        if (employee.code === null) continue
-        const employeeMemberships = membershipsByEmployee.get(employee.code) ?? []
-        if (employeeMemberships.length === 0) continue
-        const primary = employeeMemberships.at(0)
-        employeesByCode.set(employee.code, {
-          id: employee.id,
-          code: employee.code,
-          name: employee.name,
-          status: employee.status,
-          position: employee.position,
-          primaryDepartmentCode: primary?.departmentCode ?? null,
-          managerEmployeeCode: primary?.managerEmployeeCode ?? null,
-          departmentCodes: employeeMemberships.map((membership) => membership.departmentCode),
-          assignments: employeeMemberships.map((membership, index) => ({
-            departmentCode: membership.departmentCode,
-            position: employee.position,
-            managerEmployeeCode: membership.managerEmployeeCode,
-            assignmentType: index === 0 ? "primary" : "concurrent",
-          })),
-        })
-      }
-      return {
-        source: "legacy",
-        asOf: null,
-        departments: currentDepartments,
-        employeesByCode,
-        managerByDepartmentCode: new Map(
-          departmentRows.flatMap((department) =>
-            department.legacyManagerEmployeeCode === null
-              ? []
-              : [[department.code, department.legacyManagerEmployeeCode] as const],
-          ),
-        ),
-      }
+    if (snapshot.kind !== "found") {
+      return new UnavailableError(
+        "Company organization snapshotを安全に解決できません",
+        snapshot.kind === "invalid"
+          ? "company_organization_invalid"
+          : "company_organization_unavailable",
+        snapshot.kind === "unavailable" ? { cause: snapshot.cause } : undefined,
+      )
     }
 
-    const businessDate = resolveCompanyBusinessDate({
-      now: c.env.NOW ?? new Date().toISOString(),
-      timeZone: c.env.COMPANY_TIME_ZONE,
-    })
-    if (typeof businessDate !== "string") return businessDate
-    const states = await new EmployeeLifecycleReadRepository(c).findStatesAt(
-      employeeRows.map((employee) => employee.id),
-      businessDate,
+    const employeeById = new Map<EmployeeId, EmployeeCompatibilityRow>(
+      employeeRows.map((employee) => [toWorkforceEmployeeId(employee.id), employee]),
     )
-    if (states instanceof ApplicationError) return states
+    const compatibilityByCode = new Map(
+      compatibilityDepartments.map((department) => [department.code, department]),
+    )
+    const unitById = new Map(
+      snapshot.organization.units.map((unit) => [unit.organizationUnitId, unit]),
+    )
+    const codeByUnitId = new Map<OrganizationUnitId, string>()
+    for (const unit of snapshot.organization.units) {
+      if (compatibilityByCode.has(unit.code)) codeByUnitId.set(unit.organizationUnitId, unit.code)
+    }
+
+    const currentDepartments = compatibilityDepartments.flatMap((compatibility) => {
+      const unit = snapshot.organization.units.find(
+        (candidate) => candidate.code === compatibility.code,
+      )
+      if (unit === undefined) return []
+      const parent =
+        unit.parentOrganizationUnitId === null
+          ? undefined
+          : unitById.get(unit.parentOrganizationUnitId)
+
+      return [
+        {
+          code: compatibility.code,
+          departmentId: compatibility.departmentId,
+          name: compatibility.name,
+          parentCode:
+            parent === undefined || !compatibilityByCode.has(parent.code) ? null : parent.code,
+          order: compatibility.order,
+        },
+      ]
+    })
 
     const employeesByCode = new Map<string, CurrentOrganizationEmployee>()
-    const managerByDepartmentCode = new Map<string, string>()
-    for (const employee of employeeRows) {
-      // code=null（外部プロビジョニング）の従業員は組織図に載らない。
-      if (employee.code === null) continue
-      const state = states.get(employee.id)
+    const managersByDepartment = new Map<string, string[]>()
+    for (const state of snapshot.employees) {
+      const employee = employeeById.get(state.employeeId)
+      const status = activeStatus(state)
       if (
-        state === undefined ||
-        state.archived ||
-        (state.status !== "active" && state.status !== "leave")
+        employee === undefined ||
+        employee.code === null ||
+        employee.archivedAt !== null ||
+        status === null
       ) {
         continue
       }
       const assignments = [
         ...(state.primaryAssignment === null ? [] : [state.primaryAssignment]),
         ...state.concurrentAssignments,
-      ]
-        .filter((assignment) => departmentCodes.has(assignment.departmentCode))
-        .map((assignment) => ({
-          departmentCode: assignment.departmentCode,
-          position: assignment.positionTitle,
-          managerEmployeeCode: assignment.managerEmployeeCode,
-          assignmentType: assignment.assignmentType,
-        }))
-      const responsibilities = state.responsibilityDepartmentCodes.filter((code) =>
-        departmentCodes.has(code),
-      )
-      if (assignments.length === 0 && responsibilities.length === 0) continue
+      ].flatMap((assignment) => {
+        const departmentCode = codeByUnitId.get(assignment.organizationUnitId)
+        if (departmentCode === undefined) return []
+
+        return [
+          {
+            departmentCode,
+            position: assignment.positionTitle,
+            managerEmployeeCode:
+              assignment.managerEmployeeId === null
+                ? null
+                : (employeeById.get(assignment.managerEmployeeId)?.code ?? null),
+            assignmentType:
+              assignment.assignmentType === "PRIMARY"
+                ? ("primary" as const)
+                : ("concurrent" as const),
+          },
+        ]
+      })
+      const managerDepartmentCodes = state.responsibilities.flatMap((responsibility) => {
+        if (responsibility.responsibilityType !== "MANAGER") return []
+        const departmentCode = codeByUnitId.get(responsibility.organizationUnitId)
+
+        return departmentCode === undefined ? [] : [departmentCode]
+      })
+      if (assignments.length === 0 && managerDepartmentCodes.length === 0) continue
       const primary = assignments.find((assignment) => assignment.assignmentType === "primary")
       employeesByCode.set(employee.code, {
         id: employee.id,
         code: employee.code,
         name: employee.name,
-        status: state.status,
+        status,
         position: primary?.position ?? null,
         primaryDepartmentCode: primary?.departmentCode ?? null,
         managerEmployeeCode: primary?.managerEmployeeCode ?? null,
         departmentCodes: [...new Set(assignments.map((assignment) => assignment.departmentCode))],
         assignments,
       })
-      for (const code of responsibilities) {
-        if (!managerByDepartmentCode.has(code)) {
-          managerByDepartmentCode.set(code, employee.code)
-        }
+
+      for (const departmentCode of managerDepartmentCodes) {
+        managersByDepartment.set(departmentCode, [
+          ...(managersByDepartment.get(departmentCode) ?? []),
+          employee.code,
+        ])
       }
     }
 
@@ -172,7 +198,11 @@ export async function loadCurrentOrganizationReadModel(
       asOf: businessDate,
       departments: currentDepartments,
       employeesByCode,
-      managerByDepartmentCode,
+      managerByDepartmentCode: new Map(
+        [...managersByDepartment].flatMap(([code, managers]) =>
+          managers.length === 1 ? [[code, managers[0]!] as const] : [],
+        ),
+      ),
     }
   } catch (error) {
     return error instanceof Error ? error : new Error("failed to load current organization")

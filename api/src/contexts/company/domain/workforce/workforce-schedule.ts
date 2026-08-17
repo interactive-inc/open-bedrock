@@ -77,9 +77,16 @@ export type AccountEmployeeLink = Readonly<{
   employeeId: EmployeeId
 }>
 
+/** 移行時点で明示され、雇用期間を推測せず保持する初期Workforce状態。 */
+export type WorkforceBaselineState = Readonly<{
+  asOf: CalendarDate
+  status: "PRE_HIRE" | "TERMINATED"
+}>
+
 /** Employee profileやSystem Accountに依存しない、雇用ライフサイクルの正規化済みschedule。 */
 export type WorkforceLifecycleSchedule = Readonly<{
   employeeId: EmployeeId
+  baselineState?: WorkforceBaselineState
   employments: ReadonlyArray<EmploymentPeriod>
   statuses: ReadonlyArray<EmploymentStatusPeriod>
   assignments: ReadonlyArray<OrgAssignmentPeriod>
@@ -89,6 +96,7 @@ export type WorkforceLifecycleSchedule = Readonly<{
 /** 1 Employeeの最新revisionだけを並べた正規化済みschedule。 */
 export type WorkforceSchedule = Readonly<{
   employee: Employee
+  baselineState?: WorkforceBaselineState
   employments: ReadonlyArray<EmploymentPeriod>
   statuses: ReadonlyArray<EmploymentStatusPeriod>
   assignments: ReadonlyArray<OrgAssignmentPeriod>

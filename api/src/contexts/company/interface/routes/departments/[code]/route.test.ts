@@ -1,14 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
-import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments"
-import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships"
 import { createTestToken } from "@/api/test/support/create-test-token"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
+import { createLifecycleRouteDb } from "@/api/test/support/lifecycle-route-fixture"
 import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
 
 const orgDepartmentResponseSchema = z.object({
@@ -22,53 +15,7 @@ const orgDepartmentResponseSchema = z.object({
 const jwtSecret = "org-department-detail-route-test-secret"
 
 async function createTestDb(): Promise<D1Database> {
-  const db = createD1TestDatabase(loadSchema())
-
-  await seedD1(
-    db,
-    "departments",
-    seedDepartments.map((department) => ({ id: department.id, name: department.name })),
-  )
-
-  await seedD1(
-    db,
-    "org_departments",
-    seedOrgDepartments.map((department) => ({
-      code: department.code,
-      department_id: department.departmentId,
-      parent_code: department.parentCode,
-      manager_employee_code: department.managerEmployeeCode,
-      sort_order: department.order,
-    })),
-  )
-
-  await seedD1(
-    db,
-    "org_memberships",
-    seedOrgMemberships.map((membership) => ({
-      department_code: membership.departmentCode,
-      employee_code: membership.employeeCode,
-      manager_employee_code: membership.managerEmployeeCode,
-    })),
-  )
-
-  await seedD1(
-    db,
-    "employees",
-    seedEmployees.map((employee) => ({
-      id: employee.id,
-      code: employee.code,
-      name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
-      position: employee.position,
-      status: employee.status,
-    })),
-  )
-
-  await seedIamForEmployees(db)
-
-  return db
+  return createLifecycleRouteDb()
 }
 
 function adminToken(): Promise<string> {
@@ -275,20 +222,6 @@ describe("DELETE /departments/:code", () => {
       path: "/departments/D006",
       token: await adminToken(),
       method: "DELETE",
-      setup: async (db) => {
-        await db.exec(`
-          INSERT INTO employment_period_versions
-            (period_id, revision, employee_id, starts_on, ends_on, is_void,
-             recorded_by_action_id, recorded_at)
-          VALUES ('fixture-employment-e001', 1, 1, '2025-01-01', NULL, 0, 'fixture', 1);
-          INSERT INTO employee_status_period_versions
-            (period_id, revision, employment_period_id, employee_id, status, starts_on,
-             ends_on, is_void, recorded_by_action_id, recorded_at)
-          VALUES ('fixture-status-e001', 1, 'fixture-employment-e001', 1, 'active',
-                  '2025-01-01', NULL, 0, 'fixture', 1);
-          UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
-        `)
-      },
     })
 
     expect(response.status).toBe(204)

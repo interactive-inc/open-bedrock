@@ -11,6 +11,7 @@ import { databaseMiddleware } from "@/api/database-middleware"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
 import type { Bindings } from "@/env"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { z } from "zod"
@@ -66,7 +67,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedIamForEmployees(db)
 
   await seedD1(db, "org_memberships", [
-    { department_code: "ENGINEERING", employee_code: "E005", manager_employee_code: "E004" },
+    { department_code: "D003", employee_code: "E005", manager_employee_code: "E004" },
   ])
 
   await seedD1(
@@ -107,6 +108,8 @@ async function createTestDb(): Promise<D1Database> {
     },
   ])
 
+  await verifyStandardCompanyMigration(db)
+
   return db
 }
 
@@ -138,6 +141,7 @@ async function request(props: {
     DB: await createTestDb(),
     JWT_SECRET: jwtSecret,
     AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+    COMPANY_TIME_ZONE: "Asia/Tokyo",
     NOW: "2026-01-01T00:00:00.000Z",
   }
 
@@ -185,6 +189,7 @@ describe("GET /leave-requests/:id", () => {
       DB: db,
       JWT_SECRET: jwtSecret,
       AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      COMPANY_TIME_ZONE: "Asia/Tokyo",
       NOW: "2026-01-01T00:00:00.000Z",
     }
 
@@ -234,6 +239,7 @@ describe("GET /leave-requests/:id", () => {
       DB: db,
       JWT_SECRET: jwtSecret,
       AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      COMPANY_TIME_ZONE: "Asia/Tokyo",
       NOW: "2026-01-01T00:00:00.000Z",
     }
 
@@ -355,6 +361,7 @@ describe("PUT /leave-requests/:id", () => {
       DB: db,
       JWT_SECRET: jwtSecret,
       AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      COMPANY_TIME_ZONE: "Asia/Tokyo",
       NOW: "2026-01-01T00:00:00.000Z",
     }
 

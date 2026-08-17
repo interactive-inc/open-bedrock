@@ -13,6 +13,7 @@ import { expectApplicationError } from "@/api/test/support/expect-application-er
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
+import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
 import type { Context } from "@/env"
 
 /** 目標の所有者(id=owner)を、上長(id=manager)のレポートライン配下にする最小の org を仕込む。 */
@@ -21,8 +22,14 @@ async function seedReportsTo(
   props: { managerId: number; managerCode: string; ownerId: number; ownerCode: string },
 ): Promise<void> {
   await seedD1(db, "employees", [
-    { id: props.managerId, code: props.managerCode, name: "Manager", status: "active" },
-    { id: props.ownerId, code: props.ownerCode, name: "Owner", status: "active" },
+    {
+      id: props.managerId,
+      code: props.managerCode,
+      name: "Manager",
+      dept_id: 1,
+      status: "active",
+    },
+    { id: props.ownerId, code: props.ownerCode, name: "Owner", dept_id: 1, status: "active" },
   ])
 
   await seedD1(db, "org_memberships", [
@@ -33,6 +40,22 @@ async function seedReportsTo(
       manager_employee_code: props.managerCode,
     },
   ])
+
+  await verifyCompanyMigrationFixture({
+    db,
+    departments: [{ id: 1, code: "D001", name: "Team", managerEmployeeCode: props.managerCode }],
+  })
+}
+
+async function seedIndependentEmployees(db: D1Database): Promise<void> {
+  await seedD1(db, "employees", [
+    { id: 1, code: "E001", name: "Owner", dept_id: 1, status: "active" },
+    { id: 2, code: "E002", name: "Viewer", dept_id: 1, status: "active" },
+  ])
+  await verifyCompanyMigrationFixture({
+    db,
+    departments: [{ id: 1, code: "D001", name: "Team" }],
+  })
 }
 
 async function seedGoal(context: Context, employeeId: number): Promise<Goal> {
@@ -56,19 +79,16 @@ async function finalizeGoal(context: Context, goal: Goal): Promise<void> {
     throw new Error("goal id is null")
   }
 
-  const result = await new CreateGoalEvaluation(context).run({
-    goalId: goal.id,
-    kind: "final",
-    score: 5,
-    comment: "Good work",
-    evaluatorId: 999,
-    session: makeTestSession("root"),
-    createdAt: "2026-01-01T00:00:00.000Z",
-  })
-
-  if (result instanceof ApplicationError) {
-    throw new Error("finalize goal failed")
-  }
+  await context.env.DB.prepare("UPDATE performance_goals SET status = 'done' WHERE id = ?1")
+    .bind(goal.id)
+    .run()
+  await context.env.DB.prepare(
+    `INSERT INTO goal_evaluations
+       (goal_id, evaluator_id, kind, score, comment, created_at)
+     VALUES (?1, 999, 'final', 5, 'Good work', '2026-01-01T00:00:00.000Z')`,
+  )
+    .bind(goal.id)
+    .run()
 }
 
 describe("CreateGoal", () => {
@@ -152,8 +172,9 @@ describe("GetGoal", () => {
   })
 
   test("rejects a manager viewing a non-report's goal", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
     const goal = await seedGoal(context, 1)
+    await seedIndependentEmployees(db)
 
     if (goal.id === null) {
       throw new Error("id is null")
@@ -169,8 +190,9 @@ describe("GetGoal", () => {
   })
 
   test("rejects non-owner member with not_viewable", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
     const goal = await seedGoal(context, 1)
+    await seedIndependentEmployees(db)
 
     if (goal.id === null) {
       throw new Error("id is null")
@@ -450,8 +472,9 @@ describe("CreateGoalEvaluation", () => {
   })
 
   test("rejects a manager evaluation for a non-report", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
     const goal = await seedGoal(context, 1)
+    await seedIndependentEmployees(db)
 
     if (goal.id === null) {
       throw new Error("id is null")
@@ -471,8 +494,9 @@ describe("CreateGoalEvaluation", () => {
   })
 
   test("rejects manager evaluation by member with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
     const goal = await seedGoal(context, 1)
+    await seedIndependentEmployees(db)
 
     if (goal.id === null) {
       throw new Error("id is null")

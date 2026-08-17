@@ -25,7 +25,7 @@ export interface WorkforceLifecycleReadPort {
 }
 
 export type ReadWorkforceStateResult =
-  | Readonly<{ kind: "found"; state: WorkforceStateAt }>
+  | Readonly<{ kind: "found"; state: WorkforceStateAt; organizationRevision: number }>
   | Readonly<{ kind: "not_found" }>
   | Readonly<{
       kind: "invalid_schedule"
@@ -96,6 +96,6 @@ export class ReadWorkforceState {
     const state = resolveWorkforceStateAt(loaded.schedule, props.asOf)
     return state instanceof WorkforceStateResolutionError
       ? { kind: "invalid_schedule", error: state }
-      : { kind: "found", state }
+      : { kind: "found", state, organizationRevision: organization.snapshot.revision }
   }
 }

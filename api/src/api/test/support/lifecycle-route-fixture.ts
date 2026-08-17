@@ -114,7 +114,9 @@ export async function createLifecycleRouteDb(): Promise<D1Database> {
        'fixture-people-operations', 1);
     UPDATE organization_change_operations SET status = 'COMPLETED'
     WHERE id = 'fixture-people-operations';
-    UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
+    UPDATE lifecycle_migration_states
+    SET status = 'verified', baseline_on = '2025-01-01', company_time_zone = 'Asia/Tokyo'
+    WHERE id = 1;
   `)
   return db
 }

@@ -16,6 +16,7 @@ import {
 } from "@/contexts/company/infrastructure/workforce/organization-period-row.adapter"
 import type { Context } from "@/env"
 import { ApplicationError } from "@/lib/errors"
+import { readWorkforceBaselineStates } from "@/contexts/company/infrastructure/workforce/read-workforce-baseline-states"
 
 type AssignmentRow = Omit<OrgAssignmentProjectionRow, "isVoid"> & Readonly<{ isVoid: number }>
 type ResponsibilityRow = Omit<OrgResponsibilityProjectionRow, "isVoid"> &
@@ -59,7 +60,7 @@ export class EmployeeLifecycleWorkforceRepository implements WorkforceLifecycleR
       const source = await new EmployeeLifecycleRepository(this.c).loadSchedule(sourceEmployeeId)
       if (source instanceof ApplicationError) return { ok: false, cause: source }
 
-      const [assignments, responsibilities] = await Promise.all([
+      const [assignments, responsibilities, baselineStates] = await Promise.all([
         this.c.env.DB.prepare(
           `SELECT period_id AS periodId, revision, employment_id AS employmentId,
                   employee_id AS employeeId, organization_unit_id AS organizationUnitId,
@@ -85,10 +86,16 @@ export class EmployeeLifecycleWorkforceRepository implements WorkforceLifecycleR
         )
           .bind(employeeId)
           .all<ResponsibilityRow>(),
+        readWorkforceBaselineStates(this.c.env.DB),
       ])
       const baseSchedule = toWorkforceLifecycleSchedules([source])[0] ?? emptySchedule(employeeId)
       const schedule = attachOrganizationPeriods({
-        schedules: [baseSchedule],
+        schedules: [
+          {
+            ...baseSchedule,
+            baselineState: baselineStates.get(employeeId),
+          },
+        ],
         assignmentRows: assignments.results.map((row) => ({ ...row, isVoid: row.isVoid === 1 })),
         responsibilityRows: responsibilities.results.map((row) => ({
           ...row,

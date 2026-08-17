@@ -51,10 +51,16 @@ export function resolveWorkforceStateAt(
 
   const employment = currentEmployments[0]
   if (employment === undefined) {
+    const baselineStatus =
+      schedule.baselineState !== undefined && schedule.baselineState.asOf <= asOf
+        ? schedule.baselineState.status
+        : null
     return {
       employeeId: schedule.employeeId,
       asOf,
-      status: employments.some((period) => period.startsOn <= asOf) ? "TERMINATED" : "PRE_HIRE",
+      status:
+        baselineStatus ??
+        (employments.some((period) => period.startsOn <= asOf) ? "TERMINATED" : "PRE_HIRE"),
       employmentId: null,
       primaryAssignment: null,
       concurrentAssignments: [],

@@ -52,6 +52,12 @@ export const organizationChangeOperations = sqliteTable(
       .notNull()
       .default("PENDING"),
     recordedAt: integer("recorded_at", { mode: "timestamp_ms" }).notNull(),
+    actorAccountId: text("actor_account_id").notNull().default("system:legacy"),
+    reason: text("reason").notNull().default("legacy organization change"),
+    evidenceReferencesJson: text("evidence_references_json").notNull().default("[]"),
+    requestFingerprint: text("request_fingerprint")
+      .notNull()
+      .default("0000000000000000000000000000000000000000000000000000000000000000"),
   },
   (table) => [
     check("organization_change_operations_id", sql`length(${table.id}) BETWEEN 1 AND 128`),
@@ -70,6 +76,23 @@ export const organizationChangeOperations = sqliteTable(
       sql`${table.status} IN ('PENDING', 'COMPLETED')`,
     ),
     check("organization_change_operations_recorded", sql`${table.recordedAt} >= 0`),
+    check(
+      "organization_change_operations_actor",
+      sql`length(${table.actorAccountId}) BETWEEN 1 AND 255 AND trim(${table.actorAccountId}) = ${table.actorAccountId}`,
+    ),
+    check(
+      "organization_change_operations_reason",
+      sql`length(${table.reason}) BETWEEN 1 AND 1000 AND trim(${table.reason}) = ${table.reason}`,
+    ),
+    check(
+      "organization_change_operations_evidence",
+      sql`json_valid(${table.evidenceReferencesJson}) AND json_type(${table.evidenceReferencesJson}) = 'array'`,
+    ),
+    check(
+      "organization_change_operations_fingerprint",
+      sql`length(${table.requestFingerprint}) = 64
+          AND ${table.requestFingerprint} NOT GLOB '*[^0-9a-f]*'`,
+    ),
   ],
 )
 

@@ -1,9 +1,11 @@
-import { and, eq, isNull } from "drizzle-orm"
-import type { Context } from "@/env"
-import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import { ReadWorkforceState } from "@/contexts/company/application/workforce/read-workforce-state"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { orgDepartments } from "@/contexts/company/infrastructure/schema/organization"
+import { EmployeeLifecycleWorkforceRepository } from "@/contexts/company/infrastructure/workforce/employee-lifecycle-workforce.repository"
+import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
+import type { Context } from "@/env"
+import { UnavailableError } from "@/lib/errors"
 
 export type EmployeeActiveResult =
   | { valid: true }
@@ -13,113 +15,40 @@ export type EmployeeActiveResult =
       message: string
     }
 
-/**
- * 従業員が active/leave かつ非 archived であることを検証する。
- *
- * lifecycle migration が "verified" の場合は EmployeeLifecycleReadRepository.findStatesAt() を使い、
- * active/leave かつ非 archived かつ所属部門が非 archived であることを確認する。
- * それ以外は employees テーブルから直接判定する（レガシーパス）。
- *
- * resolve-workflow-approver-matches.ts の loadWorkflowOrganization() と同一の判定基準を共有する。
- */
+/** canonical Workforce snapshotだけから指定時点の在籍有効性を検証する。 */
 export async function validateEmployeeActive(
   c: Context,
   employeeId: number,
   businessDate: string,
 ): Promise<EmployeeActiveResult | Error> {
-  try {
-    const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
-
-    if (migrationStatus instanceof Error) {
-      return migrationStatus
-    }
-
-    if (migrationStatus === "verified") {
-      return validateViaLifecycle(c, employeeId, businessDate)
-    }
-
-    return validateViaLegacy(c, employeeId)
-  } catch (error) {
-    return error instanceof Error ? error : new Error("failed to validate employee active status")
-  }
-}
-
-async function validateViaLifecycle(
-  c: Context,
-  employeeId: number,
-  businessDate: string,
-): Promise<EmployeeActiveResult> {
-  const states = await new EmployeeLifecycleReadRepository(c).findStatesAt(
-    [employeeId],
-    businessDate,
-  )
-
-  if (states instanceof Error) {
-    throw states
+  const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
+  if (migrationStatus instanceof Error) return migrationStatus
+  if (migrationStatus !== "verified") {
+    return new UnavailableError(
+      "Company migrationが完了していません",
+      "company_migration_incomplete",
+    )
   }
 
-  const state = states.get(employeeId)
-
-  if (state === undefined) {
+  const state = await new ReadWorkforceState({
+    workforce: new EmployeeLifecycleWorkforceRepository(c),
+    organization: new OrganizationUnitReadRepository(c.var.database),
+  }).execute({
+    employeeId: toWorkforceEmployeeId(employeeId),
+    asOf: restoreCalendarDate(businessDate),
+  })
+  if (state.kind === "not_found") {
     return { valid: false, code: "not_found", message: "employee not found" }
   }
-
-  if (state.archived) {
-    return { valid: false, code: "archived", message: "employee is archived" }
+  if (state.kind !== "found") {
+    return new UnavailableError(
+      "Company workforceを検証できません",
+      "company_workforce_unavailable",
+      state.kind === "unavailable" ? { cause: state.cause } : { cause: state.error },
+    )
   }
-
-  if (state.status !== "active" && state.status !== "leave") {
+  if (state.state.status !== "ACTIVE" && state.state.status !== "ON_LEAVE") {
     return { valid: false, code: "not_active", message: "employee is not active" }
-  }
-
-  // 所属部門が archived でないことを確認（resolve-workflow-approver-matches.ts 同様）
-  if (state.primaryAssignment !== null) {
-    const activeDeptRows = await c.var.database
-      .select({ code: orgDepartments.code })
-      .from(orgDepartments)
-      .where(
-        and(
-          eq(orgDepartments.code, state.primaryAssignment.departmentCode),
-          isNull(orgDepartments.archivedAt),
-        ),
-      )
-      .limit(1)
-
-    if (activeDeptRows.length === 0) {
-      return {
-        valid: false,
-        code: "department_archived",
-        message: "employee belongs to an archived department",
-      }
-    }
-  }
-
-  return { valid: true }
-}
-
-async function validateViaLegacy(c: Context, employeeId: number): Promise<EmployeeActiveResult> {
-  const rows = await c.var.database
-    .select({
-      id: employees.id,
-      status: employees.status,
-      archivedAt: employees.archivedAt,
-    })
-    .from(employees)
-    .where(eq(employees.id, employeeId))
-    .limit(1)
-
-  const row = rows.at(0)
-
-  if (row === undefined) {
-    return { valid: false, code: "not_found", message: "employee not found" }
-  }
-
-  if (row.archivedAt !== null) {
-    return { valid: false, code: "archived", message: "employee is archived" }
-  }
-
-  if (row.status === "retired") {
-    return { valid: false, code: "retired", message: "employee is retired" }
   }
 
   return { valid: true }

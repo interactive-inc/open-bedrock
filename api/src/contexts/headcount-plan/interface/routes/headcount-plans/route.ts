@@ -1,4 +1,5 @@
 import { CreateHeadcountPlan } from "@/contexts/headcount-plan/application/create-headcount-plan"
+import { readActiveHeadcount } from "@/contexts/company/application/organization/read-active-headcount"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -71,15 +72,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to count headcount plans")
   }
 
-  const countsByCode = await repository.countActiveByDepartment()
-
-  if (countsByCode instanceof Error) {
-    throw new InternalError("failed to count active employees")
+  const activeHeadcount = await readActiveHeadcount(c)
+  if (activeHeadcount instanceof ApplicationError) {
+    throw toHttpException(activeHeadcount)
   }
-
-  const activeTotal = await repository.countActiveTotal()
-
-  if (activeTotal instanceof Error) {
+  if (activeHeadcount instanceof Error) {
     throw new InternalError("failed to count active employees")
   }
 
@@ -90,7 +87,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       department_code: plan.departmentCode,
       planned_count: plan.plannedCount,
       actual_count:
-        plan.departmentCode === null ? activeTotal : (countsByCode.get(plan.departmentCode) ?? 0),
+        plan.departmentCode === null
+          ? activeHeadcount.total
+          : (activeHeadcount.byOrganizationUnitCode.get(plan.departmentCode) ?? 0),
       note: plan.note,
       created_at: plan.createdAt,
     })),

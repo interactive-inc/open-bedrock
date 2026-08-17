@@ -7,6 +7,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
 
 const jwtSecret = "transition-permissions-test-secret"
 
@@ -39,10 +40,12 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "org_memberships", [
     {
       employee_code: seedEmployees[4].code,
-      department_code: "D001",
+      department_code: "D003",
       manager_employee_code: seedEmployees[3].code,
     },
   ])
+
+  await verifyStandardCompanyMigration(db)
 
   return db
 }
@@ -1351,7 +1354,7 @@ describe("lifecycle evaluator validation", () => {
   async function createLifecycleMboDb(opts?: {
     subjectAssignmentStartsOn?: string
     subjectAssignmentEndsOn?: string | null
-    managerArchivedAt?: number | null
+    managerEndsOn?: string
   }): Promise<D1Database> {
     const db = await createLifecycleRouteDb()
 
@@ -1377,10 +1380,46 @@ describe("lifecycle evaluator validation", () => {
         .run()
     }
 
-    if (opts?.managerArchivedAt !== undefined) {
+    if (opts?.managerEndsOn !== undefined) {
       await db
-        .prepare("UPDATE employees SET archived_at = ?1 WHERE id = 4")
-        .bind(opts.managerArchivedAt)
+        .prepare(
+          `INSERT INTO employee_org_responsibility_period_versions
+             (period_id, revision, department_code, responsibility_type, employee_id,
+              starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
+           VALUES ('responsibility-4', 2, 'D003', 'department_manager', 4,
+                   '2025-01-01', ?1, 0, 'test-fixture', 2)`,
+        )
+        .bind(opts.managerEndsOn)
+        .run()
+      await db
+        .prepare(
+          `INSERT INTO employee_org_assignment_period_versions
+             (period_id, revision, employment_period_id, employee_id, department_code,
+              assignment_type, position_title, manager_employee_id, starts_on, ends_on,
+              is_void, recorded_by_action_id, recorded_at)
+           VALUES ('assignment-4', 2, 'employment-4', 4, 'D003', 'primary', 'Manager', 1,
+                   '2025-01-01', ?1, 0, 'test-fixture', 2)`,
+        )
+        .bind(opts.managerEndsOn)
+        .run()
+      await db
+        .prepare(
+          `INSERT INTO employee_status_period_versions
+             (period_id, revision, employment_period_id, employee_id, status, starts_on,
+              ends_on, is_void, recorded_by_action_id, recorded_at)
+           VALUES ('status-4', 2, 'employment-4', 4, 'active', '2025-01-01',
+                   ?1, 0, 'test-fixture', 2)`,
+        )
+        .bind(opts.managerEndsOn)
+        .run()
+      await db
+        .prepare(
+          `INSERT INTO employment_period_versions
+             (period_id, revision, employee_id, starts_on, ends_on, is_void,
+              recorded_by_action_id, recorded_at)
+           VALUES ('employment-4', 2, 4, '2025-01-01', ?1, 0, 'test-fixture', 2)`,
+        )
+        .bind(opts.managerEndsOn)
         .run()
     }
 
@@ -1465,9 +1504,8 @@ describe("lifecycle evaluator validation", () => {
     expect(body.code).toBe("no_manager_found")
   })
 
-  test("archived manager: evaluator_archived", async () => {
-    // employee 4 (manager) を archived に設定
-    const db = await createLifecycleMboDb({ managerArchivedAt: 1 })
+  test("terminated manager: evaluator_not_active", async () => {
+    const db = await createLifecycleMboDb({ managerEndsOn: "2026-01-01" })
 
     const res = await requestWithContext({
       db,
@@ -1480,7 +1518,7 @@ describe("lifecycle evaluator validation", () => {
 
     expect(res.status).toBe(400)
     const body = (await res.json()) as { code: string }
-    expect(body.code).toBe("evaluator_archived")
+    expect(body.code).toBe("evaluator_not_active")
   })
 
   test("active assignments prevent archiving their department", async () => {

@@ -1,12 +1,10 @@
+import { readCanonicalOrganizationState } from "@/contexts/company/application/organization/read-canonical-organization-state"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
+import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import type { ReviewCyclePolicy } from "@/contexts/performance-review/domain/review/review-cycle-policy"
 import type { Context } from "@/env"
-import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { ApplicationError } from "@/lib/errors"
-import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { orgMemberships } from "@/contexts/company/infrastructure/schema/organization"
-import { asc, eq } from "drizzle-orm"
+import { asc } from "drizzle-orm"
 
 type Assignment = {
   subjectEmployeeId: number
@@ -26,62 +24,56 @@ async function loadReviewPopulation(c: Context): Promise<{
   employeeRows: ReadonlyArray<ReviewEmployee>
   membershipRows: ReadonlyArray<ReviewMembership>
 }> {
-  const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
-  if (migrationStatus instanceof ApplicationError) throw migrationStatus
+  const snapshot = await readCanonicalOrganizationState(c)
+  if (snapshot instanceof Error) throw snapshot
 
-  if (migrationStatus !== "verified") {
-    const [rawEmployeeRows, membershipRows] = await Promise.all([
-      c.var.database
-        .select({ id: employees.id, code: employees.code })
-        .from(employees)
-        .where(eq(employees.status, "active"))
-        .orderBy(asc(employees.id)),
-      c.var.database.select().from(orgMemberships),
-    ])
-    // code=null（外部プロビジョニング）の従業員は組織メンバーシップを持たず、評価対象母集団に含めない。
-    const employeeRows = rawEmployeeRows.filter(
-      (employee): employee is ReviewEmployee => employee.code !== null,
-    )
-    return { employeeRows, membershipRows }
-  }
-
-  const businessDate = resolveCompanyBusinessDate({
-    now: c.env.NOW ?? new Date().toISOString(),
-    timeZone: c.env.COMPANY_TIME_ZONE,
-  })
-  if (typeof businessDate !== "string") throw businessDate
-
-  const allEmployees = await c.var.database
-    .select({ id: employees.id, code: employees.code })
+  const employeeProfiles = await c.var.database
+    .select({ id: employees.id, code: employees.code, archivedAt: employees.archivedAt })
     .from(employees)
     .orderBy(asc(employees.id))
-  const states = await new EmployeeLifecycleReadRepository(c).findStatesAt(
-    allEmployees.map((employee) => employee.id),
-    businessDate,
-  )
-  if (states instanceof ApplicationError) throw states
 
-  const employeeRows = allEmployees.filter((employee): employee is ReviewEmployee => {
-    // code=null（外部プロビジョニング）の従業員は組織図・評価母集団に含めない。
-    if (employee.code === null) return false
-    const state = states.get(employee.id)
-    return state?.status === "active" && state.archived === false
-  })
-  const activeCodes = new Set(employeeRows.map((employee) => employee.code))
-  const membershipRows = employeeRows.flatMap((employee) => {
-    const state = states.get(employee.id)
-    if (state === undefined) return []
+  const profileByEmployeeId = new Map<EmployeeId, ReviewEmployee>(
+    employeeProfiles.flatMap((employee) =>
+      employee.code === null || employee.archivedAt !== null
+        ? []
+        : [[toWorkforceEmployeeId(employee.id), { id: employee.id, code: employee.code }]],
+    ),
+  )
+  const activeStates = snapshot.employees.filter((state) => state.status === "ACTIVE")
+  const activeProfileByEmployeeId = new Map<EmployeeId, ReviewEmployee>(
+    activeStates.flatMap((state) => {
+      const profile = profileByEmployeeId.get(state.employeeId)
+      return profile === undefined ? [] : [[state.employeeId, profile]]
+    }),
+  )
+  const employeeRows = [...activeProfileByEmployeeId.values()].toSorted(
+    (left, right) => left.id - right.id,
+  )
+  const organizationCodeById = new Map(
+    snapshot.organization.units.map((unit) => [unit.organizationUnitId, unit.code]),
+  )
+  const membershipRows = activeStates.flatMap((state) => {
+    const employee = activeProfileByEmployeeId.get(state.employeeId)
+    if (employee === undefined) return []
+
     return [
       ...(state.primaryAssignment === null ? [] : [state.primaryAssignment]),
       ...state.concurrentAssignments,
-    ].map((assignment) => ({
-      employeeCode: employee.code,
-      departmentCode: assignment.departmentCode,
-      managerEmployeeCode:
-        assignment.managerEmployeeCode !== null && activeCodes.has(assignment.managerEmployeeCode)
-          ? assignment.managerEmployeeCode
-          : null,
-    }))
+    ].flatMap((assignment) => {
+      const departmentCode = organizationCodeById.get(assignment.organizationUnitId)
+      if (departmentCode === undefined) return []
+
+      return [
+        {
+          employeeCode: employee.code,
+          departmentCode,
+          managerEmployeeCode:
+            assignment.managerEmployeeId === null
+              ? null
+              : (activeProfileByEmployeeId.get(assignment.managerEmployeeId)?.code ?? null),
+        },
+      ]
+    })
   })
 
   return { employeeRows, membershipRows }

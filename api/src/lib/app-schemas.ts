@@ -607,6 +607,78 @@ export const zAppEmployeeDirectoryList = z.object({
 
 export type AppEmployeeDirectoryList = z.infer<typeof zAppEmployeeDirectoryList>
 
+const zAppCompanyOrganizationPeriod = z.strictObject({
+  period_id: z.string(),
+  revision: z.number().int().positive(),
+  starts_on: z.string(),
+  ends_on: z.string().nullable(),
+  is_void: z.boolean(),
+  recorded_by_operation_id: z.string(),
+  recorded_at: z.string().datetime(),
+})
+
+export const zAppCompanyEmployeeDirectory = z.strictObject({
+  employees: z.array(
+    z.strictObject({
+      employee_id: z.string(),
+      official_name: z.string(),
+      employee_code: z.string().nullable(),
+      email: z.string().nullable(),
+      phone: z.string().nullable(),
+    }),
+  ),
+  missing_employee_ids: z.array(z.string()),
+})
+
+export const zAppCompanyAssignment = zAppCompanyOrganizationPeriod.extend({
+  employment_id: z.string(),
+  employee_id: z.string(),
+  organization_unit_id: z.string(),
+  assignment_type: z.enum(["PRIMARY", "CONCURRENT"]),
+  position_title: z.string().nullable(),
+  manager_employee_id: z.string().nullable(),
+})
+
+export const zAppCompanyResponsibility = zAppCompanyOrganizationPeriod.extend({
+  employment_id: z.string(),
+  employee_id: z.string(),
+  organization_unit_id: z.string(),
+  responsibility_type: z.string(),
+})
+
+export const zAppCompanyWorkforceState = z.strictObject({
+  employee_id: z.string(),
+  as_of: z.string(),
+  organization_revision: z.number().int().nonnegative(),
+  employment_status: z.enum(["PRE_HIRE", "ACTIVE", "ON_LEAVE", "TERMINATED"]),
+  employment_id: z.string().nullable(),
+  primary_assignment: zAppCompanyAssignment.nullable(),
+  concurrent_assignments: z.array(zAppCompanyAssignment),
+  responsibilities: z.array(zAppCompanyResponsibility),
+})
+
+export const zAppCompanyOrganizationSnapshot = z.strictObject({
+  as_of: z.string(),
+  organization_revision: z.number().int().nonnegative(),
+  organization_units: z.array(
+    zAppCompanyOrganizationPeriod.extend({
+      organization_unit_id: z.string(),
+      code: z.string(),
+      official_name: z.string(),
+      kind: z.enum(["COMPANY", "DIVISION", "DEPARTMENT", "TEAM", "OTHER"]),
+      parent_organization_unit_id: z.string().nullable(),
+    }),
+  ),
+  assignments: z.array(zAppCompanyAssignment),
+  responsibilities: z.array(zAppCompanyResponsibility),
+})
+
+export const zAppCompanyOrganizationChange = z.strictObject({
+  operation_id: z.string(),
+  organization_revision: z.number().int().nonnegative(),
+  replayed: z.boolean(),
+})
+
 /** 機能ゲートの現在の状態。無効化されている機能キーの一覧を返す。 */
 export const zAppFeatureAvailability = z.object({
   disabled_features: z.array(z.string()),

@@ -1,8 +1,8 @@
-import type { Context } from "@/env"
 import type { OrganizationAuthority } from "@/contexts/company/domain/organization/organization-authority"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { resolveLegacyOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-legacy-organization-authority"
-import { resolveLifecycleOrganizationAuthority } from "@/contexts/company/application/organization/resolve-lifecycle-organization-authority"
+import { resolveEmployeeManagementAuthority } from "@/contexts/company/domain/workforce/resolve-employee-management-authority"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
+import { readCanonicalOrganizationState } from "@/contexts/company/application/organization/read-canonical-organization-state"
+import type { Context } from "@/env"
 
 /**
  * 組織図上で actor が target に対して持つ管理関係を解決する。
@@ -13,9 +13,12 @@ export async function resolveOrganizationAuthority(
   actorEmployeeId: number,
   targetEmployeeId: number,
 ): Promise<OrganizationAuthority | Error> {
-  const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
-  if (migrationStatus instanceof Error) return migrationStatus
-  return migrationStatus === "verified"
-    ? resolveLifecycleOrganizationAuthority(c, actorEmployeeId, targetEmployeeId)
-    : resolveLegacyOrganizationAuthority(c, actorEmployeeId, targetEmployeeId)
+  const snapshot = await readCanonicalOrganizationState(c)
+  if (snapshot instanceof Error) return snapshot
+
+  return resolveEmployeeManagementAuthority({
+    states: snapshot.employees,
+    actorEmployeeId: toWorkforceEmployeeId(actorEmployeeId),
+    targetEmployeeId: toWorkforceEmployeeId(targetEmployeeId),
+  })
 }

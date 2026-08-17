@@ -37,6 +37,45 @@ async function setup() {
     { department_code: "ROOT", employee_code: "E004", manager_employee_code: "E001" },
   ])
 
+  await db.exec(`
+    INSERT INTO employment_period_versions
+      (period_id, revision, employee_id, starts_on, ends_on, is_void,
+       recorded_by_action_id, recorded_at) VALUES
+      ('employment-1', 1, 1, '2025-01-01', NULL, 0, 'fixture', 1),
+      ('employment-2', 1, 2, '2025-01-01', NULL, 0, 'fixture', 1),
+      ('employment-3', 1, 3, '2025-01-01', NULL, 0, 'fixture', 1),
+      ('employment-4', 1, 4, '2025-01-01', NULL, 0, 'fixture', 1);
+    INSERT INTO employee_status_period_versions
+      (period_id, revision, employment_period_id, employee_id, status, starts_on,
+       ends_on, is_void, recorded_by_action_id, recorded_at) VALUES
+      ('status-1', 1, 'employment-1', 1, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
+      ('status-2', 1, 'employment-2', 2, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
+      ('status-3', 1, 'employment-3', 3, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
+      ('status-4', 1, 'employment-4', 4, 'active', '2025-01-01', NULL, 0, 'fixture', 1);
+    INSERT INTO employee_org_assignment_period_versions
+      (period_id, revision, employment_period_id, employee_id, department_code,
+       assignment_type, position_title, manager_employee_id, starts_on, ends_on,
+       is_void, recorded_by_action_id, recorded_at) VALUES
+      ('assignment-1', 1, 'employment-1', 1, 'ROOT', 'primary', NULL, NULL,
+       '2025-01-01', NULL, 0, 'fixture', 1),
+      ('assignment-2', 1, 'employment-2', 2, 'TEAM', 'primary', NULL, 1,
+       '2025-01-01', NULL, 0, 'fixture', 1),
+      ('assignment-3', 1, 'employment-3', 3, 'TEAM', 'primary', NULL, 2,
+       '2025-01-01', NULL, 0, 'fixture', 1),
+      ('assignment-4', 1, 'employment-4', 4, 'ROOT', 'primary', NULL, 1,
+       '2025-01-01', NULL, 0, 'fixture', 1);
+    INSERT INTO employee_org_responsibility_period_versions
+      (period_id, revision, department_code, responsibility_type, employee_id,
+       starts_on, ends_on, is_void, recorded_by_action_id, recorded_at) VALUES
+      ('responsibility-1', 1, 'ROOT', 'department_manager', 1,
+       '2025-01-01', NULL, 0, 'fixture', 1),
+      ('responsibility-2', 1, 'TEAM', 'department_manager', 2,
+       '2025-01-01', NULL, 0, 'fixture', 1);
+    UPDATE lifecycle_migration_states
+    SET status = 'verified', baseline_on = '2025-01-01', company_time_zone = 'Asia/Tokyo'
+    WHERE id = 1;
+  `)
+
   return context
 }
 

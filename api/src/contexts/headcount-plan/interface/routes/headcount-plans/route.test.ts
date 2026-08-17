@@ -7,10 +7,11 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
 
 const jwtSecret = "headcount-plan-route-test-secret"
 
-async function createTestDb(): Promise<D1Database> {
+async function createTestDb(verifyCompany = true): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
   await seedD1(
@@ -38,6 +39,8 @@ async function createTestDb(): Promise<D1Database> {
       manager_employee_code: membership.managerEmployeeCode,
     })),
   )
+
+  if (verifyCompany) await verifyStandardCompanyMigration(db)
 
   return db
 }
@@ -68,7 +71,7 @@ describe("headcount plans", () => {
   test("read:all lists plans with the department's active headcount attached", async () => {
     const db = await createTestDb()
 
-    // D003(Engineering)には active な E004・E005 が所属 → actual_count=2 を期待。
+    // D003(Engineering)には基準日時点で active な E004・E005・E006 が所属する。
     const created = await createPlan(db, {
       fiscal_year: 2026,
       department_code: "D003",
@@ -95,7 +98,21 @@ describe("headcount plans", () => {
 
     expect(body.data[0]?.planned_count).toBe(4)
 
-    expect(body.data[0]?.actual_count).toBe(2)
+    expect(body.data[0]?.actual_count).toBe(3)
+  })
+
+  test("fails closed before the Company migration is verified", async () => {
+    const db = await createTestDb(false)
+    await createPlan(db, { fiscal_year: 2026, department_code: "D003", planned_count: 4 })
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/headcount-plans",
+      token: await tokenFor(1, "root"),
+    })
+
+    expect(response.status).toBe(503)
   })
 
   test("company-wide plan (null department) uses total active headcount", async () => {

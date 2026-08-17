@@ -15,6 +15,7 @@ import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-dep
 import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments"
 import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships"
 import { seedPositions } from "@/contexts/company/infrastructure/seed/seed-positions"
+import { verifyCompanyMigration } from "@/api/test/support/verify-company-migration"
 import { contextStorage } from "hono/context-storage"
 import { HTTPException } from "hono/http-exception"
 import { z } from "zod"
@@ -115,22 +116,13 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
+  await verifyCompanyMigration(db)
+
   return db
 }
 
-async function enableVerifiedLifecycleForAdmin(db: D1Database): Promise<void> {
-  await db.exec(`
-    INSERT INTO employment_period_versions
-      (period_id, revision, employee_id, starts_on, ends_on, is_void,
-       recorded_by_action_id, recorded_at)
-    VALUES ('fixture-employment-e001', 1, 1, '2025-01-01', NULL, 0, 'fixture', 1);
-    INSERT INTO employee_status_period_versions
-      (period_id, revision, employment_period_id, employee_id, status, starts_on,
-       ends_on, is_void, recorded_by_action_id, recorded_at)
-    VALUES ('fixture-status-e001', 1, 'fixture-employment-e001', 1, 'active',
-            '2025-01-01', NULL, 0, 'fixture', 1);
-    UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
-  `)
+async function markCompanyMigrationPending(db: D1Database): Promise<void> {
+  await db.prepare("UPDATE lifecycle_migration_states SET status = 'pending' WHERE id = 1").run()
 }
 
 function adminToken(): Promise<string> {
@@ -273,16 +265,28 @@ describe("GET /employees/:code", () => {
   })
 
   // このテスト用アプリの onError は message だけを返すため code は検証しない（status のみ）
-  test("returns 422 when as_of is given but lifecycle data is not verified", async () => {
-    const response = await request("/employees/E001?as_of=2026-01-01", await adminToken())
+  test("fails closed when lifecycle data is not verified", async () => {
+    const response = await request(
+      "/employees/E001?as_of=2026-01-01",
+      await adminToken(),
+      undefined,
+      undefined,
+      markCompanyMigrationPending,
+    )
 
-    expect(response.status).toBe(422)
+    expect(response.status).toBe(503)
   })
 
-  test("keeps serving the legacy path with 200 when as_of is omitted", async () => {
-    const response = await request("/employees/E001", await adminToken())
+  test("does not fall back when as_of is omitted", async () => {
+    const response = await request(
+      "/employees/E001",
+      await adminToken(),
+      undefined,
+      undefined,
+      markCompanyMigrationPending,
+    )
 
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(503)
   })
 
   test("honors as_of instead of rejecting it once lifecycle data is verified", async () => {
@@ -291,7 +295,6 @@ describe("GET /employees/:code", () => {
       await adminToken(),
       undefined,
       undefined,
-      enableVerifiedLifecycleForAdmin,
     )
 
     expect(response.status).toBe(200)
@@ -318,13 +321,7 @@ describe("POST /employees", () => {
   }
 
   test("admin creates an employee and gets 201", async () => {
-    const response = await request(
-      "/employees",
-      await adminToken(),
-      "POST",
-      newEmployee,
-      enableVerifiedLifecycleForAdmin,
-    )
+    const response = await request("/employees", await adminToken(), "POST", newEmployee)
 
     expect(response.status).toBe(201)
 

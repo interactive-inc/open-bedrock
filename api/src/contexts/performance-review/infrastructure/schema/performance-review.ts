@@ -63,7 +63,7 @@ export type EvaluationTemplateRow = InferSelectModel<typeof evaluationTemplates>
 
 /**
  * 評価シート（評価期 × 社員。MBO の中心エンティティ）。
- * primary/secondary_evaluator_id はシート作成時に org_memberships から解決して固定する。
+ * primary/secondary_evaluator_id はシート作成時にcanonical Company snapshotから解決して固定する。
  * 異動後も評価期間中は変わらない。HR/admin のみ手動変更可（audit_log 記録）。
  */
 export const evaluationSheets = sqliteTable(

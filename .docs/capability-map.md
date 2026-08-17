@@ -118,6 +118,8 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 
 現行実装には opaque OrgUnit identity、名称・kind・親子関係の period version、期間付き Assignment、organization revision、atomic change operation がある。単一 root、code 重複、親期間、循環、主務重複、上司在籍、部分適用を Domain と DB の両方で拒否する。旧部署表と membership は既存 wire の互換 projection に限定し、検証済み lifecycle の判断正本には使わない。
 
+`/company/v1` はopaque Employee IDのdirectory、指定時点のWorkforce state、同一revisionのOrgUnit・Assignment・Responsibility snapshot、原子的なorganization changeを公開する。writeはoperation fingerprintによる安全な再送、expected revision、Technical PermissionとCompany Responsibilityの合成を強制する。契約と失敗条件は [Company API](./company-api.md) に定める。
+
 ### 職務と責任
 
 - Job、Position、Grade、OrganizationalOffice
@@ -135,7 +137,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - System の Case に対する会社上の判断資格の解決
 - 判断時点の Employment、Membership、ResponsibilityAssignment の snapshot
 
-現行実装には Account と Employee の一対一対応と、それを在籍・組織資格、active な canonical System Account と同時に検査する Company resolver がある。System workflow の候補解決はこの resolver を利用し、Company snapshot を証拠へ保存する。Company 内部の整数 Account ID は互換境界に閉じ、System Task へは opaque な文字列 ID を渡す。
+現行実装には Account と Employee の一対一対応と、それを在籍・組織資格、active な canonical System Account と同時に検査する Company resolver がある。System workflow の候補解決はこの resolver を利用し、Company snapshot を証拠へ保存する。Company内部の整数Account IDは既存wireの互換境界に閉じ、System TaskとCompany APIへはopaqueな文字列IDを渡す。migration未検証時のlegacy組織資格fallbackはなく、評価不能時は停止する。
 
 ### 雇用事実と人事発令
 

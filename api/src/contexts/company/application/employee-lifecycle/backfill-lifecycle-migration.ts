@@ -149,78 +149,99 @@ export class BackfillLifecycleMigration {
               now,
             ),
           )
-
-          const assignments = [
-            ...(primary === null
-              ? []
-              : [
-                  {
-                    departmentCode: primary.code,
-                    assignmentType: "primary" as const,
-                    positionTitle: employee.position,
-                    managerEmployeeCode: primaryMembership?.managerEmployeeCode ?? null,
-                  },
-                ]),
-            ...employeeMemberships
-              .filter((membership) => membership.departmentCode !== primary?.code)
-              .map((membership) => ({
-                departmentCode: membership.departmentCode,
-                assignmentType: "concurrent" as const,
-                positionTitle: null,
-                managerEmployeeCode: membership.managerEmployeeCode,
-              })),
-          ]
-
-          for (const [index, assignment] of assignments.entries()) {
-            statements.push(
-              this.c.env.DB.prepare(
-                `INSERT OR IGNORE INTO employee_org_assignment_period_versions
-                     (period_id, revision, employment_period_id, employee_id, department_code,
-                      assignment_type, position_title, manager_employee_id, starts_on, ends_on,
-                      is_void, recorded_by_action_id, recorded_at)
-                   VALUES (?1, 1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, NULL, 0, ?9, ?10)`,
-              ).bind(
-                `${id}:assignment:${index + 1}`,
-                employmentId,
-                employee.id,
-                assignment.departmentCode,
-                assignment.assignmentType,
-                assignment.positionTitle,
-                assignment.managerEmployeeCode === null
-                  ? null
-                  : (employeeIds.get(assignment.managerEmployeeCode) ?? null),
-                command.baselineOn,
-                id,
-                now,
-              ),
-            )
-          }
-
-          const responsibilities = snapshot.departments.filter(
-            (department) => department.managerEmployeeCode === employee.code,
-          )
-          for (const [index, responsibility] of responsibilities.entries()) {
-            statements.push(
-              this.c.env.DB.prepare(
-                `INSERT OR IGNORE INTO employee_org_responsibility_period_versions
-                     (period_id, revision, department_code, responsibility_type, employee_id,
-                      starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-                   VALUES (?1, 1, ?2, 'department_manager', ?3, ?4, NULL, 0, ?5, ?6)`,
-              ).bind(
-                `${id}:responsibility:${index + 1}`,
-                responsibility.code,
-                employee.id,
-                command.baselineOn,
-                id,
-                now,
-              ),
-            )
-          }
         }
 
         const results = await this.c.env.DB.batch(statements)
         if (results.length !== statements.length || results.some((result) => !result.success)) {
           throw new Error("legacy employee backfill did not succeed")
+        }
+      }
+
+      for (const employee of snapshot.employees) {
+        if (employee.status === "retired") continue
+
+        const id = actionId(snapshot, employee.id)
+        const employmentId = `${id}:employment:1`
+        const primary = primaryDepartment(snapshot, employee.deptId)
+        const employeeMemberships = snapshot.memberships.filter(
+          (membership) => membership.employeeCode === employee.code,
+        )
+        const primaryMembership = employeeMemberships.find(
+          (membership) => membership.departmentCode === primary?.code,
+        )
+        const assignments = [
+          ...(primary === null
+            ? []
+            : [
+                {
+                  departmentCode: primary.code,
+                  assignmentType: "primary" as const,
+                  positionTitle: employee.position,
+                  managerEmployeeCode: primaryMembership?.managerEmployeeCode ?? null,
+                },
+              ]),
+          ...employeeMemberships
+            .filter((membership) => membership.departmentCode !== primary?.code)
+            .map((membership) => ({
+              departmentCode: membership.departmentCode,
+              assignmentType: "concurrent" as const,
+              positionTitle: null,
+              managerEmployeeCode: membership.managerEmployeeCode,
+            })),
+        ]
+        const statements: Array<D1PreparedStatement> = []
+
+        for (const [index, assignment] of assignments.entries()) {
+          statements.push(
+            this.c.env.DB.prepare(
+              `INSERT OR IGNORE INTO employee_org_assignment_period_versions
+                   (period_id, revision, employment_period_id, employee_id, department_code,
+                    assignment_type, position_title, manager_employee_id, starts_on, ends_on,
+                    is_void, recorded_by_action_id, recorded_at)
+                 VALUES (?1, 1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, NULL, 0, ?9, ?10)`,
+            ).bind(
+              `${id}:assignment:${index + 1}`,
+              employmentId,
+              employee.id,
+              assignment.departmentCode,
+              assignment.assignmentType,
+              assignment.positionTitle,
+              assignment.managerEmployeeCode === null
+                ? null
+                : (employeeIds.get(assignment.managerEmployeeCode) ?? null),
+              command.baselineOn,
+              id,
+              now,
+            ),
+          )
+        }
+
+        const responsibilities = snapshot.departments.filter(
+          (department) => department.managerEmployeeCode === employee.code,
+        )
+        for (const [index, responsibility] of responsibilities.entries()) {
+          statements.push(
+            this.c.env.DB.prepare(
+              `INSERT OR IGNORE INTO employee_org_responsibility_period_versions
+                   (period_id, revision, department_code, responsibility_type, employee_id,
+                    starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
+                 VALUES (?1, 1, ?2, 'department_manager', ?3, ?4, NULL, 0, ?5, ?6)`,
+            ).bind(
+              `${id}:responsibility:${index + 1}`,
+              responsibility.code,
+              employee.id,
+              command.baselineOn,
+              id,
+              now,
+            ),
+          )
+        }
+
+        if (statements.length === 0) continue
+
+        const results = await this.c.env.DB.batch(statements)
+        if (results.length !== statements.length || results.some((result) => !result.success)) {
+          throw new Error("legacy organization backfill did not succeed")
         }
       }
 

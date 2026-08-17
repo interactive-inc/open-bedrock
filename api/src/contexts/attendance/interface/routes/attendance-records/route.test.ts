@@ -8,6 +8,8 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
 import { z } from "zod"
 
 const jwtSecret = "attendance-list-route-test-secret"
@@ -64,6 +66,8 @@ async function createTestDb(): Promise<D1Database> {
       status: record.status,
     })),
   )
+
+  await verifyStandardCompanyMigration(db)
 
   return db
 }
@@ -164,10 +168,10 @@ describe("GET /attendance-records", () => {
 
 /** scope=reports 用に、manager(id2)が id20/id21 の 2 名を配下に持つ小さな組織を組む。 */
 const scopeEmployeeRows = [
-  { id: 2, code: "M002", email: "you+m002@example.com", role: "manager" },
-  { id: 20, code: "R020", email: "you+r020@example.com", role: "member" },
-  { id: 21, code: "R021", email: "you+r021@example.com", role: "member" },
-  { id: 22, code: "S022", email: "you+s022@example.com", role: "manager" },
+  { id: 2, code: "M002", email: "you+m002@example.com", role: "manager", departmentId: 1 },
+  { id: 20, code: "R020", email: "you+r020@example.com", role: "member", departmentId: 1 },
+  { id: 21, code: "R021", email: "you+r021@example.com", role: "member", departmentId: 1 },
+  { id: 22, code: "S022", email: "you+s022@example.com", role: "manager", departmentId: 2 },
 ]
 
 async function createScopeTestDb(): Promise<D1Database> {
@@ -180,7 +184,7 @@ async function createScopeTestDb(): Promise<D1Database> {
       id: employee.id,
       code: employee.code,
       name: employee.code,
-      dept_id: 1,
+      dept_id: employee.departmentId,
       dept_name: "Dept",
       position: "-",
       status: "active",
@@ -224,6 +228,14 @@ async function createScopeTestDb(): Promise<D1Database> {
       status: "closed",
     },
   ])
+
+  await verifyCompanyMigrationFixture({
+    db,
+    departments: [
+      { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
+      { id: 2, code: "D002", name: "Dept Two", managerEmployeeCode: "S022" },
+    ],
+  })
 
   return db
 }
