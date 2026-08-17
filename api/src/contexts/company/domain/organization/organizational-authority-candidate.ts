@@ -11,6 +11,11 @@ export type OrganizationalAuthorityCriterion =
   | Readonly<{ kind: "direct_manager" }>
   | Readonly<{ kind: "department_manager" }>
   | Readonly<{ kind: "target_department_manager" }>
+  | Readonly<{
+      kind: "responsibility"
+      responsibilityType: string
+      organizationUnitCode: string | null
+    }>
   | Readonly<{ kind: "management_chain" }>
 
 /** Company が判断資格を評価した時点と、その根拠にした組織投影。 */

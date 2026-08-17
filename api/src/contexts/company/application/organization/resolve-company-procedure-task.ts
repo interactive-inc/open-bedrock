@@ -1,23 +1,11 @@
-import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
 import { applicableWorkflowSteps } from "@/contexts/company/application/organization/company-procedure-applicable-steps"
 import { resolveWorkflowStepSnapshot } from "@/contexts/company/application/organization/resolve-company-procedure-task-snapshot"
 import type { CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
 import type { ApplicationWorkflowStep } from "@/contexts/company/domain/organization/company-procedure-workflow"
-import {
-  accountRoles,
-  accounts,
-  permissions,
-  rolePermissions,
-  roles,
-} from "@/api/legacy-system/adapters/schema/system"
-import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
 import type { Context } from "@/env"
 import type { StartSystemProcedureTask } from "@system/application/workflow/start-system-procedure"
-import { systemAccounts } from "@system/infrastructure/schema/system-core"
 import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
 import { toSystemProposalDigest } from "@system/domain/workflow/to-system-proposal-digest"
-import type { AccountId } from "@system/domain/auth/account-id"
-import { and, eq, inArray, isNull, sql } from "drizzle-orm"
 
 export type CompanyProcedureApplicant = Readonly<{
   id: number
@@ -51,8 +39,7 @@ export async function resolveCompanyProcedureTask(
   }>,
 ): Promise<ResolvedCompanyProcedureTask | null | Error> {
   if (input.policy.workflow === null) {
-    if (input.afterTaskKey !== null) return null
-    return resolveLegacyTask(input)
+    return new Error("Company procedure requires an explicit authority workflow")
   }
 
   const steps = applicableWorkflowSteps({
@@ -120,133 +107,5 @@ async function resolveConfiguredTask(
       candidates,
       excludedAccountIds: [],
     },
-  }
-}
-
-async function resolveLegacyTask(
-  input: Parameters<typeof resolveCompanyProcedureTask>[0],
-): Promise<ResolvedCompanyProcedureTask | Error> {
-  const roleKeys = input.policy.approverRoles
-  const roleCondition = roleKeys.length === 0 ? undefined : inArray(roles.key, [...roleKeys])
-  const rows = await input.c.var.database
-    .select({
-      accountId: systemAccounts.id,
-      employeeId: accountEmployeeLinks.employeeId,
-      roleKey: roles.key,
-    })
-    .from(accounts)
-    .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
-    .innerJoin(employees, eq(employees.id, accountEmployeeLinks.employeeId))
-    .innerJoin(accountRoles, eq(accountRoles.accountId, accounts.id))
-    .innerJoin(roles, eq(roles.id, accountRoles.roleId))
-    .innerJoin(systemAccounts, sql`${systemAccounts.id} = CAST(${accounts.id} AS TEXT)`)
-    .where(
-      and(
-        eq(accounts.status, "active"),
-        eq(systemAccounts.status, "active"),
-        eq(employees.status, "active"),
-        isNull(employees.archivedAt),
-        roleCondition,
-        sql`EXISTS (
-          SELECT 1
-          FROM account_roles permission_account_role
-          JOIN role_permissions permission_role
-            ON permission_role.role_id = permission_account_role.role_id
-          JOIN permissions permission
-            ON permission.id = permission_role.permission_id
-          WHERE permission_account_role.account_id = ${accounts.id}
-            AND permission.key = 'application:approve'
-        )`,
-      ),
-    )
-  const grouped = new Map<AccountId, { employeeId: number; roleKeys: Set<string> }>()
-  for (const row of rows) {
-    if (row.employeeId === input.applicant.id) continue
-    const existing = grouped.get(row.accountId) ?? {
-      employeeId: row.employeeId,
-      roleKeys: new Set<string>(),
-    }
-    existing.roleKeys.add(row.roleKey)
-    grouped.set(row.accountId, existing)
-  }
-  const resolutionId = crypto.randomUUID()
-  const candidates: StartSystemProcedureTask["candidates"][number][] = []
-  for (const [accountId, candidate] of grouped) {
-    const hasOrganizationWideAuthority = await hasPermission(
-      input.c,
-      candidate.employeeId,
-      "org:manage",
-    )
-    if (hasOrganizationWideAuthority instanceof Error) return hasOrganizationWideAuthority
-    const authority = hasOrganizationWideAuthority
-      ? { managementChain: true, departmentManager: true }
-      : await resolveOrganizationAuthority(input.c, candidate.employeeId, input.applicant.id)
-    if (authority instanceof Error) return authority
-    if (!authority.managementChain && !authority.departmentManager) continue
-    const canonicalEvidence = toCanonicalSystemJson({
-      accountId,
-      employeeId: candidate.employeeId,
-      roleKeys: [...candidate.roleKeys].toSorted(),
-      permission: "application:approve",
-      organizationAuthority: authority,
-      resolvedAt: input.activatedAt.toISOString(),
-    })
-    if (canonicalEvidence instanceof Error) return canonicalEvidence
-    const digest = await toSystemProposalDigest(canonicalEvidence)
-    if (digest instanceof Error) return digest
-    candidates.push({
-      accountId,
-      source: "primary",
-      evidenceContext: "company",
-      evidenceKind: "legacy-organizational-authority",
-      evidenceId: resolutionId,
-      evidenceVersion: input.activatedAt.toISOString(),
-      eligibilityDigest: digest,
-      eligibleFrom: null,
-      resolvedAt: input.activatedAt,
-    })
-  }
-  if (candidates.length === 0) {
-    return new Error("legacy procedure has no eligible Company decision candidate")
-  }
-
-  return {
-    key: "manager_approval",
-    name: "承認",
-    rejectionBehavior: "reject",
-    allowDelegation: true,
-    task: {
-      key: "manager_approval",
-      requiredApprovals: 1,
-      openedAt: input.activatedAt,
-      dueAt: null,
-      candidates,
-      excludedAccountIds: [],
-    },
-  }
-}
-
-async function hasPermission(
-  c: Context,
-  employeeId: number,
-  permissionKey: string,
-): Promise<boolean | Error> {
-  try {
-    const found = await c.var.database
-      .select({ id: permissions.id })
-      .from(accountEmployeeLinks)
-      .innerJoin(accountRoles, eq(accountRoles.accountId, accountEmployeeLinks.accountId))
-      .innerJoin(rolePermissions, eq(rolePermissions.roleId, accountRoles.roleId))
-      .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
-      .where(
-        and(eq(accountEmployeeLinks.employeeId, employeeId), eq(permissions.key, permissionKey)),
-      )
-      .limit(1)
-
-    return found.length > 0
-  } catch (cause) {
-    return cause instanceof Error
-      ? cause
-      : new Error("failed to resolve Company permission", { cause })
   }
 }

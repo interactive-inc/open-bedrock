@@ -1,9 +1,18 @@
 import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import type { OrganizationUnitReadPort } from "@/contexts/company/application/workforce/read-organization-state"
+import {
+  type OrganizationInvariantViolation,
+  validateOrganizationUnitSnapshot,
+} from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
 import {
   resolveWorkforceStateAt,
   WorkforceStateResolutionError,
   type WorkforceStateAt,
 } from "@/contexts/company/domain/workforce/resolve-workforce-state"
+import {
+  validateWorkforceLifecycleSchedule,
+  type WorkforceInvariantViolation,
+} from "@/contexts/company/domain/workforce/validate-workforce-schedules"
 import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/workforce/workforce-schedule"
 import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
 
@@ -18,12 +27,30 @@ export interface WorkforceLifecycleReadPort {
 export type ReadWorkforceStateResult =
   | Readonly<{ kind: "found"; state: WorkforceStateAt }>
   | Readonly<{ kind: "not_found" }>
-  | Readonly<{ kind: "invalid_schedule"; error: WorkforceStateResolutionError }>
+  | Readonly<{
+      kind: "invalid_schedule"
+      error: WorkforceStateResolutionError | WorkforceInvariantViolation
+    }>
+  | Readonly<{ kind: "invalid_organization"; error: OrganizationInvariantViolation }>
   | Readonly<{ kind: "unavailable"; cause: unknown }>
+
+export class WorkforceSnapshotChangedError extends Error {
+  readonly code = "workforce_snapshot_changed"
+
+  constructor() {
+    super("company organization changed while workforce state was read")
+    this.name = "WorkforceSnapshotChangedError"
+  }
+}
 
 /** 製品固有の永続化をportの外へ閉じ、Companyの基準日時点状態を読む。 */
 export class ReadWorkforceState {
-  constructor(private readonly port: WorkforceLifecycleReadPort) {
+  constructor(
+    private readonly ports: Readonly<{
+      workforce: WorkforceLifecycleReadPort
+      organization: OrganizationUnitReadPort
+    }>,
+  ) {
     Object.freeze(this)
   }
 
@@ -31,15 +58,40 @@ export class ReadWorkforceState {
     employeeId: EmployeeId
     asOf: CalendarDate
   }): Promise<ReadWorkforceStateResult> {
+    let organization
     let loaded: WorkforceLifecycleReadPortResult
     try {
-      loaded = await this.port.findByEmployeeId(props.employeeId)
+      organization = await this.ports.organization.readSnapshot(props.asOf)
+      if (!organization.ok) return { kind: "unavailable", cause: organization.cause }
+      const organizationError = validateOrganizationUnitSnapshot(organization.snapshot)
+      if (organizationError !== null) {
+        return { kind: "invalid_organization", error: organizationError }
+      }
+
+      loaded = await this.ports.workforce.findByEmployeeId(props.employeeId)
     } catch (cause) {
       return { kind: "unavailable", cause }
     }
 
     if (!loaded.ok) return { kind: "unavailable", cause: loaded.cause }
     if (loaded.schedule === null) return { kind: "not_found" }
+
+    let currentRevision
+    try {
+      currentRevision = await this.ports.organization.readRevision()
+    } catch (cause) {
+      return { kind: "unavailable", cause }
+    }
+    if (!currentRevision.ok) return { kind: "unavailable", cause: currentRevision.cause }
+    if (currentRevision.revision !== organization.snapshot.revision) {
+      return { kind: "unavailable", cause: new WorkforceSnapshotChangedError() }
+    }
+
+    const scheduleError = validateWorkforceLifecycleSchedule({
+      schedule: loaded.schedule,
+      organizationUnitPeriods: organization.snapshot.units,
+    })
+    if (scheduleError !== null) return { kind: "invalid_schedule", error: scheduleError }
 
     const state = resolveWorkforceStateAt(loaded.schedule, props.asOf)
     return state instanceof WorkforceStateResolutionError

@@ -9,8 +9,17 @@ import {
 import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/workforce/workforce-schedule"
 import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import {
+  attachOrganizationPeriods,
+  type OrgAssignmentProjectionRow,
+  type OrgResponsibilityProjectionRow,
+} from "@/contexts/company/infrastructure/workforce/organization-period-row.adapter"
 import type { Context } from "@/env"
 import { ApplicationError } from "@/lib/errors"
+
+type AssignmentRow = Omit<OrgAssignmentProjectionRow, "isVoid"> & Readonly<{ isVoid: number }>
+type ResponsibilityRow = Omit<OrgResponsibilityProjectionRow, "isVoid"> &
+  Readonly<{ isVoid: number }>
 
 function storageEmployeeId(employeeId: EmployeeId): number | null {
   const match = /^employee:(0|[1-9]\d*)$/.exec(String(employeeId))
@@ -50,9 +59,46 @@ export class EmployeeLifecycleWorkforceRepository implements WorkforceLifecycleR
       const source = await new EmployeeLifecycleRepository(this.c).loadSchedule(sourceEmployeeId)
       if (source instanceof ApplicationError) return { ok: false, cause: source }
 
+      const [assignments, responsibilities] = await Promise.all([
+        this.c.env.DB.prepare(
+          `SELECT period_id AS periodId, revision, employment_id AS employmentId,
+                  employee_id AS employeeId, organization_unit_id AS organizationUnitId,
+                  assignment_type AS assignmentType, position_title AS positionTitle,
+                  manager_employee_id AS managerEmployeeId, starts_on AS startsOn,
+                  ends_on AS endsOn, is_void AS isVoid,
+                  recorded_by_action_id AS recordedByActionId, recorded_at AS recordedAt
+             FROM organization_assignment_period_versions
+             WHERE employee_id = ?1
+             ORDER BY period_id, revision`,
+        )
+          .bind(employeeId)
+          .all<AssignmentRow>(),
+        this.c.env.DB.prepare(
+          `SELECT period_id AS periodId, revision, employment_id AS employmentId,
+                  employee_id AS employeeId, organization_unit_id AS organizationUnitId,
+                  responsibility_type AS responsibilityType, starts_on AS startsOn,
+                  ends_on AS endsOn, is_void AS isVoid,
+                  recorded_by_action_id AS recordedByActionId, recorded_at AS recordedAt
+             FROM organization_responsibility_period_versions
+             WHERE employee_id = ?1
+             ORDER BY period_id, revision`,
+        )
+          .bind(employeeId)
+          .all<ResponsibilityRow>(),
+      ])
+      const baseSchedule = toWorkforceLifecycleSchedules([source])[0] ?? emptySchedule(employeeId)
+      const schedule = attachOrganizationPeriods({
+        schedules: [baseSchedule],
+        assignmentRows: assignments.results.map((row) => ({ ...row, isVoid: row.isVoid === 1 })),
+        responsibilityRows: responsibilities.results.map((row) => ({
+          ...row,
+          isVoid: row.isVoid === 1,
+        })),
+      })[0]
+
       return {
         ok: true,
-        schedule: toWorkforceLifecycleSchedules([source])[0] ?? emptySchedule(employeeId),
+        schedule: schedule ?? emptySchedule(employeeId),
       }
     } catch (cause) {
       return { ok: false, cause }

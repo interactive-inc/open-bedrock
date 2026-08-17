@@ -151,4 +151,43 @@ describe("WorkflowEditor", () => {
     ])
     expect(new Set(submitted.steps.map((step) => step.key)).size).toBe(submitted.steps.length)
   })
+
+  test("edits an explicit Company responsibility selector without an Account role", () => {
+    const responsibilityWorkflow: ApplicationWorkflow = {
+      ...initialWorkflow,
+      steps: [
+        {
+          ...initialWorkflow.steps[0],
+          approvers: [
+            {
+              type: "responsibility",
+              responsibility_type: "PEOPLE_OPERATIONS",
+              organization_unit_code: null,
+            },
+          ],
+        },
+      ],
+    }
+    const { container } = render(
+      <WorkflowEditor code="personnel" initial={responsibilityWorkflow} revision={3} />,
+    )
+
+    fireEvent.change(screen.getByLabelText("責務タイプ"), {
+      target: { value: "SECURITY_REVIEW" },
+    })
+    fireEvent.change(screen.getByLabelText("組織コード（任意）"), {
+      target: { value: "headquarters" },
+    })
+
+    const workflowInput = container.querySelector<HTMLInputElement>('input[name="workflow_json"]')
+    if (workflowInput === null) throw new Error("workflow_json input not found")
+    const submitted = JSON.parse(workflowInput.value) as ApplicationWorkflow
+    expect(submitted.steps[0]?.approvers).toEqual([
+      {
+        type: "responsibility",
+        responsibility_type: "SECURITY_REVIEW",
+        organization_unit_code: "headquarters",
+      },
+    ])
+  })
 })

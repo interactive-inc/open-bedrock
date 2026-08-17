@@ -7,6 +7,11 @@ import { resolveOrganizationAuthority } from "@/contexts/company/application/org
 async function setup() {
   const { context, db } = createTestContext()
 
+  await seedD1(db, "departments", [
+    { id: 1, name: "Head Office" },
+    { id: 2, name: "Team" },
+  ])
+
   await seedD1(db, "employees", [
     { id: 1, code: "E001", name: "Director", status: "active" },
     { id: 2, code: "E002", name: "Manager", status: "active" },

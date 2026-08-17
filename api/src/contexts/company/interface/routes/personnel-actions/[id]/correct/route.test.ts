@@ -2,6 +2,7 @@ import { createTestToken } from "@/api/test/support/create-test-token"
 import {
   createLifecycleRouteDb,
   lifecycleRouteJwtSecret,
+  readOrganizationRevision,
 } from "@/api/test/support/lifecycle-route-fixture"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { describe, expect, test } from "bun:test"
@@ -18,6 +19,7 @@ describe("POST /personnel-actions/:id/correct", () => {
   test("appends a correction without exposing the required reason", async () => {
     const db = await createLifecycleRouteDb()
     const token = await adminToken()
+    const initialOrganizationRevision = await readOrganizationRevision(db)
     const created = await requestWithContext({
       db,
       jwtSecret: lifecycleRouteJwtSecret,
@@ -37,7 +39,7 @@ describe("POST /personnel-actions/:id/correct", () => {
           changeType: "promotion",
         },
         expected_employee_revision: 0,
-        expected_organization_revision: 0,
+        expected_organization_revision: initialOrganizationRevision,
       },
     })
     expect(created.status).toBe(201)
@@ -64,7 +66,7 @@ describe("POST /personnel-actions/:id/correct", () => {
           changeType: "promotion",
         },
         expected_employee_revision: 1,
-        expected_organization_revision: 1,
+        expected_organization_revision: await readOrganizationRevision(db),
       },
     })
     expect(corrected.status).toBe(201)
