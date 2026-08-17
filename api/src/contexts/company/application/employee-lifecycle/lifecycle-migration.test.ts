@@ -111,6 +111,34 @@ describe("employee lifecycle migration", () => {
     ).toBe("verified")
   })
 
+  test("backfills a report before its higher-id manager without violating employment integrity", async () => {
+    const { context, db } = createTestContext()
+    await db.exec(`
+      INSERT INTO departments (id, name) VALUES (1, 'Product');
+      INSERT INTO org_departments
+        (code, department_id, parent_code, manager_employee_code, sort_order)
+      VALUES ('D001', 1, NULL, 'E002', 1);
+      INSERT INTO employees (id, code, name, dept_id, dept_name, position, status) VALUES
+        (1, 'E001', 'Report', 1, 'Product', 'Member', 'active'),
+        (2, 'E002', 'Manager', 1, 'Product', 'Manager', 'active');
+      INSERT INTO org_memberships
+        (department_code, employee_code, manager_employee_code)
+      VALUES ('D001', 'E001', 'E002'), ('D001', 'E002', NULL);
+    `)
+    const preflight = await new PreflightLifecycleMigration(context).run(migrationInput)
+    expect(preflight).not.toBeInstanceOf(ApplicationError)
+    const fingerprint = (preflight as Exclude<typeof preflight, ApplicationError>)
+      .legacySourceFingerprint
+    const command = { ...migrationInput, legacySourceFingerprint: fingerprint }
+
+    expect(await new BackfillLifecycleMigration(context).run(command)).not.toBeInstanceOf(
+      ApplicationError,
+    )
+    expect(await new VerifyLifecycleMigration(context).run(command)).not.toBeInstanceOf(
+      ApplicationError,
+    )
+  })
+
   test("rejects backfill when legacy data changed after preflight", async () => {
     const { context, db } = await legacyFixture()
     const preflight = await new PreflightLifecycleMigration(context).run(migrationInput)

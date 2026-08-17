@@ -16,6 +16,7 @@ import {
 } from "@/contexts/company/infrastructure/workforce/organization-period-row.adapter"
 import type { Context } from "@/env"
 import { ApplicationError } from "@/lib/errors"
+import { readWorkforceBaselineStates } from "@/contexts/company/infrastructure/workforce/read-workforce-baseline-states"
 
 type EmployeeRow = Readonly<{
   id: number
@@ -47,20 +48,21 @@ export class OrganizationWorkforceSnapshotRepository implements WorkforceSnapsho
 
   async readAllSnapshot(): Promise<WorkforceSnapshotReadResult> {
     try {
-      const [sourceSchedules, employees, links, assignments, responsibilities] = await Promise.all([
-        new EmployeeLifecycleRepository(this.c).loadOrganizationSchedules(),
-        this.c.env.DB.prepare(
-          "SELECT id, code, name, phone FROM employees ORDER BY id",
-        ).all<EmployeeRow>(),
-        this.c.env.DB.prepare(
-          `SELECT CAST(link.account_id AS TEXT) AS account_id, link.employee_id
+      const [sourceSchedules, employees, links, assignments, responsibilities, baselineStates] =
+        await Promise.all([
+          new EmployeeLifecycleRepository(this.c).loadOrganizationSchedules(),
+          this.c.env.DB.prepare(
+            "SELECT id, code, name, phone FROM employees ORDER BY id",
+          ).all<EmployeeRow>(),
+          this.c.env.DB.prepare(
+            `SELECT CAST(link.account_id AS TEXT) AS account_id, link.employee_id
              FROM account_employee_links AS link
              JOIN system_accounts AS account ON account.id = CAST(link.account_id AS TEXT)
              WHERE account.status = 'active'
              ORDER BY link.employee_id, account.id`,
-        ).all<LinkRow>(),
-        this.c.env.DB.prepare(
-          `SELECT period_id AS periodId, revision, employment_id AS employmentId,
+          ).all<LinkRow>(),
+          this.c.env.DB.prepare(
+            `SELECT period_id AS periodId, revision, employment_id AS employmentId,
                   employee_id AS employeeId, organization_unit_id AS organizationUnitId,
                   assignment_type AS assignmentType, position_title AS positionTitle,
                   manager_employee_id AS managerEmployeeId, starts_on AS startsOn,
@@ -68,17 +70,18 @@ export class OrganizationWorkforceSnapshotRepository implements WorkforceSnapsho
                   recorded_by_action_id AS recordedByActionId, recorded_at AS recordedAt
              FROM organization_assignment_period_versions
              ORDER BY period_id, revision`,
-        ).all<AssignmentRow>(),
-        this.c.env.DB.prepare(
-          `SELECT period_id AS periodId, revision, employment_id AS employmentId,
+          ).all<AssignmentRow>(),
+          this.c.env.DB.prepare(
+            `SELECT period_id AS periodId, revision, employment_id AS employmentId,
                   employee_id AS employeeId, organization_unit_id AS organizationUnitId,
                   responsibility_type AS responsibilityType, starts_on AS startsOn,
                   ends_on AS endsOn, is_void AS isVoid,
                   recorded_by_action_id AS recordedByActionId, recorded_at AS recordedAt
              FROM organization_responsibility_period_versions
              ORDER BY period_id, revision`,
-        ).all<ResponsibilityRow>(),
-      ])
+          ).all<ResponsibilityRow>(),
+          readWorkforceBaselineStates(this.c.env.DB),
+        ])
       if (sourceSchedules instanceof ApplicationError) {
         return { ok: false, cause: sourceSchedules }
       }
@@ -111,6 +114,7 @@ export class OrganizationWorkforceSnapshotRepository implements WorkforceSnapsho
               email: null,
               phone: employee.phone,
             },
+            baselineState: baselineStates.get(employeeId),
             employments: schedule.employments,
             statuses: schedule.statuses,
             assignments: schedule.assignments,

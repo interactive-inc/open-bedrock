@@ -5,6 +5,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
 import { z } from "zod"
 
 const jwtSecret = "overtime-summary-route-test-secret"
@@ -95,6 +96,11 @@ async function createScopeTestDb(): Promise<D1Database> {
   }
 
   await seedD1(db, "attendance_records", records)
+
+  await verifyCompanyMigrationFixture({
+    db,
+    departments: [{ id: 1, code: "D001", name: "Dept", managerEmployeeCode: "M002" }],
+  })
 
   return db
 }

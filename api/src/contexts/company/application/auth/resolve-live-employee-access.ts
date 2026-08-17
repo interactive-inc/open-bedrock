@@ -10,7 +10,7 @@ export type LiveEmployeeAccess = {
   businessDate: string | null
 }
 
-/** verified 後は有効日付き正本、移行中だけは旧列を使う配備互換の認証判定。 */
+/** migration制御を認証可能に保ち、verified後はcanonical lifecycleだけを使う。 */
 export async function resolveLiveEmployeeAccess(
   c: Context,
   employeeId: number,
@@ -30,5 +30,6 @@ export async function resolveLiveEmployeeAccess(
     return new UnexpectedError("従業員の在籍状態を取得できません", { cause: employee })
   }
   if (employee === null || employee.status === "retired") return null
+
   return { status: employee.status, source: "legacy", businessDate: null }
 }

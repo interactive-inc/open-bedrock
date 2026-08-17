@@ -4,7 +4,7 @@ export type Props = {
   session: Session
   /** 対象部門コード。 */
   departmentCode: string
-  /** viewer が所属する部門コード(org_memberships 由来)。無所属なら null。 */
+  /** viewer が基準日時点で所属するcanonical組織単位コード。無所属ならnull。 */
   viewerDepartmentCode: string | null
 }
 

@@ -92,6 +92,9 @@ function change(overrides: Partial<OrganizationChangeSet> = {}): OrganizationCha
     expectedRevision: 0,
     asOf,
     recordedAt: 10,
+    actorAccountId: "account:1",
+    reason: "Create organization unit",
+    evidenceReferences: [],
     organizationUnits: [{ id: unitId, createdAt: 10 }],
     unitPeriods: [unitPeriod()],
     assignments: [],
@@ -123,6 +126,7 @@ function service(
         readAllSnapshot: async () => ({ ok: true, schedules: props.schedules ?? [] }),
       },
       writer: {
+        findReplay: async () => ({ ok: true, kind: "not_found" }),
         append: async (input) => {
           writes.push(input)
           return {
@@ -132,6 +136,7 @@ function service(
               input.unitPeriods.length +
               input.assignments.length +
               input.responsibilities.length,
+            replayed: false,
           }
         },
       },
@@ -142,7 +147,11 @@ function service(
 describe("ApplyOrganizationChange", () => {
   test("検証済みOrgUnit作成をexpected revision付きwriterへ一度だけ渡す", async () => {
     const target = service()
-    expect(await target.value.execute(change())).toEqual({ kind: "applied", revision: 1 })
+    expect(await target.value.execute(change())).toEqual({
+      kind: "applied",
+      revision: 1,
+      replayed: false,
+    })
     expect(target.writes).toHaveLength(1)
   })
 
@@ -205,6 +214,7 @@ describe("ApplyOrganizationChange", () => {
     expect(await target.value.execute(change({ unitPeriods: [first, corrected] }))).toEqual({
       kind: "applied",
       revision: 2,
+      replayed: false,
     })
     expect(target.writes).toHaveLength(1)
   })

@@ -5,6 +5,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
 import { z } from "zod"
 
 const jwtSecret = "leave-balance-route-test-secret"
@@ -19,9 +20,9 @@ const balanceSchema = z.object({
 
 /** manager(id2)が id20 を配下に持つ。id23 は無関係。当年度は 2026(NOW 未設定時の today 依存を避けるため fiscal_year を合わせる)。 */
 const employeeRows = [
-  { id: 2, code: "M002", email: "you+m002@example.com", role: "manager" },
-  { id: 20, code: "R020", email: "you+r020@example.com", role: "member" },
-  { id: 23, code: "X023", email: "you+x023@example.com", role: "member" },
+  { id: 2, code: "M002", email: "you+m002@example.com", role: "manager", departmentId: 1 },
+  { id: 20, code: "R020", email: "you+r020@example.com", role: "member", departmentId: 1 },
+  { id: 23, code: "X023", email: "you+x023@example.com", role: "member", departmentId: 2 },
 ]
 
 async function createTestDb(): Promise<D1Database> {
@@ -34,7 +35,7 @@ async function createTestDb(): Promise<D1Database> {
       id: employee.id,
       code: employee.code,
       name: employee.code,
-      dept_id: 1,
+      dept_id: employee.departmentId,
       dept_name: "Dept",
       position: "-",
       status: "active",
@@ -67,6 +68,14 @@ async function createTestDb(): Promise<D1Database> {
       remaining_days: 18,
     },
   ])
+
+  await verifyCompanyMigrationFixture({
+    db,
+    departments: [
+      { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
+      { id: 2, code: "D002", name: "Dept Two" },
+    ],
+  })
 
   return db
 }

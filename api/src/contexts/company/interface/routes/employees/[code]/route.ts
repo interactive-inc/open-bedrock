@@ -8,25 +8,33 @@ import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-be
 import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity-repository"
 import { AccountRepository } from "@/contexts/company/infrastructure/iam/account-repository"
 import { toPrimaryRole } from "@/contexts/company/interface/utils/to-primary-role"
-import { ApplicationError, UnexpectedError, UnprocessableError } from "@/lib/errors"
+import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import {
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 import { zAppEmployee } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { GetLifecycleState } from "@/contexts/company/application/employee-lifecycle/get-lifecycle-state"
-import type { EmployeeLifecycleState } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { isoDate } from "@/lib/schemas"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
+import { ReadOrganizationWorkforceState } from "@/contexts/company/application/workforce/read-organization-workforce-state"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
+import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
+import { CanonicalCompanyAccess } from "@/contexts/company/interface/utils/canonical-company-access"
+import { requireCanonicalCompany } from "@/contexts/company/interface/utils/require-canonical-company"
 
 /** 従業員をレスポンス用の snake_case に整形する。email/role は IAM(identities/account_roles)から解決する。 */
-async function toResponseBody(c: Context, employee: Employee, state?: EmployeeLifecycleState) {
+async function toResponseBody(
+  c: Context,
+  employee: Employee,
+  state?: Readonly<{
+    status: "active" | "leave" | "retired"
+    departmentName: string | null
+    position: string | null
+  }>,
+) {
   const emailByEmployeeId = await new IdentityRepository(c).findEmailsByEmployeeIds([employee.id])
 
   if (emailByEmployeeId instanceof Error) {
@@ -42,8 +50,8 @@ async function toResponseBody(c: Context, employee: Employee, state?: EmployeeLi
   return zAppEmployee.parse({
     code: employee.code,
     name: employee.name,
-    dept_name: state?.primaryAssignment?.departmentName ?? employee.deptName,
-    position: state?.primaryAssignment?.positionTitle ?? employee.position,
+    dept_name: state?.departmentName ?? employee.deptName,
+    position: state?.position ?? employee.position,
     email: emailByEmployeeId.get(employee.id) ?? "",
     status: state?.status ?? employee.status,
     role: toPrimaryRole(roleKeys),
@@ -70,52 +78,84 @@ export const GET = factory.createHandlers(
       throw toHttpException(employee)
     }
 
-    if (employee.id !== session.employeeId) {
-      if (session.hasPermission("employee:read") === false) {
-        throw new NotFoundError("employee not found")
-      }
-
-      if (session.hasPermission("org:manage") === false) {
-        const authority = await resolveOrganizationAuthority(c, session.employeeId, employee.id)
-
-        if (authority instanceof Error) {
-          throw new InternalError("failed to resolve employee organization scope")
-        }
-
-        if (authority.managementChain === false && authority.departmentManager === false) {
-          throw new NotFoundError("employee not found")
-        }
-      }
+    if (employee.id !== session.employeeId && !session.hasPermission("employee:read")) {
+      throw new NotFoundError("employee not found")
     }
-
-    const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
-    if (migrationStatus instanceof ApplicationError) throw toHttpException(migrationStatus)
-
-    // as_of は確定済みライフサイクル履歴を引く指定。移行未完了の legacy 経路では基準日を
-    // 適用できないため、黙って無視せず 422 で拒否する（無視すると呼び出し側が現在時点の
-    // 台帳を「基準日時点の姿」として誤読する）
-    if (c.req.valid("query").as_of !== undefined && migrationStatus !== "verified") {
+    const resolvedDate =
+      c.req.valid("query").as_of ??
+      resolveCompanyBusinessDate({
+        now: c.env.NOW ?? new Date().toISOString(),
+        timeZone: c.env.COMPANY_TIME_ZONE,
+      })
+    if (typeof resolvedDate !== "string") {
       throw toHttpException(
-        new UnprocessableError(
-          "as_of は人事ライフサイクル移行の完了後にのみ指定できます",
-          "lifecycle_migration_incomplete",
+        new UnavailableError(
+          "failed to resolve company business date",
+          "company_timezone_unavailable",
+          {
+            cause: resolvedDate,
+          },
         ),
       )
     }
-
-    const state =
-      migrationStatus === "verified"
-        ? await new GetLifecycleState(c).run({
-            employeeId: employee.id,
-            asOf: c.req.valid("query").as_of,
-          })
-        : undefined
-    if (state instanceof ApplicationError) throw toHttpException(state)
-    if (state?.archived || state?.status === "prehire") {
+    const asOf = restoreCalendarDate(resolvedDate)
+    await requireCanonicalCompany(c, asOf)
+    const employeeId = toWorkforceEmployeeId(employee.id)
+    const authorization = await new CanonicalCompanyAccess({ c, session }).authorizeWorkforceRead(
+      employeeId,
+      asOf,
+    )
+    if (authorization.kind === "denied") throw new NotFoundError("employee not found")
+    if (authorization.kind === "invalid" || authorization.kind === "unavailable") {
+      throw toHttpException(
+        new UnavailableError(
+          "Company authority is unavailable",
+          authorization.kind === "invalid"
+            ? "company_authority_invalid"
+            : "company_authority_unavailable",
+          authorization.kind === "unavailable" ? { cause: authorization.cause } : undefined,
+        ),
+      )
+    }
+    const snapshot = await new ReadOrganizationWorkforceState({
+      organization: new OrganizationUnitReadRepository(c.var.database),
+      workforce: new OrganizationWorkforceSnapshotRepository(c),
+    }).execute(asOf)
+    if (snapshot.kind !== "found") {
+      throw toHttpException(
+        new UnavailableError(
+          "Company workforce is unavailable",
+          snapshot.kind === "invalid"
+            ? "company_workforce_invalid"
+            : "company_workforce_unavailable",
+          snapshot.kind === "unavailable" ? { cause: snapshot.cause } : undefined,
+        ),
+      )
+    }
+    if (
+      authorization.organizationRevision !== null &&
+      authorization.organizationRevision !== snapshot.organization.revision
+    ) {
+      throw toHttpException(
+        new UnavailableError("Company organization changed", "company_workforce_snapshot_changed"),
+      )
+    }
+    const state = snapshot.employees.find((candidate) => candidate.employeeId === employeeId)
+    if (state === undefined || state.status === "PRE_HIRE") {
       throw new NotFoundError("employee not found")
     }
-
-    const body = await toResponseBody(c, employee, state)
+    const departmentName =
+      state.primaryAssignment === null
+        ? null
+        : (snapshot.organization.units.find(
+            (unit) => unit.organizationUnitId === state.primaryAssignment?.organizationUnitId,
+          )?.officialName ?? null)
+    const body = await toResponseBody(c, employee, {
+      status:
+        state.status === "ACTIVE" ? "active" : state.status === "ON_LEAVE" ? "leave" : "retired",
+      departmentName,
+      position: state.primaryAssignment?.positionTitle ?? null,
+    })
 
     if (body instanceof ApplicationError) {
       throw toHttpException(body)

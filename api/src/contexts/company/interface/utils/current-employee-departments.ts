@@ -4,7 +4,7 @@ import { loadCurrentOrganization } from "@/contexts/company/application/organiza
 export async function loadCurrentEmployeeDepartmentNames(
   c: Context,
   employeeIds: ReadonlyArray<number>,
-): Promise<{ source: "lifecycle" | "legacy"; names: ReadonlyMap<number, string | null> } | Error> {
+): Promise<{ source: "lifecycle"; names: ReadonlyMap<number, string | null> } | Error> {
   const organization = await loadCurrentOrganization(c)
   if (organization instanceof Error) return organization
   const requested = new Set(employeeIds)

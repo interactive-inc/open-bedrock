@@ -1,8 +1,10 @@
 import type {
+  OrganizationChangeReplayReadResult,
   OrganizationChangeSet,
   OrganizationChangeWritePort,
   OrganizationChangeWriteResult,
 } from "@/contexts/company/application/workforce/apply-organization-change"
+import { toOrganizationChangeFingerprint } from "@/contexts/company/infrastructure/workforce/to-organization-change-fingerprint"
 import {
   organizationAssignmentPeriodVersions,
   organizationResponsibilityPeriodVersions,
@@ -50,6 +52,35 @@ export class OrganizationChangeRepository implements OrganizationChangeWritePort
     return revision
   }
 
+  async findReplay(change: OrganizationChangeSet): Promise<OrganizationChangeReplayReadResult> {
+    try {
+      const requestFingerprint = await toOrganizationChangeFingerprint(change)
+      const rows = await this.database
+        .select({
+          requestFingerprint: organizationChangeOperations.requestFingerprint,
+          resultingRevision: organizationChangeOperations.resultingRevision,
+          status: organizationChangeOperations.status,
+        })
+        .from(organizationChangeOperations)
+        .where(eq(organizationChangeOperations.id, change.operationId))
+        .limit(1)
+      const operation = rows[0]
+      if (operation === undefined) return { ok: true, kind: "not_found" }
+      if (operation.requestFingerprint !== requestFingerprint) {
+        return { ok: false, kind: "operation_conflict" }
+      }
+      return operation.status === "COMPLETED"
+        ? { ok: true, kind: "replayed", revision: operation.resultingRevision }
+        : {
+            ok: false,
+            kind: "unavailable",
+            cause: new Error("organization change operation is incomplete"),
+          }
+    } catch (cause) {
+      return { ok: false, kind: "unavailable", cause }
+    }
+  }
+
   async append(change: OrganizationChangeSet): Promise<OrganizationChangeWriteResult> {
     const changeCount =
       change.unitPeriods.length + change.assignments.length + change.responsibilities.length
@@ -63,6 +94,10 @@ export class OrganizationChangeRepository implements OrganizationChangeWritePort
         resultingRevision,
         status: "PENDING",
         recordedAt: date(change.recordedAt),
+        actorAccountId: change.actorAccountId,
+        reason: change.reason,
+        evidenceReferencesJson: JSON.stringify(change.evidenceReferences),
+        requestFingerprint: await toOrganizationChangeFingerprint(change),
       }),
     ]
 
@@ -109,8 +144,15 @@ export class OrganizationChangeRepository implements OrganizationChangeWritePort
 
     try {
       await this.database.batch([statements[0]!, ...statements.slice(1)])
-      return { ok: true, revision: resultingRevision }
+      return { ok: true, revision: resultingRevision, replayed: false }
     } catch (cause) {
+      const replay = await this.findReplay(change)
+      if (replay.ok && replay.kind === "replayed") {
+        return { ok: true, revision: replay.revision, replayed: true }
+      }
+      if (!replay.ok && replay.kind === "operation_conflict") {
+        return { ok: false, kind: "operation_conflict" }
+      }
       try {
         const actualRevision = await this.revision()
         if (actualRevision !== change.expectedRevision) {

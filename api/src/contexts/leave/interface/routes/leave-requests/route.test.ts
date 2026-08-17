@@ -8,6 +8,8 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
 import { z } from "zod"
 
 const leaveRequestCreateResponseSchema = z.object({
@@ -46,7 +48,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedIamForEmployees(db)
 
   await seedD1(db, "org_memberships", [
-    { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E004" },
+    { department_code: "D003", employee_code: "E005", manager_employee_code: "E004" },
   ])
 
   await seedD1(
@@ -80,6 +82,8 @@ async function createTestDb(): Promise<D1Database> {
       remaining_days: balance.remainingDays,
     })),
   )
+
+  await verifyStandardCompanyMigration(db)
 
   return db
 }
@@ -335,10 +339,10 @@ const leaveListSchema = z.object({
 
 /** scope/relation 用に、manager(id2)が id20/id21 の 2 名を配下に持つ小さな組織を組む。 */
 const scopeEmployeeRows = [
-  { id: 2, code: "M002", email: "you+m002@example.com", role: "manager" },
-  { id: 20, code: "R020", email: "you+r020@example.com", role: "member" },
-  { id: 21, code: "R021", email: "you+r021@example.com", role: "member" },
-  { id: 22, code: "S022", email: "you+s022@example.com", role: "manager" },
+  { id: 2, code: "M002", email: "you+m002@example.com", role: "manager", departmentId: 1 },
+  { id: 20, code: "R020", email: "you+r020@example.com", role: "member", departmentId: 1 },
+  { id: 21, code: "R021", email: "you+r021@example.com", role: "member", departmentId: 1 },
+  { id: 22, code: "S022", email: "you+s022@example.com", role: "manager", departmentId: 2 },
 ]
 
 async function createScopeTestDb(): Promise<D1Database> {
@@ -351,7 +355,7 @@ async function createScopeTestDb(): Promise<D1Database> {
       id: employee.id,
       code: employee.code,
       name: employee.code,
-      dept_id: 1,
+      dept_id: employee.departmentId,
       dept_name: "Dept",
       position: "-",
       status: "active",
@@ -403,6 +407,14 @@ async function createScopeTestDb(): Promise<D1Database> {
       created_at: "2026-05-21T00:00:00Z",
     },
   ])
+
+  await verifyCompanyMigrationFixture({
+    db,
+    departments: [
+      { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
+      { id: 2, code: "D002", name: "Dept Two", managerEmployeeCode: "S022" },
+    ],
+  })
 
   return db
 }

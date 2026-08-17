@@ -17,6 +17,9 @@ function change(
     expectedRevision,
     asOf: restoreCalendarDate("2026-01-01"),
     recordedAt: 10,
+    actorAccountId: "account:1",
+    reason: "Create the platform team",
+    evidenceReferences: [{ context: "company", kind: "decision", id: "decision:1", version: "1" }],
     organizationUnits: [{ id: organizationUnitId, createdAt: 10 }],
     unitPeriods: [
       {
@@ -46,7 +49,7 @@ describe("OrganizationChangeRepository", () => {
     const repository = new OrganizationChangeRepository(context.var.database)
     const input = change()
 
-    expect(await repository.append(input)).toEqual({ ok: true, revision: 2 })
+    expect(await repository.append(input)).toEqual({ ok: true, revision: 2, replayed: false })
     expect(
       await db
         .prepare("SELECT id FROM organization_units WHERE id = 'team:platform'")
@@ -55,7 +58,8 @@ describe("OrganizationChangeRepository", () => {
     expect(
       await db
         .prepare(
-          `SELECT expected_revision, applied_count, resulting_revision, status
+          `SELECT expected_revision, applied_count, resulting_revision, status,
+                  actor_account_id, reason, evidence_references_json
              FROM organization_change_operations WHERE id = ?1`,
         )
         .bind(input.operationId)
@@ -64,17 +68,28 @@ describe("OrganizationChangeRepository", () => {
           applied_count: number
           resulting_revision: number
           status: string
+          actor_account_id: string
+          reason: string
+          evidence_references_json: string
         }>(),
     ).toEqual({
       expected_revision: 1,
       applied_count: 1,
       resulting_revision: 2,
       status: "COMPLETED",
+      actor_account_id: "account:1",
+      reason: "Create the platform team",
+      evidence_references_json:
+        '[{"context":"company","kind":"decision","id":"decision:1","version":"1"}]',
     })
     expect(await repository.append(input)).toEqual({
+      ok: true,
+      revision: 2,
+      replayed: true,
+    })
+    expect(await repository.append({ ...input, reason: "A different command" })).toEqual({
       ok: false,
-      kind: "conflict",
-      actualRevision: 2,
+      kind: "operation_conflict",
     })
   })
 

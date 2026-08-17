@@ -11,7 +11,7 @@ import { z } from "zod"
 // @authorization permission - evaluation:administer で判定する
 /**
  * POST /evaluation-sheets — 評価シートを新規作成する。
- * primary_evaluator_id 省略時は org_memberships から directManager を自動解決する。
+ * primary_evaluator_id 省略時はcanonical Company snapshotからdirect managerを自動解決する。
  */
 export const POST = factory.createHandlers(
   verifyBearer,

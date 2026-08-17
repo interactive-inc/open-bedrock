@@ -18,11 +18,21 @@ type OrganizationUnitIdentity = Readonly<{
   createdAt: number
 }>
 
+export type OrganizationChangeEvidenceReference = Readonly<{
+  context: string
+  kind: string
+  id: string
+  version: string
+}>
+
 export type OrganizationChangeSet = Readonly<{
   operationId: PersonnelActionId
   expectedRevision: number
   asOf: CalendarDate
   recordedAt: number
+  actorAccountId: string
+  reason: string
+  evidenceReferences: ReadonlyArray<OrganizationChangeEvidenceReference>
   organizationUnits: ReadonlyArray<OrganizationUnitIdentity>
   unitPeriods: ReadonlyArray<OrganizationUnitPeriod>
   assignments: ReadonlyArray<OrgAssignmentPeriod>
@@ -38,11 +48,19 @@ export interface WorkforceSnapshotReadPort {
 }
 
 export type OrganizationChangeWriteResult =
-  | Readonly<{ ok: true; revision: number }>
+  | Readonly<{ ok: true; revision: number; replayed: boolean }>
   | Readonly<{ ok: false; kind: "conflict"; actualRevision: number }>
+  | Readonly<{ ok: false; kind: "operation_conflict" }>
+  | Readonly<{ ok: false; kind: "unavailable"; cause: unknown }>
+
+export type OrganizationChangeReplayReadResult =
+  | Readonly<{ ok: true; kind: "not_found" }>
+  | Readonly<{ ok: true; kind: "replayed"; revision: number }>
+  | Readonly<{ ok: false; kind: "operation_conflict" }>
   | Readonly<{ ok: false; kind: "unavailable"; cause: unknown }>
 
 export interface OrganizationChangeWritePort {
+  findReplay(change: OrganizationChangeSet): Promise<OrganizationChangeReplayReadResult>
   append(change: OrganizationChangeSet): Promise<OrganizationChangeWriteResult>
 }
 
@@ -50,6 +68,7 @@ export type OrganizationChangeValidationCode =
   | "empty_change"
   | "invalid_revision"
   | "invalid_operation"
+  | "invalid_audit"
   | "invalid_identity"
   | "unknown_employee"
   | "invalid_organization"
@@ -63,16 +82,35 @@ export class OrganizationChangeValidationError extends Error {
 }
 
 export type ApplyOrganizationChangeResult =
-  | Readonly<{ kind: "applied"; revision: number }>
+  | Readonly<{ kind: "applied"; revision: number; replayed: boolean }>
   | Readonly<{ kind: "conflict"; actualRevision: number }>
+  | Readonly<{ kind: "operation_conflict" }>
   | Readonly<{ kind: "invalid"; error: OrganizationChangeValidationError }>
   | Readonly<{ kind: "unavailable"; cause: unknown }>
 
 export type ValidateOrganizationChangeResult =
   | Readonly<{ kind: "valid"; resultingRevision: number }>
-  | Exclude<ApplyOrganizationChangeResult, Readonly<{ kind: "applied"; revision: number }>>
+  | Exclude<ApplyOrganizationChangeResult, Readonly<{ kind: "applied" }>>
 
 type VersionedPeriod = OrganizationUnitPeriod | OrgAssignmentPeriod | OrgResponsibilityPeriod
+
+function hasValidAuditMetadata(change: OrganizationChangeSet): boolean {
+  const fieldIsValid = (value: string, maximum: number) =>
+    value.length >= 1 && value.length <= maximum && value.trim() === value
+
+  return (
+    fieldIsValid(change.actorAccountId, 255) &&
+    fieldIsValid(change.reason, 1_000) &&
+    change.evidenceReferences.length <= 100 &&
+    change.evidenceReferences.every(
+      (reference) =>
+        fieldIsValid(reference.context, 100) &&
+        fieldIsValid(reference.kind, 100) &&
+        fieldIsValid(reference.id, 512) &&
+        fieldIsValid(reference.version, 255),
+    )
+  )
+}
 
 function sameOwner(left: VersionedPeriod, right: VersionedPeriod): boolean {
   if ("officialName" in left || "officialName" in right) {
@@ -187,6 +225,12 @@ export class ValidateOrganizationChange {
         error: new OrganizationChangeValidationError("invalid_operation"),
       }
     }
+    if (!hasValidAuditMetadata(change)) {
+      return {
+        kind: "invalid",
+        error: new OrganizationChangeValidationError("invalid_audit"),
+      }
+    }
 
     let organization
     let workforce
@@ -277,6 +321,22 @@ export class ApplyOrganizationChange {
   }
 
   async execute(change: OrganizationChangeSet): Promise<ApplyOrganizationChangeResult> {
+    const replay = await this.ports.writer.findReplay(change).catch(
+      (cause): OrganizationChangeReplayReadResult => ({
+        ok: false,
+        kind: "unavailable",
+        cause,
+      }),
+    )
+    if (!replay.ok) {
+      return replay.kind === "operation_conflict"
+        ? { kind: "operation_conflict" }
+        : { kind: "unavailable", cause: replay.cause }
+    }
+    if (replay.kind === "replayed") {
+      return { kind: "applied", revision: replay.revision, replayed: true }
+    }
+
     const validation = await new ValidateOrganizationChange(this.ports).execute(change)
     if (validation.kind !== "valid") return validation
 
@@ -288,14 +348,17 @@ export class ApplyOrganizationChange {
     }
     if (written.ok) {
       return written.revision === validation.resultingRevision
-        ? { kind: "applied", revision: written.revision }
+        ? { kind: "applied", revision: written.revision, replayed: written.replayed }
         : {
             kind: "unavailable",
             cause: new Error("organization writer returned an unexpected revision"),
           }
     }
-    return written.kind === "conflict"
-      ? { kind: "conflict", actualRevision: written.actualRevision }
+    if (written.kind === "conflict") {
+      return { kind: "conflict", actualRevision: written.actualRevision }
+    }
+    return written.kind === "operation_conflict"
+      ? { kind: "operation_conflict" }
       : { kind: "unavailable", cause: written.cause }
   }
 }

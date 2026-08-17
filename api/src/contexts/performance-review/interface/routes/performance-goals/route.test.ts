@@ -9,6 +9,8 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
+import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
 import { z } from "zod"
 
 const goalResponseSchema = z.object({
@@ -79,6 +81,8 @@ async function createTestDb(): Promise<D1Database> {
       created_at: evaluation.createdAt,
     })),
   )
+
+  await verifyStandardCompanyMigration(db)
 
   return db
 }
@@ -229,10 +233,46 @@ describe("GET /performance-goals", () => {
  * seed 側は manager が 1 名しか配下を持たないため、ここで専用データを用意する。
  */
 const scopeEmployeeRows = [
-  { id: 2, code: "M002", name: "Mgr", email: "you+m002@example.com", role: "manager" },
-  { id: 20, code: "R020", name: "ReportA", email: "you+r020@example.com", role: "member" },
-  { id: 21, code: "R021", name: "ReportB", email: "you+r021@example.com", role: "member" },
-  { id: 22, code: "S022", name: "Solo", email: "you+s022@example.com", role: "manager" },
+  {
+    id: 2,
+    code: "M002",
+    name: "Mgr",
+    email: "you+m002@example.com",
+    role: "manager",
+    departmentId: 1,
+  },
+  {
+    id: 20,
+    code: "R020",
+    name: "ReportA",
+    email: "you+r020@example.com",
+    role: "member",
+    departmentId: 1,
+  },
+  {
+    id: 21,
+    code: "R021",
+    name: "ReportB",
+    email: "you+r021@example.com",
+    role: "member",
+    departmentId: 1,
+  },
+  {
+    id: 22,
+    code: "S022",
+    name: "Solo",
+    email: "you+s022@example.com",
+    role: "manager",
+    departmentId: 2,
+  },
+  {
+    id: 23,
+    code: "A023",
+    name: "Admin",
+    email: "you+a023@example.com",
+    role: "root",
+    departmentId: 1,
+  },
 ]
 
 async function createScopeTestDb(): Promise<D1Database> {
@@ -245,7 +285,7 @@ async function createScopeTestDb(): Promise<D1Database> {
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: 1,
+      dept_id: employee.departmentId,
       dept_name: "Dept",
       position: "-",
       status: "active",
@@ -289,6 +329,14 @@ async function createScopeTestDb(): Promise<D1Database> {
       status: "draft",
     },
   ])
+
+  await verifyCompanyMigrationFixture({
+    db,
+    departments: [
+      { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
+      { id: 2, code: "D002", name: "Dept Two", managerEmployeeCode: "S022" },
+    ],
+  })
 
   return db
 }
@@ -356,23 +404,6 @@ describe("GET /performance-goals?scope=reports", () => {
 /** scope=department 用に、D002 側の goal を足して部署ごとの分離を確認する。 */
 async function createDepartmentScopeTestDb(): Promise<D1Database> {
   const db = await createScopeTestDb()
-
-  // 全社権限の検証用に admin(id 23、所属なし)を追加する。
-  await seedD1(db, "employees", [
-    {
-      id: 23,
-      code: "A023",
-      name: "Admin",
-      dept_id: 1,
-      dept_name: "Dept",
-      position: "-",
-      status: "active",
-    },
-  ])
-
-  await seedIamForEmployees(db, [
-    { id: 23, email: "you+a023@example.com", passwordHash: "x", role: "root" },
-  ])
 
   await seedD1(db, "performance_goals", [
     {
