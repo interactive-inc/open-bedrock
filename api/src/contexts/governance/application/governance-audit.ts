@@ -1,11 +1,11 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
 import {
   createAuditEvent,
   type AuditAction,
   type AuditTargetType,
-} from "@/contexts/company/application/audit/company-audit-event"
+} from "@/contexts/company-compatibility/application/audit/company-audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
+import { AuditEventRepository } from "@/contexts/company-compatibility/infrastructure/company/audit/audit-event-repository"
 import type { AuditJsonValue } from "@/api/legacy-system/model/audit/legacy-stable-json"
 
 export function prepareGovernanceAudit(props: {

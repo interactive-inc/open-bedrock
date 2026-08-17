@@ -43,6 +43,9 @@ const order = [
   "application",
   "approval-delegation",
   "personnel-action",
+  "position",
+  "grade",
+  "company-core",
 ]
 
 const seedFiles = readdirSync(seedsDir)
@@ -88,6 +91,27 @@ if (
   baselineCount !== employeeCount
 ) {
   throw new Error("employee lifecycle seed is incomplete")
+}
+
+const companyOrganization = db
+  .query("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+  .get() as { revision: number } | null
+const companyHeadCount = (
+  db.query("SELECT COUNT(*) AS count FROM company_resource_heads").get() as { count: number }
+).count
+const companyRevisionCount = (
+  db.query("SELECT COUNT(*) AS count FROM company_resource_revisions").get() as { count: number }
+).count
+
+if (
+  companyOrganization?.revision !== 1 ||
+  companyHeadCount < employeeCount * 3 ||
+  companyRevisionCount !== companyHeadCount
+) {
+  throw new Error(
+    `canonical Company seed is incomplete: organizationRevision=${companyOrganization?.revision ?? "missing"}, ` +
+      `heads=${companyHeadCount}, revisions=${companyRevisionCount}, employees=${employeeCount}`,
+  )
 }
 
 const tables = (

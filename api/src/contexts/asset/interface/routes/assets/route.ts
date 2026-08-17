@@ -1,4 +1,4 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { zAppAssetList } from "@/lib/app-schemas"
 import { toAssetResponse } from "@/contexts/asset/interface/routes/assets/to-asset-response"
 import {
@@ -6,12 +6,12 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { assets } from "@/contexts/asset/infrastructure/schema/asset"
 import { and, asc, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
 import { seedOnboardingAssignments } from "@/contexts/onboarding/infrastructure/seed/seed-onboarding-assignments"
 import { seedOnboardingTasks } from "@/contexts/onboarding/infrastructure/seed/seed-onboarding-tasks"
 import { seedOnboardingTemplates } from "@/contexts/onboarding/infrastructure/seed/seed-onboarding-templates"

@@ -1,13 +1,13 @@
 import { CloseWorkAccident } from "@/contexts/work-accident/application/close-work-accident"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { zAppWorkAccident } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import {
   BadRequestError,
   ForbiddenError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+} from "@/contexts/company-compatibility/interface/lib/errors"
 
 // @authorization permission - 権限キーで判定する
 /** POST /work-accidents/:id/close — 発生記録を closed にする。work_accident:manage が必要。 */

@@ -7,11 +7,11 @@ import {
   ForbiddenError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+} from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
 import { zAppEvaluationSheet } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { evaluationSheets } from "@/contexts/performance-review/infrastructure/schema/performance-review"

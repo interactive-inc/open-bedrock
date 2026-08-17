@@ -1,14 +1,14 @@
 import { toReviewCycleStatus } from "@/contexts/performance-review/domain/review/review-cycle-status.value"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
 import { zAppReviewCycleList } from "@/lib/app-schemas"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { asc, count, eq } from "drizzle-orm"
 

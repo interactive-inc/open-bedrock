@@ -2,18 +2,18 @@ import {
   ForbiddenError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import { zAppOnboardingAssignmentList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { validateCodeParam } from "@/contexts/company-compatibility/interface/utils/validate-code-param"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
 import {
   onboardingAssignments,
   onboardingTasks,

@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
+import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { EmployeeRelation } from "@/contexts/company-compatibility/domain/organization/employee-relation"
 
 /**
  * 対象従業員の目標を閲覧できるか、スコープ(self/reports/department/all)で判定する。

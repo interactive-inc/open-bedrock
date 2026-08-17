@@ -1,10 +1,10 @@
 import { ViewMyBudget } from "@/contexts/thanks/application/thanks-points/view-my-budget"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksBudget } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /thanks-point-budgets/me — 自分の当月の贈与原資（付与・消費・残量）を取得する */

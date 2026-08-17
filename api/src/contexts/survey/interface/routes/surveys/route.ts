@@ -1,7 +1,10 @@
 import { Survey } from "@/contexts/survey/domain/survey.entity"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import {
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import { zAppSurveyList } from "@/lib/app-schemas"
 import { surveys } from "@/contexts/survey/infrastructure/schema/survey"
 import { count, eq } from "drizzle-orm"
@@ -10,7 +13,7 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

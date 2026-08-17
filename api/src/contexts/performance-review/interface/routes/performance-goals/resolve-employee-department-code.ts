@@ -1,5 +1,5 @@
-import { readCanonicalOrganizationState } from "@/contexts/company/application/organization/read-canonical-organization-state"
-import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
+import { readCanonicalOrganizationState } from "@/contexts/company-compatibility/application/organization/read-canonical-organization-state"
+import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import type { Context } from "@/env"
 
 export type Props = {

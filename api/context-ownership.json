@@ -1,56 +1,11 @@
 {
-  "companyCoreAreas": [
-    "company",
-    "employee",
-    "employee-event",
-    "employee-lifecycle",
-    "grade",
-    "iam",
-    "organization",
-    "position",
-    "workforce"
-  ],
-  "companySystemAdapterAreas": ["audit", "auth", "notification"],
+  "companyCoreAreas": ["core", "workforce"],
+  "companySystemAdapterAreas": [],
   "companyAreasByLayer": {
-    "domain": [
-      "company",
-      "employee",
-      "employee-event",
-      "employee-lifecycle",
-      "grade",
-      "iam",
-      "organization",
-      "position",
-      "workforce"
-    ],
-    "application": [
-      "audit",
-      "auth",
-      "employee",
-      "employee-event",
-      "employee-lifecycle",
-      "grade",
-      "iam",
-      "notification",
-      "organization",
-      "position",
-      "workforce"
-    ],
-    "infrastructure": [
-      "auth",
-      "company",
-      "employee",
-      "employee-event",
-      "employee-lifecycle",
-      "grade",
-      "iam",
-      "organization",
-      "position",
-      "schema",
-      "seed",
-      "workforce"
-    ],
-    "interface": ["lib", "middlewares", "routes", "utils"]
+    "domain": ["core", "workforce"],
+    "application": ["core", "workforce"],
+    "infrastructure": ["core", "schema"],
+    "interface": ["http", "routes"]
   },
   "businessAreaOwners": {
     "announcement": "announcement",

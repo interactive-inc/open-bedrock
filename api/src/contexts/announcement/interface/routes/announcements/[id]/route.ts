@@ -1,11 +1,14 @@
 import { UpdateAnnouncement } from "@/contexts/announcement/application/update-announcement"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { announcements } from "@/contexts/announcement/infrastructure/schema/announcement"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import {
+  NotFoundError,
+  UnauthorizedError,
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
 import { zAppAnnouncement } from "@/lib/app-schemas"
 import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"

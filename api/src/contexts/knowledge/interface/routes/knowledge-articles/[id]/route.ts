@@ -1,12 +1,15 @@
 import { DeleteKnowledgeArticle } from "@/contexts/knowledge/application/delete-knowledge-article"
 import { UpdateKnowledgeArticle } from "@/contexts/knowledge/application/update-knowledge-article"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { knowledgeArticles } from "@/contexts/knowledge/infrastructure/schema/knowledge"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import {
+  NotFoundError,
+  UnauthorizedError,
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { zAppKnowledge, zAppKnowledgeWritten } from "@/lib/app-schemas"
 import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"

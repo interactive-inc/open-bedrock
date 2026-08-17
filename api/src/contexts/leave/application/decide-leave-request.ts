@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { NotifyApprovalResult } from "@/contexts/company/application/notification/notify-approval-result"
+import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import { NotifyApprovalResult } from "@/contexts/company-compatibility/application/notification/notify-approval-result"
 import type { LeaveRequest } from "@/contexts/leave/domain/leave-request.entity"
 import { hasLeaveBalanceTracking } from "@/contexts/leave/domain/has-balance-tracking"
 import { toFiscalYear } from "@/contexts/leave/domain/to-fiscal-year"
@@ -13,7 +13,7 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request-repository"
-import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
+import { resolveOrganizationAuthority } from "@/contexts/company-compatibility/application/organization/resolve-organization-authority"
 
 export type Command = {
   session: Session

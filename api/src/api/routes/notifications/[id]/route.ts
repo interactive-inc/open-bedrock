@@ -1,12 +1,12 @@
 import { DeleteNotification } from "@/api/legacy-system/use-cases/notifications/delete-notification"
 import { GetNotification } from "@/api/legacy-system/use-cases/notifications/get-notification"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { zAppNotification } from "@/lib/app-schemas"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /notifications/:id — 本人宛ての通知1件を取得する */

@@ -1,13 +1,13 @@
-import { findUnknownApproverRoles } from "@/contexts/company/application/organization/validate-procedure-policy-references"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { findUnknownApproverRoles } from "@/contexts/company-compatibility/application/organization/validate-procedure-policy-references"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { jsonPayloadSchema } from "@/contexts/company-compatibility/interface/utils/json-payload-schema"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import {
   createLegacyCompanyPolicy,
   publishSystemProcedure,

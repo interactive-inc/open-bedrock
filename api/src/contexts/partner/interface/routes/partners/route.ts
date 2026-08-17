@@ -1,19 +1,19 @@
 import { RegisterPartner } from "@/contexts/partner/application/register-partner"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { likeKeyword } from "@/contexts/company/interface/utils/like-keyword"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { likeKeyword } from "@/contexts/company-compatibility/interface/utils/like-keyword"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { partners } from "@/contexts/partner/infrastructure/schema/partner"
 import { and, asc, count, eq, or } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { zAppPartner, zAppPartnerList } from "@/lib/app-schemas"
 import { codeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"

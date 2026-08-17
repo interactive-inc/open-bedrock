@@ -3,7 +3,7 @@ import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
 import { toNotificationSearchQuery } from "@/api/routes/notifications/me/to-notification-search-query"
 
 describe("toNotificationSearchQuery", () => {

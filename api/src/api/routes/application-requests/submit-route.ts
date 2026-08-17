@@ -4,13 +4,13 @@ import {
   toApplicationCurrentStep,
   toApplicationStatus,
 } from "@/api/routes/application-requests/lib/system-application-view"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { jsonPayloadSchema } from "@/contexts/company-compatibility/interface/utils/json-payload-schema"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { zAppApplication } from "@/lib/app-schemas"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"

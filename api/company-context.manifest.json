@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "coverage": "company",
+  "sourceRoots": ["src/contexts/company"],
+  "implementedCapabilities": [
+    "account-employee-link",
+    "collective-body",
+    "company-profile",
+    "employee",
+    "employment",
+    "grade",
+    "legal-entity",
+    "organization",
+    "organizational-authority",
+    "person",
+    "personnel-action",
+    "position",
+    "responsibility"
+  ],
+  "targetCapabilities": [
+    "account-employee-link",
+    "collective-body",
+    "company-profile",
+    "employee",
+    "employment",
+    "grade",
+    "legal-entity",
+    "organization",
+    "organizational-authority",
+    "person",
+    "personnel-action",
+    "position",
+    "responsibility"
+  ]
+}

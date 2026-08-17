@@ -1,23 +1,23 @@
 import { CreateSalaryRevision } from "@/contexts/compensation-change/application/salary-revision/create-salary-revision"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/salary-revision/salary-revision-repository"
-import { resolveTargetEmployeeId } from "@/contexts/company/interface/utils/resolve-target-employee-id"
-import { resolveEmployeeIdFromBody } from "@/contexts/company/interface/utils/resolve-employee-id-from-body"
+import { resolveTargetEmployeeId } from "@/contexts/company-compatibility/interface/utils/resolve-target-employee-id"
+import { resolveEmployeeIdFromBody } from "@/contexts/company-compatibility/interface/utils/resolve-employee-id-from-body"
 import { ApplicationError } from "@/lib/errors"
 import {
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+} from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { zAppSalaryRevision, zAppSalaryRevisionList } from "@/lib/app-schemas"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
