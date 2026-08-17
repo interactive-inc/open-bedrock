@@ -170,10 +170,14 @@ Company 自体を持たない製品では、この resolver を登録しない�
 
 ## 現行実装
 
-`api/src/contexts/company/application/organization/resolve-organizational-authority-candidates.ts` が資格候補を解決し、Company domain の criterion、snapshot、candidate 型だけを公開する。legacy 組織投影と検証済み lifecycle 投影を切り替え、同じ解決内では一つの `asOf` と organization revision を使う。
+`api/src/contexts/company/domain/workforce/resolve-organizational-authority.ts` が、固定済み Workforce state と AccountEmployeeLink だけから資格候補を解決する正本である。DB、Hono、Worker、System schema、暗黙の時計を読まない。criterion、snapshot、candidate、evidence は opaque ID と判別可能な union だけで表し、整数 Employee ID、Department code、自由形式の DB evidence を公開しない。
+
+純粋 resolver は同じ `asOf`、Employee state の一意性、period の所有者と有効期間、Account と Employee の一対一対応、参照先 Employee、組織全体の管理循環を先に検査する。候補が存在しない正常結果と、組織事実を安全に評価できない `OrganizationalAuthorityError` を区別する。候補探索は criterion 順、opaque ID、period IDで決定的に行い、入力配列やDB読取順へ依存しない。
+
+`api/src/contexts/company/infrastructure/workforce/resolve-workforce-organizational-authority.ts` は現行の整数ID、Employee code、Department code、legacy evidenceを共通Workforceへ変換する互換adapterである。既存の証拠wireへ戻す責任もこのadapterだけが持つ。`api/src/contexts/company/application/organization/resolve-organizational-authority-candidates.ts` は legacy 組織投影と検証済み lifecycle 投影を読み、同じ解決内で一つの `asOf` と organization revision を固定してから純粋 resolver を呼ぶ。
 
 `api/src/contexts/company/application/organization/resolve-company-procedure-task.ts` は procedure selector から Company criterion への adapter である。候補列挙、在籍判定、組織探索、Account 対応を自分では実装せず、Company resolver の証拠を System Task の候補 snapshot へ変換する。
 
-現行実装は Company 資格候補の責任、時点 snapshot、canonical System Account ID、System Task への接続を実装した。ただし `legacy_account_role`、旧整数の Company 対応 table、legacy 組織投影が残る。ResponsibilityAssignment の汎用 scope が完成するまでは最終形ではない。
+現行実装は Company 資格候補の責任、時点 snapshot、canonical System Account ID、System Task への接続を実装した。正規条件の探索と検証は共通の純粋 resolverへ収束した。ただし `legacy_account_role`、旧整数の Company 対応 table、legacy 組織投影が互換adapterに残る。ResponsibilityAssignment の汎用 scope が完成するまでは最終形ではない。
 
 判断時の Employee 対応と在籍の再検査は Company の公開 resolver を経由し、Account 状態の正本は canonical `system_accounts` である。System HumanAttestation は Company table を直接読まず、API composition が Company の live な主体対応と System の候補資格を合成する。

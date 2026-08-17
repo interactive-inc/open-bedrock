@@ -4,8 +4,14 @@ import type {
   OrganizationalAuthorityCriterion,
   OrganizationalAuthoritySnapshot,
 } from "@/contexts/company/domain/organization/organizational-authority-candidate"
+import { OrganizationalAuthorityError } from "@/contexts/company/domain/workforce/organizational-authority-error"
 import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import {
+  resolveWorkforceOrganizationalAuthority,
+  type WorkforceAuthorityEmployeeRow,
+  type WorkforceAuthorityOrganizationProjection,
+} from "@/contexts/company/infrastructure/workforce/resolve-workforce-organizational-authority"
 import { accounts, accountRoles, roles } from "@/api/legacy-system/adapters/schema/system"
 import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
 import {
@@ -19,68 +25,12 @@ import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { and, eq, isNotNull, isNull, sql } from "drizzle-orm"
 
-type EmployeeRow = Readonly<{
-  id: number
-  code: string | null
-  status: string
-  archivedAt: number | null
-}>
-
-type OrganizationMembership = Readonly<{
-  employeeCode: string
-  departmentCode: string
-  managerEmployeeCode: string | null
-  evidence: Readonly<Record<string, unknown>>
-}>
-
-type DepartmentManager = Readonly<{
-  code: string
-  managerEmployeeCode: string
-  evidence: Readonly<Record<string, unknown>>
-}>
-
-type OrganizationProjection = Readonly<{
-  memberships: ReadonlyArray<OrganizationMembership>
-  departments: ReadonlyArray<DepartmentManager>
-  liveEmployeeIds: ReadonlySet<number>
-  organizationRevision: number | null
-}>
-
 type PreliminaryCandidate = Readonly<{
   employeeId: number
   legacyAccountId: number | null
   criterionIndex: number
   evidence: Readonly<Record<string, unknown>>
 }>
-
-function hasManagementCycle(memberships: ReadonlyArray<OrganizationMembership>): boolean {
-  const managersByEmployee = new Map<string, Set<string>>()
-
-  for (const membership of memberships) {
-    if (membership.managerEmployeeCode === null) continue
-    const managers = managersByEmployee.get(membership.employeeCode) ?? new Set<string>()
-    managers.add(membership.managerEmployeeCode)
-    managersByEmployee.set(membership.employeeCode, managers)
-  }
-
-  const visiting = new Set<string>()
-  const visited = new Set<string>()
-
-  const visit = (employeeCode: string): boolean => {
-    if (visiting.has(employeeCode)) return true
-    if (visited.has(employeeCode)) return false
-
-    visiting.add(employeeCode)
-    for (const managerCode of managersByEmployee.get(employeeCode) ?? []) {
-      if (visit(managerCode)) return true
-    }
-    visiting.delete(employeeCode)
-    visited.add(employeeCode)
-    return false
-  }
-
-  return [...managersByEmployee.keys()].some(visit)
-}
 
 async function resolveSnapshot(
   c: Context,
@@ -138,9 +88,9 @@ function revisionConflict(): ConflictError {
 
 async function loadOrganizationProjection(props: {
   c: Context
-  employeeRows: ReadonlyArray<EmployeeRow>
+  employeeRows: ReadonlyArray<WorkforceAuthorityEmployeeRow>
   snapshot: OrganizationalAuthoritySnapshot
-}): Promise<OrganizationProjection | ApplicationError> {
+}): Promise<WorkforceAuthorityOrganizationProjection | ApplicationError> {
   if (props.snapshot.source === "legacy") {
     try {
       const [memberships, departments] = await Promise.all([
@@ -266,144 +216,6 @@ async function loadOrganizationProjection(props: {
   }
 }
 
-function organizationCandidates(props: {
-  criteria: ReadonlyArray<OrganizationalAuthorityCriterion>
-  employeeRows: ReadonlyArray<EmployeeRow>
-  subjectEmployeeId: number | null
-  targetDepartmentCode: string | null
-  organization: OrganizationProjection
-}): ReadonlyArray<PreliminaryCandidate> {
-  const codedEmployees = props.employeeRows.filter(
-    (employee): employee is EmployeeRow & { code: string } => employee.code !== null,
-  )
-  const subjectCode = codedEmployees.find(
-    (employee) => employee.id === props.subjectEmployeeId,
-  )?.code
-  const idByCode = new Map(codedEmployees.map((employee) => [employee.code, employee.id] as const))
-  const subjectMemberships =
-    subjectCode === undefined
-      ? []
-      : props.organization.memberships.filter(
-          (membership) => membership.employeeCode === subjectCode,
-        )
-  const result: PreliminaryCandidate[] = []
-
-  for (const [criterionIndex, criterion] of props.criteria.entries()) {
-    if (criterion.kind === "legacy_account_role") continue
-
-    if (criterion.kind === "employee") {
-      const employeeId = idByCode.get(criterion.employeeCode)
-      if (employeeId !== undefined) {
-        result.push({
-          employeeId,
-          legacyAccountId: null,
-          criterionIndex,
-          evidence: { type: "employee_code", employee_code: criterion.employeeCode },
-        })
-      }
-      continue
-    }
-
-    if (criterion.kind === "direct_manager") {
-      for (const membership of subjectMemberships) {
-        const employeeId =
-          membership.managerEmployeeCode === null
-            ? undefined
-            : idByCode.get(membership.managerEmployeeCode)
-        if (employeeId !== undefined) {
-          result.push({
-            employeeId,
-            legacyAccountId: null,
-            criterionIndex,
-            evidence: membership.evidence,
-          })
-        }
-      }
-      continue
-    }
-
-    if (criterion.kind === "department_manager") {
-      const departmentCodes = new Set(
-        subjectMemberships.map((membership) => membership.departmentCode),
-      )
-      for (const department of props.organization.departments) {
-        if (!departmentCodes.has(department.code)) continue
-        const employeeId = idByCode.get(department.managerEmployeeCode)
-        if (employeeId !== undefined) {
-          result.push({
-            employeeId,
-            legacyAccountId: null,
-            criterionIndex,
-            evidence: department.evidence,
-          })
-        }
-      }
-      continue
-    }
-
-    if (criterion.kind === "target_department_manager") {
-      for (const department of props.organization.departments) {
-        if (department.code !== props.targetDepartmentCode) continue
-        const employeeId = idByCode.get(department.managerEmployeeCode)
-        if (employeeId !== undefined) {
-          result.push({
-            employeeId,
-            legacyAccountId: null,
-            criterionIndex,
-            evidence: department.evidence,
-          })
-        }
-      }
-      continue
-    }
-
-    const managersByEmployee = new Map<
-      string,
-      Array<{
-        managerEmployeeCode: string
-        evidence: Readonly<Record<string, unknown>>
-      }>
-    >()
-    for (const membership of props.organization.memberships) {
-      if (membership.managerEmployeeCode === null) continue
-      const managerEdges = managersByEmployee.get(membership.employeeCode) ?? []
-      managerEdges.push({
-        managerEmployeeCode: membership.managerEmployeeCode,
-        evidence: membership.evidence,
-      })
-      managersByEmployee.set(membership.employeeCode, managerEdges)
-    }
-
-    const pending = (
-      subjectCode === undefined ? [] : (managersByEmployee.get(subjectCode) ?? [])
-    ).map((edge) => ({ code: edge.managerEmployeeCode, path: [edge.evidence] }))
-    const visited = new Set<string>(subjectCode === undefined ? [] : [subjectCode])
-
-    while (pending.length > 0) {
-      const current = pending.shift()
-      if (current === undefined || visited.has(current.code)) continue
-      visited.add(current.code)
-      const employeeId = idByCode.get(current.code)
-      if (employeeId !== undefined) {
-        result.push({
-          employeeId,
-          legacyAccountId: null,
-          criterionIndex,
-          evidence: { type: "management_chain", path: current.path },
-        })
-      }
-      pending.push(
-        ...(managersByEmployee.get(current.code) ?? []).map((edge) => ({
-          code: edge.managerEmployeeCode,
-          path: [...current.path, edge.evidence],
-        })),
-      )
-    }
-  }
-
-  return result
-}
-
 async function legacyRoleCandidates(props: {
   c: Context
   criteria: ReadonlyArray<OrganizationalAuthorityCriterion>
@@ -524,12 +336,6 @@ export async function resolveOrganizationalAuthorityCandidates(props: {
       snapshot,
     })
     if (organization instanceof ApplicationError) return organization
-    if (hasManagementCycle(organization.memberships)) {
-      return new ConflictError(
-        "上司関係が循環しているため判断資格を固定できません",
-        "manager_cycle",
-      )
-    }
 
     const roleCandidates = await legacyRoleCandidates({ c: props.c, criteria: props.criteria })
     if (roleCandidates instanceof ApplicationError) return roleCandidates
@@ -556,23 +362,40 @@ export async function resolveOrganizationalAuthorityCandidates(props: {
       }
     }
 
+    const workforceResolution = resolveWorkforceOrganizationalAuthority({
+      snapshot: resolvedSnapshot,
+      criteria: props.criteria,
+      employeeRows,
+      organization,
+      accountRows,
+      subjectEmployeeId: props.subjectEmployeeId,
+      targetDepartmentCode: props.targetDepartmentCode ?? null,
+    })
+    if (workforceResolution instanceof OrganizationalAuthorityError) {
+      return workforceResolution.code === "organizational_authority_manager_cycle"
+        ? new ConflictError("上司関係が循環しているため判断資格を固定できません", "manager_cycle")
+        : new ConflictError(
+            "組織投影が不整合なため判断資格を固定できません",
+            workforceResolution.code,
+          )
+    }
+    if (workforceResolution instanceof Error) {
+      return new UnexpectedError("共通の組織資格を解決できません", {
+        cause: workforceResolution,
+      })
+    }
+
     return {
       snapshot: resolvedSnapshot,
-      candidates: materializeCandidates({
-        preliminary: [
-          ...organizationCandidates({
-            criteria: props.criteria,
-            employeeRows,
-            subjectEmployeeId: props.subjectEmployeeId,
-            targetDepartmentCode: props.targetDepartmentCode ?? null,
-            organization,
-          }),
-          ...roleCandidates,
-        ],
-        accountRows,
-        liveEmployeeIds: organization.liveEmployeeIds,
-        subjectEmployeeId: props.subjectEmployeeId,
-      }),
+      candidates: [
+        ...workforceResolution.candidates,
+        ...materializeCandidates({
+          preliminary: roleCandidates,
+          accountRows,
+          liveEmployeeIds: organization.liveEmployeeIds,
+          subjectEmployeeId: props.subjectEmployeeId,
+        }),
+      ],
     }
   } catch (cause) {
     return new UnexpectedError("組織上の判断資格を解決できません", { cause })
