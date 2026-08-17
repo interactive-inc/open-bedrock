@@ -1,8 +1,8 @@
 import { canReadGoalOf } from "@/contexts/performance-review/domain/goal/can-read-goal-of"
-import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
-import { listReportEmployeeIds } from "@/contexts/company/interface/utils/list-report-employee-ids"
-import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { listDepartmentEmployeeIds } from "@/contexts/company-compatibility/interface/utils/list-department-employee-ids"
+import { listReportEmployeeIds } from "@/contexts/company-compatibility/interface/utils/list-report-employee-ids"
+import { resolveEmployeeRelation } from "@/contexts/company-compatibility/application/organization/resolve-employee-relation"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { zAppGoalList } from "@/lib/app-schemas"
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import {
@@ -10,8 +10,8 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { and, count, eq, inArray } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import {
@@ -19,7 +19,7 @@ import {
   InternalError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/contexts/company/interface/lib/errors"
+} from "@/contexts/company-compatibility/interface/lib/errors"
 
 // @authorization permission - 権限キーで判定する
 /**

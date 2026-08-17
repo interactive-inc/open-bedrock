@@ -67,14 +67,14 @@ export type ContextBoundaryViolation = Readonly<{
   reason: string
 }>
 
-/** Company直下をDDDの4層だけに限定し、一時testや互換directoryの残存を拒否する。 */
+/** Company直下をDDDの4層と横断testだけに限定し、互換directoryの残存を拒否する。 */
 export function inspectCompanyRootPath(file: string): ContextBoundaryViolation[] {
   const normalized = file.replaceAll("\\", "/")
   const match = normalized.match(/(?:^|\/)src\/contexts\/company\/([^/]+)/)
   if (match === null) return []
 
   const rootDirectory = match[1]
-  return rootDirectory !== undefined && isContextLayer(rootDirectory)
+  return rootDirectory !== undefined && (isContextLayer(rootDirectory) || rootDirectory === "test")
     ? []
     : [{ file, reason: `Company直下のDDD layerではありません: ${rootDirectory ?? "unknown"}` }]
 }
@@ -90,6 +90,8 @@ export function inspectCompanyAreaPath(file: string): ContextBoundaryViolation[]
   const layer = match[1]
   const area = match[2]
   if (layer === undefined || area === undefined || !isContextLayer(layer)) return []
+
+  if (area.endsWith(".ts")) return []
 
   return ownershipManifest.companyAreasByLayer[layer].includes(area)
     ? []
@@ -338,6 +340,11 @@ export function canContextDependOn(sourceContext: string, targetContext: string)
   if (sourceContext === targetContext) return true
   if (sourceContext === "system") return false
   if (sourceContext === "company") return targetContext === "system"
+
+  if (sourceContext === "company-compatibility") {
+    return targetContext === "system" || targetContext === "company"
+  }
+  if (targetContext === "company-compatibility") return true
 
   return targetContext === "system" || targetContext === "company"
 }

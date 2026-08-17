@@ -1,21 +1,24 @@
 import { codeSchema } from "@/lib/schemas"
 import { zAppShiftAssignmentList } from "@/lib/app-schemas"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { orgDepartments } from "@/contexts/company/infrastructure/schema/organization"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+import { orgDepartments } from "@/contexts/company-compatibility/infrastructure/schema/organization"
 import { shiftAssignments } from "@/contexts/shift/infrastructure/schema/shift"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { and, count, eq, gte, lte } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  UnauthorizedError,
+} from "@/contexts/company-compatibility/interface/lib/errors"
 
 // @authorization permission - 権限キーで判定する
 /** GET /shift-assignments — 特権ロールが部署単位でシフトを横断検索する */

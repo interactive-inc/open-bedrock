@@ -127,7 +127,7 @@ describe("context dependency matrix", () => {
 
   test("type-onlyを含む全依存構文でcontext間の逆依存を拒否する", () => {
     const sources = [
-      'import type { Employee } from "@/contexts/company/domain/employee"',
+      'import type { Employee } from "@/contexts/company-compatibility/domain/employee"',
       'export { Employee } from "@/api/domain/company/employee"',
       'type Employee = import("@/domain/company/employee").Employee',
       'const company = import("@/application/company/setup")',
@@ -146,7 +146,7 @@ describe("context dependency matrix", () => {
       [
         'import type { Account } from "@system/domain/auth/account"',
         'import { LegacyAccount } from "@/api/legacy-system/model/auth/account"',
-        'import type { Employee } from "@/contexts/company/domain/employee"',
+        'import type { Employee } from "@/contexts/company-compatibility/domain/employee"',
         'import { parse } from "@/lib/parse"',
         'import { z } from "zod"',
       ].join("\n"),
@@ -187,21 +187,24 @@ describe("context dependency matrix", () => {
 })
 
 describe("ownership manifest", () => {
-  test("Company直下に一時testや互換directoryを残さない", () => {
-    expect(inspectCompanyRootPath("src/contexts/company/domain/employee/employee.ts")).toEqual([])
+  test("Company直下をDDDの4層と横断testに限定し、互換directoryを残さない", () => {
+    expect(inspectCompanyRootPath("src/contexts/company/domain/core/company-resource.ts")).toEqual(
+      [],
+    )
     expect(
-      inspectCompanyRootPath(
-        "src/contexts/company/test/system-compatibility/account-backfill.test.ts",
-      ),
+      inspectCompanyRootPath("src/contexts/company/test/company-api.integration.test.ts"),
+    ).toEqual([])
+    expect(
+      inspectCompanyRootPath("src/contexts/company/compatibility/account-backfill.ts"),
     ).not.toEqual([])
   })
 
-  test("Company直下をcoreとSystem adapterの明示領域へ限定する", () => {
+  test("Companyの各層をmanifestで宣言した領域へ限定する", () => {
+    expect(inspectCompanyAreaPath("src/contexts/company/domain/core/company-resource.ts")).toEqual(
+      [],
+    )
     expect(
-      inspectCompanyAreaPath("src/contexts/company/domain/employee/employee.entity.ts"),
-    ).toEqual([])
-    expect(
-      inspectCompanyAreaPath("src/contexts/company/application/notification/send-notification.ts"),
+      inspectCompanyAreaPath("src/contexts/company/application/workforce/read-workforce-state.ts"),
     ).toEqual([])
     expect(
       inspectCompanyAreaPath("src/contexts/company/domain/expense/expense.entity.ts"),
@@ -233,7 +236,7 @@ describe("lib boundary", () => {
 
     for (const source of [
       'import { Account } from "@system/domain/auth/account"',
-      'import { Employee } from "@/contexts/company/domain/employee"',
+      'import { Employee } from "@/contexts/company-compatibility/domain/employee"',
       'import { users } from "@/schema"',
       'import { factory } from "@/api/factory"',
     ]) {
@@ -244,7 +247,8 @@ describe("lib boundary", () => {
   test("新規違反と解消済みbaselineを拒否する", () => {
     const knownViolation = {
       file: "src/lib/example.ts",
-      reason: "lib から所有者のある実装へ依存しています: @/contexts/company/domain/example",
+      reason:
+        "lib から所有者のある実装へ依存しています: @/contexts/company-compatibility/domain/example",
     }
     const newViolation = {
       file: "src/lib/new-example.ts",

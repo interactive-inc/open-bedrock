@@ -1,21 +1,21 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { zAppExpenseInboxList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { and, count, desc, eq, inArray, sql } from "drizzle-orm"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { listManagedEmployeeIds } from "@/contexts/company/application/organization/list-managed-employee-ids"
+} from "@/contexts/company-compatibility/interface/lib/errors"
+import { listManagedEmployeeIds } from "@/contexts/company-compatibility/application/organization/list-managed-employee-ids"
 
 // @authorization permission - 権限キーで判定する
 /** GET /expenses/inbox — 承認待ちの経費一覧（承認権限が必要） */

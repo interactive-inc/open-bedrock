@@ -6,10 +6,10 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+} from "@/contexts/company-compatibility/interface/lib/errors"
+import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"

@@ -3,9 +3,9 @@ import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+} from "@/contexts/company-compatibility/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 
 // @authorization permission - 権限キーで判定する
 /** POST /batch/migrate-password-hashes — 旧形式ハッシュを PBKDF2 ラップに一括移行する */

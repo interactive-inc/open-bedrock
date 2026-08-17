@@ -118,7 +118,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 
 現行実装には opaque OrgUnit identity、名称・kind・親子関係の period version、期間付き Assignment、organization revision、atomic change operation がある。単一 root、code 重複、親期間、循環、主務重複、上司在籍、部分適用を Domain と DB の両方で拒否する。旧部署表と membership は既存 wire の互換 projection に限定し、検証済み lifecycle の判断正本には使わない。
 
-`/company/v1` はopaque Employee IDのdirectory、指定時点のWorkforce state、同一revisionのOrgUnit・Assignment・Responsibility snapshot、原子的なorganization changeを公開する。writeはoperation fingerprintによる安全な再送、expected revision、Technical PermissionとCompany Responsibilityの合成を強制する。契約と失敗条件は [Company API](./company-api.md) に定める。
+`/company/v1` はLegalEntity、CompanyProfile、Person、Employee、Employment、OrgUnit、Assignment、ReportingRelation、Position、Grade、Responsibility、CollectiveBody、OrganizationalAuthority、AccountEmployeeLink、PersonnelActionを同じresource、revision、半開期間、command契約で公開する。readはD1 atomic batchで一つのorganization revisionへ固定し、writeはexpected revision、resource revision、SHA-256 fingerprint付きidempotency receipt、append-only履歴を強制する。契約と失敗条件は [Company API](./company-api.md) に定める。
 
 ### 職務と責任
 

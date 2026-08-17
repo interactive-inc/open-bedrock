@@ -3,12 +3,15 @@ import { summarizeAttendance } from "@/contexts/attendance/interface/routes/atte
 import { toBusinessMonth } from "@/lib/to-business-month"
 import { toMonthRange } from "@/contexts/attendance/interface/routes/attendance-records/to-month-range"
 import { attendanceSummaryQuerySchema } from "@/contexts/attendance/interface/routes/attendance-records/me/summary/attendance-summary-query"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { zAppAttendanceSummary } from "@/lib/app-schemas"
 import { attendanceRecords } from "@/contexts/attendance/infrastructure/schema/attendance"
 import { and, asc, eq, gte, lte } from "drizzle-orm"
-import { BadRequestError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  BadRequestError,
+  UnauthorizedError,
+} from "@/contexts/company-compatibility/interface/lib/errors"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /attendance-records/me/summary — 本人の指定月の勤怠集計（未指定なら現在月） */

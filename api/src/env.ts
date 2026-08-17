@@ -1,4 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { CompanyActor } from "@/contexts/company/application/core/company-resource.service"
 import type { schema } from "@/schema"
 import type {
   SystemD1Context,
@@ -58,6 +59,7 @@ export type RequestAuditContext = SystemRequestAudit
 
 /** リクエストスコープの変数。database に Drizzle、session に本人（Session。認可判定は session.hasPermission）を載せる。 */
 export type Variables = {
+  companyActor?: CompanyActor
   database: DrizzleD1Database<typeof schema>
   session: Session | null
   auditContext: RequestAuditContext

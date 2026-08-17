@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { seedSurveyResponses } from "@/contexts/survey/infrastructure/seed/seed-survey-responses"
 import { seedSurveys } from "@/contexts/survey/infrastructure/seed/seed-surveys"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
 import { databaseMiddleware } from "@/api/database-middleware"
 import { HTTPException } from "hono/http-exception"
 import { contextStorage } from "hono/context-storage"
@@ -13,7 +13,7 @@ import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import * as responseDetailRoute from "@/contexts/survey/interface/routes/surveys/responses/[response_id]/route"
 import * as responseMineRoute from "@/contexts/survey/interface/routes/surveys/responses/me/route"
 import type { Bindings } from "@/env"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { z } from "zod"
 
 const surveyResponseSchema = z.object({

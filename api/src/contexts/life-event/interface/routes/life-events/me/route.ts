@@ -1,16 +1,16 @@
 import { ListMyLifeEvents } from "@/contexts/life-event/application/list-my-life-events"
 import { ApplicationError } from "@/lib/errors"
 import { zAppLifeEventList } from "@/lib/app-schemas"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { lifeEvents } from "@/contexts/life-event/infrastructure/schema/life-event"
 import { count, eq } from "drizzle-orm"
 

@@ -60,6 +60,8 @@ API、Web、CLI、AI に法人 selector を設けない。全社共通の table 
 
 System の実装は `api/src/contexts/system`、Company は `api/src/contexts/company`、削除可能な業務は `api/src/contexts/<app>` に置く。汎用手続きは System が所有し、独立した `request` コンテキストは作らない。これらから上位コンテキストへの import、相対 import による境界の迂回、上位コンテキストの語彙の混入、および `contexts/request` の再導入は `bun run --filter api lint:system-boundary` と `bun run --filter api lint:context-boundaries` で検査する。HTTP の既存契約で Employee 識別子を返す必要がある場合は Company または最上位の API composition で変換し、System の entity と schema には持ち込まない。
 
+`api/src/contexts/company-compatibility`は旧wireと旧storageを隔離する一時adapterであり、業務階層を一段増やすcontextではない。portable Companyからこのadapterへ依存せず、新しい業務contextも原則としてportable Companyだけへ依存する。adapterの削除可能性はcontext boundary lintで固定する。
+
 System の監査イベントは `audit_events` に Account 主体の汎用エンベロープとして保存する。Employee 文脈は Company の `audit_event_employee_contexts` が所有し、Company の監査 adapter が `company_audit_events` view で読み取り、`company_audit_event_appends` の一時行を同一 transaction 内で System イベントと Employee 文脈へ分配する。System の監査 repository は Company の view、table、語彙を参照しない。
 
 ## Web と CLI

@@ -1,7 +1,10 @@
 import { toFiscalYear } from "@/contexts/leave/domain/to-fiscal-year"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import {
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company-compatibility/interface/lib/errors"
 import { zAppLeaveBalanceList } from "@/lib/app-schemas"
 import { leaveBalances } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, eq } from "drizzle-orm"

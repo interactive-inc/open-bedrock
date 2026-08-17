@@ -1,17 +1,17 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { zAppMyShiftAssignmentList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { shiftAssignments, shiftPatterns } from "@/contexts/shift/infrastructure/schema/shift"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { and, count, eq, gte, inArray, isNotNull, lte } from "drizzle-orm"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 
 // @authorization owner - 本人のリソースに限定する
 /**

@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
 import {
   ApplicationError,
   ConflictError,
@@ -8,7 +8,7 @@ import {
 } from "@/lib/errors"
 import { TrainingEnrollment } from "@/contexts/training/domain/training-enrollment.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company-compatibility/infrastructure/employee/employee-repository"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/training-course-repository"
 import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/training-enrollment-repository"
 

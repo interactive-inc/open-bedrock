@@ -5,9 +5,10 @@ import {
   systemProcedureSchema,
   systemWorkflowSchema,
 } from "@/contexts/system/infrastructure/schema/system"
-import * as ownedSchema0 from "@/contexts/company/infrastructure/schema/employee"
-import * as ownedSchema1 from "@/contexts/company/infrastructure/schema/employee-lifecycle"
-import * as ownedSchema2 from "@/contexts/company/infrastructure/schema/organization"
+import { companySchema as canonicalCompanySchema } from "@/contexts/company/infrastructure/schema/company"
+import * as ownedSchema0 from "@/contexts/company-compatibility/infrastructure/schema/employee"
+import * as ownedSchema1 from "@/contexts/company-compatibility/infrastructure/schema/employee-lifecycle"
+import * as ownedSchema2 from "@/contexts/company-compatibility/infrastructure/schema/organization"
 import * as ownedSchema3 from "@/contexts/announcement/infrastructure/schema/announcement"
 import * as ownedSchema4 from "@/contexts/antisocial-check/infrastructure/schema/antisocial-check"
 import * as ownedSchema5 from "@/contexts/asset/infrastructure/schema/asset"
@@ -19,10 +20,10 @@ import * as ownedSchema10 from "@/contexts/certificate-request/infrastructure/sc
 import * as ownedSchema11 from "@/contexts/certification/infrastructure/schema/certification"
 import * as ownedSchema12 from "@/contexts/commendation/infrastructure/schema/commendation"
 import * as ownedSchema13 from "@/contexts/company-calendar/infrastructure/schema/company-calendar"
-import * as ownedSchema14 from "@/contexts/company/infrastructure/schema/audit"
-import * as ownedSchema15 from "@/contexts/company/infrastructure/schema/employee-event"
-import * as ownedSchema16 from "@/contexts/company/infrastructure/schema/grade"
-import * as ownedSchema17 from "@/contexts/company/infrastructure/schema/position"
+import * as ownedSchema14 from "@/contexts/company-compatibility/infrastructure/schema/audit"
+import * as ownedSchema15 from "@/contexts/company-compatibility/infrastructure/schema/employee-event"
+import * as ownedSchema16 from "@/contexts/company-compatibility/infrastructure/schema/grade"
+import * as ownedSchema17 from "@/contexts/company-compatibility/infrastructure/schema/position"
 import * as ownedSchema18 from "@/contexts/compensation-change/infrastructure/schema/compensation-change"
 import * as ownedSchema19 from "@/contexts/disciplinary-action/infrastructure/schema/disciplinary-action"
 import * as ownedSchema20 from "@/contexts/document/infrastructure/schema/document"
@@ -58,9 +59,10 @@ import * as ownedSchema49 from "@/contexts/work-accident/infrastructure/schema/w
 import * as ownedSchema50 from "@/contexts/work-style/infrastructure/schema/work-style"
 
 export * from "@/api/legacy-system/adapters/schema/system"
-export * from "@/contexts/company/infrastructure/schema/employee"
-export * from "@/contexts/company/infrastructure/schema/employee-lifecycle"
-export * from "@/contexts/company/infrastructure/schema/organization"
+export * from "@/contexts/company-compatibility/infrastructure/schema/employee"
+export * from "@/contexts/company-compatibility/infrastructure/schema/employee-lifecycle"
+export * from "@/contexts/company-compatibility/infrastructure/schema/organization"
+export * from "@/contexts/company/infrastructure/schema/company"
 export * from "@/contexts/system/infrastructure/schema/system"
 export * from "@/contexts/announcement/infrastructure/schema/announcement"
 export * from "@/contexts/antisocial-check/infrastructure/schema/antisocial-check"
@@ -73,10 +75,10 @@ export * from "@/contexts/certificate-request/infrastructure/schema/certificate-
 export * from "@/contexts/certification/infrastructure/schema/certification"
 export * from "@/contexts/commendation/infrastructure/schema/commendation"
 export * from "@/contexts/company-calendar/infrastructure/schema/company-calendar"
-export * from "@/contexts/company/infrastructure/schema/audit"
-export * from "@/contexts/company/infrastructure/schema/employee-event"
-export * from "@/contexts/company/infrastructure/schema/grade"
-export * from "@/contexts/company/infrastructure/schema/position"
+export * from "@/contexts/company-compatibility/infrastructure/schema/audit"
+export * from "@/contexts/company-compatibility/infrastructure/schema/employee-event"
+export * from "@/contexts/company-compatibility/infrastructure/schema/grade"
+export * from "@/contexts/company-compatibility/infrastructure/schema/position"
 export * from "@/contexts/compensation-change/infrastructure/schema/compensation-change"
 export * from "@/contexts/disciplinary-action/infrastructure/schema/disciplinary-action"
 export * from "@/contexts/document/infrastructure/schema/document"
@@ -117,6 +119,7 @@ export const schema = {
   ...systemProcedureDelegationSchema,
   ...systemProcedureSchema,
   ...systemWorkflowSchema,
+  ...canonicalCompanySchema,
   ...ownedSchema0,
   ...ownedSchema1,
   ...ownedSchema2,

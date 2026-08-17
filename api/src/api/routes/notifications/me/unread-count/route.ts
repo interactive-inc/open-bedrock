@@ -1,7 +1,7 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { notifications } from "@/api/legacy-system/adapters/schema/system"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { and, count, eq } from "drizzle-orm"
 
 // @authorization owner - 本人のリソースに限定する

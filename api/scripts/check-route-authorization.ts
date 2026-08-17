@@ -115,7 +115,11 @@ export function parseMethodDeclarations(source: string): MethodDeclaration[] {
 }
 
 /** 1 ファイルを検査する。違反があれば理由を返す。 */
-export function inspectRouteFile(file: string, source: string): RouteViolation[] {
+export function inspectRouteFile(
+  file: string,
+  source: string,
+  globallyAuthenticated = false,
+): RouteViolation[] {
   const declarations = parseMethodDeclarations(source)
   if (declarations.length === 0) return []
 
@@ -146,7 +150,7 @@ export function inspectRouteFile(file: string, source: string): RouteViolation[]
 
     // middleware は createHandlers の引数として現れる。import 文やコメントの
     // 出現で通してしまわないよう、handler 本体の中だけを見る。
-    const hasVerifyBearer = /\bverifyBearer\b/.test(entry.body)
+    const hasVerifyBearer = globallyAuthenticated || /\bverifyBearer\b/.test(entry.body)
     const hasMachineGuard = /\bverify[A-Z]\w*Key\b/.test(entry.body)
 
     if (kind === "machine" && !hasMachineGuard) {
@@ -206,13 +210,19 @@ export async function checkRouteAuthorization(): Promise<{
   const violations: RouteViolation[] = []
   const summary = new Map<AuthorizationKind, number>()
   let checked = 0
+  const appBase = readFileSync(resolve(SOURCE_ROOT, "api/app-base.ts"), "utf8")
+  const companyV1HasGlobalBearer =
+    /\.use\(\s*["']\/company\/v1\/\*["']\s*,\s*verifyBearer\s*\)/.test(appBase)
 
   for (const routeFile of await collectRouteFiles()) {
     const source = readFileSync(routeFile.absolutePath, "utf8")
     const declarations = parseMethodDeclarations(source)
     if (declarations.length === 0) continue
 
-    violations.push(...inspectRouteFile(routeFile.file, source))
+    const globallyAuthenticated =
+      companyV1HasGlobalBearer &&
+      routeFile.file.startsWith("contexts/company/interface/routes/company/v1/")
+    violations.push(...inspectRouteFile(routeFile.file, source, globallyAuthenticated))
 
     // 集計は handler 単位。ファイル単位だと GET と POST で方針が違う場合に数が合わない。
     for (const entry of declarations) {

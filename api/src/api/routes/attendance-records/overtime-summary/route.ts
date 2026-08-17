@@ -1,9 +1,9 @@
 import { countBusinessDays } from "@/api/routes/attendance-records/overtime-summary/count-business-days"
 import { toOvertimeEntries } from "@/api/routes/attendance-records/overtime-summary/to-overtime-entries"
 import { toMonthRange } from "@/contexts/attendance/interface/routes/attendance-records/to-month-range"
-import { listReportEmployeeIds } from "@/contexts/company/interface/utils/list-report-employee-ids"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { listReportEmployeeIds } from "@/contexts/company-compatibility/interface/utils/list-report-employee-ids"
+import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { zAppOvertimeSummary } from "@/lib/app-schemas"
 import { yearMonth } from "@/lib/schemas"
 import { attendanceRecords } from "@/contexts/attendance/infrastructure/schema/attendance"
@@ -15,7 +15,7 @@ import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+} from "@/contexts/company-compatibility/interface/lib/errors"
 
 /** 1 日の所定労働時間の目安（8 時間）。時間外の参考値算出に使う。法定判定ではない。 */
 const DAILY_REGULAR_MINUTES = 480
