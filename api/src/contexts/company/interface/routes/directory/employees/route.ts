@@ -9,17 +9,20 @@ import {
 } from "@/contexts/company/interface/utils/to-bounded-int"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { ApplicationError, UnavailableError } from "@/lib/errors"
+import { UnavailableError } from "@/lib/errors"
 import { zAppEmployeeDirectoryList } from "@/lib/app-schemas"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { employeeStatusPeriodVersions } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
-import { and, asc, count, eq, exists, inArray, isNull, lte, or, sql } from "drizzle-orm"
+import { and, asc, isNull, or } from "drizzle-orm"
 import { z } from "zod"
+import { ReadOrganizationWorkforceState } from "@/contexts/company/application/workforce/read-organization-workforce-state"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
+import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
+import { requireCanonicalCompany } from "@/contexts/company/interface/utils/require-canonical-company"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 /**
@@ -41,7 +44,6 @@ export const GET = factory.createHandlers(
     if (c.var.session === null) {
       throw new UnauthorizedError()
     }
-
     const query = c.req.valid("query")
 
     const conditions: Array<SQL> = []
@@ -71,114 +73,70 @@ export const GET = factory.createHandlers(
       max: MAX_LIST_OFFSET,
     })
 
-    const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
-    if (migrationStatus instanceof ApplicationError) throw toHttpException(migrationStatus)
-
-    if (migrationStatus === "verified") {
-      const businessDate = resolveCompanyBusinessDate({
-        now: c.env.NOW ?? new Date().toISOString(),
-        timeZone: c.env.COMPANY_TIME_ZONE,
-      })
-      if (typeof businessDate !== "string") {
-        throw toHttpException(
-          new UnavailableError(
-            "failed to resolve company business date",
-            "company_timezone_unavailable",
-            { cause: businessDate },
-          ),
-        )
-      }
-
-      // Pre-filter at the DB level: exclude archived employees and use a subquery
-      // on employee_status_period_versions to select only those with a current
-      // active status period. This avoids loading all employees into memory.
-      conditions.push(isNull(employees.archivedAt))
-      const spv = employeeStatusPeriodVersions
-      conditions.push(
-        exists(
-          c.var.database
-            .select({ one: sql`1` })
-            .from(spv)
-            .where(
-              and(
-                eq(spv.employeeId, employees.id),
-                eq(spv.isVoid, false),
-                sql`${spv.revision} = (SELECT MAX(c.revision) FROM employee_status_period_versions c WHERE c.period_id = ${spv.periodId})`,
-                inArray(spv.status, ["active"]),
-                lte(spv.startsOn, businessDate),
-                or(isNull(spv.endsOn), sql`${spv.endsOn} > ${businessDate}`),
-              ),
-            ),
+    const businessDate = resolveCompanyBusinessDate({
+      now: c.env.NOW ?? new Date().toISOString(),
+      timeZone: c.env.COMPANY_TIME_ZONE,
+    })
+    if (typeof businessDate !== "string") {
+      throw toHttpException(
+        new UnavailableError(
+          "failed to resolve company business date",
+          "company_timezone_unavailable",
+          {
+            cause: businessDate,
+          },
         ),
       )
-      const candidates = await c.var.database
-        .select({ id: employees.id, code: employees.code, name: employees.name })
-        .from(employees)
-        .where(and(...conditions))
-        .orderBy(asc(employees.code))
-      const states = await new EmployeeLifecycleReadRepository(c).findStatesAt(
-        candidates.map((employee) => employee.id),
-        businessDate,
-      )
-      if (states instanceof ApplicationError) throw toHttpException(states)
-
-      const active = candidates.flatMap((employee) => {
-        const state = states.get(employee.id)
-        if (state === undefined || state.archived || state.status !== "active") return []
-        const assignment = state.primaryAssignment
-        if (query.dept !== undefined && assignment?.departmentName !== query.dept) return []
-        return [
-          {
-            code: employee.code,
-            name: employee.name,
-            dept_name: assignment?.departmentName ?? null,
-            position: assignment?.positionTitle ?? null,
-          },
-        ]
-      })
-
-      return c.json(
-        zAppEmployeeDirectoryList.parse({
-          data: active.slice(offset, offset + limit),
-          total: active.length,
-        }),
-        200,
+    }
+    const asOf = restoreCalendarDate(businessDate)
+    await requireCanonicalCompany(c, asOf)
+    const snapshot = await new ReadOrganizationWorkforceState({
+      organization: new OrganizationUnitReadRepository(c.var.database),
+      workforce: new OrganizationWorkforceSnapshotRepository(c),
+    }).execute(asOf)
+    if (snapshot.kind !== "found") {
+      throw toHttpException(
+        new UnavailableError(
+          "Company workforce is unavailable",
+          snapshot.kind === "invalid"
+            ? "company_workforce_invalid"
+            : "company_workforce_unavailable",
+          snapshot.kind === "unavailable" ? { cause: snapshot.cause } : undefined,
+        ),
       )
     }
-
-    conditions.push(eq(employees.status, "active"))
-
-    if (query.dept !== undefined) {
-      conditions.push(eq(employees.deptName, query.dept))
-    }
-
-    const rows = await c.var.database
-      .select({
-        code: employees.code,
-        name: employees.name,
-        deptName: employees.deptName,
-        position: employees.position,
-      })
+    conditions.push(isNull(employees.archivedAt))
+    const candidates = await c.var.database
+      .select({ id: employees.id, code: employees.code, name: employees.name })
       .from(employees)
       .where(and(...conditions))
       .orderBy(asc(employees.code))
-      .limit(limit)
-      .offset(offset)
-
-    const totalRows = await c.var.database
-      .select({ total: count() })
-      .from(employees)
-      .where(and(...conditions))
-
+    const stateByEmployeeId = new Map(snapshot.employees.map((state) => [state.employeeId, state]))
+    const unitById = new Map(
+      snapshot.organization.units.map((unit) => [unit.organizationUnitId, unit]),
+    )
+    const active = candidates.flatMap((employee) => {
+      const state = stateByEmployeeId.get(toWorkforceEmployeeId(employee.id))
+      if (state?.status !== "ACTIVE") return []
+      const assignment = state.primaryAssignment
+      const departmentName =
+        assignment === null
+          ? null
+          : (unitById.get(assignment.organizationUnitId)?.officialName ?? null)
+      if (query.dept !== undefined && departmentName !== query.dept) return []
+      return [
+        {
+          code: employee.code,
+          name: employee.name,
+          dept_name: departmentName,
+          position: assignment?.positionTitle ?? null,
+        },
+      ]
+    })
     return c.json(
       zAppEmployeeDirectoryList.parse({
-        data: rows.map((row) => ({
-          code: row.code,
-          name: row.name,
-          dept_name: row.deptName,
-          position: row.position,
-        })),
-        total: totalRows.at(0)?.total ?? 0,
+        data: active.slice(offset, offset + limit),
+        total: active.length,
       }),
       200,
     )

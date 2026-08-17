@@ -2,9 +2,7 @@ import { HeadcountPlan } from "@/contexts/headcount-plan/domain/headcount-plan.e
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { headcountPlans } from "@/contexts/headcount-plan/infrastructure/schema/headcount-plan"
-import { orgMemberships } from "@/contexts/company/infrastructure/schema/organization"
 import { and, asc, count, eq, isNull } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
@@ -133,42 +131,6 @@ export class HeadcountPlanRepository {
         : HeadcountPlan.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update headcount_plan")
-    }
-  }
-
-  /** 部署コードごとの active 在籍数。org_memberships と employees(code) を突き合わせ status=active を数える。 */
-  async countActiveByDepartment(): Promise<Map<string, number> | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select({ departmentCode: orgMemberships.departmentCode, total: count() })
-        .from(orgMemberships)
-        .innerJoin(employees, eq(employees.code, orgMemberships.employeeCode))
-        .where(eq(employees.status, "active"))
-        .groupBy(orgMemberships.departmentCode)
-
-      const countsByCode = new Map<string, number>()
-
-      for (const row of rows) {
-        countsByCode.set(row.departmentCode, row.total)
-      }
-
-      return countsByCode
-    } catch (error) {
-      return error instanceof Error ? error : new Error("failed to count active employees")
-    }
-  }
-
-  /** 全社の active 在籍数（department_code が null の計画の実績に添える）。 */
-  async countActiveTotal(): Promise<number | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select({ total: count() })
-        .from(employees)
-        .where(eq(employees.status, "active"))
-
-      return rows.at(0)?.total ?? 0
-    } catch (error) {
-      return error instanceof Error ? error : new Error("failed to count active employees")
     }
   }
 }

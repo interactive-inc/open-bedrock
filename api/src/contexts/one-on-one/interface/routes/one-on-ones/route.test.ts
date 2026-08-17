@@ -7,6 +7,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
 import { z } from "zod"
 
 const oneOnOneResponseSchema = z.object({
@@ -198,10 +199,38 @@ function tokenFor(employeeId: number, role: string): Promise<string> {
 }
 
 const scopeEmployeeRows = [
-  { id: 2, code: "M002", name: "Mgr", email: "you+m002@example.com", role: "manager" },
-  { id: 20, code: "R020", name: "ReportA", email: "you+r020@example.com", role: "member" },
-  { id: 21, code: "R021", name: "ReportB", email: "you+r021@example.com", role: "member" },
-  { id: 22, code: "S022", name: "Solo", email: "you+s022@example.com", role: "manager" },
+  {
+    id: 2,
+    code: "M002",
+    name: "Mgr",
+    email: "you+m002@example.com",
+    role: "manager",
+    departmentId: 1,
+  },
+  {
+    id: 20,
+    code: "R020",
+    name: "ReportA",
+    email: "you+r020@example.com",
+    role: "member",
+    departmentId: 1,
+  },
+  {
+    id: 21,
+    code: "R021",
+    name: "ReportB",
+    email: "you+r021@example.com",
+    role: "member",
+    departmentId: 1,
+  },
+  {
+    id: 22,
+    code: "S022",
+    name: "Solo",
+    email: "you+s022@example.com",
+    role: "manager",
+    departmentId: 2,
+  },
 ]
 
 async function createDepartmentScopeTestDb(): Promise<D1Database> {
@@ -214,7 +243,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: 1,
+      dept_id: employee.departmentId,
       dept_name: "Dept",
       position: "-",
       status: "active",
@@ -267,6 +296,14 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
       next_action: null,
     },
   ])
+
+  await verifyCompanyMigrationFixture({
+    db,
+    departments: [
+      { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
+      { id: 2, code: "D002", name: "Dept Two", managerEmployeeCode: "S022" },
+    ],
+  })
 
   return db
 }

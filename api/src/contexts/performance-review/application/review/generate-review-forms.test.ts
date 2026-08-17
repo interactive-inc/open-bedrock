@@ -1,25 +1,62 @@
 import { generateReviewForms } from "@/contexts/performance-review/application/review/generate-review-forms"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
+import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
 import { describe, expect, test } from "bun:test"
 
 describe("generateReviewForms", () => {
+  test("fails closed instead of reading legacy organization memberships", async () => {
+    const { context, db } = createTestContext()
+    await seedD1(db, "employees", [
+      { id: 2, code: "E002", name: "Manager", dept_id: 1, status: "active" },
+      { id: 5, code: "E005", name: "Member", dept_id: 1, status: "active" },
+    ])
+    await seedD1(db, "org_memberships", [
+      { department_code: "D001", employee_code: "E005", manager_employee_code: "E002" },
+    ])
+
+    const generated = await generateReviewForms({
+      c: context,
+      cycleId: 1,
+      policy: {
+        include_self: true,
+        include_manager: true,
+        include_peers: true,
+        include_subordinates: true,
+        peer_count: 0,
+      },
+    })
+
+    expect(generated).toBeInstanceOf(Error)
+    const count = await db.prepare("SELECT COUNT(*) AS total FROM review_forms").first<{
+      total: number
+    }>()
+    expect(count?.total).toBe(0)
+  })
+
   test("creates self, manager, peer and subordinate assignments from the organization", async () => {
     const { context, db } = createTestContext()
     await seedD1(db, "employees", [
-      { id: 2, code: "E002", name: "Manager", status: "active" },
-      { id: 5, code: "E005", name: "Member A", status: "active" },
-      { id: 6, code: "E006", name: "Member B", status: "active" },
-      { id: 9, code: "E009", name: "Inactive", status: "retired" },
+      { id: 2, code: "E002", name: "Manager", dept_id: 1, status: "active" },
+      { id: 5, code: "E005", name: "Member A", dept_id: 3, status: "active" },
+      { id: 6, code: "E006", name: "Member B", dept_id: 3, status: "active" },
+      { id: 9, code: "E009", name: "Inactive", dept_id: 3, status: "retired" },
     ])
     await seedD1(db, "org_memberships", [
-      { department_code: "HQ", employee_code: "E002", manager_employee_code: null },
-      { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E002" },
-      { department_code: "TEAM", employee_code: "E006", manager_employee_code: "E002" },
+      { department_code: "D001", employee_code: "E002", manager_employee_code: null },
+      { department_code: "D003", employee_code: "E005", manager_employee_code: "E002" },
+      { department_code: "D003", employee_code: "E006", manager_employee_code: "E002" },
     ])
     await seedD1(db, "review_cycles", [
       { id: 1, title: "Review", period: "2026-H1", status: "draft", due_date: null },
     ])
+    await verifyCompanyMigrationFixture({
+      db,
+      departments: [
+        { id: 1, code: "D001", name: "Headquarters", managerEmployeeCode: "E002" },
+        { id: 3, code: "D003", name: "Team" },
+      ],
+    })
 
     const generated = await generateReviewForms({
       c: context,
@@ -107,7 +144,9 @@ describe("generateReviewForms", () => {
         ('assignment-9', 1, 'employment-9', 9, 'D001', 'primary', 'Member', NULL, '2027-01-01', NULL, 0, 'fixture', 1);
       INSERT INTO review_cycles
         (id, title, period, status, due_date) VALUES (1, 'Review', '2026-H1', 'draft', NULL);
-      UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
+      UPDATE lifecycle_migration_states
+      SET status = 'verified', baseline_on = '2025-01-01', company_time_zone = 'Asia/Tokyo'
+      WHERE id = 1;
     `)
 
     const generated = await generateReviewForms({

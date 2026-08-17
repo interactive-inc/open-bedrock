@@ -1,6 +1,6 @@
+import { readCanonicalOrganizationState } from "@/contexts/company/application/organization/read-canonical-organization-state"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import type { Context } from "@/env"
-import { buildEmployeeCodeMap } from "@/contexts/company/infrastructure/organization/build-employee-code-map"
-import { buildMembershipMap } from "@/contexts/company/infrastructure/organization/build-membership-map"
 
 export type Props = {
   c: Context
@@ -8,26 +8,19 @@ export type Props = {
 }
 
 /**
- * 従業員 id が所属する部門コードを org_memberships から解決する。無所属・不明なら null。
+ * 従業員の主所属コードをcanonical Company snapshotから解決する。無所属・不明ならnull。
  */
 export async function resolveEmployeeDepartmentCode(props: Props): Promise<string | null | Error> {
-  const codesById = await buildEmployeeCodeMap(props.c)
+  const snapshot = await readCanonicalOrganizationState(props.c)
+  if (snapshot instanceof Error) return snapshot
+  const employee = snapshot.employees.find(
+    (candidate) => candidate.employeeId === toWorkforceEmployeeId(props.employeeId),
+  )
+  const organizationUnitId = employee?.primaryAssignment?.organizationUnitId
+  if (organizationUnitId === undefined) return null
 
-  if (codesById instanceof Error) {
-    return codesById
-  }
-
-  const employeeCode = codesById.get(props.employeeId) ?? null
-
-  if (employeeCode === null) {
-    return null
-  }
-
-  const memberships = await buildMembershipMap(props.c)
-
-  if (memberships instanceof Error) {
-    return memberships
-  }
-
-  return memberships.get(employeeCode)?.departmentCode ?? null
+  return (
+    snapshot.organization.units.find((unit) => unit.organizationUnitId === organizationUnitId)
+      ?.code ?? null
+  )
 }

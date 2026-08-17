@@ -74,6 +74,7 @@ export class ResolveOrganizationAuthority {
         const state = resolveWorkforceStateAt(
           {
             employeeId: schedule.employee.id,
+            baselineState: schedule.baselineState,
             employments: schedule.employments,
             statuses: schedule.statuses,
             assignments: schedule.assignments,

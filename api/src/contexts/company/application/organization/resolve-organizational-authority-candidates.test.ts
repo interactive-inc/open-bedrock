@@ -4,12 +4,12 @@ import type { OrganizationChangeSet } from "@/contexts/company/application/workf
 import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
 import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
 import { OrganizationChangeRepository } from "@/contexts/company/infrastructure/workforce/organization-change.repository"
-import { ConflictError } from "@/lib/errors"
+import { ConflictError, UnavailableError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 import { zAccountId } from "@system/domain/auth/account-id"
 
 describe("resolveOrganizationalAuthorityCandidates", () => {
-  test("returns only live linked accounts with a fixed legacy snapshot", async () => {
+  test("rejects an unverified migration instead of reading the legacy projection", async () => {
     const { context, db } = createTestContext()
     await db.exec(`
       INSERT INTO employees (id, code, name, status, archived_at) VALUES
@@ -52,30 +52,8 @@ describe("resolveOrganizationalAuthorityCandidates", () => {
       resolvedAt: "2026-01-01T00:00:00.000Z",
     })
 
-    expect(resolution).toEqual({
-      snapshot: {
-        schemaVersion: 1,
-        source: "legacy",
-        asOf: "2026-01-01",
-        organizationRevision: null,
-      },
-      candidates: [
-        {
-          employeeId: 1,
-          accountId: zAccountId.parse("11"),
-          qualification: {
-            criterionIndex: 0,
-            evidence: {
-              type: "org_membership",
-              department_code: "D001",
-              employee_code: "E002",
-              manager_employee_code: "E001",
-              system_account_id: "11",
-            },
-          },
-        },
-      ],
-    })
+    expect(resolution).toBeInstanceOf(UnavailableError)
+    expect(resolution).toMatchObject({ code: "company_migration_incomplete" })
   })
 
   test("fails closed when the management graph contains a cycle", async () => {
@@ -95,6 +73,27 @@ describe("resolveOrganizationalAuthorityCandidates", () => {
         (department_code, employee_code, manager_employee_code) VALUES
         ('D001', 'E001', 'E002'),
         ('D001', 'E002', 'E001');
+      INSERT INTO employment_period_versions
+        (period_id, revision, employee_id, starts_on, ends_on, is_void,
+         recorded_by_action_id, recorded_at) VALUES
+        ('employment-1', 1, 1, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('employment-2', 1, 2, '2025-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO employee_status_period_versions
+        (period_id, revision, employment_period_id, employee_id, status, starts_on,
+         ends_on, is_void, recorded_by_action_id, recorded_at) VALUES
+        ('status-1', 1, 'employment-1', 1, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
+        ('status-2', 1, 'employment-2', 2, 'active', '2025-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO employee_org_assignment_period_versions
+        (period_id, revision, employment_period_id, employee_id, department_code,
+         assignment_type, position_title, manager_employee_id, starts_on, ends_on,
+         is_void, recorded_by_action_id, recorded_at) VALUES
+        ('assignment-1', 1, 'employment-1', 1, 'D001', 'primary', NULL, 2,
+         '2025-01-01', NULL, 0, 'fixture', 1),
+        ('assignment-2', 1, 'employment-2', 2, 'D001', 'primary', NULL, 1,
+         '2025-01-01', NULL, 0, 'fixture', 1);
+      UPDATE lifecycle_migration_states
+      SET status = 'verified', baseline_on = '2025-01-01', company_time_zone = 'Asia/Tokyo'
+      WHERE id = 1;
     `)
 
     const resolution = await resolveOrganizationalAuthorityCandidates({
@@ -138,6 +137,9 @@ describe("resolveOrganizationalAuthorityCandidates", () => {
       expectedRevision: 1,
       asOf: restoreCalendarDate("2026-01-01"),
       recordedAt: 2,
+      actorAccountId: "account:11",
+      reason: "Create canonical authority fixtures",
+      evidenceReferences: [],
       organizationUnits: [{ id: organizationUnitId, createdAt: 2 }],
       unitPeriods: [
         {
@@ -219,8 +221,13 @@ describe("resolveOrganizationalAuthorityCandidates", () => {
     expect(await new OrganizationChangeRepository(context.var.database).append(input)).toEqual({
       ok: true,
       revision: 6,
+      replayed: false,
     })
-    await db.exec("UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1")
+    await db.exec(`
+      UPDATE lifecycle_migration_states
+      SET status = 'verified', baseline_on = '2025-01-01', company_time_zone = 'Asia/Tokyo'
+      WHERE id = 1
+    `)
 
     const resolution = await resolveOrganizationalAuthorityCandidates({
       c: context,
@@ -310,7 +317,9 @@ describe("resolveOrganizationalAuthorityCandidates", () => {
          '2025-01-01', NULL, 0, 'fixture', 1),
         ('assignment-2', 1, 'employment-2', 2, 'D001', 'primary', 'Member', 1,
          '2025-01-01', NULL, 0, 'fixture', 1);
-      UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
+      UPDATE lifecycle_migration_states
+      SET status = 'verified', baseline_on = '2025-01-01', company_time_zone = 'Asia/Tokyo'
+      WHERE id = 1;
       UPDATE organization_lifecycle_states SET revision = 7, updated_at = 1 WHERE id = 1;
     `)
 

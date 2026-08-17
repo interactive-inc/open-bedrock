@@ -120,6 +120,10 @@ import * as batchEmployeeLifecycleProcessOutboxRoute from "@/contexts/company/in
 import * as batchEmployeeLifecycleRebuildProjectionsRoute from "@/contexts/company/interface/routes/batch/employee-lifecycle/rebuild-projections/route"
 import * as batchEmployeeLifecycleVerifyRoute from "@/contexts/company/interface/routes/batch/employee-lifecycle/verify/route"
 import * as batchRoute from "@/contexts/company/interface/routes/batch/route"
+import * as companyV1EmployeesEmployeeIdWorkforceStateRoute from "@/contexts/company/interface/routes/company/v1/employees/[employee_id]/workforce-state/route"
+import * as companyV1EmployeesRoute from "@/contexts/company/interface/routes/company/v1/employees/route"
+import * as companyV1OrganizationChangesRoute from "@/contexts/company/interface/routes/company/v1/organization-changes/route"
+import * as companyV1OrganizationSnapshotsRoute from "@/contexts/company/interface/routes/company/v1/organization-snapshots/route"
 import * as departmentDefinitionsCreateRoute from "@/contexts/company/interface/routes/department-definitions/create-route"
 import * as departmentDefinitionsRoute from "@/contexts/company/interface/routes/department-definitions/route"
 import * as departmentsCodeMembersRoute from "@/contexts/company/interface/routes/departments/[code]/members/route"
@@ -539,6 +543,13 @@ const routePart25 = createRouteApp()
   .get("/commendations", ...commendationsRoute.GET)
   .post("/commendations", ...commendationsRoute.POST)
   .delete("/commendations/:id", ...commendationsIdRoute.DELETE)
+  .get("/company/v1/employees", ...companyV1EmployeesRoute.GET)
+  .get(
+    "/company/v1/employees/:employee_id/workforce-state",
+    ...companyV1EmployeesEmployeeIdWorkforceStateRoute.GET,
+  )
+  .post("/company/v1/organization-changes", ...companyV1OrganizationChangesRoute.POST)
+  .get("/company/v1/organization-snapshots", ...companyV1OrganizationSnapshotsRoute.GET)
   .get("/company-calendar-days", ...companyCalendarDaysRoute.GET)
   .post("/company-calendar-days", ...companyCalendarDaysCreateRoute.POST)
   .delete("/company-calendar-days/:id", ...companyCalendarDaysIdRoute.DELETE)
@@ -560,12 +571,12 @@ const routePart25 = createRouteApp()
   .get("/departments", ...departmentsRoute.GET)
   .post("/departments", ...departmentsRoute.POST)
   .get("/departments/tree", ...departmentsTreeRoute.GET)
+
+const routePart26 = createRouteApp()
   .get("/departments/:code", ...departmentsCodeRoute.GET)
   .put("/departments/:code", ...departmentsCodeRoute.PUT)
   .delete("/departments/:code", ...departmentsCodeRoute.DELETE)
   .get("/departments/:code/members", ...departmentsCodeMembersRoute.GET)
-
-const routePart26 = createRouteApp()
   .get("/directory/employees", ...directoryEmployeesRoute.GET)
   .get("/disciplinary-actions", ...disciplinaryActionsRoute.GET)
   .post("/disciplinary-actions", ...disciplinaryActionsRoute.POST)
@@ -610,12 +621,12 @@ const routePart26 = createRouteApp()
   .get("/expenses/inbox", ...expensesInboxRoute.GET)
   .get("/expenses/me", ...expensesMeRoute.GET)
   .get("/expenses/:id", ...expensesIdRoute.GET)
+
+const routePart27 = createRouteApp()
   .put("/expenses/:id", ...expensesIdRoute.PUT)
   .delete("/expenses/:id", ...expensesIdRoute.DELETE)
   .post("/expenses/:id/approve", ...expensesIdApproveRoute.POST)
   .post("/expenses/:id/reject", ...expensesIdRejectRoute.POST)
-
-const routePart27 = createRouteApp()
   .post("/family-care-leaves", ...familyCareLeavesRoute.POST)
   .get("/family-care-leaves/admin", ...familyCareLeavesAdminRoute.GET)
   .get("/family-care-leaves/me", ...familyCareLeavesMeRoute.GET)
@@ -669,12 +680,12 @@ const routePart27 = createRouteApp()
   .post("/job-openings/:job_opening_id/candidates", ...jobOpeningsJobOpeningIdCandidatesRoute.POST)
   .get("/knowledge-articles", ...knowledgeArticlesRoute.GET)
   .post("/knowledge-articles", ...knowledgeArticlesRoute.POST)
+
+const routePart28 = createRouteApp()
   .get("/knowledge-articles/:id", ...knowledgeArticlesIdRoute.GET)
   .put("/knowledge-articles/:id", ...knowledgeArticlesIdRoute.PUT)
   .delete("/knowledge-articles/:id", ...knowledgeArticlesIdRoute.DELETE)
   .get("/leave-balances", ...leaveBalancesRoute.GET)
-
-const routePart28 = createRouteApp()
   .get("/leave-balances/me", ...leaveBalancesMeRoute.GET)
   .get("/leave-requests", ...leaveRequestsRoute.GET)
   .post("/leave-requests", ...leaveRequestsRoute.POST)
@@ -722,12 +733,12 @@ const routePart28 = createRouteApp()
   .get("/onboarding-assignments/me", ...onboardingAssignmentsMeRoute.GET)
   .get("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.GET)
   .put("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.PUT)
+
+const routePart29 = createRouteApp()
   .delete("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.DELETE)
   .post("/onboarding-tasks/:id/complete", ...onboardingTasksIdCompleteRoute.POST)
   .post("/onboarding-tasks/:id/uncomplete", ...onboardingTasksIdUncompleteRoute.POST)
   .get("/onboarding-templates", ...onboardingTemplatesRoute.GET)
-
-const routePart29 = createRouteApp()
   .post("/onboarding-templates", ...onboardingTemplatesRoute.POST)
   .get("/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.GET)
   .put("/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.PUT)

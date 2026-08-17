@@ -6,6 +6,10 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyCompanyMigration } from "@/api/test/support/verify-company-migration"
+import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments"
+import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments"
+import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships"
 import { z } from "zod"
 
 const jwtSecret = "auth-me-route-test-secret"
@@ -20,7 +24,7 @@ const meResponseSchema = z.object({
   position: z.string().nullable(),
 })
 
-async function createTestDb(): Promise<D1Database> {
+async function createTestDb(verified = true): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
   await seedD1(
@@ -38,6 +42,32 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+  await seedD1(
+    db,
+    "departments",
+    seedDepartments.map((department) => ({ id: department.id, name: department.name })),
+  )
+  await seedD1(
+    db,
+    "org_departments",
+    seedOrgDepartments.map((department) => ({
+      code: department.code,
+      department_id: department.departmentId,
+      parent_code: department.parentCode,
+      manager_employee_code: department.managerEmployeeCode,
+      sort_order: department.order,
+    })),
+  )
+  await seedD1(
+    db,
+    "org_memberships",
+    seedOrgMemberships.map((membership) => ({
+      department_code: membership.departmentCode,
+      employee_code: membership.employeeCode,
+      manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
+  if (verified) await verifyCompanyMigration(db)
 
   return db
 }
@@ -195,12 +225,10 @@ describe("GET /me", () => {
   })
 
   test("returns the effective lifecycle department and position after verification", async () => {
-    const db = await createTestDb()
+    const db = await createTestDb(false)
     await db.exec(`
-      INSERT INTO departments (id, name) VALUES (4, 'Sales');
-      INSERT INTO org_departments
-        (code, department_id, parent_code, manager_employee_code, sort_order)
-      VALUES ('D004', 4, NULL, NULL, 1);
+      INSERT INTO departments (id, name) VALUES (7, 'Sales');
+      UPDATE org_departments SET department_id = 7 WHERE code = 'D004';
       INSERT INTO employment_period_versions
         (period_id, revision, employee_id, starts_on, ends_on, is_void,
          recorded_by_action_id, recorded_at)
@@ -215,7 +243,9 @@ describe("GET /me", () => {
          is_void, recorded_by_action_id, recorded_at)
       VALUES ('assignment-1', 1, 'employment-1', 1, 'D004', 'primary', 'Sales Director', NULL,
               '2025-01-01', NULL, 0, 'fixture', 1);
-      UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
+      UPDATE lifecycle_migration_states
+      SET status = 'verified', baseline_on = '2025-01-01', company_time_zone = 'Asia/Tokyo'
+      WHERE id = 1;
     `)
 
     const response = await requestWithContext({

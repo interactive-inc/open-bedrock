@@ -6,6 +6,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
 import { z } from "zod"
 
 const jwtSecret = "evaluation-sheets-crud-test-secret"
@@ -54,10 +55,12 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "org_memberships", [
     {
       employee_code: seedEmployees[4].code, // employee 5 (E005)
-      department_code: "D001",
+      department_code: "D003",
       manager_employee_code: seedEmployees[0].code, // employee 1 (E001)
     },
   ])
+
+  await verifyStandardCompanyMigration(db)
 
   return db
 }

@@ -179,4 +179,37 @@ describe("Company organization migration", () => {
         .run(),
     ).rejects.toThrow("organization change operation is immutable")
   })
+
+  test("adds immutable actor, reason, evidence and request fingerprint to operations", async () => {
+    const db = createD1TestDatabase(schemaThrough("0139_company_organization_idempotency.sql"))
+
+    expect(
+      await db
+        .prepare(
+          `SELECT request_fingerprint, actor_account_id, reason, evidence_references_json
+             FROM organization_change_operations
+            WHERE id = 'migration:0138:organization-baseline'`,
+        )
+        .first<{
+          request_fingerprint: string
+          actor_account_id: string
+          reason: string
+          evidence_references_json: string
+        }>(),
+    ).toEqual({
+      request_fingerprint: "0".repeat(64),
+      actor_account_id: "system:legacy",
+      reason: "legacy organization change",
+      evidence_references_json: "[]",
+    })
+    expect(
+      db
+        .prepare(
+          `UPDATE organization_change_operations
+              SET reason = 'rewritten'
+            WHERE id = 'migration:0138:organization-baseline'`,
+        )
+        .run(),
+    ).rejects.toThrow("organization change command is immutable")
+  })
 })

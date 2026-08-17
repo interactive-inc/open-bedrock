@@ -6,6 +6,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
 import { z } from "zod"
 
 const jwtSecret = "evaluation-sheet-create-test-secret"
@@ -45,14 +46,16 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
-  // Seed org_memberships for manager resolution (employee 5 reports to employee 1)
+  // migration sourceではemployee 5がemployee 1へreportする。
   await seedD1(db, "org_memberships", [
     {
       employee_code: seedEmployees[4].code, // employee 5
-      department_code: "D001",
+      department_code: "D003",
       manager_employee_code: seedEmployees[0].code, // employee 1
     },
   ])
+
+  await verifyStandardCompanyMigration(db)
 
   return db
 }
@@ -113,7 +116,7 @@ describe("POST /evaluation-sheets", () => {
     }
   })
 
-  test("auto-resolves primary evaluator from org_memberships", async () => {
+  test("auto-resolves primary evaluator from canonical Company organization", async () => {
     const db = await createTestDb()
     const token = await hrToken()
 

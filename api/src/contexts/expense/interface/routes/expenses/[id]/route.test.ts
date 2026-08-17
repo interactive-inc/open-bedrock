@@ -8,6 +8,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
 import { z } from "zod"
 
 const categoryEnum = z.enum(["transport", "supplies", "entertainment", "books", "other"])
@@ -48,7 +49,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedIamForEmployees(db)
 
   await seedD1(db, "org_memberships", [
-    { department_code: "ENGINEERING", employee_code: "E005", manager_employee_code: "E004" },
+    { department_code: "D003", employee_code: "E005", manager_employee_code: "E004" },
   ])
 
   await seedD1(
@@ -78,6 +79,8 @@ async function createTestDb(): Promise<D1Database> {
       created_at: approval.createdAt,
     })),
   )
+
+  await verifyStandardCompanyMigration(db)
 
   return db
 }

@@ -259,6 +259,9 @@ function canonicalOrganizationChange(props: {
   expectedRevision: number
   businessDate: string
   recordedAt: number
+  actorAccountId: string
+  reason: string
+  evidenceReferences: OrganizationChangeSet["evidenceReferences"]
   projection: PersonnelActionProjection
 }): OrganizationChangeSet | ApplicationError {
   try {
@@ -328,6 +331,9 @@ function canonicalOrganizationChange(props: {
       expectedRevision: props.expectedRevision,
       asOf: restoreCalendarDate(props.businessDate),
       recordedAt: props.recordedAt,
+      actorAccountId: props.actorAccountId,
+      reason: props.reason,
+      evidenceReferences: props.evidenceReferences,
       organizationUnits: [],
       unitPeriods: [],
       assignments,
@@ -406,6 +412,9 @@ async function validateCanonicalOrganizationChange(
   if (result.kind === "valid") return null
   if (result.kind === "conflict") {
     return new ConflictError("組織情報が更新されています", "personnel_action_stale")
+  }
+  if (result.kind === "operation_conflict") {
+    return new ConflictError("組織変更IDが再利用されています", "personnel_action_stale")
   }
   if (result.kind === "invalid") {
     return new ValidationError(
@@ -520,14 +529,25 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
         .prepare(
           `INSERT INTO organization_change_operations
              (id, expected_revision, change_count, applied_count,
-              resulting_revision, status, recorded_at)
-           VALUES (?1, ?2, ?3, 0, ?2 + ?3, 'PENDING', ?4)`,
+              resulting_revision, status, recorded_at, actor_account_id,
+              reason, evidence_references_json)
+           VALUES (?1, ?2, ?3, 0, ?2 + ?3, 'PENDING', ?4, ?5, ?6, ?7)`,
         )
         .bind(
           props.action.id,
           props.revisions.organizationRevision,
           canonicalMutations.length,
           props.action.recordedAt,
+          String(props.command.session.accountId),
+          `personnel_action:${props.action.kind}`,
+          stableLifecycleJson([
+            {
+              context: "company",
+              kind: "personnel_action",
+              id: props.action.id,
+              version: String(nextEmployeeRevision),
+            },
+          ]),
         ),
     )
   }
@@ -819,6 +839,16 @@ export class ApplyPersonnelAction {
         expectedRevision: loadedRevisions.organizationRevision,
         businessDate,
         recordedAt,
+        actorAccountId: String(command.session.accountId),
+        reason: `personnel_action:${command.input.kind}`,
+        evidenceReferences: [
+          {
+            context: "company",
+            kind: "personnel_action",
+            id: actionId,
+            version: String(loadedRevisions.employeeRevision + 1),
+          },
+        ],
         projection: projected,
       })
       if (validation !== null) return validation
@@ -1012,6 +1042,16 @@ export class ApplyPersonnelAction {
         expectedRevision: loadedRevisions.organizationRevision,
         businessDate,
         recordedAt,
+        actorAccountId: String(command.session.accountId),
+        reason: `personnel_action:${command.input.kind}`,
+        evidenceReferences: [
+          {
+            context: "company",
+            kind: "personnel_action",
+            id: actionId,
+            version: String(loadedRevisions.employeeRevision + 1),
+          },
+        ],
         projection: projected,
         prospectiveEmployee:
           command.employeeId === null && command.input.kind === "hire"

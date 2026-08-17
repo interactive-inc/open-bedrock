@@ -8,6 +8,7 @@ import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { verifyCompanyMigration } from "@/api/test/support/verify-company-migration"
 import { describe, expect, test } from "bun:test"
 import { SignJWT } from "jose"
 
@@ -21,6 +22,8 @@ async function database(): Promise<D1Database> {
   await seedIamForEmployees(db, [
     { id: 1, email: "active@example.com", passwordHash: "fixture", role: "root" },
   ])
+  await verifyCompanyMigration(db)
+
   return db
 }
 
