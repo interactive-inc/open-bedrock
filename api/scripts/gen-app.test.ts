@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { readFileSync } from "node:fs"
+import { Glob } from "bun"
+import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import {
   collectRegistrations,
@@ -13,6 +14,7 @@ import {
   toUrl,
   type RouteRegistration,
 } from "@/../scripts/gen-app"
+import { ROUTE_MODULE_REGISTRY } from "@/api/route-module.registry"
 
 const APP_PATH = resolve(import.meta.dir, "../src/api/app.ts")
 
@@ -22,11 +24,14 @@ describe("toUrl", () => {
   })
 
   test("動的セグメントは :param になる", () => {
-    expect(toUrl("employees/[code]/route.ts")).toBe("/employees/:code")
+    expect(toUrl("employees.$code.ts")).toBe("/employees/:code")
+    expect(toUrl("job-openings.$jobOpeningId.ts")).toBe(
+      "/job-openings/:jobOpeningId",
+    )
   })
 
   test("動的セグメントが複数でも対応づく", () => {
-    expect(toUrl("stocktakes/[id]/assets/[code]/check/route.ts")).toBe(
+    expect(toUrl("stocktakes.$id.assets.$code.check.ts")).toBe(
       "/stocktakes/:id/assets/:code/check",
     )
   })
@@ -39,6 +44,11 @@ describe("toUrl", () => {
   test("名前付きファイルはファイル名を URL に含める", () => {
     expect(toUrl("company/v1/account-employee-links.ts")).toBe("/company/v1/account-employee-links")
   })
+
+  test("root直下のdot区切りrouteをURL階層へ展開する", () => {
+    expect(toUrl("company.v1.capabilities.ts")).toBe("/company/v1/capabilities")
+    expect(toUrl("system.v1.sessions.ts")).toBe("/system/v1/sessions")
+  })
 })
 
 describe("toAlias", () => {
@@ -46,12 +56,20 @@ describe("toAlias", () => {
     expect(toAlias("employees/route.ts")).toBe("employeesRoute")
   })
 
-  test("動的セグメントの括弧は落とす", () => {
-    expect(toAlias("employees/[code]/route.ts")).toBe("employeesCodeRoute")
+  test("動的セグメントの$は落とす", () => {
+    expect(toAlias("employees.$code.ts")).toBe("employeesCodeRoute")
   })
 
   test("ハイフンは camelCase に畳む", () => {
     expect(toAlias("application-requests/route.ts")).toBe("applicationRequestsRoute")
+  })
+
+  test("dot区切りも有効なcamelCase別名へ畳む", () => {
+    expect(toAlias("company.v1.capabilities.ts")).toBe("companyV1CapabilitiesRoute")
+    expect(toAlias("system.v1.sessions.ts")).toBe("systemV1SessionsRoute")
+    expect(toAlias("application-requests.$id.approve.ts")).toBe(
+      "applicationRequestsIdApproveRoute",
+    )
   })
 
   // 並置ファイルは隣の route.ts と別名が衝突してはいけない。
@@ -143,17 +161,68 @@ describe("renderApp の安全確認", () => {
 })
 
 describe("collectRegistrations", () => {
+  test("全contextのrouteとtestはroutes直下のdot filenameだけで表す", async () => {
+    const nested: string[] = []
+    const invalidDynamicParameters: string[] = []
+    for (const module of ROUTE_MODULE_REGISTRY) {
+      for await (const file of new Glob("**/*.ts").scan(
+        resolve(import.meta.dir, `../src/${module.routesDirectory}`),
+      )) {
+        if (file.includes("/")) nested.push(`${module.context}:${file}`)
+        if (
+          file
+            .replace(/(?:\.test)?\.ts$/, "")
+            .split(".")
+            .some((segment) => segment.startsWith("$") && !/^\$[a-z][A-Za-z0-9]*$/.test(segment))
+        ) {
+          invalidDynamicParameters.push(`${module.context}:${file}`)
+        }
+      }
+    }
+    expect(nested).toEqual([])
+    expect(invalidDynamicParameters).toEqual([])
+  })
+
+  test("routes内のtestは同名のroute sourceと一対一で対応する", async () => {
+    const unmatched: string[] = []
+    for (const module of ROUTE_MODULE_REGISTRY) {
+      const routesDirectory = resolve(import.meta.dir, `../src/${module.routesDirectory}`)
+      for await (const file of new Glob("*.test.ts").scan(routesDirectory)) {
+        const source = file.replace(/\.test\.ts$/, ".ts")
+        if (!existsSync(resolve(routesDirectory, source))) {
+          unmatched.push(`${module.context}:${file}`)
+        }
+      }
+    }
+    expect(unmatched).toEqual([])
+  })
+
+  test("一つのURLは一つのroute fileだけが所有する", async () => {
+    const registrations = await collectRegistrations()
+    const modulesByUrl = new Map<string, Set<string>>()
+    for (const registration of registrations) {
+      const modules = modulesByUrl.get(registration.url) ?? new Set<string>()
+      modules.add(registration.module)
+      modulesByUrl.set(registration.url, modules)
+    }
+    expect(
+      [...modulesByUrl]
+        .filter(([, modules]) => modules.size > 1)
+        .map(([url, modules]) => `${url}: ${[...modules].join(", ")}`),
+    ).toEqual([])
+  })
+
   test("明示登録されたcontextのrouteを公開する", async () => {
     const registrations = await collectRegistrations()
 
     expect(registrations).toContainEqual({
-      module: "@system/interface/routes/health/route",
+      module: "@system/interface/routes/health",
       url: "/health",
       method: "GET",
       alias: "healthRoute",
     })
     expect(registrations).toContainEqual({
-      module: "@/contexts/company-compatibility/interface/routes/departments/route",
+      module: "@/contexts/company-compatibility/interface/routes/departments",
       url: "/departments",
       method: "GET",
       alias: "departmentsRoute",

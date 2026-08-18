@@ -1,5 +1,6 @@
 import type { Context } from "@/env"
 import type { AccountStatus } from "@/contexts/system/domain/auth/account-status"
+import { zAccountId } from "@system/domain/auth/account-id"
 import { LastRootError } from "@/contexts/company-compatibility/infrastructure/iam/last-root-error"
 import { LastRootGuard } from "@/contexts/company-compatibility/infrastructure/iam/last-root-guard"
 import { LivePermissionGuard } from "@/contexts/company-compatibility/infrastructure/iam/live-permission-guard"
@@ -19,7 +20,7 @@ export type AccountSummary = {
 }
 
 /**
- * accounts の管理操作(一覧・取得・状態遷移・ロール割当)を扱うリポジトリ。
+ * System Accountの管理操作（一覧・取得・状態遷移・ロール割当）を扱うリポジトリ。
  * verify-bearer 用の AccountAuthRepository とは別に、管理画面向けの読み書きを担う。
  */
 export class AccountRepository {
@@ -62,7 +63,7 @@ export class AccountRepository {
       return accountRows.results.flatMap((account) => {
         const accountId = Number(account.id)
         if (!Number.isSafeInteger(accountId) || String(accountId) !== account.id) return []
-        const employeeId = employeeIdByAccountId.get(accountId) ?? null
+        const employeeId = employeeIdByAccountId.get(zAccountId.parse(account.id)) ?? null
 
         return [
           {
@@ -295,7 +296,7 @@ export class AccountRepository {
       const rows = await this.c.env.DB.prepare(
         `SELECT link.employee_id, role.key
            FROM account_employee_links AS link
-           INNER JOIN system_accounts AS account ON account.id = CAST(link.account_id AS TEXT)
+           INNER JOIN system_accounts AS account ON account.id = link.account_id
            INNER JOIN system_role_bindings AS binding ON binding.account_id = account.id
            INNER JOIN system_iam_roles AS role ON role.id = binding.role_id
            WHERE link.employee_id IN (SELECT CAST(value AS INTEGER) FROM json_each(?1))

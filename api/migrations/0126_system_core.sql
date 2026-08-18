@@ -1,5 +1,4 @@
--- Wave 43a: 上位contextから独立したcanonical System persistence。
--- legacy tablesは後続のdual-write/read切替が終わるまで保持する。
+-- 上位contextや製品runtimeから独立したcanonical System persistence。
 
 CREATE TABLE system_accounts (
   id TEXT PRIMARY KEY NOT NULL
@@ -71,6 +70,21 @@ WHEN
 BEGIN
   SELECT RAISE(ABORT, 'identity lifecycle is not monotonic');
 END;
+
+CREATE TABLE system_identity_profiles (
+  identity_id TEXT PRIMARY KEY NOT NULL
+    REFERENCES system_identity_bindings(id) ON DELETE CASCADE,
+  email TEXT
+    CHECK (email IS NULL OR length(email) BETWEEN 3 AND 320),
+  email_verified INTEGER NOT NULL DEFAULT 0
+    CHECK (email_verified IN (0, 1)),
+  last_used_at INTEGER,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX system_identity_profiles_email_idx
+  ON system_identity_profiles (email);
+
 
 CREATE TABLE system_password_credentials (
   identity_id TEXT PRIMARY KEY NOT NULL
@@ -170,6 +184,61 @@ BEGIN
   SELECT RAISE(ABORT, 'session lifecycle is not monotonic');
 END;
 
+CREATE TABLE system_identity_login_tokens (
+  jti TEXT PRIMARY KEY NOT NULL
+    CHECK (length(jti) BETWEEN 1 AND 512),
+  expires_at INTEGER NOT NULL,
+  used_at INTEGER NOT NULL,
+  CHECK (expires_at > used_at)
+);
+
+CREATE INDEX system_identity_login_tokens_expires_idx
+  ON system_identity_login_tokens (expires_at);
+
+CREATE TABLE system_cli_login_states (
+  state TEXT PRIMARY KEY NOT NULL
+    CHECK (length(state) BETWEEN 16 AND 512),
+  port INTEGER NOT NULL
+    CHECK (port BETWEEN 1 AND 65535),
+  cli_state TEXT NOT NULL
+    CHECK (length(cli_state) BETWEEN 1 AND 512),
+  code_verifier TEXT NOT NULL
+    CHECK (length(code_verifier) BETWEEN 43 AND 128),
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  CHECK (expires_at > created_at)
+);
+
+CREATE INDEX system_cli_login_states_expires_idx
+  ON system_cli_login_states (expires_at);
+
+CREATE TABLE system_cli_login_codes (
+  code_hash TEXT PRIMARY KEY NOT NULL
+    CHECK (length(code_hash) BETWEEN 32 AND 512),
+  account_id TEXT NOT NULL
+    REFERENCES system_accounts(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  CHECK (expires_at > created_at)
+);
+
+CREATE INDEX system_cli_login_codes_expires_idx
+  ON system_cli_login_codes (expires_at);
+
+CREATE TABLE system_browser_login_codes (
+  code_hash TEXT PRIMARY KEY NOT NULL
+    CHECK (length(code_hash) BETWEEN 32 AND 512),
+  account_id TEXT NOT NULL
+    REFERENCES system_accounts(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  CHECK (expires_at > created_at)
+);
+
+CREATE INDEX system_browser_login_codes_expires_idx
+  ON system_browser_login_codes (expires_at);
+
+
 CREATE TABLE system_iam_roles (
   id TEXT PRIMARY KEY NOT NULL
     CHECK (length(id) BETWEEN 1 AND 255),
@@ -179,6 +248,8 @@ CREATE TABLE system_iam_roles (
     CHECK (kind IN ('managed', 'custom')),
   name TEXT NOT NULL
     CHECK (length(name) BETWEEN 1 AND 100),
+  description TEXT
+    CHECK (description IS NULL OR length(description) BETWEEN 1 AND 1000),
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
     CHECK (updated_at >= created_at)
@@ -323,6 +394,22 @@ WHEN
 BEGIN
   SELECT RAISE(ABORT, 'notification delivery is immutable except first read');
 END;
+
+CREATE TABLE system_batch_jobs (
+  id INTEGER PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL
+    CHECK (length(name) BETWEEN 1 AND 200),
+  status TEXT NOT NULL
+    CHECK (status IN ('running', 'completed', 'failed')),
+  started_at INTEGER,
+  finished_at INTEGER,
+  message TEXT,
+  CHECK (finished_at IS NULL OR started_at IS NULL OR finished_at >= started_at)
+);
+
+CREATE INDEX system_batch_jobs_status_idx
+  ON system_batch_jobs (status, id);
+
 
 CREATE TABLE system_audit_events (
   event_id TEXT PRIMARY KEY NOT NULL

@@ -97,7 +97,7 @@ export class ResolveCliIdentity {
   > {
     const identityRepository = new IdentityRepository(this.c)
     const provisioner = new AccountProvisioner(this.c)
-    const nowEpoch = Math.floor(command.now.getTime() / 1_000)
+    const nowEpoch = command.now.getTime()
 
     const linkedAccountId = await identityRepository.findAccountIdByEmail(command.email)
     if (linkedAccountId instanceof Error) {

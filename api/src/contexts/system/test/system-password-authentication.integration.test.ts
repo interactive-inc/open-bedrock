@@ -1,5 +1,7 @@
 import { AuthenticateSystemPassword } from "@system/application/auth/authenticate-system-password"
 import type { SystemPasswordMaterialService } from "@system/application/auth/system-password-material-service"
+import { zAccountId } from "@system/domain/auth/account-id"
+import { zIdentityId } from "@system/domain/identity/identity-id"
 import { identitySubjectSchema } from "@system/domain/identity/identity-subject"
 import { createSystemD1TestDatabase } from "@system/infrastructure/auth/system-d1-test-database.test-support"
 import { SystemPasswordCredentialRepository } from "@system/infrastructure/auth/system-password-credential-repository"
@@ -73,8 +75,8 @@ describe("System password authentication", () => {
       await createService(database, verifiedHashes).execute({ subject, password: "secret", now }),
     ).toEqual({
       kind: "authenticated",
-      accountId: "account-1",
-      identityId: "identity-1",
+      accountId: zAccountId.parse("account-1"),
+      identityId: zIdentityId.parse("identity-1"),
       requiresPasswordRehash: false,
       tokenVersion: 3,
     })

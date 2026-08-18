@@ -1,6 +1,8 @@
 import type { EmployeeStatus } from "@/contexts/company-compatibility/domain/employee/employee-status"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import type { AccountId } from "@system/domain/auth/account-id"
+import { systemAccounts } from "@system/infrastructure/schema/system-core"
 
 /**
  * 従業員台帳。認証はSystem identity、認可はSystem IAMが正であり、Companyは人との対応だけを持つ。
@@ -25,7 +27,10 @@ export type EmployeeRow = InferSelectModel<typeof employees>
 export const accountEmployeeLinks = sqliteTable(
   "account_employee_links",
   {
-    accountId: integer("account_id").primaryKey(),
+    accountId: text("account_id")
+      .primaryKey()
+      .$type<AccountId>()
+      .references(() => systemAccounts.id, { onDelete: "cascade" }),
     employeeId: integer("employee_id").notNull().unique(),
   },
   (table) => [index("idx_account_employee_links_employee").on(table.employeeId)],

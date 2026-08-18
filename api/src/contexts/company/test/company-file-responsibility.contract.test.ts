@@ -35,7 +35,7 @@ describe("Company file responsibility contract", () => {
       "profile",
     ]
     const violations = pairedRoutes.flatMap((route) => {
-      const file = `interface/routes/company/v1/${route}.ts`
+      const file = `interface/routes/company.v1.${route}.ts`
       const source = readFileSync(new URL(file, contextDirectory), "utf8")
       return [
         ...(!source.includes("export const GET") || !source.includes("export const POST")
@@ -47,7 +47,7 @@ describe("Company file responsibility contract", () => {
         ...(source.includes("Schema") || source.includes("schema")
           ? [`${file}: shared HTTP schema import`]
           : []),
-        ...(manifest.split(`module: "@/contexts/company/interface/routes/company/v1/${route}"`)
+        ...(manifest.split(`module: "@/contexts/company/interface/routes/company.v1.${route}"`)
           .length -
           1 ===
         2
@@ -97,7 +97,7 @@ describe("Company file responsibility contract", () => {
   test("HTTP testはHono hc clientから呼び出す", () => {
     const files = [
       "test/company-api.integration.test.ts",
-      "interface/routes/company/v1/capabilities/route.test.ts",
+      "interface/routes/company.v1.capabilities.test.ts",
     ]
     const violations = files.flatMap((file) => {
       const source = readFileSync(new URL(file, contextDirectory), "utf8")
@@ -107,5 +107,13 @@ describe("Company file responsibility contract", () => {
     })
 
     expect(violations).toEqual([])
+  })
+
+  test("routeはURLをdotで表すflat fileだけを許可する", () => {
+    const routeFiles = [...new Glob("interface/routes/**/*.ts").scanSync()]
+    expect(routeFiles.filter((file) => file.split("/").length !== 3)).toEqual([])
+    expect(
+      routeFiles.filter((file) => /\/(?:route|create-route)(?:\.test)?\.ts$/.test(file)),
+    ).toEqual([])
   })
 })

@@ -1,0 +1,175 @@
+import { describe, expect, test } from "bun:test"
+import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
+import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
+import { createTestToken } from "@/api/test/support/create-test-token"
+import { loadSchema } from "@/api/test/support/load-schema"
+import { requestWithContext } from "@/api/test/support/request-with-context"
+import { seedD1 } from "@/api/test/support/seed-d1"
+import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { loginCodeHash } from "@/lib/auth/login-code-hash"
+import { z } from "zod"
+
+const jwtSecret = "browser-token-route-jwt-secret"
+const now = "2026-01-01T00:00:00.000Z"
+const nowEpoch = 1_767_225_600
+const nowEpochMilliseconds = nowEpoch * 1_000
+
+const tokenResponseSchema = z.strictObject({
+  access_token: z.string(),
+  refresh_token: z.string(),
+})
+
+const codeResponseSchema = z.strictObject({
+  code: z.string(),
+  expires_in: z.number(),
+})
+
+async function createTestDb(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+  await seedD1(
+    db,
+    "employees",
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      dept_id: employee.deptId,
+      dept_name: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
+  await seedIamForEmployees(db)
+  return db
+}
+
+async function seedBrowserLoginCode(
+  db: D1Database,
+  code: string,
+  accountId: number,
+  expiresAt: number = nowEpochMilliseconds + 60_000,
+): Promise<void> {
+  const codeHash = await loginCodeHash(code)
+  const createdAt = Math.min(nowEpochMilliseconds, expiresAt - 1)
+  await db
+    .prepare(
+      `INSERT INTO system_browser_login_codes (code_hash, account_id, created_at, expires_at)
+       VALUES (?1, ?2, ?3, ?4)`,
+    )
+    .bind(codeHash, String(accountId), createdAt, expiresAt)
+    .run()
+}
+
+function postBrowserToken(db: D1Database, body: unknown): Promise<Response> {
+  return requestWithContext({
+    db,
+    jwtSecret,
+    path: "/auth/browser/token",
+    token: null,
+    method: "POST",
+    body,
+    now,
+  })
+}
+
+async function auditRows(
+  db: D1Database,
+): Promise<Array<{ action: string; reason_code: string | null }>> {
+  return (
+    await db
+      .prepare("SELECT action, reason_code FROM system_audit_events ORDER BY occurred_at, event_id")
+      .all<{ action: string; reason_code: string | null }>()
+  ).results
+}
+
+describe("POST /auth/browser/token", () => {
+  test("exchanges a code issued by /auth/browser/code for a session", async () => {
+    const db = await createTestDb()
+    const bearer = await createTestToken(jwtSecret, { employeeId: 1 })
+
+    const issuedResponse = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/auth/browser/code",
+      token: bearer,
+      method: "POST",
+      body: {},
+      now,
+    })
+    expect(issuedResponse.status).toBe(200)
+    const issued = codeResponseSchema.parse(await issuedResponse.json())
+
+    const response = await postBrowserToken(db, { code: issued.code })
+
+    expect(response.status).toBe(200)
+    const body = tokenResponseSchema.parse(await response.json())
+    expect(body.access_token.length > 0).toBe(true)
+    expect(body.refresh_token.length > 0).toBe(true)
+
+    // セッション発行の成功監査はここ(token 消費時)で初めて記録される。
+    expect(await auditRows(db)).toEqual([{ action: "auth.session.create", reason_code: null }])
+
+    const remaining = await db
+      .prepare("SELECT COUNT(*) AS count FROM system_browser_login_codes")
+      .first<number>("count")
+    expect(remaining).toBe(0)
+  })
+
+  test("consumes the code so it cannot be exchanged twice", async () => {
+    const db = await createTestDb()
+    await seedBrowserLoginCode(db, "raw-code-2", 1)
+
+    const first = await postBrowserToken(db, { code: "raw-code-2" })
+    expect(first.status).toBe(200)
+
+    const second = await postBrowserToken(db, { code: "raw-code-2" })
+    expect(second.status).toBe(401)
+
+    const remaining = await db
+      .prepare("SELECT COUNT(*) AS count FROM system_browser_login_codes")
+      .first<number>("count")
+    expect(remaining).toBe(0)
+  })
+
+  test("returns 401 for an unknown code", async () => {
+    const db = await createTestDb()
+
+    const response = await postBrowserToken(db, { code: "never-issued" })
+
+    expect(response.status).toBe(401)
+  })
+
+  test("returns 401 for an expired code", async () => {
+    const db = await createTestDb()
+    await seedBrowserLoginCode(db, "raw-code-expired", 1, nowEpochMilliseconds - 1)
+
+    const response = await postBrowserToken(db, { code: "raw-code-expired" })
+
+    expect(response.status).toBe(401)
+  })
+
+  test("returns 401 when the account was suspended after the code was issued", async () => {
+    const db = await createTestDb()
+    await seedBrowserLoginCode(db, "raw-code-suspended", 1)
+    await db
+      .prepare(
+        `UPDATE system_accounts
+         SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+         WHERE id = 1`,
+      )
+      .run()
+
+    const response = await postBrowserToken(db, { code: "raw-code-suspended" })
+
+    expect(response.status).toBe(401)
+    expect(await auditRows(db)).toEqual([])
+  })
+
+  test("rejects an empty code with a 400", async () => {
+    const db = await createTestDb()
+
+    const response = await postBrowserToken(db, { code: "" })
+
+    expect(response.status).toBe(400)
+  })
+})

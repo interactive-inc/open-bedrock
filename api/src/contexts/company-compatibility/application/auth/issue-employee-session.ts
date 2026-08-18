@@ -1,4 +1,4 @@
-import type { AccessTokenView } from "@/api/legacy-system/use-cases/auth/access-token-view"
+import type { AccessTokenView } from "@system/domain/auth/access-token-view"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import type { Context } from "@/env"

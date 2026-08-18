@@ -8,7 +8,6 @@ export async function replaceAccountRolesWithPermissionSets(
 ): Promise<ReadonlyArray<{ id: number; key: string }>> {
   const db = context.env.DB
 
-  await db.prepare("DELETE FROM account_roles WHERE account_id = ?1").bind(accountId).run()
   await db
     .prepare("DELETE FROM system_role_bindings WHERE account_id = ?1")
     .bind(String(accountId))
@@ -18,11 +17,16 @@ export async function replaceAccountRolesWithPermissionSets(
 
   for (const [index, permissionKeys] of permissionSets.entries()) {
     const roleKey = `${roleKeyPrefix}-${index + 1}`
-    const inserted = await db
-      .prepare("INSERT INTO roles (key, name, is_system, created_at) VALUES (?1, ?1, 0, 0)")
-      .bind(roleKey)
-      .run()
-    const roleId = inserted.meta.last_row_id
+    const roleId = await db
+      .prepare(
+        `SELECT COALESCE(MAX(CAST(id AS INTEGER)), 9999) + 1 AS id
+         FROM system_iam_roles
+         WHERE id GLOB '[0-9]*'`,
+      )
+      .first<number>("id")
+    if (roleId === null || !Number.isSafeInteger(roleId)) {
+      throw new Error("failed to allocate a test system IAM role ID")
+    }
     await db
       .prepare(
         `INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
@@ -34,13 +38,6 @@ export async function replaceAccountRolesWithPermissionSets(
     for (const permissionKey of permissionKeys) {
       await db
         .prepare(
-          `INSERT INTO role_permissions (role_id, permission_id)
-           SELECT ?1, id FROM permissions WHERE key = ?2`,
-        )
-        .bind(roleId, permissionKey)
-        .run()
-      await db
-        .prepare(
           `INSERT INTO system_iam_role_permissions (role_id, permission_key)
            VALUES (?1, ?2)`,
         )
@@ -48,12 +45,6 @@ export async function replaceAccountRolesWithPermissionSets(
         .run()
     }
 
-    await db
-      .prepare(
-        "INSERT INTO account_roles (account_id, role_id, granted_by, granted_at) VALUES (?1, ?2, NULL, 0)",
-      )
-      .bind(accountId, roleId)
-      .run()
     await db
       .prepare(
         `INSERT INTO system_role_bindings

@@ -126,7 +126,7 @@ export class LivePermissionGuard {
     return `SELECT DISTINCT permission.permission_key AS key
             FROM system_accounts actor_account
             INNER JOIN account_employee_links actor_link
-              ON CAST(actor_link.account_id AS TEXT) = actor_account.id
+              ON actor_link.account_id = actor_account.id
             INNER JOIN employees actor_employee ON actor_employee.id = actor_link.employee_id
             INNER JOIN system_role_bindings assignment ON assignment.account_id = actor_account.id
             INNER JOIN system_iam_role_permissions permission ON permission.role_id = assignment.role_id

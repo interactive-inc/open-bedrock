@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { RoleRepository } from "@/contexts/company-compatibility/infrastructure/iam/role-repository"
-import { hasPermissionSuperset } from "@/api/legacy-system/use-cases/iam/has-permission-superset"
+import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
 
 export type Command = {
   session: Session
@@ -42,7 +42,7 @@ export class DeleteRole {
       return new UnexpectedError("failed to load role permissions", { cause: permissionKeys })
     }
 
-    if (hasPermissionSuperset(command.session, permissionKeys) === false) {
+    if (hasSystemPermissionSuperset(command.session, permissionKeys) === false) {
       return new ForbiddenError("cannot delete a higher privilege role", "role_escalation")
     }
 

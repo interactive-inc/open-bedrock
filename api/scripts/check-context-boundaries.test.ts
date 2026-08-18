@@ -18,7 +18,7 @@ import { LIB_BOUNDARY_BASELINE } from "./lib-boundary-baseline"
 import { describe, expect, test } from "bun:test"
 
 describe("API root structure", () => {
-  test("HTTP composition・横断test・System互換adapterだけを許可する", () => {
+  test("HTTP compositionと横断testだけを許可する", () => {
     expect(inspectApiRootPath("src/api/api-route-module.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/app-base.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/app.ts")).toEqual([])
@@ -26,9 +26,10 @@ describe("API root structure", () => {
     expect(inspectApiRootPath("src/api/read-http-exception-problem.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/route-module.registry.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/to-negotiated-http-exception-response.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/http/dashboard/get-dashboard.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/routes/inbox/counts/route.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/test/app.test.ts")).toEqual([])
-    expect(inspectApiRootPath("src/api/legacy-system/adapters/auth/repository.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/system/auth/repository.ts")).not.toEqual([])
   })
 
   test("機能実装とDDD mini-treeの流入を拒否する", () => {
@@ -77,10 +78,7 @@ describe("context path classification", () => {
       context: "company",
       layer: "application",
     })
-    expect(classifyContextSource("src/api/legacy-system/model/auth/account.ts")).toEqual({
-      context: "system",
-      layer: "domain",
-    })
+    expect(classifyContextSource("src/api/system/auth/account.ts")).toBeNull()
     expect(classifyContextSource("src/infrastructure/care/repository.ts")).toEqual({
       context: "care",
       layer: "infrastructure",
@@ -103,10 +101,7 @@ describe("context path classification", () => {
       context: "system",
       layer: "application",
     })
-    expect(classifyContextModule("@/api/legacy-system/adapters/auth/repository")).toEqual({
-      context: "system",
-      layer: "infrastructure",
-    })
+    expect(classifyContextModule("@/api/system/auth/repository")).toBeNull()
     expect(classifyContextModule("@/infrastructure/shared/parse-d1-row")).toBeNull()
     expect(classifyContextModule("@/interface/utils/factory")).toBeNull()
     expect(classifyContextModule("zod")).toBeNull()
@@ -145,7 +140,7 @@ describe("context dependency matrix", () => {
       "src/contexts/care/application/example.ts",
       [
         'import type { Account } from "@system/domain/auth/account"',
-        'import { LegacyAccount } from "@/api/legacy-system/model/auth/account"',
+        'import { Account } from "@system/domain/auth/account.entity"',
         'import type { Employee } from "@/contexts/company-compatibility/domain/employee"',
         'import { parse } from "@/lib/parse"',
         'import { z } from "zod"',
@@ -220,6 +215,16 @@ describe("ownership manifest", () => {
     expect(
       inspectRouteOwnershipPath(
         "src/contexts/company/interface/routes/department-budgets/route.ts",
+      ),
+    ).not.toEqual([])
+    expect(
+      inspectRouteOwnershipPath(
+        "src/contexts/expense/interface/routes/department-budgets.summary.test.ts",
+      ),
+    ).toEqual([])
+    expect(
+      inspectRouteOwnershipPath(
+        "src/contexts/company/interface/routes/department-budgets.summary.ts",
       ),
     ).not.toEqual([])
   })

@@ -30,7 +30,7 @@ async function setupSystemSession(rawToken: string, options: SetupOptions = {}) 
   }
   await db
     .prepare(
-      `INSERT INTO accounts (id, status, token_version, created_at, updated_at)
+      `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
        VALUES (1, ?1, ?2, ?3, ?3)`,
     )
     .bind(

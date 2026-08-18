@@ -22,7 +22,7 @@ export class LastRootGuard {
       `SELECT CASE WHEN NOT EXISTS (
            SELECT 1
            FROM system_accounts a
-           JOIN account_employee_links link ON CAST(link.account_id AS TEXT) = a.id
+           JOIN account_employee_links link ON link.account_id = a.id
            JOIN employees e ON e.id = link.employee_id
            WHERE a.status = 'active'
              AND e.status <> 'retired'
@@ -54,7 +54,7 @@ export class LastRootGuard {
       `SELECT CASE WHEN EXISTS (
            SELECT 1
            FROM system_accounts target
-           JOIN account_employee_links target_link ON CAST(target_link.account_id AS TEXT) = target.id
+           JOIN account_employee_links target_link ON target_link.account_id = target.id
            WHERE target_link.employee_id = ?${employeeIdIndex}
              AND target.status = 'active'
              AND (
@@ -69,7 +69,7 @@ export class LastRootGuard {
          ) AND NOT EXISTS (
            SELECT 1
            FROM system_accounts a
-           JOIN account_employee_links link ON CAST(link.account_id AS TEXT) = a.id
+           JOIN account_employee_links link ON link.account_id = a.id
            JOIN employees e ON e.id = link.employee_id
            WHERE a.status = 'active'
              AND e.status <> 'retired'

@@ -1,5 +1,5 @@
 import { Glob } from "bun"
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { relative, resolve } from "node:path"
 import process from "node:process"
 import ts from "typescript"
@@ -15,7 +15,7 @@ const OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "context-ownership.json")
 const RETIRED_CONTEXT_NAMES = new Set(["request"])
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
-const API_ROOT_DIRECTORIES = new Set(["legacy-system", "routes", "test"])
+const API_ROOT_DIRECTORIES = new Set(["http", "routes", "test"])
 const API_ROOT_FILES = new Set([
   "api-route-module.ts",
   "app-base.ts",
@@ -33,12 +33,6 @@ const LAYER_FIRST_PLATFORM_DIRECTORIES = new Set([
   "test-helpers",
   "utils",
 ])
-const LEGACY_SYSTEM_LAYER_BY_DIRECTORY = {
-  adapters: "infrastructure",
-  model: "domain",
-  "use-cases": "application",
-} as const satisfies Readonly<Record<string, ContextLayer>>
-
 const ownershipManifest = z
   .strictObject({
     companyCoreAreas: z.array(z.string().min(1)),
@@ -107,8 +101,14 @@ export function inspectRouteOwnershipPath(file: string): ContextBoundaryViolatio
   if (match === null) return []
 
   const actualOwner = match[1]
-  const routePrefix = match[2]
-  if (actualOwner === undefined || routePrefix === undefined) return []
+  const routeEntry = match[2]
+  if (actualOwner === undefined || routeEntry === undefined) return []
+
+  const routeBase = routeEntry.replace(/(?:\.test)?\.ts$/, "")
+  const routePrefix = Object.keys(ownershipManifest.routeOwners)
+    .filter((prefix) => routeBase === prefix || routeBase.startsWith(`${prefix}.`))
+    .sort((left, right) => right.length - left.length)[0]
+  if (routePrefix === undefined) return []
 
   const expectedOwner = ownershipManifest.routeOwners[routePrefix]
   return expectedOwner === undefined || expectedOwner === actualOwner
@@ -119,6 +119,18 @@ export function inspectRouteOwnershipPath(file: string): ContextBoundaryViolatio
           reason: `route ${routePrefix} の所有者は ${expectedOwner} です: ${actualOwner}`,
         },
       ]
+}
+
+function hasFlatRoutePrefix(directory: string, routePrefix: string): boolean {
+  if (!existsSync(directory)) return false
+
+  return readdirSync(directory, { withFileTypes: true }).some(
+    (entry) =>
+      entry.isFile() &&
+      entry.name.endsWith(".ts") &&
+      !entry.name.endsWith(".test.ts") &&
+      (entry.name === `${routePrefix}.ts` || entry.name.startsWith(`${routePrefix}.`)),
+  )
 }
 
 /** manifestの所有contextとroute directoryが実在することを検査する。 */
@@ -136,19 +148,21 @@ export function inspectOwnershipManifest(): ContextBoundaryViolation[] {
   }
 
   for (const [routePrefix, owner] of Object.entries(ownershipManifest.routeOwners)) {
-    if (!existsSync(resolve(CONTEXTS_ROOT, owner, "interface", "routes", routePrefix))) {
+    if (
+      !hasFlatRoutePrefix(resolve(CONTEXTS_ROOT, owner, "interface", "routes"), routePrefix)
+    ) {
       violations.push({
         file: "context-ownership.json",
-        reason: `route所有directoryが存在しません: ${owner}/${routePrefix}`,
+        reason: `route所有fileが存在しません: ${owner}/${routePrefix}`,
       })
     }
   }
 
   for (const routePrefix of ownershipManifest.apiCompositionRoutePrefixes) {
-    if (!existsSync(resolve(API_ROOT, "routes", routePrefix))) {
+    if (!hasFlatRoutePrefix(resolve(API_ROOT, "routes"), routePrefix)) {
       violations.push({
         file: "context-ownership.json",
-        reason: `API composition routeが存在しません: ${routePrefix}`,
+        reason: `API composition route fileが存在しません: ${routePrefix}`,
       })
     }
   }
@@ -242,7 +256,7 @@ function isContextLayer(value: string): value is ContextLayer {
   return CONTEXT_LAYERS.some((layer) => layer === value)
 }
 
-/** context-first と移行前の layer-first path を同じ所有情報へ正規化する。 */
+/** context-first と製品固有のlayer-first pathを同じ所有情報へ正規化する。 */
 export function classifyContextSource(file: string): ContextSource | null {
   const normalized = file.replaceAll("\\", "/")
   const contextFirst = normalized.match(
@@ -256,15 +270,6 @@ export function classifyContextSource(file: string): ContextSource | null {
     return context !== undefined && layer !== undefined && isContextLayer(layer)
       ? { context, layer }
       : null
-  }
-
-  const legacySystem = normalized.match(
-    /(?:^|\/)src\/api\/legacy-system\/(model|use-cases|adapters)(?:\/|$)/,
-  )
-
-  if (legacySystem !== null) {
-    const directory = legacySystem[1] as keyof typeof LEGACY_SYSTEM_LAYER_BY_DIRECTORY
-    return { context: "system", layer: LEGACY_SYSTEM_LAYER_BY_DIRECTORY[directory] }
   }
 
   const layerFirst = normalized.match(
@@ -294,15 +299,6 @@ export function classifyContextModule(moduleSpecifier: string): ContextSource | 
     const layer = systemReference[1]
 
     return layer !== undefined && isContextLayer(layer) ? { context: "system", layer } : null
-  }
-
-  const legacySystemReference = moduleSpecifier.match(
-    /^@\/api\/legacy-system\/(model|use-cases|adapters)(?:\/|$)/,
-  )
-
-  if (legacySystemReference !== null) {
-    const directory = legacySystemReference[1] as keyof typeof LEGACY_SYSTEM_LAYER_BY_DIRECTORY
-    return { context: "system", layer: LEGACY_SYSTEM_LAYER_BY_DIRECTORY[directory] }
   }
 
   const contextFirst = moduleSpecifier.match(
@@ -417,8 +413,7 @@ function inspectModuleDependency(
   if (
     moduleSpecifier === "@/api" ||
     (moduleSpecifier.startsWith("@/api/") &&
-      !/^@\/api\/(?:domain|application|infrastructure|interface)\//.test(moduleSpecifier) &&
-      !/^@\/api\/legacy-system\/(?:model|use-cases|adapters)\//.test(moduleSpecifier))
+      !/^@\/api\/(?:domain|application|infrastructure|interface)\//.test(moduleSpecifier))
   ) {
     return [{ file, reason: `contextから API root へ依存しています: ${moduleSpecifier}` }]
   }

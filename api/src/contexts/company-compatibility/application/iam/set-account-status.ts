@@ -10,10 +10,10 @@ import {
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AccountRepository } from "@/contexts/company-compatibility/infrastructure/iam/account-repository"
-import { AccountAuthRepository } from "@/api/legacy-system/adapters/auth/account-auth-repository"
+import { AccountAuthRepository } from "@/contexts/company-compatibility/infrastructure/auth/account-auth-repository"
 import { LastRootError } from "@/contexts/company-compatibility/infrastructure/iam/last-root-error"
 import { LivePermissionGuardError } from "@/contexts/company-compatibility/infrastructure/iam/live-permission-guard-error"
-import { hasPermissionSuperset } from "@/api/legacy-system/use-cases/iam/has-permission-superset"
+import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
 
 export type Command = {
   session: Session
@@ -58,7 +58,7 @@ export class SetAccountStatus {
       return new NotFoundError("account not found", "account_not_found")
     }
 
-    if (hasPermissionSuperset(command.session, targetAccount.permissions) === false) {
+    if (hasSystemPermissionSuperset(command.session, targetAccount.permissions) === false) {
       return new ForbiddenError("cannot change a higher privilege account", "role_escalation")
     }
 

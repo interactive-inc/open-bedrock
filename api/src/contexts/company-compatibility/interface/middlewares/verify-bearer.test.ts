@@ -85,7 +85,7 @@ describe("verifyBearer lifecycle status", () => {
       const db = await database()
       await db
         .prepare(
-          `UPDATE accounts
+          `UPDATE system_accounts
            SET status = ?1,
                token_version = token_version + 1,
                updated_at = updated_at + 1

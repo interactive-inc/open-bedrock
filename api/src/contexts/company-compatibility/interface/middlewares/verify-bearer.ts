@@ -5,7 +5,7 @@ import { getAccountSessionRejection } from "@/contexts/system/domain/auth/get-ac
 import { parseBearerAuthorization } from "@/contexts/system/domain/auth/parse-bearer-authorization"
 import { zAccountId } from "@system/domain/auth/account-id"
 import type { HonoEnv } from "@/env"
-import { AccountAuthRepository } from "@/api/legacy-system/adapters/auth/account-auth-repository"
+import { AccountAuthRepository } from "@/contexts/company-compatibility/infrastructure/auth/account-auth-repository"
 import { AccountEmployeeLinkRepository } from "@/contexts/company-compatibility/infrastructure/employee/account-employee-link-repository"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 import { accessTokenService } from "@/contexts/company-compatibility/infrastructure/auth/jose-token-signer"
@@ -51,7 +51,11 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   const account = await accountPromise
   const canonicalSession = await canonicalSessionPromise
 
-  if (account === null || account instanceof Error) {
+  if (account instanceof Error) {
+    throw new UnauthorizedError("account authentication is unavailable")
+  }
+
+  if (account === null) {
     throw new UnauthorizedError("account not found")
   }
 

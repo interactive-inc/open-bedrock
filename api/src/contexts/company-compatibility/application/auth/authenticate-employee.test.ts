@@ -1,12 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { AuthenticateEmployee } from "@/contexts/company-compatibility/application/auth/authenticate-employee"
 import { accessTokenService } from "@/contexts/company-compatibility/infrastructure/auth/jose-token-signer"
-import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
 import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service"
-import { toLegacyPasswordHash } from "@/lib/auth/to-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
-import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
-import { IdentityRepository } from "@/contexts/company-compatibility/infrastructure/auth/identity-repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
@@ -294,79 +290,6 @@ describe("AuthenticateEmployee", () => {
     expect(result).toEqual({ reason: "invalid_credentials" })
   })
 
-  test("authenticates against a legacy hash and rehashes to the new format", async () => {
-    const { context, db } = createTestContext()
-
-    const legacyHash = await toLegacyPasswordHash("legacy-password")
-
-    await insertEmployee(db, {
-      id: 1,
-      email: "you+legacy@example.com",
-      passwordHash: legacyHash,
-    })
-
-    const result = await new AuthenticateEmployee(context).run({
-      email: "you+legacy@example.com",
-      password: "legacy-password",
-      jwtSecret,
-      userAgent: null,
-      now,
-    })
-
-    if (result instanceof Error || "reason" in result) {
-      throw new Error("expected access token")
-    }
-
-    // 段階移行: ログイン後は identity の secret が新形式に書き換えられているはず。
-    const repository = new IdentityRepository(context)
-
-    const found = await repository.findPasswordIdentityByEmail("you+legacy@example.com")
-
-    if (found === null || found instanceof Error || found.secret === null) {
-      throw new Error("identity should exist")
-    }
-
-    expect(isLegacyPasswordHash(found.secret)).toBe(false)
-    expect(found.secret.startsWith("pbkdf2:")).toBe(true)
-  })
-
-  test("authenticates against a wrapped-legacy hash and upgrades to pure PBKDF2", async () => {
-    const { context, db } = createTestContext()
-
-    const legacyHash = await toLegacyPasswordHash("wrapped-password")
-    const wrappedHash = await wrapLegacyHash(legacyHash)
-
-    await insertEmployee(db, {
-      id: 1,
-      email: "you+wrapped@example.com",
-      passwordHash: wrappedHash,
-    })
-
-    const result = await new AuthenticateEmployee(context).run({
-      email: "you+wrapped@example.com",
-      password: "wrapped-password",
-      jwtSecret,
-      userAgent: null,
-      now,
-    })
-
-    if (result instanceof Error || "reason" in result) {
-      throw new Error("expected access token")
-    }
-
-    // ログイン後は identity の secret が純正 PBKDF2 に昇格しているはず。
-    const repository = new IdentityRepository(context)
-
-    const found = await repository.findPasswordIdentityByEmail("you+wrapped@example.com")
-
-    if (found === null || found instanceof Error || found.secret === null) {
-      throw new Error("identity should exist")
-    }
-
-    expect(found.secret.startsWith("pbkdf2:")).toBe(true)
-    expect(found.secret.startsWith("pbkdf2-wrapped-legacy:")).toBe(false)
-  })
-
   test("rejects a retired employee with the correct password as invalid_credentials (#775)", async () => {
     const { context, db } = createTestContext()
 
@@ -433,16 +356,18 @@ describe("AuthenticateEmployee", () => {
       now,
     })
 
-    const repository = new IdentityRepository(context)
-
-    const found = await repository.findPasswordIdentityByEmail("you+modern@example.com")
-
-    if (found === null || found instanceof Error) {
-      throw new Error("identity should exist")
-    }
-
-    // 既に新形式なので、ハッシュ値そのものが変化していないこと。
-    expect(found.secret).toBe(hash)
+    expect(
+      await db
+        .prepare(
+          `SELECT credential.password_hash
+           FROM system_password_credentials AS credential
+           INNER JOIN system_identity_bindings AS identity
+             ON identity.id = credential.identity_id
+           WHERE identity.provider = 'password' AND identity.subject = ?1`,
+        )
+        .bind("you+modern@example.com")
+        .first<string>("password_hash"),
+    ).toBe(hash)
   })
 
   test("fails closed and rolls the refresh token back when the success audit insert fails", async () => {

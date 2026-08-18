@@ -17,17 +17,20 @@ describe("resolveOrganizationalAuthorityCandidates", () => {
         (2, 'E002', 'Subject', 'active', NULL),
         (3, 'E003', 'Archived', 'active', 1),
         (4, 'E004', 'Retired', 'retired', NULL);
-      INSERT INTO accounts (id, status, created_at, updated_at) VALUES
+      INSERT INTO system_accounts (id, status, created_at, updated_at) VALUES
         (11, 'active', 0, 0),
         (12, 'active', 0, 0),
         (13, 'active', 0, 0),
         (14, 'active', 0, 0);
       INSERT INTO account_employee_links (account_id, employee_id) VALUES
         (11, 1), (12, 2), (13, 3), (14, 4);
-      INSERT INTO roles (id, key, name, is_system, created_at)
-        VALUES (1, 'technical_admin', 'Technical admin', 1, 0);
-      INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
-        VALUES (11, 1, NULL, 0);
+      INSERT INTO system_iam_roles
+        (id, key, kind, name, description, created_at, updated_at)
+        VALUES ('technical-admin', 'company:technical_admin', 'managed',
+                'Technical admin', NULL, 0, 0);
+      INSERT INTO system_role_bindings
+        (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+        VALUES ('test:11:technical-admin', '11', 'technical-admin', NULL, NULL, 0, NULL);
       INSERT INTO departments (id, name) VALUES (1, 'Product');
       INSERT INTO org_departments
         (code, department_id, parent_code, manager_employee_code, sort_order)
@@ -62,7 +65,7 @@ describe("resolveOrganizationalAuthorityCandidates", () => {
       INSERT INTO employees (id, code, name, status) VALUES
         (1, 'E001', 'One', 'active'),
         (2, 'E002', 'Two', 'active');
-      INSERT INTO accounts (id, status, created_at, updated_at) VALUES
+      INSERT INTO system_accounts (id, status, created_at, updated_at) VALUES
         (11, 'active', 0, 0), (12, 'active', 0, 0);
       INSERT INTO account_employee_links (account_id, employee_id) VALUES (11, 1), (12, 2);
       INSERT INTO departments (id, name) VALUES (1, 'Product');
@@ -113,7 +116,7 @@ describe("resolveOrganizationalAuthorityCandidates", () => {
       INSERT INTO employees (id, code, name, status) VALUES
         (1, 'E001', 'Manager', 'active'),
         (2, 'E002', 'Subject', 'active');
-      INSERT INTO accounts (id, status, created_at, updated_at) VALUES
+      INSERT INTO system_accounts (id, status, created_at, updated_at) VALUES
         (11, 'active', 0, 0), (12, 'active', 0, 0);
       INSERT INTO account_employee_links (account_id, employee_id) VALUES (11, 1), (12, 2);
       INSERT INTO employment_period_versions
@@ -292,7 +295,7 @@ describe("resolveOrganizationalAuthorityCandidates", () => {
       INSERT INTO employees (id, code, name, status) VALUES
         (1, 'E001', 'Manager', 'active'),
         (2, 'E002', 'Subject', 'active');
-      INSERT INTO accounts (id, status, created_at, updated_at) VALUES
+      INSERT INTO system_accounts (id, status, created_at, updated_at) VALUES
         (11, 'active', 0, 0), (12, 'active', 0, 0);
       INSERT INTO account_employee_links (account_id, employee_id) VALUES (11, 1), (12, 2);
       INSERT INTO departments (id, name) VALUES (1, 'Product');

@@ -815,8 +815,12 @@ describe("AuditEventRepository write contract", () => {
       await rejectionOf(
         db.batch([
           db
-            .prepare("INSERT INTO roles (key, name, is_system, created_at) VALUES (?1, ?2, 0, 0)")
-            .bind("atomic-role", "Atomic role"),
+            .prepare(
+              `INSERT INTO system_iam_roles
+                 (id, key, kind, name, description, created_at, updated_at)
+               VALUES ('test:atomic-role', ?1, 'custom', ?2, NULL, 0, 0)`,
+            )
+            .bind("company:test:atomic-role", "Atomic role"),
           ...repository.prepareAppend(record()),
         ]),
       ),
@@ -824,7 +828,9 @@ describe("AuditEventRepository write contract", () => {
 
     expect(
       await db
-        .prepare("SELECT COUNT(*) AS count FROM roles WHERE key = 'atomic-role'")
+        .prepare(
+          "SELECT COUNT(*) AS count FROM system_iam_roles WHERE key = 'company:test:atomic-role'",
+        )
         .first<number>("count"),
     ).toBe(0)
   })
@@ -845,15 +851,21 @@ describe("AuditEventRepository write contract", () => {
       await rejectionOf(
         db.batch([
           db
-            .prepare("INSERT INTO roles (key, name, is_system, created_at) VALUES (?1, ?2, 0, 0)")
-            .bind("ignored-audit-role", "Ignored audit role"),
+            .prepare(
+              `INSERT INTO system_iam_roles
+                 (id, key, kind, name, description, created_at, updated_at)
+               VALUES ('test:ignored-audit-role', ?1, 'custom', ?2, NULL, 0, 0)`,
+            )
+            .bind("company:test:ignored-audit-role", "Ignored audit role"),
           ...repository.prepareAppend(record({ eventId: "silently-ignored-in-batch" })),
         ]),
       ),
     ).toBeInstanceOf(Error)
     expect(
       await db
-        .prepare("SELECT COUNT(*) AS count FROM roles WHERE key = 'ignored-audit-role'")
+        .prepare(
+          "SELECT COUNT(*) AS count FROM system_iam_roles WHERE key = 'company:test:ignored-audit-role'",
+        )
         .first<number>("count"),
     ).toBe(0)
   })
@@ -866,7 +878,9 @@ describe("AuditEventRepository write contract", () => {
       await rejectionOf(
         db.batch([
           db.prepare(
-            "INSERT INTO roles (key, name, is_system, created_at) VALUES ('root', 'x', 0, 0)",
+            `INSERT INTO system_iam_roles
+               (id, key, kind, name, description, created_at, updated_at)
+             VALUES ('test:duplicate-root', 'company:root', 'custom', 'x', NULL, 0, 0)`,
           ),
           ...repository.prepareAppend(record({ eventId: "must-not-remain" })),
         ]),

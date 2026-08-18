@@ -6,7 +6,7 @@ export const companyRouteManifest = [
     phase: "authenticated",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/capabilities/route",
+      module: "@/contexts/company/interface/routes/company.v1.capabilities",
       exportName: "GET",
     },
   },
@@ -16,7 +16,7 @@ export const companyRouteManifest = [
     phase: "authenticated",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/profile",
+      module: "@/contexts/company/interface/routes/company.v1.profile",
       exportName: "GET",
     },
   },
@@ -26,7 +26,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/profile",
+      module: "@/contexts/company/interface/routes/company.v1.profile",
       exportName: "POST",
     },
   },
@@ -36,7 +36,7 @@ export const companyRouteManifest = [
     phase: "authenticated",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/people",
+      module: "@/contexts/company/interface/routes/company.v1.people",
       exportName: "GET",
     },
   },
@@ -46,7 +46,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/people",
+      module: "@/contexts/company/interface/routes/company.v1.people",
       exportName: "POST",
     },
   },
@@ -56,7 +56,7 @@ export const companyRouteManifest = [
     phase: "authenticated",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/employees",
+      module: "@/contexts/company/interface/routes/company.v1.employees",
       exportName: "GET",
     },
   },
@@ -66,7 +66,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/employees",
+      module: "@/contexts/company/interface/routes/company.v1.employees",
       exportName: "POST",
     },
   },
@@ -76,7 +76,7 @@ export const companyRouteManifest = [
     phase: "authenticated",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/employments",
+      module: "@/contexts/company/interface/routes/company.v1.employments",
       exportName: "GET",
     },
   },
@@ -86,7 +86,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/employments",
+      module: "@/contexts/company/interface/routes/company.v1.employments",
       exportName: "POST",
     },
   },
@@ -96,7 +96,7 @@ export const companyRouteManifest = [
     phase: "authenticated",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/organization-snapshots",
+      module: "@/contexts/company/interface/routes/company.v1.organization-snapshots",
       exportName: "GET",
     },
   },
@@ -106,7 +106,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/organization-changes",
+      module: "@/contexts/company/interface/routes/company.v1.organization-changes",
       exportName: "POST",
     },
   },
@@ -116,7 +116,7 @@ export const companyRouteManifest = [
     phase: "authenticated",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/definitions",
+      module: "@/contexts/company/interface/routes/company.v1.definitions",
       exportName: "GET",
     },
   },
@@ -126,7 +126,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/definitions",
+      module: "@/contexts/company/interface/routes/company.v1.definitions",
       exportName: "POST",
     },
   },
@@ -136,7 +136,7 @@ export const companyRouteManifest = [
     phase: "authenticated",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/account-employee-links",
+      module: "@/contexts/company/interface/routes/company.v1.account-employee-links",
       exportName: "GET",
     },
   },
@@ -146,7 +146,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/account-employee-links",
+      module: "@/contexts/company/interface/routes/company.v1.account-employee-links",
       exportName: "POST",
     },
   },
@@ -156,7 +156,7 @@ export const companyRouteManifest = [
     phase: "authenticated",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/personnel-actions",
+      module: "@/contexts/company/interface/routes/company.v1.personnel-actions",
       exportName: "GET",
     },
   },
@@ -166,7 +166,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/personnel-actions",
+      module: "@/contexts/company/interface/routes/company.v1.personnel-actions",
       exportName: "POST",
     },
   },

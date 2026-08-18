@@ -2,6 +2,7 @@ import type { AccountStatus } from "@system/domain/auth/account-status"
 import type { AccountId } from "@system/domain/auth/account-id"
 import type { IdentityProvider } from "@system/domain/identity/identity-provider"
 import type { SystemAuditOutcome } from "@system/domain/audit/system-audit-event"
+import type { SystemBatchJobStatus } from "@system/domain/batch/system-batch-job-status"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import {
@@ -76,6 +77,29 @@ export const systemIdentityBindings = sqliteTable(
 
 export type SystemIdentityBindingRow = InferSelectModel<typeof systemIdentityBindings>
 
+/** providerが返す連絡先claim。Identityの同一性とcredentialから分離して更新できる。 */
+export const systemIdentityProfiles = sqliteTable(
+  "system_identity_profiles",
+  {
+    identityId: text("identity_id")
+      .primaryKey()
+      .references(() => systemIdentityBindings.id, { onDelete: "cascade" }),
+    email: text("email"),
+    emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
+    lastUsedAt: integer("last_used_at", { mode: "timestamp_ms" }),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    index("system_identity_profiles_email_idx").on(table.email),
+    check(
+      "system_identity_profiles_email_length",
+      sql`${table.email} IS NULL OR length(${table.email}) BETWEEN 3 AND 320`,
+    ),
+  ],
+)
+
+export type SystemIdentityProfileRow = InferSelectModel<typeof systemIdentityProfiles>
+
 /** password provider固有のsecret projection。encoded hashだけを保存する。 */
 export const systemPasswordCredentials = sqliteTable(
   "system_password_credentials",
@@ -147,6 +171,95 @@ export const systemSessions = sqliteTable(
 
 export type SystemSessionRow = InferSelectModel<typeof systemSessions>
 
+/** 外部Identity tokenのsingle-use jti。replay検知に必要な最小情報だけを保持する。 */
+export const systemIdentityLoginTokens = sqliteTable(
+  "system_identity_login_tokens",
+  {
+    jti: text("jti").primaryKey(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    usedAt: integer("used_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    index("system_identity_login_tokens_expires_idx").on(table.expiresAt),
+    check("system_identity_login_tokens_jti_length", sql`length(${table.jti}) BETWEEN 1 AND 512`),
+    check("system_identity_login_tokens_expiration", sql`${table.expiresAt} > ${table.usedAt}`),
+  ],
+)
+
+export type SystemIdentityLoginTokenRow = InferSelectModel<typeof systemIdentityLoginTokens>
+
+/** CLI login開始時のsingle-use state。brokerへCLI callback情報を直接露出しない。 */
+export const systemCliLoginStates = sqliteTable(
+  "system_cli_login_states",
+  {
+    state: text("state").primaryKey(),
+    port: integer("port").notNull(),
+    cliState: text("cli_state").notNull(),
+    codeVerifier: text("code_verifier").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    index("system_cli_login_states_expires_idx").on(table.expiresAt),
+    check("system_cli_login_states_state_length", sql`length(${table.state}) BETWEEN 16 AND 512`),
+    check("system_cli_login_states_port", sql`${table.port} BETWEEN 1 AND 65535`),
+    check(
+      "system_cli_login_states_cli_state_length",
+      sql`length(${table.cliState}) BETWEEN 1 AND 512`,
+    ),
+    check(
+      "system_cli_login_states_verifier_length",
+      sql`length(${table.codeVerifier}) BETWEEN 43 AND 128`,
+    ),
+    check("system_cli_login_states_expiration", sql`${table.expiresAt} > ${table.createdAt}`),
+  ],
+)
+
+export type SystemCliLoginStateRow = InferSelectModel<typeof systemCliLoginStates>
+
+/** CLI callbackからtoken交換へAccountだけを渡すhashed single-use code。 */
+export const systemCliLoginCodes = sqliteTable(
+  "system_cli_login_codes",
+  {
+    codeHash: text("code_hash").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => systemAccounts.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    index("system_cli_login_codes_expires_idx").on(table.expiresAt),
+    check("system_cli_login_codes_hash_length", sql`length(${table.codeHash}) BETWEEN 32 AND 512`),
+    check("system_cli_login_codes_expiration", sql`${table.expiresAt} > ${table.createdAt}`),
+  ],
+)
+
+export type SystemCliLoginCodeRow = InferSelectModel<typeof systemCliLoginCodes>
+
+/** Web browserからtoken交換へAccountだけを渡すhashed single-use code。 */
+export const systemBrowserLoginCodes = sqliteTable(
+  "system_browser_login_codes",
+  {
+    codeHash: text("code_hash").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => systemAccounts.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    index("system_browser_login_codes_expires_idx").on(table.expiresAt),
+    check(
+      "system_browser_login_codes_hash_length",
+      sql`length(${table.codeHash}) BETWEEN 32 AND 512`,
+    ),
+    check("system_browser_login_codes_expiration", sql`${table.expiresAt} > ${table.createdAt}`),
+  ],
+)
+
+export type SystemBrowserLoginCodeRow = InferSelectModel<typeof systemBrowserLoginCodes>
+
 /** namespaced permissionを束ねるSystem Role。permission vocabulary自体は各contextが所有する。 */
 export const systemIamRoles = sqliteTable(
   "system_iam_roles",
@@ -155,6 +268,7 @@ export const systemIamRoles = sqliteTable(
     key: text("key").notNull(),
     kind: text("kind", { enum: ["managed", "custom"] }).notNull(),
     name: text("name").notNull(),
+    description: text("description"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
   },
@@ -164,6 +278,10 @@ export const systemIamRoles = sqliteTable(
     check("system_iam_roles_key_length", sql`length(${table.key}) BETWEEN 3 AND 100`),
     check("system_iam_roles_kind", sql`${table.kind} IN ('managed', 'custom')`),
     check("system_iam_roles_name_length", sql`length(${table.name}) BETWEEN 1 AND 100`),
+    check(
+      "system_iam_roles_description_length",
+      sql`${table.description} IS NULL OR length(${table.description}) BETWEEN 1 AND 1000`,
+    ),
     check("system_iam_roles_chronology", sql`${table.updatedAt} >= ${table.createdAt}`),
   ],
 )
@@ -308,6 +426,30 @@ export const systemNotificationDeliveries = sqliteTable(
 
 export type SystemNotificationDeliveryRow = InferSelectModel<typeof systemNotificationDeliveries>
 
+/** 業務内容を解釈せず、非同期処理の実行状態だけを追跡する。 */
+export const systemBatchJobs = sqliteTable(
+  "system_batch_jobs",
+  {
+    id: integer("id").primaryKey(),
+    name: text("name").notNull(),
+    status: text("status").notNull().$type<SystemBatchJobStatus>(),
+    startedAt: integer("started_at", { mode: "timestamp_ms" }),
+    finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+    message: text("message"),
+  },
+  (table) => [
+    index("system_batch_jobs_status_idx").on(table.status, table.id),
+    check("system_batch_jobs_name_length", sql`length(${table.name}) BETWEEN 1 AND 200`),
+    check("system_batch_jobs_status", sql`${table.status} IN ('running', 'completed', 'failed')`),
+    check(
+      "system_batch_jobs_chronology",
+      sql`${table.finishedAt} IS NULL OR ${table.startedAt} IS NULL OR ${table.finishedAt} >= ${table.startedAt}`,
+    ),
+  ],
+)
+
+export type SystemBatchJobRow = InferSelectModel<typeof systemBatchJobs>
+
 /** Account lifecycle後も残るappend-onlyなsecurity audit envelope。 */
 export const systemAuditEvents = sqliteTable(
   "system_audit_events",
@@ -384,13 +526,19 @@ export type SystemBootstrapStateRow = InferSelectModel<typeof systemBootstrapSta
 export const systemCoreSchema = {
   systemAccounts,
   systemIdentityBindings,
+  systemIdentityProfiles,
   systemPasswordCredentials,
   systemSessions,
+  systemIdentityLoginTokens,
+  systemCliLoginStates,
+  systemCliLoginCodes,
+  systemBrowserLoginCodes,
   systemIamRoles,
   systemIamRolePermissions,
   systemRoleBindings,
   systemNotificationMessages,
   systemNotificationDeliveries,
+  systemBatchJobs,
   systemAuditEvents,
   systemBootstrapState,
 }

@@ -1,4 +1,4 @@
-import type { AccessTokenView } from "@/api/legacy-system/use-cases/auth/access-token-view"
+import type { AccessTokenView } from "@system/domain/auth/access-token-view"
 import { AccountEmployeeLinkRepository } from "@/contexts/company-compatibility/infrastructure/employee/account-employee-link-repository"
 import { JoseTokenSigner } from "@/contexts/company-compatibility/infrastructure/auth/jose-token-signer"
 import { resolveLiveEmployeeAccess } from "@/contexts/company-compatibility/application/auth/resolve-live-employee-access"

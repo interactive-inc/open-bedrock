@@ -21,10 +21,10 @@ describe("SyncExternalIdentities", () => {
     // 新規従業員は作らず、既存アカウントに oidc identity を足している。
     const identity = await db
       .prepare(
-        `SELECT link.employee_id AS employee_id, i.provider AS provider
-         FROM identities i
-         JOIN account_employee_links link ON link.account_id = i.account_id
-         WHERE i.subject = 'ext-link-1'`,
+        `SELECT link.employee_id AS employee_id, identity.provider AS provider
+         FROM system_identity_bindings AS identity
+         JOIN account_employee_links link ON link.account_id = identity.account_id
+         WHERE identity.subject = 'ext-link-1'`,
       )
       .first<{ employee_id: number; provider: string }>()
     expect(identity).toEqual({ employee_id: employeeId, provider: "oidc" })
