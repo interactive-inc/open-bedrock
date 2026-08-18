@@ -1,8 +1,6 @@
-import {
-  InvalidCalendarDateError,
-  isCalendarDate,
-  restoreCalendarDate,
-} from "@/contexts/company/domain/workforce/calendar-date"
+import { InvalidCalendarDateError } from "@/contexts/company/domain/workforce/invalid-calendar-date-error"
+import { isCalendarDate } from "@/contexts/company/domain/workforce/is-calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { describe, expect, test } from "bun:test"
 
 describe("CalendarDate", () => {

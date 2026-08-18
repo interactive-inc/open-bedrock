@@ -1,7 +1,7 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import type { OrganizationUnitPeriod } from "@/contexts/company/domain/workforce/organization-unit"
 import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { describe, expect, test } from "bun:test"
 
 const rootId = restoreWorkforceId("organization_unit", "company")

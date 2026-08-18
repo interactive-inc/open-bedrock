@@ -1,6 +1,6 @@
 import { isCanonicalEmployee } from "@/contexts/company/domain/workforce/is-canonical-employee"
 import type { Employee } from "@/contexts/company/domain/workforce/workforce-schedule"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { describe, expect, test } from "bun:test"
 
 const canonicalEmployee: Employee = {

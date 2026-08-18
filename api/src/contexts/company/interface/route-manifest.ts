@@ -26,7 +26,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/profile/route",
+      module: "@/contexts/company/interface/routes/company/v1/profile/create-route",
       exportName: "POST",
     },
   },
@@ -46,7 +46,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/people/route",
+      module: "@/contexts/company/interface/routes/company/v1/people/create-route",
       exportName: "POST",
     },
   },
@@ -66,7 +66,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/employees/route",
+      module: "@/contexts/company/interface/routes/company/v1/employees/create-route",
       exportName: "POST",
     },
   },
@@ -86,7 +86,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/employments/route",
+      module: "@/contexts/company/interface/routes/company/v1/employments/create-route",
       exportName: "POST",
     },
   },
@@ -126,7 +126,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/definitions/route",
+      module: "@/contexts/company/interface/routes/company/v1/definitions/create-route",
       exportName: "POST",
     },
   },
@@ -146,7 +146,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/account-employee-links/route",
+      module: "@/contexts/company/interface/routes/company/v1/account-employee-links/create-route",
       exportName: "POST",
     },
   },
@@ -166,7 +166,7 @@ export const companyRouteManifest = [
     phase: "audited",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company/v1/personnel-actions/route",
+      module: "@/contexts/company/interface/routes/company/v1/personnel-actions/create-route",
       exportName: "POST",
     },
   },

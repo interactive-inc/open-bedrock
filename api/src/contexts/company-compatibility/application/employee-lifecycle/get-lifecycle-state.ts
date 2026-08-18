@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
 import { ReadWorkforceState } from "@/contexts/company/application/workforce/read-workforce-state"
-import { isCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { isCalendarDate } from "@/contexts/company/domain/workforce/is-calendar-date"
 import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import {
   EmployeeLifecycleReadRepository,

@@ -1,7 +1,5 @@
-import {
-  InvalidWorkforceIdError,
-  restoreWorkforceId,
-} from "@/contexts/company/domain/workforce/workforce-id"
+import { InvalidWorkforceIdError } from "@/contexts/company/domain/workforce/invalid-workforce-id-error"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { describe, expect, test } from "bun:test"
 
 describe("restoreWorkforceId", () => {

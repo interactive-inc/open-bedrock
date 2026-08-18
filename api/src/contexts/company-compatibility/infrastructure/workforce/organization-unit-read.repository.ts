@@ -4,7 +4,7 @@ import type {
   OrganizationUnitSnapshotReadResult,
 } from "@/contexts/company/application/workforce/read-organization-state"
 import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
-import { WorkforceSnapshotChangedError } from "@/contexts/company/application/workforce/read-workforce-state"
+import { WorkforceSnapshotChangedError } from "@/contexts/company/application/workforce/workforce-snapshot-changed-error"
 import { projectOrganizationUnitSnapshot } from "@/contexts/company-compatibility/infrastructure/workforce/organization-unit-row.adapter"
 import {
   organizationChangeOperations,

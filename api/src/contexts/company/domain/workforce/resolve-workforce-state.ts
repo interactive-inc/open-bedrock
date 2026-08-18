@@ -1,25 +1,14 @@
-import { periodContainsDate } from "@/contexts/company/domain/workforce/effective-period"
+import { periodContainsDate } from "@/contexts/company/domain/workforce/period-contains-date"
+import { compareWorkforcePeriods } from "@/contexts/company/domain/workforce/compare-workforce-periods"
+import { WorkforceStateResolutionError } from "@/contexts/company/domain/workforce/workforce-state-resolution-error"
 import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
 import type {
-  EmploymentStatus,
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
   WorkforceLifecycleSchedule,
 } from "@/contexts/company/domain/workforce/workforce-schedule"
+import type { EmploymentStatus } from "@/contexts/company/domain/workforce/employment-status"
 import type { EmployeeId, EmploymentId } from "@/contexts/company/domain/workforce/workforce-id"
-
-export type WorkforceStateResolutionCode =
-  | "employment_state_ambiguous"
-  | "status_state_missing"
-  | "status_state_ambiguous"
-  | "primary_assignment_state_ambiguous"
-
-export class WorkforceStateResolutionError extends Error {
-  constructor(readonly code: WorkforceStateResolutionCode) {
-    super(code)
-    this.name = "WorkforceStateResolutionError"
-  }
-}
 
 export type WorkforceStateAt = Readonly<{
   employeeId: EmployeeId
@@ -30,13 +19,6 @@ export type WorkforceStateAt = Readonly<{
   concurrentAssignments: ReadonlyArray<OrgAssignmentPeriod>
   responsibilities: ReadonlyArray<OrgResponsibilityPeriod>
 }>
-
-function comparePeriods(
-  left: { startsOn: CalendarDate; periodId: string },
-  right: { startsOn: CalendarDate; periodId: string },
-): number {
-  return left.startsOn.localeCompare(right.startsOn) || left.periodId.localeCompare(right.periodId)
-}
 
 /** 正規化済みscheduleから、半開区間の基準日時点状態を決定的に解決する。 */
 export function resolveWorkforceStateAt(
@@ -88,7 +70,7 @@ export function resolveWorkforceStateAt(
         period.employmentId === employment.employmentId &&
         periodContainsDate(period, asOf),
     )
-    .sort(comparePeriods)
+    .sort(compareWorkforcePeriods)
   const primaryAssignments = assignments.filter(
     (assignment) => assignment.assignmentType === "PRIMARY",
   )
@@ -112,6 +94,6 @@ export function resolveWorkforceStateAt(
           period.employmentId === employment.employmentId &&
           periodContainsDate(period, asOf),
       )
-      .sort(comparePeriods),
+      .sort(compareWorkforcePeriods),
   }
 }

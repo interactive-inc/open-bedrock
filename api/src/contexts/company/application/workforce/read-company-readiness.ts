@@ -1,7 +1,5 @@
-import {
-  isCalendarDate,
-  type CalendarDate,
-} from "@/contexts/company/domain/workforce/calendar-date"
+import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { isCalendarDate } from "@/contexts/company/domain/workforce/is-calendar-date"
 
 export type CompanyMigrationStatus = "pending" | "backfilled" | "verified"
 

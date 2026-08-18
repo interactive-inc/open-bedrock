@@ -1,4 +1,4 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { OrganizationalAuthorityError } from "@/contexts/company/domain/workforce/organizational-authority-error"
 import type {
   OrganizationalAuthorityCriterion,
@@ -11,10 +11,10 @@ import type {
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
 } from "@/contexts/company/domain/workforce/workforce-schedule"
-import {
-  restoreWorkforceId,
-  type EmployeeId,
-  type OrganizationUnitId,
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
+import type {
+  EmployeeId,
+  OrganizationUnitId,
 } from "@/contexts/company/domain/workforce/workforce-id"
 import { describe, expect, test } from "bun:test"
 

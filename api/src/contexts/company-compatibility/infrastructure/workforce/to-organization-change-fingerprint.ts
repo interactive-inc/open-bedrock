@@ -1,4 +1,4 @@
-import type { OrganizationChangeSet } from "@/contexts/company/application/workforce/apply-organization-change"
+import type { OrganizationChangeSet } from "@/contexts/company/application/workforce/organization-change"
 
 /** operation IDを変更内容へ結び、同じcommandと異なる再利用を区別する。 */
 export async function toOrganizationChangeFingerprint(

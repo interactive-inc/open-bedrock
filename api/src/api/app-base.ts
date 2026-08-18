@@ -10,7 +10,7 @@ import { requestContextMiddleware } from "@/contexts/company-compatibility/inter
 import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { auditNoStore } from "@/contexts/company-compatibility/interface/middlewares/audit-no-store"
 import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import type { CompanyCapability } from "@/contexts/company/application/core/company-resource.service"
+import type { CompanyCapability } from "@/contexts/company/application/core/company-actor"
 import { toNegotiatedHttpExceptionResponse } from "@/api/to-negotiated-http-exception-response"
 
 /** CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。 */

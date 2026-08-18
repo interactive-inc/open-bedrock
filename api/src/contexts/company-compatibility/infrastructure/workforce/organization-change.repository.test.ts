@@ -1,7 +1,7 @@
 import { createTestContext } from "@/api/test/support/create-test-context"
-import type { OrganizationChangeSet } from "@/contexts/company/application/workforce/apply-organization-change"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import type { OrganizationChangeSet } from "@/contexts/company/application/workforce/organization-change"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { OrganizationChangeRepository } from "@/contexts/company-compatibility/infrastructure/workforce/organization-change.repository"
 import { describe, expect, test } from "bun:test"
 
