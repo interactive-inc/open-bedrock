@@ -302,6 +302,170 @@ server.tool(
 )
 
 // ---------------------------------------------------------------------------
+// Life Events
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "life_events_request",
+  "Submit a life event report (marriage, divorce, childbirth, relocation/address change, dependent added/removed).",
+  {
+    event_type: z
+      .enum([
+        "marriage",
+        "divorce",
+        "childbirth",
+        "relocation",
+        "dependent_added",
+        "dependent_removed",
+      ])
+      .describe("Life event type. Use 'relocation' for address changes."),
+    event_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .describe("Event date in YYYY-MM-DD (e.g. relocation date, marriage date)"),
+    detail: z
+      .string()
+      .max(3000)
+      .optional()
+      .describe(
+        "Optional detail. For relocation, include the new postal code, address, and phone number.",
+      ),
+  },
+  async (args) => {
+    const data = await apiRequest("/life-events", {
+      method: "POST",
+      json: {
+        event_type: args.event_type,
+        event_date: args.event_date,
+        detail: args.detail ?? null,
+      },
+    })
+
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
+  },
+)
+
+server.tool(
+  "life_events_mine",
+  "List my own life event reports and their statuses.",
+  {},
+  async () => {
+    const data = await apiRequest("/life-events/me")
+
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
+  },
+)
+
+// ---------------------------------------------------------------------------
+// Application Requests
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "application_templates_list",
+  "List application templates (request forms) that can be submitted. Each template defines its input schema.",
+  {
+    category: z.string().optional().describe("Filter by template category"),
+  },
+  async (args) => {
+    const data = await apiRequest("/application-templates", {
+      query: { category: args.category },
+    })
+
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
+  },
+)
+
+server.tool(
+  "application_requests_submit",
+  "Submit an application request based on a template. The payload must match the template's input schema.",
+  {
+    template_code: z.string().describe("Template code to submit against"),
+    payload: z
+      .record(z.string(), z.unknown())
+      .describe("Form values matching the template's field schema"),
+  },
+  async (args) => {
+    const data = await apiRequest("/application-requests", {
+      method: "POST",
+      json: { template_code: args.template_code, payload: args.payload },
+    })
+
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
+  },
+)
+
+server.tool(
+  "application_requests_mine",
+  "List my own application requests.",
+  {
+    status: z.string().optional().describe("Filter by status (e.g. pending, approved, rejected)"),
+  },
+  async (args) => {
+    const data = await apiRequest("/application-requests", { query: { status: args.status } })
+
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
+  },
+)
+
+server.tool(
+  "application_requests_inbox",
+  "List application requests waiting for my approval.",
+  {},
+  async () => {
+    const data = await apiRequest("/application-requests/inbox")
+
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
+  },
+)
+
+server.tool(
+  "application_requests_show",
+  "Get a single application request by ID, including its payload and approval history.",
+  {
+    application_id: z.string().regex(/^\d+$/).describe("The application request ID"),
+  },
+  async (args) => {
+    const data = await apiRequest(`/application-requests/${args.application_id}`)
+
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
+  },
+)
+
+server.tool(
+  "application_requests_approve",
+  "Approve an application request that is waiting for my approval.",
+  {
+    application_id: z.string().regex(/^\d+$/).describe("The application request ID"),
+    comment: z.string().optional().describe("Optional approval comment"),
+  },
+  async (args) => {
+    const data = await apiRequest(`/application-requests/${args.application_id}/approve`, {
+      method: "POST",
+      json: { comment: args.comment ?? null },
+    })
+
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
+  },
+)
+
+server.tool(
+  "application_requests_reject",
+  "Reject an application request that is waiting for my approval. A comment explaining the reason is required.",
+  {
+    application_id: z.string().regex(/^\d+$/).describe("The application request ID"),
+    comment: z.string().min(1).describe("Reason for rejection (required)"),
+  },
+  async (args) => {
+    const data = await apiRequest(`/application-requests/${args.application_id}/reject`, {
+      method: "POST",
+      json: { comment: args.comment },
+    })
+
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
+  },
+)
+
+// ---------------------------------------------------------------------------
 // Start
 // ---------------------------------------------------------------------------
 
