@@ -157,14 +157,19 @@ export const zGovernanceMetadata = z
     effective_from: date.nullable().default(null),
     effective_to: date.nullable().default(null),
     review_due_on: date.nullable().default(null),
-    audience: zAudience.default({}),
-    publication: zPublication.default({}),
+    audience: zAudience.default({
+      all_employees: true,
+      employee_statuses: ["active", "leave"],
+      department_codes: [],
+      org_roles: [],
+    }),
+    publication: zPublication.default({ mode: "direct", approver_org_roles: [] }),
     acknowledgement: z
       .strictObject({
         required: z.boolean().default(false),
         renew_on_change: z.boolean().default(true),
       })
-      .default({}),
+      .default({ required: false, renew_on_change: true }),
     tags: z.array(code).max(50).default([]),
     references: z.array(zGovernanceReference).max(200).default([]),
     procedure: zProcedureDefinition.nullable().default(null),

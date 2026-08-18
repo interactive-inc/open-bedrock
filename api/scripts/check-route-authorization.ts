@@ -221,7 +221,7 @@ export async function checkRouteAuthorization(): Promise<{
 
     const globallyAuthenticated =
       companyV1HasGlobalBearer &&
-      routeFile.file.startsWith("contexts/company/interface/routes/company/v1/")
+      routeFile.file.startsWith("contexts/company/interface/routes/company.v1.")
     violations.push(...inspectRouteFile(routeFile.file, source, globallyAuthenticated))
 
     // 集計は handler 単位。ファイル単位だと GET と POST で方針が違う場合に数が合わない。

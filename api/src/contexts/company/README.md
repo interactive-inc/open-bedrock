@@ -20,17 +20,20 @@ interface -> application -> domain
 
 ## Explicit operations
 
-Every route and use case has a concrete name and one production file. Read and write routes for
-the same resource live in separate files. Shared core functions may implement repeated policy,
-but a route never selects behavior by passing a resource-type array to a generic HTTP factory.
+Every URL has one concrete route file. When the same URL supports both read and write,
+that file exports both `GET` and `POST` so the complete HTTP contract is readable in one place.
+Zod schemas are written directly in each validator. A schema change therefore cannot silently
+change unrelated endpoints through a shared schema graph.
 
-A production TypeScript file may export at most one runtime operation: one function, one class,
-or one HTTP method. It may additionally export immutable data and types. The contract test under
-`test/` prevents generic route factories and multi-operation files from returning.
+Application functions exist only when they enforce policy or invariants. A function that only
+renames another function or forwards its arguments is forbidden. Shared code is limited to
+security and consistency mechanisms that must have one implementation: organization access,
+capability checks, revision conflicts, idempotency, canonical serialization, and the atomic
+audit/write transaction.
 
 ## HTTP contract
 
-Zod schemas are the request contract. Hono validators expose those inferred inputs to
+Zod schemas in each route are the request contract. Hono validators expose those inferred inputs to
 `hono/client` so tests and consumers use typed path, method, header, query, and JSON values.
 Application and domain code do not depend on Hono or Zod.
 

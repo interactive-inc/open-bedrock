@@ -55,9 +55,9 @@ export class OrganizationWorkforceSnapshotRepository implements WorkforceSnapsho
             "SELECT id, code, name, phone FROM employees ORDER BY id",
           ).all<EmployeeRow>(),
           this.c.env.DB.prepare(
-            `SELECT CAST(link.account_id AS TEXT) AS account_id, link.employee_id
+            `SELECT link.account_id, link.employee_id
              FROM account_employee_links AS link
-             JOIN system_accounts AS account ON account.id = CAST(link.account_id AS TEXT)
+             JOIN system_accounts AS account ON account.id = link.account_id
              WHERE account.status = 'active'
              ORDER BY link.employee_id, account.id`,
           ).all<LinkRow>(),

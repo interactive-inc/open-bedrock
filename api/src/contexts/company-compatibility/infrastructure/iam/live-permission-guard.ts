@@ -29,7 +29,7 @@ export class LivePermissionGuard {
     return this.rolePermissionGuard({
       ...input,
       targetColumn: "id",
-      targetValue: input.targetRoleId,
+      targetValue: String(input.targetRoleId),
     })
   }
 
@@ -40,7 +40,7 @@ export class LivePermissionGuard {
     return this.rolePermissionGuard({
       ...input,
       targetColumn: "key",
-      targetValue: input.targetRoleKey,
+      targetValue: `company:${input.targetRoleKey}`,
     })
   }
 
@@ -57,14 +57,15 @@ export class LivePermissionGuard {
       `WITH actor_permissions AS (
            ${this.actorPermissionsSql()}
          ), target_permissions AS (
-           SELECT DISTINCT permission.key
-           FROM account_roles assignment
-           INNER JOIN role_permissions role_permission ON role_permission.role_id = assignment.role_id
-           INNER JOIN permissions permission ON permission.id = role_permission.permission_id
+           SELECT DISTINCT permission.permission_key AS key
+           FROM system_role_bindings assignment
+           INNER JOIN system_iam_role_permissions permission ON permission.role_id = assignment.role_id
            WHERE assignment.account_id = ?2
+             AND assignment.resource_type IS NULL
+             AND assignment.revoked_at IS NULL
          )
          SELECT CASE WHEN
-           EXISTS (SELECT 1 FROM accounts WHERE id = ?2)
+           EXISTS (SELECT 1 FROM system_accounts WHERE id = ?2)
            AND ${this.actorHasAllJsonPermissionsSql("?3")}
            AND NOT EXISTS (
              SELECT 1 FROM target_permissions target_permission
@@ -75,8 +76,8 @@ export class LivePermissionGuard {
            )
          THEN 1 ELSE ${ABORT_EXPRESSION} END AS ok`,
     ).bind(
-      input.actorAccountId,
-      input.targetAccountId,
+      String(input.actorAccountId),
+      String(input.targetAccountId),
       JSON.stringify([...input.requiredPermissionKeys]),
     )
   }
@@ -95,16 +96,15 @@ export class LivePermissionGuard {
       `WITH actor_permissions AS (
            ${this.actorPermissionsSql()}
          ), target_permissions AS (
-           SELECT DISTINCT permission.key
-           FROM roles target_role
-           INNER JOIN role_permissions role_permission ON role_permission.role_id = target_role.id
-           INNER JOIN permissions permission ON permission.id = role_permission.permission_id
+           SELECT DISTINCT permission.permission_key AS key
+           FROM system_iam_roles target_role
+           INNER JOIN system_iam_role_permissions permission ON permission.role_id = target_role.id
            WHERE target_role.${input.targetColumn} = ?2
            UNION
            SELECT CAST(value AS TEXT) FROM json_each(?4)
          )
          SELECT CASE WHEN
-           EXISTS (SELECT 1 FROM roles target_role WHERE target_role.${input.targetColumn} = ?2)
+           EXISTS (SELECT 1 FROM system_iam_roles target_role WHERE target_role.${input.targetColumn} = ?2)
            AND ${this.actorHasAllJsonPermissionsSql("?3")}
            AND NOT EXISTS (
              SELECT 1 FROM target_permissions target_permission
@@ -115,7 +115,7 @@ export class LivePermissionGuard {
            )
          THEN 1 ELSE ${ABORT_EXPRESSION} END AS ok`,
     ).bind(
-      input.actorAccountId,
+      String(input.actorAccountId),
       input.targetValue,
       JSON.stringify([...input.requiredPermissionKeys]),
       JSON.stringify([...additionalProtectedPermissionKeys]),
@@ -123,16 +123,17 @@ export class LivePermissionGuard {
   }
 
   private actorPermissionsSql(): string {
-    return `SELECT DISTINCT permission.key
-            FROM accounts actor_account
+    return `SELECT DISTINCT permission.permission_key AS key
+            FROM system_accounts actor_account
             INNER JOIN account_employee_links actor_link
               ON actor_link.account_id = actor_account.id
             INNER JOIN employees actor_employee ON actor_employee.id = actor_link.employee_id
-            INNER JOIN account_roles assignment ON assignment.account_id = actor_account.id
-            INNER JOIN role_permissions role_permission ON role_permission.role_id = assignment.role_id
-            INNER JOIN permissions permission ON permission.id = role_permission.permission_id
+            INNER JOIN system_role_bindings assignment ON assignment.account_id = actor_account.id
+            INNER JOIN system_iam_role_permissions permission ON permission.role_id = assignment.role_id
             WHERE actor_account.id = ?1
               AND actor_account.status = 'active'
+              AND assignment.resource_type IS NULL
+              AND assignment.revoked_at IS NULL
               AND actor_employee.status <> 'retired'`
   }
 

@@ -12,8 +12,8 @@ export async function updateSurveyResponse(
 ): Promise<SurveyResponseItem | Error> {
   const client = await createClient()
 
-  const response = await client.surveys.responses[":response_id"].$put({
-    param: { response_id: String(id) },
+  const response = await client.surveys.responses[":responseId"].$put({
+    param: { responseId: String(id) },
     json: request,
   })
 

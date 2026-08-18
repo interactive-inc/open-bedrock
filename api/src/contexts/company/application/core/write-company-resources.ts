@@ -7,10 +7,7 @@ import type {
 import { hasCompanyCapability } from "@/contexts/company/application/core/has-company-capability"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/core/company-resource-validation-error"
 import { validateCompanyResourceChange } from "@/contexts/company/domain/core/validate-company-resource-change"
-import type {
-  CompanyResourceChange,
-  CompanyResourceType,
-} from "@/contexts/company/domain/core/company-resource"
+import type { CompanyResourceChange } from "@/contexts/company/domain/core/company-resource"
 
 export type WriteCompanyResourcesResult =
   | CompanyResourceWriteResult
@@ -20,7 +17,6 @@ export type WriteCompanyResourcesResult =
 export async function writeCompanyResources(
   actor: CompanyActor,
   change: Omit<CompanyResourceChange, "actorAccountId">,
-  allowedTypes: ReadonlyArray<CompanyResourceType>,
   write: WriteCompanyResourcePersistence,
 ): Promise<WriteCompanyResourcesResult> {
   const organizationId = change.resources[0]?.organizationId ?? ""
@@ -33,13 +29,10 @@ export async function writeCompanyResources(
 
   const command: CompanyResourceChange = { ...change, actorAccountId: actor.accountId }
   const error = validateCompanyResourceChange(command)
-  if (
-    error !== null ||
-    command.resources.some((resource) => !allowedTypes.includes(resource.type))
-  ) {
+  if (error !== null) {
     return {
       kind: "invalid",
-      error: error ?? new CompanyResourceValidationError("invalid_resource"),
+      error,
     }
   }
 

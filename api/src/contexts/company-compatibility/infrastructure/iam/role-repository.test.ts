@@ -2,35 +2,22 @@ import { RoleRepository } from "@/contexts/company-compatibility/infrastructure/
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
-function seedDynamicRole(db: D1Database, key: string): Promise<number> {
-  return db
-    .prepare("INSERT INTO roles (key, name, is_system, created_at) VALUES (?1, ?2, 0, 0)")
-    .bind(key, key)
+async function seedDynamicRole(db: D1Database, key: string): Promise<number> {
+  const roleId = 999
+  await db
+    .prepare(
+      `INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
+       VALUES (?1, ?2, 'custom', ?3, 0, 0)`,
+    )
+    .bind(String(roleId), `company:${key}`, key)
     .run()
-    .then((result) => result.meta.last_row_id)
-}
-
-async function getPermissionIds(
-  db: D1Database,
-  keys: ReadonlyArray<string>,
-): Promise<ReadonlyArray<number>> {
-  const results: number[] = []
-
-  for (const key of keys) {
-    const row = await db.prepare("SELECT id FROM permissions WHERE key = ?1").bind(key).first()
-
-    if (row !== null) {
-      results.push((row as { id: number }).id)
-    }
-  }
-
-  return results
+  return roleId
 }
 
 async function countRolePermissions(db: D1Database, roleId: number): Promise<number> {
   const result = await db
-    .prepare("SELECT COUNT(*) as cnt FROM role_permissions WHERE role_id = ?1")
-    .bind(roleId)
+    .prepare("SELECT COUNT(*) as cnt FROM system_iam_role_permissions WHERE role_id = ?1")
+    .bind(String(roleId))
     .first()
 
   return (result as { cnt: number }).cnt
@@ -39,9 +26,9 @@ async function countRolePermissions(db: D1Database, roleId: number): Promise<num
 async function getRolePermissionKeys(db: D1Database, roleId: number): Promise<string[]> {
   const rows = await db
     .prepare(
-      "SELECT p.key FROM role_permissions rp JOIN permissions p ON p.id = rp.permission_id WHERE rp.role_id = ?1",
+      "SELECT permission_key AS key FROM system_iam_role_permissions WHERE role_id = ?1",
     )
-    .bind(roleId)
+    .bind(String(roleId))
     .all()
 
   return rows.results.map((row) => (row as { key: string }).key)
@@ -53,12 +40,12 @@ describe("RoleRepository.replacePermissions", () => {
     const repo = new RoleRepository(context)
 
     const roleId = await seedDynamicRole(db, "batch-replace-role")
-    const [permId] = await getPermissionIds(db, ["dashboard:view"])
-
     // 初期権限を設定
     await db
-      .prepare("INSERT INTO role_permissions (role_id, permission_id) VALUES (?1, ?2)")
-      .bind(roleId, permId)
+      .prepare(
+        "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES (?1, ?2)",
+      )
+      .bind(String(roleId), "dashboard:view")
       .run()
 
     expect(await countRolePermissions(db, roleId)).toBe(1)
@@ -80,11 +67,11 @@ describe("RoleRepository.replacePermissions", () => {
     const repo = new RoleRepository(context)
 
     const roleId = await seedDynamicRole(db, "empty-replace-role")
-    const [permId] = await getPermissionIds(db, ["dashboard:view"])
-
     await db
-      .prepare("INSERT INTO role_permissions (role_id, permission_id) VALUES (?1, ?2)")
-      .bind(roleId, permId)
+      .prepare(
+        "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES (?1, ?2)",
+      )
+      .bind(String(roleId), "dashboard:view")
       .run()
 
     const result = await repo.replacePermissions(roleId, [])

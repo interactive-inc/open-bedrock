@@ -6,6 +6,23 @@ import type {
 import type { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
 import type { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
 
+export type SystemNotification = Readonly<{
+  delivery: NotificationDelivery
+  message: NotificationMessage
+}>
+
+export type SystemNotificationPage = Readonly<{
+  items: ReadonlyArray<SystemNotification>
+  total: number
+}>
+
+export type ListSystemNotificationsProps = Readonly<{
+  recipientAccountId: AccountId
+  read: boolean | null
+  limit: number
+  offset: number
+}>
+
 export type MarkNotificationDeliveryReadProps = Readonly<{
   deliveryId: NotificationDeliveryId
   recipientAccountId: AccountId
@@ -22,7 +39,18 @@ export type NotificationRepository = Readonly<{
     deliveryId: NotificationDeliveryId,
     recipientAccountId: AccountId,
   ) => Promise<NotificationDelivery | null | Error>
+  findByDeliveryIdForAccount: (
+    deliveryId: NotificationDeliveryId,
+    recipientAccountId: AccountId,
+  ) => Promise<SystemNotification | null | Error>
+  listForAccount: (props: ListSystemNotificationsProps) => Promise<SystemNotificationPage | Error>
+  countUnreadForAccount: (recipientAccountId: AccountId) => Promise<number | Error>
   markDeliveryRead: (
     props: MarkNotificationDeliveryReadProps,
   ) => Promise<NotificationDelivery | null | Error>
+  markAllDeliveriesRead: (recipientAccountId: AccountId, readAt: Date) => Promise<number | Error>
+  dismissDelivery: (
+    deliveryId: NotificationDeliveryId,
+    recipientAccountId: AccountId,
+  ) => Promise<boolean | Error>
 }>

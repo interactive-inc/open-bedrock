@@ -8,14 +8,71 @@ const productionFiles = [...new Glob("**/*.ts").scanSync({ cwd: contextDirectory
   .sort()
 
 describe("Company file responsibility contract", () => {
-  test("production fileはtop-level操作を一つだけ持つ", () => {
+  test("route以外のproduction fileはtop-level操作を一つだけ持つ", () => {
     const violations = productionFiles.flatMap((file) => {
       const source = readFileSync(new URL(file, contextDirectory), "utf8")
       const operations =
         source.match(
           /^(?:export )?(?:async )?(?:function|class)|^export const (?:GET|POST|PUT|PATCH|DELETE)/gm,
         ) ?? []
-      return operations.length > 1 ? [`${file}: ${operations.join(", ")}`] : []
+      const isRoute = file.startsWith("interface/routes/")
+      const allowedOperations = isRoute ? 2 : 1
+      return operations.length > allowedOperations ? [`${file}: ${operations.join(", ")}`] : []
+    })
+
+    expect(violations).toEqual([])
+  })
+
+  test("同一URLのmethodを一ファイルに置きschemaと変換をrouteへ閉じる", () => {
+    const manifest = readFileSync(new URL("interface/route-manifest.ts", contextDirectory), "utf8")
+    const pairedRoutes = [
+      "account-employee-links",
+      "definitions",
+      "employees",
+      "employments",
+      "people",
+      "personnel-actions",
+      "profile",
+    ]
+    const violations = pairedRoutes.flatMap((route) => {
+      const file = `interface/routes/company.v1.${route}.ts`
+      const source = readFileSync(new URL(file, contextDirectory), "utf8")
+      return [
+        ...(!source.includes("export const GET") || !source.includes("export const POST")
+          ? [`${file}: GET and POST must be colocated`]
+          : []),
+        ...(source.match(/zValidator\(/g)?.length === 4
+          ? []
+          : [`${file}: validators must be explicit`]),
+        ...(source.includes("Schema") || source.includes("schema")
+          ? [`${file}: shared HTTP schema import`]
+          : []),
+        ...(manifest.split(`module: "@/contexts/company/interface/routes/company.v1.${route}"`)
+          .length -
+          1 ===
+        2
+          ? []
+          : [`${file}: manifest does not use one module`]),
+      ]
+    })
+
+    expect(violations).toEqual([])
+  })
+
+  test("薄いwrapperと汎用type再判定を再導入しない", () => {
+    const forbidden = [
+      "allowedTypes",
+      "toCompanyResourceChange",
+      "toCompanyReadQuery",
+      "companyReadHeaderSchema",
+      "companyReadQuerySchema",
+      "companyWriteHeaderSchema",
+      "createCompanyReadHandlers",
+      "createCompanyWriteHandlers",
+    ]
+    const violations = productionFiles.flatMap((file) => {
+      const source = readFileSync(new URL(file, contextDirectory), "utf8")
+      return forbidden.flatMap((token) => (source.includes(token) ? [`${file}: ${token}`] : []))
     })
 
     expect(violations).toEqual([])
@@ -40,7 +97,7 @@ describe("Company file responsibility contract", () => {
   test("HTTP testはHono hc clientから呼び出す", () => {
     const files = [
       "test/company-api.integration.test.ts",
-      "interface/routes/company/v1/capabilities/route.test.ts",
+      "interface/routes/company.v1.capabilities.test.ts",
     ]
     const violations = files.flatMap((file) => {
       const source = readFileSync(new URL(file, contextDirectory), "utf8")
@@ -50,5 +107,13 @@ describe("Company file responsibility contract", () => {
     })
 
     expect(violations).toEqual([])
+  })
+
+  test("routeはURLをdotで表すflat fileだけを許可する", () => {
+    const routeFiles = [...new Glob("interface/routes/**/*.ts").scanSync()]
+    expect(routeFiles.filter((file) => file.split("/").length !== 3)).toEqual([])
+    expect(
+      routeFiles.filter((file) => /\/(?:route|create-route)(?:\.test)?\.ts$/.test(file)),
+    ).toEqual([])
   })
 })

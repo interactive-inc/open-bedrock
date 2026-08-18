@@ -6,7 +6,7 @@ import { AccountRepository } from "@/contexts/company-compatibility/infrastructu
 import { LastRootError } from "@/contexts/company-compatibility/infrastructure/iam/last-root-error"
 import { LivePermissionGuardError } from "@/contexts/company-compatibility/infrastructure/iam/live-permission-guard-error"
 import { RoleRepository } from "@/contexts/company-compatibility/infrastructure/iam/role-repository"
-import { hasPermissionSuperset } from "@/api/legacy-system/use-cases/iam/has-permission-superset"
+import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
 
 export type Command = {
   session: Session
@@ -48,7 +48,7 @@ export class RevokeAccountRole {
       return new UnexpectedError("failed to load role permissions", { cause: rolePermissions })
     }
 
-    if (hasPermissionSuperset(command.session, rolePermissions) === false) {
+    if (hasSystemPermissionSuperset(command.session, rolePermissions) === false) {
       return new ForbiddenError("cannot revoke a higher privilege role", "role_escalation")
     }
 

@@ -22,7 +22,7 @@ export async function resolveCompanyAccountParticipants(
     const unique = [...new Set(accountIds)]
     const placeholders = unique.map((_, index) => `?${index + 1}`).join(", ")
     const rows = await c.env.DB.prepare(
-      `SELECT CAST(link.account_id AS TEXT) AS account_id,
+      `SELECT link.account_id,
               employee.id AS employee_id,
               employee.code AS employee_code,
               employee.name AS employee_name,
@@ -31,7 +31,7 @@ export async function resolveCompanyAccountParticipants(
               employee.archived_at
        FROM account_employee_links AS link
        JOIN employees AS employee ON employee.id = link.employee_id
-       WHERE CAST(link.account_id AS TEXT) IN (${placeholders})
+       WHERE link.account_id IN (${placeholders})
        ORDER BY account_id`,
     )
       .bind(...unique)
@@ -82,7 +82,7 @@ export async function resolveSystemAccountIdsForEmployees(
     const unique = [...new Set(employeeIds)]
     const placeholders = unique.map((_, index) => `?${index + 1}`).join(", ")
     const rows = await c.env.DB.prepare(
-      `SELECT CAST(account_id AS TEXT) AS account_id
+      `SELECT account_id
        FROM account_employee_links
        WHERE employee_id IN (${placeholders})`,
     )

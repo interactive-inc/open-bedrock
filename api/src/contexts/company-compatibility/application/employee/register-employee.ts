@@ -7,7 +7,7 @@ import { EmployeeRepository } from "@/contexts/company-compatibility/infrastruct
 import { AccountProvisioner } from "@/contexts/company-compatibility/infrastructure/iam/account-provisioner"
 import { LivePermissionGuard } from "@/contexts/company-compatibility/infrastructure/iam/live-permission-guard"
 import { RoleRepository } from "@/contexts/company-compatibility/infrastructure/iam/role-repository"
-import { validatePasswordComplexity } from "@/api/legacy-system/use-cases/auth/password-policy"
+import { validatePasswordComplexity } from "@/contexts/company-compatibility/application/auth/password-policy"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
@@ -17,7 +17,7 @@ import {
   UnexpectedError,
   ValidationError,
 } from "@/lib/errors"
-import { hasPermissionSuperset } from "@/api/legacy-system/use-cases/iam/has-permission-superset"
+import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
 
 export type Command = {
   session: Session
@@ -67,7 +67,7 @@ export class RegisterEmployee {
     if (rolePermissions instanceof Error) {
       return new UnexpectedError("failed to load role permissions", { cause: rolePermissions })
     }
-    if (!hasPermissionSuperset(command.session, rolePermissions)) {
+    if (!hasSystemPermissionSuperset(command.session, rolePermissions)) {
       return new ForbiddenError(
         "cannot assign a role with permissions you do not hold",
         "role_escalation_forbidden",

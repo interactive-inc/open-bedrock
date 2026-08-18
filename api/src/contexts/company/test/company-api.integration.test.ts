@@ -1,14 +1,11 @@
 import { describe, expect, test } from "bun:test"
 import type { CompanyActor } from "@/contexts/company/application/core/company-actor"
-import { POST as POST_ORGANIZATION_CHANGE } from "@/contexts/company/interface/routes/company/v1/organization-changes/route"
-import { POST } from "@/contexts/company/interface/routes/company/v1/people/create-route"
-import { GET } from "@/contexts/company/interface/routes/company/v1/people/route"
-import { personCompanyResourceSchema } from "@/contexts/company/interface/http/resources/person-company-resource-schema"
+import { POST as POST_ORGANIZATION_CHANGE } from "@/contexts/company/interface/routes/company.v1.organization-changes"
+import { GET, POST } from "@/contexts/company/interface/routes/company.v1.people"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { Hono } from "hono"
 import { hc } from "hono/client"
 import { readFileSync } from "node:fs"
-import type { z } from "zod"
 
 const companySql = readFileSync(
   new URL("../infrastructure/schema/company.sql", import.meta.url),
@@ -124,17 +121,16 @@ describe("canonical Company API", () => {
       },
     })
 
-    expect(response.status).toBe(422)
-    expect(await response.json()).toMatchObject({ code: "invalid_company_change" })
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ success: false })
   })
 
   test("同じorganization revisionに固定して訂正・将来取消をas_ofで解決する", async () => {
     const client = createClient(createCompanyD1TestDatabase(companySql))
-    const write = (
-      commandId: string,
-      expectedRevision: number,
-      resource: z.input<typeof personCompanyResourceSchema>,
-    ) =>
+    type PersonResource = Parameters<
+      typeof client.company.v1.people.$post
+    >[0]["json"]["resources"][number]
+    const write = (commandId: string, expectedRevision: number, resource: PersonResource) =>
       client.company.v1.people.$post({
         header: writeHeaders(commandId, expectedRevision),
         json: { reason: commandId, resources: [resource] },

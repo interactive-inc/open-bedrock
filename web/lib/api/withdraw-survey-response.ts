@@ -8,8 +8,8 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function withdrawSurveyResponse(id: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.surveys.responses[":response_id"].$delete({
-    param: { response_id: String(id) },
+  const response = await client.surveys.responses[":responseId"].$delete({
+    param: { responseId: String(id) },
   })
 
   if (response.status >= 400) {

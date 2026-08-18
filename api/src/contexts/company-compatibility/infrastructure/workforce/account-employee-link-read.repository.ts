@@ -38,15 +38,15 @@ export class AccountEmployeeLinkReadRepository implements AccountEmployeeLinkRea
     try {
       const statement = this.c.env.DB.prepare(
         `SELECT
-           CAST(link.account_id AS TEXT) AS account_id,
+           link.account_id,
            link.employee_id AS employee_id,
            account.status AS account_status
          FROM account_employee_links link
          LEFT JOIN system_accounts account
-           ON account.id = CAST(link.account_id AS TEXT)
+           ON account.id = link.account_id
          WHERE ${
            query.kind === "by_account"
-             ? "CAST(link.account_id AS TEXT) = ?1"
+             ? "link.account_id = ?1"
              : "link.employee_id = ?1"
          }`,
       ).bind(query.kind === "by_account" ? query.accountId : employeeId)

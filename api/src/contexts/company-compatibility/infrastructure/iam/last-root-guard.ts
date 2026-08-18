@@ -21,18 +21,19 @@ export class LastRootGuard {
     return this.c.env.DB.prepare(
       `SELECT CASE WHEN NOT EXISTS (
            SELECT 1
-           FROM accounts a
+           FROM system_accounts a
            JOIN account_employee_links link ON link.account_id = a.id
            JOIN employees e ON e.id = link.employee_id
            WHERE a.status = 'active'
              AND e.status <> 'retired'
              AND (
-               SELECT COUNT(DISTINCT p.key)
-               FROM account_roles ar
-               JOIN role_permissions rp ON rp.role_id = ar.role_id
-               JOIN permissions p ON p.id = rp.permission_id
-               WHERE ar.account_id = a.id
-                 AND p.key IN (${placeholders})
+               SELECT COUNT(DISTINCT permission.permission_key)
+               FROM system_role_bindings binding
+               JOIN system_iam_role_permissions permission ON permission.role_id = binding.role_id
+               WHERE binding.account_id = a.id
+                 AND binding.resource_type IS NULL
+                 AND binding.revoked_at IS NULL
+                 AND permission.permission_key IN (${placeholders})
              ) = ?${requiredPermissionCountIndex}
          ) THEN json_extract('', '$') ELSE 1 END AS ok`,
     ).bind(...EFFECTIVE_ROOT_PERMISSION_KEYS, EFFECTIVE_ROOT_PERMISSION_KEYS.length)
@@ -52,32 +53,34 @@ export class LastRootGuard {
     return this.c.env.DB.prepare(
       `SELECT CASE WHEN EXISTS (
            SELECT 1
-           FROM accounts target
+           FROM system_accounts target
            JOIN account_employee_links target_link ON target_link.account_id = target.id
            WHERE target_link.employee_id = ?${employeeIdIndex}
              AND target.status = 'active'
              AND (
-               SELECT COUNT(DISTINCT p.key)
-               FROM account_roles ar
-               JOIN role_permissions rp ON rp.role_id = ar.role_id
-               JOIN permissions p ON p.id = rp.permission_id
-               WHERE ar.account_id = target.id
-                 AND p.key IN (${placeholders})
+               SELECT COUNT(DISTINCT permission.permission_key)
+               FROM system_role_bindings binding
+               JOIN system_iam_role_permissions permission ON permission.role_id = binding.role_id
+               WHERE binding.account_id = target.id
+                 AND binding.resource_type IS NULL
+                 AND binding.revoked_at IS NULL
+                 AND permission.permission_key IN (${placeholders})
              ) = ?${requiredPermissionCountIndex}
          ) AND NOT EXISTS (
            SELECT 1
-           FROM accounts a
+           FROM system_accounts a
            JOIN account_employee_links link ON link.account_id = a.id
            JOIN employees e ON e.id = link.employee_id
            WHERE a.status = 'active'
              AND e.status <> 'retired'
              AND (
-               SELECT COUNT(DISTINCT p.key)
-               FROM account_roles ar
-               JOIN role_permissions rp ON rp.role_id = ar.role_id
-               JOIN permissions p ON p.id = rp.permission_id
-               WHERE ar.account_id = a.id
-                 AND p.key IN (${placeholders})
+               SELECT COUNT(DISTINCT permission.permission_key)
+               FROM system_role_bindings binding
+               JOIN system_iam_role_permissions permission ON permission.role_id = binding.role_id
+               WHERE binding.account_id = a.id
+                 AND binding.resource_type IS NULL
+                 AND binding.revoked_at IS NULL
+                 AND permission.permission_key IN (${placeholders})
              ) = ?${requiredPermissionCountIndex}
          ) THEN json_extract('', '$') ELSE 1 END AS ok`,
     ).bind(...EFFECTIVE_ROOT_PERMISSION_KEYS, employeeId, EFFECTIVE_ROOT_PERMISSION_KEYS.length)

@@ -87,7 +87,7 @@ export class ArchiveEmployee {
     }
     const account = await this.c.env.DB.prepare(
       `SELECT account.id, account.token_version
-       FROM accounts account
+       FROM system_accounts account
        JOIN account_employee_links link ON link.account_id = account.id
        WHERE link.employee_id = ?1`,
     )
@@ -133,7 +133,7 @@ export class ArchiveEmployee {
         ).bind(employee.id, archivedAtSeconds, command.session.accountId, state.employeeRevision),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
         this.c.env.DB.prepare(
-          `UPDATE accounts SET status = 'suspended', token_version = token_version + 1,
+          `UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1,
                                  updated_at = ?2
              WHERE id = (
                SELECT account_id FROM account_employee_links WHERE employee_id = ?1

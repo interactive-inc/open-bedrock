@@ -1,27 +1,21 @@
 import type { Context } from "@/env"
-import {
-  accountRoles,
-  permissions,
-  rolePermissions,
-  roles,
-} from "@/api/legacy-system/adapters/schema/system"
-import type { RoleRow } from "@/api/legacy-system/adapters/schema/system"
-import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { LastRootError } from "@/contexts/company-compatibility/infrastructure/iam/last-root-error"
 import { LastRootGuard } from "@/contexts/company-compatibility/infrastructure/iam/last-root-guard"
 import { LivePermissionGuard } from "@/contexts/company-compatibility/infrastructure/iam/live-permission-guard"
 import { LivePermissionGuardError } from "@/contexts/company-compatibility/infrastructure/iam/live-permission-guard-error"
-import { eq } from "drizzle-orm"
+import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
+import { permissionKeySchema } from "@/contexts/company-compatibility/domain/iam/permission-key.catalog"
 
-export type RoleWithPermissions = {
-  role: RoleRow
-  permissionKeys: ReadonlyArray<string>
-}
+export type RoleRow = Readonly<{
+  id: number
+  key: string
+  name: string
+  description: string | null
+  isSystem: number
+  createdAt: number
+}>
 
-/**
- * roles と role_permissions を扱うリポジトリ。動的ロールの CRUD と permission 一括置換を担う。
- */
+/** 既存APIのnumber/key表現をcanonical System IAMへ写す互換Repository。 */
 export class RoleRepository {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -29,7 +23,14 @@ export class RoleRepository {
 
   async list(): Promise<ReadonlyArray<RoleRow> | Error> {
     try {
-      return await this.c.var.database.select().from(roles)
+      const rows = await this.c.env.DB.prepare(
+        `SELECT id, key, kind, name, created_at
+         FROM system_iam_roles ORDER BY id`,
+      ).all<Record<string, unknown>>()
+
+      const roles = rows.results.map((row) => this.toCompatibilityRole(row))
+      const invalid = roles.find((role) => role instanceof Error)
+      return invalid instanceof Error ? invalid : (roles as Array<RoleRow>)
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to list roles")
     }
@@ -37,9 +38,14 @@ export class RoleRepository {
 
   async findById(id: number): Promise<RoleRow | null | Error> {
     try {
-      const rows = await this.c.var.database.select().from(roles).where(eq(roles.id, id)).limit(1)
+      const row = await this.c.env.DB.prepare(
+        `SELECT id, key, kind, name, created_at
+           FROM system_iam_roles WHERE id = ?1 LIMIT 1`,
+      )
+        .bind(String(id))
+        .first<Record<string, unknown>>()
 
-      return rows.at(0) ?? null
+      return row === null ? null : this.toCompatibilityRole(row)
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to find role")
     }
@@ -47,49 +53,19 @@ export class RoleRepository {
 
   async findByKey(key: string): Promise<RoleRow | null | Error> {
     try {
-      const rows = await this.c.var.database.select().from(roles).where(eq(roles.key, key)).limit(1)
+      const row = await this.c.env.DB.prepare(
+        `SELECT id, key, kind, name, created_at
+           FROM system_iam_roles WHERE key = ?1 LIMIT 1`,
+      )
+        .bind(`company:${key}`)
+        .first<Record<string, unknown>>()
 
-      return rows.at(0) ?? null
+      return row === null ? null : this.toCompatibilityRole(row)
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to find role")
     }
   }
 
-  async create(props: {
-    key: string
-    name: string
-    description: string | null
-    createdAt: number
-  }): Promise<RoleRow | Error> {
-    try {
-      const rows = await this.c.var.database
-        .insert(roles)
-        .values({
-          key: props.key,
-          name: props.name,
-          description: props.description,
-          isSystem: 0,
-          createdAt: props.createdAt,
-        })
-        .returning()
-
-      const created = rows.at(0)
-
-      return created ?? new Error("failed to create role")
-    } catch (caught) {
-      if (isUniqueConstraintError(caught)) {
-        return new UniqueConstraintError("role key already exists", { cause: caught })
-      }
-
-      return caught instanceof Error ? caught : new Error("failed to create role")
-    }
-  }
-
-  /**
-   * ロール作成と権限付与を原子的に行う。
-   * create で role を挿入し、その ID を使って replacePermissions で権限を一括挿入する。
-   * replacePermissions が失敗した場合はロールを削除してクリーンアップする。
-   */
   async createWithPermissions(props: {
     key: string
     name: string
@@ -97,43 +73,68 @@ export class RoleRepository {
     createdAt: number
     permissionKeys: ReadonlyArray<string>
   }): Promise<RoleRow | "role_key_conflict" | Error> {
-    const created = await this.create({
-      key: props.key,
-      name: props.name,
-      description: props.description,
-      createdAt: props.createdAt,
-    })
+    try {
+      const permissionKeys = [
+        ...new Set(
+          props.permissionKeys.flatMap((key) => {
+            const parsed = permissionKeySchema.safeParse(key)
+            return parsed.success ? [parsed.data] : []
+          }),
+        ),
+      ].sort()
+      const words = crypto.getRandomValues(new Uint32Array(2))
+      const roleId = ((words[0] ?? 0) & 0x000f_ffff) * 0x1_0000_0000 + (words[1] ?? 0) || 1
+      const database = this.c.env.DB
 
-    if (created instanceof UniqueConstraintError) {
-      return "role_key_conflict"
+      await database.batch([
+        database
+          .prepare(
+            `INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
+             VALUES (?1, ?2, 'custom', ?3, ?4, ?4)`,
+          )
+          .bind(String(roleId), `company:${props.key}`, props.name, props.createdAt),
+        ...permissionKeys.map((permissionKey) =>
+          database
+            .prepare(
+              `INSERT INTO system_iam_role_permissions (role_id, permission_key)
+               VALUES (?1, ?2)`,
+            )
+            .bind(String(roleId), permissionKey),
+        ),
+        database
+          .prepare(
+            `SELECT CASE WHEN
+               (SELECT count(*) FROM system_iam_role_permissions WHERE role_id = ?1) = ?2
+             THEN 1 ELSE json_extract('', '$') END AS ok`,
+          )
+          .bind(String(roleId), permissionKeys.length),
+      ])
+
+      return {
+        id: roleId,
+        key: props.key,
+        name: props.name,
+        description: props.description,
+        isSystem: 0,
+        createdAt: props.createdAt,
+      }
+    } catch (caught) {
+      if (isUniqueConstraintError(caught)) return "role_key_conflict"
+      return caught instanceof Error ? caught : new Error("failed to create role")
     }
-
-    if (created instanceof Error) {
-      return created
-    }
-
-    const replaced = await this.replacePermissions(created.id, props.permissionKeys)
-
-    if (replaced instanceof Error) {
-      // 権限付与が失敗したらロールを削除して孤立を防ぐ
-      await this.deleteById(created.id)
-
-      return replaced
-    }
-
-    return created
   }
 
   async permissionKeysOf(roleId: number): Promise<ReadonlyArray<string> | Error> {
     try {
-      // permission 数が D1 のバインド変数上限(100)を超えるため join で解決する。
-      const rows = await this.c.var.database
-        .select({ key: permissions.key })
-        .from(rolePermissions)
-        .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
-        .where(eq(rolePermissions.roleId, roleId))
+      const rows = await this.c.env.DB.prepare(
+        `SELECT permission_key
+           FROM system_iam_role_permissions
+           WHERE role_id = ?1 ORDER BY permission_key`,
+      )
+        .bind(String(roleId))
+        .all<{ permission_key: string }>()
 
-      return rows.map((row) => row.key)
+      return rows.results.map((row) => row.permission_key)
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to load role permissions")
     }
@@ -141,85 +142,59 @@ export class RoleRepository {
 
   async isAssignedToAnyAccount(roleId: number): Promise<boolean | Error> {
     try {
-      const rows = await this.c.var.database
-        .select()
-        .from(accountRoles)
-        .where(eq(accountRoles.roleId, roleId))
-        .limit(1)
-
-      return rows.length > 0
+      const assigned = await this.c.env.DB.prepare(
+        `SELECT 1 AS assigned FROM system_role_bindings
+           WHERE role_id = ?1 AND revoked_at IS NULL LIMIT 1`,
+      )
+        .bind(String(roleId))
+        .first<number>("assigned")
+      return assigned === 1
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to check role assignment")
     }
   }
 
-  async updateMeta(props: {
-    roleId: number
-    name: string
-    description: string | null
-  }): Promise<null | Error> {
-    try {
-      await this.c.var.database
-        .update(roles)
-        .set({ name: props.name, description: props.description })
-        .where(eq(roles.id, props.roleId))
-
-      return null
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to update role")
-    }
-  }
-
-  /**
-   * ロールの permission を一括置換する。
-   * permission キーの解決後、既存の DELETE と新規 INSERT を同一の D1 batch にまとめる。
-   * 途中失敗時は batch 全体が rollback され、既存権限が保持される。
-   */
   async replacePermissions(
     roleId: number,
-    permissionKeys: ReadonlyArray<string>,
+    permissionKeysInput: ReadonlyArray<string>,
   ): Promise<null | Error> {
     try {
-      const db = this.c.env.DB
-
-      if (permissionKeys.length === 0) {
-        await db.batch([db.prepare("DELETE FROM role_permissions WHERE role_id = ?1").bind(roleId)])
-
-        return null
-      }
-
-      // permission キーを ID に解決する（読み取り専用なので batch 外で実行）。
-      // 指定キー数が D1 のバインド変数上限(100)を超えうるため、全件を読み key で絞る。
-      const drizzle = this.c.var.database
-
-      const requestedKeys = new Set(permissionKeys)
-
-      const allPermissionRows = await drizzle.select().from(permissions)
-
-      const permissionRows = allPermissionRows.filter((row) => requestedKeys.has(row.key))
-
-      // DELETE と全 INSERT を同一 batch にまとめてアトミックに実行する
-      await db.batch([
-        db.prepare("DELETE FROM role_permissions WHERE role_id = ?1").bind(roleId),
-        ...permissionRows.map((permission) =>
-          db
-            .prepare(
-              "INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?1, ?2)",
-            )
-            .bind(roleId, permission.id),
+      const permissionKeys = [
+        ...new Set(
+          permissionKeysInput.flatMap((key) => {
+            const parsed = permissionKeySchema.safeParse(key)
+            return parsed.success ? [parsed.data] : []
+          }),
         ),
+      ].sort()
+      const database = this.c.env.DB
+      await database.batch([
+        database
+          .prepare("DELETE FROM system_iam_role_permissions WHERE role_id = ?1")
+          .bind(String(roleId)),
+        ...permissionKeys.map((permissionKey) =>
+          database
+            .prepare(
+              `INSERT INTO system_iam_role_permissions (role_id, permission_key)
+               SELECT ?1, ?2 WHERE EXISTS (SELECT 1 FROM system_iam_roles WHERE id = ?1)`,
+            )
+            .bind(String(roleId), permissionKey),
+        ),
+        database
+          .prepare(
+            `SELECT CASE WHEN
+               EXISTS (SELECT 1 FROM system_iam_roles WHERE id = ?1)
+               AND (SELECT count(*) FROM system_iam_role_permissions WHERE role_id = ?1) = ?2
+             THEN 1 ELSE json_extract('', '$') END AS ok`,
+          )
+          .bind(String(roleId), permissionKeys.length),
       ])
-
       return null
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to replace role permissions")
     }
   }
 
-  /**
-   * ロールのメタ情報と権限を単一の D1 batch で原子的に更新する。
-   * 途中失敗でメタだけ変わって権限が旧のままになることを防ぐ。
-   */
   async updateMetaAndPermissions(props: {
     actorAccountId: number
     roleId: number
@@ -228,114 +203,103 @@ export class RoleRepository {
     permissionKeys: ReadonlyArray<string>
   }): Promise<null | Error | LastRootError | LivePermissionGuardError> {
     try {
-      const db = this.c.env.DB
-
-      const permissionIds =
-        props.permissionKeys.length === 0
-          ? []
-          : await this.resolvePermissionIds(props.permissionKeys)
-
-      if (permissionIds instanceof Error) {
-        return permissionIds
-      }
-
-      await db.batch([
+      const permissionKeys = [
+        ...new Set(
+          props.permissionKeys.flatMap((key) => {
+            const parsed = permissionKeySchema.safeParse(key)
+            return parsed.success ? [parsed.data] : []
+          }),
+        ),
+      ].sort()
+      const database = this.c.env.DB
+      const now = new Date(this.c.env.NOW ?? Date.now()).getTime()
+      await database.batch([
         new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleById({
           actorAccountId: props.actorAccountId,
           targetRoleId: props.roleId,
           requiredPermissionKeys: ["iam:manage_roles"],
-          additionalProtectedPermissionKeys: props.permissionKeys,
+          additionalProtectedPermissionKeys: permissionKeys,
         }),
-        db
-          .prepare("UPDATE roles SET name = ?2, description = ?3 WHERE id = ?1")
-          .bind(props.roleId, props.name, props.description),
-        db.prepare("DELETE FROM role_permissions WHERE role_id = ?1").bind(props.roleId),
-        ...permissionIds.map((permissionId) =>
-          db
+        database
+          .prepare(
+            `UPDATE system_iam_roles SET name = ?2, updated_at = max(updated_at, ?3)
+             WHERE id = ?1 AND kind = 'custom'`,
+          )
+          .bind(String(props.roleId), props.name, now),
+        database
+          .prepare("DELETE FROM system_iam_role_permissions WHERE role_id = ?1")
+          .bind(String(props.roleId)),
+        ...permissionKeys.map((permissionKey) =>
+          database
             .prepare(
-              "INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?1, ?2)",
+              `INSERT INTO system_iam_role_permissions (role_id, permission_key)
+               VALUES (?1, ?2)`,
             )
-            .bind(props.roleId, permissionId),
+            .bind(String(props.roleId), permissionKey),
         ),
         new LastRootGuard(this.c).abortWhenNoLoginEnabledEffectiveRoot(),
       ])
-
       return null
     } catch (caught) {
       if (LivePermissionGuard.isAbortedBy(caught)) {
         return new LivePermissionGuardError({ cause: caught })
       }
-
-      if (LastRootGuard.isAbortedBy(caught)) {
-        return new LastRootError()
-      }
-
+      if (LastRootGuard.isAbortedBy(caught)) return new LastRootError()
       return caught instanceof Error ? caught : new Error("failed to update role")
     }
   }
 
-  async deleteById(roleId: number): Promise<null | Error> {
-    try {
-      await this.c.var.database.delete(roles).where(eq(roles.id, roleId))
-
-      return null
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to delete role")
-    }
-  }
-
-  /**
-   * ロールと紐づく role_permissions を単一の D1 batch で一括削除する。
-   * batch 内で account_roles に割当がないことを検証し、割当があれば batch ごと rollback する。
-   * TOCTOU を防ぎ、role_permissions の孤立も防ぐ。
-   */
   async deleteWithPermissionsGuardingAssignment(
     roleId: number,
   ): Promise<null | "role_in_use" | Error> {
     try {
-      const db = this.c.env.DB
-
-      await db.batch([
-        db
+      const database = this.c.env.DB
+      await database.batch([
+        database
           .prepare(
             `SELECT CASE WHEN EXISTS (
-             SELECT 1 FROM account_roles WHERE role_id = ?1
-           ) THEN json_extract('', '$') ELSE 1 END AS ok`,
+               SELECT 1 FROM system_role_bindings WHERE role_id = ?1 AND revoked_at IS NULL
+             ) THEN json_extract('', '$') ELSE 1 END AS ok`,
           )
-          .bind(roleId),
-        db.prepare("DELETE FROM role_permissions WHERE role_id = ?1").bind(roleId),
-        db.prepare("DELETE FROM roles WHERE id = ?1").bind(roleId),
+          .bind(String(roleId)),
+        database
+          .prepare("DELETE FROM system_iam_role_permissions WHERE role_id = ?1")
+          .bind(String(roleId)),
+        database
+          .prepare("DELETE FROM system_iam_roles WHERE id = ?1 AND kind = 'custom'")
+          .bind(String(roleId)),
       ])
-
       return null
     } catch (caught) {
-      if (isAbortedByRoleInUseGuard(caught)) {
+      if (caught instanceof Error && caught.message.includes("malformed JSON")) {
         return "role_in_use"
       }
-
       return caught instanceof Error ? caught : new Error("failed to delete role")
     }
   }
 
-  /**
-   * permission キーを ID に解決する。batch 外の読み取り専用操作。
-   */
-  private async resolvePermissionIds(
-    permissionKeys: ReadonlyArray<string>,
-  ): Promise<ReadonlyArray<number> | Error> {
-    try {
-      // 指定キー数が D1 のバインド変数上限(100)を超えうるため、全件を読み key で絞る。
-      const requestedKeys = new Set(permissionKeys)
+  private toCompatibilityRole(row: Record<string, unknown>): RoleRow | Error {
+    const id = Number(row.id)
+    if (
+      !Number.isSafeInteger(id) ||
+      id < 1 ||
+      String(id) !== row.id ||
+      typeof row.key !== "string" ||
+      !row.key.startsWith("company:") ||
+      (row.kind !== "managed" && row.kind !== "custom") ||
+      typeof row.name !== "string" ||
+      typeof row.created_at !== "number"
+    ) {
+      return new Error("canonical System IAM role is not legacy-compatible")
+    }
 
-      const rows = await this.c.var.database.select().from(permissions)
-
-      return rows.filter((row) => requestedKeys.has(row.key)).map((row) => row.id)
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to resolve permission ids")
+    return {
+      id,
+      key: row.key.slice("company:".length),
+      name: row.name,
+      description: null,
+      isSystem: row.kind === "managed" ? 1 : 0,
+      createdAt: row.created_at,
     }
   }
-}
-
-function isAbortedByRoleInUseGuard(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("malformed JSON")
 }

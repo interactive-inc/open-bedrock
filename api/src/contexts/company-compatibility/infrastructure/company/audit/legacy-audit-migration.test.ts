@@ -1,5 +1,8 @@
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { auditBatchDecisions, auditLogs } from "@/api/legacy-system/adapters/schema/system"
+import {
+  auditBatchDecisions,
+  auditLogs,
+} from "@/contexts/company-compatibility/infrastructure/schema/audit"
 import { describe, expect, test } from "bun:test"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"

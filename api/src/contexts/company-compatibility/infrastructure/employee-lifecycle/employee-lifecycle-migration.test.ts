@@ -324,27 +324,26 @@ describe("employee lifecycle migration", () => {
     const rows = (
       await db
         .prepare(
-          `SELECT role.key AS role_key, permission.key AS permission_key
-           FROM role_permissions role_permission
-           INNER JOIN roles role ON role.id = role_permission.role_id
-           INNER JOIN permissions permission ON permission.id = role_permission.permission_id
-           WHERE permission.key LIKE 'employee:lifecycle:%'
-              OR permission.key = 'employee:archive'
-           ORDER BY role.key, permission.key`,
+          `SELECT role.key AS role_key, role_permission.permission_key
+           FROM system_iam_role_permissions role_permission
+           INNER JOIN system_iam_roles role ON role.id = role_permission.role_id
+           WHERE role_permission.permission_key LIKE 'employee:lifecycle:%'
+              OR role_permission.permission_key = 'employee:archive'
+           ORDER BY role.key, role_permission.permission_key`,
         )
         .all<{ role_key: string; permission_key: string }>()
     ).results
 
     expect(rows).toEqual([
-      { role_key: "hr", permission_key: "employee:archive" },
-      { role_key: "hr", permission_key: "employee:lifecycle:apply" },
-      { role_key: "hr", permission_key: "employee:lifecycle:read:all" },
-      { role_key: "hr", permission_key: "employee:lifecycle:request" },
-      { role_key: "manager", permission_key: "employee:lifecycle:request" },
-      { role_key: "root", permission_key: "employee:archive" },
-      { role_key: "root", permission_key: "employee:lifecycle:apply" },
-      { role_key: "root", permission_key: "employee:lifecycle:read:all" },
-      { role_key: "root", permission_key: "employee:lifecycle:request" },
+      { role_key: "company:hr", permission_key: "employee:archive" },
+      { role_key: "company:hr", permission_key: "employee:lifecycle:apply" },
+      { role_key: "company:hr", permission_key: "employee:lifecycle:read:all" },
+      { role_key: "company:hr", permission_key: "employee:lifecycle:request" },
+      { role_key: "company:manager", permission_key: "employee:lifecycle:request" },
+      { role_key: "company:root", permission_key: "employee:archive" },
+      { role_key: "company:root", permission_key: "employee:lifecycle:apply" },
+      { role_key: "company:root", permission_key: "employee:lifecycle:read:all" },
+      { role_key: "company:root", permission_key: "employee:lifecycle:request" },
     ])
   })
 

@@ -12,7 +12,7 @@ import type { Context } from "@/env"
 import { RoleRepository } from "@/contexts/company-compatibility/infrastructure/iam/role-repository"
 import { LastRootError } from "@/contexts/company-compatibility/infrastructure/iam/last-root-error"
 import { LivePermissionGuardError } from "@/contexts/company-compatibility/infrastructure/iam/live-permission-guard-error"
-import { hasPermissionSuperset } from "@/api/legacy-system/use-cases/iam/has-permission-superset"
+import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
 
 export type Command = {
   session: Session
@@ -59,7 +59,7 @@ export class UpdateRole {
     }
 
     // 現在のロールが実行者より高権限なら、権限の除去も含めて変更を拒否する。
-    if (hasPermissionSuperset(command.session, currentPermissionKeys) === false) {
+    if (hasSystemPermissionSuperset(command.session, currentPermissionKeys) === false) {
       return new ForbiddenError("cannot edit a higher privilege role", "role_escalation")
     }
 
