@@ -22,6 +22,15 @@ const EXPECTED_TOOLS = [
   "evaluation_sheets_create",
   "evaluation_sheets_transition",
   "evaluation_sheets_evaluators",
+  "life_events_request",
+  "life_events_mine",
+  "application_templates_list",
+  "application_requests_submit",
+  "application_requests_mine",
+  "application_requests_inbox",
+  "application_requests_show",
+  "application_requests_approve",
+  "application_requests_reject",
 ] as const
 
 describe("MCP tool registration", () => {
