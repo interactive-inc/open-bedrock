@@ -1,4 +1,3 @@
-import { systemSchema as compatibilitySystemSchema } from "@/api/legacy-system/adapters/schema/system"
 import {
   systemCoreSchema,
   systemProcedureDelegationSchema,
@@ -58,7 +57,6 @@ import * as ownedSchema48 from "@/contexts/training/infrastructure/schema/traini
 import * as ownedSchema49 from "@/contexts/work-accident/infrastructure/schema/work-accident"
 import * as ownedSchema50 from "@/contexts/work-style/infrastructure/schema/work-style"
 
-export * from "@/api/legacy-system/adapters/schema/system"
 export * from "@/contexts/company-compatibility/infrastructure/schema/employee"
 export * from "@/contexts/company-compatibility/infrastructure/schema/employee-lifecycle"
 export * from "@/contexts/company-compatibility/infrastructure/schema/organization"
@@ -114,7 +112,6 @@ export * from "@/contexts/work-accident/infrastructure/schema/work-accident"
 export * from "@/contexts/work-style/infrastructure/schema/work-style"
 
 export const schema = {
-  ...compatibilitySystemSchema,
   ...systemCoreSchema,
   ...systemProcedureDelegationSchema,
   ...systemProcedureSchema,

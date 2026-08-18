@@ -5,8 +5,8 @@ import type { ApiResponseError } from "@/lib/api/api-response-error"
 
 export async function getAuditEvent(eventId: string): Promise<AuditEventDetail | ApiResponseError> {
   const client = await createClient()
-  const response = await client["audit-events"][":event_id"].$get(
-    { param: { event_id: eventId } },
+  const response = await client["audit-events"][":eventId"].$get(
+    { param: { eventId: eventId } },
     { init: { cache: "no-store" } },
   )
 

@@ -20,7 +20,7 @@ export const seedNotifications: ReadonlyArray<SeedNotification> = [
     title: "承認待ち",
     body: "このリクエストを確認してください。",
     isRead: false,
-    createdAt: "2026-05-20T09:00:00Z",
+    createdAt: "2025-05-20T09:00:00Z",
   },
   {
     id: 2,
@@ -31,7 +31,7 @@ export const seedNotifications: ReadonlyArray<SeedNotification> = [
     title: "既読のお知らせ",
     body: null,
     isRead: true,
-    createdAt: "2026-05-22T09:00:00Z",
+    createdAt: "2025-05-22T09:00:00Z",
   },
   {
     id: 3,
@@ -42,7 +42,7 @@ export const seedNotifications: ReadonlyArray<SeedNotification> = [
     title: "リマインダー",
     body: null,
     isRead: false,
-    createdAt: "2026-05-25T09:00:00Z",
+    createdAt: "2025-05-25T09:00:00Z",
   },
   {
     id: 4,
@@ -53,6 +53,44 @@ export const seedNotifications: ReadonlyArray<SeedNotification> = [
     title: "他の従業員への通知",
     body: null,
     isRead: false,
-    createdAt: "2026-05-26T09:00:00Z",
+    createdAt: "2025-05-26T09:00:00Z",
   },
 ]
+
+export async function seedSystemNotifications(db: D1Database): Promise<void> {
+  await db.batch(
+    seedNotifications.map((notification) =>
+      db
+        .prepare(
+          `INSERT INTO system_notification_messages
+             (id, kind, title, body, source_type, source_id, created_at)
+           VALUES (?1, ?2, ?3, ?4, 'company:notification.source', ?5, ?6)`,
+        )
+        .bind(
+          String(notification.id),
+          `company:${notification.kind}`,
+          notification.title,
+          notification.body,
+          JSON.stringify({ domain: notification.sourceDomain, id: notification.sourceId }),
+          new Date(notification.createdAt).getTime(),
+        ),
+    ),
+  )
+  await db.batch(
+    seedNotifications.map((notification) => {
+      const deliveredAt = new Date(notification.createdAt).getTime()
+      return db
+        .prepare(
+          `INSERT INTO system_notification_deliveries
+             (id, message_id, recipient_account_id, delivered_at, read_at)
+           VALUES (?1, ?1, ?2, ?3, ?4)`,
+        )
+        .bind(
+          String(notification.id),
+          String(notification.recipientEmployeeId),
+          deliveredAt,
+          notification.isRead ? deliveredAt : null,
+        )
+    }),
+  )
+}

@@ -53,8 +53,8 @@ type AuditListInputContract = Assert<
 >
 type AuditDetailInputContract = Assert<
   Equal<
-    InferRequestType<ApiClient["audit-events"][":event_id"]["$get"]>,
-    { param: { event_id: string } }
+    InferRequestType<ApiClient["audit-events"][":eventId"]["$get"]>,
+    { param: { eventId: string } }
   >
 >
 type AuditExportInputContract = Assert<
@@ -64,7 +64,7 @@ type AuditListOutputContract = Assert<
   Equal<InferResponseType<ApiClient["audit-events"]["$get"], 200>, AppAuditEventPage>
 >
 type AuditDetailOutputContract = Assert<
-  Equal<InferResponseType<ApiClient["audit-events"][":event_id"]["$get"], 200>, AppAuditEventDetail>
+  Equal<InferResponseType<ApiClient["audit-events"][":eventId"]["$get"], 200>, AppAuditEventDetail>
 >
 type AuditExportOutputContract = Assert<
   Equal<InferResponseType<ApiClient["audit-event-exports"]["$post"], 200>, string>
@@ -73,13 +73,13 @@ type AuditExportOutputContract = Assert<
 function assertAuditRpcArguments(client: ApiClient): void {
   void client["audit-events"].$get()
   void client["audit-events"].$get({ query: { limit: "50" } })
-  void client["audit-events"][":event_id"].$get({ param: { event_id: "legacy-1" } })
+  void client["audit-events"][":eventId"].$get({ param: { eventId: "legacy-1" } })
   void client["audit-event-exports"].$post({
     json: { from: "2026-01-01T00:00:00Z", to: "2026-01-02T00:00:00Z" },
   })
 
   // @ts-expect-error Detail RPC calls require the canonical path parameter.
-  void client["audit-events"][":event_id"].$get()
+  void client["audit-events"][":eventId"].$get()
   // @ts-expect-error Export RPC calls require both range endpoints.
   void client["audit-event-exports"].$post({ json: {} })
 }

@@ -1,6 +1,9 @@
 import type {
+  ListSystemNotificationsProps,
   MarkNotificationDeliveryReadProps,
   NotificationRepository,
+  SystemNotification,
+  SystemNotificationPage,
 } from "@system/application/notifications/notification-repository"
 import type { AccountId } from "@system/domain/auth/account-id"
 import type {
@@ -10,7 +13,10 @@ import type {
 import type { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
 import type { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context"
-import { toSystemNotificationDelivery } from "@system/infrastructure/notifications/to-system-notification"
+import {
+  toSystemNotificationDelivery,
+  toSystemNotificationMessage,
+} from "@system/infrastructure/notifications/to-system-notification"
 
 const maximumPublicationPayloadBytes = 1_000_000
 
@@ -75,6 +81,109 @@ export class SystemNotificationRepository implements NotificationRepository {
     }
   }
 
+  async findByDeliveryIdForAccount(
+    deliveryId: NotificationDeliveryId,
+    recipientAccountId: AccountId,
+  ): Promise<SystemNotification | null | Error> {
+    try {
+      const row = await prepareNotificationSelect(
+        this.props.context.env.DB,
+        deliveryId,
+        recipientAccountId,
+      ).first<Record<string, unknown>>()
+
+      return row === null ? null : toSystemNotification(row)
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to find System Notification")
+    }
+  }
+
+  async listForAccount(
+    props: ListSystemNotificationsProps,
+  ): Promise<SystemNotificationPage | Error> {
+    try {
+      const database = this.props.context.env.DB
+      const results = await database.batch([
+        database
+          .prepare(
+            `SELECT
+               delivery.id AS delivery_id,
+               delivery.message_id,
+               delivery.recipient_account_id,
+               delivery.delivered_at,
+               delivery.read_at,
+               message.id AS message_id_value,
+               message.kind,
+               message.title,
+               message.body,
+               message.source_type,
+               message.source_id,
+               message.created_at
+             FROM system_notification_deliveries AS delivery
+             INNER JOIN system_notification_messages AS message ON message.id = delivery.message_id
+             WHERE delivery.recipient_account_id = ?1
+               AND (?2 IS NULL OR (delivery.read_at IS NOT NULL) = ?2)
+             ORDER BY delivery.delivered_at DESC, delivery.id DESC
+             LIMIT ?3 OFFSET ?4`,
+          )
+          .bind(
+            props.recipientAccountId,
+            props.read === null ? null : props.read ? 1 : 0,
+            props.limit,
+            props.offset,
+          ),
+        database
+          .prepare(
+            `SELECT count(*) AS total
+             FROM system_notification_deliveries
+             WHERE recipient_account_id = ?1
+               AND (?2 IS NULL OR (read_at IS NOT NULL) = ?2)`,
+          )
+          .bind(props.recipientAccountId, props.read === null ? null : props.read ? 1 : 0),
+      ])
+
+      if (results.length !== 2 || results.some((result) => !result.success)) {
+        return new Error("System Notification list did not succeed")
+      }
+
+      const items: Array<SystemNotification> = []
+      for (const row of results[0]?.results ?? []) {
+        const notification = toSystemNotification(row)
+        if (notification instanceof Error) return notification
+        items.push(notification)
+      }
+
+      const total = (results[1]?.results?.[0] as Record<string, unknown> | undefined)?.total
+      if (typeof total !== "number" || !Number.isSafeInteger(total) || total < 0) {
+        return new Error("System Notification total is invalid")
+      }
+
+      return Object.freeze({ items: Object.freeze(items), total })
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to list System Notifications")
+    }
+  }
+
+  async countUnreadForAccount(recipientAccountId: AccountId): Promise<number | Error> {
+    try {
+      const total = await this.props.context.env.DB.prepare(
+        `SELECT count(*) AS total
+           FROM system_notification_deliveries
+           WHERE recipient_account_id = ?1 AND read_at IS NULL`,
+      )
+        .bind(recipientAccountId)
+        .first<number>("total")
+
+      return typeof total === "number" && Number.isSafeInteger(total) && total >= 0
+        ? total
+        : new Error("System Notification unread count is invalid")
+    } catch (caught) {
+      return caught instanceof Error
+        ? caught
+        : new Error("failed to count unread System Notifications")
+    }
+  }
+
   async markDeliveryRead(
     props: MarkNotificationDeliveryReadProps,
   ): Promise<NotificationDelivery | null | Error> {
@@ -118,6 +227,50 @@ export class SystemNotificationRepository implements NotificationRepository {
       return caught instanceof Error
         ? caught
         : new Error("failed to mark System Notification Delivery read")
+    }
+  }
+
+  async markAllDeliveriesRead(
+    recipientAccountId: AccountId,
+    readAt: Date,
+  ): Promise<number | Error> {
+    try {
+      const result = await this.props.context.env.DB.prepare(
+        `UPDATE system_notification_deliveries
+           SET read_at = ?1
+           WHERE recipient_account_id = ?2
+             AND read_at IS NULL
+             AND delivered_at <= ?1`,
+      )
+        .bind(readAt.getTime(), recipientAccountId)
+        .run()
+
+      const changes = result.meta.changes
+      return Number.isSafeInteger(changes) && changes >= 0
+        ? changes
+        : new Error("System Notification read-all count is invalid")
+    } catch (caught) {
+      return caught instanceof Error
+        ? caught
+        : new Error("failed to mark all System Notifications read")
+    }
+  }
+
+  async dismissDelivery(
+    deliveryId: NotificationDeliveryId,
+    recipientAccountId: AccountId,
+  ): Promise<boolean | Error> {
+    try {
+      const result = await this.props.context.env.DB.prepare(
+        `DELETE FROM system_notification_deliveries
+           WHERE id = ?1 AND recipient_account_id = ?2`,
+      )
+        .bind(deliveryId, recipientAccountId)
+        .run()
+
+      return result.meta.changes === 1
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to dismiss System Notification")
     }
   }
 }
@@ -236,4 +389,64 @@ function prepareDeliverySelect(
        LIMIT 1`,
     )
     .bind(deliveryId, recipientAccountId)
+}
+
+function prepareNotificationSelect(
+  database: D1Database,
+  deliveryId: NotificationDeliveryId,
+  recipientAccountId: AccountId,
+): D1PreparedStatement {
+  return database
+    .prepare(
+      `SELECT
+         delivery.id AS delivery_id,
+         delivery.message_id,
+         delivery.recipient_account_id,
+         delivery.delivered_at,
+         delivery.read_at,
+         message.id AS message_id_value,
+         message.kind,
+         message.title,
+         message.body,
+         message.source_type,
+         message.source_id,
+         message.created_at
+       FROM system_notification_deliveries AS delivery
+       INNER JOIN system_notification_messages AS message ON message.id = delivery.message_id
+       WHERE delivery.id = ?1 AND delivery.recipient_account_id = ?2
+       LIMIT 1`,
+    )
+    .bind(deliveryId, recipientAccountId)
+}
+
+function toSystemNotification(row: unknown): SystemNotification | Error {
+  if (typeof row !== "object" || row === null || Array.isArray(row)) {
+    return new Error("System Notification row is invalid")
+  }
+
+  const values = row as Record<string, unknown>
+  const delivery = toSystemNotificationDelivery({
+    id: values.delivery_id,
+    message_id: values.message_id,
+    recipient_account_id: values.recipient_account_id,
+    delivered_at: values.delivered_at,
+    read_at: values.read_at,
+  })
+  if (delivery instanceof Error) return delivery
+
+  const message = toSystemNotificationMessage({
+    id: values.message_id_value,
+    kind: values.kind,
+    title: values.title,
+    body: values.body,
+    source_type: values.source_type,
+    source_id: values.source_id,
+    created_at: values.created_at,
+  })
+  if (message instanceof Error) return message
+  if (message.id !== delivery.messageId) {
+    return new Error("System Notification Message and Delivery do not match")
+  }
+
+  return Object.freeze({ message, delivery })
 }

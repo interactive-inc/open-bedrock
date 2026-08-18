@@ -43,7 +43,6 @@ import workStylesHandler from "@/app/employee-work-styles/route"
 import workStylesListHandler from "@/app/employee-work-styles/list/route"
 import workStylesAddHandler from "@/app/employee-work-styles/add/route"
 import batchHandler from "@/app/batch/route"
-import batchMigratePasswordHashesHandler from "@/app/batch/migrate-password-hashes/route"
 import careerApplyHandler from "@/app/career-applications/create/[posting_id]/route"
 import careerApplicationsRootHandler from "@/app/career-applications/route"
 import careerPostingsRootHandler from "@/app/career-postings/route"
@@ -749,7 +748,6 @@ routes.post("/shift-swap-requests/create", ...shiftSwapHandler)
 routes.post("/shift-swap-requests/approve/:id?", ...shiftSwapApproveHandler)
 
 routes.post("/batch", ...batchHandler)
-routes.post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesHandler)
 routes.post("/dashboard", ...dashboardHandler)
 routes.post("/dashboard/management", ...dashboardManagementHandler)
 routes.post("/business-trips", ...businessTripHandler)

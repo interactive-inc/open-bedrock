@@ -3,7 +3,7 @@ import { identitySubjectSchema } from "@/contexts/system/domain/identity/identit
 import type { Context } from "@/env"
 import { BootstrapAccountRepository } from "@/contexts/company-compatibility/infrastructure/iam/bootstrap-account-repository"
 import type { AlreadyInitialized } from "@/contexts/company-compatibility/infrastructure/iam/bootstrap-account-repository"
-import { validatePasswordComplexity } from "@/api/legacy-system/use-cases/auth/password-policy"
+import { validatePasswordComplexity } from "@/contexts/company-compatibility/application/auth/password-policy"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
@@ -25,7 +25,7 @@ export type BootstrapResult = {
 /**
  * 初期 ROOT アカウントを作成する。BOOTSTRAP_TOKEN の検証と一回性ゲートは interface 層と
  * リポジトリの原子的バッチが担い、ここでは入力の正規化・ハッシュ化・監査イベントの組み立てを行う。
- * accounts が既に存在する場合は AlreadyInitialized を返し、二重初期化を拒否する。
+ * system_bootstrap_state が確定済みの場合は AlreadyInitialized を返し、二重初期化を拒否する。
  */
 export class BootstrapInitialAccount {
   constructor(private readonly c: Context) {}
@@ -78,7 +78,7 @@ export class BootstrapInitialAccount {
       email: command.email,
       subject: subject.data,
       secret,
-      now: Math.floor(command.now.getTime() / 1_000),
+      now: command.now.getTime(),
       audit,
     })
 

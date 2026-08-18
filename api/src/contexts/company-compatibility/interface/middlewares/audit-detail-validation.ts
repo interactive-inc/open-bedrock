@@ -3,15 +3,15 @@ import { throwAuditRouteError } from "@/contexts/company-compatibility/interface
 import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 
 type AuditDetailValidationInput = {
-  in: { param: { event_id: string } }
-  out: { param: { event_id: string } }
+  in: { param: { eventId: string } }
+  out: { param: { eventId: string } }
 }
 
 /** Canonical detail-path validator placed after authentication and the permission gate. */
 export const auditDetailValidation = factory.createMiddleware<AuditDetailValidationInput>(
   async (c, next) => {
     try {
-      c.req.addValidatedData("param", { event_id: parseAuditEventId(c.req.param("event_id")) })
+      c.req.addValidatedData("param", { eventId: parseAuditEventId(c.req.param("eventId")) })
     } catch (error) {
       throwAuditRouteError(error)
     }

@@ -2,12 +2,12 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { CareerApplyRequest } from "@/lib/api/types/career-types"
 
-/** 指定の社内公募へ応募する。POST /career-postings/:posting_id/apply。 */
+/** 指定の社内公募へ応募する。POST /career-postings/:postingId/apply。 */
 export async function applyCareerPosting(postingId: number, body: CareerApplyRequest) {
   const client = await createClient()
 
-  const response = await client["career-postings"][":posting_id"].apply.$post({
-    param: { posting_id: String(postingId) },
+  const response = await client["career-postings"][":postingId"].apply.$post({
+    param: { postingId: String(postingId) },
     json: body,
   })
 

@@ -1,6 +1,6 @@
 import { createSystemAuditEvent as createSystemAuditEventEnvelope } from "@/contexts/system/domain/audit/create-system-audit-event"
-import type { AuditJsonValue } from "@/api/legacy-system/model/audit/legacy-stable-json"
-import { toStableAuditJson } from "@/api/legacy-system/model/audit/legacy-stable-json"
+import type { AuditJsonValue } from "@system/application/audit/to-stable-audit-json"
+import { toStableAuditJson } from "@system/application/audit/to-stable-audit-json"
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
 
@@ -95,7 +95,7 @@ function parseManagedValue<Output>(
   message: string,
   code: string,
 ): Output {
-  let parsed: z.SafeParseReturnType<unknown, Output>
+  let parsed: ReturnType<typeof schema.safeParse>
   try {
     parsed = schema.safeParse(value)
   } catch (error) {

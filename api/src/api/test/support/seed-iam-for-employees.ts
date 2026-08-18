@@ -9,11 +9,10 @@ export type IamSeedEmployee = {
 }
 
 /**
- * テスト用: 従業員 seed データに対応する accounts/identities/account_roles を生成する。
- * 本番の backfill(0005_iam_backfill.sql)のテスト版。account.id は employee.id と同値に固定し、
+ * テスト用: 従業員seedに対応するcanonical System Account / Identity / Role bindingを生成する。
+ * account.idはemployee.idと同値に固定し、
  * テストが createTestToken({ employeeId }) で作るトークンの accountId と一致させる。
- * 認証(email/password)・認可(role)は employees 列ではなく、seed データ(または引数)を正とする。
- * roles/permissions のマスタは loadSchema(0004) で投入済み前提
+ * 認証・認可はSystem、人物はCompanyを正とする。
  */
 export async function seedIamForEmployees(
   db: D1Database,
@@ -21,14 +20,6 @@ export async function seedIamForEmployees(
 ): Promise<void> {
   for (const employee of employees) {
     // account.id = employee.id に固定して 1:1。token_version は 0。
-    await db
-      .prepare(
-        `INSERT OR IGNORE INTO accounts (id, status, token_version, created_at, updated_at)
-         VALUES (?1, 'active', 0, 0, 0)`,
-      )
-      .bind(employee.id)
-      .run()
-
     await db
       .prepare(
         `INSERT OR IGNORE INTO system_accounts
@@ -41,25 +32,47 @@ export async function seedIamForEmployees(
     await db
       .prepare(
         `INSERT OR IGNORE INTO account_employee_links (account_id, employee_id)
-         VALUES (?1, ?1)`,
+         VALUES (?1, ?2)`,
       )
-      .bind(employee.id)
+      .bind(String(employee.id), employee.id)
       .run()
 
     await db
       .prepare(
-        `INSERT OR IGNORE INTO identities (account_id, provider, subject, secret, email, email_verified, created_at)
-         VALUES (?1, 'password', lower(?2), ?3, ?2, 1, 0)`,
+        `INSERT OR IGNORE INTO system_identity_bindings
+           (id, account_id, provider, subject, created_at, activated_at, revoked_at)
+         VALUES ('password:' || ?1, ?1, 'password', lower(?2), 0, 0, NULL)`,
       )
-      .bind(employee.id, employee.email, employee.passwordHash)
+      .bind(String(employee.id), employee.email)
       .run()
 
     await db
       .prepare(
-        `INSERT OR IGNORE INTO account_roles (account_id, role_id, granted_by, granted_at)
-         SELECT ?1, r.id, NULL, 0 FROM roles r WHERE r.key = ?2 AND r.is_system = 1`,
+        `INSERT OR IGNORE INTO system_identity_profiles
+           (identity_id, email, email_verified, last_used_at, updated_at)
+         VALUES ('password:' || ?1, ?2, 1, NULL, 0)`,
       )
-      .bind(employee.id, employee.role)
+      .bind(String(employee.id), employee.email)
+      .run()
+
+    await db
+      .prepare(
+        `INSERT OR IGNORE INTO system_password_credentials
+           (identity_id, password_hash, changed_at, created_at, updated_at)
+         VALUES ('password:' || ?1, ?2, 0, 0, 0)`,
+      )
+      .bind(String(employee.id), employee.passwordHash)
+      .run()
+
+    await db
+      .prepare(
+        `INSERT OR IGNORE INTO system_role_bindings
+           (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+         SELECT 'test:' || ?1 || ':' || role.id, ?1, role.id,
+                NULL, NULL, 0, NULL
+         FROM system_iam_roles AS role WHERE role.key = 'company:' || ?2`,
+      )
+      .bind(String(employee.id), employee.role)
       .run()
   }
 }

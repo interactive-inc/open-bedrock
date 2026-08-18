@@ -1,7 +1,8 @@
 import type { AccountStatus } from "@/contexts/system/domain/auth/account-status"
+import { zAccountId } from "@system/domain/auth/account-id"
+import { systemAccounts } from "@system/infrastructure/schema/system-core"
 import type { Context } from "@/env"
 import { accountEmployeeLinks } from "@/contexts/company-compatibility/infrastructure/schema/employee"
-import { accounts } from "@/api/legacy-system/adapters/schema/system"
 import { eq } from "drizzle-orm"
 
 export type LinkedEmployeeAccount = Readonly<{
@@ -21,17 +22,22 @@ export class AccountEmployeeLinkRepository {
     try {
       const rows = await this.c.var.database
         .select({
-          accountId: accounts.id,
-          status: accounts.status,
-          tokenVersion: accounts.tokenVersion,
+          accountId: systemAccounts.id,
+          status: systemAccounts.status,
+          tokenVersion: systemAccounts.tokenVersion,
           employeeId: accountEmployeeLinks.employeeId,
         })
-        .from(accounts)
-        .leftJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
-        .where(eq(accounts.id, accountId))
+        .from(systemAccounts)
+        .leftJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, systemAccounts.id))
+        .where(eq(systemAccounts.id, zAccountId.parse(String(accountId))))
         .limit(1)
 
-      return rows.at(0) ?? null
+      const row = rows.at(0)
+      if (row === undefined) return null
+      const numericAccountId = Number(row.accountId)
+      return Number.isSafeInteger(numericAccountId) && numericAccountId > 0
+        ? { ...row, accountId: numericAccountId }
+        : new Error("System Account ID is not compatible with the numeric product API")
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to resolve account employee link")
     }
@@ -43,17 +49,22 @@ export class AccountEmployeeLinkRepository {
     try {
       const rows = await this.c.var.database
         .select({
-          accountId: accounts.id,
-          status: accounts.status,
-          tokenVersion: accounts.tokenVersion,
+          accountId: systemAccounts.id,
+          status: systemAccounts.status,
+          tokenVersion: systemAccounts.tokenVersion,
           employeeId: accountEmployeeLinks.employeeId,
         })
         .from(accountEmployeeLinks)
-        .innerJoin(accounts, eq(accounts.id, accountEmployeeLinks.accountId))
+        .innerJoin(systemAccounts, eq(systemAccounts.id, accountEmployeeLinks.accountId))
         .where(eq(accountEmployeeLinks.employeeId, employeeId))
         .limit(1)
 
-      return rows.at(0) ?? null
+      const row = rows.at(0)
+      if (row === undefined) return null
+      const numericAccountId = Number(row.accountId)
+      return Number.isSafeInteger(numericAccountId) && numericAccountId > 0
+        ? { ...row, accountId: numericAccountId }
+        : new Error("System Account ID is not compatible with the numeric product API")
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to resolve employee account link")
     }

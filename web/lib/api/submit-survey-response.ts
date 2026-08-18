@@ -2,12 +2,12 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { SubmitSurveyResponseRequest } from "@/lib/api/types/survey-types"
 
-/** アンケート回答を送信する。POST /surveys/:survey_id/responses。 */
+/** アンケート回答を送信する。POST /surveys/:surveyId/responses。 */
 export async function submitSurveyResponse(surveyId: number, body: SubmitSurveyResponseRequest) {
   const client = await createClient()
 
-  const response = await client.surveys[":survey_id"].responses.$post({
-    param: { survey_id: String(surveyId) },
+  const response = await client.surveys[":surveyId"].responses.$post({
+    param: { surveyId: String(surveyId) },
     json: body,
   })
 

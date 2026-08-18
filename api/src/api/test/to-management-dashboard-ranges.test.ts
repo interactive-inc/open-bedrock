@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { toManagementDashboardRanges } from "@/api/routes/dashboard/management/to-management-dashboard-ranges"
+import { toManagementDashboardRanges } from "@/api/http/dashboard/management/to-management-dashboard-ranges"
 
 describe("toManagementDashboardRanges", () => {
   test("derives the current month prefix and the 30-day lower bound", () => {

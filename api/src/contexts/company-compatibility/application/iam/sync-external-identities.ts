@@ -60,7 +60,7 @@ export class SyncExternalIdentities {
     now: Date,
   ): Promise<SyncOutcome | ApplicationError> {
     const identityRepository = new IdentityRepository(this.c)
-    const nowEpoch = Math.floor(now.getTime() / 1_000)
+    const nowEpoch = now.getTime()
 
     const existing = await identityRepository.findByProviderSubject(
       EXTERNAL_PROVIDER,

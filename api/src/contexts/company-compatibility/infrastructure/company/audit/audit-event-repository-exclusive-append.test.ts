@@ -202,8 +202,12 @@ describe("AuditEventRepository exclusive append fragment", () => {
             )
             .bind(decisionId),
           db
-            .prepare("INSERT INTO roles (key, name, is_system, created_at) VALUES (?1, ?2, 0, 0)")
-            .bind("transaction-role", "Transaction role"),
+            .prepare(
+              `INSERT INTO system_iam_roles
+                 (id, key, kind, name, description, created_at, updated_at)
+               VALUES ('test:transaction-role', ?1, 'custom', ?2, NULL, 0, 0)`,
+            )
+            .bind("company:test:transaction-role", "Transaction role"),
           ...fragment.statements,
         ]),
       ).rejects.toThrow()
@@ -211,7 +215,9 @@ describe("AuditEventRepository exclusive append fragment", () => {
       expect(await markerCount(db)).toBe(0)
       expect(
         await db
-          .prepare("SELECT COUNT(*) AS count FROM roles WHERE key = 'transaction-role'")
+          .prepare(
+            "SELECT COUNT(*) AS count FROM system_iam_roles WHERE key = 'company:test:transaction-role'",
+          )
           .first<number>("count"),
       ).toBe(0)
       expect(

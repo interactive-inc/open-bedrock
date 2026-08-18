@@ -3,8 +3,10 @@ import { permissionKeySchema } from "@/contexts/company-compatibility/domain/iam
 import { ConflictError, ForbiddenError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import type { RoleRow } from "@/api/legacy-system/adapters/schema/system"
-import { RoleRepository } from "@/contexts/company-compatibility/infrastructure/iam/role-repository"
+import {
+  RoleRepository,
+  type RoleRow,
+} from "@/contexts/company-compatibility/infrastructure/iam/role-repository"
 
 export type Command = {
   session: Session

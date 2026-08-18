@@ -8,7 +8,7 @@ export async function listPersonnelActionRequests(targetEmployeeCode: string) {
       query: {
         target_employee_code: targetEmployeeCode,
         status: "pending",
-        limit: 20,
+        limit: "20",
       },
     },
     { init: { cache: "no-store" } },

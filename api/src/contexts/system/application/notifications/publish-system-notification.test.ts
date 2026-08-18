@@ -8,7 +8,12 @@ import { describe, expect, test } from "bun:test"
 const unreachableRepository: NotificationRepository = {
   publish: () => Promise.reject(new Error("repository must not be called")),
   findDeliveryByIdForAccount: () => Promise.reject(new Error("repository must not be called")),
+  findByDeliveryIdForAccount: () => Promise.reject(new Error("repository must not be called")),
+  listForAccount: () => Promise.reject(new Error("repository must not be called")),
+  countUnreadForAccount: () => Promise.reject(new Error("repository must not be called")),
   markDeliveryRead: () => Promise.reject(new Error("repository must not be called")),
+  markAllDeliveriesRead: () => Promise.reject(new Error("repository must not be called")),
+  dismissDelivery: () => Promise.reject(new Error("repository must not be called")),
 }
 
 describe("PublishSystemNotification", () => {

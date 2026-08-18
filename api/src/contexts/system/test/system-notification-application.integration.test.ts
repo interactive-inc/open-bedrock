@@ -194,6 +194,63 @@ describe("canonical System Notification Application + D1 repository", () => {
     if (idempotent.kind !== "marked") return
     expect(idempotent.delivery.readAt).toEqual(new Date(3_000))
   })
+
+  test("Account単位の一覧・未読件数・一括既読・破棄をcanonical Deliveryだけで処理する", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await insertAccount(database, "account-owner", "active")
+    await insertAccount(database, "account-other", "active")
+    const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
+
+    for (const [index, accountId] of [
+      "account-owner",
+      "account-owner",
+      "account-other",
+    ].entries()) {
+      const message = createMessage(`message-list-${index + 1}`)
+      const deliveries = createDeliveryBatch([
+        createDelivery({
+          id: `delivery-list-${index + 1}`,
+          messageId: message.id,
+          recipientAccountId: accountId,
+        }),
+      ])
+      expect(
+        await new PublishSystemNotification({ notificationRepository: repository }).execute({
+          message,
+          deliveries,
+        }),
+      ).toEqual({ kind: "published" })
+    }
+
+    const accountId = zAccountId.parse("account-owner")
+    expect(await repository.countUnreadForAccount(accountId)).toBe(2)
+
+    const page = await repository.listForAccount({
+      recipientAccountId: accountId,
+      read: false,
+      limit: 1,
+      offset: 0,
+    })
+    expect(page).not.toBeInstanceOf(Error)
+    if (page instanceof Error) throw page
+    expect(page.total).toBe(2)
+    expect(page.items).toHaveLength(1)
+    expect(page.items[0]?.message.title).toBe("System test notification")
+    expect(String(page.items[0]?.delivery.recipientAccountId)).toBe("account-owner")
+
+    expect(await repository.markAllDeliveriesRead(accountId, new Date(3_000))).toBe(2)
+    expect(await repository.countUnreadForAccount(accountId)).toBe(0)
+    expect(
+      await repository.dismissDelivery(
+        page.items[0]!.delivery.id,
+        zAccountId.parse("account-other"),
+      ),
+    ).toBe(false)
+    expect(await repository.dismissDelivery(page.items[0]!.delivery.id, accountId)).toBe(true)
+    expect(
+      await repository.findByDeliveryIdForAccount(page.items[0]!.delivery.id, accountId),
+    ).toBeNull()
+  })
 })
 
 function createMessage(id: string): NotificationMessage {

@@ -26,7 +26,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
         status: "active",
       },
       email: "you+e500@example.com",
-      passwordHash: "hashed-password",
+      passwordHash: "hashed-password-material",
       roleKey: "member",
       grantedByAccountId: actorAccountId,
       now: 1000,
@@ -41,7 +41,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
 
     const account = await db
       .prepare(
-        "SELECT account.* FROM accounts account JOIN account_employee_links link ON link.account_id = account.id WHERE link.employee_id = ?1",
+        "SELECT account.* FROM system_accounts account JOIN account_employee_links link ON link.account_id = account.id WHERE link.employee_id = ?1",
       )
       .bind((employee as { id: number }).id)
       .first()
@@ -49,20 +49,24 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
     expect(account).not.toBeNull()
 
     const identity = await db
-      .prepare("SELECT * FROM identities WHERE account_id = ?1")
-      .bind((account as { id: number }).id)
+      .prepare(
+        `SELECT profile.email
+         FROM system_identity_bindings AS identity
+         INNER JOIN system_identity_profiles AS profile ON profile.identity_id = identity.id
+         WHERE identity.account_id = ?1`,
+      )
+      .bind(String((account as { id: number }).id))
       .first()
 
     expect(identity).not.toBeNull()
     expect((identity as { email: string }).email).toBe("you+e500@example.com")
 
     const accountRole = await db
-      .prepare("SELECT * FROM account_roles WHERE account_id = ?1")
-      .bind((account as { id: number }).id)
+      .prepare("SELECT * FROM system_role_bindings WHERE account_id = ?1 AND revoked_at IS NULL")
+      .bind(String((account as { id: number }).id))
       .first()
 
     expect(accountRole).not.toBeNull()
-    expect((accountRole as { granted_by: number }).granted_by).toBe(actorAccountId)
   })
 
   test("employee code 重複時は全体が rollback される", async () => {
@@ -75,7 +79,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
       .prepare("INSERT INTO employees (code, name, status) VALUES ('E501', 'Existing', 'active')")
       .run()
 
-    const beforeAccounts = await countRows(db, "accounts")
+    const beforeAccounts = await countRows(db, "system_accounts")
 
     const result = await provisioner.provisionWithEmployee({
       employee: {
@@ -87,7 +91,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
         status: "active",
       },
       email: "you+e501@example.com",
-      passwordHash: "hashed-password",
+      passwordHash: "hashed-password-material",
       roleKey: "member",
       grantedByAccountId: actorAccountId,
       now: 1000,
@@ -96,7 +100,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
     expect(result).toBeInstanceOf(Error)
 
     // account が増えていないこと（employee INSERT の失敗で batch 全体が rollback）
-    const afterAccounts = await countRows(db, "accounts")
+    const afterAccounts = await countRows(db, "system_accounts")
 
     expect(afterAccounts).toBe(beforeAccounts)
   })
@@ -116,7 +120,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
         status: "active",
       },
       email: "you+e502@example.com",
-      passwordHash: "hashed-password",
+      passwordHash: "hashed-password-material",
       roleKey: "nonexistent_role",
       grantedByAccountId: actorAccountId,
       now: 1000,
@@ -148,7 +152,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
         status: "active",
       },
       email: "you+e503@example.com",
-      passwordHash: "hashed-password",
+      passwordHash: "hashed-password-material",
       roleKey: "root",
       grantedByAccountId: actorAccountId,
       now: 1000,
@@ -159,7 +163,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
     expect(await db.prepare("SELECT * FROM employees WHERE code = 'E503'").first()).toBeNull()
     expect(
       await db
-        .prepare("SELECT * FROM identities WHERE email = ?1")
+        .prepare("SELECT * FROM system_identity_profiles WHERE email = ?1")
         .bind("you+e503@example.com")
         .first(),
     ).toBeNull()

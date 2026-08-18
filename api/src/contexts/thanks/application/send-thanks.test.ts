@@ -29,7 +29,7 @@ async function seedEmployee(
   }
 
   await context.env.DB.prepare(
-    `INSERT INTO accounts (id, status, token_version, created_at, updated_at)
+    `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
      VALUES (?1, 'active', 0, 0, 0)`,
   )
     .bind(created.id)

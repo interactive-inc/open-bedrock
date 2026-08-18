@@ -63,7 +63,10 @@ describe("employee mutations preserve an effective administrator", () => {
       .first<number>("count")
     const assignmentCount = await db
       .prepare(
-        "SELECT COUNT(*) AS count FROM account_roles WHERE account_id IN (SELECT account_id FROM account_employee_links WHERE employee_id = ?1)",
+        `SELECT COUNT(*) AS count FROM system_role_bindings
+         WHERE account_id IN (
+           SELECT account_id FROM account_employee_links WHERE employee_id = ?1
+         ) AND resource_type IS NULL AND revoked_at IS NULL`,
       )
       .bind(employeeId)
       .first<number>("count")
@@ -110,7 +113,7 @@ describe("employee mutations preserve an effective administrator", () => {
     expect(
       await db
         .prepare(
-          "SELECT account.status FROM accounts account JOIN account_employee_links link ON link.account_id = account.id WHERE link.employee_id = ?1",
+          "SELECT account.status FROM system_accounts account JOIN account_employee_links link ON link.account_id = account.id WHERE link.employee_id = ?1",
         )
         .bind(employeeId)
         .first<string>("status"),

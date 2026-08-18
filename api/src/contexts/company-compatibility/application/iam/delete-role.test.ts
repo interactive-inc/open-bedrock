@@ -6,32 +6,32 @@ import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
-function seedDynamicRole(db: D1Database, key: string): Promise<number> {
-  return db
-    .prepare("INSERT INTO roles (key, name, is_system, created_at) VALUES (?1, ?2, 0, 0)")
-    .bind(key, key)
+async function seedDynamicRole(db: D1Database, key: string): Promise<number> {
+  const roleId = 999
+  await db
+    .prepare(
+      `INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
+       VALUES (?1, ?2, 'custom', ?3, 0, 0)`,
+    )
+    .bind(String(roleId), `company:${key}`, key)
     .run()
-    .then((result) => result.meta.last_row_id)
+  return roleId
 }
 
-function seedRolePermission(db: D1Database, roleId: number, permissionId: number): Promise<void> {
+function seedRolePermission(db: D1Database, roleId: number, permissionKey: string): Promise<void> {
   return db
-    .prepare("INSERT INTO role_permissions (role_id, permission_id) VALUES (?1, ?2)")
-    .bind(roleId, permissionId)
+    .prepare(
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES (?1, ?2)",
+    )
+    .bind(String(roleId), permissionKey)
     .run()
     .then(() => undefined)
 }
 
-async function getPermissionId(db: D1Database, key: string): Promise<number> {
-  const result = await db.prepare("SELECT id FROM permissions WHERE key = ?1").bind(key).first()
-
-  return (result as { id: number }).id
-}
-
 async function countRolePermissions(db: D1Database, roleId: number): Promise<number> {
   const result = await db
-    .prepare("SELECT COUNT(*) as cnt FROM role_permissions WHERE role_id = ?1")
-    .bind(roleId)
+    .prepare("SELECT COUNT(*) as cnt FROM system_iam_role_permissions WHERE role_id = ?1")
+    .bind(String(roleId))
     .first()
 
   return (result as { cnt: number }).cnt
@@ -39,8 +39,8 @@ async function countRolePermissions(db: D1Database, roleId: number): Promise<num
 
 async function countRoles(db: D1Database, roleId: number): Promise<number> {
   const result = await db
-    .prepare("SELECT COUNT(*) as cnt FROM roles WHERE id = ?1")
-    .bind(roleId)
+    .prepare("SELECT COUNT(*) as cnt FROM system_iam_roles WHERE id = ?1")
+    .bind(String(roleId))
     .first()
 
   return (result as { cnt: number }).cnt
@@ -51,9 +51,7 @@ describe("DeleteRole", () => {
     const { context, db } = createTestContext()
 
     const roleId = await seedDynamicRole(db, "test-role")
-    const permId = await getPermissionId(db, "dashboard:view")
-
-    await seedRolePermission(db, roleId, permId)
+    await seedRolePermission(db, roleId, "dashboard:view")
 
     expect(await countRolePermissions(db, roleId)).toBe(1)
 
@@ -86,9 +84,11 @@ describe("DeleteRole", () => {
 
     await db
       .prepare(
-        "INSERT INTO account_roles (account_id, role_id, granted_by, granted_at) VALUES (99, ?1, NULL, 0)",
+        `INSERT INTO system_role_bindings
+           (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+         VALUES ('assigned-test', '99', ?1, NULL, NULL, 0, NULL)`,
       )
-      .bind(roleId)
+      .bind(String(roleId))
       .run()
 
     const usecase = new DeleteRole(context)
@@ -111,9 +111,7 @@ describe("DeleteRole", () => {
     const { context, db } = createTestContext()
 
     const roleId = await seedDynamicRole(db, "race-role")
-    const permId = await getPermissionId(db, "dashboard:view")
-
-    await seedRolePermission(db, roleId, permId)
+    await seedRolePermission(db, roleId, "dashboard:view")
 
     // employee + account を作成
     await db
@@ -129,9 +127,11 @@ describe("DeleteRole", () => {
     // 割当を追加
     await db
       .prepare(
-        "INSERT INTO account_roles (account_id, role_id, granted_by, granted_at) VALUES (88, ?1, NULL, 0)",
+        `INSERT INTO system_role_bindings
+           (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+         VALUES ('race-test', '88', ?1, NULL, NULL, 0, NULL)`,
       )
-      .bind(roleId)
+      .bind(String(roleId))
       .run()
 
     const repo = new RoleRepository(context)

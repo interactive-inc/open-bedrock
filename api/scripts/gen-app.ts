@@ -11,7 +11,11 @@
  * ## 対応づけの規則
  *
  * - registry内のroute sourceにある `export const GET|POST|PUT|PATCH|DELETE` を登録する
- * - URL はファイルを除いたディレクトリのパス。`[param]` は `:param` にする
+ * - `route.ts` / `<action>-route.ts` の URL はファイルを除いたディレクトリのパス
+ * - それ以外の名前付きファイルはファイル名も URL の末尾に含める
+ * - root直下のdot区切りrouteはdotをURLの`/`へ展開する
+ *   (`company.v1.capabilities.ts` -> `/company/v1/capabilities`)
+ * - `$param` は `:param` にする
  * - `*.test.ts` と、HTTP メソッドを export しない同居ヘルパは対象外
  * - middleware・エラーハンドラは手書きの `app-base.ts` が持つ。生成器は触らない
  *
@@ -42,7 +46,7 @@ const TYPE_HEAVY_ROUTE_PREFIXES = [
 type Method = (typeof METHODS)[number]
 
 export type RouteRegistration = {
-  /** "@/interface/routes/employees/[code]/route" */
+  /** "@/interface/routes/employees/$code/route" */
   module: string
   /** "/employees/:code" */
   url: string
@@ -51,19 +55,23 @@ export type RouteRegistration = {
   alias: string
 }
 
-/** ディレクトリのパスから URL を作る。`[code]` → `:code`。 */
+/** ルートファイルのパスから URL を作る。`$jobOpeningId` → `:jobOpeningId`。 */
 export function toUrl(relativeFile: string): string {
   const segments = relativeFile.replace(/\.ts$/, "").split("/")
-  const directories = segments.slice(0, -1)
-  const mapped = directories.map((segment) =>
-    segment.startsWith("[") && segment.endsWith("]") ? `:${segment.slice(1, -1)}` : segment,
+  const fileName = segments.at(-1) ?? ""
+  const pathSegments =
+    fileName === "route" || fileName.endsWith("-route") ? segments.slice(0, -1) : segments
+  const mapped = pathSegments.flatMap((segment) =>
+    segment
+      .split(".")
+      .map((part) => (part.startsWith("$") ? `:${part.slice(1)}` : part)),
   )
   return `/${mapped.join("/")}`
 }
 
 /**
  * import 別名。パスから機械的に作る（手で付けた名前は再現できないし、再現する必要もない）。
- * `employees/[code]/route.ts` → `employeesCodeRoute`
+ * `employees/$code/route.ts` → `employeesCodeRoute`
  * `application-requests/submit-route.ts` → `applicationRequestsSubmitRoute`
  *
  * `<動詞>-route.ts` は同じ URL に別メソッドを足す並置ファイルなので、ディレクトリだけでは
@@ -78,8 +86,9 @@ export function toAlias(relativeFile: string): string {
   const verb = fileName === "route" ? "" : fileName.replace(/-route$/, "")
   const words = [...directories, verb].flatMap((segment) =>
     segment
-      .replace(/^\[|\]$/g, "")
-      .split(/[-_]/)
+      .replace(/\{[^}]*\}/g, "")
+      .replaceAll("$", "")
+      .split(/[.\-_]/)
       .filter(Boolean),
   )
   const camel = words

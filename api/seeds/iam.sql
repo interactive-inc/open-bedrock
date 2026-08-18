@@ -1,60 +1,75 @@
--- IAM ドメインの seed(認証・認可の正)
--- 認証(email/password)は identities、認可(role)は account_roles。
--- employees は純台帳になったため(0006)、ここで accounts/identities/account_roles を直接投入する。
--- account.id = employee.id に固定し、トークンの accountId と employeeId を揃える(dev の利便性)。
--- 平文パスワードは全員 "password"(seed-password-hash.ts と同一の固定ソルト PBKDF2)。
--- 値は src/infrastructure/seed/seed-employees.ts / seeds/employee.sql と一致させる。
--- roles マスタは 0004_iam_seed.sql 投入済み前提。
+-- canonical System IAM seed。AccountとEmployeeは別identityとしてCompanyのlinkだけで対応する。
+-- 平文パスワードは全員 "password"（seed-password-hash.tsと同じ固定salt PBKDF2）。
 
--- 0123 で accounts から employee_id が分離されたため、リンクは account_employee_links に持つ。
-INSERT INTO accounts (id, status, token_version, created_at, updated_at) VALUES
-  (1, 'active', 0, 0, 0),
-  (2, 'active', 0, 0, 0),
-  (3, 'active', 0, 0, 0),
-  (4, 'active', 0, 0, 0),
-  (5, 'active', 0, 0, 0),
-  (9, 'active', 0, 0, 0),
-  (10, 'active', 0, 0, 0),
-  (13, 'active', 0, 0, 0),
-  (16, 'active', 0, 0, 0);
-
-INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-SELECT CAST(id AS TEXT), status, token_version, created_at, updated_at
-FROM accounts;
+INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES
+  ('1', 'active', 0, 0, 0),
+  ('2', 'active', 0, 0, 0),
+  ('3', 'active', 0, 0, 0),
+  ('4', 'active', 0, 0, 0),
+  ('5', 'active', 0, 0, 0),
+  ('9', 'active', 0, 0, 0),
+  ('10', 'active', 0, 0, 0),
+  ('13', 'active', 0, 0, 0),
+  ('16', 'active', 0, 0, 0);
 
 INSERT INTO account_employee_links (account_id, employee_id) VALUES
-  (1, 1),
-  (2, 2),
-  (3, 3),
-  (4, 4),
-  (5, 5),
-  (9, 9),
-  (10, 10),
-  (13, 13),
-  (16, 16);
+  ('1', 1),
+  ('2', 2),
+  ('3', 3),
+  ('4', 4),
+  ('5', 5),
+  ('9', 9),
+  ('10', 10),
+  ('13', 13),
+  ('16', 16);
 
-INSERT INTO identities (account_id, provider, subject, secret, email, email_verified, created_at) VALUES
-  (1, 'password', 'you+e001@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e001@example.com', 1, 0),
-  (2, 'password', 'you+e002@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e002@example.com', 1, 0),
-  (3, 'password', 'you+e003@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e003@example.com', 1, 0),
-  (4, 'password', 'you+e004@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e004@example.com', 1, 0),
-  (5, 'password', 'you+e005@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e005@example.com', 1, 0),
-  (9, 'password', 'you+e009@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e009@example.com', 1, 0),
-  (10, 'password', 'you+e010@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e010@example.com', 1, 0),
-  (13, 'password', 'you+e013@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e013@example.com', 1, 0),
-  (16, 'password', 'you+e016@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e016@example.com', 1, 0);
+INSERT INTO system_identity_bindings
+  (id, account_id, provider, subject, created_at, activated_at, revoked_at)
+VALUES
+  ('password:1', '1', 'password', 'you+e001@example.com', 0, 0, NULL),
+  ('password:2', '2', 'password', 'you+e002@example.com', 0, 0, NULL),
+  ('password:3', '3', 'password', 'you+e003@example.com', 0, 0, NULL),
+  ('password:4', '4', 'password', 'you+e004@example.com', 0, 0, NULL),
+  ('password:5', '5', 'password', 'you+e005@example.com', 0, 0, NULL),
+  ('password:9', '9', 'password', 'you+e009@example.com', 0, 0, NULL),
+  ('password:10', '10', 'password', 'you+e010@example.com', 0, 0, NULL),
+  ('password:13', '13', 'password', 'you+e013@example.com', 0, 0, NULL),
+  ('password:16', '16', 'password', 'you+e016@example.com', 0, 0, NULL);
 
--- account_roles: E001 は root、E003 は hr、E002/E004 は manager、その他は member。
--- 組織上の役職とは分離しつつ、seed だけで管理・人事・一般の権限経路を検証可能にする。
-INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
-  SELECT a.id, r.id, NULL, 0
-  FROM accounts a
-  JOIN roles r ON r.is_system = 1 AND r.key = (
-    CASE
-      WHEN a.id = 1 THEN 'root'
-      WHEN a.id = 3 THEN 'hr'
-      WHEN a.id IN (2, 4) THEN 'manager'
-      ELSE 'member'
-    END
-  )
-  WHERE a.id IN (1, 2, 3, 4, 5, 9, 10, 13, 16);
+INSERT INTO system_identity_profiles (identity_id, email, email_verified, last_used_at, updated_at)
+SELECT id, subject, 1, NULL, 0
+FROM system_identity_bindings
+WHERE provider = 'password';
+
+INSERT INTO system_password_credentials
+  (identity_id, password_hash, changed_at, created_at, updated_at)
+SELECT
+  id,
+  'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=',
+  0,
+  0,
+  0
+FROM system_identity_bindings
+WHERE provider = 'password';
+
+-- E001=root、E003=hr、E002/E004=manager、その他=member。
+INSERT INTO system_role_bindings
+  (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+SELECT
+  'seed:' || account.id || ':' || role.id,
+  account.id,
+  role.id,
+  NULL,
+  NULL,
+  0,
+  NULL
+FROM system_accounts account
+JOIN system_iam_roles role ON role.kind = 'managed' AND role.key = 'company:' || (
+  CASE
+    WHEN account.id = '1' THEN 'root'
+    WHEN account.id = '3' THEN 'hr'
+    WHEN account.id IN ('2', '4') THEN 'manager'
+    ELSE 'member'
+  END
+)
+WHERE account.id IN ('1', '2', '3', '4', '5', '9', '10', '13', '16');

@@ -1,6 +1,8 @@
-import type { Notification } from "@/api/legacy-system/model/notifications/legacy-notification.entity"
 import type { Context } from "@/env"
-import { EmployeeNotificationGateway } from "@/contexts/company-compatibility/infrastructure/company/notifications/employee-notification.gateway"
+import {
+  EmployeeNotificationGateway,
+  type PublishedEmployeeNotification,
+} from "@/contexts/company-compatibility/infrastructure/company/notifications/employee-notification.gateway"
 
 export type Command = {
   recipientEmployeeId: number
@@ -18,7 +20,7 @@ export type Command = {
 export class NotifyApprovalResult {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Notification | Error> {
+  async run(command: Command): Promise<PublishedEmployeeNotification | Error> {
     const title =
       command.action === "approve"
         ? `${command.subjectLabel}が承認されました`

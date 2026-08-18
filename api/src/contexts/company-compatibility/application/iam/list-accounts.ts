@@ -4,8 +4,8 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import type { AccountSummary } from "@/contexts/company-compatibility/infrastructure/iam/account-repository"
 import { AccountRepository } from "@/contexts/company-compatibility/infrastructure/iam/account-repository"
-import { AccountAuthRepository } from "@/api/legacy-system/adapters/auth/account-auth-repository"
-import { hasPermissionSuperset } from "@/api/legacy-system/use-cases/iam/has-permission-superset"
+import { AccountAuthRepository } from "@/contexts/company-compatibility/infrastructure/auth/account-auth-repository"
+import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
 
 export type AccountAccessSummary = AccountSummary & {
   canManage: boolean
@@ -62,7 +62,7 @@ export class ListAccounts {
       canManage:
         resolved !== null &&
         !(resolved instanceof Error) &&
-        hasPermissionSuperset(command.session, resolved.permissions),
+        hasSystemPermissionSuperset(command.session, resolved.permissions),
       isSelf: account.id === command.session.accountId,
     }))
   }

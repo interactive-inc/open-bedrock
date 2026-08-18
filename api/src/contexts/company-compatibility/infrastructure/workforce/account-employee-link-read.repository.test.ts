@@ -14,7 +14,7 @@ async function seedLink(db: D1Database, id: number): Promise<void> {
       .bind(id, `E${id}`),
     db
       .prepare(
-        `INSERT INTO accounts (id, status, token_version, created_at, updated_at)
+        `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
          VALUES (?1, 'active', 0, 0, 0)`,
       )
       .bind(id),
@@ -53,7 +53,7 @@ describe("AccountEmployeeLinkReadRepository", () => {
     await seedLink(db, 42)
     await db
       .prepare(
-        `UPDATE accounts
+        `UPDATE system_accounts
          SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
          WHERE id = 42`,
       )

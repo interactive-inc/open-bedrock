@@ -8,8 +8,8 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function deleteGoal(goalId: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["performance-goals"][":goal_id"].$delete({
-    param: { goal_id: String(goalId) },
+  const response = await client["performance-goals"][":goalId"].$delete({
+    param: { goalId: String(goalId) },
   })
 
   if (response.status >= 400) {

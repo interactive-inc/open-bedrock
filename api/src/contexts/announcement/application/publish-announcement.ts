@@ -8,8 +8,12 @@ import {
   accountEmployeeLinks,
   employees,
 } from "@/contexts/company-compatibility/infrastructure/schema/employee"
-import { notifications } from "@/api/legacy-system/adapters/schema/system"
 import { eq } from "drizzle-orm"
+import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
+import { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
+import { NotificationDelivery } from "@system/domain/notifications/notification-delivery.entity"
+import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
+import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
 
 export type Command = {
   session: Session
@@ -53,7 +57,7 @@ export class PublishAnnouncement {
       return new NotFoundError("announcement not found", "announcement_not_found")
     }
 
-    const notified = await this.notifyAllEmployees(result)
+    const notified = await this.notifyAllEmployees(result, command.createdAt)
 
     if (notified instanceof Error) {
       return new UnexpectedError("failed to notify announcement", { cause: notified })
@@ -63,7 +67,10 @@ export class PublishAnnouncement {
   }
 
   /** 公開されたアナウンスを全 active 従業員へ 1 通ずつ配信する。 */
-  private async notifyAllEmployees(announcement: Announcement): Promise<null | Error> {
+  private async notifyAllEmployees(
+    announcement: Announcement,
+    createdAtValue: string,
+  ): Promise<null | Error> {
     try {
       const recipients = await this.c.var.database
         .select({ accountId: accountEmployeeLinks.accountId })
@@ -75,18 +82,42 @@ export class PublishAnnouncement {
         return null
       }
 
-      await this.c.var.database.insert(notifications).values(
-        recipients.map((recipient) => ({
-          recipientAccountId: recipient.accountId,
-          sourceDomain: "announcement",
-          sourceId: announcement.id,
-          kind: "announcement",
-          title: announcement.title,
-          body: null,
-          isRead: 0,
-          createdAt: announcement.createdAt,
-        })),
+      const createdAt = new Date(createdAtValue)
+      const message = NotificationMessage.create({
+        id: crypto.randomUUID(),
+        kind: "company:announcement",
+        title: announcement.title,
+        body: null,
+        source: {
+          type: "company:notification.source",
+          id: JSON.stringify({ domain: "announcement", id: announcement.id }),
+        },
+        createdAt,
+      })
+      if (message instanceof Error) return message
+
+      const deliveries = NotificationDeliveryBatch.create(
+        recipients.map((recipient) =>
+          NotificationDelivery.create({
+            id: crypto.randomUUID(),
+            messageId: message.id,
+            recipientAccountId: String(recipient.accountId),
+            deliveredAt: createdAt,
+            readAt: null,
+          }),
+        ),
       )
+      if (deliveries instanceof Error) return deliveries
+
+      const published = await new PublishSystemNotification({
+        notificationRepository: new SystemNotificationRepository({
+          context: { env: { DB: this.c.env.DB } },
+        }),
+      }).execute({ message, deliveries })
+      if (published instanceof Error) return published
+      if (published.kind === "rejected") {
+        return new Error(`announcement notification rejected: ${published.reason}`)
+      }
 
       return null
     } catch (error) {

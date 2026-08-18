@@ -12,7 +12,7 @@ import type {
   CompanyAuditRecord,
   CompanyAuditSummary,
 } from "@/contexts/company-compatibility/application/audit/company-audit-record"
-import type { AuditJsonValue } from "@/api/legacy-system/model/audit/legacy-stable-json"
+import type { AuditJsonValue } from "@system/application/audit/to-stable-audit-json"
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
 
@@ -132,7 +132,7 @@ function parseManagedValue<Output>(
   message: string,
   code: string,
 ): Output {
-  let parsed: z.SafeParseReturnType<unknown, Output>
+  let parsed: ReturnType<typeof schema.safeParse>
   try {
     parsed = schema.safeParse(value)
   } catch (error) {

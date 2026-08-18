@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ReviewCycleUpdateRequest } from "@/lib/api/types/review-types"
 
-/** PUT /review-cycles/:cycle_id。特権ロールがサイクルの題目・期間・締切を更新する。 */
+/** PUT /review-cycles/:cycleId。特権ロールがサイクルの題目・期間・締切を更新する。 */
 export async function updateReviewCycle(cycleId: number, request: ReviewCycleUpdateRequest) {
   const client = await createClient()
 
@@ -11,8 +11,8 @@ export async function updateReviewCycle(cycleId: number, request: ReviewCycleUpd
       ? { title: request.title, period: request.period }
       : { title: request.title, period: request.period, dueDate: request.dueDate }
 
-  const response = await client["review-cycles"][":cycle_id"].$put({
-    param: { cycle_id: String(cycleId) },
+  const response = await client["review-cycles"][":cycleId"].$put({
+    param: { cycleId: String(cycleId) },
     json,
   })
 

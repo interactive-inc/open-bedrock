@@ -6,10 +6,16 @@ export const iamRoleIdSchema = z.string().min(1).max(255).brand<"IamRoleId">()
 
 export type IamRoleId = z.infer<typeof iamRoleIdSchema>
 
+export const iamRoleKeySchema = z
+  .string()
+  .min(3)
+  .max(100)
+  .regex(/^[a-z][a-z0-9_-]*(?::[a-z][a-z0-9_-]*)+$/)
+
 const propsSchema = z
   .object({
     id: iamRoleIdSchema,
-    key: permissionKeySchema,
+    key: iamRoleKeySchema,
     kind: z.enum(["managed", "custom"]),
     name: z.string().min(1).max(100),
     permissionKeys: z.array(permissionKeySchema).max(500),

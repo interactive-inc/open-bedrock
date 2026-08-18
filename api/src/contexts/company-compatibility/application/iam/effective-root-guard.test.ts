@@ -53,7 +53,10 @@ describe("effective administrator invariant", () => {
     )
 
     const activeAdminCount = await db
-      .prepare("SELECT COUNT(*) AS count FROM accounts WHERE status = 'active'")
+      .prepare(
+        "SELECT COUNT(*) AS count FROM system_accounts WHERE id = ?1 AND status = 'active'",
+      )
+      .bind(String(accountId))
       .first<number>("count")
 
     expect(activeAdminCount).toBe(1)
@@ -83,11 +86,15 @@ describe("effective administrator invariant", () => {
     expectApplicationError(result, ConflictError, "last_admin")
 
     const assignmentCount = await db
-      .prepare("SELECT COUNT(*) AS count FROM account_roles WHERE account_id = ?1 AND role_id = ?2")
-      .bind(accountId, effectiveRole.id)
+      .prepare(
+        `SELECT COUNT(*) AS count FROM system_role_bindings
+         WHERE account_id = ?1 AND role_id = ?2
+           AND resource_type IS NULL AND revoked_at IS NULL`,
+      )
+      .bind(String(accountId), String(effectiveRole.id))
       .first<number>("count")
     const tokenVersion = await db
-      .prepare("SELECT token_version FROM accounts WHERE id = ?1")
+      .prepare("SELECT token_version FROM system_accounts WHERE id = ?1")
       .bind(accountId)
       .first<number>("token_version")
 
@@ -114,7 +121,7 @@ describe("effective administrator invariant", () => {
     expect(result).toBeInstanceOf(LastRootError)
 
     const account = await db
-      .prepare("SELECT status, token_version FROM accounts WHERE id = ?1")
+      .prepare("SELECT status, token_version FROM system_accounts WHERE id = ?1")
       .bind(accountId)
       .first<{ status: string; token_version: number }>()
 

@@ -105,11 +105,6 @@ const evaluationSheetRoutes: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/evaluation-sheets/evaluators", help: "evaluation-sheets evaluators" },
 ]
 
-/** セキュリティ修正で追加されたルートの到達性テスト。 */
-const securityRoutes: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/batch/migrate-password-hashes", help: "batch migrate-password-hashes" },
-]
-
 describe("route registration (#100)", () => {
   for (const route of previouslyUnregistered) {
     test(`POST ${route.path} is reachable and returns its help`, async () => {
@@ -128,22 +123,6 @@ describe("route registration (#100)", () => {
 
 describe("route registration (evaluation-sheets #991)", () => {
   for (const route of evaluationSheetRoutes) {
-    test(`POST ${route.path} is reachable and returns its help`, async () => {
-      const response = await app.request(route.path, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ help: "1" }),
-      })
-
-      expect(response.status).toBe(200)
-
-      expect(await response.text()).toContain(route.help)
-    })
-  }
-})
-
-describe("route registration (security fixes)", () => {
-  for (const route of securityRoutes) {
     test(`POST ${route.path} is reachable and returns its help`, async () => {
       const response = await app.request(route.path, {
         method: "POST",

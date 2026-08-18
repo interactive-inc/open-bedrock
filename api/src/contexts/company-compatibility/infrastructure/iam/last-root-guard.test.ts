@@ -35,9 +35,10 @@ describe("last effective admin guard", () => {
     await seedIamTestAccount(context, "E971", "root")
     await db
       .prepare(
-        `DELETE FROM role_permissions
-         WHERE role_id = (SELECT id FROM roles WHERE key = 'root' AND is_system = 1)
-           AND permission_id = (SELECT id FROM permissions WHERE key = 'account:manage')`,
+        `DELETE FROM system_iam_role_permissions
+         WHERE role_id = (
+           SELECT id FROM system_iam_roles WHERE key = 'company:root' AND kind = 'managed'
+         ) AND permission_key = 'account:manage'`,
       )
       .run()
 

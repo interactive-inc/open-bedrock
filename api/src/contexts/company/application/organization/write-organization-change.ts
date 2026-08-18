@@ -12,7 +12,6 @@ import {
 import type { CompanyResourceChange } from "@/contexts/company/domain/core/company-resource"
 import { validateCompanyOrganizationChange } from "@/contexts/company/domain/core/validate-company-organization-change"
 import { validateCompanyResourceChange } from "@/contexts/company/domain/core/validate-company-resource-change"
-import { CompanyResourceValidationError } from "@/contexts/company/domain/core/company-resource-validation-error"
 
 export async function writeOrganizationChange(
   actor: CompanyActor,
@@ -20,7 +19,7 @@ export async function writeOrganizationChange(
   read: ReadCompanyResourcePersistence,
   write: WriteCompanyResourcePersistence,
 ): Promise<WriteCompanyResourcesResult> {
-  const allowedTypes = [
+  const organizationResourceTypes = [
     "organization-unit",
     "assignment",
     "reporting-relation",
@@ -29,17 +28,7 @@ export async function writeOrganizationChange(
   const organizationId = change.resources[0]?.organizationId ?? ""
   const command = { ...change, actorAccountId: actor.accountId }
   const genericError = validateCompanyResourceChange(command)
-  if (
-    genericError !== null ||
-    change.resources.some(
-      (resource) => !allowedTypes.some((allowedType) => allowedType === resource.type),
-    )
-  ) {
-    return {
-      kind: "invalid",
-      error: genericError ?? new CompanyResourceValidationError("invalid_resource"),
-    }
-  }
+  if (genericError !== null) return { kind: "invalid", error: genericError }
   if (
     !canAccessCompanyOrganization(actor, organizationId) ||
     !hasCompanyCapability(actor, "company:write")
@@ -49,7 +38,7 @@ export async function writeOrganizationChange(
 
   let current
   try {
-    current = await read({ organizationId, types: allowedTypes })
+    current = await read({ organizationId, types: organizationResourceTypes })
   } catch (cause) {
     return { kind: "unavailable", cause }
   }
@@ -60,5 +49,5 @@ export async function writeOrganizationChange(
   const organizationError = validateCompanyOrganizationChange(current.resources, command)
   if (organizationError !== null) return { kind: "invalid", error: organizationError }
 
-  return writeCompanyResources(actor, change, allowedTypes, write)
+  return writeCompanyResources(actor, change, write)
 }

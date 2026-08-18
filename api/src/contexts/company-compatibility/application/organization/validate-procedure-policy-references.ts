@@ -1,6 +1,4 @@
 import type { Context } from "@/env"
-import { roles } from "@/api/legacy-system/adapters/schema/system"
-import { inArray } from "drizzle-orm"
 
 export async function findUnknownApproverRoles(
   c: Context,
@@ -10,11 +8,15 @@ export async function findUnknownApproverRoles(
   if (uniqueRoleKeys.length === 0) return []
 
   try {
-    const existing = await c.var.database
-      .select({ key: roles.key })
-      .from(roles)
-      .where(inArray(roles.key, uniqueRoleKeys))
-    const existingKeys = new Set(existing.map((role) => role.key))
+    const existing = await c.env.DB.prepare(
+      `SELECT key FROM system_iam_roles
+         WHERE key IN (
+           SELECT 'company:' || CAST(value AS TEXT) FROM json_each(?1)
+         )`,
+    )
+      .bind(JSON.stringify(uniqueRoleKeys))
+      .all<{ key: string }>()
+    const existingKeys = new Set(existing.results.map((role) => role.key.replace(/^company:/, "")))
 
     return uniqueRoleKeys.filter((roleKey) => existingKeys.has(roleKey) === false)
   } catch (error) {

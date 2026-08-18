@@ -18,7 +18,7 @@ describe("legacy Session to canonical System Account adapter", () => {
     const { context, db } = createTestContext()
     await db
       .prepare(
-        `INSERT INTO accounts (id, status, token_version, created_at, updated_at)
+        `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
          VALUES (501, 'active', 0, 0, 0)`,
       )
       .run()
