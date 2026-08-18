@@ -106,6 +106,93 @@ function tokenFor(employeeId: number, role: string): Promise<string> {
   })
 }
 
+describe("GET /performance-goals/:goal_id/evaluations", () => {
+  test("owner can list evaluations in creation order", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/performance-goals/4/evaluations",
+      token: await tokenFor(9, "member"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(goalEvaluationResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(3)
+      expect(parsed.data.map((evaluation) => evaluation.id)).toEqual([1, 2, 3])
+      expect(parsed.data.map((evaluation) => evaluation.kind)).toEqual(["self", "manager", "final"])
+      expect(parsed.data.every((evaluation) => evaluation.goal_id === 4)).toBe(true)
+    }
+  })
+
+  test("privileged role can list another employee's goal evaluations", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/performance-goals/4/evaluations",
+      token: await tokenFor(1, "root"),
+    })
+
+    expect(response.status).toBe(200)
+  })
+
+  test("returns an empty list when the goal has no evaluations", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/performance-goals/3/evaluations",
+      token: await tokenFor(9, "member"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(goalEvaluationResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(0)
+    }
+  })
+
+  test("returns 403 for another person's goal as a member", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/performance-goals/4/evaluations",
+      token: await tokenFor(5, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 404 when the goal does not exist", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/performance-goals/9999/evaluations",
+      token: await tokenFor(1, "root"),
+    })
+
+    expect(response.status).toBe(404)
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/performance-goals/4/evaluations",
+      token: null,
+    })
+
+    expect(response.status).toBe(401)
+  })
+})
+
 describe("POST /performance-goals/:goal_id/evaluations", () => {
   test("owner can add a self evaluation and returns 201", async () => {
     const response = await requestWithContext({

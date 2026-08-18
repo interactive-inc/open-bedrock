@@ -7,6 +7,7 @@ import { UpdateGoal } from "@/contexts/performance-review/application/goal/updat
 import { DeleteGoal } from "@/contexts/performance-review/application/goal/delete-goal"
 import { ListMyGoals } from "@/contexts/performance-review/application/goal/list-my-goals"
 import { CreateGoalEvaluation } from "@/contexts/performance-review/application/goal/create-goal-evaluation"
+import { ListGoalEvaluations } from "@/contexts/performance-review/application/goal/list-goal-evaluations"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
@@ -395,6 +396,92 @@ describe("ListMyGoals", () => {
     }
 
     expect(result.length).toBe(0)
+  })
+})
+
+describe("ListGoalEvaluations", () => {
+  test("returns evaluations in creation order for the owner", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    await new CreateGoalEvaluation(context).run({
+      goalId: goal.id,
+      kind: "self",
+      score: 4,
+      comment: "Self check",
+      evaluatorId: 1,
+      session: makeTestSession("member"),
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    const result = await new ListGoalEvaluations(context).run({
+      goalId: goal.id,
+      viewerEmployeeId: 1,
+      session: makeTestSession("member"),
+    })
+
+    if (result instanceof ApplicationError) {
+      throw new Error("list failed")
+    }
+
+    expect(result.length).toBe(1)
+    expect(result[0]?.kind).toBe("self")
+    expect(result[0]?.score).toBe(4)
+  })
+
+  test("returns an empty list when the goal has no evaluations", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new ListGoalEvaluations(context).run({
+      goalId: goal.id,
+      viewerEmployeeId: 1,
+      session: makeTestSession("member"),
+    })
+
+    if (result instanceof ApplicationError) {
+      throw new Error("list failed")
+    }
+
+    expect(result.length).toBe(0)
+  })
+
+  test("rejects non-owner member with not_viewable", async () => {
+    const { context, db } = createTestContext()
+    const goal = await seedGoal(context, 1)
+    await seedIndependentEmployees(db)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new ListGoalEvaluations(context).run({
+      goalId: goal.id,
+      viewerEmployeeId: 2,
+      session: makeTestSession("member", 2),
+    })
+
+    expectApplicationError(result, ForbiddenError, "not_viewable")
+  })
+
+  test("rejects unknown id with goal_not_found", async () => {
+    const { context } = createTestContext()
+
+    const result = await new ListGoalEvaluations(context).run({
+      goalId: 9999,
+      viewerEmployeeId: 1,
+      session: makeTestSession("root"),
+    })
+
+    expectApplicationError(result, NotFoundError, "goal_not_found")
   })
 })
 
