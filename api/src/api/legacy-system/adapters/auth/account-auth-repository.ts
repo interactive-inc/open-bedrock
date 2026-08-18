@@ -1,13 +1,12 @@
 import type { AccountStatus } from "@system/domain/auth/account-status"
-import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context"
-import {
-  accountRoles,
-  accounts,
-  permissions,
-  rolePermissions,
-  roles,
-} from "@/api/legacy-system/adapters/schema/system"
-import { eq, inArray } from "drizzle-orm"
+import { ResolveSystemAuthorization } from "@system/application/iam/resolve-system-authorization"
+import { zAccountId } from "@system/domain/auth/account-id"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
+import type {
+  SystemD1Context,
+  SystemDatabaseContext,
+} from "@system/infrastructure/configuration/system-context"
+import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization-repository"
 
 export type ResolvedAccount = {
   accountId: number
@@ -24,7 +23,10 @@ export type ResolvedAccountAuthorization = Pick<ResolvedAccount, "roleKeys" | "p
  * permission は accountRoles ⋈ roles ⋈ rolePermissions ⋈ permissions の和集合。
  */
 export class AccountAuthRepository {
-  constructor(private readonly c: SystemDatabaseContext) {
+  constructor(
+    private readonly c: SystemDatabaseContext &
+      SystemD1Context & { env: { NOW?: string | number } },
+  ) {
     Object.freeze(this)
   }
 
@@ -38,18 +40,13 @@ export class AccountAuthRepository {
     | Error
   > {
     try {
-      const db = this.c.var.database
-
-      const rows = await db.select().from(accounts).where(eq(accounts.id, accountId)).limit(1)
-
-      const account = rows.at(0)
-
-      if (account === undefined) {
-        return null
-      }
+      const account = await new SystemAccountRepository({ database: this.c.env.DB }).findById(
+        zAccountId.parse(String(accountId)),
+      )
+      if (account === null || account instanceof Error) return account
 
       return {
-        accountId: account.id,
+        accountId,
         status: account.status,
         tokenVersion: account.tokenVersion,
       }
@@ -70,45 +67,24 @@ export class AccountAuthRepository {
 
   async resolveAuthorizationById(accountId: number): Promise<ResolvedAccountAuthorization | Error> {
     try {
-      const db = this.c.var.database
-      const grantedRoles = await db
-        .select()
-        .from(accountRoles)
-        .where(eq(accountRoles.accountId, accountId))
-
-      const roleIds = grantedRoles.map((row) => row.roleId)
-
-      const roleRows =
-        roleIds.length === 0 ? [] : await db.select().from(roles).where(inArray(roles.id, roleIds))
-
-      const roleKeys = roleRows.map((row) => row.key)
-
-      const permissionKeys = await this.toPermissionKeys(roleIds)
+      const authorization = await new ResolveSystemAuthorization(
+        new SystemD1AuthorizationRepository({ env: { DB: this.c.env.DB } }),
+      ).execute({
+        accountId: zAccountId.parse(String(accountId)),
+        resource: null,
+        at: new Date(this.c.env.NOW ?? Date.now()),
+      })
+      if (authorization instanceof Error) return authorization
+      if (authorization === null) {
+        return { roleKeys: [], permissions: new Set() }
+      }
 
       return {
-        roleKeys: roleKeys,
-        permissions: new Set(permissionKeys),
+        roleKeys: authorization.roleKeys.map((key) => key.replace(/^company:/, "")),
+        permissions: authorization.permissionKeys,
       }
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to resolve account")
     }
-  }
-
-  private async toPermissionKeys(roleIds: ReadonlyArray<number>): Promise<ReadonlyArray<string>> {
-    if (roleIds.length === 0) {
-      return []
-    }
-
-    const db = this.c.var.database
-
-    // permission 数が D1 のバインド変数上限(100)を超えるため、permission ID の
-    // inArray ではなく join で解決する。バインド変数はロール数だけに依存する。
-    const grantRows = await db
-      .select({ key: permissions.key })
-      .from(rolePermissions)
-      .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
-      .where(inArray(rolePermissions.roleId, [...roleIds]))
-
-    return grantRows.map((row) => row.key)
   }
 }

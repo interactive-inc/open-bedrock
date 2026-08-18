@@ -184,14 +184,14 @@ describe("POST /bootstrap", () => {
 
     const roleRow = await db
       .prepare(
-        `SELECT r.key AS role_key, r.is_system AS is_system
-         FROM account_roles ar
-         JOIN roles r ON r.id = ar.role_id
-         WHERE ar.account_id = ?1`,
+        `SELECT role.key AS role_key, role.kind
+         FROM system_role_bindings binding
+         JOIN system_iam_roles role ON role.id = binding.role_id
+         WHERE binding.account_id = ?1 AND binding.revoked_at IS NULL`,
       )
-      .bind(body.account_id)
-      .first<{ role_key: string; is_system: number }>()
-    expect(roleRow).toEqual({ role_key: "root", is_system: 1 })
+      .bind(String(body.account_id))
+      .first<{ role_key: string; kind: string }>()
+    expect(roleRow).toEqual({ role_key: "company:root", kind: "managed" })
 
     const audit = await db
       .prepare(

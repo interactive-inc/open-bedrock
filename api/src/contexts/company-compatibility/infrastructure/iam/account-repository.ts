@@ -8,8 +8,7 @@ import {
   accountEmployeeLinks,
   employees,
 } from "@/contexts/company-compatibility/infrastructure/schema/employee"
-import { accountRoles, accounts, roles } from "@/api/legacy-system/adapters/schema/system"
-import { eq, inArray, sql } from "drizzle-orm"
+import { inArray } from "drizzle-orm"
 
 export type AccountSummary = {
   id: number
@@ -34,8 +33,9 @@ export class AccountRepository {
   async listSummaries(): Promise<ReadonlyArray<AccountSummary> | Error> {
     try {
       const db = this.c.var.database
-
-      const accountRows = await db.select().from(accounts)
+      const accountRows = await this.c.env.DB.prepare(
+        "SELECT id, status FROM system_accounts ORDER BY id",
+      ).all<{ id: string; status: string }>()
 
       const linkRows = await db.select().from(accountEmployeeLinks)
       const employeeIdByAccountId = new Map(
@@ -51,25 +51,30 @@ export class AccountRepository {
 
       const nameByEmployeeId = new Map(employeeRows.map((row) => [row.id, row.name]))
 
-      const grantRows = await db.select().from(accountRoles)
+      const grantRows = await this.c.env.DB.prepare(
+        `SELECT binding.account_id, role.key
+         FROM system_role_bindings AS binding
+         INNER JOIN system_iam_roles AS role ON role.id = binding.role_id
+         WHERE binding.resource_type IS NULL AND binding.revoked_at IS NULL
+         ORDER BY binding.account_id, role.key`,
+      ).all<{ account_id: string; key: string }>()
 
-      const roleRows = await db.select().from(roles)
+      return accountRows.results.flatMap((account) => {
+        const accountId = Number(account.id)
+        if (!Number.isSafeInteger(accountId) || String(accountId) !== account.id) return []
+        const employeeId = employeeIdByAccountId.get(accountId) ?? null
 
-      const keyByRoleId = new Map(roleRows.map((row) => [row.id, row.key]))
-
-      return accountRows.map((account) => {
-        const employeeId = employeeIdByAccountId.get(account.id) ?? null
-
-        return {
-          id: account.id,
-          employeeId,
-          employeeName: employeeId === null ? null : (nameByEmployeeId.get(employeeId) ?? null),
-          status: account.status,
-          roleKeys: grantRows
-            .filter((grant) => grant.accountId === account.id)
-            .map((grant) => keyByRoleId.get(grant.roleId))
-            .filter((key): key is string => key !== undefined),
-        }
+        return [
+          {
+            id: accountId,
+            employeeId,
+            employeeName: employeeId === null ? null : (nameByEmployeeId.get(employeeId) ?? null),
+            status: account.status,
+            roleKeys: grantRows.results
+              .filter((grant) => grant.account_id === account.id)
+              .map((grant) => grant.key.replace(/^company:/, "")),
+          },
+        ]
       })
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to list accounts")
@@ -81,13 +86,12 @@ export class AccountRepository {
    */
   async existsById(accountId: number): Promise<boolean | Error> {
     try {
-      const rows = await this.c.var.database
-        .select()
-        .from(accounts)
-        .where(eq(accounts.id, accountId))
-        .limit(1)
-
-      return rows.length > 0
+      const found = await this.c.env.DB.prepare(
+        "SELECT 1 AS found FROM system_accounts WHERE id = ?1 LIMIT 1",
+      )
+        .bind(String(accountId))
+        .first<number>("found")
+      return found === 1
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to find account")
     }
@@ -103,15 +107,13 @@ export class AccountRepository {
     now: number
   }): Promise<null | Error> {
     try {
-      await this.c.var.database
-        .insert(accountRoles)
-        .values({
-          accountId: props.accountId,
-          roleId: props.roleId,
-          grantedBy: props.grantedBy,
-          grantedAt: props.now,
-        })
-        .onConflictDoNothing()
+      await this.c.env.DB.prepare(
+        `INSERT OR IGNORE INTO system_role_bindings
+             (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+           VALUES (?1, ?2, ?3, NULL, NULL, ?4, NULL)`,
+      )
+        .bind(crypto.randomUUID(), String(props.accountId), String(props.roleId), props.now)
+        .run()
 
       return null
     } catch (caught) {
@@ -137,11 +139,15 @@ export class AccountRepository {
           requiredPermissionKeys: ["iam:assign_roles"],
         }),
         this.c.env.DB.prepare(
-          "INSERT OR IGNORE INTO account_roles (account_id, role_id, granted_by, granted_at) VALUES (?1, ?2, ?3, ?4)",
-        ).bind(props.accountId, props.roleId, props.grantedBy, props.now),
+          `INSERT OR IGNORE INTO system_role_bindings
+             (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+           VALUES (?1, ?2, ?3, NULL, NULL, ?4, NULL)`,
+        ).bind(crypto.randomUUID(), String(props.accountId), String(props.roleId), props.now),
         this.c.env.DB.prepare(
-          "UPDATE accounts SET token_version = token_version + 1, updated_at = ?2 WHERE id = ?1",
-        ).bind(props.accountId, props.now),
+          `UPDATE system_accounts
+           SET token_version = token_version + 1, updated_at = max(updated_at, ?2)
+           WHERE id = ?1`,
+        ).bind(String(props.accountId), props.now),
       ])
 
       return null
@@ -159,10 +165,13 @@ export class AccountRepository {
    */
   async setStatus(accountId: number, status: AccountStatus, now: number): Promise<null | Error> {
     try {
-      await this.c.var.database
-        .update(accounts)
-        .set({ status: status, tokenVersion: sql`${accounts.tokenVersion} + 1`, updatedAt: now })
-        .where(eq(accounts.id, accountId))
+      await this.c.env.DB.prepare(
+        `UPDATE system_accounts
+           SET status = ?2, token_version = token_version + 1, updated_at = max(updated_at, ?3)
+           WHERE id = ?1`,
+      )
+        .bind(String(accountId), status, now)
+        .run()
 
       return null
     } catch (caught) {
@@ -188,12 +197,16 @@ export class AccountRepository {
           requiredPermissionKeys: ["iam:assign_roles"],
         }),
         this.c.env.DB.prepare(
-          "DELETE FROM account_roles WHERE account_id = ?1 AND role_id = ?2",
-        ).bind(accountId, roleId),
+          `UPDATE system_role_bindings SET revoked_at = max(created_at, ?3)
+           WHERE account_id = ?1 AND role_id = ?2
+             AND resource_type IS NULL AND revoked_at IS NULL`,
+        ).bind(String(accountId), String(roleId), now),
         new LastRootGuard(this.c).abortWhenNoLoginEnabledEffectiveRoot(),
         this.c.env.DB.prepare(
-          "UPDATE accounts SET token_version = token_version + 1, updated_at = ?2 WHERE id = ?1",
-        ).bind(accountId, now),
+          `UPDATE system_accounts
+           SET token_version = token_version + 1, updated_at = max(updated_at, ?2)
+           WHERE id = ?1`,
+        ).bind(String(accountId), now),
       ])
 
       return null
@@ -228,8 +241,10 @@ export class AccountRepository {
           requiredPermissionKeys: ["account:manage"],
         }),
         this.c.env.DB.prepare(
-          "UPDATE accounts SET status = ?2, token_version = token_version + 1, updated_at = ?3 WHERE id = ?1",
-        ).bind(accountId, status, now),
+          `UPDATE system_accounts
+           SET status = ?2, token_version = token_version + 1, updated_at = max(updated_at, ?3)
+           WHERE id = ?1`,
+        ).bind(String(accountId), status, now),
         new LastRootGuard(this.c).abortWhenNoLoginEnabledEffectiveRoot(),
       ])
 
@@ -252,10 +267,13 @@ export class AccountRepository {
    */
   async bumpTokenVersion(accountId: number, now: number): Promise<null | Error> {
     try {
-      await this.c.var.database
-        .update(accounts)
-        .set({ tokenVersion: sql`${accounts.tokenVersion} + 1`, updatedAt: now })
-        .where(eq(accounts.id, accountId))
+      await this.c.env.DB.prepare(
+        `UPDATE system_accounts
+           SET token_version = token_version + 1, updated_at = max(updated_at, ?2)
+           WHERE id = ?1`,
+      )
+        .bind(String(accountId), now)
+        .run()
 
       return null
     } catch (caught) {
@@ -274,23 +292,30 @@ export class AccountRepository {
         return new Map()
       }
 
-      const rows = await this.c.var.database
-        .select({ employeeId: accountEmployeeLinks.employeeId, roleKey: roles.key })
-        .from(accounts)
-        .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
-        .innerJoin(accountRoles, eq(accountRoles.accountId, accounts.id))
-        .innerJoin(roles, eq(roles.id, accountRoles.roleId))
-        .where(inArray(accountEmployeeLinks.employeeId, [...employeeIds]))
+      const rows = await this.c.env.DB.prepare(
+        `SELECT link.employee_id, role.key
+           FROM account_employee_links AS link
+           INNER JOIN system_accounts AS account ON account.id = CAST(link.account_id AS TEXT)
+           INNER JOIN system_role_bindings AS binding ON binding.account_id = account.id
+           INNER JOIN system_iam_roles AS role ON role.id = binding.role_id
+           WHERE link.employee_id IN (SELECT CAST(value AS INTEGER) FROM json_each(?1))
+             AND binding.resource_type IS NULL
+             AND binding.revoked_at IS NULL
+           ORDER BY link.employee_id, role.key`,
+      )
+        .bind(JSON.stringify(employeeIds))
+        .all<{ employee_id: number; key: string }>()
 
       const result = new Map<number, Array<string>>()
 
-      for (const row of rows) {
-        const existing = result.get(row.employeeId)
+      for (const row of rows.results) {
+        const existing = result.get(row.employee_id)
+        const roleKey = row.key.replace(/^company:/, "")
 
         if (existing === undefined) {
-          result.set(row.employeeId, [row.roleKey])
+          result.set(row.employee_id, [roleKey])
         } else {
-          existing.push(row.roleKey)
+          existing.push(roleKey)
         }
       }
 

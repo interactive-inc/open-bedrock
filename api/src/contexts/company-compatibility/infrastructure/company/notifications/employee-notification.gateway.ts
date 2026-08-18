@@ -1,10 +1,13 @@
 import type { CompanyNotificationKind } from "@/contexts/company-compatibility/domain/company/notifications/notification-kind"
-import { Notification } from "@/api/legacy-system/model/notifications/legacy-notification.entity"
 import type { Context } from "@/env"
 import { ResolveAccountEmployeeLink } from "@/contexts/company/application/workforce/resolve-account-employee-link"
 import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { AccountEmployeeLinkReadRepository } from "@/contexts/company-compatibility/infrastructure/workforce/account-employee-link-read.repository"
-import { NotificationRepository } from "@/api/legacy-system/adapters/notifications/notification-repository"
+import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
+import { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
+import { NotificationDelivery } from "@system/domain/notifications/notification-delivery.entity"
+import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
+import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
 
 export type EmployeeNotification = Readonly<{
   recipientEmployeeId: number
@@ -16,11 +19,23 @@ export type EmployeeNotification = Readonly<{
   createdAt: string
 }>
 
+export type PublishedEmployeeNotification = Readonly<{
+  id: number
+  recipientAccountId: number
+  sourceDomain: string
+  sourceId: number | null
+  kind: CompanyNotificationKind
+  title: string
+  body: string | null
+  isRead: false
+  createdAt: string
+}>
+
 /** Company の Employee 宛て要求を System の Account 宛て通知へ変換する。 */
 export class EmployeeNotificationGateway {
   constructor(private readonly c: Context) {}
 
-  async create(props: EmployeeNotification): Promise<Notification | Error> {
+  async create(props: EmployeeNotification): Promise<PublishedEmployeeNotification | Error> {
     const resolved = await new ResolveAccountEmployeeLink(
       new AccountEmployeeLinkReadRepository(this.c),
     ).execute({
@@ -42,16 +57,59 @@ export class EmployeeNotificationGateway {
       return new Error("notification recipient account is not legacy-compatible")
     }
 
-    return await new NotificationRepository(this.c).create(
-      Notification.create({
-        recipientAccountId: legacyAccountId,
-        kind: props.kind,
-        title: props.title,
-        body: props.body,
-        sourceDomain: props.sourceDomain,
-        sourceId: props.sourceId,
-        createdAt: props.createdAt,
+    const createdAt = new Date(props.createdAt)
+    if (!Number.isSafeInteger(createdAt.getTime())) {
+      return new Error("notification creation time is invalid")
+    }
+
+    const words = crypto.getRandomValues(new Uint32Array(2))
+    const notificationId = ((words[0] ?? 0) & 0x000f_ffff) * 0x1_0000_0000 + (words[1] ?? 0) || 1
+    const canonicalId = String(notificationId)
+    const message = NotificationMessage.create({
+      id: canonicalId,
+      kind: `company:${props.kind}`,
+      title: props.title,
+      body: props.body,
+      source: {
+        type: "company:notification.source",
+        id: JSON.stringify({ domain: props.sourceDomain, id: props.sourceId }),
+      },
+      createdAt,
+    })
+    if (message instanceof Error) return message
+
+    const delivery = NotificationDelivery.create({
+      id: canonicalId,
+      messageId: message.id,
+      recipientAccountId: resolved.link.accountId,
+      deliveredAt: createdAt,
+      readAt: null,
+    })
+    if (delivery instanceof Error) return delivery
+
+    const deliveries = NotificationDeliveryBatch.create([delivery])
+    if (deliveries instanceof Error) return deliveries
+
+    const result = await new PublishSystemNotification({
+      notificationRepository: new SystemNotificationRepository({
+        context: { env: { DB: this.c.env.DB } },
       }),
-    )
+    }).execute({ message, deliveries })
+    if (result instanceof Error) return result
+    if (result.kind === "rejected") {
+      return new Error(`notification publication rejected: ${result.reason}`)
+    }
+
+    return Object.freeze({
+      id: notificationId,
+      recipientAccountId: legacyAccountId,
+      sourceDomain: props.sourceDomain,
+      sourceId: props.sourceId,
+      kind: props.kind,
+      title: props.title,
+      body: props.body,
+      isRead: false as const,
+      createdAt: props.createdAt,
+    })
   }
 }

@@ -1,12 +1,15 @@
-import { DeleteNotification } from "@/api/legacy-system/use-cases/notifications/delete-notification"
-import { GetNotification } from "@/api/legacy-system/use-cases/notifications/get-notification"
-import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
 import { zAppNotification } from "@/lib/app-schemas"
 import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
 import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { companyNotificationKindSchema } from "@/contexts/company-compatibility/domain/company/notifications/notification-kind"
+import { zAccountId } from "@system/domain/auth/account-id"
+import { notificationDeliveryIdSchema } from "@system/domain/notifications/notification-delivery.entity"
+import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
+import { NotFoundError } from "@/lib/errors"
+import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { z } from "zod"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /notifications/:id — 本人宛ての通知1件を取得する */
@@ -18,26 +21,32 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const notificationId = validateIntParam(c.req.param("id"), "notification")
-
-  const result = await new GetNotification(c).run({
-    notificationId,
-    viewerAccountId: session.accountId,
-  })
-
-  if (result instanceof ApplicationError) {
-    throw toHttpException(result)
+  const result = await new SystemNotificationRepository({
+    context: { env: { DB: c.env.DB } },
+  }).findByDeliveryIdForAccount(
+    notificationDeliveryIdSchema.parse(String(notificationId)),
+    zAccountId.parse(String(session.accountId)),
+  )
+  if (result instanceof Error) throw result
+  if (result === null) {
+    throw toHttpException(new NotFoundError("notification not found", "notification_not_found"))
   }
 
+  const kind = companyNotificationKindSchema.parse(result.message.kind.replace(/^company:/, ""))
+  const source = z
+    .object({ domain: z.string(), id: z.number().int().positive().safe().nullable() })
+    .parse(JSON.parse(result.message.source?.id ?? ""))
+
   const responseBody = zAppNotification.parse({
-    id: result.id,
+    id: notificationId,
     recipient_employee_id: session.employeeId,
-    source_domain: result.sourceDomain,
-    source_id: result.sourceId,
-    kind: result.kind,
-    title: result.title,
-    body: result.body,
-    is_read: result.isRead,
-    created_at: result.createdAt,
+    source_domain: source.domain,
+    source_id: source.id,
+    kind,
+    title: result.message.title,
+    body: result.message.body,
+    is_read: result.delivery.isRead,
+    created_at: result.message.createdAt.toISOString(),
   })
 
   return c.json(responseBody, 200)
@@ -54,13 +63,15 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const notificationId = validateIntParam(c.req.param("id"), "notification")
 
-  const result = await new DeleteNotification(c).run({
-    notificationId,
-    viewerAccountId: session.accountId,
-  })
-
-  if (result instanceof ApplicationError) {
-    throw toHttpException(result)
+  const dismissed = await new SystemNotificationRepository({
+    context: { env: { DB: c.env.DB } },
+  }).dismissDelivery(
+    notificationDeliveryIdSchema.parse(String(notificationId)),
+    zAccountId.parse(String(session.accountId)),
+  )
+  if (dismissed instanceof Error) throw dismissed
+  if (!dismissed) {
+    throw toHttpException(new NotFoundError("notification not found", "notification_not_found"))
   }
 
   return c.body(null, 204)

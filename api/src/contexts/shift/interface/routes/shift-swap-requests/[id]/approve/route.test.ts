@@ -358,18 +358,25 @@ describe("POST /shift-swap-requests/:id/approve", () => {
     })
 
     const notifications = await db
-      .prepare("SELECT recipient_account_id, kind, source_domain FROM notifications")
-      .all<{ recipient_account_id: number; kind: string; source_domain: string }>()
+      .prepare(
+        `SELECT
+           delivery.recipient_account_id,
+           message.kind,
+           json_extract(message.source_id, '$.domain') AS source_domain
+         FROM system_notification_deliveries AS delivery
+         INNER JOIN system_notification_messages AS message ON message.id = delivery.message_id`,
+      )
+      .all<{ recipient_account_id: string; kind: string; source_domain: string }>()
 
     const results = notifications.results
 
     expect(results.length).toBe(2)
 
-    const recipientIds = results.map((r) => r.recipient_account_id).sort((a, b) => a - b)
-    expect(recipientIds).toEqual([4, 5])
+    const recipientIds = results.map((row) => row.recipient_account_id).sort()
+    expect(recipientIds).toEqual(["4", "5"])
 
     for (const row of results) {
-      expect(row.kind).toBe("approval_result")
+      expect(row.kind).toBe("company:approval_result")
       expect(row.source_domain).toBe("shift_swap_request")
     }
   })

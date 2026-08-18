@@ -132,7 +132,7 @@ function parseManagedValue<Output>(
   message: string,
   code: string,
 ): Output {
-  let parsed: z.SafeParseReturnType<unknown, Output>
+  let parsed: ReturnType<typeof schema.safeParse>
   try {
     parsed = schema.safeParse(value)
   } catch (error) {

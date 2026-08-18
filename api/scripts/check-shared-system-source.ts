@@ -1,6 +1,6 @@
 import { Glob } from "bun"
 import { createHash } from "node:crypto"
-import { readFileSync } from "node:fs"
+import { readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { z } from "zod"
 
@@ -31,6 +31,14 @@ export async function collectSharedSystemSourceHashes(): Promise<ReadonlyMap<str
   paths.push("system-context.manifest.json")
 
   return new Map(paths.toSorted().map((relativePath) => [relativePath, hashFile(relativePath)]))
+}
+
+export async function writeSharedSystemSourceLock(): Promise<void> {
+  const actual = await collectSharedSystemSourceHashes()
+  writeFileSync(
+    LOCK_PATH,
+    `${JSON.stringify({ version: 1, files: Object.fromEntries(actual) }, null, 2)}\n`,
+  )
 }
 
 export async function checkSharedSystemSource(): Promise<string[]> {
@@ -65,10 +73,15 @@ export async function checkSharedSystemSource(): Promise<string[]> {
 }
 
 if (import.meta.main) {
-  const violations = await checkSharedSystemSource()
-  if (violations.length > 0) {
-    console.error(violations.join("\n"))
-    process.exit(1)
+  if (process.argv.includes("--write")) {
+    await writeSharedSystemSourceLock()
+    console.log("System共通source lockを更新しました")
+  } else {
+    const violations = await checkSharedSystemSource()
+    if (violations.length > 0) {
+      console.error(violations.join("\n"))
+      process.exit(1)
+    }
+    console.log("System共通sourceはlockと一致しています")
   }
-  console.log("System共通sourceはlockと一致しています")
 }

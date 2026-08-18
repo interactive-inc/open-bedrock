@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { AuthenticateEmployee } from "@/contexts/company-compatibility/application/auth/authenticate-employee"
 import { accessTokenService } from "@/contexts/company-compatibility/infrastructure/auth/jose-token-signer"
 import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
-import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
+import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service"
 import { toLegacyPasswordHash } from "@/lib/auth/to-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
@@ -97,36 +97,41 @@ describe("AuthenticateEmployee", () => {
     expect(result.accountId).toBe(1)
     expect(result.employeeId).toBe(1)
     expect((await accessTokenService.verify(result.accessToken, jwtSecret)).ver).toBe(0)
-    expect(
-      await db
-        .prepare(
-          `SELECT actor_account_id, action, target_type, target_id, outcome, reason_code,
-                  authorization_json, before_json, after_json, metadata_json, occurred_at
-           FROM system_audit_events`,
-        )
-        .first<Record<string, unknown>>(),
-    ).toEqual({
+    const sessionAudit = await db
+      .prepare(
+        `SELECT actor_account_id, action, target_type, target_id, outcome, reason_code,
+                authorization_json, before_json, after_json, metadata_json, occurred_at
+         FROM system_audit_events`,
+      )
+      .first<Record<string, unknown>>()
+    expect(sessionAudit).toMatchObject({
       actor_account_id: "1",
-      action: "auth.session.login_succeeded",
-      target_type: "account",
-      target_id: "1",
+      action: "auth.session.create",
+      target_type: "session",
       outcome: "succeeded",
       reason_code: null,
       authorization_json: null,
       before_json: null,
       after_json: null,
       metadata_json:
-        '{"client_ip":null,"client_name":"api","request_id":"00000000-0000-4000-8000-000000000000"}',
+        '{"client_ip":null,"client_name":"api","request_id":"00000000-0000-4000-8000-000000000000","transport_action":"auth.session.login_succeeded"}',
       occurred_at: 1_767_225_600_000,
     })
+    expect(sessionAudit?.target_id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    )
+    const refreshTokenHash = await new SystemSessionMaterialService().hashRawToken(
+      result.refreshToken,
+    )
+    if (refreshTokenHash instanceof Error) throw refreshTokenHash
     expect(
       await db
-        .prepare("SELECT token_hash, created_at, expires_at FROM refresh_tokens")
+        .prepare("SELECT token_hash, created_at, expires_at FROM system_sessions")
         .first<{ token_hash: string; created_at: number; expires_at: number }>(),
     ).toEqual({
-      token_hash: await refreshTokenHash(result.refreshToken),
-      created_at: 1_767_225_600,
-      expires_at: 1_767_830_400,
+      token_hash: refreshTokenHash,
+      created_at: 1_767_225_600_000,
+      expires_at: 1_767_830_400_000,
     })
 
     const persistedAudit = JSON.stringify(
@@ -145,7 +150,6 @@ describe("AuthenticateEmployee", () => {
       "UPDATE system_accounts SET status = 'suspended', token_version = 1 WHERE id = '1'",
     ],
     ["locked", "UPDATE system_accounts SET status = 'locked', token_version = 1 WHERE id = '1'"],
-    ["token version drift", "UPDATE system_accounts SET token_version = 1 WHERE id = '1'"],
   ])("fails closed without session material when the canonical account is %s", async (_, sql) => {
     const { context, db } = createTestContext()
     const hash = await toPasswordHash("supersecret")
@@ -166,11 +170,36 @@ describe("AuthenticateEmployee", () => {
 
     expect(result).toEqual({ reason: "invalid_credentials" })
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM system_sessions").first<number>("count"),
     ).toBe(0)
     expect(
       await db.prepare("SELECT COUNT(*) AS count FROM system_audit_events").first<number>("count"),
     ).toBe(0)
+  })
+
+  test("uses canonical Account tokenVersion when issuing the access token", async () => {
+    const { context, db } = createTestContext()
+    const hash = await toPasswordHash("supersecret")
+    await insertEmployee(db, {
+      id: 1,
+      email: "you+canonical-version@example.com",
+      passwordHash: hash,
+    })
+    await db.exec("UPDATE system_accounts SET token_version = 1 WHERE id = '1'")
+
+    const result = await new AuthenticateEmployee(context).run({
+      email: "you+canonical-version@example.com",
+      password: "supersecret",
+      jwtSecret,
+      userAgent: null,
+      now,
+    })
+
+    if (result instanceof Error || "reason" in result) {
+      throw new Error("expected access token")
+    }
+
+    expect((await accessTokenService.verify(result.accessToken, jwtSecret)).ver).toBe(1)
   })
 
   test("fails closed without session material when the canonical account cannot be read", async () => {
@@ -194,7 +223,7 @@ describe("AuthenticateEmployee", () => {
     expect(result).toBeInstanceOf(Error)
     expect(result).toMatchObject({ code: "unexpected" })
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM system_sessions").first<number>("count"),
     ).toBe(0)
     expect(
       await db.prepare("SELECT COUNT(*) AS count FROM system_audit_events").first<number>("count"),
@@ -226,7 +255,7 @@ describe("AuthenticateEmployee", () => {
     expect(result).toBeInstanceOf(UnavailableError)
     expect(result).toMatchObject({ code: "audit_unavailable" })
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM system_sessions").first<number>("count"),
     ).toBe(0)
     expect(
       await db.prepare("SELECT COUNT(*) AS count FROM system_audit_events").first<number>("count"),
@@ -440,7 +469,7 @@ describe("AuthenticateEmployee", () => {
     expect((result as UnavailableError).code).toBe("audit_unavailable")
     expect((result as UnavailableError).message).toBe("invalid email or password")
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM system_sessions").first<number>("count"),
     ).toBe(0)
     expect(
       await db.prepare("SELECT COUNT(*) AS count FROM system_audit_events").first<number>("count"),

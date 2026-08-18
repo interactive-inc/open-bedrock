@@ -1,10 +1,6 @@
-import { createAuditEvent } from "@/contexts/company-compatibility/application/audit/company-audit-event"
-import { AuditEventRepository } from "@/contexts/company-compatibility/infrastructure/company/audit/audit-event-repository"
-import { RefreshTokenRepository } from "@/contexts/company-compatibility/infrastructure/auth/refresh-token-repository"
-import { assertAuditHmacSecret } from "@/lib/audit/assert-audit-hmac-secret"
-import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
-import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
+import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -20,58 +16,30 @@ export const POST = factory.createHandlers(
   async (c) => {
     const json = c.req.valid("json")
     const now = c.env.NOW === undefined ? new Date() : new Date(c.env.NOW)
-    const nowEpoch = Math.floor(now.getTime() / 1_000)
-
-    let auditHmacSecret: string
-    try {
-      assertAuditHmacSecret(c.env.AUDIT_HMAC_SECRET)
-      auditHmacSecret = c.env.AUDIT_HMAC_SECRET
-    } catch {
-      // HMAC secret missing — still revoke, but skip audit
+    const applications = createSystemSessionApplications({
+      context: { env: { DB: c.env.DB } },
+      sessionTtlMilliseconds: 7 * 24 * 60 * 60 * 1_000,
+    })
+    if (applications instanceof Error) {
+      console.error("[auth/logout] failed to configure canonical System Session")
       return c.body(null, 204)
     }
 
-    const refreshTokenRepository = new RefreshTokenRepository(c)
-    const auditRepository = new AuditEventRepository(c)
+    const metadataJson = toStableSystemAuditJson({
+      client_ip: c.var.auditContext.clientIp,
+      client_name: c.var.auditContext.clientName,
+      request_id: c.var.auditContext.requestId,
+    })
+    if (metadataJson instanceof Error) return c.body(null, 204)
 
-    const hashedToken = await refreshTokenHash(json.refresh_token)
-    const existing = await refreshTokenRepository.findByHash(hashedToken)
-
-    if (existing instanceof Error || existing === null) {
-      // Token not found or DB error — return 204 regardless (logout is idempotent)
-      return c.body(null, 204)
-    }
-
-    const familyHash = await hashAuditIdentifier(
-      `refresh-family:${existing.familyId}`,
-      auditHmacSecret,
-    )
-
-    const record = createAuditEvent(
-      {
-        actorAccountId: existing.accountId,
-        actorEmployeeId: null,
-        action: "auth.session.logout",
-        target: { type: "account", id: String(existing.accountId) },
-        outcome: "succeeded",
-        reasonCode: null,
-        metadata: { family_id_hash: familyHash },
-        now,
-      },
-      c.var.auditContext,
-    )
-
-    const auditStatements = auditRepository.prepareAppend(record)
-
-    const revokeResult = await refreshTokenRepository.revokeFamilyWithAudit({
-      familyId: existing.familyId,
-      nowEpoch,
-      auditStatements,
+    const revokeResult = await applications.revoke.execute({
+      rawToken: json.refresh_token,
+      now,
+      auditContext: { authorizationJson: null, metadataJson },
     })
 
     if (revokeResult instanceof Error) {
-      // Revocation failed — return 204 anyway (client should still clear cookies)
-      console.error("[auth/logout] failed to revoke token family", revokeResult)
+      console.error("[auth/logout] failed to revoke canonical System Session")
     }
 
     return c.body(null, 204)

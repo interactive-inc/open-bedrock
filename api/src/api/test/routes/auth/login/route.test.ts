@@ -127,27 +127,28 @@ describe("POST /auth/login", () => {
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
     )
     expect(internalRequestId).not.toBe(incomingRequestId)
-    expect(
-      await db
-        .prepare(
-          `SELECT actor_account_id, action, target_type, target_id, outcome, reason_code,
-                  authorization_json, before_json, after_json, metadata_json, occurred_at
-           FROM system_audit_events`,
-        )
-        .first<Record<string, unknown>>(),
-    ).toEqual({
+    const sessionAudit = await db
+      .prepare(
+        `SELECT actor_account_id, action, target_type, target_id, outcome, reason_code,
+                authorization_json, before_json, after_json, metadata_json, occurred_at
+         FROM system_audit_events`,
+      )
+      .first<Record<string, unknown>>()
+    expect(sessionAudit).toMatchObject({
       actor_account_id: "1",
-      action: "auth.session.login_succeeded",
-      target_type: "account",
-      target_id: "1",
+      action: "auth.session.create",
+      target_type: "session",
       outcome: "succeeded",
       reason_code: null,
       authorization_json: null,
       before_json: null,
       after_json: null,
-      metadata_json: `{"client_ip":"198.51.100.41","client_name":"cli","request_id":"${internalRequestId}"}`,
+      metadata_json: `{"client_ip":"198.51.100.41","client_name":"cli","request_id":"${internalRequestId}","transport_action":"auth.session.login_succeeded"}`,
       occurred_at: nowEpoch * 1_000,
     })
+    expect(sessionAudit?.target_id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    )
 
     const persisted = JSON.stringify(await db.prepare("SELECT * FROM system_audit_events").all())
     for (const secret of [
@@ -320,7 +321,7 @@ describe("POST /auth/login", () => {
     expect(body).not.toHaveProperty("access_token")
     expect(body).not.toHaveProperty("refresh_token")
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM system_sessions").first<number>("count"),
     ).toBe(0)
     expect(await auditCount(db)).toBe(0)
   })

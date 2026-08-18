@@ -1,16 +1,10 @@
 import type { AccessTokenView } from "@/api/legacy-system/use-cases/auth/access-token-view"
-import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
 import { zAccountId } from "@system/domain/auth/account-id"
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import type { Context } from "@/env"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
 import { JoseTokenSigner } from "@/contexts/company-compatibility/infrastructure/auth/jose-token-signer"
-import { RefreshTokenRepository } from "@/contexts/company-compatibility/infrastructure/auth/refresh-token-repository"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
-import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
-import { generateOpaqueToken } from "@/contexts/system/infrastructure/auth/generate-opaque-token"
+import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
 
 export type IssueSessionCommand = {
   accountId: number
@@ -55,90 +49,47 @@ export class IssueEmployeeSession {
       return new UnexpectedError("failed to authorize account session")
     }
 
-    const canonicalSession = await resolveAccountSession({
-      accountRepository: new SystemAccountRepository({ database: this.c.env.DB }),
-      accountId: accountId.data,
-      sessionTokenVersion: command.tokenVersion,
+    const applications = createSystemSessionApplications({
+      context: { env: { DB: this.c.env.DB } },
+      sessionTtlMilliseconds: 7 * 24 * 60 * 60 * 1_000,
     })
-
-    if (canonicalSession instanceof Error) {
-      return new UnexpectedError("failed to authorize account session", {
-        cause: canonicalSession,
-      })
+    if (applications instanceof Error) {
+      return new UnexpectedError("failed to configure account session", { cause: applications })
     }
 
-    if (canonicalSession.kind === "rejected") {
-      return { reason: "account_session_rejected" }
-    }
+    const metadataJson = toStableSystemAuditJson({
+      client_ip: this.c.var.auditContext.clientIp,
+      client_name: this.c.var.auditContext.clientName,
+      request_id: this.c.var.auditContext.requestId,
+      transport_action: command.successAction,
+    })
+    if (metadataJson instanceof Error) return auditUnavailable(metadataJson)
 
-    const canonicalTokenVersion = canonicalSession.account.tokenVersion
-    const tokenSigner = new JoseTokenSigner()
+    const issued = await applications.issue.execute({
+      accountId: accountId.data,
+      tokenVersion: command.tokenVersion,
+      now: command.now,
+      auditContext: { authorizationJson: null, metadataJson },
+    })
+    if (issued instanceof Error) return auditUnavailable(issued)
+    if (issued.kind === "rejected") return { reason: "account_session_rejected" }
 
-    const accessToken = await tokenSigner.sign(
-      {
-        accountId: command.accountId,
-        tokenVersion: canonicalTokenVersion,
-      },
+    const accessToken = await new JoseTokenSigner().sign(
+      { accountId: command.accountId, tokenVersion: issued.tokenVersion },
       command.jwtSecret,
     )
-
     if (accessToken instanceof Error) {
+      await applications.revoke.execute({
+        rawToken: issued.rawToken,
+        now: command.now,
+        auditContext: { authorizationJson: null, metadataJson },
+      })
       return new UnexpectedError("failed to sign access token", { cause: accessToken })
-    }
-
-    const rawRefreshToken = generateOpaqueToken()
-
-    const hashedToken = await refreshTokenHash(rawRefreshToken)
-
-    const nowEpoch = Math.floor(command.now.getTime() / 1_000)
-
-    let auditStatements: ReturnType<SystemAuditEventRepository["prepareAppend"]>
-    try {
-      const metadataJson = toStableSystemAuditJson({
-        client_ip: this.c.var.auditContext.clientIp,
-        client_name: this.c.var.auditContext.clientName,
-        request_id: this.c.var.auditContext.requestId,
-      })
-      if (metadataJson instanceof Error) return auditUnavailable(metadataJson)
-
-      const auditRecord = createSystemAuditEvent({
-        actorAccountId: String(command.accountId),
-        action: command.successAction,
-        targetType: "account",
-        targetId: String(command.accountId),
-        outcome: "succeeded",
-        reasonCode: null,
-        authorizationJson: null,
-        beforeJson: null,
-        afterJson: null,
-        metadataJson,
-        occurredAt: command.now,
-      })
-      if (auditRecord instanceof Error) return auditUnavailable(auditRecord)
-      auditStatements = new SystemAuditEventRepository(this.c).prepareAppend(auditRecord)
-    } catch (cause) {
-      return auditUnavailable(cause)
-    }
-
-    const createResult = await new RefreshTokenRepository(this.c).createWithAudit(
-      {
-        accountId: command.accountId,
-        tokenHash: hashedToken,
-        familyId: crypto.randomUUID(),
-        tokenVersion: canonicalTokenVersion,
-        userAgent: command.userAgent,
-        nowEpoch,
-      },
-      auditStatements,
-    )
-
-    if (createResult instanceof Error) {
-      return auditUnavailable(createResult)
     }
 
     return {
       accessToken,
-      refreshToken: rawRefreshToken,
+      refreshToken: issued.rawToken,
       accountId: command.accountId,
       employeeId: command.employeeId,
     }

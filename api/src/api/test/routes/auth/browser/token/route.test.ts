@@ -105,9 +105,7 @@ describe("POST /auth/browser/token", () => {
     expect(body.refresh_token.length > 0).toBe(true)
 
     // セッション発行の成功監査はここ(token 消費時)で初めて記録される。
-    expect(await auditRows(db)).toEqual([
-      { action: "auth.session.browser_login_succeeded", reason_code: null },
-    ])
+    expect(await auditRows(db)).toEqual([{ action: "auth.session.create", reason_code: null }])
 
     const remaining = await db
       .prepare("SELECT COUNT(*) AS count FROM browser_login_codes")

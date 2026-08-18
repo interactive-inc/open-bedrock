@@ -198,6 +198,13 @@ async function removePermissionFromRole(
     )
     .bind(roleId, permissionKey)
     .run()
+  await db
+    .prepare(
+      `DELETE FROM system_iam_role_permissions
+       WHERE role_id = ?1 AND permission_key = ?2`,
+    )
+    .bind(String(roleId), permissionKey)
+    .run()
 }
 
 async function employeeCount(db: D1Database, code: string): Promise<number> {

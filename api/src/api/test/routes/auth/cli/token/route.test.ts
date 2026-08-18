@@ -88,9 +88,7 @@ describe("POST /auth/cli/token", () => {
     expect(body.refresh_token.length > 0).toBe(true)
 
     // セッション発行の成功監査はここ(token 消費時)で初めて記録される。
-    expect(await auditRows(db)).toEqual([
-      { action: "auth.session.cli_login_succeeded", reason_code: null },
-    ])
+    expect(await auditRows(db)).toEqual([{ action: "auth.session.create", reason_code: null }])
 
     // トークンは cli_login_codes に一切保存されていない（既に行ごと消費済み）。
     const remaining = await db

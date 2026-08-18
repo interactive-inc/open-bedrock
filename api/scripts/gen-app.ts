@@ -11,7 +11,9 @@
  * ## 対応づけの規則
  *
  * - registry内のroute sourceにある `export const GET|POST|PUT|PATCH|DELETE` を登録する
- * - URL はファイルを除いたディレクトリのパス。`[param]` は `:param` にする
+ * - `route.ts` / `<action>-route.ts` の URL はファイルを除いたディレクトリのパス
+ * - それ以外の名前付きファイルはファイル名も URL の末尾に含める
+ * - `[param]` は `:param` にする
  * - `*.test.ts` と、HTTP メソッドを export しない同居ヘルパは対象外
  * - middleware・エラーハンドラは手書きの `app-base.ts` が持つ。生成器は触らない
  *
@@ -51,11 +53,13 @@ export type RouteRegistration = {
   alias: string
 }
 
-/** ディレクトリのパスから URL を作る。`[code]` → `:code`。 */
+/** ルートファイルのパスから URL を作る。`[code]` → `:code`。 */
 export function toUrl(relativeFile: string): string {
   const segments = relativeFile.replace(/\.ts$/, "").split("/")
-  const directories = segments.slice(0, -1)
-  const mapped = directories.map((segment) =>
+  const fileName = segments.at(-1) ?? ""
+  const pathSegments =
+    fileName === "route" || fileName.endsWith("-route") ? segments.slice(0, -1) : segments
+  const mapped = pathSegments.map((segment) =>
     segment.startsWith("[") && segment.endsWith("]") ? `:${segment.slice(1, -1)}` : segment,
   )
   return `/${mapped.join("/")}`

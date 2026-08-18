@@ -145,23 +145,16 @@ import * as personnelActionsRoute from "@/contexts/company-compatibility/interfa
 import * as positionDefinitionsIdRoute from "@/contexts/company-compatibility/interface/routes/position-definitions/[id]/route"
 import * as positionDefinitionsCreateRoute from "@/contexts/company-compatibility/interface/routes/position-definitions/create-route"
 import * as positionDefinitionsRoute from "@/contexts/company-compatibility/interface/routes/position-definitions/route"
-import * as companyV1AccountEmployeeLinksCreateRoute from "@/contexts/company/interface/routes/company/v1/account-employee-links/create-route"
-import * as companyV1AccountEmployeeLinksRoute from "@/contexts/company/interface/routes/company/v1/account-employee-links/route"
+import * as companyV1AccountEmployeeLinksRoute from "@/contexts/company/interface/routes/company/v1/account-employee-links"
 import * as companyV1CapabilitiesRoute from "@/contexts/company/interface/routes/company/v1/capabilities/route"
-import * as companyV1DefinitionsCreateRoute from "@/contexts/company/interface/routes/company/v1/definitions/create-route"
-import * as companyV1DefinitionsRoute from "@/contexts/company/interface/routes/company/v1/definitions/route"
-import * as companyV1EmployeesCreateRoute from "@/contexts/company/interface/routes/company/v1/employees/create-route"
-import * as companyV1EmployeesRoute from "@/contexts/company/interface/routes/company/v1/employees/route"
-import * as companyV1EmploymentsCreateRoute from "@/contexts/company/interface/routes/company/v1/employments/create-route"
-import * as companyV1EmploymentsRoute from "@/contexts/company/interface/routes/company/v1/employments/route"
-import * as companyV1OrganizationChangesRoute from "@/contexts/company/interface/routes/company/v1/organization-changes/route"
-import * as companyV1OrganizationSnapshotsRoute from "@/contexts/company/interface/routes/company/v1/organization-snapshots/route"
-import * as companyV1PeopleCreateRoute from "@/contexts/company/interface/routes/company/v1/people/create-route"
-import * as companyV1PeopleRoute from "@/contexts/company/interface/routes/company/v1/people/route"
-import * as companyV1PersonnelActionsCreateRoute from "@/contexts/company/interface/routes/company/v1/personnel-actions/create-route"
-import * as companyV1PersonnelActionsRoute from "@/contexts/company/interface/routes/company/v1/personnel-actions/route"
-import * as companyV1ProfileCreateRoute from "@/contexts/company/interface/routes/company/v1/profile/create-route"
-import * as companyV1ProfileRoute from "@/contexts/company/interface/routes/company/v1/profile/route"
+import * as companyV1DefinitionsRoute from "@/contexts/company/interface/routes/company/v1/definitions"
+import * as companyV1EmployeesRoute from "@/contexts/company/interface/routes/company/v1/employees"
+import * as companyV1EmploymentsRoute from "@/contexts/company/interface/routes/company/v1/employments"
+import * as companyV1OrganizationChangesRoute from "@/contexts/company/interface/routes/company/v1/organization-changes"
+import * as companyV1OrganizationSnapshotsRoute from "@/contexts/company/interface/routes/company/v1/organization-snapshots"
+import * as companyV1PeopleRoute from "@/contexts/company/interface/routes/company/v1/people"
+import * as companyV1PersonnelActionsRoute from "@/contexts/company/interface/routes/company/v1/personnel-actions"
+import * as companyV1ProfileRoute from "@/contexts/company/interface/routes/company/v1/profile"
 import * as salaryRevisionsRoute from "@/contexts/compensation-change/interface/routes/salary-revisions/route"
 import * as disciplinaryActionsRoute from "@/contexts/disciplinary-action/interface/routes/disciplinary-actions/route"
 import * as documentLedgerEntriesIdRoute from "@/contexts/document/interface/routes/document-ledger-entries/[id]/route"
@@ -353,6 +346,7 @@ import * as workAccidentsRoute from "@/contexts/work-accident/interface/routes/w
 import * as employeeWorkStylesRoute from "@/contexts/work-style/interface/routes/employee-work-styles/route"
 import * as healthRoute from "@system/interface/routes/health/route"
 import * as systemV1HealthRoute from "@system/interface/routes/system/v1/health/route"
+import * as systemV1SessionsRoute from "@system/interface/routes/system/v1/sessions"
 
 const routePart0 = createRouteApp()
   .get("/accounts", ...accountsRoute.GET)
@@ -557,22 +551,22 @@ const routePart25 = createRouteApp()
   .post("/commendations", ...commendationsRoute.POST)
   .delete("/commendations/:id", ...commendationsIdRoute.DELETE)
   .get("/company/v1/account-employee-links", ...companyV1AccountEmployeeLinksRoute.GET)
-  .post("/company/v1/account-employee-links", ...companyV1AccountEmployeeLinksCreateRoute.POST)
+  .post("/company/v1/account-employee-links", ...companyV1AccountEmployeeLinksRoute.POST)
   .get("/company/v1/capabilities", ...companyV1CapabilitiesRoute.GET)
   .get("/company/v1/definitions", ...companyV1DefinitionsRoute.GET)
-  .post("/company/v1/definitions", ...companyV1DefinitionsCreateRoute.POST)
+  .post("/company/v1/definitions", ...companyV1DefinitionsRoute.POST)
   .get("/company/v1/employees", ...companyV1EmployeesRoute.GET)
-  .post("/company/v1/employees", ...companyV1EmployeesCreateRoute.POST)
+  .post("/company/v1/employees", ...companyV1EmployeesRoute.POST)
   .get("/company/v1/employments", ...companyV1EmploymentsRoute.GET)
-  .post("/company/v1/employments", ...companyV1EmploymentsCreateRoute.POST)
+  .post("/company/v1/employments", ...companyV1EmploymentsRoute.POST)
   .post("/company/v1/organization-changes", ...companyV1OrganizationChangesRoute.POST)
   .get("/company/v1/organization-snapshots", ...companyV1OrganizationSnapshotsRoute.GET)
   .get("/company/v1/people", ...companyV1PeopleRoute.GET)
-  .post("/company/v1/people", ...companyV1PeopleCreateRoute.POST)
+  .post("/company/v1/people", ...companyV1PeopleRoute.POST)
   .get("/company/v1/personnel-actions", ...companyV1PersonnelActionsRoute.GET)
-  .post("/company/v1/personnel-actions", ...companyV1PersonnelActionsCreateRoute.POST)
+  .post("/company/v1/personnel-actions", ...companyV1PersonnelActionsRoute.POST)
   .get("/company/v1/profile", ...companyV1ProfileRoute.GET)
-  .post("/company/v1/profile", ...companyV1ProfileCreateRoute.POST)
+  .post("/company/v1/profile", ...companyV1ProfileRoute.POST)
   .get("/company-calendar-days", ...companyCalendarDaysRoute.GET)
   .post("/company-calendar-days", ...companyCalendarDaysCreateRoute.POST)
   .delete("/company-calendar-days/:id", ...companyCalendarDaysIdRoute.DELETE)
@@ -936,6 +930,9 @@ const routePart36 = createRouteApp()
   .post("/surveys/:survey_id/responses", ...surveysSurveyIdResponsesRoute.POST)
   .get("/surveys/:survey_id/summary", ...surveysSurveyIdSummaryRoute.GET)
   .get("/system/v1/health", ...systemV1HealthRoute.GET)
+  .get("/system/v1/sessions", ...systemV1SessionsRoute.GET)
+  .post("/system/v1/sessions", ...systemV1SessionsRoute.POST)
+  .delete("/system/v1/sessions", ...systemV1SessionsRoute.DELETE)
   .get("/thanks-messages", ...thanksMessagesRoute.GET)
   .post("/thanks-messages", ...thanksMessagesRoute.POST)
   .get("/thanks-messages/me", ...thanksMessagesMeRoute.GET)

@@ -1,5 +1,8 @@
 import type { AccessTokenView } from "@/api/legacy-system/use-cases/auth/access-token-view"
 import { decoyPasswordHash } from "@/api/legacy-system/use-cases/auth/decoy-password-hash"
+import { AuthenticateSystemPassword } from "@system/application/auth/authenticate-system-password"
+import { identitySubjectSchema } from "@system/domain/identity/identity-subject"
+import { SystemPasswordCredentialRepository } from "@system/infrastructure/auth/system-password-credential-repository"
 import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { verifyPassword } from "@/lib/auth/verify-password"
@@ -8,6 +11,7 @@ import type { Context } from "@/env"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { IssueEmployeeSession } from "@/contexts/company-compatibility/application/auth/issue-employee-session"
 import { resolveLiveEmployeeAccess } from "@/contexts/company-compatibility/application/auth/resolve-live-employee-access"
+import { AccountEmployeeLinkRepository } from "@/contexts/company-compatibility/infrastructure/employee/account-employee-link-repository"
 import { IdentityRepository } from "@/contexts/company-compatibility/infrastructure/auth/identity-repository"
 
 export type Command = {
@@ -36,33 +40,53 @@ export class AuthenticateEmployee {
   async run(
     command: Command,
   ): Promise<AuthenticatedSession | InvalidCredentials | ApplicationError> {
-    const identityRepository = new IdentityRepository(this.c)
-
-    const identity = await identityRepository.findPasswordIdentityByEmail(command.email)
-
-    if (identity instanceof Error) {
-      return new UnexpectedError("failed to find identity", { cause: identity })
-    }
-
-    if (identity === null || identity.secret === null) {
-      // ユーザー列挙のタイミング差を消すため、実在ユーザーと同じ PBKDF2 検証コストを払う（#212）。
+    const subject = identitySubjectSchema.safeParse(command.email.toLowerCase())
+    if (!subject.success) {
       await verifyPassword(command.password, decoyPasswordHash)
-
       return { reason: "invalid_credentials" }
     }
 
-    const isValid = await verifyPassword(command.password, identity.secret)
-
-    if (isValid === false) {
+    const authentication = await new AuthenticateSystemPassword({
+      credentialRepository: new SystemPasswordCredentialRepository({
+        database: this.c.var.database,
+      }),
+      passwordMaterialService: {
+        dummyHash: decoyPasswordHash,
+        needsRehash: (passwordHash) =>
+          isLegacyPasswordHash(passwordHash) || isWrappedLegacyHash(passwordHash),
+        verify: (password, passwordHash) => verifyPassword(password, passwordHash),
+      },
+    }).execute({ subject: subject.data, password: command.password, now: command.now })
+    if (authentication instanceof Error) {
+      return new UnexpectedError("failed to authenticate identity", { cause: authentication })
+    }
+    if (authentication.kind === "rejected") {
       return { reason: "invalid_credentials" }
     }
 
-    // 停止・ロック中のアカウントは資格情報エラーと同一レスポンスにして状態の漏えいを避ける。
-    if (identity.accountStatus !== "active" || identity.employeeId === null) {
+    const accountId = Number(authentication.accountId)
+    const identityId = Number(authentication.identityId)
+    if (
+      !Number.isSafeInteger(accountId) ||
+      accountId <= 0 ||
+      String(accountId) !== authentication.accountId ||
+      !Number.isSafeInteger(identityId) ||
+      identityId <= 0 ||
+      String(identityId) !== authentication.identityId
+    ) {
+      return new UnexpectedError("canonical identity cannot be mapped to the legacy transport")
+    }
+    const linkedAccount = await new AccountEmployeeLinkRepository(this.c).findLinkedAccount(
+      accountId,
+    )
+    if (linkedAccount instanceof Error) {
+      return new UnexpectedError("failed to find employee link", { cause: linkedAccount })
+    }
+    if (linkedAccount?.employeeId === null || linkedAccount === null) {
       return { reason: "invalid_credentials" }
     }
 
-    const employeeAccess = await resolveLiveEmployeeAccess(this.c, identity.employeeId)
+    const employeeAccess = await resolveLiveEmployeeAccess(this.c, linkedAccount.employeeId)
     if (employeeAccess instanceof ApplicationError) return employeeAccess
     if (employeeAccess === null) {
       return { reason: "invalid_credentials" }
@@ -70,16 +94,15 @@ export class AuthenticateEmployee {
 
     // 旧形式またはラップ済み旧形式は純正 PBKDF2 に昇格する。
     // 書き戻し失敗はログイン体験を妨げないため握りつぶす（次回ログインで再試行される）。
-    if (isLegacyPasswordHash(identity.secret) || isWrappedLegacyHash(identity.secret)) {
+    if (authentication.requiresPasswordRehash) {
       const newHash = await toPasswordHash(command.password)
-
-      await identityRepository.updateSecret(identity.identityId, newHash)
+      await new IdentityRepository(this.c).updateSecret(identityId, newHash)
     }
 
     const issued = await new IssueEmployeeSession(this.c).run({
-      accountId: identity.accountId,
-      employeeId: identity.employeeId,
-      tokenVersion: identity.tokenVersion,
+      accountId,
+      employeeId: linkedAccount.employeeId,
+      tokenVersion: authentication.tokenVersion,
       jwtSecret: command.jwtSecret,
       userAgent: command.userAgent,
       now: command.now,

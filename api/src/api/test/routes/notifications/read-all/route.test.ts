@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
-import { seedNotifications } from "@/api/test/support/seed-notifications"
+import { seedSystemNotifications } from "@/api/test/support/seed-notifications"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -20,22 +20,6 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "notifications",
-    seedNotifications.map((notification) => ({
-      id: notification.id,
-      recipient_account_id: notification.recipientEmployeeId,
-      source_domain: notification.sourceDomain,
-      source_id: notification.sourceId,
-      kind: notification.kind,
-      title: notification.title,
-      body: notification.body,
-      is_read: notification.isRead ? 1 : 0,
-      created_at: notification.createdAt,
-    })),
-  )
-
-  await seedD1(
-    db,
     "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
@@ -49,6 +33,7 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+  await seedSystemNotifications(db)
 
   return db
 }

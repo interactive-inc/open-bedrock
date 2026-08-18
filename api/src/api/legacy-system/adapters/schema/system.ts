@@ -14,29 +14,6 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 
-/** System の Account 宛て汎用通知。is_read は 0/1 で保存する。 */
-export const notifications = sqliteTable(
-  "notifications",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    recipientAccountId: integer("recipient_account_id").notNull(),
-    sourceDomain: text("source_domain").notNull(),
-    sourceId: integer("source_id"),
-    kind: text("kind").notNull(),
-    title: text("title").notNull(),
-    body: text("body"),
-    isRead: integer("is_read").notNull().default(0),
-    createdAt: text("created_at").notNull(),
-  },
-  (table) => [
-    index("idx_notifications_recipient_unread")
-      .on(table.recipientAccountId)
-      .where(sql`is_read = 0`),
-  ],
-)
-
-export type NotificationRow = InferSelectModel<typeof notifications>
-
 /** バッチジョブの実行状況。業務固有の実行内容は name と message の外側で管理する。 */
 export const batchJobs = sqliteTable("batch_jobs", {
   id: integer("id").primaryKey(),
@@ -184,30 +161,6 @@ export const accountRoles = sqliteTable(
 
 export type AccountRoleRow = InferSelectModel<typeof accountRoles>
 
-/** IAM: refresh token。生は保存せず SHA-256 のみ。 */
-export const refreshTokens = sqliteTable(
-  "refresh_tokens",
-  {
-    id: integer("id").primaryKey(),
-    accountId: integer("account_id").notNull(),
-    tokenHash: text("token_hash").notNull().unique(),
-    familyId: text("family_id").notNull(),
-    tokenVersion: integer("token_version").notNull().default(0),
-    expiresAt: integer("expires_at").notNull(),
-    revokedAt: integer("revoked_at"),
-    userAgent: text("user_agent"),
-    createdAt: integer("created_at").notNull(),
-  },
-  (table) => [
-    index("idx_refresh_tokens_account").on(table.accountId),
-    index("idx_refresh_tokens_active_family")
-      .on(table.familyId)
-      .where(sql`revoked_at IS NULL`),
-  ],
-)
-
-export type RefreshTokenRow = InferSelectModel<typeof refreshTokens>
-
 /** Account 主体の append-only 監査イベント。 */
 export const auditLogs = sqliteTable(
   "audit_events",
@@ -273,9 +226,7 @@ export const systemSchema = {
   permissions,
   rolePermissions,
   accountRoles,
-  refreshTokens,
   auditLogs,
   auditBatchDecisions,
   batchJobs,
-  notifications,
 }

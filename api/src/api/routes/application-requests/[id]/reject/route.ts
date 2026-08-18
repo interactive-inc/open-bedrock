@@ -16,10 +16,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       comment: z
-        .string({
-          required_error: "却下にはコメントが必須です",
-          invalid_type_error: "却下にはコメントが必須です",
-        })
+        .string({ error: "却下にはコメントが必須です" })
         .min(1, "却下にはコメントが必須です")
         .max(3_000),
     }),

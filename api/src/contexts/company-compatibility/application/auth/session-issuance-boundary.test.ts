@@ -23,8 +23,15 @@ describe("canonical Account session issuance boundary", () => {
 
       if (/\b(?:new\s+JoseTokenSigner\(\)|tokenSigner)\.sign\(/u.test(source)) {
         signerCallsites.push(path)
-        expect(source).toContain("resolveAccountSession")
-        expect(source).toContain("SystemAccountRepository")
+        expect(
+          source.includes("resolveAccountSession") ||
+            source.includes("applications.authenticate.execute") ||
+            source.includes("applications.issue.execute"),
+        ).toBe(true)
+        expect(
+          source.includes("SystemAccountRepository") ||
+            source.includes("createSystemSessionApplications"),
+        ).toBe(true)
       }
     }
 

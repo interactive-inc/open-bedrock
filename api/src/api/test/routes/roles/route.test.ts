@@ -103,23 +103,16 @@ describe("GET /roles", () => {
   test("returns roles to an account with iam:assign_roles for the assignment UI", async () => {
     const db = await createTestDb()
 
-    await db
-      .prepare(
-        "INSERT INTO roles (key, name, is_system, created_at) VALUES ('assigner', 'Assigner', 0, 0)",
-      )
-      .run()
-
-    await db
-      .prepare(
-        "INSERT INTO role_permissions (role_id, permission_id) SELECT r.id, p.id FROM roles r, permissions p WHERE r.key = 'assigner' AND p.key = 'iam:assign_roles'",
-      )
-      .run()
-
-    await db
-      .prepare(
-        "INSERT INTO account_roles (account_id, role_id, granted_at) SELECT link.account_id, role.id, 0 FROM account_employee_links link, roles role WHERE link.employee_id = 5 AND role.key = 'assigner'",
-      )
-      .run()
+    await db.exec(`
+      INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
+      VALUES ('9999', 'company:assigner', 'custom', 'Assigner', 0, 0);
+      INSERT INTO system_iam_role_permissions (role_id, permission_key)
+      VALUES ('9999', 'iam:assign_roles');
+      DELETE FROM system_role_bindings WHERE account_id = '5';
+      INSERT INTO system_role_bindings
+        (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+      VALUES ('test-assigner-binding', '5', '9999', NULL, NULL, 0, NULL);
+    `)
 
     const response = await requestWithContext({
       db,

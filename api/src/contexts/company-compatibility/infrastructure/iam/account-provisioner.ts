@@ -2,17 +2,11 @@ import type { Context } from "@/env"
 import type { IdentityProvider } from "@/contexts/system/domain/identity/identity-provider"
 import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
 import { accountEmployeeLinks } from "@/contexts/company-compatibility/infrastructure/schema/employee"
-import {
-  accountRoles,
-  accounts,
-  identities,
-  roles,
-} from "@/api/legacy-system/adapters/schema/system"
+import { accounts, identities } from "@/api/legacy-system/adapters/schema/system"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { LivePermissionGuard } from "@/contexts/company-compatibility/infrastructure/iam/live-permission-guard"
 import { RoleAssignmentGuardError } from "@/contexts/company-compatibility/infrastructure/iam/role-assignment-guard-error"
-import { eq } from "drizzle-orm"
 
 export type ProvisionInput = {
   employeeId: number
@@ -119,18 +113,14 @@ export class AccountProvisioner {
         createdAt: input.now,
       })
 
-      const roleRows = await db.select().from(roles).where(eq(roles.key, input.roleKey)).limit(1)
-
-      const role = roleRows.at(0)
-
-      if (role !== undefined) {
-        await db.insert(accountRoles).values({
-          accountId: account.id,
-          roleId: role.id,
-          grantedBy: null,
-          grantedAt: input.now,
-        })
-      }
+      await this.c.env.DB.prepare(
+        `INSERT INTO system_role_bindings
+             (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+           SELECT lower(hex(randomblob(16))), ?1, role.id, NULL, NULL, ?3, NULL
+           FROM system_iam_roles AS role WHERE role.key = ?2`,
+      )
+        .bind(String(account.id), `company:${input.roleKey}`, input.now)
+        .run()
 
       return null
     } catch (caught) {
@@ -193,16 +183,18 @@ export class AccountProvisioner {
           )
           .bind(input.provider, subject.data, input.email, input.now),
 
-        // 5. account_role を作成する。account は subject 経由で逆引きし、role 不在なら 0 行。
+        // 5. canonical System Role Bindingを作成する。role不在なら0行。
         db
           .prepare(
-            `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
-             SELECT identity.account_id, role.id, NULL, ?3
+            `INSERT INTO system_role_bindings
+               (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+             SELECT lower(hex(randomblob(16))), CAST(identity.account_id AS TEXT), role.id,
+                    NULL, NULL, ?3, NULL
              FROM identities identity
-             JOIN roles role ON role.key = ?2
+             JOIN system_iam_roles role ON role.key = ?2
              WHERE identity.provider = ?4 AND identity.subject = ?1`,
           )
-          .bind(subject.data, input.roleKey, input.now, input.provider),
+          .bind(subject.data, `company:${input.roleKey}`, input.now, input.provider),
 
         // role 不在なら直前 INSERT は 0 行。孤立した employee/account/identity も rollback する。
         abortWhenPreviousStatementChangedNoRows(db),
@@ -297,16 +289,18 @@ export class AccountProvisioner {
       }),
       db
         .prepare(
-          `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
-           SELECT account.id, role.id, ?3, ?4
+          `INSERT INTO system_role_bindings
+             (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+           SELECT lower(hex(randomblob(16))), CAST(account.id AS TEXT), role.id,
+                  NULL, NULL, ?4, NULL
            FROM accounts account
            INNER JOIN account_employee_links link ON link.account_id = account.id
            INNER JOIN employees employee ON employee.id = link.employee_id
-           INNER JOIN roles role ON role.key = ?2
+           INNER JOIN system_iam_roles role ON role.key = ?2
            WHERE employee.code = ?1
            RETURNING account_id`,
         )
-        .bind(input.employeeCode, input.roleKey, input.grantedByAccountId, input.now),
+        .bind(input.employeeCode, `company:${input.roleKey}`, input.grantedByAccountId, input.now),
       abortWhenPreviousStatementChangedNoRows(db),
     ]
   }
@@ -380,18 +374,25 @@ export class AccountProvisioner {
               : ["employee:create", "employee:assign_role"],
         }),
 
-        // 6. account_role を作成する。role 不在・live 権限不足は直前の guard が中止する。
+        // 6. canonical System Role Bindingを作成する。
         db
           .prepare(
-            `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
-             SELECT a.id, r.id, ?3, ?4
+            `INSERT INTO system_role_bindings
+               (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+             SELECT lower(hex(randomblob(16))), CAST(a.id AS TEXT), r.id,
+                    NULL, NULL, ?4, NULL
              FROM accounts a
              JOIN account_employee_links link ON link.account_id = a.id
              JOIN employees e ON e.id = link.employee_id
-             JOIN roles r ON r.key = ?2
+             JOIN system_iam_roles r ON r.key = ?2
              WHERE e.code = ?1`,
           )
-          .bind(input.employee.code, input.roleKey, input.grantedByAccountId, input.now),
+          .bind(
+            input.employee.code,
+            `company:${input.roleKey}`,
+            input.grantedByAccountId,
+            input.now,
+          ),
 
         // role 不在・権限超過なら直前 INSERT は 0 行。孤立した employee/account/identity も rollback する。
         abortWhenPreviousStatementChangedNoRows(db),

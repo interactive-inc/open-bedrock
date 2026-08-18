@@ -77,12 +77,26 @@ export class BootstrapAccountRepository {
           .bind(props.code, props.subject, props.secret, props.email, props.now),
         database
           .prepare(
-            `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
-             SELECT a.id, r.id, NULL, ?2
+            `INSERT INTO system_role_bindings
+               (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+             SELECT 'bootstrap:' || a.id || ':' || r.id, CAST(a.id AS TEXT), r.id,
+                    NULL, NULL, ?2, NULL
              FROM accounts a
              JOIN account_employee_links link ON link.account_id = a.id
              JOIN employees e ON e.id = link.employee_id
-             JOIN roles r ON r.key = 'root' AND r.is_system = 1
+             JOIN system_iam_roles r ON r.key = 'company:root' AND r.kind = 'managed'
+             WHERE e.code = ?1`,
+          )
+          .bind(props.code, props.now),
+        database
+          .prepare(
+            `INSERT INTO system_bootstrap_state
+               (singleton, completed_by_account_id, root_binding_id, completed_at)
+             SELECT 1, CAST(a.id AS TEXT), 'bootstrap:' || a.id || ':' || r.id, ?2
+             FROM accounts a
+             JOIN account_employee_links link ON link.account_id = a.id
+             JOIN employees e ON e.id = link.employee_id
+             JOIN system_iam_roles r ON r.key = 'company:root' AND r.kind = 'managed'
              WHERE e.code = ?1`,
           )
           .bind(props.code, props.now),

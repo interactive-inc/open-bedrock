@@ -35,6 +35,10 @@ describe("toUrl", () => {
     expect(toUrl("assets/register-route.ts")).toBe("/assets")
     expect(toUrl("assets/route.ts")).toBe("/assets")
   })
+
+  test("名前付きファイルはファイル名を URL に含める", () => {
+    expect(toUrl("company/v1/account-employee-links.ts")).toBe("/company/v1/account-employee-links")
+  })
 })
 
 describe("toAlias", () => {

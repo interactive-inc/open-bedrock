@@ -193,7 +193,7 @@ describe("checkRouteAuthorization", () => {
     ).toBe(true)
     expect(
       routeFiles.some((routeFile) =>
-        routeFile.file.endsWith("company/interface/routes/company/v1/employees/route.ts"),
+        routeFile.file.endsWith("company/interface/routes/company/v1/employees.ts"),
       ),
     ).toBe(true)
   })

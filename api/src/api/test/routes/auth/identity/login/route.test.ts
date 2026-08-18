@@ -134,7 +134,7 @@ describe("POST /auth/identity/login", () => {
     expect(body.refresh_token.length > 0).toBe(true)
 
     const rows = await systemAuditRows(db)
-    expect(rows).toEqual([{ action: "auth.session.identity_login_succeeded", reason_code: null }])
+    expect(rows).toEqual([{ action: "auth.session.create", reason_code: null }])
 
     // jti が使用済みとして記録されている。
     const jti = await db
@@ -293,7 +293,7 @@ describe("POST /auth/identity/login", () => {
     expect(second.status).toBe(401)
 
     expect(await systemAuditRows(db)).toEqual([
-      { action: "auth.session.identity_login_succeeded", reason_code: null },
+      { action: "auth.session.create", reason_code: null },
     ])
     expect(await auditRows(db)).toEqual([
       { action: "auth.session.identity_login_denied", reason_code: "token_replayed" },

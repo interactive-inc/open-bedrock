@@ -134,8 +134,8 @@ describe("atomic IAM live-permission boundary", () => {
     expectApplicationError(result, ForbiddenError, "role_escalation")
 
     const account = await db
-      .prepare("SELECT status, token_version FROM accounts WHERE id = ?1")
-      .bind(targetAccountId)
+      .prepare("SELECT status, token_version FROM system_accounts WHERE id = ?1")
+      .bind(String(targetAccountId))
       .first<{ status: string; token_version: number }>()
 
     expect(account).toEqual({ status: "active", token_version: 0 })
@@ -262,10 +262,10 @@ async function addPermissionToRole(
 ): Promise<void> {
   await db
     .prepare(
-      `INSERT OR IGNORE INTO role_permissions (role_id, permission_id)
-       SELECT ?1, id FROM permissions WHERE key = ?2`,
+      `INSERT OR IGNORE INTO system_iam_role_permissions (role_id, permission_key)
+       VALUES (?1, ?2)`,
     )
-    .bind(roleId, permissionKey)
+    .bind(String(roleId), permissionKey)
     .run()
 }
 
@@ -276,35 +276,39 @@ async function removePermissionFromRole(
 ): Promise<void> {
   await db
     .prepare(
-      `DELETE FROM role_permissions
-       WHERE role_id = ?1
-         AND permission_id = (SELECT id FROM permissions WHERE key = ?2)`,
+      `DELETE FROM system_iam_role_permissions
+       WHERE role_id = ?1 AND permission_key = ?2`,
     )
-    .bind(roleId, permissionKey)
+    .bind(String(roleId), permissionKey)
     .run()
 }
 
 async function assignRole(db: D1Database, accountId: number, roleId: number): Promise<void> {
   await db
     .prepare(
-      "INSERT INTO account_roles (account_id, role_id, granted_by, granted_at) VALUES (?1, ?2, NULL, 0)",
+      `INSERT INTO system_role_bindings
+         (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+       VALUES (?1, ?2, ?3, NULL, NULL, 0, NULL)`,
     )
-    .bind(accountId, roleId)
+    .bind(crypto.randomUUID(), String(accountId), String(roleId))
     .run()
 }
 
 async function countAssignment(db: D1Database, accountId: number, roleId: number): Promise<number> {
   return (
     (await db
-      .prepare("SELECT COUNT(*) AS total FROM account_roles WHERE account_id = ?1 AND role_id = ?2")
-      .bind(accountId, roleId)
+      .prepare(
+        `SELECT COUNT(*) AS total FROM system_role_bindings
+         WHERE account_id = ?1 AND role_id = ?2 AND revoked_at IS NULL`,
+      )
+      .bind(String(accountId), String(roleId))
       .first<number>("total")) ?? 0
   )
 }
 
 async function tokenVersionOf(db: D1Database, accountId: number): Promise<number | null> {
   return db
-    .prepare("SELECT token_version FROM accounts WHERE id = ?1")
-    .bind(accountId)
+    .prepare("SELECT token_version FROM system_accounts WHERE id = ?1")
+    .bind(String(accountId))
     .first<number>("token_version")
 }

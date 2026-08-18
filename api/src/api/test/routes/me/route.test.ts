@@ -204,11 +204,12 @@ describe("GET /me", () => {
     const db = await createTestDb()
 
     await db.prepare("DELETE FROM identities WHERE account_id = ?1").bind(1).run()
+    await db.prepare("DELETE FROM system_identity_bindings WHERE account_id = '1'").run()
 
     await db.exec(
       "INSERT INTO identities (id, account_id, provider, subject, secret, email, email_verified, created_at) " +
         "VALUES (900, 1, 'oidc', 'ext-e001', NULL, 'you+e001-external@example.com', 1, 0), " +
-        "(901, 1, 'password', 'you+e001@example.com', 'hash', 'you+e001@example.com', 1, 0)",
+        "(901, 1, 'password', 'you+e001@example.com', 'password-hash-material', 'you+e001@example.com', 1, 0)",
     )
 
     const response = await requestWithContext({

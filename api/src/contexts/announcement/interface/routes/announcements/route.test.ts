@@ -233,7 +233,12 @@ describe("POST /announcements/:id/publish", () => {
     }
 
     const notificationCount = await db
-      .prepare("SELECT COUNT(*) AS total FROM notifications WHERE source_domain = 'announcement'")
+      .prepare(
+        `SELECT count(*) AS total
+         FROM system_notification_messages
+         WHERE source_type = 'company:notification.source'
+           AND json_extract(source_id, '$.domain') = 'announcement'`,
+      )
       .first("total")
 
     // active 従業員数ぶんの通知が届く（seed の active 従業員は 12 名）。

@@ -37,6 +37,12 @@ describe("IamRole", () => {
     expect("facilityId" in role).toBe(false)
   })
 
+  test("Role keyはpermissionとは独立にhyphenを含むnamespaced識別子を許可する", () => {
+    expect(requireRole(roleProps({ key: "company:facility-manager" })).key).toBe(
+      "company:facility-manager",
+    )
+  })
+
   test("custom Roleのpermissionをimmutableに置換する", () => {
     const role = requireRole(roleProps({ permissionKeys: ["iam:read"] }))
     const updated = role.replacePermissions(["iam:read", "iam:write"], UPDATED_AT)

@@ -16,4 +16,34 @@ export const systemRouteManifest = [
       exportName: "GET",
     },
   },
+  {
+    method: "GET",
+    path: "/system/v1/sessions",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system/v1/sessions",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/sessions",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system/v1/sessions",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/system/v1/sessions",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system/v1/sessions",
+      exportName: "DELETE",
+    },
+  },
 ] as const

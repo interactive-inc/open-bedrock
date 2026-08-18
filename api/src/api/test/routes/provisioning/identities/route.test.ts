@@ -92,10 +92,12 @@ describe("POST /provisioning/identities", () => {
     const roleCount = await db
       .prepare(
         `SELECT COUNT(*) AS n
-         FROM account_roles ar
-         JOIN identities i ON i.account_id = ar.account_id
-         JOIN roles r ON r.id = ar.role_id
-         WHERE i.subject = 'ext-100' AND r.key = 'member'`,
+         FROM system_role_bindings binding
+         JOIN system_identity_bindings identity ON identity.account_id = binding.account_id
+         JOIN system_iam_roles role ON role.id = binding.role_id
+         WHERE identity.subject = 'ext-100'
+           AND role.key = 'company:member'
+           AND binding.revoked_at IS NULL`,
       )
       .first<number>("n")
     expect(roleCount).toBe(1)

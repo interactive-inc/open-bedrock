@@ -26,7 +26,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
         status: "active",
       },
       email: "you+e500@example.com",
-      passwordHash: "hashed-password",
+      passwordHash: "hashed-password-material",
       roleKey: "member",
       grantedByAccountId: actorAccountId,
       now: 1000,
@@ -57,12 +57,11 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
     expect((identity as { email: string }).email).toBe("you+e500@example.com")
 
     const accountRole = await db
-      .prepare("SELECT * FROM account_roles WHERE account_id = ?1")
-      .bind((account as { id: number }).id)
+      .prepare("SELECT * FROM system_role_bindings WHERE account_id = ?1 AND revoked_at IS NULL")
+      .bind(String((account as { id: number }).id))
       .first()
 
     expect(accountRole).not.toBeNull()
-    expect((accountRole as { granted_by: number }).granted_by).toBe(actorAccountId)
   })
 
   test("employee code 重複時は全体が rollback される", async () => {
@@ -87,7 +86,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
         status: "active",
       },
       email: "you+e501@example.com",
-      passwordHash: "hashed-password",
+      passwordHash: "hashed-password-material",
       roleKey: "member",
       grantedByAccountId: actorAccountId,
       now: 1000,
@@ -116,7 +115,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
         status: "active",
       },
       email: "you+e502@example.com",
-      passwordHash: "hashed-password",
+      passwordHash: "hashed-password-material",
       roleKey: "nonexistent_role",
       grantedByAccountId: actorAccountId,
       now: 1000,
@@ -148,7 +147,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
         status: "active",
       },
       email: "you+e503@example.com",
-      passwordHash: "hashed-password",
+      passwordHash: "hashed-password-material",
       roleKey: "root",
       grantedByAccountId: actorAccountId,
       now: 1000,

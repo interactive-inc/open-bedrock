@@ -1,8 +1,8 @@
 import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { notifications } from "@/api/legacy-system/adapters/schema/system"
 import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
-import { and, count, eq } from "drizzle-orm"
+import { zAccountId } from "@system/domain/auth/account-id"
+import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /notifications/me/unread-count — 本人宛ての未読通知数 */
@@ -13,14 +13,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const rows = await c.var.database
-    .select({ total: count() })
-    .from(notifications)
-    .where(
-      and(eq(notifications.recipientAccountId, session.accountId), eq(notifications.isRead, 0)),
-    )
+  const count = await new SystemNotificationRepository({
+    context: { env: { DB: c.env.DB } },
+  }).countUnreadForAccount(zAccountId.parse(String(session.accountId)))
+  if (count instanceof Error) throw count
 
-  const responseBody = { count: rows.at(0)?.total ?? 0 }
+  const responseBody = { count }
 
   return c.json(responseBody, 200)
 })
