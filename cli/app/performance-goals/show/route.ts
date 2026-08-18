@@ -23,11 +23,6 @@ export default factory.createHandlers(
 
     const goal = await response.json()
 
-    // 目標が取得できない場合は api のエラーレスポンスをそのまま返す。
-    if (response.status >= 400) {
-      return c.json(goal)
-    }
-
     const evaluationsResponse = await client["performance-goals"][":goal_id"].evaluations.$get({
       param: { goal_id: query.id },
     })
