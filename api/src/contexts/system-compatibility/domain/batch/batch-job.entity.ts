@@ -1,4 +1,4 @@
-import { batchJobStatusSchema } from "@/api/legacy-system/model/batch/batch-job-status"
+import { batchJobStatusSchema } from "@/contexts/system-compatibility/domain/batch/batch-job-status"
 import { z } from "zod"
 
 const zProps = z.object({

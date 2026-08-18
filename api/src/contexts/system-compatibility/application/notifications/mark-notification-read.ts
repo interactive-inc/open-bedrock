@@ -1,6 +1,6 @@
-import type { Notification } from "@/api/legacy-system/model/notifications/legacy-notification.entity"
+import type { Notification } from "@/contexts/system-compatibility/domain/notifications/legacy-notification.entity"
 import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context"
-import { NotificationRepository } from "@/api/legacy-system/adapters/notifications/notification-repository"
+import { NotificationRepository } from "@/contexts/system-compatibility/infrastructure/notifications/notification-repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

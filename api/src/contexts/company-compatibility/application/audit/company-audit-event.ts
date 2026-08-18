@@ -12,7 +12,7 @@ import type {
   CompanyAuditRecord,
   CompanyAuditSummary,
 } from "@/contexts/company-compatibility/application/audit/company-audit-record"
-import type { AuditJsonValue } from "@/api/legacy-system/model/audit/legacy-stable-json"
+import type { AuditJsonValue } from "@/contexts/system-compatibility/domain/audit/legacy-stable-json"
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
 

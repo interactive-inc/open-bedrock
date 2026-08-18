@@ -1,5 +1,5 @@
 import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context"
-import { LegacySecretRepository } from "@/api/legacy-system/adapters/auth/legacy-secret-repository"
+import { LegacySecretRepository } from "@/contexts/system-compatibility/infrastructure/auth/legacy-secret-repository"
 import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
 import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
 

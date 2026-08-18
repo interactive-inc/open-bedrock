@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { MigrateLegacyHashes } from "@/api/legacy-system/use-cases/batch/migrate-legacy-hashes"
+import { MigrateLegacyHashes } from "@/contexts/system-compatibility/application/batch/migrate-legacy-hashes"
 import { toLegacyPasswordHash } from "@/lib/auth/to-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { createTestContext } from "@/api/test/support/create-test-context"

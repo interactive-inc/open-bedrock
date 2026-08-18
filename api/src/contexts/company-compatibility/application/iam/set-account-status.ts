@@ -10,10 +10,10 @@ import {
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AccountRepository } from "@/contexts/company-compatibility/infrastructure/iam/account-repository"
-import { AccountAuthRepository } from "@/api/legacy-system/adapters/auth/account-auth-repository"
+import { AccountAuthRepository } from "@/contexts/system-compatibility/infrastructure/auth/account-auth-repository"
 import { LastRootError } from "@/contexts/company-compatibility/infrastructure/iam/last-root-error"
 import { LivePermissionGuardError } from "@/contexts/company-compatibility/infrastructure/iam/live-permission-guard-error"
-import { hasPermissionSuperset } from "@/api/legacy-system/use-cases/iam/has-permission-superset"
+import { hasPermissionSuperset } from "@/contexts/system-compatibility/application/iam/has-permission-superset"
 
 export type Command = {
   session: Session

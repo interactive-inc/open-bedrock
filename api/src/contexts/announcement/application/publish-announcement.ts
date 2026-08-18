@@ -8,7 +8,7 @@ import {
   accountEmployeeLinks,
   employees,
 } from "@/contexts/company-compatibility/infrastructure/schema/employee"
-import { notifications } from "@/api/legacy-system/adapters/schema/system"
+import { notifications } from "@/contexts/system-compatibility/infrastructure/schema/system"
 import { eq } from "drizzle-orm"
 
 export type Command = {

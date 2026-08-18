@@ -1,4 +1,4 @@
-import { MigrateLegacyHashes } from "@/api/legacy-system/use-cases/batch/migrate-legacy-hashes"
+import { MigrateLegacyHashes } from "@/contexts/system-compatibility/application/batch/migrate-legacy-hashes"
 import {
   ForbiddenError,
   InternalError,

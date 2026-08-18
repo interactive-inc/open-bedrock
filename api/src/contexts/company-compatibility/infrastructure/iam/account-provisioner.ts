@@ -7,7 +7,7 @@ import {
   accounts,
   identities,
   roles,
-} from "@/api/legacy-system/adapters/schema/system"
+} from "@/contexts/system-compatibility/infrastructure/schema/system"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { LivePermissionGuard } from "@/contexts/company-compatibility/infrastructure/iam/live-permission-guard"

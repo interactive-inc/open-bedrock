@@ -1,4 +1,4 @@
-import type { SystemAuthorization } from "@/api/legacy-system/use-cases/iam/system-authorization"
+import type { SystemAuthorization } from "@/contexts/system-compatibility/application/iam/system-authorization"
 
 /**
  * 対象の実効権限をすべて実行者も持つか判定する。

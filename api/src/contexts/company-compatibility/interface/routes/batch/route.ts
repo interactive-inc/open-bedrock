@@ -10,7 +10,7 @@ import {
 } from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
 import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { batchJobs } from "@/api/legacy-system/adapters/schema/system"
+import { batchJobs } from "@/contexts/system-compatibility/infrastructure/schema/system"
 import { count, desc } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

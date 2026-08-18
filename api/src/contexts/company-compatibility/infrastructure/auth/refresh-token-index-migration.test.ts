@@ -1,6 +1,6 @@
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
-import { refreshTokens } from "@/api/legacy-system/adapters/schema/system"
+import { refreshTokens } from "@/contexts/system-compatibility/infrastructure/schema/system"
 import { describe, expect, test } from "bun:test"
 import { getTableConfig, SQLiteSyncDialect } from "drizzle-orm/sqlite-core"
 import { existsSync, readFileSync, readdirSync } from "node:fs"

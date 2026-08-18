@@ -1,6 +1,6 @@
-import { Notification } from "@/api/legacy-system/model/notifications/legacy-notification.entity"
+import { Notification } from "@/contexts/system-compatibility/domain/notifications/legacy-notification.entity"
 import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context"
-import { notifications } from "@/api/legacy-system/adapters/schema/system"
+import { notifications } from "@/contexts/system-compatibility/infrastructure/schema/system"
 import { and, eq } from "drizzle-orm"
 
 export class NotificationRepository {

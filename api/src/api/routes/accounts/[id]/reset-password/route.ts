@@ -1,4 +1,4 @@
-import { ResetAccountPassword } from "@/api/legacy-system/use-cases/iam/reset-account-password"
+import { ResetAccountPassword } from "@/contexts/system-compatibility/application/iam/reset-account-password"
 import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"

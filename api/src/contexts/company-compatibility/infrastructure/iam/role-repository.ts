@@ -4,8 +4,8 @@ import {
   permissions,
   rolePermissions,
   roles,
-} from "@/api/legacy-system/adapters/schema/system"
-import type { RoleRow } from "@/api/legacy-system/adapters/schema/system"
+} from "@/contexts/system-compatibility/infrastructure/schema/system"
+import type { RoleRow } from "@/contexts/system-compatibility/infrastructure/schema/system"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { LastRootError } from "@/contexts/company-compatibility/infrastructure/iam/last-root-error"

@@ -1,5 +1,5 @@
 import { IssueEmployeeSession } from "@/contexts/company-compatibility/application/auth/issue-employee-session"
-import { CliLoginCodeRepository } from "@/api/legacy-system/adapters/auth/cli-login-code-repository"
+import { CliLoginCodeRepository } from "@/contexts/system-compatibility/infrastructure/auth/cli-login-code-repository"
 import { IdentityRepository } from "@/contexts/company-compatibility/infrastructure/auth/identity-repository"
 import { loginCodeHash } from "@/lib/auth/login-code-hash"
 import { factory } from "@/contexts/company-compatibility/interface/utils/factory"

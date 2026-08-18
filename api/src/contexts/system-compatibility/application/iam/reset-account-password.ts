@@ -1,6 +1,6 @@
-import type { SystemAuthorization } from "@/api/legacy-system/use-cases/iam/system-authorization"
+import type { SystemAuthorization } from "@/contexts/system-compatibility/application/iam/system-authorization"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
-import { validatePasswordComplexity } from "@/api/legacy-system/use-cases/auth/password-policy"
+import { validatePasswordComplexity } from "@/contexts/system-compatibility/application/auth/password-policy"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type {
@@ -8,9 +8,9 @@ import type {
   SystemDatabaseContext,
   SystemRequestAuditContext,
 } from "@system/infrastructure/configuration/system-context"
-import { PasswordIdentityRepository } from "@/api/legacy-system/adapters/auth/password-identity-repository"
-import { AccountAuthRepository } from "@/api/legacy-system/adapters/auth/account-auth-repository"
-import { hasPermissionSuperset } from "@/api/legacy-system/use-cases/iam/has-permission-superset"
+import { PasswordIdentityRepository } from "@/contexts/system-compatibility/infrastructure/auth/password-identity-repository"
+import { AccountAuthRepository } from "@/contexts/system-compatibility/infrastructure/auth/account-auth-repository"
+import { hasPermissionSuperset } from "@/contexts/system-compatibility/application/iam/has-permission-superset"
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"

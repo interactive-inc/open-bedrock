@@ -1,5 +1,5 @@
-import { Notification } from "@/api/legacy-system/model/notifications/legacy-notification.entity"
-import { NotificationRepository } from "@/api/legacy-system/adapters/notifications/notification-repository"
+import { Notification } from "@/contexts/system-compatibility/domain/notifications/legacy-notification.entity"
+import { NotificationRepository } from "@/contexts/system-compatibility/infrastructure/notifications/notification-repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 

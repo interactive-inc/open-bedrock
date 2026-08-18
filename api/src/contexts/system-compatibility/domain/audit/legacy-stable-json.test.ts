@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { toStableAuditJson } from "@/api/legacy-system/model/audit/legacy-stable-json"
+import { toStableAuditJson } from "@/contexts/system-compatibility/domain/audit/legacy-stable-json"
 import { PayloadTooLargeError, ValidationError } from "@/lib/errors"
 
 describe("toStableAuditJson compatibility adapter", () => {

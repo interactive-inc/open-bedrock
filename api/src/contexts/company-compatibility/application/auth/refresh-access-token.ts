@@ -1,4 +1,4 @@
-import type { AccessTokenView } from "@/api/legacy-system/use-cases/auth/access-token-view"
+import type { AccessTokenView } from "@/contexts/system-compatibility/application/auth/access-token-view"
 import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { getAccountSessionRejection } from "@/contexts/system/domain/auth/get-account-session-rejection"

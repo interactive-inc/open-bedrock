@@ -1,7 +1,7 @@
 import type { AccountStatus } from "@system/domain/auth/account-status"
 import type { IdentityProvider } from "@system/domain/identity/identity-provider"
 import type { IdentitySubject } from "@system/domain/identity/identity-subject"
-import type { BatchJobStatus } from "@/api/legacy-system/model/batch/batch-job-status"
+import type { BatchJobStatus } from "@/contexts/system-compatibility/domain/batch/batch-job-status"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import {

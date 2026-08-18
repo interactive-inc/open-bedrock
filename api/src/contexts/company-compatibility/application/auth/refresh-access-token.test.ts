@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { AccessTokenView } from "@/api/legacy-system/use-cases/auth/access-token-view"
+import type { AccessTokenView } from "@/contexts/system-compatibility/application/auth/access-token-view"
 import { RefreshAccessToken } from "@/contexts/company-compatibility/application/auth/refresh-access-token"
 import type { AccountStatus } from "@/contexts/system/domain/auth/account-status"
 import type { Context } from "@/env"

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { CliLoginStateRepository } from "@/api/legacy-system/adapters/auth/cli-login-state-repository"
+import { CliLoginStateRepository } from "@/contexts/system-compatibility/infrastructure/auth/cli-login-state-repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 
 describe("CliLoginStateRepository", () => {

@@ -3,7 +3,7 @@ import { factory } from "@/contexts/company-compatibility/interface/utils/factor
 import { zAppNotificationList } from "@/lib/app-schemas"
 import { toNotificationSearchQuery } from "@/api/routes/notifications/me/to-notification-search-query"
 import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { notifications } from "@/api/legacy-system/adapters/schema/system"
+import { notifications } from "@/contexts/system-compatibility/infrastructure/schema/system"
 import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { and, count, desc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"

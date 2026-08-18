@@ -1,7 +1,7 @@
 import { Session } from "@/contexts/company-compatibility/domain/iam/session"
 import { RegisterEmployee } from "@/contexts/company-compatibility/application/employee/register-employee"
 import type { Context } from "@/env"
-import { AccountAuthRepository } from "@/api/legacy-system/adapters/auth/account-auth-repository"
+import { AccountAuthRepository } from "@/contexts/system-compatibility/infrastructure/auth/account-auth-repository"
 import { AccountEmployeeLinkRepository } from "@/contexts/company-compatibility/infrastructure/employee/account-employee-link-repository"
 import { RoleRepository } from "@/contexts/company-compatibility/infrastructure/iam/role-repository"
 import { createTestContext } from "@/api/test/support/create-test-context"

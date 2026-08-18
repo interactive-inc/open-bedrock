@@ -1,6 +1,6 @@
 import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
 import type { CompanyNotificationKind } from "@/contexts/company-compatibility/domain/company/notifications/notification-kind"
-import type { Notification } from "@/api/legacy-system/model/notifications/legacy-notification.entity"
+import type { Notification } from "@/contexts/system-compatibility/domain/notifications/legacy-notification.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company-compatibility/infrastructure/employee/employee-repository"
 import { EmployeeNotificationGateway } from "@/contexts/company-compatibility/infrastructure/company/notifications/employee-notification.gateway"

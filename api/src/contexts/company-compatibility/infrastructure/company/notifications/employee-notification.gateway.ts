@@ -1,10 +1,10 @@
 import type { CompanyNotificationKind } from "@/contexts/company-compatibility/domain/company/notifications/notification-kind"
-import { Notification } from "@/api/legacy-system/model/notifications/legacy-notification.entity"
+import { Notification } from "@/contexts/system-compatibility/domain/notifications/legacy-notification.entity"
 import type { Context } from "@/env"
 import { ResolveAccountEmployeeLink } from "@/contexts/company/application/workforce/resolve-account-employee-link"
 import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { AccountEmployeeLinkReadRepository } from "@/contexts/company-compatibility/infrastructure/workforce/account-employee-link-read.repository"
-import { NotificationRepository } from "@/api/legacy-system/adapters/notifications/notification-repository"
+import { NotificationRepository } from "@/contexts/system-compatibility/infrastructure/notifications/notification-repository"
 
 export type EmployeeNotification = Readonly<{
   recipientEmployeeId: number

@@ -1,7 +1,7 @@
 import type { AccountStatus } from "@/contexts/system/domain/auth/account-status"
 import type { Context } from "@/env"
 import { accountEmployeeLinks } from "@/contexts/company-compatibility/infrastructure/schema/employee"
-import { accounts } from "@/api/legacy-system/adapters/schema/system"
+import { accounts } from "@/contexts/system-compatibility/infrastructure/schema/system"
 import { eq } from "drizzle-orm"
 
 export type LinkedEmployeeAccount = Readonly<{

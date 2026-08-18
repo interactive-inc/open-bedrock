@@ -3,7 +3,7 @@ import { identitySubjectSchema } from "@/contexts/system/domain/identity/identit
 import type { Context } from "@/env"
 import { BootstrapAccountRepository } from "@/contexts/company-compatibility/infrastructure/iam/bootstrap-account-repository"
 import type { AlreadyInitialized } from "@/contexts/company-compatibility/infrastructure/iam/bootstrap-account-repository"
-import { validatePasswordComplexity } from "@/api/legacy-system/use-cases/auth/password-policy"
+import { validatePasswordComplexity } from "@/contexts/system-compatibility/application/auth/password-policy"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"

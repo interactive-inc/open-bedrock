@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { roles } from "@/api/legacy-system/adapters/schema/system"
+import { roles } from "@/contexts/system-compatibility/infrastructure/schema/system"
 import { inArray } from "drizzle-orm"
 
 export async function findUnknownApproverRoles(

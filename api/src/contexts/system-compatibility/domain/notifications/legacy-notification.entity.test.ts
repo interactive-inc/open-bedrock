@@ -1,4 +1,4 @@
-import { Notification } from "@/api/legacy-system/model/notifications/legacy-notification.entity"
+import { Notification } from "@/contexts/system-compatibility/domain/notifications/legacy-notification.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("Notification.create", () => {

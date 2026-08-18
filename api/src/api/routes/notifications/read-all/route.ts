@@ -1,4 +1,4 @@
-import { MarkAllNotificationsRead } from "@/api/legacy-system/use-cases/notifications/mark-all-notifications-read"
+import { MarkAllNotificationsRead } from "@/contexts/system-compatibility/application/notifications/mark-all-notifications-read"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
 import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"

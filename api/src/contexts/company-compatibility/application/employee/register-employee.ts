@@ -7,7 +7,7 @@ import { EmployeeRepository } from "@/contexts/company-compatibility/infrastruct
 import { AccountProvisioner } from "@/contexts/company-compatibility/infrastructure/iam/account-provisioner"
 import { LivePermissionGuard } from "@/contexts/company-compatibility/infrastructure/iam/live-permission-guard"
 import { RoleRepository } from "@/contexts/company-compatibility/infrastructure/iam/role-repository"
-import { validatePasswordComplexity } from "@/api/legacy-system/use-cases/auth/password-policy"
+import { validatePasswordComplexity } from "@/contexts/system-compatibility/application/auth/password-policy"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
@@ -17,7 +17,7 @@ import {
   UnexpectedError,
   ValidationError,
 } from "@/lib/errors"
-import { hasPermissionSuperset } from "@/api/legacy-system/use-cases/iam/has-permission-superset"
+import { hasPermissionSuperset } from "@/contexts/system-compatibility/application/iam/has-permission-superset"
 
 export type Command = {
   session: Session

@@ -30,3 +30,12 @@ src/contexts/<context>/
 - dashboard、inbox、directory、search は正本を持たず、`src/api` または利用側で複数コンテキストを合成する。
 
 申請内容と業務上の実行規則は各 App が所有する。System は申請内容の変更不能な参照と digest、状態遷移、判断、承認、実行許可を所有し、Company は判断者の会社上の資格を解決する。System に Employee、Department、Company 固有のpermissionを追加しない。
+
+## 互換コンテキスト
+
+canonical へ移行するまでの旧実装を、正本のコンテキストから隔離するために置く。
+
+- `system-compatibility` は旧 DB 互換の System 実装（旧通知、旧 batch、パスワード・CLI ログイン、旧 IAM 操作、旧 system schema）を持つ。`system` と同格の下位提供層であり、`system` だけを利用できる。`system` と `company` からは利用せず、`company-compatibility` と業務コンテキストからは利用できる。
+- `company-compatibility` は旧 Company wire と旧 storage の移行 adapter を持つ。`api/src/contexts/company` の変更なしに削除できる状態を維持する。
+
+どちらも新機能の配置先にしない。新しい import、新しい正本、新しい API を追加せず、依存を減らす方向だけへ変更する。#1085 の canonical 移行が完了した時点で、ディレクトリごと削除する。

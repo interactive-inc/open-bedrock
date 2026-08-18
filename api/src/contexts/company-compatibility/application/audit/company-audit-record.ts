@@ -1,6 +1,6 @@
 import { createSystemAuditEvent as createSystemAuditEventEnvelope } from "@/contexts/system/domain/audit/create-system-audit-event"
-import type { AuditJsonValue } from "@/api/legacy-system/model/audit/legacy-stable-json"
-import { toStableAuditJson } from "@/api/legacy-system/model/audit/legacy-stable-json"
+import type { AuditJsonValue } from "@/contexts/system-compatibility/domain/audit/legacy-stable-json"
+import { toStableAuditJson } from "@/contexts/system-compatibility/domain/audit/legacy-stable-json"
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
 

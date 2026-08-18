@@ -18,7 +18,7 @@ import { LIB_BOUNDARY_BASELINE } from "./lib-boundary-baseline"
 import { describe, expect, test } from "bun:test"
 
 describe("API root structure", () => {
-  test("HTTP composition・横断test・System互換adapterだけを許可する", () => {
+  test("HTTP compositionと横断testだけを許可する", () => {
     expect(inspectApiRootPath("src/api/api-route-module.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/app-base.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/app.ts")).toEqual([])
@@ -28,11 +28,11 @@ describe("API root structure", () => {
     expect(inspectApiRootPath("src/api/to-negotiated-http-exception-response.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/routes/inbox/counts/route.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/test/app.test.ts")).toEqual([])
-    expect(inspectApiRootPath("src/api/legacy-system/adapters/auth/repository.ts")).toEqual([])
   })
 
   test("機能実装とDDD mini-treeの流入を拒否する", () => {
     expect(inspectApiRootPath("src/api/accounts/delete-account.ts")).not.toEqual([])
+    expect(inspectApiRootPath("src/api/legacy-system/adapters/auth/repository.ts")).not.toEqual([])
     expect(inspectApiRootPath("src/api/test/domain/entity.ts")).toEqual([
       {
         file: "src/api/test/domain/entity.ts",
@@ -77,8 +77,10 @@ describe("context path classification", () => {
       context: "company",
       layer: "application",
     })
-    expect(classifyContextSource("src/api/legacy-system/model/auth/account.ts")).toEqual({
-      context: "system",
+    expect(
+      classifyContextSource("src/contexts/system-compatibility/domain/audit/legacy-stable-json.ts"),
+    ).toEqual({
+      context: "system-compatibility",
       layer: "domain",
     })
     expect(classifyContextSource("src/infrastructure/care/repository.ts")).toEqual({
@@ -103,8 +105,10 @@ describe("context path classification", () => {
       context: "system",
       layer: "application",
     })
-    expect(classifyContextModule("@/api/legacy-system/adapters/auth/repository")).toEqual({
-      context: "system",
+    expect(
+      classifyContextModule("@/contexts/system-compatibility/infrastructure/auth/repository"),
+    ).toEqual({
+      context: "system-compatibility",
       layer: "infrastructure",
     })
     expect(classifyContextModule("@/infrastructure/shared/parse-d1-row")).toBeNull()
@@ -123,6 +127,16 @@ describe("context dependency matrix", () => {
     expect(canContextDependOn("care", "company")).toBe(true)
     expect(canContextDependOn("care", "chat")).toBe(false)
     expect(canContextDependOn("care", "care")).toBe(true)
+  })
+
+  test("system-compatibilityはSystemだけへ依存し、canonicalからは利用しない", () => {
+    expect(canContextDependOn("system-compatibility", "system")).toBe(true)
+    expect(canContextDependOn("system-compatibility", "company")).toBe(false)
+    expect(canContextDependOn("system-compatibility", "care")).toBe(false)
+    expect(canContextDependOn("system", "system-compatibility")).toBe(false)
+    expect(canContextDependOn("company", "system-compatibility")).toBe(false)
+    expect(canContextDependOn("company-compatibility", "system-compatibility")).toBe(true)
+    expect(canContextDependOn("care", "system-compatibility")).toBe(true)
   })
 
   test("type-onlyを含む全依存構文でcontext間の逆依存を拒否する", () => {
@@ -145,7 +159,7 @@ describe("context dependency matrix", () => {
       "src/contexts/care/application/example.ts",
       [
         'import type { Account } from "@system/domain/auth/account"',
-        'import { LegacyAccount } from "@/api/legacy-system/model/auth/account"',
+        'import { Notification } from "@/contexts/system-compatibility/domain/notifications/legacy-notification.entity"',
         'import type { Employee } from "@/contexts/company-compatibility/domain/employee"',
         'import { parse } from "@/lib/parse"',
         'import { z } from "zod"',

@@ -15,7 +15,7 @@ const OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "context-ownership.json")
 const RETIRED_CONTEXT_NAMES = new Set(["request"])
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
-const API_ROOT_DIRECTORIES = new Set(["legacy-system", "routes", "test"])
+const API_ROOT_DIRECTORIES = new Set(["routes", "test"])
 const API_ROOT_FILES = new Set([
   "api-route-module.ts",
   "app-base.ts",
@@ -33,12 +33,6 @@ const LAYER_FIRST_PLATFORM_DIRECTORIES = new Set([
   "test-helpers",
   "utils",
 ])
-const LEGACY_SYSTEM_LAYER_BY_DIRECTORY = {
-  adapters: "infrastructure",
-  model: "domain",
-  "use-cases": "application",
-} as const satisfies Readonly<Record<string, ContextLayer>>
-
 const ownershipManifest = z
   .strictObject({
     companyCoreAreas: z.array(z.string().min(1)),
@@ -258,15 +252,6 @@ export function classifyContextSource(file: string): ContextSource | null {
       : null
   }
 
-  const legacySystem = normalized.match(
-    /(?:^|\/)src\/api\/legacy-system\/(model|use-cases|adapters)(?:\/|$)/,
-  )
-
-  if (legacySystem !== null) {
-    const directory = legacySystem[1] as keyof typeof LEGACY_SYSTEM_LAYER_BY_DIRECTORY
-    return { context: "system", layer: LEGACY_SYSTEM_LAYER_BY_DIRECTORY[directory] }
-  }
-
   const layerFirst = normalized.match(
     /(?:^|\/)src\/(?:api\/)?(domain|application|infrastructure|interface)\/([^/]+)(?:\/|$)/,
   )
@@ -294,15 +279,6 @@ export function classifyContextModule(moduleSpecifier: string): ContextSource | 
     const layer = systemReference[1]
 
     return layer !== undefined && isContextLayer(layer) ? { context: "system", layer } : null
-  }
-
-  const legacySystemReference = moduleSpecifier.match(
-    /^@\/api\/legacy-system\/(model|use-cases|adapters)(?:\/|$)/,
-  )
-
-  if (legacySystemReference !== null) {
-    const directory = legacySystemReference[1] as keyof typeof LEGACY_SYSTEM_LAYER_BY_DIRECTORY
-    return { context: "system", layer: LEGACY_SYSTEM_LAYER_BY_DIRECTORY[directory] }
   }
 
   const contextFirst = moduleSpecifier.match(
@@ -335,18 +311,27 @@ export function classifyContextModule(moduleSpecifier: string): ContextSource | 
     : null
 }
 
-/** System > Company > 業務の一方向依存だけを許可する。 */
+/** System > Company > 業務の一方向依存だけを許可する。system-compatibilityはSystemと同格の下位提供層で、canonicalなsystem・companyからは利用しない。 */
 export function canContextDependOn(sourceContext: string, targetContext: string): boolean {
   if (sourceContext === targetContext) return true
   if (sourceContext === "system") return false
+  if (sourceContext === "system-compatibility") return targetContext === "system"
   if (sourceContext === "company") return targetContext === "system"
 
   if (sourceContext === "company-compatibility") {
-    return targetContext === "system" || targetContext === "company"
+    return (
+      targetContext === "system" ||
+      targetContext === "system-compatibility" ||
+      targetContext === "company"
+    )
   }
   if (targetContext === "company-compatibility") return true
 
-  return targetContext === "system" || targetContext === "company"
+  return (
+    targetContext === "system" ||
+    targetContext === "system-compatibility" ||
+    targetContext === "company"
+  )
 }
 
 function getModuleSpecifier(node: ts.Node): string | null | Error {
@@ -417,8 +402,7 @@ function inspectModuleDependency(
   if (
     moduleSpecifier === "@/api" ||
     (moduleSpecifier.startsWith("@/api/") &&
-      !/^@\/api\/(?:domain|application|infrastructure|interface)\//.test(moduleSpecifier) &&
-      !/^@\/api\/legacy-system\/(?:model|use-cases|adapters)\//.test(moduleSpecifier))
+      !/^@\/api\/(?:domain|application|infrastructure|interface)\//.test(moduleSpecifier))
   ) {
     return [{ file, reason: `contextから API root へ依存しています: ${moduleSpecifier}` }]
   }

@@ -1,4 +1,4 @@
-import { createPkce } from "@/api/legacy-system/adapters/auth/create-pkce"
+import { createPkce } from "@/contexts/system-compatibility/infrastructure/auth/create-pkce"
 import { verifyPkceS256Challenge } from "@system/infrastructure/auth/pkce-s256"
 import { describe, expect, test } from "bun:test"
 

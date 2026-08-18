@@ -5,7 +5,7 @@ import {
   accountEmployeeLinks,
   employees,
 } from "@/contexts/company-compatibility/infrastructure/schema/employee"
-import { accounts, identities } from "@/api/legacy-system/adapters/schema/system"
+import { accounts, identities } from "@/contexts/system-compatibility/infrastructure/schema/system"
 import { and, asc, eq, inArray, isNotNull, like, not, sql } from "drizzle-orm"
 
 export type PasswordIdentity = {

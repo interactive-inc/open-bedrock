@@ -8,7 +8,11 @@ import {
   accountEmployeeLinks,
   employees,
 } from "@/contexts/company-compatibility/infrastructure/schema/employee"
-import { accountRoles, accounts, roles } from "@/api/legacy-system/adapters/schema/system"
+import {
+  accountRoles,
+  accounts,
+  roles,
+} from "@/contexts/system-compatibility/infrastructure/schema/system"
 import { eq, inArray, sql } from "drizzle-orm"
 
 export type AccountSummary = {
