@@ -4,7 +4,7 @@ import type {
   AccountEmployeeLinkReadPortResult,
 } from "@/contexts/company/application/workforce/resolve-account-employee-link"
 import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import type { Context } from "@/env"
 
 type LinkRow = Readonly<{

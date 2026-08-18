@@ -11,7 +11,7 @@ export type OrganizationRevisionReadResult =
   | Readonly<{ ok: true; revision: number }>
   | Readonly<{ ok: false; cause: unknown }>
 
-export interface OrganizationUnitReadPort {
+export type OrganizationUnitReadPort = {
   readSnapshot(asOf: CalendarDate): Promise<OrganizationUnitSnapshotReadResult>
   readRevision(): Promise<OrganizationRevisionReadResult>
 }

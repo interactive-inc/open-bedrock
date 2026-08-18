@@ -3,7 +3,18 @@
   "companySystemAdapterAreas": [],
   "companyAreasByLayer": {
     "domain": ["core", "workforce"],
-    "application": ["core", "workforce"],
+    "application": [
+      "account-employee-links",
+      "core",
+      "definitions",
+      "employees",
+      "employments",
+      "organization",
+      "people",
+      "personnel-actions",
+      "profile",
+      "workforce"
+    ],
     "infrastructure": ["core", "schema"],
     "interface": ["http", "routes"]
   },

@@ -5,7 +5,7 @@ import {
   type EmployeeDirectoryReadPortResult,
 } from "@/contexts/company/application/workforce/read-employee-directory"
 import type { Employee } from "@/contexts/company/domain/workforce/workforce-schedule"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { describe, expect, test } from "bun:test"
 
 const firstEmployeeId = restoreWorkforceId("employee", "employee-1")

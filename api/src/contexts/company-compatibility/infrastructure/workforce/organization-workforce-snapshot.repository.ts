@@ -1,12 +1,12 @@
 import type {
   WorkforceSnapshotReadPort,
   WorkforceSnapshotReadResult,
-} from "@/contexts/company/application/workforce/apply-organization-change"
+} from "@/contexts/company/application/workforce/organization-change"
 import {
   toWorkforceEmployeeId,
   toWorkforceLifecycleSchedules,
 } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/workforce/workforce-schedule"
 import { EmployeeLifecycleRepository } from "@/contexts/company-compatibility/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import {

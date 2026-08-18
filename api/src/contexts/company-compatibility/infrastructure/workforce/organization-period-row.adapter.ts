@@ -1,15 +1,15 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import type {
   OrgAssignmentPeriod,
-  OrgAssignmentType,
   OrgResponsibilityPeriod,
   WorkforceLifecycleSchedule,
 } from "@/contexts/company/domain/workforce/workforce-schedule"
 import {
-  isOrgResponsibilityType,
   orgAssignmentTypes,
-} from "@/contexts/company/domain/workforce/workforce-schedule"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+  type OrgAssignmentType,
+} from "@/contexts/company/domain/workforce/org-assignment-type"
+import { isOrgResponsibilityType } from "@/contexts/company/domain/workforce/is-org-responsibility-type"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 
 type PeriodProjectionRow = Readonly<{
   periodId: string

@@ -3,7 +3,7 @@ import type {
   OrganizationChangeSet,
   OrganizationChangeWritePort,
   OrganizationChangeWriteResult,
-} from "@/contexts/company/application/workforce/apply-organization-change"
+} from "@/contexts/company/application/workforce/organization-change"
 import { toOrganizationChangeFingerprint } from "@/contexts/company-compatibility/infrastructure/workforce/to-organization-change-fingerprint"
 import {
   organizationAssignmentPeriodVersions,

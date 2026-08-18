@@ -4,7 +4,7 @@ import {
   type AccountEmployeeLinkReadPort,
   type AccountEmployeeLinkReadPortResult,
 } from "@/contexts/company/application/workforce/resolve-account-employee-link"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { describe, expect, test } from "bun:test"
 
 const accountId = restoreWorkforceId("system_account", "account-1")

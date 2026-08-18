@@ -1,5 +1,5 @@
 import { ResolveOrganizationAuthority } from "@/contexts/company/application/workforce/resolve-organization-authority"
-import { WorkforceSnapshotChangedError } from "@/contexts/company/application/workforce/read-workforce-state"
+import { WorkforceSnapshotChangedError } from "@/contexts/company/application/workforce/workforce-snapshot-changed-error"
 import type {
   OrganizationalAuthorityCandidateResolution,
   OrganizationalAuthorityCriterion as LegacyCriterion,
@@ -12,7 +12,7 @@ import {
   toWorkforceEmployeeId,
   toWorkforceOrganizationUnitId,
 } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
 import { OrganizationUnitReadRepository } from "@/contexts/company-compatibility/infrastructure/workforce/organization-unit-read.repository"
 import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company-compatibility/infrastructure/workforce/organization-workforce-snapshot.repository"

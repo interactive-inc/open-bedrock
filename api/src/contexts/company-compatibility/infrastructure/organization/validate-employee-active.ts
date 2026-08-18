@@ -1,6 +1,6 @@
 import { ReadWorkforceState } from "@/contexts/company/application/workforce/read-workforce-state"
 import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { EmployeeLifecycleRepository } from "@/contexts/company-compatibility/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeLifecycleWorkforceRepository } from "@/contexts/company-compatibility/infrastructure/workforce/employee-lifecycle-workforce.repository"
 import { OrganizationUnitReadRepository } from "@/contexts/company-compatibility/infrastructure/workforce/organization-unit-read.repository"
