@@ -1022,6 +1022,11 @@ export const zAppGoalEvaluation = z.object({
 
 export type AppGoalEvaluation = z.infer<typeof zAppGoalEvaluation>
 
+/** 目標評価一覧のレスポンス。ページネーションなしのためフラット配列で返す。 */
+export const zAppGoalEvaluationList = z.array(zAppGoalEvaluation)
+
+export type AppGoalEvaluationList = z.infer<typeof zAppGoalEvaluationList>
+
 /** 目標ツリーのノード 1 件（children で再帰）。全社を根、部門を中間、個人目標を葉とする。 */
 export type AppGoalTreeNode = {
   id: number

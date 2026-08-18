@@ -23,6 +23,12 @@ export default factory.createHandlers(
 
     const goal = await response.json()
 
-    return c.json(goal)
+    const evaluationsResponse = await client["performance-goals"][":goal_id"].evaluations.$get({
+      param: { goal_id: query.id },
+    })
+
+    const evaluations = await evaluationsResponse.json()
+
+    return c.json({ ...goal, evaluations })
   },
 )

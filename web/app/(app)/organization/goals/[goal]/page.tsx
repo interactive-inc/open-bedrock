@@ -1,11 +1,13 @@
 import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { GoalEvaluationForm } from "@/app/(app)/organization/goals/[goal]/_components/goal-evaluation-form"
+import { GoalEvaluationList } from "@/app/(app)/organization/goals/[goal]/_components/goal-evaluation-list"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { getGoal } from "@/lib/api/get-goal"
+import { getGoalEvaluations } from "@/lib/api/get-goal-evaluations"
 import { statusLabel } from "@/lib/status-label"
 import { getMe } from "@/lib/api/get-me"
 import type { GoalEvaluationKind } from "@/lib/api/types/goal-types"
@@ -29,7 +31,11 @@ export default async function GoalDetailPage(props: Props) {
     return <FetchError message="目標 ID が不正です" />
   }
 
-  const [goal, currentUser] = await Promise.all([getGoal(goalId), getMe()])
+  const [goal, evaluations, currentUser] = await Promise.all([
+    getGoal(goalId),
+    getGoalEvaluations(goalId),
+    getMe(),
+  ])
 
   if (goal instanceof Error) {
     return (
@@ -91,6 +97,12 @@ export default async function GoalDetailPage(props: Props) {
           </div>
         </CardContent>
       </Card>
+
+      {evaluations instanceof Error ? (
+        <FetchError message="評価の取得に失敗しました" />
+      ) : (
+        <GoalEvaluationList evaluations={evaluations} />
+      )}
 
       {goal.id !== null && evaluationKinds.length > 0 ? (
         <GoalEvaluationForm goalId={goal.id} allowedKinds={evaluationKinds} />
