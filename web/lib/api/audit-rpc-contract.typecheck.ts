@@ -24,7 +24,7 @@ type ExpectedAuditListInput = {
   }
 }
 
-type ExpectedAuditDetailInput = { param: { event_id: string } }
+type ExpectedAuditDetailInput = { param: { eventId: string } }
 
 type ExpectedAuditExportInput = {
   json: {
@@ -45,7 +45,7 @@ export type AuditRpcContract = [
   Assert<Equal<AuditListInput, ExpectedAuditListInput>>,
   Assert<
     Equal<
-      InferRequestType<ApiClient["audit-events"][":event_id"]["$get"]>,
+      InferRequestType<ApiClient["audit-events"][":eventId"]["$get"]>,
       ExpectedAuditDetailInput
     >
   >,

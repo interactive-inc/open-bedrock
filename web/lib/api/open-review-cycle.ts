@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-/** POST /review-cycles/:cycle_id/open。特権ロールがサイクルを open にする。 */
+/** POST /review-cycles/:cycleId/open。特権ロールがサイクルを open にする。 */
 export async function openReviewCycle(cycleId: number) {
   const client = await createClient()
 
-  const response = await client["review-cycles"][":cycle_id"].open.$post({
-    param: { cycle_id: String(cycleId) },
+  const response = await client["review-cycles"][":cycleId"].open.$post({
+    param: { cycleId: String(cycleId) },
   })
 
   if (response.status >= 400) {
