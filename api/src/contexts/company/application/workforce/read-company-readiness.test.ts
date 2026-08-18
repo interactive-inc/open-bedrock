@@ -2,7 +2,7 @@ import {
   ReadCompanyReadiness,
   type CompanyReadinessPortResult,
 } from "@/contexts/company/application/workforce/read-company-readiness"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { describe, expect, test } from "bun:test"
 
 function service(result: CompanyReadinessPortResult): ReadCompanyReadiness {

@@ -3,13 +3,13 @@ import {
   toWorkforceLifecycleSchedules,
   toWorkforceOrganizationUnitId,
 } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import {
-  validateWorkforceLifecycleSchedules,
-  type WorkforceInvariantCode,
-  type WorkforceInvariantViolation,
-} from "@/contexts/company/domain/workforce/validate-workforce-schedules"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import type {
+  WorkforceInvariantCode,
+  WorkforceInvariantViolation,
+} from "@/contexts/company/domain/workforce/workforce-invariant"
+import { validateWorkforceLifecycleSchedules } from "@/contexts/company/domain/workforce/validate-workforce-lifecycle-schedules"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { ApplicationError, ConflictError } from "@/lib/errors"
 
 type ValidateLifecycleSchedulesProps = {

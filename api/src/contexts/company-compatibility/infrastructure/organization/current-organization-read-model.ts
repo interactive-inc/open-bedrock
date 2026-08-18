@@ -5,7 +5,7 @@ import type {
 import { ReadCompanyReadiness } from "@/contexts/company/application/workforce/read-company-readiness"
 import { ReadOrganizationWorkforceState } from "@/contexts/company/application/workforce/read-organization-workforce-state"
 import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import type { WorkforceStateAt } from "@/contexts/company/domain/workforce/resolve-workforce-state"
 import type {
   EmployeeId,

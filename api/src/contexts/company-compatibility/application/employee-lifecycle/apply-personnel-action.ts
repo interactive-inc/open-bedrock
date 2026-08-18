@@ -12,14 +12,14 @@ import {
 import type { PersonnelActionInput } from "@/contexts/company-compatibility/domain/employee-lifecycle/lifecycle-types"
 import { fingerprintPersonnelAction } from "@/contexts/company-compatibility/application/employee-lifecycle/fingerprint-personnel-action"
 import { stableLifecycleJson } from "@/contexts/company-compatibility/application/employee-lifecycle/stable-lifecycle-json"
-import {
-  ValidateOrganizationChange,
-  type OrganizationChangeSet,
-  type WorkforceSnapshotReadPort,
-} from "@/contexts/company/application/workforce/apply-organization-change"
+import type {
+  OrganizationChangeSet,
+  WorkforceSnapshotReadPort,
+} from "@/contexts/company/application/workforce/organization-change"
+import { ValidateOrganizationChange } from "@/contexts/company/application/workforce/validate-organization-change"
 import { toWorkforceLifecycleSchedules } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company-compatibility/infrastructure/company/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company-compatibility/infrastructure/employee-lifecycle/employee-lifecycle-repository"

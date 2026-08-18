@@ -1,6 +1,6 @@
-import type { WorkforceSnapshotReadPort } from "@/contexts/company/application/workforce/apply-organization-change"
+import type { WorkforceSnapshotReadPort } from "@/contexts/company/application/workforce/organization-change"
 import type { OrganizationUnitReadPort } from "@/contexts/company/application/workforce/read-organization-state"
-import { WorkforceSnapshotChangedError } from "@/contexts/company/application/workforce/read-workforce-state"
+import { WorkforceSnapshotChangedError } from "@/contexts/company/application/workforce/workforce-snapshot-changed-error"
 import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
 import type {
   OrganizationalAuthorityCriterion,
@@ -11,11 +11,11 @@ import { resolveOrganizationalAuthority } from "@/contexts/company/domain/workfo
 import {
   resolveWorkforceStateAt,
   type WorkforceStateAt,
-  type WorkforceStateResolutionError,
 } from "@/contexts/company/domain/workforce/resolve-workforce-state"
+import type { WorkforceStateResolutionError } from "@/contexts/company/domain/workforce/workforce-state-resolution-error"
 import type { OrganizationInvariantViolation } from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
 import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/workforce/validate-workforce-schedules"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/workforce/workforce-invariant"
 import { validateWorkforceSchedules } from "@/contexts/company/domain/workforce/validate-workforce-schedules"
 import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
 

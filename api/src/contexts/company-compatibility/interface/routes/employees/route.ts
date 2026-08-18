@@ -31,7 +31,7 @@ import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-
 import { UnavailableError } from "@/lib/errors"
 import { ReadOrganizationWorkforceState } from "@/contexts/company/application/workforce/read-organization-workforce-state"
 import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import type { WorkforceStateAt } from "@/contexts/company/domain/workforce/resolve-workforce-state"
 import { OrganizationUnitReadRepository } from "@/contexts/company-compatibility/infrastructure/workforce/organization-unit-read.repository"
 import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company-compatibility/infrastructure/workforce/organization-workforce-snapshot.repository"

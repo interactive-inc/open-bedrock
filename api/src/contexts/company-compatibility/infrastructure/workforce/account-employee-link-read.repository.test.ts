@@ -1,6 +1,6 @@
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { AccountEmployeeLinkReadRepository } from "@/contexts/company-compatibility/infrastructure/workforce/account-employee-link-read.repository"
 import { describe, expect, test } from "bun:test"
 

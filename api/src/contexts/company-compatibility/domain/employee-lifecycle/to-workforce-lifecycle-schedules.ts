@@ -1,14 +1,14 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import type {
   WorkforceLifecycleSchedule,
   WorkforcePeriodVersion,
 } from "@/contexts/company/domain/workforce/workforce-schedule"
 import {
-  restoreWorkforceId,
   type EmployeeId,
   type EmploymentId,
   type OrganizationUnitId,
 } from "@/contexts/company/domain/workforce/workforce-id"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import type {
   LifecyclePeriodBase,
   LifecycleSchedule,

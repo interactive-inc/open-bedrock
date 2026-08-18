@@ -2,7 +2,7 @@ import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 import { check, index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 import { organizationUnitKinds } from "@/contexts/company/domain/workforce/organization-unit"
-import { orgAssignmentTypes } from "@/contexts/company/domain/workforce/workforce-schedule"
+import { orgAssignmentTypes } from "@/contexts/company/domain/workforce/org-assignment-type"
 import { organizationLifecycleState } from "@/contexts/company-compatibility/infrastructure/schema/employee-lifecycle"
 
 /** Companyが所有する部署マスタ。 */

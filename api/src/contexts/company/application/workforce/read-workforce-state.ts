@@ -6,21 +6,20 @@ import {
 } from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
 import {
   resolveWorkforceStateAt,
-  WorkforceStateResolutionError,
   type WorkforceStateAt,
 } from "@/contexts/company/domain/workforce/resolve-workforce-state"
-import {
-  validateWorkforceLifecycleSchedule,
-  type WorkforceInvariantViolation,
-} from "@/contexts/company/domain/workforce/validate-workforce-schedules"
+import { WorkforceStateResolutionError } from "@/contexts/company/domain/workforce/workforce-state-resolution-error"
+import { validateWorkforceLifecycleSchedule } from "@/contexts/company/domain/workforce/validate-workforce-lifecycle-schedule"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/workforce/workforce-invariant"
 import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/workforce/workforce-schedule"
 import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
+import { WorkforceSnapshotChangedError } from "@/contexts/company/application/workforce/workforce-snapshot-changed-error"
 
 export type WorkforceLifecycleReadPortResult =
   | Readonly<{ ok: true; schedule: WorkforceLifecycleSchedule | null }>
   | Readonly<{ ok: false; cause: unknown }>
 
-export interface WorkforceLifecycleReadPort {
+export type WorkforceLifecycleReadPort = {
   findByEmployeeId(employeeId: EmployeeId): Promise<WorkforceLifecycleReadPortResult>
 }
 
@@ -33,15 +32,6 @@ export type ReadWorkforceStateResult =
     }>
   | Readonly<{ kind: "invalid_organization"; error: OrganizationInvariantViolation }>
   | Readonly<{ kind: "unavailable"; cause: unknown }>
-
-export class WorkforceSnapshotChangedError extends Error {
-  readonly code = "workforce_snapshot_changed"
-
-  constructor() {
-    super("company organization changed while workforce state was read")
-    this.name = "WorkforceSnapshotChangedError"
-  }
-}
 
 /** 製品固有の永続化をportの外へ閉じ、Companyの基準日時点状態を読む。 */
 export class ReadWorkforceState {

@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { listManagedWorkforceEmployeeIds } from "@/contexts/company/domain/workforce/resolve-employee-management-authority"
+import { listManagedWorkforceEmployeeIds } from "@/contexts/company/domain/workforce/list-managed-workforce-employee-ids"
 import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { readCanonicalOrganizationState } from "@/contexts/company-compatibility/application/organization/read-canonical-organization-state"
 import { toStorageEmployeeId } from "@/contexts/company-compatibility/infrastructure/workforce/to-storage-employee-id"

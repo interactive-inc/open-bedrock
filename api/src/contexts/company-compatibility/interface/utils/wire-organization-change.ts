@@ -1,8 +1,8 @@
-import type { OrganizationChangeSet } from "@/contexts/company/application/workforce/apply-organization-change"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import type { OrganizationChangeSet } from "@/contexts/company/application/workforce/organization-change"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { organizationUnitKinds } from "@/contexts/company/domain/workforce/organization-unit"
-import { orgAssignmentTypes } from "@/contexts/company/domain/workforce/workforce-schedule"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import { orgAssignmentTypes } from "@/contexts/company/domain/workforce/org-assignment-type"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { isoDate } from "@/lib/schemas"
 import { z } from "zod"
 
