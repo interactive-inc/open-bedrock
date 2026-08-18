@@ -788,6 +788,7 @@ const routePart29 = createRouteApp()
   .get("/performance-goals/:goal_id", ...performanceGoalsGoalIdRoute.GET)
   .put("/performance-goals/:goal_id", ...performanceGoalsGoalIdRoute.PUT)
   .delete("/performance-goals/:goal_id", ...performanceGoalsGoalIdRoute.DELETE)
+  .get("/performance-goals/:goal_id/evaluations", ...performanceGoalsGoalIdEvaluationsRoute.GET)
   .post("/performance-goals/:goal_id/evaluations", ...performanceGoalsGoalIdEvaluationsRoute.POST)
   .get("/permission-definitions", ...permissionDefinitionsRoute.GET)
 

@@ -73,7 +73,7 @@ export async function createGoalAction(
   }
 
   revalidatePath("/organization/goals")
-  revalidatePath("/organization/goals/[id]", "page")
+  revalidatePath("/organization/goals/[goal]", "page")
 
   return { ok: true, error: null }
 }
@@ -213,7 +213,7 @@ export async function updateGoalAction(
   }
 
   revalidatePath("/organization/goals")
-  revalidatePath("/organization/goals/[id]", "page")
+  revalidatePath("/organization/goals/[goal]", "page")
 
   return { ok: true, error: null }
 }
@@ -238,7 +238,7 @@ export async function deleteGoalAction(
   }
 
   revalidatePath("/organization/goals")
-  revalidatePath("/organization/goals/[id]", "page")
+  revalidatePath("/organization/goals/[goal]", "page")
 
   return { ok: true, error: null }
 }
@@ -294,7 +294,7 @@ export async function createGoalEvaluationAction(
   }
 
   revalidatePath("/organization/goals")
-  revalidatePath("/organization/goals/[id]", "page")
+  revalidatePath("/organization/goals/[goal]", "page")
 
   return { ok: true, error: null }
 }
