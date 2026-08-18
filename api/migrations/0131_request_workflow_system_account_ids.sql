@@ -14,28 +14,37 @@ SELECT
   1,
   count(*)
 FROM (
-  SELECT updated_by_account_id AS legacy_account_id
-  FROM application_workflows
-  WHERE updated_by_account_id IS NOT NULL
+  -- D1（workerd SQLite）は 1 つの compound SELECT に許す項数が SQLite 既定の
+  -- 500 よりずっと少ない（実測 5 項まで、6 項から SQLITE_ERROR: too many terms
+  -- in compound SELECT）。3 項ずつのグループへ分け、グループ同士を
+  -- `SELECT * FROM (...)` でラップしてから UNION ALL する（外側 2 項・内側 3 項
+  -- のどちらも上限内に収める）。
+  SELECT * FROM (
+    SELECT updated_by_account_id AS legacy_account_id
+    FROM application_workflows
+    WHERE updated_by_account_id IS NOT NULL
+    UNION ALL
+    SELECT updated_by_account_id
+    FROM application_workflow_revisions
+    WHERE updated_by_account_id IS NOT NULL
+    UNION ALL
+    SELECT candidate_account_id
+    FROM application_workflow_step_candidates
+  )
   UNION ALL
-  SELECT updated_by_account_id
-  FROM application_workflow_revisions
-  WHERE updated_by_account_id IS NOT NULL
-  UNION ALL
-  SELECT candidate_account_id
-  FROM application_workflow_step_candidates
-  UNION ALL
-  SELECT approver_account_id
-  FROM application_workflow_approvals
-  WHERE approver_account_id IS NOT NULL
-  UNION ALL
-  SELECT actor_account_id
-  FROM application_workflow_events
-  WHERE actor_account_id IS NOT NULL
-  UNION ALL
-  SELECT created_by_account_id
-  FROM approval_delegations
-  WHERE created_by_account_id IS NOT NULL
+  SELECT * FROM (
+    SELECT approver_account_id
+    FROM application_workflow_approvals
+    WHERE approver_account_id IS NOT NULL
+    UNION ALL
+    SELECT actor_account_id
+    FROM application_workflow_events
+    WHERE actor_account_id IS NOT NULL
+    UNION ALL
+    SELECT created_by_account_id
+    FROM approval_delegations
+    WHERE created_by_account_id IS NOT NULL
+  )
 ) workflow_account
 LEFT JOIN system_accounts canonical
   ON canonical.id = CAST(workflow_account.legacy_account_id AS TEXT)
@@ -385,17 +394,23 @@ SELECT
   (
     SELECT count(*)
     FROM (
-      SELECT updated_by_account_id AS account_id FROM application_workflows
+      -- D1 の compound SELECT 項数上限（実測5項）を避けるため 3 項ずつに分ける。
+      -- 理由は先頭の validation INSERT のコメントを参照。
+      SELECT * FROM (
+        SELECT updated_by_account_id AS account_id FROM application_workflows
+        UNION ALL
+        SELECT updated_by_account_id FROM application_workflow_revisions
+        UNION ALL
+        SELECT candidate_account_id FROM application_workflow_step_candidates
+      )
       UNION ALL
-      SELECT updated_by_account_id FROM application_workflow_revisions
-      UNION ALL
-      SELECT candidate_account_id FROM application_workflow_step_candidates
-      UNION ALL
-      SELECT approver_account_id FROM application_workflow_approvals
-      UNION ALL
-      SELECT actor_account_id FROM application_workflow_events
-      UNION ALL
-      SELECT created_by_account_id FROM approval_delegations
+      SELECT * FROM (
+        SELECT approver_account_id FROM application_workflow_approvals
+        UNION ALL
+        SELECT actor_account_id FROM application_workflow_events
+        UNION ALL
+        SELECT created_by_account_id FROM approval_delegations
+      )
     ) stored_account
     WHERE account_id IS NOT NULL AND typeof(account_id) <> 'text'
   ),
