@@ -1,6 +1,6 @@
 import { readCanonicalOrganizationState } from "@/contexts/company-compatibility/application/organization/read-canonical-organization-state"
 import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { toStorageEmployeeId } from "@/contexts/company-compatibility/infrastructure/workforce/to-storage-employee-id"
 import type { Context } from "@/env"
 

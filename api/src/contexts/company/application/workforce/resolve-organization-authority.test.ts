@@ -1,8 +1,8 @@
 import { ResolveOrganizationAuthority } from "@/contexts/company/application/workforce/resolve-organization-authority"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import type { OrganizationUnitPeriod } from "@/contexts/company/domain/workforce/organization-unit"
 import type { WorkforceSchedule } from "@/contexts/company/domain/workforce/workforce-schedule"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { describe, expect, test } from "bun:test"
 
 const asOf = restoreCalendarDate("2026-06-01")

@@ -1,7 +1,7 @@
 import { readCanonicalOrganizationState } from "@/contexts/company-compatibility/application/organization/read-canonical-organization-state"
 import { toWorkforceEmployeeId } from "@/contexts/company-compatibility/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import type { EmployeeRelation } from "@/contexts/company-compatibility/domain/organization/employee-relation"
-import { resolveWorkforceEmployeeRelation } from "@/contexts/company/domain/workforce/resolve-employee-management-authority"
+import { resolveWorkforceEmployeeRelation } from "@/contexts/company/domain/workforce/resolve-workforce-employee-relation"
 import type { Context } from "@/env"
 
 export type Props = {

@@ -1,7 +1,7 @@
 import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
 import type { WorkforceStateAt } from "@/contexts/company/domain/workforce/resolve-workforce-state"
 import type { AccountEmployeeLink } from "@/contexts/company/domain/workforce/workforce-schedule"
-import type { OrgResponsibilityType } from "@/contexts/company/domain/workforce/workforce-schedule"
+import type { OrgResponsibilityType } from "@/contexts/company/domain/workforce/org-responsibility-type"
 import type {
   EmployeeId,
   OrganizationUnitId,

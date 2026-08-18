@@ -1,4 +1,4 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import type {
   EmploymentPeriod,
   EmploymentStatusPeriod,
@@ -8,11 +8,9 @@ import type {
   WorkforceSchedule,
 } from "@/contexts/company/domain/workforce/workforce-schedule"
 import type { OrganizationUnitPeriod } from "@/contexts/company/domain/workforce/organization-unit"
-import {
-  validateWorkforceLifecycleSchedules,
-  validateWorkforceSchedules,
-} from "@/contexts/company/domain/workforce/validate-workforce-schedules"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
+import { validateWorkforceLifecycleSchedules } from "@/contexts/company/domain/workforce/validate-workforce-lifecycle-schedules"
+import { validateWorkforceSchedules } from "@/contexts/company/domain/workforce/validate-workforce-schedules"
+import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { describe, expect, test } from "bun:test"
 
 const managerId = restoreWorkforceId("employee", "employee-manager")

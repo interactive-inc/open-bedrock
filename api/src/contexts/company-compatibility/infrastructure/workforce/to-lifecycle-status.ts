@@ -1,4 +1,4 @@
-import type { EmploymentStatus } from "@/contexts/company/domain/workforce/workforce-schedule"
+import type { EmploymentStatus } from "@/contexts/company/domain/workforce/employment-status"
 import type { LifecycleEmployeeStatus } from "@/contexts/company-compatibility/domain/employee-lifecycle/lifecycle-types"
 
 /** 共通Workforceの在籍状態を既存APIの語彙へ変換する。 */

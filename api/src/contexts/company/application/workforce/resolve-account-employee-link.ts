@@ -1,5 +1,6 @@
 import type { AccountEmployeeLink } from "@/contexts/company/domain/workforce/workforce-schedule"
 import type { EmployeeId, SystemAccountId } from "@/contexts/company/domain/workforce/workforce-id"
+import { AccountEmployeeLinkResolutionError } from "@/contexts/company/application/workforce/account-employee-link-resolution-error"
 
 export type AccountEmployeeLinkQuery =
   | Readonly<{ kind: "by_account"; accountId: SystemAccountId }>
@@ -14,20 +15,8 @@ export type AccountEmployeeLinkReadPortResult =
   | Readonly<{ ok: true; records: ReadonlyArray<AccountEmployeeLinkRecord> }>
   | Readonly<{ ok: false; cause: unknown }>
 
-export interface AccountEmployeeLinkReadPort {
+export type AccountEmployeeLinkReadPort = {
   find(query: AccountEmployeeLinkQuery): Promise<AccountEmployeeLinkReadPortResult>
-}
-
-export type AccountEmployeeLinkResolutionCode =
-  | "account_link_ambiguous"
-  | "account_link_account_mismatch"
-  | "account_link_employee_mismatch"
-
-export class AccountEmployeeLinkResolutionError extends Error {
-  constructor(readonly code: AccountEmployeeLinkResolutionCode) {
-    super(code)
-    this.name = "AccountEmployeeLinkResolutionError"
-  }
 }
 
 export type ResolveAccountEmployeeLinkResult =

@@ -1,6 +1,6 @@
 import { ReadCompanyReadiness } from "@/contexts/company/application/workforce/read-company-readiness"
 import { ReadOrganizationWorkforceState } from "@/contexts/company/application/workforce/read-organization-workforce-state"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
 import { CompanyReadinessRepository } from "@/contexts/company-compatibility/infrastructure/workforce/company-readiness.repository"
 import { OrganizationUnitReadRepository } from "@/contexts/company-compatibility/infrastructure/workforce/organization-unit-read.repository"

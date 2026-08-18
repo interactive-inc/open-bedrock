@@ -1,5 +1,5 @@
 import type { ReadOrganizationWorkforceStateResult } from "@/contexts/company/application/workforce/read-organization-workforce-state"
-import { periodContainsDate } from "@/contexts/company/domain/workforce/effective-period"
+import { periodContainsDate } from "@/contexts/company/domain/workforce/period-contains-date"
 import { toCompanyAssignmentResponse } from "@/contexts/company-compatibility/interface/utils/to-company-assignment-response"
 import { toCompanyResponsibilityResponse } from "@/contexts/company-compatibility/interface/utils/to-company-responsibility-response"
 

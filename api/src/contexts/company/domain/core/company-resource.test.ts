@@ -1,10 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import {
-  validateCompanyResource,
-  validateCompanyResourceChange,
-  type CompanyResource,
-} from "./company-resource"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import type { CompanyResource } from "./company-resource"
+import { validateCompanyResource } from "./validate-company-resource"
+import { validateCompanyResourceChange } from "./validate-company-resource-change"
+import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 
 const employee = {
   organizationId: "organization:default",
