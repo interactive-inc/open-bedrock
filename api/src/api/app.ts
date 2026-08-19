@@ -34,9 +34,6 @@ import * as authCliCallbackRoute from "@/api/routes/auth.cli.callback"
 import * as authCliLoginRoute from "@/api/routes/auth.cli.login"
 import * as authCliTokenRoute from "@/api/routes/auth.cli.token"
 import * as authIdentityLoginRoute from "@/api/routes/auth.identity.login"
-import * as authLoginRoute from "@/api/routes/auth.login"
-import * as authLogoutRoute from "@/api/routes/auth.logout"
-import * as authRefreshRoute from "@/api/routes/auth.refresh"
 import * as bootstrapRoute from "@/api/routes/bootstrap"
 import * as dashboardRoute from "@/api/routes/dashboard"
 import * as dashboardManagementRoute from "@/api/routes/dashboard.management"
@@ -494,11 +491,8 @@ const routePart24 = createRouteApp()
   .get("/auth/cli/login", ...authCliLoginRoute.GET)
   .post("/auth/cli/token", ...authCliTokenRoute.POST)
   .post("/auth/identity/login", ...authIdentityLoginRoute.POST)
-  .post("/auth/login", ...authLoginRoute.POST)
-  .post("/auth/logout", ...authLogoutRoute.POST)
   .post("/auth/password/reset", ...authPasswordResetRoute.POST)
   .patch("/auth/password/reset", ...authPasswordResetRoute.PATCH)
-  .post("/auth/refresh", ...authRefreshRoute.POST)
   .get("/batch", ...batchRoute.GET)
   .post("/batch/employee-lifecycle/backfill", ...batchEmployeeLifecycleBackfillRoute.POST)
   .post("/batch/employee-lifecycle/preflight", ...batchEmployeeLifecyclePreflightRoute.POST)
@@ -523,11 +517,11 @@ const routePart24 = createRouteApp()
   .get("/career-applications/me", ...careerApplicationsMeRoute.GET)
   .get("/career-applications/:id", ...careerApplicationsIdRoute.GET)
   .put("/career-applications/:id", ...careerApplicationsIdRoute.PUT)
-
-const routePart25 = createRouteApp()
   .delete("/career-applications/:id", ...careerApplicationsIdRoute.DELETE)
   .get("/career-postings", ...careerPostingsRoute.GET)
   .post("/career-postings", ...careerPostingsRoute.POST)
+
+const routePart25 = createRouteApp()
   .get("/career-postings/:postingId", ...careerPostingsPostingIdRoute.GET)
   .put("/career-postings/:postingId", ...careerPostingsPostingIdRoute.PUT)
   .delete("/career-postings/:postingId", ...careerPostingsPostingIdRoute.DELETE)
@@ -573,11 +567,11 @@ const routePart25 = createRouteApp()
   .get("/dashboard/management", ...dashboardManagementRoute.GET)
   .get("/decision-records", ...decisionRecordsRoute.GET)
   .post("/decision-records", ...decisionRecordsRoute.POST)
-
-const routePart26 = createRouteApp()
   .get("/decision-records/:id", ...decisionRecordsIdRoute.GET)
   .put("/decision-records/:id", ...decisionRecordsIdRoute.PUT)
   .post("/decision-records/:id/supersede", ...decisionRecordsIdSupersedeRoute.POST)
+
+const routePart26 = createRouteApp()
   .get("/department-budgets", ...departmentBudgetsRoute.GET)
   .post("/department-budgets", ...departmentBudgetsRoute.POST)
   .get("/department-budgets/summary", ...departmentBudgetsSummaryRoute.GET)
@@ -623,11 +617,11 @@ const routePart26 = createRouteApp()
   .get("/employees/:code/reporting-line", ...employeesCodeReportingLineRoute.GET)
   .get("/evaluation-sheets", ...evaluationSheetsRoute.GET)
   .post("/evaluation-sheets", ...evaluationSheetsRoute.POST)
-
-const routePart27 = createRouteApp()
   .get("/evaluation-sheets/me", ...evaluationSheetsMeRoute.GET)
   .get("/evaluation-sheets/:sheetId", ...evaluationSheetsSheetIdRoute.GET)
   .put("/evaluation-sheets/:sheetId/evaluators", ...evaluationSheetsSheetIdEvaluatorsRoute.PUT)
+
+const routePart27 = createRouteApp()
   .post("/evaluation-sheets/:sheetId/transition", ...evaluationSheetsSheetIdTransitionRoute.POST)
   .get("/evaluation-templates", ...evaluationTemplatesRoute.GET)
   .post("/evaluation-templates", ...evaluationTemplatesRoute.POST)
@@ -682,11 +676,11 @@ const routePart27 = createRouteApp()
   .put("/headcount-plans/:id", ...headcountPlansIdRoute.PUT)
   .get("/health", ...healthRoute.GET)
   .get("/health-checkups", ...healthCheckupsRoute.GET)
-
-const routePart28 = createRouteApp()
   .post("/health-checkups", ...healthCheckupsRoute.POST)
   .post("/health-checkups/:id/complete", ...healthCheckupsIdCompleteRoute.POST)
   .get("/inbox/counts", ...inboxCountsRoute.GET)
+
+const routePart28 = createRouteApp()
   .get("/it-incidents", ...itIncidentsRoute.GET)
   .post("/it-incidents", ...itIncidentsRoute.POST)
   .post("/it-incidents/:id/resolve", ...itIncidentsIdResolveRoute.POST)
@@ -732,11 +726,11 @@ const routePart28 = createRouteApp()
   .get("/meetings/:code", ...meetingsCodeRoute.GET)
   .put("/meetings/:code", ...meetingsCodeRoute.PUT)
   .post("/meetings/:code/archive", ...meetingsCodeArchiveRoute.POST)
-
-const routePart29 = createRouteApp()
   .get("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.GET)
   .post("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.POST)
   .post("/notifications", ...notificationsRoute.POST)
+
+const routePart29 = createRouteApp()
   .get("/notifications/me", ...notificationsMeRoute.GET)
   .get("/notifications/me/unread-count", ...notificationsMeUnreadCountRoute.GET)
   .post("/notifications/read-all", ...notificationsReadAllRoute.POST)
@@ -791,12 +785,14 @@ const routePart29 = createRouteApp()
   .get("/performance-goals/tree", ...performanceGoalsTreeRoute.GET)
   .get("/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.GET)
   .put("/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.PUT)
-
-const routePart30 = createRouteApp()
   .delete("/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.DELETE)
   .get("/performance-goals/:goalId/evaluations", ...performanceGoalsGoalIdEvaluationsRoute.GET)
   .post("/performance-goals/:goalId/evaluations", ...performanceGoalsGoalIdEvaluationsRoute.POST)
-  .get("/permission-definitions", ...permissionDefinitionsRoute.GET)
+
+const routePart30 = createRouteApp().get(
+  "/permission-definitions",
+  ...permissionDefinitionsRoute.GET,
+)
 
 const routePart31 = createRouteApp().get(
   "/personnel-action-requests",

@@ -199,18 +199,18 @@ describe("rate limiting fail-closed (#1035)", () => {
     expect(response.status).toBe(200)
   })
 
-  test("本番相当で RATE_LIMIT KV 未設定なら /auth/login は 503 で拒否する", async () => {
+  test("System Session は PEPPER_SECRET 未設定なら 503 で拒否する", async () => {
     const bindings = {
       ...makeBindings("https://app.example.com"),
       API_RATE_LIMITER: makeLimiter(true),
     }
 
     const response = await app.request(
-      "/auth/login",
+      "/system/v1/sessions",
       {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: "you@example.com", password: "password" }),
+        body: JSON.stringify({ subject: "you@example.com", password: "password" }),
       },
       bindings,
     )

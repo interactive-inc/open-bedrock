@@ -17,7 +17,7 @@ import { z } from "zod"
  * code 自体は解決済みの account id しか保持していない（トークンを保存領域に
  * 平文で置かないため）。ここで account の最新状態を読み直し、有効なら初めて
  * IssueEmployeeSession でセッション（access/refresh トークン）を発行する。
- * 消費に成功すれば /auth/login と同じ形（AccessTokenView）でトークンを返す。無効・期限切れ・
+ * 消費に成功すれば /system/v1/sessions と同じ形でトークンを返す。無効・期限切れ・
  * 消費後にアカウントが無効化されていた場合は 401。
  */
 export const POST = factory.createHandlers(

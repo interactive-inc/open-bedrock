@@ -74,7 +74,7 @@ function validBody(overrides: Record<string, unknown> = {}): Record<string, unkn
 function postLogin(db: D1Database, body: unknown): Promise<Response> {
   return Promise.resolve(
     app.request(
-      "/auth/login",
+      "/system/v1/sessions",
       {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -203,10 +203,10 @@ describe("POST /bootstrap", () => {
     expect(persisted).not.toContain(password)
 
     const loginResponse = await postLogin(db, {
-      email: "root@example.com",
+      subject: "root@example.com",
       password,
     })
-    expect(loginResponse.status).toBe(200)
+    expect(loginResponse.status).toBe(201)
     const loginBody = z
       .object({ access_token: z.string(), refresh_token: z.string() })
       .parse(await loginResponse.json())

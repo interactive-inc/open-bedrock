@@ -70,10 +70,10 @@ async function tryRefresh(
   refreshToken: string,
 ): Promise<{ access_token: string } | null> {
   try {
-    const url = new URL("/auth/refresh", baseUrl)
+    const url = new URL("/system/v1/sessions", baseUrl)
 
     const res = await fetch(url, {
-      method: "POST",
+      method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ refresh_token: refreshToken }),
       signal: AbortSignal.timeout(15_000),
