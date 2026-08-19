@@ -1,8 +1,9 @@
 import type { Context } from "@/env"
+import type { AccountId } from "@/contexts/system/domain/auth/account-id"
 
 export async function replaceAccountRolesWithPermissionSets(
   context: Context,
-  accountId: number,
+  accountId: AccountId,
   roleKeyPrefix: string,
   permissionSets: ReadonlyArray<ReadonlyArray<string>>,
 ): Promise<ReadonlyArray<{ id: number; key: string }>> {

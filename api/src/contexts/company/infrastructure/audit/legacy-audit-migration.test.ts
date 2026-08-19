@@ -1,4 +1,6 @@
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
+import { loadSchema } from "@/api/test/support/load-schema"
+import { testAccountId } from "@/api/test/support/test-account-id"
 import { auditBatchDecisions, auditLogs } from "@/contexts/company/infrastructure/schema/audit"
 import { describe, expect, test } from "bun:test"
 import { eq } from "drizzle-orm"
@@ -103,30 +105,6 @@ async function applyAppendGuardMigration(db: D1Database): Promise<void> {
 
 async function applyBatchDecisionMigration(db: D1Database): Promise<void> {
   await applyMigration(db, batchDecisionMigrationPath)
-}
-
-/**
- * 0114 のうち audit に関わる部分だけを再現する。0114 は 21 表を一括で改名するため、
- * audit 系の表しか持たないこの fixture にはそのまま適用できない。
- */
-async function applyTablesRenameMigration(db: D1Database): Promise<void> {
-  await db.exec("ALTER TABLE audit_logs RENAME TO audit_events;")
-  await db.exec("DROP TRIGGER audit_logs_append_guard_prevent_insert;")
-  await db.exec(
-    `CREATE TRIGGER audit_events_append_guard_prevent_insert
-     BEFORE INSERT ON audit_logs_append_guard
-     WHEN
-       NOT EXISTS (
-         SELECT 1 FROM audit_events WHERE id = NEW.audit_id AND event_id = NEW.event_id
-       )
-       OR EXISTS (
-         SELECT 1 FROM audit_logs_append_guard
-         WHERE audit_id = NEW.audit_id OR event_id = NEW.event_id
-       )
-     BEGIN
-       SELECT RAISE(ABORT, 'audit_events append guard is immutable');
-     END;`,
-  )
 }
 
 async function applyMigrations(db: D1Database): Promise<void> {
@@ -476,16 +454,13 @@ describe("audit event migration", () => {
   })
 
   test("keeps the Drizzle audit schema synchronized with the migrated table", async () => {
-    const db = await createLegacyDatabase("legacy note")
-    await applyMigrations(db)
-    // schema.ts は 0114 改名後の audit_events を指すため、この検証だけ改名まで進める。
-    await applyTablesRenameMigration(db)
+    const db = createD1TestDatabase(loadSchema())
     const database = drizzle(db, { schema: { auditLogs } })
 
     await database.insert(auditLogs).values({
       eventId: "event-42",
       requestId: "request-42",
-      actorAccountId: 8,
+      actorAccountId: testAccountId(8),
       action: "employee.updated",
       targetType: "employee",
       targetId: "E018",
@@ -507,10 +482,10 @@ describe("audit event migration", () => {
       .get()
 
     expect(inserted).toEqual({
-      id: 42,
+      id: 1,
       eventId: "event-42",
       requestId: "request-42",
-      actorAccountId: 8,
+      actorAccountId: testAccountId(8),
       action: "employee.updated",
       targetType: "employee",
       targetId: "E018",

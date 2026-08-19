@@ -3,9 +3,9 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { zAccountId } from "@system/domain/auth/account-id"
 import { accountStatusSchema } from "@/contexts/system/domain/auth/account-status"
 import { z } from "zod"
 
@@ -21,13 +21,14 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const accountId = validateIntParam(c.req.param("id"), "account")
+    const accountId = zAccountId.safeParse(c.req.param("id"))
+    if (!accountId.success) throw new NotFoundError("account not found")
 
     const json = c.req.valid("json")
 
     const result = await new SetAccountStatus(c).run({
       session: session,
-      accountId: accountId,
+      accountId: accountId.data,
       status: json.status,
       now: c.env.NOW === undefined ? Date.now() : Date.parse(c.env.NOW),
     })

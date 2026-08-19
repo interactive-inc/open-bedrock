@@ -4,6 +4,7 @@ import { check, index, integer, primaryKey, sqliteTable, text } from "drizzle-or
 import { organizationUnitKinds } from "@/contexts/company/domain/workforce/organization-unit"
 import { orgAssignmentTypes } from "@/contexts/company/domain/workforce/org-assignment-type"
 import { organizationLifecycleState } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 /** Companyが所有する部署マスタ。 */
 export const departments = sqliteTable("departments", {
@@ -21,7 +22,7 @@ export const orgDepartments = sqliteTable("org_departments", {
   managerEmployeeCode: text("manager_employee_code"),
   sortOrder: integer("sort_order").notNull(),
   archivedAt: integer("archived_at"),
-  archivedByAccountId: integer("archived_by_account_id"),
+  archivedByAccountId: text("archived_by_account_id").$type<AccountId>(),
 })
 
 export type OrgDepartmentRow = InferSelectModel<typeof orgDepartments>

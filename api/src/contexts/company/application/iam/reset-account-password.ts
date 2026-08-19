@@ -1,11 +1,12 @@
 import type { SystemAuthorization } from "@system/domain/iam/system-authorization"
-import { toPasswordHash } from "@/lib/auth/to-password-hash"
-import { validatePasswordComplexity } from "@/contexts/company/application/auth/password-policy"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { validateSystemPassword } from "@system/domain/auth/system-password-policy"
+import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
+import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type {
   SystemD1Context,
   SystemDatabaseContext,
+  SystemPasswordHashContext,
   SystemRequestAuditContext,
 } from "@system/infrastructure/configuration/system-context"
 import { PasswordIdentityRepository } from "@system/infrastructure/auth/password-identity-repository"
@@ -13,12 +14,13 @@ import { AccountAuthRepository } from "@/contexts/company/application/auth/accou
 import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { zAccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/auth/account-id"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 
 export type Command = {
-  session: SystemAuthorization<number>
-  accountId: number
+  session: SystemAuthorization<AccountId>
+  accountId: AccountId
   newPassword: string
   now: number
 }
@@ -26,12 +28,15 @@ export type Command = {
 export type Reset = { reason: "reset" }
 
 /**
- * Product APIの数値Account commandをcanonical System password resetへ接続する。
+ * Product APIのopaque Account commandをcanonical System password resetへ接続する。
  * 再設定後は tokenVersion を増やして既存トークンを失効させる。
  */
 export class ResetAccountPassword {
   constructor(
-    private readonly c: SystemDatabaseContext & SystemD1Context & SystemRequestAuditContext,
+    private readonly c: SystemDatabaseContext &
+      SystemD1Context &
+      SystemPasswordHashContext &
+      SystemRequestAuditContext,
   ) {}
 
   async run(command: Command): Promise<Reset | ApplicationError> {
@@ -39,8 +44,17 @@ export class ResetAccountPassword {
       return new ForbiddenError("cannot manage accounts", "forbidden")
     }
 
-    const passwordError = validatePasswordComplexity(command.newPassword)
-    if (passwordError !== null) return passwordError
+    const passwordViolation = validateSystemPassword(command.newPassword)
+    if (passwordViolation !== null) {
+      return new ValidationError(
+        "password must be between 12 and 200 characters",
+        passwordViolation,
+      )
+    }
+    const pepper = this.c.env.PEPPER_SECRET
+    if (pepper === undefined || pepper === "") {
+      return new UnexpectedError("password reset is unavailable")
+    }
 
     const targetAccount = await new AccountAuthRepository(this.c).resolveById(command.accountId)
 
@@ -58,7 +72,7 @@ export class ResetAccountPassword {
 
     const identityRepository = new PasswordIdentityRepository(this.c)
 
-    const accountId = zAccountId.parse(String(command.accountId))
+    const accountId = zAccountId.parse(command.accountId)
     const identityId = await identityRepository.findIdByAccount(accountId)
 
     if (identityId instanceof Error) {
@@ -69,7 +83,7 @@ export class ResetAccountPassword {
       return new NotFoundError("password identity not found", "identity_not_found")
     }
 
-    const hash = await toPasswordHash(command.newPassword)
+    const hash = await PasswordHashService.hash(command.newPassword, pepper)
 
     let auditStatements: ReturnType<SystemAuditEventRepository["prepareAppend"]>
     try {

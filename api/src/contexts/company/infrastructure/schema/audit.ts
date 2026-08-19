@@ -1,15 +1,16 @@
 import type { InferSelectModel } from "drizzle-orm"
+import type { AccountId } from "@system/domain/auth/account-id"
 import { sql } from "drizzle-orm"
 import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
-/** Product APIの数値Account/Employee projectionを保持するappend-only監査event。 */
+/** Product APIのopaque Account IDと数値Employee IDを保持するappend-only監査event。 */
 export const auditLogs = sqliteTable(
   "audit_events",
   {
     id: integer("id").primaryKey(),
     eventId: text("event_id").notNull().unique(),
     requestId: text("request_id").notNull(),
-    actorAccountId: integer("actor_account_id"),
+    actorAccountId: text("actor_account_id").$type<AccountId>(),
     action: text("action").notNull(),
     targetType: text("target_type"),
     targetId: text("target_id"),

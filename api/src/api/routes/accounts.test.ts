@@ -63,7 +63,7 @@ describe("GET /accounts", () => {
       .object({
         data: z.array(
           z.object({
-            id: z.number(),
+            id: z.string(),
             employee_id: z.number().nullable(),
             employee_name: z.string().nullable(),
             status: z.string(),

@@ -7,8 +7,8 @@ import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/e
 import { AccountProvisioner } from "@/contexts/company/infrastructure/iam/account-provisioner"
 import { LivePermissionGuard } from "@/contexts/company/infrastructure/iam/live-permission-guard"
 import { RoleRepository } from "@/contexts/company/infrastructure/iam/role-repository"
-import { validatePasswordComplexity } from "@/contexts/company/application/auth/password-policy"
-import { toPasswordHash } from "@/lib/auth/to-password-hash"
+import { validateSystemPassword } from "@system/domain/auth/system-password-policy"
+import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
   ApplicationError,
@@ -73,8 +73,17 @@ export class RegisterEmployee {
         "role_escalation_forbidden",
       )
     }
-    const passwordError = validatePasswordComplexity(command.employee.password)
-    if (passwordError !== null) return passwordError
+    const passwordViolation = validateSystemPassword(command.employee.password)
+    if (passwordViolation !== null) {
+      return new ValidationError(
+        "password must be between 12 and 200 characters",
+        passwordViolation,
+      )
+    }
+    const pepper = this.c.env.PEPPER_SECRET
+    if (pepper === undefined || pepper === "") {
+      return new UnexpectedError("employee registration is unavailable")
+    }
     const [existing, existingByEmail] = await Promise.all([
       new EmployeeRepository(this.c).findByCode(command.employee.code),
       new IdentityRepository(this.c).findEmployeeIdByEmail(command.employee.email),
@@ -111,7 +120,7 @@ export class RegisterEmployee {
     })
     if (prepared instanceof ApplicationError) return prepared
 
-    const passwordHash = await toPasswordHash(command.employee.password)
+    const passwordHash = await PasswordHashService.hash(command.employee.password, pepper)
     const now = Number(this.c.env.NOW === undefined ? Date.now() : Date.parse(this.c.env.NOW))
     const accountStatements = new AccountProvisioner(this.c).prepareProvisionByEmployeeCode({
       employeeCode: command.employee.code,

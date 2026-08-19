@@ -14,6 +14,7 @@ import type {
 } from "@/contexts/company/application/audit/company-audit-record"
 import type { AuditJsonValue } from "@system/application/audit/to-stable-audit-json"
 import { ValidationError } from "@/lib/errors"
+import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
 import { z } from "zod"
 
 export { auditClientNameSchema, auditOutcomeSchema, auditRequestContextSchema }
@@ -90,7 +91,7 @@ export type AuditAction = z.infer<typeof auditActionSchema>
 export type AuditTargetType = z.infer<typeof auditTargetTypeSchema>
 
 export type AuditEventInput = Readonly<{
-  actorAccountId: number | null
+  actorAccountId: AccountId | null
   actorEmployeeId: number | null
   action: AuditAction
   target: Readonly<{ type: AuditTargetType; id: string | null }>
@@ -107,10 +108,11 @@ export type AuditEventRecord = CompanyAuditRecord & Readonly<{ actorEmployeeId: 
 export type AuditEventSummary = CompanyAuditSummary & Readonly<{ actorEmployeeId: number | null }>
 export type AuditEventDetail = CompanyAuditDetail & Readonly<{ actorEmployeeId: number | null }>
 
-const actorIdSchema = z.number().int().safe().positive().nullable()
+const actorAccountIdSchema = zAccountId.nullable()
+const actorEmployeeIdSchema = z.number().int().safe().positive().nullable()
 const eventEnvelopeSchema = z.strictObject({
-  actorAccountId: actorIdSchema,
-  actorEmployeeId: actorIdSchema,
+  actorAccountId: actorAccountIdSchema,
+  actorEmployeeId: actorEmployeeIdSchema,
   action: z.unknown(),
   target: z.unknown(),
   outcome: z.unknown(),

@@ -2,6 +2,7 @@ import { Session } from "@/contexts/company/domain/iam/session"
 import { canReadAttendanceOf } from "@/contexts/attendance/interface/http/attendance-records/can-read-attendance-of"
 import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
 import { makeTestSession } from "@/api/test/support/make-test-session"
+import { testAccountId } from "@/api/test/support/test-account-id"
 import { describe, expect, test } from "bun:test"
 
 const self: EmployeeRelation = { isSelf: true, isReport: false, isSameDepartment: false }
@@ -14,7 +15,7 @@ const stranger: EmployeeRelation = { isSelf: false, isReport: false, isSameDepar
 
 function sessionWith(permissions: ReadonlyArray<string>): Session {
   return new Session({
-    accountId: 1,
+    accountId: testAccountId(1),
     employeeId: 1,
     employeeStatus: "active",
     permissions: new Set(permissions),

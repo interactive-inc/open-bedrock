@@ -1,7 +1,8 @@
 import type { Context } from "@/env"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 type RoleGuardInput = {
-  actorAccountId: number
+  actorAccountId: AccountId
   requiredPermissionKeys: ReadonlyArray<string>
   additionalProtectedPermissionKeys?: ReadonlyArray<string>
 }
@@ -49,8 +50,8 @@ export class LivePermissionGuard {
    * D1 batch 内で検証する。対象不在・実行者停止・退職・権限不足はいずれも fail closed とする。
    */
   abortWhenActorCannotManageAccount(input: {
-    actorAccountId: number
-    targetAccountId: number
+    actorAccountId: AccountId
+    targetAccountId: AccountId
     requiredPermissionKeys: ReadonlyArray<string>
   }): D1PreparedStatement {
     return this.c.env.DB.prepare(

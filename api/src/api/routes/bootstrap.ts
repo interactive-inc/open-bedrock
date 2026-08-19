@@ -1,10 +1,12 @@
-import { BootstrapInitialAccount } from "@/contexts/company/application/iam/bootstrap-initial-account"
+import { ProvisionCompanyBootstrapEmployee } from "@/contexts/company/application/employee/provision-company-bootstrap-employee"
+import { CompanyBootstrapEmployeeRepositoryD1 } from "@/contexts/company/infrastructure/employee/company-bootstrap-employee-repository"
+import { BootstrapSystemRoot } from "@system/application/iam/bootstrap-system-root"
 import { timingSafeStringEqual } from "@/contexts/system/infrastructure/auth/timing-safe-string-equal"
+import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
+import { SystemRootBootstrapRepositoryD1 } from "@system/infrastructure/iam/system-root-bootstrap-repository"
 import { factory } from "@/contexts/company/interface/utils/factory"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppBootstrapResult } from "@/lib/app-schemas"
 import { isPlaceholderSecret } from "@/lib/config/is-placeholder-secret"
-import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -36,7 +38,7 @@ export const POST = factory.createHandlers(
     z.object({
       token: z.string().min(1),
       email: z.string().email().max(254),
-      password: z.string().min(1).max(200),
+      password: z.string().min(12).max(200),
       name: z.string().min(1).max(200),
       code: z.string().min(1).max(64).optional(),
     }),
@@ -56,28 +58,71 @@ export const POST = factory.createHandlers(
       return c.json({ error: "unauthorized" }, 401)
     }
 
-    const now = c.env.NOW === undefined ? new Date() : new Date(c.env.NOW)
-
-    const result = await new BootstrapInitialAccount(c).run({
-      email: json.email,
-      password: json.password,
-      name: json.name,
-      code: json.code ?? "E001",
-      now,
-    })
-
-    if (result instanceof ApplicationError) {
-      throw toHttpException(result)
+    const pepper = c.env.PEPPER_SECRET
+    if (pepper === undefined || pepper === "") {
+      return c.json({ error: "bootstrap_unavailable" }, 503)
     }
 
-    if ("reason" in result) {
+    const now = c.env.NOW === undefined ? new Date() : new Date(c.env.NOW)
+
+    const systemResult = await new BootstrapSystemRoot({
+      passwordHasher: {
+        hash: (password) => PasswordHashService.hash(password, pepper),
+      },
+      repository: new SystemRootBootstrapRepositoryD1(c),
+    }).execute({
+      email: json.email,
+      password: json.password,
+      now,
+    })
+    if (systemResult instanceof Error) {
+      return c.json({ error: "bootstrap_failed" }, 500)
+    }
+    if (systemResult.kind === "invalid_input") {
+      return c.json({ error: "invalid_bootstrap_input" }, 400)
+    }
+    if (
+      systemResult.kind === "already_initialized" &&
+      systemResult.state === "account_exists_without_bootstrap_state"
+    ) {
+      return c.json({ error: "already_initialized" }, 409)
+    }
+    if (
+      systemResult.accountId === null ||
+      systemResult.identityId === null ||
+      systemResult.rootBindingId === null ||
+      systemResult.email === null
+    ) {
+      return c.json({ error: "bootstrap_incomplete" }, 500)
+    }
+
+    const companyResult = await new ProvisionCompanyBootstrapEmployee({
+      repository: new CompanyBootstrapEmployeeRepositoryD1(c),
+    }).execute({
+      accountId: systemResult.accountId,
+      employeeCode: json.code ?? "E001",
+      name: json.name,
+    })
+    if (companyResult instanceof Error) {
+      return c.json({ error: "bootstrap_failed" }, 500)
+    }
+    if (companyResult.kind === "invalid_input") {
+      return c.json({ error: "invalid_bootstrap_input" }, 400)
+    }
+    if (companyResult.state === "company_exists_without_account_link") {
+      return c.json({ error: "company_bootstrap_incomplete" }, 500)
+    }
+    if (
+      systemResult.kind === "already_initialized" &&
+      companyResult.kind === "already_initialized"
+    ) {
       return c.json({ error: "already_initialized" }, 409)
     }
 
     const responseBody = zAppBootstrapResult.parse({
-      account_id: result.accountId,
-      employee_id: result.employeeId,
-      email: result.email,
+      account_id: systemResult.accountId,
+      employee_id: companyResult.employeeId,
+      email: systemResult.email,
     })
 
     return c.json(responseBody, 201)

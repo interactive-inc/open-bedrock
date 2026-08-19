@@ -385,7 +385,7 @@ describe("POST /audit-event-exports", () => {
     const { db } = await createTestDb()
     const response = await request(db, await token(3), {
       ...exportRange,
-      actor_account_id: -41,
+      actor_account_id: "-41",
       action: "legacy.action",
       target_type: "legacy_target",
       target_id: "=formula",

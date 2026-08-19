@@ -15,6 +15,7 @@ import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-dep
 import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments"
 import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships"
 import { seedPositions } from "@/contexts/company/infrastructure/seed/seed-positions"
+import { seedPepperSecret } from "@/contexts/company/infrastructure/seed/seed-password-hash"
 import { verifyCompanyMigration } from "@/api/test/support/verify-company-migration"
 import { contextStorage } from "hono/context-storage"
 import { HTTPException } from "hono/http-exception"
@@ -183,6 +184,7 @@ async function request(
   const bindings: Bindings = {
     DB: db,
     JWT_SECRET: jwtSecret,
+    PEPPER_SECRET: seedPepperSecret,
     AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
     NOW: "2026-01-01T00:00:00.000Z",
     COMPANY_TIME_ZONE: "Asia/Tokyo",
