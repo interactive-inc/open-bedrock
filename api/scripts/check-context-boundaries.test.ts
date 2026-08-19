@@ -4,6 +4,7 @@ import {
   classifyContextModule,
   classifyContextSource,
   inspectApiRootPath,
+  inspectApiCompositionParticipants,
   inspectCompanyRootPath,
   inspectBoundaryBaseline,
   inspectCompanyAreaPath,
@@ -188,6 +189,61 @@ describe("context dependency matrix", () => {
 })
 
 describe("ownership manifest", () => {
+  test("API composition participant宣言を完全一致で検査する", () => {
+    expect(
+      inspectApiCompositionParticipants(["auth"], { auth: ["company", "system"] }, [
+        {
+          file: "src/api/routes/auth.login.ts",
+          routePrefix: "auth",
+          source: [
+            'import { account } from "@/contexts/company/domain/account"',
+            'import { session } from "@system/domain/auth/session"',
+          ].join("\n"),
+        },
+      ]),
+    ).toEqual([])
+
+    expect(
+      inspectApiCompositionParticipants(
+        ["auth", "missing"],
+        {
+          auth: ["system", "company", "system"],
+          retired: ["company", "system"],
+        },
+        [
+          {
+            file: "src/api/routes/auth.login.ts",
+            routePrefix: "auth",
+            source: 'import { login } from "@/contexts/twit/application/login"',
+          },
+        ],
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          file: "context-ownership.json",
+          reason: "API composition participantが重複しています: auth",
+        },
+        {
+          file: "context-ownership.json",
+          reason: "API composition participantは昇順で宣言してください: auth",
+        },
+        {
+          file: "src/api/routes/auth.login.ts",
+          reason: "未宣言のAPI composition participantです: twit",
+        },
+        {
+          file: "context-ownership.json",
+          reason: "API composition participant宣言がありません: missing",
+        },
+        {
+          file: "context-ownership.json",
+          reason: "route prefixがないAPI composition participant宣言です: retired",
+        },
+      ]),
+    )
+  })
+
   test("Company直下をDDDの4層と横断testに限定し、互換directoryを残さない", () => {
     expect(inspectCompanyRootPath("src/contexts/company/domain/core/company-resource.ts")).toEqual(
       [],

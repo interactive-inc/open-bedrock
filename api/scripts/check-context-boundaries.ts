@@ -46,6 +46,10 @@ const ownershipManifest = z
     businessAreaOwners: z.record(z.string(), z.string().min(1)),
     routeOwners: z.record(z.string(), z.string().min(1)),
     apiCompositionRoutePrefixes: z.array(z.string().min(1)),
+    apiCompositionParticipants: z.record(
+      z.string(),
+      z.array(z.string().regex(/^[a-z][a-z0-9-]*$/)).min(2),
+    ),
   })
   .parse(JSON.parse(readFileSync(OWNERSHIP_MANIFEST_PATH, "utf8")))
 
@@ -60,6 +64,74 @@ export type ContextBoundaryViolation = Readonly<{
   file: string
   reason: string
 }>
+
+type ApiCompositionRouteSource = Readonly<{
+  file: string
+  routePrefix: string
+  source: string
+}>
+
+/** API compositionの宣言を完全一致で検査し、暗黙のcontext依存を拒否する。 */
+export function inspectApiCompositionParticipants(
+  compositionPrefixes: ReadonlyArray<string>,
+  participantsByPrefix: Readonly<Record<string, ReadonlyArray<string>>>,
+  routeSources: ReadonlyArray<ApiCompositionRouteSource>,
+): ContextBoundaryViolation[] {
+  const violations: ContextBoundaryViolation[] = []
+  const participantPrefixes = Object.keys(participantsByPrefix)
+
+  for (const routePrefix of compositionPrefixes) {
+    const participants = participantsByPrefix[routePrefix]
+    if (participants === undefined) {
+      violations.push({
+        file: "context-ownership.json",
+        reason: `API composition participant宣言がありません: ${routePrefix}`,
+      })
+      continue
+    }
+    if (new Set(participants).size !== participants.length) {
+      violations.push({
+        file: "context-ownership.json",
+        reason: `API composition participantが重複しています: ${routePrefix}`,
+      })
+    }
+    if (participants.some((participant, index) => participant !== participants.toSorted()[index])) {
+      violations.push({
+        file: "context-ownership.json",
+        reason: `API composition participantは昇順で宣言してください: ${routePrefix}`,
+      })
+    }
+
+    for (const route of routeSources) {
+      if (route.routePrefix !== routePrefix) continue
+
+      const importedContexts = new Set<string>()
+      for (const match of route.source.matchAll(/from\s+["']@\/contexts\/([^/"']+)/g)) {
+        if (match[1] !== undefined) importedContexts.add(match[1])
+      }
+      if (/from\s+["']@system\//.test(route.source)) importedContexts.add("system")
+      for (const importedContext of importedContexts) {
+        if (!participants.includes(importedContext)) {
+          violations.push({
+            file: route.file,
+            reason: `未宣言のAPI composition participantです: ${importedContext}`,
+          })
+        }
+      }
+    }
+  }
+
+  for (const routePrefix of participantPrefixes) {
+    if (!compositionPrefixes.includes(routePrefix)) {
+      violations.push({
+        file: "context-ownership.json",
+        reason: `route prefixがないAPI composition participant宣言です: ${routePrefix}`,
+      })
+    }
+  }
+
+  return violations
+}
 
 /** Company直下をDDDの4層と横断testだけに限定し、互換directoryの残存を拒否する。 */
 export function inspectCompanyRootPath(file: string): ContextBoundaryViolation[] {
@@ -164,6 +236,36 @@ export function inspectOwnershipManifest(): ContextBoundaryViolation[] {
       })
     }
   }
+
+  const routeDirectory = resolve(API_ROOT, "routes")
+  const routeSources = existsSync(routeDirectory)
+    ? readdirSync(routeDirectory, { withFileTypes: true })
+        .filter(
+          (entry) =>
+            entry.isFile() && entry.name.endsWith(".ts") && !entry.name.endsWith(".test.ts"),
+        )
+        .flatMap((entry): ApiCompositionRouteSource[] => {
+          const routePrefix = ownershipManifest.apiCompositionRoutePrefixes.find(
+            (prefix) => entry.name === `${prefix}.ts` || entry.name.startsWith(`${prefix}.`),
+          )
+          return routePrefix === undefined
+            ? []
+            : [
+                {
+                  file: `src/api/routes/${entry.name}`,
+                  routePrefix,
+                  source: readFileSync(resolve(routeDirectory, entry.name), "utf8"),
+                },
+              ]
+        })
+    : []
+  violations.push(
+    ...inspectApiCompositionParticipants(
+      ownershipManifest.apiCompositionRoutePrefixes,
+      ownershipManifest.apiCompositionParticipants,
+      routeSources,
+    ),
+  )
 
   return violations
 }
