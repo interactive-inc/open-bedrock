@@ -1,22 +1,26 @@
 import type {
   SystemAuthorizationContext,
   SystemClockContext,
+  SystemD1Context,
   SystemDatabaseContext,
   SystemEmailContext,
   SystemJwtSecretContext,
   SystemOidcConfigurationContext,
   SystemOidcSigningContext,
   SystemPasswordHashContext,
+  SystemRequestAuditContext,
 } from "@system/infrastructure/configuration/system-context"
 import { createFactory } from "hono/factory"
 
 type SystemInterfaceContext = SystemDatabaseContext &
+  SystemD1Context &
   SystemClockContext &
   SystemAuthorizationContext &
   SystemJwtSecretContext &
   SystemOidcConfigurationContext &
   SystemOidcSigningContext &
   SystemPasswordHashContext &
+  SystemRequestAuditContext &
   SystemEmailContext
 
 /** System InterfaceがHonoを利用するための、製品APIから独立した最小Env。 */

@@ -126,6 +126,73 @@ export const systemPasswordCredentials = sqliteTable(
 
 export type SystemPasswordCredentialRow = InferSelectModel<typeof systemPasswordCredentials>
 
+/** raw tokenを保存しない、単回利用のpassword reset challenge。 */
+export const systemPasswordResetChallenges = sqliteTable(
+  "system_password_reset_challenges",
+  {
+    id: text("id").primaryKey(),
+    tokenHash: text("token_hash").notNull(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
+    identityId: text("identity_id")
+      .notNull()
+      .references(() => systemIdentityBindings.id, { onDelete: "restrict" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    usedAt: integer("used_at", { mode: "timestamp_ms" }),
+  },
+  (table) => [
+    uniqueIndex("system_password_reset_challenges_token_hash_uniq").on(table.tokenHash),
+    index("system_password_reset_challenges_account_idx").on(table.accountId, table.createdAt),
+    index("system_password_reset_challenges_expires_idx").on(table.expiresAt),
+    check("system_password_reset_challenges_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
+    check(
+      "system_password_reset_challenges_hash",
+      sql`length(${table.tokenHash}) = 64 AND ${table.tokenHash} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+    check(
+      "system_password_reset_challenges_expiration",
+      sql`${table.expiresAt} > ${table.createdAt}`,
+    ),
+    check(
+      "system_password_reset_challenges_use_chronology",
+      sql`${table.usedAt} IS NULL OR ${table.usedAt} >= ${table.createdAt}`,
+    ),
+  ],
+)
+
+export type SystemPasswordResetChallengeRow = InferSelectModel<typeof systemPasswordResetChallenges>
+
+/** 全isolateが共有する認証試行。認証前の資源なのでAccountへのFKを持たない。 */
+export const systemAuthenticationAttempts = sqliteTable(
+  "system_authentication_attempts",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    ip: text("ip"),
+    attemptedAt: integer("attempted_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    index("system_authentication_attempts_identifier_attempted_at_idx").on(
+      table.identifier,
+      table.attemptedAt,
+    ),
+    index("system_authentication_attempts_ip_attempted_at_idx").on(table.ip, table.attemptedAt),
+    check("system_authentication_attempts_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
+    check(
+      "system_authentication_attempts_identifier_length",
+      sql`length(${table.identifier}) BETWEEN 1 AND 2048`,
+    ),
+    check(
+      "system_authentication_attempts_ip_length",
+      sql`${table.ip} IS NULL OR length(${table.ip}) BETWEEN 1 AND 255`,
+    ),
+  ],
+)
+
+export type SystemAuthenticationAttemptRow = InferSelectModel<typeof systemAuthenticationAttempts>
+
 /** raw tokenを持たず、rotation/reuse detectionに必要なhashとfamilyだけを保持する。 */
 export const systemSessions = sqliteTable(
   "system_sessions",
@@ -528,6 +595,8 @@ export const systemCoreSchema = {
   systemIdentityBindings,
   systemIdentityProfiles,
   systemPasswordCredentials,
+  systemPasswordResetChallenges,
+  systemAuthenticationAttempts,
   systemSessions,
   systemIdentityLoginTokens,
   systemCliLoginStates,
