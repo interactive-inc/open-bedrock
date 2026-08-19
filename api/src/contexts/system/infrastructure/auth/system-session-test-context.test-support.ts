@@ -114,6 +114,37 @@ const schema = `
   CREATE INDEX system_sessions_active_family_idx
     ON system_sessions (family_id) WHERE revoked_at IS NULL;
 
+  CREATE TABLE system_identity_login_tokens (
+    jti TEXT PRIMARY KEY NOT NULL,
+    expires_at INTEGER NOT NULL,
+    used_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX system_identity_login_tokens_expires_idx
+    ON system_identity_login_tokens (expires_at);
+
+  CREATE TABLE system_cli_login_states (
+    state TEXT PRIMARY KEY NOT NULL,
+    port INTEGER NOT NULL,
+    cli_state TEXT NOT NULL,
+    code_verifier TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX system_cli_login_states_expires_idx
+    ON system_cli_login_states (expires_at);
+
+  CREATE TABLE system_cli_login_codes (
+    code_hash TEXT PRIMARY KEY NOT NULL,
+    account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE CASCADE,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX system_cli_login_codes_expires_idx
+    ON system_cli_login_codes (expires_at);
+
   CREATE TRIGGER system_sessions_monotonic_lifecycle
   BEFORE UPDATE ON system_sessions
   WHEN

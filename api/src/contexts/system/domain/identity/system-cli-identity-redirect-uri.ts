@@ -1,13 +1,13 @@
-import { isSecureIdentityIssuer } from "@/lib/auth/is-secure-identity-issuer"
+import { isSecureSystemIdentityIssuer } from "@system/domain/identity/is-secure-system-identity-issuer"
 
 /**
  * API originを検証し、ブローカーへ登録するCLI callback URLを返す。
  */
-export function cliIdentityRedirectUri(apiOrigin: string): string | Error {
+export function systemCliIdentityRedirectUri(apiOrigin: string): string | Error {
   try {
     const origin = new URL(apiOrigin)
     if (
-      !isSecureIdentityIssuer(origin) ||
+      !isSecureSystemIdentityIssuer(origin) ||
       origin.username !== "" ||
       origin.password !== "" ||
       origin.pathname !== "/" ||
@@ -17,7 +17,7 @@ export function cliIdentityRedirectUri(apiOrigin: string): string | Error {
       return new Error("API origin is invalid")
     }
 
-    return new URL("/auth/cli/callback", origin.origin).toString()
+    return new URL("/system/v1/cli-authorization-callback", origin.origin).toString()
   } catch {
     return new Error("API origin is invalid")
   }

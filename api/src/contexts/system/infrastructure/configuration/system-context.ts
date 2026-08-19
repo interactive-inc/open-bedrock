@@ -51,6 +51,16 @@ export type SystemSessionConfigurationContext = Readonly<{
   env: Readonly<{ SYSTEM_SESSION_TTL_SECONDS?: string }>
 }>
 
+export type SystemExternalIdentityContext = Readonly<{
+  env: Readonly<{
+    IDENTITY_JWKS?: string
+    IDENTITY_ISSUER?: string
+    IDENTITY_AUDIENCE?: string
+    IDENTITY_LOGIN_URL?: string
+    API_ORIGIN?: string
+  }>
+}>
+
 export type SystemOidcSigningContext = Readonly<{
   env: Readonly<{ OIDC_SIGNING_KEYS?: string }>
 }>

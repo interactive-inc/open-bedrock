@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { isSecureIdentityIssuer } from "@/lib/auth/is-secure-identity-issuer"
+import { isSecureSystemIdentityIssuer } from "@system/domain/identity/is-secure-system-identity-issuer"
 
 type Props = {
   code: string
@@ -16,10 +16,10 @@ const responseSchema = z.object({
 /**
  * ブローカーのone-time codeをPKCE verifierでidentity JWTへ交換する。
  */
-export async function exchangeIdentityCode(props: Props): Promise<string | Error> {
+export async function exchangeSystemIdentityCode(props: Props): Promise<string | Error> {
   try {
     const issuer = new URL(props.issuer)
-    if (!isSecureIdentityIssuer(issuer)) {
+    if (!isSecureSystemIdentityIssuer(issuer)) {
       return new Error("identity issuer must use HTTPS")
     }
 

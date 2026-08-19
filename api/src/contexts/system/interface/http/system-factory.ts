@@ -5,6 +5,7 @@ import type {
   SystemD1Context,
   SystemDatabaseContext,
   SystemEmailContext,
+  SystemExternalIdentityContext,
   SystemJwtSecretContext,
   SystemOidcConfigurationContext,
   SystemOidcSigningContext,
@@ -25,7 +26,8 @@ type SystemInterfaceContext = SystemDatabaseContext &
   SystemPasswordHashContext &
   SystemSessionConfigurationContext &
   SystemRequestAuditContext &
-  SystemEmailContext
+  SystemEmailContext &
+  SystemExternalIdentityContext
 
 /** System InterfaceがHonoを利用するための、製品APIから独立した最小Env。 */
 export type SystemHonoEnv = Readonly<{
