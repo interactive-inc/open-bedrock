@@ -1,4 +1,6 @@
 import * as systemSchema from "@system/infrastructure/schema/system"
+import type { OidcClientRegistry } from "@system/domain/identity/oidc-client.policy"
+import type { OidcIssuerConfiguration } from "@system/domain/identity/oidc.value"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 
 type SystemDrizzleDatabase = DrizzleD1Database<typeof systemSchema>
@@ -49,6 +51,13 @@ export type SystemOidcSigningContext = Readonly<{
   env: Readonly<{ OIDC_SIGNING_KEYS?: string }>
 }>
 
+export type SystemOidcConfigurationContext = Readonly<{
+  var: Readonly<{
+    oidcClientRegistry: OidcClientRegistry
+    oidcIssuerConfiguration: OidcIssuerConfiguration
+  }>
+}>
+
 export type SystemPasswordHashContext = Readonly<{
   env: Readonly<{ PEPPER_SECRET?: string }>
 }>
@@ -76,9 +85,9 @@ export type SystemEmailSender = Readonly<{
 
 export type SystemEmailContext = Readonly<{
   env: Readonly<{
-    EMAIL: SystemEmailSender
+    EMAIL?: SystemEmailSender
     EMAIL_SENDER_NAME?: string
-    INVITE_EMAIL_FROM: string
+    INVITE_EMAIL_FROM?: string
     INVITE_EMAIL_SEND_ENABLED?: string
   }>
 }>

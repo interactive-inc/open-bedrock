@@ -112,6 +112,14 @@ describe("inspectRouteFile", () => {
     expect(violations[0]?.reason).toContain("verifyBearer を通っていません")
   })
 
+  test("System context自身のfail-closed認証guardを認証として扱う", () => {
+    const source =
+      "// @authorization authenticated - System主体を要求する\n" +
+      "export const POST = factory.createHandlers(requireSystemAuthentication, handler)\n"
+
+    expect(inspectRouteFile("contexts/system/interface/routes/oauth.ts", source)).toEqual([])
+  })
+
   test("API compositionでglobal bearerを通すrouteはhandler内の重複guardを要求しない", () => {
     const source =
       "// @authorization service - application serviceがscopeを判定する\n" +

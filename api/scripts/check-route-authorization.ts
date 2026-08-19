@@ -150,7 +150,10 @@ export function inspectRouteFile(
 
     // middleware は createHandlers の引数として現れる。import 文やコメントの
     // 出現で通してしまわないよう、handler 本体の中だけを見る。
-    const hasVerifyBearer = globallyAuthenticated || /\bverifyBearer\b/.test(entry.body)
+    const hasVerifyBearer =
+      globallyAuthenticated ||
+      /\bverifyBearer\b/.test(entry.body) ||
+      /\brequireSystemAuthentication\b/.test(entry.body)
     const hasMachineGuard = /\bverify[A-Z]\w*Key\b/.test(entry.body)
 
     if (kind === "machine" && !hasMachineGuard) {
