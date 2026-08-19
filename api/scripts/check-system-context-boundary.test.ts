@@ -5,6 +5,7 @@ import {
   discoverSystemCapabilityNames,
   inspectSystemCapabilityCatalog,
   inspectSystemCapabilityRootEntries,
+  inspectLegacySystemRuntime,
   inspectSystemOwnershipManifest,
   inspectSystemSelfReferencePathMappings,
   inspectSystemSource,
@@ -199,6 +200,38 @@ describe("System storage ownership", () => {
   })
 })
 
+describe("legacy System runtime", () => {
+  test("旧schema module、export、物理table参照を拒否する", () => {
+    const violations = inspectLegacySystemRuntime(
+      "src/contexts/system/infrastructure/auth/legacy.ts",
+      [
+        'import { users } from "@system/infrastructure/schema/system-runtime"',
+        "const identity = userIdentities.id",
+        'const read = "SELECT id FROM user_identities"',
+      ].join("\n"),
+    )
+
+    expect(violations.map((violation) => violation.reason)).toEqual([
+      "旧System schema exportを参照しています: userIdentities",
+      "旧System schema exportを参照しています: users",
+      "旧System schema moduleをimportしています: @system/infrastructure/schema/system-runtime",
+      "旧System tableを参照しています: user_identities",
+    ])
+  })
+
+  test("canonical schemaとtableだけを使う実装は許可する", () => {
+    expect(
+      inspectLegacySystemRuntime(
+        "src/contexts/system/infrastructure/auth/canonical.ts",
+        [
+          'import { systemAccounts } from "@system/infrastructure/schema/system-core"',
+          'const read = "SELECT id FROM system_accounts"',
+        ].join("\n"),
+      ),
+    ).toEqual([])
+  })
+})
+
 describe("System capability catalog", () => {
   test("export constの昇順・一意な文字列arrayから共通targetを読む", () => {
     const inspected = inspectSystemCapabilityCatalog(
@@ -279,7 +312,7 @@ describe("inspectSystemSource", () => {
         'import { Id } from "@/api/domain/core/identity/id"',
         'import { SharedId } from "@/lib/identity/id"',
         'import { parse } from "@/infrastructure/shared/parse"',
-        'import { users } from "@/schema/system"',
+        'import { accounts } from "@/schema/system"',
         'import { systemAccounts } from "@/schema/system-core"',
         'import { contextUsers } from "@/contexts/system/infrastructure/schema/system"',
         'import { contextAccounts } from "@/contexts/system/infrastructure/schema/system-core"',

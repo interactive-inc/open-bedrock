@@ -1,4 +1,4 @@
-import { users } from "@system/infrastructure/schema/system-runtime"
+import { systemAccounts } from "@system/infrastructure/schema/system-core"
 import { Glob } from "bun"
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
@@ -6,7 +6,7 @@ import { getTableColumns } from "drizzle-orm"
 
 describe("System Account profile boundary", () => {
   test("System Account schema does not expose a display name", () => {
-    expect(Object.keys(getTableColumns(users))).not.toContain("name")
+    expect(Object.keys(getTableColumns(systemAccounts))).not.toContain("name")
   })
 
   test("System production source does not read or define a downstream Account profile", () => {

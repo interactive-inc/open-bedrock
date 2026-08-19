@@ -90,6 +90,8 @@ describe("canonical System core schema", () => {
       "system_identity_profiles",
       "system_notification_deliveries",
       "system_notification_messages",
+      "system_oidc_access_tokens",
+      "system_oidc_authorization_codes",
       "system_password_credentials",
       "system_password_reset_challenges",
       "system_role_bindings",

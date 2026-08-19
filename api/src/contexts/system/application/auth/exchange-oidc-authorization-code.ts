@@ -1,32 +1,28 @@
 import {
   OidcInvalidGrantApplicationError,
   OidcTemporarilyUnavailableApplicationError,
-} from "@/contexts/system/application/auth/errors"
-import { AuthAuditLogRepository } from "@/contexts/system/infrastructure/audit/auth-audit-log.repository"
-import { OidcAccessTokenRepository } from "@/contexts/system/infrastructure/identity/oidc-access-token.repository"
-import { OidcAuthorizationCodeRepository } from "@/contexts/system/infrastructure/identity/oidc-authorization-code.repository"
-import {
-  OidcIdTokenService,
-  type OidcIdentity,
-} from "@/contexts/system/infrastructure/identity/oidc-id-token.service"
-import {
-  OidcSigningKeyService,
-  type OidcSigningKeys,
-} from "@/contexts/system/infrastructure/identity/oidc-signing-key.service"
+} from "@system/application/auth/errors"
+import { createSystemOidcAudit } from "@system/application/auth/create-system-oidc-audit"
 import {
   OidcClientPolicy,
   type OidcClientRegistry,
 } from "@system/domain/identity/oidc-client.policy"
-import { WriteOperationEntity } from "@/lib/persistence/write-operation.entity"
 import { OidcScopeValue } from "@system/domain/identity/oidc-scope.value"
 import { OidcValue } from "@system/domain/identity/oidc.value"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 import type {
   SystemClockContext,
+  SystemD1Context,
   SystemDatabaseContext,
   SystemOidcSigningContext,
 } from "@system/infrastructure/configuration/system-context"
+import { createOidcAccessToken } from "@system/infrastructure/identity/create-oidc-access-token"
+import { consumeOidcAuthorizationCode } from "@system/infrastructure/identity/consume-oidc-authorization-code"
+import { OidcIdTokenService } from "@system/infrastructure/identity/oidc-id-token.service"
+import { OidcSigningKeyService } from "@system/infrastructure/identity/oidc-signing-key.service"
+import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity-repository"
 
-type PrepareProps = Readonly<{
+type Props = Readonly<{
   issuer: string
   code: string
   clientId: string
@@ -35,133 +31,91 @@ type PrepareProps = Readonly<{
   clientRegistry: OidcClientRegistry
 }>
 
-type PreparedExchange = Readonly<{
-  clientId: string
-  signingKeys: OidcSigningKeys
-  authorizationCode: Readonly<{ userId: string; nonce: string }>
-  scope: ReadonlyArray<string>
-}>
-type Props = Readonly<{
-  issuer: string
-  prepared: PreparedExchange
-  identity: OidcIdentity | null
-}>
-
+/** OIDC codeの検証・消費からtoken発行・監査までを一つの操作として実行する。 */
 export class ExchangeOidcAuthorizationCode {
   constructor(
-    private readonly c: SystemDatabaseContext & SystemClockContext & SystemOidcSigningContext,
-  ) {}
+    private readonly context: SystemDatabaseContext &
+      SystemD1Context &
+      SystemClockContext &
+      SystemOidcSigningContext,
+  ) {
+    Object.freeze(this)
+  }
 
-  async prepare(
-    props: PrepareProps,
-  ): Promise<
-    PreparedExchange | OidcInvalidGrantApplicationError | OidcTemporarilyUnavailableApplicationError
-  > {
-    const client = OidcClientPolicy.resolve(
-      {
-        issuer: props.issuer,
-        clientId: props.clientId,
-        redirectUri: props.redirectUri,
-      },
-      props.clientRegistry,
-    )
+  async execute(props: Props) {
+    const client = OidcClientPolicy.resolve(props, props.clientRegistry)
+    if (client === null) return new OidcInvalidGrantApplicationError()
 
-    if (client === null) {
-      return new OidcInvalidGrantApplicationError()
-    }
-
-    const signingKeys = OidcSigningKeyService.parse(this.c.env.OIDC_SIGNING_KEYS)
-
+    const signingKeys = OidcSigningKeyService.parse(this.context.env.OIDC_SIGNING_KEYS)
     if (signingKeys instanceof Error) {
       return new OidcTemporarilyUnavailableApplicationError(signingKeys)
     }
 
-    const authorizationCode = await new OidcAuthorizationCodeRepository(this.c).write(
-      WriteOperationEntity.create("consume", {
-        issuer: props.issuer,
-        clientId: client.id,
-        redirectUri: props.redirectUri,
-        code: props.code,
-        verifier: props.codeVerifier,
-      }),
-    )
-
+    const authorizationCode = await consumeOidcAuthorizationCode(this.context, {
+      issuer: props.issuer,
+      clientId: client.id,
+      redirectUri: props.redirectUri,
+      code: props.code,
+      verifier: props.codeVerifier,
+    })
     if (authorizationCode instanceof Error) {
       return new OidcTemporarilyUnavailableApplicationError(authorizationCode)
     }
-
-    if (authorizationCode === null) {
-      return new OidcInvalidGrantApplicationError()
-    }
+    if (authorizationCode === null) return new OidcInvalidGrantApplicationError()
 
     const scope = OidcScopeValue.parse(authorizationCode.scope)
+    if (scope instanceof Error) return new OidcInvalidGrantApplicationError(scope)
 
-    if (scope instanceof Error) {
-      return new OidcInvalidGrantApplicationError(scope)
-    }
-
-    return {
-      clientId: client.id,
-      signingKeys,
-      authorizationCode: {
-        userId: authorizationCode.userId,
-        nonce: authorizationCode.nonce,
-      },
-      scope,
-    }
-  }
-
-  async execute(props: Props) {
-    if (props.identity === null) {
-      return new OidcInvalidGrantApplicationError()
-    }
-
-    const idToken = await new OidcIdTokenService(this.c).create({
-      keys: props.prepared.signingKeys,
-      issuer: props.issuer,
-      clientId: props.prepared.clientId,
-      identity: props.identity,
-      nonce: props.prepared.authorizationCode.nonce,
-      scope: props.prepared.scope,
-    })
-
-    if (idToken instanceof Error) {
-      return new OidcTemporarilyUnavailableApplicationError(idToken)
-    }
-
-    const accessToken = await new OidcAccessTokenRepository(this.c).write(
-      WriteOperationEntity.create("create", {
-        issuer: props.issuer,
-        clientId: props.prepared.clientId,
-        userId: props.prepared.authorizationCode.userId,
-        scope: props.prepared.scope.join(" "),
-      }),
+    const identity = await new SystemOidcIdentityRepository(this.context).findByAccountId(
+      authorizationCode.accountId,
     )
+    if (identity instanceof Error) {
+      return new OidcTemporarilyUnavailableApplicationError(identity)
+    }
+    if (identity === null) return new OidcInvalidGrantApplicationError()
 
+    const idToken = await new OidcIdTokenService(this.context).create({
+      keys: signingKeys,
+      issuer: props.issuer,
+      clientId: client.id,
+      identity,
+      nonce: authorizationCode.nonce,
+      scope,
+    })
+    if (idToken instanceof Error) return new OidcTemporarilyUnavailableApplicationError(idToken)
+
+    const accessToken = await createOidcAccessToken(this.context, {
+      issuer: props.issuer,
+      clientId: client.id,
+      accountId: authorizationCode.accountId,
+      scope: scope.join(" "),
+    })
     if (accessToken instanceof Error) {
       return new OidcTemporarilyUnavailableApplicationError(accessToken)
     }
 
-    await new AuthAuditLogRepository(this.c).write(
-      WriteOperationEntity.create("record", {
-        userId: props.prepared.authorizationCode.userId,
-        role: "identity",
-        action: "login:oidc",
-        resourceId: props.prepared.authorizationCode.userId,
-        metadata: {
-          issuer: props.issuer,
-          clientId: props.prepared.clientId,
-          scope: props.prepared.scope.join(" "),
-        },
-      }),
-    )
+    const audit = createSystemOidcAudit({
+      accountId: authorizationCode.accountId,
+      action: "auth.oidc.token_exchange",
+      outcome: "succeeded",
+      reasonCode: null,
+      authorization: null,
+      metadata: { issuer: props.issuer, clientId: client.id, scope: scope.join(" ") },
+      occurredAt: this.context.var.now(),
+    })
+    if (audit instanceof Error) return new OidcTemporarilyUnavailableApplicationError(audit)
+
+    const appended = await new SystemAuditEventRepository(this.context).append(audit)
+    if (appended instanceof Error) {
+      return new OidcTemporarilyUnavailableApplicationError(appended)
+    }
 
     return {
       access_token: accessToken.accessToken,
       token_type: "Bearer" as const,
       expires_in: OidcValue.TOKEN_MAX_AGE_SECONDS,
       id_token: idToken,
-      scope: props.prepared.scope.join(" "),
+      scope: scope.join(" "),
     }
   }
 }
