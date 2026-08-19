@@ -64,6 +64,12 @@ test("context横断テストを単数形testへ配置する", () => {
 
 test("Systemへ統合したrequest contextの再導入を拒否する", () => {
   expect(inspectRetiredContextPath("src/contexts/request/domain/request.ts")).not.toEqual([])
+  expect(
+    inspectRetiredContextPath("src/contexts/company-compatibility/domain/example.ts"),
+  ).not.toEqual([])
+  expect(
+    inspectRetiredContextPath("src/contexts/system-compatibility/application/example.ts"),
+  ).not.toEqual([])
   expect(inspectRetiredContextPath("src/contexts/system/domain/workflow/proposal.ts")).toEqual([])
   expect(inspectRetiredContextPath("src/contexts/company/application/procedure.ts")).toEqual([])
 })
@@ -122,7 +128,7 @@ describe("context dependency matrix", () => {
 
   test("type-onlyを含む全依存構文でcontext間の逆依存を拒否する", () => {
     const sources = [
-      'import type { Employee } from "@/contexts/company-compatibility/domain/employee"',
+      'import type { Employee } from "@/contexts/company/domain/employee"',
       'export { Employee } from "@/api/domain/company/employee"',
       'type Employee = import("@/domain/company/employee").Employee',
       'const company = import("@/application/company/setup")',
@@ -141,7 +147,7 @@ describe("context dependency matrix", () => {
       [
         'import type { Account } from "@system/domain/auth/account"',
         'import { Account } from "@system/domain/auth/account.entity"',
-        'import type { Employee } from "@/contexts/company-compatibility/domain/employee"',
+        'import type { Employee } from "@/contexts/company/domain/employee"',
         'import { parse } from "@/lib/parse"',
         'import { z } from "zod"',
       ].join("\n"),
@@ -241,7 +247,7 @@ describe("lib boundary", () => {
 
     for (const source of [
       'import { Account } from "@system/domain/auth/account"',
-      'import { Employee } from "@/contexts/company-compatibility/domain/employee"',
+      'import { Employee } from "@/contexts/company/domain/employee"',
       'import { users } from "@/schema"',
       'import { factory } from "@/api/factory"',
     ]) {
@@ -252,8 +258,7 @@ describe("lib boundary", () => {
   test("新規違反と解消済みbaselineを拒否する", () => {
     const knownViolation = {
       file: "src/lib/example.ts",
-      reason:
-        "lib から所有者のある実装へ依存しています: @/contexts/company-compatibility/domain/example",
+      reason: "lib から所有者のある実装へ依存しています: @/contexts/company/domain/example",
     }
     const newViolation = {
       file: "src/lib/new-example.ts",

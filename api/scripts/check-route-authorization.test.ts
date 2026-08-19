@@ -187,9 +187,7 @@ describe("checkRouteAuthorization", () => {
     const routeFiles = await collectRouteFiles()
 
     expect(
-      routeFiles.some((routeFile) =>
-        routeFile.file.endsWith("system/interface/routes/health.ts"),
-      ),
+      routeFiles.some((routeFile) => routeFile.file.endsWith("system/interface/routes/health.ts")),
     ).toBe(true)
     expect(
       routeFiles.some((routeFile) =>

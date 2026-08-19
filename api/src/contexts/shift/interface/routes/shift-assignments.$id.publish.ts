@@ -1,11 +1,11 @@
 import { PublishShiftAssignment } from "@/contexts/shift/application/publish-shift-assignment"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppShiftAssignment } from "@/lib/app-schemas"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
-import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /shift-assignments/:id/publish — 特権ロールが未公開の割当を公開する */

@@ -1,12 +1,12 @@
-import { AuditEventRepository } from "@/contexts/company-compatibility/infrastructure/company/audit/audit-event-repository"
-import { AuditTrail } from "@/contexts/company-compatibility/interface/utils/audit-trail"
-import { auditEventNotFound } from "@/contexts/company-compatibility/interface/utils/audit-event-not-found"
-import { throwAuditRouteError } from "@/contexts/company-compatibility/interface/utils/throw-audit-route-error"
-import { toPublicAuditDetail } from "@/contexts/company-compatibility/interface/utils/to-public-audit-detail"
-import { auditDetailPermission } from "@/contexts/company-compatibility/interface/middlewares/audit-detail-permission"
-import { auditDetailValidation } from "@/contexts/company-compatibility/interface/middlewares/audit-detail-validation"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
+import { AuditTrail } from "@/contexts/company/interface/utils/audit-trail"
+import { auditEventNotFound } from "@/contexts/company/interface/utils/audit-event-not-found"
+import { throwAuditRouteError } from "@/contexts/company/interface/utils/throw-audit-route-error"
+import { toPublicAuditDetail } from "@/contexts/company/interface/utils/to-public-audit-detail"
+import { auditDetailPermission } from "@/contexts/company/interface/middlewares/audit-detail-permission"
+import { auditDetailValidation } from "@/contexts/company/interface/middlewares/audit-detail-validation"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 // @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(

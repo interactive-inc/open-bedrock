@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { seedGoalEvaluations } from "@/contexts/performance-review/infrastructure/seed/seed-goal-evaluations"
 import { seedGoals } from "@/contexts/performance-review/infrastructure/seed/seed-goals"
-import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
-import { seedOrgMemberships } from "@/contexts/company-compatibility/infrastructure/seed/seed-org-memberships"
+import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
+import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -439,7 +439,7 @@ async function grantDepartmentReader(db: D1Database, accountId: number): Promise
 
   await db
     .prepare(
-       `INSERT INTO system_role_bindings
+      `INSERT INTO system_role_bindings
          (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
        VALUES ('test:department-reader:' || ?1, ?1, '900', NULL, NULL, 0, NULL)`,
     )

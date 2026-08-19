@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -7,9 +7,9 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { verifyCompanyMigration } from "@/api/test/support/verify-company-migration"
-import { seedDepartments } from "@/contexts/company-compatibility/infrastructure/seed/seed-departments"
-import { seedOrgDepartments } from "@/contexts/company-compatibility/infrastructure/seed/seed-org-departments"
-import { seedOrgMemberships } from "@/contexts/company-compatibility/infrastructure/seed/seed-org-memberships"
+import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments"
+import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments"
+import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships"
 import { z } from "zod"
 
 const jwtSecret = "auth-me-route-test-secret"
@@ -171,7 +171,9 @@ describe("GET /me", () => {
     const db = await createTestDb()
 
     await db
-      .prepare("DELETE FROM system_identity_bindings WHERE account_id = ?1 AND provider = 'password'")
+      .prepare(
+        "DELETE FROM system_identity_bindings WHERE account_id = ?1 AND provider = 'password'",
+      )
       .bind("1")
       .run()
 

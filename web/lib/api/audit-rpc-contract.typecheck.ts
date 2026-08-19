@@ -44,10 +44,7 @@ type AuditExportInput = InferRequestType<ApiClient["audit-event-exports"]["$post
 export type AuditRpcContract = [
   Assert<Equal<AuditListInput, ExpectedAuditListInput>>,
   Assert<
-    Equal<
-      InferRequestType<ApiClient["audit-events"][":eventId"]["$get"]>,
-      ExpectedAuditDetailInput
-    >
+    Equal<InferRequestType<ApiClient["audit-events"][":eventId"]["$get"]>, ExpectedAuditDetailInput>
   >,
   Assert<Equal<AuditExportInput, ExpectedAuditExportInput>>,
   Assert<Equal<InferResponseType<ApiClient["audit-event-exports"]["$post"], 200>, string>>,

@@ -1,15 +1,15 @@
 import { DeleteExpense } from "@/contexts/expense/application/delete-expense"
 import { UpdateExpense } from "@/contexts/expense/application/update-expense"
-import { resolveOrganizationAuthority } from "@/contexts/company-compatibility/application/organization/resolve-organization-authority"
+import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
 import type { Expense } from "@/contexts/expense/domain/expense.entity"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppExpense, zAppExpenseDetail } from "@/lib/app-schemas"
 import { expenseCategorySchema, isoDate } from "@/lib/schemas"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { eq } from "drizzle-orm"
 import {
@@ -17,7 +17,7 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

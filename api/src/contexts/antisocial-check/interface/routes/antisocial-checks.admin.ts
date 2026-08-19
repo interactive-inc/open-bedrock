@@ -1,18 +1,15 @@
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
-import {
-  ForbiddenError,
-  UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppAntisocialCheckAdminList } from "@/lib/app-schemas"
 import { antisocialChecks } from "@/contexts/antisocial-check/infrastructure/schema/antisocial-check"
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
 import { and, count, desc, eq, ne } from "drizzle-orm"

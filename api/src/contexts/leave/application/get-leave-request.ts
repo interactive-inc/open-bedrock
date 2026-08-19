@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
-import { resolveOrganizationAuthority } from "@/contexts/company-compatibility/application/organization/resolve-organization-authority"
+import type { Session } from "@/contexts/company/domain/iam/session"
+import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
 import type { LeaveRequest } from "@/contexts/leave/domain/leave-request.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

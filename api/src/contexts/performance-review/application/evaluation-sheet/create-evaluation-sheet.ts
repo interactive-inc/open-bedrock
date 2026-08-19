@@ -4,13 +4,11 @@ import type { Context } from "@/env"
 import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/evaluation-sheet/evaluation-sheet-repository"
 import type { ApplicationError } from "@/lib/errors"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
-import {
-  resolveDepartmentManagerId,
-  resolveDirectManagerId,
-} from "@/contexts/company-compatibility/infrastructure/organization/resolve-direct-manager-id"
-import { validateEmployeeActive } from "@/contexts/company-compatibility/infrastructure/organization/validate-employee-active"
+import { resolveDirectManagerId } from "@/contexts/company/infrastructure/organization/resolve-direct-manager-id"
+import { resolveDepartmentManagerId } from "@/contexts/company/infrastructure/organization/resolve-department-manager-id"
+import { validateEmployeeActive } from "@/contexts/company/infrastructure/organization/validate-employee-active"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { evaluationTemplates } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 
 export type Command = {

@@ -1,5 +1,5 @@
-import { createCompanyProcedureDecisionPolicy } from "@/contexts/company-compatibility/domain/organization/company-procedure-decision-policy"
-import { findUnknownApproverRoles } from "@/contexts/company-compatibility/application/organization/validate-procedure-policy-references"
+import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
+import { findUnknownApproverRoles } from "@/contexts/company/application/organization/validate-procedure-policy-references"
 import {
   loadSystemProcedure,
   parseSystemProcedureInputSchema,
@@ -7,19 +7,19 @@ import {
   publishSystemProcedure,
   systemProcedureRepository,
 } from "@/api/http/application-templates/lib/system-procedure-route"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { jsonPayloadSchema } from "@/contexts/company-compatibility/interface/utils/json-payload-schema"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import {
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+} from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { ConflictError as ApplicationConflictError, UnprocessableError } from "@/lib/errors"
 import { zAppApplicationTemplate, zAppApplicationTemplateDetail } from "@/lib/app-schemas"
-import { validateCodeParam } from "@/contexts/company-compatibility/interface/utils/validate-code-param"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

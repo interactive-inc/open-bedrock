@@ -1,17 +1,17 @@
 import { CreateCareerPosting } from "@/contexts/career/application/create-career-posting"
 import type { CareerPosting } from "@/contexts/career/domain/career-posting.entity"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppCareerPosting, zAppCareerPostingList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { careerPostings } from "@/contexts/career/infrastructure/schema/career"
 import { zValidator } from "@hono/zod-validator"
 import { count, desc, eq } from "drizzle-orm"

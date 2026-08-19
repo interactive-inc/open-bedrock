@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
 import { createIdentityTestKey } from "@/lib/auth/test/create-identity-test-key"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createIdentityToken } from "@/lib/auth/test/create-identity-token"

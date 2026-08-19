@@ -2,7 +2,7 @@ import {
   ACCESS_TOKEN_AUDIENCE,
   ACCESS_TOKEN_ISSUER,
   JoseTokenSigner,
-} from "@/contexts/company-compatibility/infrastructure/auth/jose-token-signer"
+} from "@/contexts/company/application/auth/jose-token-signer"
 import { ACCESS_TOKEN_TYPE } from "@/contexts/system/domain/auth/access-token-claims"
 import { SignJWT } from "jose"
 

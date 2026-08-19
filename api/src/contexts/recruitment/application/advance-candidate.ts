@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { RecruitmentCandidate } from "@/contexts/recruitment/domain/recruitment-candidate.entity"
 import type { CandidateStage } from "@/contexts/recruitment/domain/recruitment-candidate.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

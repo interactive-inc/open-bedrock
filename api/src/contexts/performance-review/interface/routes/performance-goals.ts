@@ -1,11 +1,21 @@
-import { resolveEmployeeRelation } from "@/contexts/company-compatibility/application/organization/resolve-employee-relation"
-import { ForbiddenError, InternalError, UnauthorizedError, UnprocessableEntityError } from "@/contexts/company-compatibility/interface/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { listDepartmentEmployeeIds } from "@/contexts/company-compatibility/interface/utils/list-department-employee-ids"
-import { listReportEmployeeIds } from "@/contexts/company-compatibility/interface/utils/list-report-employee-ids"
-import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, MAX_LIST_OFFSET, toBoundedInt } from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+  UnprocessableEntityError,
+} from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
+import { listReportEmployeeIds } from "@/contexts/company/interface/utils/list-report-employee-ids"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { CreateGoal } from "@/contexts/performance-review/application/goal/create-goal"
 import { canReadGoalOf } from "@/contexts/performance-review/domain/goal/can-read-goal-of"
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"

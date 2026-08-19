@@ -1,4 +1,4 @@
-import { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { canReadWorkStylesOf } from "@/contexts/work-style/interface/http/employee-work-styles/can-read-work-styles-of"
 import { describe, expect, test } from "bun:test"
 

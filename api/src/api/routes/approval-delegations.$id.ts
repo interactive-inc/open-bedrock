@@ -2,11 +2,11 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { resolveActiveSystemAccountId } from "@/contexts/company-compatibility/application/iam/to-system-account-id"
-import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+} from "@/contexts/company/interface/lib/errors"
+import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { SystemD1ProcedureDelegationRepository } from "@system/infrastructure/workflow/system-d1-procedure-delegation-repository"
 
 // @authorization owner - 委任元本人だけが取消できる

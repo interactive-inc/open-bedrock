@@ -1,13 +1,10 @@
 import { ManageGovernanceOrgRole } from "@/contexts/governance/application/manage-governance-org-role"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
-import {
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { parseGovernanceCode } from "@/contexts/company-compatibility/interface/utils/parse-governance-code"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { parseGovernanceCode } from "@/contexts/company/interface/utils/parse-governance-code"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

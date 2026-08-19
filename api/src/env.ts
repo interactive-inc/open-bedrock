@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { CompanyActor } from "@/contexts/company/application/core/company-actor"
 import type { schema } from "@/schema"
 import type {

@@ -1,7 +1,7 @@
 import { CreateEmployeeWorkStyle } from "@/contexts/work-style/application/create-employee-work-style"
 import { canReadWorkStylesOf } from "@/contexts/work-style/interface/http/employee-work-styles/can-read-work-styles-of"
-import { resolveTargetEmployeeId } from "@/contexts/company-compatibility/interface/utils/resolve-target-employee-id"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { resolveTargetEmployeeId } from "@/contexts/company/interface/utils/resolve-target-employee-id"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEmployeeWorkStyle, zAppEmployeeWorkStyleList } from "@/lib/app-schemas"
 import { EmployeeWorkStyleRepository } from "@/contexts/work-style/infrastructure/employee-work-style-repository"
@@ -10,9 +10,9 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { isoDate, workStyleSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import {
@@ -20,7 +20,7 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 import { z } from "zod"
 
 // @authorization owner - 本人のリソースに限定する

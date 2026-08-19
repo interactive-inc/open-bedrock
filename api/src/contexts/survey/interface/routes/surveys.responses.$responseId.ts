@@ -2,15 +2,12 @@ import { GetSurveyResponse } from "@/contexts/survey/application/get-survey-resp
 import { UpdateSurveyResponse } from "@/contexts/survey/application/update-survey-response"
 import { WithdrawSurveyResponse } from "@/contexts/survey/application/withdraw-survey-response"
 import type { SurveyResponse } from "@/contexts/survey/domain/survey-response.entity"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { jsonPayloadSchema } from "@/contexts/company-compatibility/interface/utils/json-payload-schema"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import {
-  BadRequestError,
-  UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { BadRequestError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppSurveyResponse } from "@/lib/app-schemas"
 import type { AppSurveyResponse } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"

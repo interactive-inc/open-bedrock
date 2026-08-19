@@ -44,9 +44,9 @@ Company は次を所有する。
 
 判断資格 resolver の入力、時点 snapshot、Account 対応、fail closed 条件、System と App への接続は `.docs/company-organizational-authority.md` に従う。
 
-Companyのportable実装は`api/src/contexts/company`のDomain、Application、Infrastructure、Interface、testを一つの単位とする。`company-context.manifest.json`と`company-context.lock.json`はこの全ファイルのpathとhashを固定し、部分的な製品差を許さない。`/company/v1`、Drizzle schema、D1 repository、append-only SQL、競合・再送・訂正・取消のtestまでがCompanyである。API compositionが持つのは認証済みactorとD1 bindingの注入だけとする。
+Systemの正本は`api/src/contexts/system`であり、共通基盤を採用する別製品と全ファイルを同一にする。`system-context.manifest.json`と`system-context.lock.json`はディレクトリ全体のpathとhashを固定する。製品固有のhostname、cookie、複数contextを束ねるログイン応答などはSystemへ混ぜず、API compositionがSystemのapplicationを呼び出す。
 
-旧Employee、旧組織、旧IAM、旧通知、旧HTTP wireは`api/src/contexts/company-compatibility`に隔離した移行adapterであり、Companyの一部ではない。新しいimport、新しい正本、新しいAPIを追加しない。削除には呼び出し側の移行だけを必要とし、`api/src/contexts/company`の変更を必要としない状態を維持する。
+Companyの両製品共通部分は`company-context.manifest.json`の`sharedSourcePaths`に明示する。`company-context.lock.json`はその全pathとhashを固定し、同じlockを両製品で使用する。Open Bedrockだけが持つ完成済みCompany capabilityと、各製品のDB・HTTP接続adapterは`contexts/company`に置けるが、共通実装とは数えない。manifestの`coverage`は必ず`shared-company-core`とし、ディレクトリ全体が一致するという未検証の主張へ戻さない。
 
 Account role と technical permission は API 操作能力だけに使う。会社上の判断資格は期間付き Assignment と Responsibility から解決し、workflow 未定義、旧 role selector、候補ゼロを最上位 role や管理者で補完しない。
 
@@ -116,8 +116,7 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 
 ディレクトリの構成は以下のとおり。
 
-- `api/src/contexts/<context>/` … contextごとの domain / application / infrastructure / interface の4層。interface は `routes/` 配下に Next.js App Router 記法でルートを定義し（`routes/<URLパス>/route.ts`、URL とディレクトリを一致させる。動的セグメント `[param]`）、`api/src/api/app.ts` が `:param` に対応づけて登録する。`app.ts` は `bun run gen:app` の生成物なので手で編集しない（後述）。同一 URL に別メソッドを足す場合は `create-route.ts` のような `<動詞>-route.ts` を同ディレクトリに並置する。ルート横断のコードは内容を表す名前のディレクトリに置く（`middlewares/`、`utils/`、`test-helpers/` など。`shared/` のような中身のわからない名前は禁止）。API レスポンスは `lib/app-schemas.ts` の zApp スキーマで parse してから返す（1 ファイル 1 スキーマ規約の例外として集約）
-- `api/src/contexts/company-compatibility/` … 旧Company wireと旧storageの移行adapter。新規機能の配置先にせず、依存を減らして最終的にディレクトリごと削除する
+- `api/src/contexts/<context>/` … contextごとの domain / application / infrastructure / interface の4層。interface の `routes/` はURLをdotで表すflat file（例: `employees.$code.ts`）とし、動的segmentは`$name`で表す。同じURLのHTTP methodは同じファイルから`GET`、`POST`などをexportする。`api/src/api/app.ts`は`bun run gen:app`の生成物なので手で編集しない。ルート横断のコードは内容を表す名前のディレクトリに置く（`middlewares/`、`utils/`、`test-helpers/`など。`shared/`のような中身のわからない名前は禁止）。APIレスポンスは`lib/app-schemas.ts`のzAppスキーマでparseしてから返す（1ファイル1スキーマ規約の例外として集約）
 - `api/src/api/` … HTTP runtimeのcomposition root。手書きmiddleware、route registry、生成app、複数contextを正本なしで集約するroute、複数層を横断するtestだけを置く。Domainや業務実装は置かない
 - `api/src/lib/` … context中立で、context・API root・DB所有schemaへ依存しない技術部品だけを置く
 - `cli/app/` … コマンド群。`<command>/.../route.ts` で定義し、`cli/app/index.ts` が POST ルートとして集約する。ルート追加時は index.ts への登録を忘れない（未登録だと catch-all に落ちて使用不可）。共通処理は `cli/lib/`

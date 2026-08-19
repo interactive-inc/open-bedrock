@@ -62,9 +62,7 @@ export function toUrl(relativeFile: string): string {
   const pathSegments =
     fileName === "route" || fileName.endsWith("-route") ? segments.slice(0, -1) : segments
   const mapped = pathSegments.flatMap((segment) =>
-    segment
-      .split(".")
-      .map((part) => (part.startsWith("$") ? `:${part.slice(1)}` : part)),
+    segment.split(".").map((part) => (part.startsWith("$") ? `:${part.slice(1)}` : part)),
   )
   return `/${mapped.join("/")}`
 }

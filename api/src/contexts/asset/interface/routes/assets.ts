@@ -1,11 +1,16 @@
 import { RegisterAsset } from "@/contexts/asset/application/register-asset"
 import { assets } from "@/contexts/asset/infrastructure/schema/asset"
 import { toAssetResponse } from "@/contexts/asset/interface/http/assets/to-asset-response"
-import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, MAX_LIST_OFFSET, toBoundedInt } from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { zAppAsset, zAppAssetList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { codeSchema, isoDate } from "@/lib/schemas"

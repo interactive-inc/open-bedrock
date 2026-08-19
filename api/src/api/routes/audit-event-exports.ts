@@ -1,12 +1,12 @@
-import { AuditEventRepository } from "@/contexts/company-compatibility/infrastructure/company/audit/audit-event-repository"
-import { AuditTrail } from "@/contexts/company-compatibility/interface/utils/audit-trail"
-import { throwAuditRouteError } from "@/contexts/company-compatibility/interface/utils/throw-audit-route-error"
-import { auditExportPermission } from "@/contexts/company-compatibility/interface/middlewares/audit-export-permission"
-import { auditExportValidation } from "@/contexts/company-compatibility/interface/middlewares/audit-export-validation"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { toAuditCsv } from "@/contexts/company-compatibility/application/audit/to-audit-csv"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
+import { AuditTrail } from "@/contexts/company/interface/utils/audit-trail"
+import { throwAuditRouteError } from "@/contexts/company/interface/utils/throw-audit-route-error"
+import { auditExportPermission } from "@/contexts/company/interface/middlewares/audit-export-permission"
+import { auditExportValidation } from "@/contexts/company/interface/middlewares/audit-export-validation"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toAuditCsv } from "@/contexts/company/application/audit/to-audit-csv"
 import { PayloadTooLargeError } from "@/lib/errors"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 
 // @authorization permission - 権限キーで判定する
 export const POST = factory.createHandlers(

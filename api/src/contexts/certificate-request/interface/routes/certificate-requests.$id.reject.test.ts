@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { z } from "zod"
 import { seedCertificateRequests } from "@/contexts/certificate-request/infrastructure/seed/seed-certificate-requests"
-import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"

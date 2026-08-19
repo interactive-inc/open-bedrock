@@ -1,17 +1,14 @@
-import { resolveActiveSystemAccountId } from "@/contexts/company-compatibility/application/iam/to-system-account-id"
-import { resolveCompanyAccountParticipants } from "@/contexts/company-compatibility/application/iam/resolve-company-account-participants"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
+import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import {
-  InternalError,
-  UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppApplicationInboxList } from "@/lib/app-schemas"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
 import {

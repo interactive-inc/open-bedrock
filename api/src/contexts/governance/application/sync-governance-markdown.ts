@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import {
   parseGovernanceMarkdown,
   type GovernanceReference,
@@ -8,7 +8,7 @@ import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import type { Context } from "@/env"
 import type { GovernanceDocumentRecord } from "@/contexts/governance/infrastructure/governance-repository"
 import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance-repository"
-import { PERMISSION_KEYS } from "@/contexts/company-compatibility/domain/iam/permission-key.catalog"
+import { PERMISSION_KEYS } from "@/contexts/company/domain/iam/permission-key.catalog"
 import { prepareGovernanceAudit } from "@/contexts/governance/application/governance-audit"
 import {
   ConflictError,

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { app } from "@/api/app"
-import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"

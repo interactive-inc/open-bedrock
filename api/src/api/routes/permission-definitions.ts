@@ -1,10 +1,7 @@
-import { PERMISSION_CATALOG } from "@/contexts/company-compatibility/domain/iam/permission.catalog"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import {
-  ForbiddenError,
-  UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
+import { PERMISSION_CATALOG } from "@/contexts/company/domain/iam/permission.catalog"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppPermissionList } from "@/lib/app-schemas"
 
 // @authorization permission - 権限キーで判定する

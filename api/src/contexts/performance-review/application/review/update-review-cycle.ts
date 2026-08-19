@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { ReviewCycle } from "@/contexts/performance-review/domain/review/review-cycle.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

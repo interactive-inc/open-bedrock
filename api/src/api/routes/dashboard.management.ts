@@ -1,13 +1,10 @@
 import { GetManagementDashboard } from "@/api/http/dashboard/management/get-management-dashboard"
 import { ApplicationError } from "@/lib/errors"
 import { zAppManagementDashboard } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import {
-  ForbiddenError,
-  UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 
 // @authorization permission - 権限キーで判定する
 /** GET /dashboard/management — 経営ダッシュボードの横断集計。management_dashboard:view のみ。 */

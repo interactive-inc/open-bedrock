@@ -3,14 +3,11 @@ import { GetLeaveRequest } from "@/contexts/leave/application/get-leave-request"
 import { UpdateLeaveRequest } from "@/contexts/leave/application/update-leave-request"
 import { LeaveRequest } from "@/contexts/leave/domain/leave-request.entity"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import {
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppLeaveRequestDetail } from "@/lib/app-schemas"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { isoDate, leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

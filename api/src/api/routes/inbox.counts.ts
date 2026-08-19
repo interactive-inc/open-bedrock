@@ -1,10 +1,7 @@
-import {
-  InternalError,
-  UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { resolveActiveSystemAccountId } from "@/contexts/company-compatibility/application/iam/to-system-account-id"
+import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"

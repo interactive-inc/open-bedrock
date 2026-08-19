@@ -4,19 +4,17 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { resolveLiveEmployeeAccess } from "@/contexts/company-compatibility/application/auth/resolve-live-employee-access"
-import { resolveActiveSystemAccountId } from "@/contexts/company-compatibility/application/iam/to-system-account-id"
-import {
-  resolveCompanyAccountParticipants,
-  resolveSystemAccountIdsForEmployees,
-} from "@/contexts/company-compatibility/application/iam/resolve-company-account-participants"
+} from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { resolveLiveEmployeeAccess } from "@/contexts/company/application/auth/resolve-live-employee-access"
+import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
+import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
+import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/application/iam/resolve-system-account-ids-for-employees"
 import { loadSystemProcedure } from "@/api/http/application-templates/lib/system-procedure-route"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
 import { z } from "zod"

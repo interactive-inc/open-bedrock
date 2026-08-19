@@ -1,23 +1,23 @@
 import { CreateOneOnOne } from "@/contexts/one-on-one/application/oneonone/create-one-on-one"
-import { listDepartmentEmployeeIds } from "@/contexts/company-compatibility/interface/utils/list-department-employee-ids"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppOneOnOne, zAppOneOnOneList } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { oneOnOnes } from "@/contexts/one-on-one/infrastructure/schema/one-on-one"
 import { zValidator } from "@hono/zod-validator"
 import { aliasedTable, and, count, desc, eq, inArray, or } from "drizzle-orm"

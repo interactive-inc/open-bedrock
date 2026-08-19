@@ -1,9 +1,18 @@
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
-import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, MAX_LIST_OFFSET, toBoundedInt } from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import {
+  ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { EnrollTraining } from "@/contexts/training/application/enroll-training"
 import { trainingEnrollments } from "@/contexts/training/infrastructure/schema/training"
 import { type Variables } from "@/env"

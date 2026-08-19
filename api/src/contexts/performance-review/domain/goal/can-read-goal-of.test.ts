@@ -1,6 +1,6 @@
-import { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { canReadGoalOf } from "@/contexts/performance-review/domain/goal/can-read-goal-of"
-import type { EmployeeRelation } from "@/contexts/company-compatibility/domain/organization/employee-relation"
+import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
 import { describe, expect, test } from "bun:test"
 
 function sessionWith(permissions: ReadonlyArray<string>): Session {

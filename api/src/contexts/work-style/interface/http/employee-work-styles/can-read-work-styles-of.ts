@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 
 /**
  * 対象従業員の勤務形態を閲覧できるか判定する。本人か work_style:read:all を持つ場合に許可する。

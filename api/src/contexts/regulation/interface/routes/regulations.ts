@@ -1,13 +1,13 @@
 import { RegisterRegulation } from "@/contexts/regulation/application/register-regulation"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   regulations,
   regulationVersions,
 } from "@/contexts/regulation/infrastructure/schema/regulation"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppRegulation, zAppRegulationList } from "@/lib/app-schemas"
 import { codeSchema } from "@/lib/schemas"
 import {
@@ -15,7 +15,7 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { and, asc, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"

@@ -1,9 +1,9 @@
-import { resolveActiveSystemAccountId } from "@/contexts/company-compatibility/application/iam/to-system-account-id"
+import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
 import {
   createCompanyProcedureDecisionPolicy,
-  parseCompanyProcedureDecisionPolicy,
   type CompanyProcedureDecisionPolicy,
-} from "@/contexts/company-compatibility/domain/organization/company-procedure-decision-policy"
+} from "@/contexts/company/domain/organization/company-procedure-decision-policy"
+import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/parse-company-procedure-decision-policy"
 import type { Context } from "@/env"
 import { PublishSystemProcedure } from "@system/application/workflow/publish-system-procedure"
 import type { ProcedureDefinition } from "@system/domain/workflow/procedure-definition.entity"

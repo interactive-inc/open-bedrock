@@ -1,8 +1,13 @@
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, MAX_LIST_OFFSET, toBoundedInt } from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { CreateEvaluationTemplate } from "@/contexts/performance-review/application/evaluation-template/create-evaluation-template"
 import { evaluationTemplates } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { zAppEvaluationTemplate, zAppEvaluationTemplateList } from "@/lib/app-schemas"

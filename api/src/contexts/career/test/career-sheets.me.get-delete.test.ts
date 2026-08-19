@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedCareerSheets } from "@/contexts/career/infrastructure/seed/seed-career-sheets"
-import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"

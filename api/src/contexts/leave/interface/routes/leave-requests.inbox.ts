@@ -1,21 +1,21 @@
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 import { zAppLeaveRequestInboxList } from "@/lib/app-schemas"
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm"
-import { listManagedEmployeeIds } from "@/contexts/company-compatibility/application/organization/list-managed-employee-ids"
+import { listManagedEmployeeIds } from "@/contexts/company/application/organization/list-managed-employee-ids"
 
 /** 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。 */
 const SORT_OPTIONS = {

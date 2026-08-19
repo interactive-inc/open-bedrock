@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "68cf8258c05aeb56ede0096fdaa827466465b3643e38acac9bee5bbad1293625",
+    "company-context.manifest.json": "e7c4acc19b4abc0676b29a4374192096a1276a9ddc9c2f8c9f83d4a17ccebbb0",
     "src/contexts/company/README.md": "c2616457a29375f5ccfda44fcfdbbb8ab8a095a61d161c941ced5dc84347809b",
     "src/contexts/company/application/core/can-access-company-organization.ts": "57911dd47c0dffbd3030f3ddec8efc1c5ee863f58f9a142dd272a834f35fa472",
     "src/contexts/company/application/core/company-actor.ts": "aecd4cfadecc064d9b868bf73c760a87f19dab23a8cee613ed6aba7af0e4f8e5",
@@ -162,6 +162,9 @@
     "src/contexts/company/infrastructure/schema/company-sql.contract.test.ts": "2d6507db9e55675999ed64fe10d78e32f9ee67456dadb8306797196e0820f889",
     "src/contexts/company/infrastructure/schema/company.sql": "db6d68f9fc5d4a8b88ed27e6ac2b9a94ef33ee9b7bf31719cb2e7f3c9f346775",
     "src/contexts/company/infrastructure/schema/company.ts": "52b1349f6533d47c14dc643d6f9a5cef41bb7bf739cd22e45c3d9a69618fbe0a",
+    "src/contexts/company/infrastructure/workforce/organization-unit-read.repository.ts": "898deaa2f876222d17e633550351ca66ad446cf1057252497e8ae86d426e9211",
+    "src/contexts/company/infrastructure/workforce/organization-unit-row.adapter.ts": "5ca1cfa6cf8c0f0443073a821e17f89935e2268fb31c9b8618e42da028ce671e",
+    "src/contexts/company/infrastructure/workforce/to-organization-change-fingerprint.ts": "7bc3a6fa64d20e2ae9d13eb0e1f5cd37eb6936fb2963425e6cec1685b2c5c4de",
     "src/contexts/company/interface/http/company-capabilities.ts": "e552f0311cf2e9ff19cf63229614a4e90cc1355703626781ca92005de27f2c0b",
     "src/contexts/company/interface/http/company-http-environment.ts": "797f51b1275660be3d5e8d89eda331ba5ae53e1f5ecf1b48323f16b959e48f37",
     "src/contexts/company/interface/http/company-http-input-error.ts": "06db3cfd03690b994571091266fbaae7e5d2319d39fdde5c3e8c58c5160c5bd2",
@@ -169,7 +172,6 @@
     "src/contexts/company/interface/http/read-company-request-runtime.ts": "eae6c8c700330ff32a51db88dc9ac7668e2ae5977b4a66cfad5e4d73c806b810",
     "src/contexts/company/interface/http/respond-to-company-read.ts": "6e11ccd328f398a041434075d2e8248da8f5170363c1fa8cb97288a60333584a",
     "src/contexts/company/interface/http/respond-to-company-write.ts": "338968ef49d2be491aad58c495678260757fda0832dcf7ce1751f097401f7ea2",
-    "src/contexts/company/interface/module.ts": "e44fa7373176c32b372cf5c4962ce089775f85dacdfebc853c16d46935a450ee",
     "src/contexts/company/interface/route-manifest.ts": "4e892cc45223918b6d189a1211a420127bf868b0c7765653b645116898d05a3e",
     "src/contexts/company/interface/routes/company.v1.account-employee-links.ts": "66b734a5d6b599d89a4a4d94b5ae8f17f0a35adadefc49814ba4c9ccf7db50f7",
     "src/contexts/company/interface/routes/company.v1.capabilities.test.ts": "d9b806c452e2ac688e212b9128a3bb7d816d9ca22942962b92564b3979ea18ce",
@@ -183,7 +185,7 @@
     "src/contexts/company/interface/routes/company.v1.personnel-actions.ts": "b48c1d6dc8e51da01bd5fa2af16bb32adabe6afe6a7fd3748aaefcb5afe8dca3",
     "src/contexts/company/interface/routes/company.v1.profile.ts": "b6954d866e7f8c288111dd9580354186c7eb590511394389c2d4b4d77f85d3af",
     "src/contexts/company/test/company-api.integration.test.ts": "db62deb718f545251665c84b8db859407797b7c0981eadfc2f01671a2ddb32d8",
-    "src/contexts/company/test/company-file-responsibility.contract.test.ts": "5a642c8f20c9a4c4f74a61863c6e52ad8c142be4b7cedb1d877ced266fbbd303",
+    "src/contexts/company/test/company-file-responsibility.contract.test.ts": "babf6679030f5c22f53797601ba358fb6dda8336894acb63d1359d97a80e44cd",
     "src/contexts/company/test/d1-test-database.test-support.ts": "e9aff0daf4196c794b454c63dfdad58aa86ec45b35a621a8fe0628d7e26a1e79"
   }
 }

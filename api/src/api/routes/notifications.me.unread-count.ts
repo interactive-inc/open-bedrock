@@ -1,6 +1,6 @@
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
 
