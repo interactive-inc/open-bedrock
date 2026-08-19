@@ -9,7 +9,7 @@ import { recordSystemIdentityLoginToken } from "@system/infrastructure/auth/reco
 import { cliIdentityRedirectUri } from "@/lib/auth/cli-identity-redirect-uri"
 import { exchangeIdentityCode } from "@/lib/auth/exchange-identity-code"
 import { getIdentityVerificationKey } from "@/lib/auth/get-identity-verification-key"
-import { loginCodeHash } from "@/lib/auth/login-code-hash"
+import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash"
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyIdentityToken } from "@/lib/auth/verify-identity-token"
@@ -155,7 +155,10 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
   }
 
   const rawCode = crypto.randomUUID()
-  const codeHash = await loginCodeHash(rawCode)
+  const codeHash = await systemLoginCodeHash(rawCode)
+  if (codeHash instanceof Error) {
+    return c.json({ error: "cli login is unavailable", code: "cli_login_code_unavailable" }, 503)
+  }
 
   const codeCreated = await createSystemCliLoginCode(c, {
     codeHash,

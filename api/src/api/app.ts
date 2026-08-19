@@ -28,8 +28,6 @@ import * as attendanceRecordsOvertimeSummaryRoute from "@/api/routes/attendance-
 import * as auditEventExportsRoute from "@/api/routes/audit-event-exports"
 import * as auditEventsRoute from "@/api/routes/audit-events"
 import * as auditEventsEventIdRoute from "@/api/routes/audit-events.$eventId"
-import * as authBrowserCodeRoute from "@/api/routes/auth.browser.code"
-import * as authBrowserTokenRoute from "@/api/routes/auth.browser.token"
 import * as authCliCallbackRoute from "@/api/routes/auth.cli.callback"
 import * as authCliLoginRoute from "@/api/routes/auth.cli.login"
 import * as authCliTokenRoute from "@/api/routes/auth.cli.token"
@@ -338,6 +336,8 @@ import * as systemV1AccountsAccountIdRoleBindingsBindingIdRoute from "@system/in
 import * as systemV1AuditEventsRoute from "@system/interface/routes/system.v1.audit-events"
 import * as systemV1AuditEventsEventIdRoute from "@system/interface/routes/system.v1.audit-events.$eventId"
 import * as systemV1BootstrapRoute from "@system/interface/routes/system.v1.bootstrap"
+import * as systemV1BrowserLoginCodesRoute from "@system/interface/routes/system.v1.browser-login-codes"
+import * as systemV1BrowserSessionsRoute from "@system/interface/routes/system.v1.browser-sessions"
 import * as systemV1HealthRoute from "@system/interface/routes/system.v1.health"
 import * as systemV1NotificationsRoute from "@system/interface/routes/system.v1.notifications"
 import * as systemV1NotificationsIdRoute from "@system/interface/routes/system.v1.notifications.$id"
@@ -485,8 +485,6 @@ const routePart24 = createRouteApp()
   .post("/audit-event-exports", ...auditEventExportsRoute.POST)
   .get("/audit-events", ...auditEventsRoute.GET)
   .get("/audit-events/:eventId", ...auditEventsEventIdRoute.GET)
-  .post("/auth/browser/code", ...authBrowserCodeRoute.POST)
-  .post("/auth/browser/token", ...authBrowserTokenRoute.POST)
   .get("/auth/cli/callback", ...authCliCallbackRoute.GET)
   .get("/auth/cli/login", ...authCliLoginRoute.GET)
   .post("/auth/cli/token", ...authCliTokenRoute.POST)
@@ -520,10 +518,10 @@ const routePart24 = createRouteApp()
   .delete("/career-applications/:id", ...careerApplicationsIdRoute.DELETE)
   .get("/career-postings", ...careerPostingsRoute.GET)
   .post("/career-postings", ...careerPostingsRoute.POST)
-
-const routePart25 = createRouteApp()
   .get("/career-postings/:postingId", ...careerPostingsPostingIdRoute.GET)
   .put("/career-postings/:postingId", ...careerPostingsPostingIdRoute.PUT)
+
+const routePart25 = createRouteApp()
   .delete("/career-postings/:postingId", ...careerPostingsPostingIdRoute.DELETE)
   .post("/career-postings/:postingId/apply", ...careerPostingsPostingIdApplyRoute.POST)
   .get("/career-sheets/me", ...careerSheetsMeRoute.GET)
@@ -570,10 +568,10 @@ const routePart25 = createRouteApp()
   .get("/decision-records/:id", ...decisionRecordsIdRoute.GET)
   .put("/decision-records/:id", ...decisionRecordsIdRoute.PUT)
   .post("/decision-records/:id/supersede", ...decisionRecordsIdSupersedeRoute.POST)
-
-const routePart26 = createRouteApp()
   .get("/department-budgets", ...departmentBudgetsRoute.GET)
   .post("/department-budgets", ...departmentBudgetsRoute.POST)
+
+const routePart26 = createRouteApp()
   .get("/department-budgets/summary", ...departmentBudgetsSummaryRoute.GET)
   .get("/department-budgets/:id", ...departmentBudgetsIdRoute.GET)
   .patch("/department-budgets/:id", ...departmentBudgetsIdRoute.PATCH)
@@ -620,10 +618,10 @@ const routePart26 = createRouteApp()
   .get("/evaluation-sheets/me", ...evaluationSheetsMeRoute.GET)
   .get("/evaluation-sheets/:sheetId", ...evaluationSheetsSheetIdRoute.GET)
   .put("/evaluation-sheets/:sheetId/evaluators", ...evaluationSheetsSheetIdEvaluatorsRoute.PUT)
-
-const routePart27 = createRouteApp()
   .post("/evaluation-sheets/:sheetId/transition", ...evaluationSheetsSheetIdTransitionRoute.POST)
   .get("/evaluation-templates", ...evaluationTemplatesRoute.GET)
+
+const routePart27 = createRouteApp()
   .post("/evaluation-templates", ...evaluationTemplatesRoute.POST)
   .get("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.GET)
   .put("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PUT)
@@ -679,10 +677,10 @@ const routePart27 = createRouteApp()
   .post("/health-checkups", ...healthCheckupsRoute.POST)
   .post("/health-checkups/:id/complete", ...healthCheckupsIdCompleteRoute.POST)
   .get("/inbox/counts", ...inboxCountsRoute.GET)
-
-const routePart28 = createRouteApp()
   .get("/it-incidents", ...itIncidentsRoute.GET)
   .post("/it-incidents", ...itIncidentsRoute.POST)
+
+const routePart28 = createRouteApp()
   .post("/it-incidents/:id/resolve", ...itIncidentsIdResolveRoute.POST)
   .get("/job-openings", ...jobOpeningsRoute.GET)
   .post("/job-openings", ...jobOpeningsRoute.POST)
@@ -729,10 +727,10 @@ const routePart28 = createRouteApp()
   .get("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.GET)
   .post("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.POST)
   .post("/notifications", ...notificationsRoute.POST)
-
-const routePart29 = createRouteApp()
   .get("/notifications/me", ...notificationsMeRoute.GET)
   .get("/notifications/me/unread-count", ...notificationsMeUnreadCountRoute.GET)
+
+const routePart29 = createRouteApp()
   .post("/notifications/read-all", ...notificationsReadAllRoute.POST)
   .get("/notifications/:id", ...notificationsIdRoute.GET)
   .delete("/notifications/:id", ...notificationsIdRoute.DELETE)
@@ -788,33 +786,29 @@ const routePart29 = createRouteApp()
   .delete("/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.DELETE)
   .get("/performance-goals/:goalId/evaluations", ...performanceGoalsGoalIdEvaluationsRoute.GET)
   .post("/performance-goals/:goalId/evaluations", ...performanceGoalsGoalIdEvaluationsRoute.POST)
+  .get("/permission-definitions", ...permissionDefinitionsRoute.GET)
 
 const routePart30 = createRouteApp().get(
-  "/permission-definitions",
-  ...permissionDefinitionsRoute.GET,
-)
-
-const routePart31 = createRouteApp().get(
   "/personnel-action-requests",
   ...personnelActionRequestsRoute.GET,
 )
 
-const routePart32 = createRouteApp().post(
+const routePart31 = createRouteApp().post(
   "/personnel-action-requests",
   ...personnelActionRequestsRoute.POST,
 )
 
-const routePart33 = createRouteApp().get(
+const routePart32 = createRouteApp().get(
   "/personnel-action-requests/:id",
   ...personnelActionRequestsIdRoute.GET,
 )
 
-const routePart34 = createRouteApp().delete(
+const routePart33 = createRouteApp().delete(
   "/personnel-action-requests/:id",
   ...personnelActionRequestsIdRoute.DELETE,
 )
 
-const routePart35 = createRouteApp()
+const routePart34 = createRouteApp()
   .post("/personnel-actions", ...personnelActionsRoute.POST)
   .post("/personnel-actions/:id/correct", ...personnelActionsIdCorrectRoute.POST)
   .get("/position-definitions", ...positionDefinitionsRoute.GET)
@@ -867,7 +861,7 @@ const routePart35 = createRouteApp()
   .get("/ringi-requests/inbox", ...ringiRequestsInboxRoute.GET)
   .get("/ringi-requests/me", ...ringiRequestsMeRoute.GET)
 
-const routePart36 = createRouteApp()
+const routePart35 = createRouteApp()
   .post("/ringi-requests/:id/approve", ...ringiRequestsIdApproveRoute.POST)
   .post("/ringi-requests/:id/reject", ...ringiRequestsIdRejectRoute.POST)
   .get("/roles", ...rolesRoute.GET)
@@ -917,7 +911,7 @@ const routePart36 = createRouteApp()
   .get("/stocktakes/:id", ...stocktakesIdRoute.GET)
   .post("/stocktakes/:id/assets/:code/check", ...stocktakesIdAssetsCodeCheckRoute.POST)
 
-const routePart37 = createRouteApp()
+const routePart36 = createRouteApp()
   .post("/stocktakes/:id/close", ...stocktakesIdCloseRoute.POST)
   .get("/surveys", ...surveysRoute.GET)
   .post("/surveys", ...surveysRoute.POST)
@@ -966,6 +960,8 @@ const routePart37 = createRouteApp()
   .get("/system/v1/audit-events", ...systemV1AuditEventsRoute.GET)
   .get("/system/v1/audit-events/:eventId", ...systemV1AuditEventsEventIdRoute.GET)
   .post("/system/v1/bootstrap", ...systemV1BootstrapRoute.POST)
+  .post("/system/v1/browser-login-codes", ...systemV1BrowserLoginCodesRoute.POST)
+  .post("/system/v1/browser-sessions", ...systemV1BrowserSessionsRoute.POST)
   .get("/system/v1/health", ...systemV1HealthRoute.GET)
   .get("/system/v1/notifications", ...systemV1NotificationsRoute.GET)
   .post("/system/v1/notifications", ...systemV1NotificationsRoute.POST)
@@ -985,10 +981,10 @@ const routePart37 = createRouteApp()
   .delete("/system/v1/sessions", ...systemV1SessionsRoute.DELETE)
   .get("/thanks-messages", ...thanksMessagesRoute.GET)
   .post("/thanks-messages", ...thanksMessagesRoute.POST)
+
+const routePart37 = createRouteApp()
   .get("/thanks-messages/me", ...thanksMessagesMeRoute.GET)
   .get("/thanks-point-balances/me", ...thanksPointBalancesMeRoute.GET)
-
-const routePart38 = createRouteApp()
   .get("/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
   .post("/thanks-redemptions", ...thanksRedemptionsRoute.POST)
   .get("/thanks-redemptions/admin", ...thanksRedemptionsAdminRoute.GET)
@@ -1054,7 +1050,6 @@ export const app = appBase
   .route("/", routePart35)
   .route("/", routePart36)
   .route("/", routePart37)
-  .route("/", routePart38)
 
 export type AppType = typeof app
 
@@ -1101,7 +1096,6 @@ type ApiClientPart34 = ReturnType<typeof hc<typeof routePart34>>
 type ApiClientPart35 = ReturnType<typeof hc<typeof routePart35>>
 type ApiClientPart36 = ReturnType<typeof hc<typeof routePart36>>
 type ApiClientPart37 = ReturnType<typeof hc<typeof routePart37>>
-type ApiClientPart38 = ReturnType<typeof hc<typeof routePart38>>
 export type ApiClient = ApiClientPart0 &
   ApiClientPart1 &
   ApiClientPart2 &
@@ -1139,5 +1133,4 @@ export type ApiClient = ApiClientPart0 &
   ApiClientPart34 &
   ApiClientPart35 &
   ApiClientPart36 &
-  ApiClientPart37 &
-  ApiClientPart38
+  ApiClientPart37

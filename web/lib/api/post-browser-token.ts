@@ -7,13 +7,13 @@ const browserTokenResponseSchema = z.object({
 })
 
 /**
- * POST /auth/browser/token。認証済みの CLI が発行した one-time code を
+ * POST /system/v1/browser-sessions。認証済みの CLI が発行した one-time code を
  * サーバーサイドで交換し、アクセストークンを取得する。未認証フローで呼ばれる。
  */
 export async function postBrowserToken(body: { code: string }) {
   const client = await createClient()
 
-  const response = await client.auth.browser.token.$post({ json: body })
+  const response = await client.system.v1["browser-sessions"].$post({ json: body })
 
   if (response.status >= 400) {
     return new Error("failed to login")

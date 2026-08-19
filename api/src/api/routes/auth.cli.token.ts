@@ -1,7 +1,7 @@
 import { IssueEmployeeSession } from "@/contexts/company/application/auth/issue-employee-session"
 import { consumeSystemCliLoginCode } from "@system/infrastructure/auth/consume-system-cli-login-code"
 import { IdentityRepository } from "@/contexts/company/application/auth/identity-repository"
-import { loginCodeHash } from "@/lib/auth/login-code-hash"
+import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
@@ -26,7 +26,10 @@ export const POST = factory.createHandlers(
     const { code } = c.req.valid("json")
 
     const now = c.env.NOW === undefined ? new Date() : new Date(c.env.NOW)
-    const codeHash = await loginCodeHash(code)
+    const codeHash = await systemLoginCodeHash(code)
+    if (codeHash instanceof Error) {
+      return c.json({ error: "cli login is unavailable", code: "cli_login_code_unavailable" }, 503)
+    }
 
     const consumed = await consumeSystemCliLoginCode(c, codeHash, now)
     if (consumed instanceof Error) {

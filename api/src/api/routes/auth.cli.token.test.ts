@@ -5,7 +5,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { loginCodeHash } from "@/lib/auth/login-code-hash"
+import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash"
 import { z } from "zod"
 
 const jwtSecret = "cli-token-route-jwt-secret"
@@ -43,7 +43,8 @@ async function seedCliLoginCode(
   accountId: number,
   expiresAt: number = nowEpochMilliseconds + 60_000,
 ): Promise<void> {
-  const codeHash = await loginCodeHash(code)
+  const codeHash = await systemLoginCodeHash(code)
+  if (codeHash instanceof Error) throw codeHash
   const createdAt = Math.min(nowEpochMilliseconds, expiresAt - 1)
   await db
     .prepare(

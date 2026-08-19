@@ -6,7 +6,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { loginCodeHash } from "@/lib/auth/login-code-hash"
+import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash"
 import { z } from "zod"
 
 const jwtSecret = "browser-token-route-jwt-secret"
@@ -15,8 +15,11 @@ const nowEpoch = 1_767_225_600
 const nowEpochMilliseconds = nowEpoch * 1_000
 
 const tokenResponseSchema = z.strictObject({
+  account_id: z.string(),
   access_token: z.string(),
   refresh_token: z.string(),
+  session_id: z.string(),
+  expires_at: z.string(),
 })
 
 const codeResponseSchema = z.strictObject({
@@ -49,7 +52,8 @@ async function seedBrowserLoginCode(
   accountId: number,
   expiresAt: number = nowEpochMilliseconds + 60_000,
 ): Promise<void> {
-  const codeHash = await loginCodeHash(code)
+  const codeHash = await systemLoginCodeHash(code)
+  if (codeHash instanceof Error) throw codeHash
   const createdAt = Math.min(nowEpochMilliseconds, expiresAt - 1)
   await db
     .prepare(
@@ -64,7 +68,7 @@ function postBrowserToken(db: D1Database, body: unknown): Promise<Response> {
   return requestWithContext({
     db,
     jwtSecret,
-    path: "/auth/browser/token",
+    path: "/system/v1/browser-sessions",
     token: null,
     method: "POST",
     body,
@@ -82,26 +86,26 @@ async function auditRows(
   ).results
 }
 
-describe("POST /auth/browser/token", () => {
-  test("exchanges a code issued by /auth/browser/code for a session", async () => {
+describe("POST /system/v1/browser-sessions", () => {
+  test("exchanges a code issued by /system/v1/browser-login-codes for a session", async () => {
     const db = await createTestDb()
     const bearer = await createTestToken(jwtSecret, { employeeId: 1 })
 
     const issuedResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: "/auth/browser/code",
+      path: "/system/v1/browser-login-codes",
       token: bearer,
       method: "POST",
       body: {},
       now,
     })
-    expect(issuedResponse.status).toBe(200)
+    expect(issuedResponse.status).toBe(201)
     const issued = codeResponseSchema.parse(await issuedResponse.json())
 
     const response = await postBrowserToken(db, { code: issued.code })
 
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(201)
     const body = tokenResponseSchema.parse(await response.json())
     expect(body.access_token.length > 0).toBe(true)
     expect(body.refresh_token.length > 0).toBe(true)
@@ -120,7 +124,7 @@ describe("POST /auth/browser/token", () => {
     await seedBrowserLoginCode(db, "raw-code-2", 1)
 
     const first = await postBrowserToken(db, { code: "raw-code-2" })
-    expect(first.status).toBe(200)
+    expect(first.status).toBe(201)
 
     const second = await postBrowserToken(db, { code: "raw-code-2" })
     expect(second.status).toBe(401)

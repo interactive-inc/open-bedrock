@@ -47,6 +47,10 @@ export type SystemJwtSecretContext = Readonly<{
   env: Readonly<{ JWT_SECRET?: string }>
 }>
 
+export type SystemSessionConfigurationContext = Readonly<{
+  env: Readonly<{ SYSTEM_SESSION_TTL_SECONDS?: string }>
+}>
+
 export type SystemOidcSigningContext = Readonly<{
   env: Readonly<{ OIDC_SIGNING_KEYS?: string }>
 }>
