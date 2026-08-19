@@ -78,6 +78,6 @@ errorは`application/problem+json`で、`type`、`title`、`status`、機械判�
 
 portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本とし、各製品のmigrationへ同じ内容をコピーする。`company_organizations`がorganization revision、`company_resource_revisions`がappend-only履歴、`company_resource_heads`がcurrent projection、`company_command_receipts`が安全な再送を所有する。
 
-旧storageからの移行はCompany context外の製品別backfillが行う。backfillはcanonical organizationがrevision 0のときだけbaseline revision 1を作り、既存canonical dataを旧storageで上書きしない。旧APIと旧tableは`company-compatibility`という削除予定adapterに隔離し、新しい依存元を追加しない。
+旧storageからの移行はCompany context外の製品別backfillが行う。backfillはcanonical organizationがrevision 0のときだけbaseline revision 1を作り、既存canonical dataを旧storageで上書きしない。runtime consumerはcanonical System・CompanyまたはAPI compositionへ接続済みであり、移行専用context、旧API adapter、ownership例外は残さない。
 
-`company-context.manifest.json`と`company-context.lock.json`は`api/src/contexts/company`全体のpathとhashを固定する。CIでlock不一致を拒否し、Domain、Application、Infrastructure、Interface、testの一部だけが製品ごとに変わる状態を許さない。
+`company-context.manifest.json`の`sharedSourcePaths`はportable Companyとして両製品で共有するsourceを明示し、`company-context.lock.json`はその全pathとhashを固定する。CIは共有対象の欠落、余分なpath、内容差を拒否する。製品固有のCompany拡張は共有対象の外に置けるが、portableなDomain、Application、Infrastructure、Interface、testへ製品差を混ぜない。
