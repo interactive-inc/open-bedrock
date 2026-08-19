@@ -21,7 +21,7 @@ describe("getAuditEvents", () => {
         {
           event_id: "legacy-1",
           request_id: "request-1",
-          actor_account_id: 1,
+          actor_account_id: "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y",
           actor_employee_id: null,
           action: "legacy.action",
           target_type: null,

@@ -8,7 +8,7 @@ import type { AccountActionFormState } from "@/app/(app)/system/accounts/actions
 const initialState: AccountActionFormState = { ok: false, error: null }
 
 type Props = {
-  accountId: number
+  accountId: string
   roleKey: string
 }
 

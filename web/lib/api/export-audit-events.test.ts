@@ -21,7 +21,7 @@ describe("exportAuditEvents", () => {
     const post = vi.fn().mockResolvedValue(response)
     mocks.createClient.mockResolvedValue({ "audit-event-exports": { $post: post } })
     const request = {
-      actor_account_id: -41,
+      actor_account_id: "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y",
       action: "legacy.action",
       target_type: "legacy_target",
       target_id: "target-1",

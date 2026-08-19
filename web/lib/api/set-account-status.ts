@@ -3,13 +3,13 @@ import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
 /** POST /accounts/:id/status。アカウントの状態を変更する（account:manage が必要）。 */
 export async function setAccountStatus(
-  accountId: number,
+  accountId: string,
   status: "active" | "suspended" | "locked",
 ): Promise<null | Error> {
   const client = await createClient()
 
   const response = await client.accounts[":id"].status.$post({
-    param: { id: String(accountId) },
+    param: { id: accountId },
     json: { status: status },
   })
 

@@ -41,7 +41,7 @@ afterEach(() => {
 const detail: AuditEventDetail = {
   event_id: "evt-001",
   request_id: "req-001",
-  actor_account_id: 10,
+  actor_account_id: "account-10",
   actor_employee_id: 20,
   action: "audit.event.read",
   target_type: "audit_event",

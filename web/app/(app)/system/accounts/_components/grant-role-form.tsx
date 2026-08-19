@@ -7,7 +7,7 @@ import type { GrantRoleFormState } from "@/app/(app)/system/accounts/actions"
 import { Button } from "@/components/ui/button"
 
 type Props = {
-  accountId: number
+  accountId: string
   roleKeys: ReadonlyArray<string>
 }
 
