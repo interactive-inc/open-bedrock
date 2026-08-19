@@ -46,4 +46,54 @@ export const systemRouteManifest = [
       exportName: "DELETE",
     },
   },
+  {
+    method: "POST",
+    path: "/auth/password/reset",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/auth.password.reset",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/oauth/token",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/oauth.token",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/oauth/userinfo",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/oauth.userinfo",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/oauth/authorizations",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/oauth.authorizations",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/oauth/mcp-grants",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/oauth.mcp-grants",
+      exportName: "POST",
+    },
+  },
 ] as const

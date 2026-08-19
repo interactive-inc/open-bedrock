@@ -91,6 +91,8 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     throw new UnauthorizedError("token has been revoked")
   }
 
+  c.set("accountTokenVersion", canonicalSession.account.tokenVersion)
+
   if (account.employeeId === null) {
     throw new UnauthorizedError("account has no employee")
   }

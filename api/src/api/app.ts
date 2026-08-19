@@ -325,7 +325,12 @@ import * as trainingEnrollmentsMeRoute from "@/contexts/training/interface/route
 import * as workAccidentsRoute from "@/contexts/work-accident/interface/routes/work-accidents"
 import * as workAccidentsIdCloseRoute from "@/contexts/work-accident/interface/routes/work-accidents.$id.close"
 import * as employeeWorkStylesRoute from "@/contexts/work-style/interface/routes/employee-work-styles"
+import * as authPasswordResetRoute from "@system/interface/routes/auth.password.reset"
 import * as healthRoute from "@system/interface/routes/health"
+import * as oauthAuthorizationsRoute from "@system/interface/routes/oauth.authorizations"
+import * as oauthMcpGrantsRoute from "@system/interface/routes/oauth.mcp-grants"
+import * as oauthTokenRoute from "@system/interface/routes/oauth.token"
+import * as oauthUserinfoRoute from "@system/interface/routes/oauth.userinfo"
 import * as systemV1HealthRoute from "@system/interface/routes/system.v1.health"
 import * as systemV1SessionsRoute from "@system/interface/routes/system.v1.sessions"
 
@@ -476,6 +481,7 @@ const routePart24 = createRouteApp()
   .post("/auth/identity/login", ...authIdentityLoginRoute.POST)
   .post("/auth/login", ...authLoginRoute.POST)
   .post("/auth/logout", ...authLogoutRoute.POST)
+  .post("/auth/password/reset", ...authPasswordResetRoute.POST)
   .post("/auth/refresh", ...authRefreshRoute.POST)
   .get("/batch", ...batchRoute.GET)
   .post("/batch/employee-lifecycle/backfill", ...batchEmployeeLifecycleBackfillRoute.POST)
@@ -502,9 +508,9 @@ const routePart24 = createRouteApp()
   .get("/career-applications/:id", ...careerApplicationsIdRoute.GET)
   .put("/career-applications/:id", ...careerApplicationsIdRoute.PUT)
   .delete("/career-applications/:id", ...careerApplicationsIdRoute.DELETE)
-  .get("/career-postings", ...careerPostingsRoute.GET)
 
 const routePart25 = createRouteApp()
+  .get("/career-postings", ...careerPostingsRoute.GET)
   .post("/career-postings", ...careerPostingsRoute.POST)
   .get("/career-postings/:postingId", ...careerPostingsPostingIdRoute.GET)
   .put("/career-postings/:postingId", ...careerPostingsPostingIdRoute.PUT)
@@ -552,9 +558,9 @@ const routePart25 = createRouteApp()
   .get("/decision-records", ...decisionRecordsRoute.GET)
   .post("/decision-records", ...decisionRecordsRoute.POST)
   .get("/decision-records/:id", ...decisionRecordsIdRoute.GET)
-  .put("/decision-records/:id", ...decisionRecordsIdRoute.PUT)
 
 const routePart26 = createRouteApp()
+  .put("/decision-records/:id", ...decisionRecordsIdRoute.PUT)
   .post("/decision-records/:id/supersede", ...decisionRecordsIdSupersedeRoute.POST)
   .get("/department-budgets", ...departmentBudgetsRoute.GET)
   .post("/department-budgets", ...departmentBudgetsRoute.POST)
@@ -602,9 +608,9 @@ const routePart26 = createRouteApp()
   .get("/evaluation-sheets", ...evaluationSheetsRoute.GET)
   .post("/evaluation-sheets", ...evaluationSheetsRoute.POST)
   .get("/evaluation-sheets/me", ...evaluationSheetsMeRoute.GET)
-  .get("/evaluation-sheets/:sheetId", ...evaluationSheetsSheetIdRoute.GET)
 
 const routePart27 = createRouteApp()
+  .get("/evaluation-sheets/:sheetId", ...evaluationSheetsSheetIdRoute.GET)
   .put("/evaluation-sheets/:sheetId/evaluators", ...evaluationSheetsSheetIdEvaluatorsRoute.PUT)
   .post("/evaluation-sheets/:sheetId/transition", ...evaluationSheetsSheetIdTransitionRoute.POST)
   .get("/evaluation-templates", ...evaluationTemplatesRoute.GET)
@@ -661,9 +667,9 @@ const routePart27 = createRouteApp()
   .get("/health", ...healthRoute.GET)
   .get("/health-checkups", ...healthCheckupsRoute.GET)
   .post("/health-checkups", ...healthCheckupsRoute.POST)
-  .post("/health-checkups/:id/complete", ...healthCheckupsIdCompleteRoute.POST)
 
 const routePart28 = createRouteApp()
+  .post("/health-checkups/:id/complete", ...healthCheckupsIdCompleteRoute.POST)
   .get("/inbox/counts", ...inboxCountsRoute.GET)
   .get("/it-incidents", ...itIncidentsRoute.GET)
   .post("/it-incidents", ...itIncidentsRoute.POST)
@@ -711,9 +717,9 @@ const routePart28 = createRouteApp()
   .put("/meetings/:code", ...meetingsCodeRoute.PUT)
   .post("/meetings/:code/archive", ...meetingsCodeArchiveRoute.POST)
   .get("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.GET)
-  .post("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.POST)
 
 const routePart29 = createRouteApp()
+  .post("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.POST)
   .post("/notifications", ...notificationsRoute.POST)
   .get("/notifications/me", ...notificationsMeRoute.GET)
   .get("/notifications/me/unread-count", ...notificationsMeUnreadCountRoute.GET)
@@ -721,6 +727,10 @@ const routePart29 = createRouteApp()
   .get("/notifications/:id", ...notificationsIdRoute.GET)
   .delete("/notifications/:id", ...notificationsIdRoute.DELETE)
   .post("/notifications/:id/read", ...notificationsIdReadRoute.POST)
+  .post("/oauth/authorizations", ...oauthAuthorizationsRoute.POST)
+  .post("/oauth/mcp-grants", ...oauthMcpGrantsRoute.POST)
+  .post("/oauth/token", ...oauthTokenRoute.POST)
+  .get("/oauth/userinfo", ...oauthUserinfoRoute.GET)
   .post("/onboarding-assignments", ...onboardingAssignmentsRoute.POST)
   .get(
     "/onboarding-assignments/employees/:employeeCode",
@@ -766,31 +776,33 @@ const routePart29 = createRouteApp()
   .get("/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.GET)
   .put("/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.PUT)
   .delete("/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.DELETE)
+
+const routePart30 = createRouteApp()
   .get("/performance-goals/:goalId/evaluations", ...performanceGoalsGoalIdEvaluationsRoute.GET)
   .post("/performance-goals/:goalId/evaluations", ...performanceGoalsGoalIdEvaluationsRoute.POST)
   .get("/permission-definitions", ...permissionDefinitionsRoute.GET)
 
-const routePart30 = createRouteApp().get(
+const routePart31 = createRouteApp().get(
   "/personnel-action-requests",
   ...personnelActionRequestsRoute.GET,
 )
 
-const routePart31 = createRouteApp().post(
+const routePart32 = createRouteApp().post(
   "/personnel-action-requests",
   ...personnelActionRequestsRoute.POST,
 )
 
-const routePart32 = createRouteApp().get(
+const routePart33 = createRouteApp().get(
   "/personnel-action-requests/:id",
   ...personnelActionRequestsIdRoute.GET,
 )
 
-const routePart33 = createRouteApp().delete(
+const routePart34 = createRouteApp().delete(
   "/personnel-action-requests/:id",
   ...personnelActionRequestsIdRoute.DELETE,
 )
 
-const routePart34 = createRouteApp()
+const routePart35 = createRouteApp()
   .post("/personnel-actions", ...personnelActionsRoute.POST)
   .post("/personnel-actions/:id/correct", ...personnelActionsIdCorrectRoute.POST)
   .get("/position-definitions", ...positionDefinitionsRoute.GET)
@@ -843,7 +855,7 @@ const routePart34 = createRouteApp()
   .get("/ringi-requests/inbox", ...ringiRequestsInboxRoute.GET)
   .get("/ringi-requests/me", ...ringiRequestsMeRoute.GET)
 
-const routePart35 = createRouteApp()
+const routePart36 = createRouteApp()
   .post("/ringi-requests/:id/approve", ...ringiRequestsIdApproveRoute.POST)
   .post("/ringi-requests/:id/reject", ...ringiRequestsIdRejectRoute.POST)
   .get("/roles", ...rolesRoute.GET)
@@ -893,7 +905,7 @@ const routePart35 = createRouteApp()
   .get("/stocktakes/:id", ...stocktakesIdRoute.GET)
   .post("/stocktakes/:id/assets/:code/check", ...stocktakesIdAssetsCodeCheckRoute.POST)
 
-const routePart36 = createRouteApp()
+const routePart37 = createRouteApp()
   .post("/stocktakes/:id/close", ...stocktakesIdCloseRoute.POST)
   .get("/surveys", ...surveysRoute.GET)
   .post("/surveys", ...surveysRoute.POST)
@@ -978,6 +990,7 @@ export const app = appBase
   .route("/", routePart34)
   .route("/", routePart35)
   .route("/", routePart36)
+  .route("/", routePart37)
 
 export type AppType = typeof app
 
@@ -1023,6 +1036,7 @@ type ApiClientPart33 = ReturnType<typeof hc<typeof routePart33>>
 type ApiClientPart34 = ReturnType<typeof hc<typeof routePart34>>
 type ApiClientPart35 = ReturnType<typeof hc<typeof routePart35>>
 type ApiClientPart36 = ReturnType<typeof hc<typeof routePart36>>
+type ApiClientPart37 = ReturnType<typeof hc<typeof routePart37>>
 export type ApiClient = ApiClientPart0 &
   ApiClientPart1 &
   ApiClientPart2 &
@@ -1059,4 +1073,5 @@ export type ApiClient = ApiClientPart0 &
   ApiClientPart33 &
   ApiClientPart34 &
   ApiClientPart35 &
-  ApiClientPart36
+  ApiClientPart36 &
+  ApiClientPart37

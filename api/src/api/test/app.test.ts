@@ -96,6 +96,56 @@ describe("security headers", () => {
   })
 })
 
+describe("System OAuth authorization boundary", () => {
+  test("OIDC authorizationはBearerなしで401に閉じる", async () => {
+    const response = await app.request(
+      "/oauth/authorizations",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      },
+      makeBindings(),
+    )
+
+    expect(response.status).toBe(401)
+  })
+
+  test("MCP grantはBearerなしで401に閉じる", async () => {
+    const response = await app.request(
+      "/oauth/mcp-grants",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ challenge: "challenge" }),
+      },
+      makeBindings(),
+    )
+
+    expect(response.status).toBe(401)
+  })
+
+  test("OIDC設定未注入時はtoken endpointをinvalid requestとして閉じる", async () => {
+    const response = await app.request(
+      "/oauth/token",
+      {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          code: "a".repeat(43),
+          client_id: "client",
+          redirect_uri: "https://client.example.com/callback",
+          code_verifier: "a".repeat(43),
+        }),
+      },
+      makeBindings(),
+    )
+
+    expect(response.status).toBe(400)
+  })
+})
+
 function makeLimiter(success: boolean): RateLimit {
   return { limit: () => Promise.resolve({ success }) }
 }

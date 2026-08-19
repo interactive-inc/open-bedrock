@@ -4,6 +4,7 @@ import type {
   SystemDatabaseContext,
   SystemEmailContext,
   SystemJwtSecretContext,
+  SystemOidcConfigurationContext,
   SystemOidcSigningContext,
   SystemPasswordHashContext,
 } from "@system/infrastructure/configuration/system-context"
@@ -13,6 +14,7 @@ type SystemInterfaceContext = SystemDatabaseContext &
   SystemClockContext &
   SystemAuthorizationContext &
   SystemJwtSecretContext &
+  SystemOidcConfigurationContext &
   SystemOidcSigningContext &
   SystemPasswordHashContext &
   SystemEmailContext

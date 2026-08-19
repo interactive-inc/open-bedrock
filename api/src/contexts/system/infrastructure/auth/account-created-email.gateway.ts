@@ -52,6 +52,10 @@ ${setPasswordLink}
       return "skipped"
     }
 
+    if (this.c.env.EMAIL === undefined || this.c.env.INVITE_EMAIL_FROM === undefined) {
+      return new Error("account_created_email_configuration_missing")
+    }
+
     try {
       await this.c.env.EMAIL.send({
         to: props.to,

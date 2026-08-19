@@ -12,9 +12,17 @@ import { auditNoStore } from "@/contexts/company/interface/middlewares/audit-no-
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import type { CompanyCapability } from "@/contexts/company/application/core/company-actor"
 import { toNegotiatedHttpExceptionResponse } from "@/api/to-negotiated-http-exception-response"
+import type { OidcClientRegistry } from "@system/domain/identity/oidc-client.policy"
+import type { OidcIssuerConfiguration } from "@system/domain/identity/oidc.value"
 
 /** CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。 */
 const defaultAllowedOrigins = ["http://localhost:3000", "http://localhost:5173"]
+const disabledOidcClientRegistry: OidcClientRegistry = Object.freeze({})
+const disabledOidcIssuerConfiguration: OidcIssuerConfiguration = Object.freeze({
+  issuersByHostname: Object.freeze({}),
+  localProxyHostnames: Object.freeze([]),
+  localIssuerHostname: null,
+})
 
 let corsWarningLogged = false
 
@@ -49,6 +57,26 @@ const nowProductionGuardMiddleware = factory.createMiddleware(async (c, next) =>
     nowProductionGuardWarned = true
     console.warn("[SECURITY] NOW override is set in production — this affects all timestamps")
   }
+  await next()
+})
+
+const systemContextMiddleware = factory.createMiddleware(async (c, next) => {
+  c.set("now", () => new Date(c.env.NOW ?? Date.now()))
+  c.set("oidcClientRegistry", c.env.OIDC_CLIENT_REGISTRY ?? disabledOidcClientRegistry)
+  c.set(
+    "oidcIssuerConfiguration",
+    c.env.OIDC_ISSUER_CONFIGURATION ?? disabledOidcIssuerConfiguration,
+  )
+  await next()
+})
+
+const systemAuthorizationMiddleware = factory.createMiddleware(async (c, next) => {
+  const session = c.var.session
+  if (session === null) throw new HTTPException(401, { message: "authentication required" })
+
+  c.set("userId", String(session.accountId))
+  c.set("permissions", session.permissions)
+  c.set("role", session.roleKeys[0] ?? "authenticated")
   await next()
 })
 
@@ -120,8 +148,13 @@ export const appBase = factory
   .use("*", secureHeaders({ crossOriginResourcePolicy: false, crossOriginOpenerPolicy: false }))
   .use("*", contextStorage())
   .use("*", nowProductionGuardMiddleware)
+  .use("*", systemContextMiddleware)
   .use("*", featureGate)
   .use("*", databaseMiddleware)
+  .use("/oauth/authorizations", verifyBearer)
+  .use("/oauth/authorizations", systemAuthorizationMiddleware)
+  .use("/oauth/mcp-grants", verifyBearer)
+  .use("/oauth/mcp-grants", systemAuthorizationMiddleware)
   .use("/company/v1/*", verifyBearer)
   .use("/company/v1/*", companyActorMiddleware)
   .onError(async (error, c) => {

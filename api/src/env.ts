@@ -4,15 +4,26 @@ import type { schema } from "@/schema"
 import type {
   SystemD1Context,
   SystemDatabaseContext,
+  SystemEmailSender,
   SystemRequestAudit,
   SystemRequestAuditContext,
 } from "@system/infrastructure/configuration/system-context"
+import type { OidcClientRegistry } from "@system/domain/identity/oidc-client.policy"
+import type { OidcIssuerConfiguration } from "@system/domain/identity/oidc.value"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 
 /** Workers のバインディング（wrangler の vars / secrets / D1）。 */
 export type Bindings = {
   DB: D1Database
   JWT_SECRET: string
+  OIDC_SIGNING_KEYS?: string
+  PEPPER_SECRET?: string
+  EMAIL?: SystemEmailSender
+  EMAIL_SENDER_NAME?: string
+  INVITE_EMAIL_FROM?: string
+  INVITE_EMAIL_SEND_ENABLED?: string
+  OIDC_CLIENT_REGISTRY?: OidcClientRegistry
+  OIDC_ISSUER_CONFIGURATION?: OidcIssuerConfiguration
   // 監査イベントの識別子 HMAC 用。`wrangler secret put AUDIT_HMAC_SECRET` で登録する。
   AUDIT_HMAC_SECRET: string
   // 人事上の会社営業日を求める IANA タイムゾーン。未設定・不正値は認証と人事変更を拒否する。
@@ -63,6 +74,13 @@ export type Variables = {
   database: DrizzleD1Database<typeof schema>
   session: Session | null
   auditContext: RequestAuditContext
+  now: () => Date
+  userId: string
+  accountTokenVersion: number
+  permissions: ReadonlySet<string>
+  role: string
+  oidcClientRegistry: OidcClientRegistry
+  oidcIssuerConfiguration: OidcIssuerConfiguration
 }
 
 /** Hono の Env。new Hono<HonoEnv>() / createFactory<HonoEnv>() で使う。 */
@@ -75,6 +93,6 @@ export type HonoEnv = {
 export type Context = SystemDatabaseContext &
   SystemD1Context &
   SystemRequestAuditContext & {
-    var: Variables
+    var: Pick<Variables, "companyActor" | "database" | "session" | "auditContext">
     env: Bindings
   }
