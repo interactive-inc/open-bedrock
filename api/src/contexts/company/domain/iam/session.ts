@@ -1,8 +1,9 @@
 import { PermissionValue } from "@/contexts/system/domain/iam/permission.value"
 import type { EmployeeStatus } from "@/contexts/company/domain/employee/employee-status"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 type Props = {
-  accountId: number
+  accountId: AccountId
   employeeId: number
   employeeStatus: EmployeeStatus
   permissions: ReadonlySet<string>
@@ -18,7 +19,7 @@ export class Session implements Props {
     Object.freeze(this)
   }
 
-  get accountId(): number {
+  get accountId(): AccountId {
     return this.props.accountId
   }
 

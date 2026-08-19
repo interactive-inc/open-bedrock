@@ -1,5 +1,6 @@
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@/contexts/system/domain/identity/identity-provider"
+import type { AccountId } from "@system/domain/auth/account-id"
 import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
@@ -26,7 +27,7 @@ export type ProvisionExternalEmployeeInput = {
 }
 
 export type AttachExternalIdentityInput = {
-  accountId: number
+  accountId: AccountId
   provider: IdentityProvider
   subject: string
   email: string
@@ -45,7 +46,7 @@ export type ProvisionWithEmployeeInput = {
   email: string
   passwordHash: string
   roleKey: string
-  grantedByAccountId: number
+  grantedByAccountId: AccountId
   now: number
 }
 
@@ -54,7 +55,7 @@ export type PreparedProvisionInput = {
   email: string
   passwordHash: string
   roleKey: string
-  grantedByAccountId: number
+  grantedByAccountId: AccountId
   now: number
 }
 

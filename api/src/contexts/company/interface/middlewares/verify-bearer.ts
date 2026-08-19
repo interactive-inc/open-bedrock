@@ -9,11 +9,9 @@ import { AccountAuthRepository } from "@/contexts/company/application/auth/accou
 import { AccountEmployeeLinkRepository } from "@/contexts/company/infrastructure/employee/account-employee-link-repository"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 import { accessTokenService } from "@/contexts/company/application/auth/jose-token-signer"
-import { legacyTokenPayloadSchema } from "@/lib/auth/token-payload"
 import { resolveLiveEmployeeAccess } from "@/contexts/company/application/auth/resolve-live-employee-access"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { createMiddleware } from "hono/factory"
-import { jwtVerify } from "jose"
 
 /**
  * Bearer トークンを検証し、本人と権限を c.var.session に載せる。
@@ -36,16 +34,10 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     throw new UnauthorizedError("invalid token")
   }
 
-  const canonicalAccountId = zAccountId.safeParse(String(payload.accountId))
-
-  if (canonicalAccountId.success === false) {
-    throw new UnauthorizedError("invalid token")
-  }
-
   const accountPromise = new AccountEmployeeLinkRepository(c).findLinkedAccount(payload.accountId)
   const canonicalSessionPromise = resolveAccountSession({
     accountRepository: new SystemAccountRepository({ database: c.env.DB }),
-    accountId: canonicalAccountId.data,
+    accountId: payload.accountId,
     sessionTokenVersion: payload.tokenVersion,
   })
   const account = await accountPromise
@@ -125,33 +117,10 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
 async function toVerifiedPayload(token: string, jwtSecret: string) {
   try {
     const claims = await accessTokenService.verify(token, jwtSecret)
-    const accountId = Number(claims.sub)
+    const accountId = zAccountId.safeParse(claims.sub)
+    if (!accountId.success) return new Error("token subject is invalid")
 
-    if (!Number.isSafeInteger(accountId) || accountId <= 0) {
-      return new Error("token subject is invalid")
-    }
-
-    return { accountId, tokenVersion: claims.ver }
-  } catch {
-    return toLegacyVerifiedPayload(token, jwtSecret)
-  }
-}
-
-async function toLegacyVerifiedPayload(token: string, jwtSecret: string) {
-  try {
-    const verified = await jwtVerify(token, new TextEncoder().encode(jwtSecret), {
-      algorithms: ["HS256"],
-    })
-
-    if (verified.protectedHeader.typ !== undefined) {
-      return new Error("token type is invalid")
-    }
-
-    const legacy = legacyTokenPayloadSchema.safeParse(verified.payload)
-
-    return legacy.success
-      ? { accountId: legacy.data.accountId, tokenVersion: legacy.data.tokenVersion }
-      : new Error("legacy token payload shape is invalid")
+    return { accountId: accountId.data, tokenVersion: claims.ver }
   } catch (caught) {
     return caught instanceof Error ? caught : new Error("token verification failed")
   }

@@ -1,12 +1,12 @@
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@/contexts/system/domain/identity/identity-provider"
 import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
-import type { AccountId } from "@system/domain/auth/account-id"
+import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
 import { zIdentityId, type IdentityId } from "@system/domain/identity/identity-id"
 
 export type ProviderIdentity = {
   identityId: IdentityId
-  accountId: number
+  accountId: AccountId
   accountStatus: string
   tokenVersion: number
   employeeId: number | null
@@ -15,7 +15,7 @@ export type ProviderIdentity = {
 }
 
 export type AccountAuthState = {
-  accountId: number
+  accountId: AccountId
   accountStatus: string
   tokenVersion: number
   employeeId: number | null
@@ -31,14 +31,7 @@ type IdentityRow = {
   employee_name: string | null
 }
 
-function toNumericId(value: string): number | Error {
-  const parsed = Number(value)
-  return Number.isSafeInteger(parsed) && parsed > 0 && String(parsed) === value
-    ? parsed
-    : new Error("canonical System ID is not compatible with the numeric product API")
-}
-
-/** Product APIの数値IDをcanonical System Identity / Accountへ接続する。 */
+/** Product APIのopaque IDをcanonical System Identity / Accountへ接続する。 */
 export class IdentityRepository {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -54,13 +47,13 @@ export class IdentityRepository {
     const found = await this.findIdentity(provider, subject.data)
     if (found === null || found instanceof Error) return found
     const identityId = zIdentityId.safeParse(found.identity_id)
-    const accountId = toNumericId(found.account_id)
+    const accountId = zAccountId.safeParse(found.account_id)
     if (!identityId.success) return identityId.error
-    if (accountId instanceof Error) return accountId
+    if (!accountId.success) return accountId.error
 
     return {
       identityId: identityId.data,
-      accountId,
+      accountId: accountId.data,
       accountStatus: found.account_status,
       tokenVersion: found.token_version,
       employeeId: found.employee_id,
@@ -69,7 +62,7 @@ export class IdentityRepository {
     }
   }
 
-  async findAccountIdByEmail(email: string): Promise<number | null | Error> {
+  async findAccountIdByEmail(email: string): Promise<AccountId | null | Error> {
     try {
       const row = await this.c.env.DB.prepare(
         `SELECT binding.account_id
@@ -82,7 +75,8 @@ export class IdentityRepository {
         .bind(email)
         .first<{ account_id: string }>()
       if (row === null) return null
-      return toNumericId(row.account_id)
+      const accountId = zAccountId.safeParse(row.account_id)
+      return accountId.success ? accountId.data : accountId.error
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to find identity by email")
     }
@@ -110,10 +104,10 @@ export class IdentityRepository {
           employee_id: number | null
         }>()
       if (row === null) return null
-      const parsedAccountId = toNumericId(row.account_id)
-      if (parsedAccountId instanceof Error) return parsedAccountId
+      const parsedAccountId = zAccountId.safeParse(row.account_id)
+      if (!parsedAccountId.success) return parsedAccountId.error
       return {
-        accountId: parsedAccountId,
+        accountId: parsedAccountId.data,
         accountStatus: row.account_status,
         tokenVersion: row.token_version,
         employeeId: row.employee_id,

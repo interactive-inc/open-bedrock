@@ -2,6 +2,7 @@ import { Session } from "@/contexts/company/domain/iam/session"
 import { describe, expect, test } from "bun:test"
 import { canWriteDepartmentGoal } from "@/contexts/performance-review/interface/http/performance-goals/can-write-department-goal"
 import { makeTestSession } from "@/api/test/support/make-test-session"
+import { testAccountId } from "@/api/test/support/test-account-id"
 
 /**
  * review:administer を持たず goal:evaluate:reports だけを持つマネージャー相当のセッション。
@@ -10,7 +11,7 @@ import { makeTestSession } from "@/api/test/support/make-test-session"
  */
 function reportsManagerSession(): Session {
   return new Session({
-    accountId: 1,
+    accountId: testAccountId(1),
     employeeId: 1,
     employeeStatus: "active",
     permissions: new Set<string>(["goal:evaluate:reports"]),

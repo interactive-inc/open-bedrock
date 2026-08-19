@@ -1,6 +1,6 @@
 import type { AccountStatus } from "@system/domain/auth/account-status"
+import type { AccountId } from "@system/domain/auth/account-id"
 import { ResolveSystemAuthorization } from "@system/application/iam/resolve-system-authorization"
-import { zAccountId } from "@system/domain/auth/account-id"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 import type {
   SystemD1Context,
@@ -9,7 +9,7 @@ import type {
 import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization-repository"
 
 export type ResolvedAccount = {
-  accountId: number
+  accountId: AccountId
   status: AccountStatus
   tokenVersion: number
   roleKeys: ReadonlyArray<string>
@@ -18,7 +18,7 @@ export type ResolvedAccount = {
 
 export type ResolvedAccountAuthorization = Pick<ResolvedAccount, "roleKeys" | "permissions">
 
-/** Product APIの数値Account IDをcanonical System認証・認可へ接続する。 */
+/** Product APIのopaque Account IDをcanonical System認証・認可へ接続する。 */
 export class AccountAuthRepository {
   constructor(
     private readonly c: SystemDatabaseContext &
@@ -27,9 +27,9 @@ export class AccountAuthRepository {
     Object.freeze(this)
   }
 
-  async findById(accountId: number): Promise<
+  async findById(accountId: AccountId): Promise<
     | {
-        accountId: number
+        accountId: AccountId
         status: AccountStatus
         tokenVersion: number
       }
@@ -38,7 +38,7 @@ export class AccountAuthRepository {
   > {
     try {
       const account = await new SystemAccountRepository({ database: this.c.env.DB }).findById(
-        zAccountId.parse(String(accountId)),
+        accountId,
       )
       if (account === null || account instanceof Error) return account
 
@@ -52,7 +52,7 @@ export class AccountAuthRepository {
     }
   }
 
-  async resolveById(accountId: number): Promise<ResolvedAccount | null | Error> {
+  async resolveById(accountId: AccountId): Promise<ResolvedAccount | null | Error> {
     const account = await this.findById(accountId)
     if (account === null || account instanceof Error) return account
 
@@ -62,12 +62,14 @@ export class AccountAuthRepository {
     return { ...account, ...authorization }
   }
 
-  async resolveAuthorizationById(accountId: number): Promise<ResolvedAccountAuthorization | Error> {
+  async resolveAuthorizationById(
+    accountId: AccountId,
+  ): Promise<ResolvedAccountAuthorization | Error> {
     try {
       const authorization = await new ResolveSystemAuthorization(
         new SystemD1AuthorizationRepository({ env: { DB: this.c.env.DB } }),
       ).execute({
-        accountId: zAccountId.parse(String(accountId)),
+        accountId,
         resource: null,
         at: new Date(this.c.env.NOW ?? Date.now()),
       })

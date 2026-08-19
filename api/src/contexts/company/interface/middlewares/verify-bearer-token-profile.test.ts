@@ -11,6 +11,7 @@ import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { verifyCompanyMigration } from "@/api/test/support/verify-company-migration"
 import { describe, expect, test } from "bun:test"
 import { SignJWT } from "jose"
+import { testAccountId } from "@/api/test/support/test-account-id"
 
 const secret = "verify-bearer-token-profile-secret"
 
@@ -39,7 +40,10 @@ async function request(token: string): Promise<Response> {
 
 describe("verifyBearer access token profile", () => {
   test("accepts the case-insensitive Bearer scheme through the shared parser", async () => {
-    const token = await new JoseTokenSigner().sign({ accountId: 1, tokenVersion: 0 }, secret)
+    const token = await new JoseTokenSigner().sign(
+      { accountId: testAccountId(1), tokenVersion: 0 },
+      secret,
+    )
 
     expect(token).not.toBeInstanceOf(Error)
     if (token instanceof Error) return
@@ -96,13 +100,13 @@ describe("verifyBearer access token profile", () => {
     expect((await request(wrongType)).status).toBe(401)
   })
 
-  test("移行前tokenは有効期限内だけ受理する", async () => {
-    const legacy = await new SignJWT({ accountId: 1, employeeId: 1, tokenVersion: 0 })
+  test("canonical profileを持たないtokenは有効期限内でも拒否する", async () => {
+    const nonCanonical = await new SignJWT({ accountId: 1, employeeId: 1, tokenVersion: 0 })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
       .setExpirationTime("1m")
       .sign(new TextEncoder().encode(secret))
 
-    expect((await request(legacy)).status).toBe(200)
+    expect((await request(nonCanonical)).status).toBe(401)
   })
 })

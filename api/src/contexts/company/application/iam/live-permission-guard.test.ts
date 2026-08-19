@@ -13,6 +13,7 @@ import { replaceAccountRolesWithPermissionSets } from "@/api/test/support/replac
 import { seedIamTestAccount } from "@/api/test/support/seed-iam-test-account"
 import { ForbiddenError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
+import type { AccountId } from "@/contexts/system/domain/auth/account-id"
 
 const BASE_PERMISSION = "dashboard:view"
 const ELEVATED_PERMISSION = "employee:delete"
@@ -178,7 +179,7 @@ async function seedLimitedActor(
   context: Context,
   code: string,
   permissionKeys: ReadonlyArray<string>,
-): Promise<number> {
+): Promise<AccountId> {
   const accountId = await seedIamTestAccount(context, code)
 
   await replaceAccountRolesWithPermissionSets(context, accountId, `permissions-${code}`, [
@@ -204,7 +205,7 @@ async function createRole(context: Context, key: string, permissionKeys: Readonl
   return role
 }
 
-async function sessionFor(context: Context, accountId: number): Promise<Session> {
+async function sessionFor(context: Context, accountId: AccountId): Promise<Session> {
   const account = await new AccountAuthRepository(context).resolveById(accountId)
 
   const linkedAccount = await new AccountEmployeeLinkRepository(context).findLinkedAccount(
@@ -283,7 +284,7 @@ async function removePermissionFromRole(
     .run()
 }
 
-async function assignRole(db: D1Database, accountId: number, roleId: number): Promise<void> {
+async function assignRole(db: D1Database, accountId: AccountId, roleId: number): Promise<void> {
   await db
     .prepare(
       `INSERT INTO system_role_bindings
@@ -294,7 +295,11 @@ async function assignRole(db: D1Database, accountId: number, roleId: number): Pr
     .run()
 }
 
-async function countAssignment(db: D1Database, accountId: number, roleId: number): Promise<number> {
+async function countAssignment(
+  db: D1Database,
+  accountId: AccountId,
+  roleId: number,
+): Promise<number> {
   return (
     (await db
       .prepare(
@@ -306,7 +311,7 @@ async function countAssignment(db: D1Database, accountId: number, roleId: number
   )
 }
 
-async function tokenVersionOf(db: D1Database, accountId: number): Promise<number | null> {
+async function tokenVersionOf(db: D1Database, accountId: AccountId): Promise<number | null> {
   return db
     .prepare("SELECT token_version FROM system_accounts WHERE id = ?1")
     .bind(String(accountId))

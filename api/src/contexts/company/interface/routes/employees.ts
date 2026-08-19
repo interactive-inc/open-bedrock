@@ -210,14 +210,7 @@ export const POST = factory.createHandlers(
       code: codeSchema,
       name: z.string().min(1).max(200),
       email: z.string().email().max(254),
-      password: z
-        .string()
-        .min(8)
-        .max(200)
-        .regex(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,200}$/,
-          "パスワードは8文字以上で、大文字・小文字・数字をそれぞれ1つ以上含めてください",
-        ),
+      password: z.string().min(12).max(200),
       role: employeeRoleSchema,
       hire_on: isoDate,
       department_code: codeSchema.nullable().optional(),

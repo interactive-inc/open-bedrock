@@ -61,20 +61,7 @@ export class RefreshAccessToken {
       return { reason: "invalid_token" }
     }
 
-    const accountId = Number(authenticated.accountId)
-    if (
-      !Number.isSafeInteger(accountId) ||
-      accountId <= 0 ||
-      String(accountId) !== authenticated.accountId
-    ) {
-      const revoked = await applications.revoke.execute({
-        rawToken: command.refreshToken,
-        now: command.now,
-        auditContext,
-      })
-      return revoked instanceof Error ? auditUnavailable(revoked) : { reason: "invalid_token" }
-    }
-
+    const accountId = authenticated.accountId
     const account = await new AccountEmployeeLinkRepository(this.c).findLinkedAccount(accountId)
     if (account instanceof Error) {
       return new UnexpectedError("failed to find account", { cause: account })

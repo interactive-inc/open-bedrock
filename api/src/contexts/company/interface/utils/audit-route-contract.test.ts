@@ -1,5 +1,6 @@
 import { Session } from "@/contexts/company/domain/iam/session"
 import { describe, expect, test } from "bun:test"
+import { testAccountId } from "@/api/test/support/test-account-id"
 import type { ApiClient } from "@/api/app"
 import { AuditExportRange } from "@/contexts/company/interface/utils/audit-export-range"
 import { AuditListQuery } from "@/contexts/company/interface/utils/audit-list-query"
@@ -38,7 +39,7 @@ type ExpectedAuditListInput = {
 
 type ExpectedAuditExportInput = {
   json: {
-    actor_account_id?: number
+    actor_account_id?: string
     action?: string
     target_type?: string
     target_id?: string
@@ -189,27 +190,23 @@ describe("audit HTTP contract", () => {
     },
   )
 
-  test.each([
-    ["0", 0],
-    ["-41", -41],
-    ["41", 41],
-  ])("accepts a signed safe actor account ID: %s", (value, expected) => {
-    expect(
-      AuditListQuery.parse(`https://example.test/audit-events?actor_account_id=${value}`).filters
-        .actorAccountId,
-    ).toBe(expected)
-  })
-
-  test.each(["9007199254740992", "1.0", "1e3", "%201", "+1", "01", "-0"])(
-    "rejects a non-canonical actor account ID: %s",
+  test.each(["0", "-41", "41", "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y"])(
+    "accepts an opaque actor account ID: %s",
     (value) => {
       expect(
-        codeOf(() =>
-          AuditListQuery.parse(`https://example.test/audit-events?actor_account_id=${value}`),
-        ),
-      ).toBe("audit_invalid_query")
+        AuditListQuery.parse(`https://example.test/audit-events?actor_account_id=${value}`).filters
+          .actorAccountId,
+      ).toBe(testAccountId(value))
     },
   )
+
+  test.each(["", "a".repeat(256)])("rejects an out-of-bounds actor account ID", (value) => {
+    expect(
+      codeOf(() =>
+        AuditListQuery.parse(`https://example.test/audit-events?actor_account_id=${value}`),
+      ),
+    ).toBe("audit_invalid_query")
+  })
 
   test("rejects unknown, repeated, directional and overlong query values", () => {
     const overAction = "a".repeat(201)
@@ -256,7 +253,7 @@ describe("audit HTTP contract", () => {
 
   test("hashes only normalized filters with a full lowercase SHA-256", async () => {
     const zulu: AuditEventFilters = {
-      actorAccountId: -41,
+      actorAccountId: testAccountId(-41),
       action: "legacy.action",
       targetType: "legacy_target",
       targetId: "private-target",
@@ -295,7 +292,7 @@ describe("audit HTTP contract", () => {
   test("normalizes event-generation validation failures to audit_unavailable", async () => {
     const { context } = createTestContext()
     context.var.session = new Session({
-      accountId: 1,
+      accountId: testAccountId(1),
       employeeId: 1,
       employeeStatus: "active",
       permissions: new Set(["audit:read"]),

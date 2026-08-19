@@ -3,6 +3,7 @@ import type { AuditEventFilters } from "@/contexts/company/infrastructure/audit/
 import { parseExactSecond } from "@/contexts/company/interface/utils/parse-exact-second"
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
+import { zAccountId } from "@system/domain/auth/account-id"
 
 type Props = { filters: AuditEventFilters }
 
@@ -10,7 +11,7 @@ const EXPORT_BODY_MAX_BYTES = 16_384
 const EXPORT_MAX_RANGE_SECONDS = 2_678_400
 
 const exportRangeSchema = z.strictObject({
-  actor_account_id: z.number().int().safe().optional(),
+  actor_account_id: zAccountId.optional(),
   action: z.string().min(1).max(200).optional(),
   target_type: z.string().min(1).max(200).optional(),
   target_id: z.string().max(512).optional(),

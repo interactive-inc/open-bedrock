@@ -6,12 +6,16 @@ import {
 } from "@/contexts/company/application/auth/jose-token-signer"
 import { describe, expect, test } from "bun:test"
 import { jwtVerify } from "jose"
+import { testAccountId } from "@/api/test/support/test-account-id"
 
 const secret = "access-token-profile-test-secret"
 
 describe("JoseTokenSigner", () => {
   test("Account主体の固定profileだけを発行する", async () => {
-    const signed = await new JoseTokenSigner().sign({ accountId: 42, tokenVersion: 3 }, secret)
+    const signed = await new JoseTokenSigner().sign(
+      { accountId: testAccountId(42), tokenVersion: 3 },
+      secret,
+    )
 
     expect(signed).not.toBeInstanceOf(Error)
     if (signed instanceof Error) return

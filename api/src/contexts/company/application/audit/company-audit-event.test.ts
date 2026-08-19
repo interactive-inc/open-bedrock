@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { testAccountId } from "@/api/test/support/test-account-id"
 import type { RequestAuditContext } from "@/env"
 import { ValidationError } from "@/lib/errors"
 import {
@@ -103,7 +104,7 @@ const context: RequestAuditContext = {
 
 function makeInput(overrides: Partial<AuditEventInput> = {}): AuditEventInput {
   return {
-    actorAccountId: 31,
+    actorAccountId: testAccountId(31),
     actorEmployeeId: 41,
     action: "iam.role.updated",
     target: { type: "role", id: "security-reviewer" },
@@ -332,13 +333,13 @@ describe("createAuditEvent", () => {
     }
   })
 
-  test("keeps the numeric persistence Account ID across the opaque Domain boundary", () => {
+  test("keeps the opaque Account ID across the persistence boundary", () => {
     const record = createAuditEvent(makeInput(), context)
 
     expect(record).toEqual({
       eventId: record.eventId,
       requestId: context.requestId,
-      actorAccountId: 31,
+      actorAccountId: testAccountId(31),
       actorEmployeeId: 41,
       action: "iam.role.updated",
       targetType: "role",

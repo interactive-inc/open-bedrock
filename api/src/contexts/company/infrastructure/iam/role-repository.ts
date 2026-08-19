@@ -5,6 +5,7 @@ import { LivePermissionGuard } from "@/contexts/company/infrastructure/iam/live-
 import { LivePermissionGuardError } from "@/contexts/company/infrastructure/iam/live-permission-guard-error"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { permissionKeySchema } from "@/contexts/company/domain/iam/permission-key.catalog"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 export type RoleRow = Readonly<{
   id: number
@@ -196,7 +197,7 @@ export class RoleRepository {
   }
 
   async updateMetaAndPermissions(props: {
-    actorAccountId: number
+    actorAccountId: AccountId
     roleId: number
     name: string
     description: string | null

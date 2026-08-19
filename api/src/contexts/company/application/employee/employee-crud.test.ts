@@ -17,6 +17,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import { makeTestSession } from "@/api/test/support/make-test-session"
+import { testAccountId } from "@/api/test/support/test-account-id"
 import { describe, expect, test } from "bun:test"
 
 async function seedEmployee(
@@ -108,7 +109,7 @@ describe("RegisterEmployee", () => {
       "forbidden",
     )
     const limited = new Session({
-      accountId: 1,
+      accountId: testAccountId(1),
       employeeId: 1,
       employeeStatus: "active",
       permissions: new Set([
@@ -142,7 +143,7 @@ describe("RegisterEmployee", () => {
         employee: { ...newEmployeeInput, code: "E901", password: "short7!" },
       }),
       ValidationError,
-      "weak_password",
+      "password_too_short",
     )
   })
 })
