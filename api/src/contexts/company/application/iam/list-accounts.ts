@@ -17,7 +17,7 @@ export type Command = {
 }
 
 /**
- * アカウント一覧を従業員名・割当ロール付きで返す。account:manage 権限が必要。
+ * アカウント一覧をCompany表示名・割当ロール付きで返す。account:manage 権限が必要。
  */
 export class ListAccounts {
   constructor(private readonly c: Context) {}

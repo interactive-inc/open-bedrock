@@ -11,7 +11,6 @@ const passwordIdentitySelection = {
   ...getTableColumns(userIdentities),
   user: {
     id: users.id,
-    name: users.name,
     disabledAt: users.disabledAt,
     tokenVersion: users.tokenVersion,
   },
