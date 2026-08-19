@@ -4,6 +4,7 @@ import {
   JoseTokenSigner,
 } from "@/contexts/company/application/auth/jose-token-signer"
 import { ACCESS_TOKEN_TYPE } from "@/contexts/system/domain/auth/access-token-claims"
+import { zAccountId } from "@/contexts/system/domain/auth/account-id"
 import { SignJWT } from "jose"
 
 /**
@@ -13,7 +14,7 @@ import { SignJWT } from "jose"
  */
 export type TestTokenPayload = {
   employeeId: number
-  accountId?: number
+  accountId?: number | string
   tokenVersion?: number
   email?: string
   role?: string
@@ -31,7 +32,7 @@ export async function createTestToken(
   if (options?.expirationTime === undefined) {
     const token = await new JoseTokenSigner().sign(
       {
-        accountId: payload.accountId ?? payload.employeeId,
+        accountId: zAccountId.parse(String(payload.accountId ?? payload.employeeId)),
         tokenVersion: payload.tokenVersion ?? 0,
       },
       secret,

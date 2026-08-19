@@ -3,7 +3,7 @@ import {
   type AccessTokenProfile,
 } from "@/contexts/system/infrastructure/auth/access-token.service"
 import { assertJwtSecret } from "@/lib/auth/assert-jwt-secret"
-import type { TokenPayload } from "@/lib/auth/token-payload"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 export const ACCESS_TOKEN_ISSUER = "open-bedrock"
 export const ACCESS_TOKEN_AUDIENCE = "open-bedrock-api"
@@ -23,7 +23,10 @@ export class JoseTokenSigner {
     Object.freeze(this)
   }
 
-  async sign(payload: TokenPayload, jwtSecret: string): Promise<string | Error> {
+  async sign(
+    payload: Readonly<{ accountId: AccountId; tokenVersion: number }>,
+    jwtSecret: string,
+  ): Promise<string | Error> {
     // try の外で落とす。設定不備を「署名失敗」に丸めず UnavailableError として伝える。
     assertJwtSecret(jwtSecret)
 

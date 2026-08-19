@@ -5,10 +5,11 @@ import type { Context } from "@/env"
 import { AccountRepository } from "@/contexts/company/infrastructure/iam/account-repository"
 import { RoleRepository } from "@/contexts/company/infrastructure/iam/role-repository"
 import { LivePermissionGuardError } from "@/contexts/company/infrastructure/iam/live-permission-guard-error"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 export type Command = {
   session: Session
-  accountId: number
+  accountId: AccountId
   roleKey: string
   now: number
 }

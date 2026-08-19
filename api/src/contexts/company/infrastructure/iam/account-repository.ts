@@ -1,6 +1,7 @@
 import type { Context } from "@/env"
 import type { AccountStatus } from "@/contexts/system/domain/auth/account-status"
 import { zAccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/auth/account-id"
 import { LastRootError } from "@/contexts/company/infrastructure/iam/last-root-error"
 import { LastRootGuard } from "@/contexts/company/infrastructure/iam/last-root-guard"
 import { LivePermissionGuard } from "@/contexts/company/infrastructure/iam/live-permission-guard"
@@ -9,7 +10,7 @@ import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructu
 import { inArray } from "drizzle-orm"
 
 export type AccountSummary = {
-  id: number
+  id: AccountId
   employeeId: number | null
   employeeName: string | null
   status: string
@@ -57,22 +58,19 @@ export class AccountRepository {
          ORDER BY binding.account_id, role.key`,
       ).all<{ account_id: string; key: string }>()
 
-      return accountRows.results.flatMap((account) => {
-        const accountId = Number(account.id)
-        if (!Number.isSafeInteger(accountId) || String(accountId) !== account.id) return []
-        const employeeId = employeeIdByAccountId.get(zAccountId.parse(account.id)) ?? null
+      return accountRows.results.map((account) => {
+        const accountId = zAccountId.parse(account.id)
+        const employeeId = employeeIdByAccountId.get(accountId) ?? null
 
-        return [
-          {
-            id: accountId,
-            employeeId,
-            employeeName: employeeId === null ? null : (nameByEmployeeId.get(employeeId) ?? null),
-            status: account.status,
-            roleKeys: grantRows.results
-              .filter((grant) => grant.account_id === account.id)
-              .map((grant) => grant.key.replace(/^company:/, "")),
-          },
-        ]
+        return {
+          id: accountId,
+          employeeId,
+          employeeName: employeeId === null ? null : (nameByEmployeeId.get(employeeId) ?? null),
+          status: account.status,
+          roleKeys: grantRows.results
+            .filter((grant) => grant.account_id === account.id)
+            .map((grant) => grant.key.replace(/^company:/, "")),
+        }
       })
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to list accounts")
@@ -82,7 +80,7 @@ export class AccountRepository {
   /**
    * アカウントの存在確認。不在は null。
    */
-  async existsById(accountId: number): Promise<boolean | Error> {
+  async existsById(accountId: AccountId): Promise<boolean | Error> {
     try {
       const found = await this.c.env.DB.prepare(
         "SELECT 1 AS found FROM system_accounts WHERE id = ?1 LIMIT 1",
@@ -99,9 +97,9 @@ export class AccountRepository {
    * アカウントにロールを付与する。冪等(既存なら無視)。
    */
   async grantRole(props: {
-    accountId: number
+    accountId: AccountId
     roleId: number
-    grantedBy: number
+    grantedBy: AccountId
     now: number
   }): Promise<null | Error> {
     try {
@@ -124,9 +122,9 @@ export class AccountRepository {
    * 途中失敗でトークンが旧権限のまま残ることを防ぐ。
    */
   async grantRoleAndBumpTokenVersion(props: {
-    accountId: number
+    accountId: AccountId
     roleId: number
-    grantedBy: number
+    grantedBy: AccountId
     now: number
   }): Promise<null | Error> {
     try {
@@ -161,7 +159,7 @@ export class AccountRepository {
   /**
    * アカウントの状態を変更し、tokenVersion を増やして既存トークンを失効させる。
    */
-  async setStatus(accountId: number, status: AccountStatus, now: number): Promise<null | Error> {
+  async setStatus(accountId: AccountId, status: AccountStatus, now: number): Promise<null | Error> {
     try {
       await this.c.env.DB.prepare(
         `UPDATE system_accounts
@@ -182,10 +180,10 @@ export class AccountRepository {
    * なる場合は batch ごと rollback して LastRootError を返す。
    */
   async revokeRoleGuardingLastRoot(
-    accountId: number,
+    accountId: AccountId,
     roleId: number,
     now: number,
-    actorAccountId: number,
+    actorAccountId: AccountId,
   ): Promise<null | Error | LastRootError> {
     try {
       await this.c.env.DB.batch([
@@ -226,10 +224,10 @@ export class AccountRepository {
    * 0 件になる場合は batch ごと rollback して LastRootError を返す（TOCTOU 防止）。
    */
   async setStatusGuardingLastRoot(
-    accountId: number,
+    accountId: AccountId,
     status: AccountStatus,
     now: number,
-    actorAccountId: number,
+    actorAccountId: AccountId,
   ): Promise<null | Error | LastRootError> {
     try {
       await this.c.env.DB.batch([
@@ -263,7 +261,7 @@ export class AccountRepository {
   /**
    * tokenVersion を 1 増やし、updatedAt を更新する。発行済みトークンを即時失効させる。
    */
-  async bumpTokenVersion(accountId: number, now: number): Promise<null | Error> {
+  async bumpTokenVersion(accountId: AccountId, now: number): Promise<null | Error> {
     try {
       await this.c.env.DB.prepare(
         `UPDATE system_accounts

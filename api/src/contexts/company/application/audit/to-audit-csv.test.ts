@@ -3,12 +3,13 @@ import type { AuditEventDetail } from "@/contexts/company/application/audit/comp
 import { toAuditCsv } from "@/contexts/company/application/audit/to-audit-csv"
 import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/application/audit/to-audit-csv-row"
 import { PayloadTooLargeError } from "@/lib/errors"
+import { testAccountId } from "@/api/test/support/test-account-id"
 
 function detail(overrides: Partial<AuditEventDetail> = {}): AuditEventDetail {
   return {
     eventId: "event-1",
     requestId: "request-1",
-    actorAccountId: 7,
+    actorAccountId: testAccountId(7),
     actorEmployeeId: 11,
     action: "legacy.unknown.action",
     targetType: "legacy_target",

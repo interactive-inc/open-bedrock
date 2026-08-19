@@ -16,6 +16,8 @@ import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/application/audit/to-aud
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
 import { z } from "zod"
+import { zAccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 const SEARCH_MAX_LIMIT = 100
 const SEARCH_SUMMARY_WIRE_BUDGET_BYTES = 4 * 1024 * 1024
@@ -82,7 +84,7 @@ const SUMMARY_STORAGE_OK_SQL = `
   ${SUMMARY_TEXT_COLUMNS.map(
     (column) => `(typeof(${column}) = 'text' OR typeof(${column}) = 'null')`,
   ).join(" AND\n  ")} AND
-  (typeof(actor_account_id) = 'integer' OR typeof(actor_account_id) = 'null') AND
+  (typeof(actor_account_id) = 'text' OR typeof(actor_account_id) = 'null') AND
   (typeof(actor_employee_id) = 'integer' OR typeof(actor_employee_id) = 'null') AND
   typeof(created_at) = 'integer'
 `
@@ -157,7 +159,7 @@ const DETAIL_STORAGE_OK_SQL = `
   ${DETAIL_TEXT_COLUMNS.map(
     (column) => `(typeof(${column}) = 'text' OR typeof(${column}) = 'null')`,
   ).join(" AND\n  ")} AND
-  (typeof(actor_account_id) = 'integer' OR typeof(actor_account_id) = 'null') AND
+  (typeof(actor_account_id) = 'text' OR typeof(actor_account_id) = 'null') AND
   (typeof(actor_employee_id) = 'integer' OR typeof(actor_employee_id) = 'null') AND
   typeof(created_at) = 'integer'
 `
@@ -204,7 +206,7 @@ const DETAIL_COMPACT_MAX_TEXT_BYTES_SQL = `max(0, ${DETAIL_TEXT_COLUMNS.map(
 const DETAIL_COMPACT_STORAGE_OK_SQL = `
   typeof(id) = 'integer' AND
   typeof(created_at) = 'integer' AND
-  (typeof(actor_account_id) = 'integer' OR typeof(actor_account_id) = 'null') AND
+  (typeof(actor_account_id) = 'text' OR typeof(actor_account_id) = 'null') AND
   (typeof(actor_employee_id) = 'integer' OR typeof(actor_employee_id) = 'null') AND
   ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_layout_bytes >= -1`).join(" AND\n  ")}
 `
@@ -239,14 +241,15 @@ const validIsoEpochSchema = z
   .safe()
   .refine((value) => Number.isFinite(new Date(value * 1_000).getTime()))
 
-const actorIdSchema = z.number().int().safe().nullable()
+const actorAccountIdSchema = zAccountId.nullable()
+const actorEmployeeIdSchema = z.number().int().safe().nullable()
 
 const auditSummaryDatabaseRowSchema = z.strictObject({
   id: z.number().int().safe(),
   event_id: z.string(),
   request_id: z.string(),
-  actor_account_id: actorIdSchema,
-  actor_employee_id: actorIdSchema,
+  actor_account_id: actorAccountIdSchema,
+  actor_employee_id: actorEmployeeIdSchema,
   action: z.string(),
   target_type: z.string().nullable(),
   target_id: z.string().nullable(),
@@ -270,8 +273,8 @@ type AuditDetailDatabaseRow = z.infer<typeof auditDetailDatabaseRowSchema>
 const auditSummaryDescriptorRowSchema = z.strictObject({
   id: z.number().int().safe(),
   created_at: validIsoEpochSchema,
-  actor_account_id: actorIdSchema,
-  actor_employee_id: actorIdSchema,
+  actor_account_id: actorAccountIdSchema,
+  actor_employee_id: actorEmployeeIdSchema,
   wire_bytes: z.number().int().safe().nonnegative(),
   raw_bytes: z.number().int().safe().nonnegative(),
   max_text_bytes: z.number().int().safe().nonnegative(),
@@ -295,8 +298,8 @@ type AuditSummaryDescriptorRow = z.infer<typeof auditSummaryDescriptorRowSchema>
 const auditExportDescriptorRowSchema = z.strictObject({
   id: z.number().int().safe(),
   created_at: validIsoEpochSchema,
-  actor_account_id: actorIdSchema,
-  actor_employee_id: actorIdSchema,
+  actor_account_id: actorAccountIdSchema,
+  actor_employee_id: actorEmployeeIdSchema,
   raw_bytes: z.number().int().safe().nonnegative(),
   wire_bytes: z.number().int().safe().nonnegative(),
   max_text_bytes: z.number().int().safe().nonnegative(),
@@ -320,7 +323,7 @@ type AuditExportReadDescriptor = {
   ordinal: number
   id: number
   createdAt: number
-  actorAccountId: number | null
+  actorAccountId: AccountId | null
   actorEmployeeId: number | null
   byteLengths: ReadonlyArray<number | null>
   exactHex: ReadonlyArray<string | null> | null
@@ -332,7 +335,7 @@ type AuditExportSegmentPlanItem = {
   descriptorOrdinal: number
   id: number
   createdAt: number
-  actorAccountId: number | null
+  actorAccountId: AccountId | null
   actorEmployeeId: number | null
   columnIndex: number
   offset: number
@@ -370,7 +373,7 @@ const DETAIL_HEX_SELECT_COLUMNS = [
 ].join(", ")
 
 const auditFiltersSchema = z.strictObject({
-  actorAccountId: z.number().int().safe().optional(),
+  actorAccountId: zAccountId.optional(),
   action: z.string().optional(),
   targetType: z.string().optional(),
   targetId: z.string().optional(),
@@ -388,7 +391,7 @@ const auditSearchQuerySchema = z.strictObject({
 const auditExportQuerySchema = z.strictObject({ filters: auditFiltersSchema })
 
 export type AuditEventFilters = {
-  actorAccountId?: number
+  actorAccountId?: AccountId
   action?: string
   targetType?: string
   targetId?: string
@@ -560,8 +563,8 @@ function parseExportReadRows(
         z.number().int().min(1).max(EXPORT_CHUNK_SIZE),
         z.number().int().safe(),
         validIsoEpochSchema,
-        actorIdSchema,
-        actorIdSchema,
+        actorAccountIdSchema,
+        actorEmployeeIdSchema,
         z.number().int().min(0).max(1),
       ])
       .safeParse(result.slice(0, 6))
@@ -672,7 +675,7 @@ function validateExactProjectionLayout(
   descriptors: ReadonlyArray<{
     id: number
     created_at: number
-    actor_account_id: number | null
+    actor_account_id: AccountId | null
     actor_employee_id: number | null
   }>,
   columns: ReadonlyArray<string>,
@@ -1224,7 +1227,7 @@ const EXPORT_SEGMENT_SQL = `
            CAST(json_extract(value, '$[1]') AS INTEGER) AS descriptor_ordinal,
            CAST(json_extract(value, '$[2]') AS INTEGER) AS id,
            CAST(json_extract(value, '$[3]') AS INTEGER) AS created_at,
-           CAST(json_extract(value, '$[4]') AS INTEGER) AS actor_account_id,
+           CAST(json_extract(value, '$[4]') AS TEXT) AS actor_account_id,
            CAST(json_extract(value, '$[5]') AS INTEGER) AS actor_employee_id,
            CAST(json_extract(value, '$[6]') AS INTEGER) AS column_index,
            CAST(json_extract(value, '$[7]') AS INTEGER) AS byte_offset,
@@ -1457,7 +1460,7 @@ export class AuditEventRepository {
   private async loadSegmentedText(
     descriptor: {
       id: number
-      actor_account_id: number | null
+      actor_account_id: AccountId | null
       actor_employee_id: number | null
       created_at: number
     } & Record<string, unknown>,

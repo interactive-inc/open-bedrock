@@ -9,7 +9,7 @@ describe("SyncExternalIdentities", () => {
   test("links an external identity to an existing employee found by email", async () => {
     const { context, db } = createTestContext()
     // 既存のパスワード従業員(email: you+e900@example.com)を用意する。
-    const employeeId = await seedIamTestAccount(context, "E900", "member")
+    const accountId = await seedIamTestAccount(context, "E900", "member")
 
     const result = await new SyncExternalIdentities(context).run(
       [{ subject: "ext-link-1", email: "you+e900@example.com", name: "Renamed Worker" }],
@@ -27,7 +27,7 @@ describe("SyncExternalIdentities", () => {
          WHERE identity.subject = 'ext-link-1'`,
       )
       .first<{ employee_id: number; provider: string }>()
-    expect(identity).toEqual({ employee_id: employeeId, provider: "oidc" })
+    expect(identity).toEqual({ employee_id: Number(accountId), provider: "oidc" })
 
     // 従業員は増えていない（既存 1 名のまま）。
     const employeeCount = await db.prepare("SELECT COUNT(*) AS n FROM employees").first<number>("n")

@@ -3,6 +3,7 @@ import type { AuditEventFilters } from "@/contexts/company/infrastructure/audit/
 import { parseExactSecond } from "@/contexts/company/interface/utils/parse-exact-second"
 import { AuditCursor } from "@/lib/audit/audit-cursor"
 import { ValidationError } from "@/lib/errors"
+import { zAccountId } from "@system/domain/auth/account-id"
 
 type Props = {
   limit: number
@@ -10,7 +11,6 @@ type Props = {
   filters: AuditEventFilters
 }
 
-const SIGNED_DECIMAL_PATTERN = /^(?:0|-?[1-9][0-9]*)$/u
 const LIMIT_PATTERN = /^(?:[1-9]|[1-9][0-9]|100)$/u
 const LIST_QUERY_KEYS = new Set([
   "actor_account_id",
@@ -26,13 +26,6 @@ const LIST_QUERY_KEYS = new Set([
 
 function invalidQuery(cause?: unknown): ValidationError {
   return new ValidationError("audit query is invalid", "audit_invalid_query", { cause })
-}
-
-function parseSignedSafeInteger(value: string): number {
-  if (!SIGNED_DECIMAL_PATTERN.test(value)) throw new Error("integer is not canonical")
-  const parsed = Number(value)
-  if (!Number.isSafeInteger(parsed)) throw new Error("integer is outside the safe range")
-  return parsed
 }
 
 function optionalBoundedString(
@@ -84,7 +77,7 @@ export class AuditListQuery {
       const filters: AuditEventFilters = {}
       const actorAccountId = values.get("actor_account_id")
       if (actorAccountId !== undefined) {
-        filters.actorAccountId = parseSignedSafeInteger(actorAccountId)
+        filters.actorAccountId = zAccountId.parse(actorAccountId)
       }
       const action = optionalBoundedString(values, "action", 200, false)
       if (action !== undefined) filters.action = action

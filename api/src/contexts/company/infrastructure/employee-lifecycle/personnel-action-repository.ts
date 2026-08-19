@@ -12,6 +12,8 @@ import {
 import type { PersonnelActionKind } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
+import { zAccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 export type PersonnelActionRecord = {
   id: string
@@ -19,7 +21,7 @@ export type PersonnelActionRecord = {
   kind: PersonnelActionKind
   eventOn: string
   recordedAt: number
-  recordedByAccountId: number | null
+  recordedByAccountId: AccountId | null
   requestedByEmployeeId: number | null
   sourceType: "application" | "direct" | "migration" | "system"
   sourceApplicationId: number | null
@@ -40,7 +42,7 @@ type PersonnelActionRow = {
   kind: PersonnelActionKind
   event_on: string
   recorded_at: number
-  recorded_by_account_id: number | null
+  recorded_by_account_id: string | null
   requested_by_employee_id: number | null
   source_type: PersonnelActionRecord["sourceType"]
   source_application_id: number | null
@@ -95,7 +97,8 @@ function toAction(row: PersonnelActionRow): PersonnelActionRecord | ApplicationE
       kind: row.kind,
       eventOn: row.event_on,
       recordedAt: row.recorded_at,
-      recordedByAccountId: row.recorded_by_account_id,
+      recordedByAccountId:
+        row.recorded_by_account_id === null ? null : zAccountId.parse(row.recorded_by_account_id),
       requestedByEmployeeId: row.requested_by_employee_id,
       sourceType: row.source_type,
       sourceApplicationId: row.source_application_id,

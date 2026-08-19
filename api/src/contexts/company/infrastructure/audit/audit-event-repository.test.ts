@@ -14,6 +14,7 @@ import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/application/audit/to-aud
 import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
 import { schema } from "@/schema"
 import { drizzle } from "drizzle-orm/d1"
+import { zAccountId } from "@system/domain/auth/account-id"
 
 const LARGE_STRESS_TEST_TIMEOUT_MS = 60_000
 
@@ -21,7 +22,7 @@ function record(overrides: Partial<AuditEventRecord> = {}): AuditEventRecord {
   return {
     eventId: "event-1",
     requestId: "00000000-0000-4000-8000-000000000001",
-    actorAccountId: 7,
+    actorAccountId: zAccountId.parse("7"),
     actorEmployeeId: 11,
     action: "iam.role.updated",
     targetType: "role",
@@ -70,7 +71,7 @@ async function insertLegacyRow(
     targetType?: string | null
     targetId?: string | null
     reasonCode?: string | null
-    actorAccountId?: number | string | null
+    actorAccountId?: string | Uint8Array | null
     authorizationJson?: string | null
     beforeJson?: string | null
     afterJson?: string | null
@@ -93,7 +94,7 @@ async function insertLegacyRow(
       id,
       overrides.eventId ?? `legacy-${id}`,
       `legacy-request-${id}`,
-      overrides.actorAccountId === undefined ? 7 : overrides.actorAccountId,
+      overrides.actorAccountId === undefined ? "7" : overrides.actorAccountId,
       overrides.action ?? "legacy.unknown.action",
       overrides.targetType === undefined ? "legacy_target" : overrides.targetType,
       overrides.targetId === undefined ? `legacy-${id}` : overrides.targetId,
@@ -725,7 +726,7 @@ describe("AuditEventRepository write contract", () => {
     ).toEqual({
       event_id: "event-1",
       request_id: "00000000-0000-4000-8000-000000000001",
-      actor_account_id: 7,
+      actor_account_id: "7",
       actor_employee_id: 11,
       action: "iam.role.updated",
       target_type: "role",
@@ -1284,7 +1285,7 @@ describe("AuditEventRepository search contract", () => {
     await repository.append(
       record({
         eventId: "alpha",
-        actorAccountId: 7,
+        actorAccountId: zAccountId.parse("7"),
         action: "iam.role.updated",
         targetType: "role",
         targetId: "alpha",
@@ -1295,7 +1296,7 @@ describe("AuditEventRepository search contract", () => {
     await repository.append(
       record({
         eventId: "beta",
-        actorAccountId: 8,
+        actorAccountId: zAccountId.parse("8"),
         action: "iam.role.created",
         targetType: "role",
         targetId: "beta",
@@ -1307,7 +1308,7 @@ describe("AuditEventRepository search contract", () => {
     await insertLegacyRow(db, {
       id: 50,
       eventId: "quoted",
-      actorAccountId: 9,
+      actorAccountId: zAccountId.parse("9"),
       action: quotedAction,
       targetType: "legacy_target",
       targetId: "quoted-target",
@@ -1315,7 +1316,7 @@ describe("AuditEventRepository search contract", () => {
     })
 
     const cases = [
-      [{ actorAccountId: 7 }, ["alpha"]],
+      [{ actorAccountId: zAccountId.parse("7") }, ["alpha"]],
       [{ action: "iam.role.created" }, ["beta"]],
       [{ action: quotedAction }, ["quoted"]],
       [{ targetType: "legacy_target" }, ["quoted"]],
@@ -1326,7 +1327,7 @@ describe("AuditEventRepository search contract", () => {
       [{ fromEpoch: 100, toEpoch: 200 }, ["alpha"]],
       [
         {
-          actorAccountId: 7,
+          actorAccountId: zAccountId.parse("7"),
           action: "iam.role.updated",
           targetType: "role",
           targetId: "alpha",
@@ -1344,23 +1345,23 @@ describe("AuditEventRepository search contract", () => {
     }
   })
 
-  test("accepts a signed safe legacy actor filter and returns the matching row", async () => {
+  test("accepts an opaque signed actor ID filter and returns the matching row", async () => {
     const { context, db } = createTestContext()
     const repository = new AuditEventRepository(context)
     await insertLegacyRow(db, {
       id: -77,
       eventId: "legacy-negative-actor",
-      actorAccountId: -7,
+      actorAccountId: "-7",
     })
 
     const page = await repository.search({
       limit: 50,
       cursor: null,
-      filters: { actorAccountId: -7 },
+      filters: { actorAccountId: zAccountId.parse("-7") },
     })
 
     expect(page.items.map((item) => item.eventId)).toEqual(["legacy-negative-actor"])
-    expect(page.items[0]?.actorAccountId).toBe(-7)
+    expect(String(page.items[0]?.actorAccountId)).toBe("-7")
   })
 
   test("maps database failures to a safe 503 for every read path", async () => {
@@ -1551,7 +1552,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(await repository.findByEventId("legacy--1")).toEqual({
       eventId: "legacy--1",
       requestId: "legacy-request--1",
-      actorAccountId: 7,
+      actorAccountId: zAccountId.parse("7"),
       actorEmployeeId: 11,
       action: "legacy.unknown.action",
       targetType: null,
@@ -1633,7 +1634,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     const expected: AuditEventDetail = {
       eventId,
       requestId,
-      actorAccountId: 7,
+      actorAccountId: zAccountId.parse("7"),
       actorEmployeeId: 11,
       action,
       targetType,
@@ -1735,7 +1736,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
   test("maps corrupted rows to safe 503 errors for search, detail, and export", async () => {
     const { context, db } = createTestContext()
     const repository = new AuditEventRepository(context)
-    await insertLegacyRow(db, { eventId: "corrupt", actorAccountId: "not-an-integer" })
+    await insertLegacyRow(db, { eventId: "corrupt", actorAccountId: Uint8Array.of(0xff) })
 
     await expectAuditUnavailable(repository.search({ limit: 50, cursor: null, filters: {} }))
     await expectAuditUnavailable(repository.findByEventId("corrupt"))
@@ -1768,7 +1769,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
       const boundaryDetail: AuditEventDetail = {
         eventId: "legacy--1",
         requestId: "legacy-request--1",
-        actorAccountId: 7,
+        actorAccountId: zAccountId.parse("7"),
         actorEmployeeId: 11,
         action: "legacy.unknown.action",
         targetType: "legacy_target",

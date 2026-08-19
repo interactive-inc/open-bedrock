@@ -260,8 +260,8 @@ describe("governance documents", () => {
         "SELECT revoked_by_account_id, revoked_at FROM governance_org_role_assignments WHERE id = ?1",
       )
       .bind(assignment.id)
-      .first<{ revoked_by_account_id: number; revoked_at: string }>()
-    expect(stored?.revoked_by_account_id).toBe(1)
+      .first<{ revoked_by_account_id: string; revoked_at: string }>()
+    expect(stored?.revoked_by_account_id).toBe("1")
     expect(stored?.revoked_at).toBeString()
 
     const replacement = await request({

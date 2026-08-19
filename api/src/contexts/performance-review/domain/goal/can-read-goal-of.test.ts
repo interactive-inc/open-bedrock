@@ -2,10 +2,11 @@ import { Session } from "@/contexts/company/domain/iam/session"
 import { canReadGoalOf } from "@/contexts/performance-review/domain/goal/can-read-goal-of"
 import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
 import { describe, expect, test } from "bun:test"
+import { testAccountId } from "@/api/test/support/test-account-id"
 
 function sessionWith(permissions: ReadonlyArray<string>): Session {
   return new Session({
-    accountId: 1,
+    accountId: testAccountId(1),
     employeeId: 1,
     employeeStatus: "active",
     permissions: new Set(permissions),

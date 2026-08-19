@@ -1,4 +1,5 @@
 import type { AccessTokenView } from "@system/domain/auth/access-token-view"
+import type { AccountId } from "@system/domain/auth/account-id"
 import { IssueEmployeeSession } from "@/contexts/company/application/auth/issue-employee-session"
 import { resolveLiveEmployeeAccess } from "@/contexts/company/application/auth/resolve-live-employee-access"
 import type { Context } from "@/env"
@@ -17,7 +18,7 @@ export type IdentityLoginCommand = {
 }
 
 export type AuthenticatedSession = AccessTokenView & {
-  accountId: number
+  accountId: AccountId
   employeeId: number
 }
 

@@ -1,9 +1,9 @@
 import type { AccessTokenView } from "@system/domain/auth/access-token-view"
-import { decoySystemPasswordHash } from "@system/infrastructure/auth/decoy-system-password-hash"
+import type { AccountId } from "@system/domain/auth/account-id"
 import { AuthenticateSystemPassword } from "@system/application/auth/authenticate-system-password"
 import { identitySubjectSchema } from "@system/domain/identity/identity-subject"
 import { SystemPasswordCredentialRepository } from "@system/infrastructure/auth/system-password-credential-repository"
-import { verifyPassword } from "@/lib/auth/verify-password"
+import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
 import type { Context } from "@/env"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { IssueEmployeeSession } from "@/contexts/company/application/auth/issue-employee-session"
@@ -21,9 +21,12 @@ export type Command = {
 export type InvalidCredentials = { reason: "invalid_credentials" }
 
 export type AuthenticatedSession = AccessTokenView & {
-  accountId: number
+  accountId: AccountId
   employeeId: number
 }
+
+const DUMMY_PASSWORD_HASH =
+  "pbkdf2$sha256$100000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
 
 /**
  * メールとパスワードを照合し、成功時にアクセストークンを発行する。
@@ -36,9 +39,14 @@ export class AuthenticateEmployee {
   async run(
     command: Command,
   ): Promise<AuthenticatedSession | InvalidCredentials | ApplicationError> {
+    const pepper = this.c.env.PEPPER_SECRET
+    if (pepper === undefined || pepper === "") {
+      return new UnexpectedError("password authentication is unavailable")
+    }
+
     const subject = identitySubjectSchema.safeParse(command.email.toLowerCase())
     if (!subject.success) {
-      await verifyPassword(command.password, decoySystemPasswordHash)
+      await PasswordHashService.verify(command.password, DUMMY_PASSWORD_HASH, pepper)
       return { reason: "invalid_credentials" }
     }
 
@@ -47,9 +55,17 @@ export class AuthenticateEmployee {
         database: this.c.var.database,
       }),
       passwordMaterialService: {
-        dummyHash: decoySystemPasswordHash,
-        needsRehash: () => false,
-        verify: (password, passwordHash) => verifyPassword(password, passwordHash),
+        dummyHash: DUMMY_PASSWORD_HASH,
+        needsRehash: (passwordHash) => PasswordHashService.needsRehash(passwordHash),
+        verify: async (password, passwordHash) => {
+          try {
+            return await PasswordHashService.verify(password, passwordHash, pepper)
+          } catch (caught) {
+            return caught instanceof Error
+              ? caught
+              : new Error("failed to verify password material")
+          }
+        },
       },
     }).execute({ subject: subject.data, password: command.password, now: command.now })
     if (authentication instanceof Error) {
@@ -59,16 +75,8 @@ export class AuthenticateEmployee {
       return { reason: "invalid_credentials" }
     }
 
-    const accountId = Number(authentication.accountId)
-    if (
-      !Number.isSafeInteger(accountId) ||
-      accountId <= 0 ||
-      String(accountId) !== authentication.accountId
-    ) {
-      return new UnexpectedError("System Account cannot be mapped to the numeric product API")
-    }
     const linkedAccount = await new AccountEmployeeLinkRepository(this.c).findLinkedAccount(
-      accountId,
+      authentication.accountId,
     )
     if (linkedAccount instanceof Error) {
       return new UnexpectedError("failed to find employee link", { cause: linkedAccount })
@@ -84,7 +92,7 @@ export class AuthenticateEmployee {
     }
 
     const issued = await new IssueEmployeeSession(this.c).run({
-      accountId,
+      accountId: authentication.accountId,
       employeeId: linkedAccount.employeeId,
       tokenVersion: authentication.tokenVersion,
       jwtSecret: command.jwtSecret,

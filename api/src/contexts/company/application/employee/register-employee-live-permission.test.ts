@@ -10,6 +10,7 @@ import { replaceAccountRolesWithPermissionSets } from "@/api/test/support/replac
 import { seedIamTestAccount } from "@/api/test/support/seed-iam-test-account"
 import { ForbiddenError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
+import type { AccountId } from "@/contexts/system/domain/auth/account-id"
 
 describe("RegisterEmployee live actor authorization", () => {
   test("fails closed when employee:create is revoked before provisioning", async () => {
@@ -134,7 +135,7 @@ async function createRole(context: Context, key: string, permissionKeys: Readonl
   return role
 }
 
-async function sessionFor(context: Context, accountId: number): Promise<Session> {
+async function sessionFor(context: Context, accountId: AccountId): Promise<Session> {
   const account = await new AccountAuthRepository(context).resolveById(accountId)
 
   const linkedAccount = await new AccountEmployeeLinkRepository(context).findLinkedAccount(

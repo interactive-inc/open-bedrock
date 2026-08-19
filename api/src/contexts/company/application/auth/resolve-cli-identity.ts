@@ -5,6 +5,7 @@ import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/au
 import { AccountProvisioner } from "@/contexts/company/infrastructure/iam/account-provisioner"
 import { IdentityRepository } from "@/contexts/company/application/auth/identity-repository"
 import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 /** 外部 identity provider は OIDC ブローカー。identity の provider 値に対応する。 */
 const EXTERNAL_PROVIDER = "oidc" as const
@@ -22,7 +23,7 @@ export type ResolveCliIdentityCommand = {
 
 /** セッション発行に必要な、解決済みアカウントの最小情報。POST /auth/cli/token が消費する。 */
 export type ResolvedCliAccount = {
-  accountId: number
+  accountId: AccountId
   employeeId: number
 }
 
@@ -93,7 +94,7 @@ export class ResolveCliIdentity {
   private async provision(
     command: ResolveCliIdentityCommand,
   ): Promise<
-    { accountId: number; employeeId: number | null; accountStatus: string } | ApplicationError
+    { accountId: AccountId; employeeId: number | null; accountStatus: string } | ApplicationError
   > {
     const identityRepository = new IdentityRepository(this.c)
     const provisioner = new AccountProvisioner(this.c)

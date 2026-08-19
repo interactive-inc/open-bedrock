@@ -5,7 +5,7 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 type AuditExportValidationInput = {
   in: {
     json: {
-      actor_account_id?: number
+      actor_account_id?: string
       action?: string
       target_type?: string
       target_id?: string

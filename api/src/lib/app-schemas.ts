@@ -424,7 +424,7 @@ export type AppBrowserLoginCode = z.infer<typeof zAppBrowserLoginCode>
 
 /** 初期 ROOT ブートストラップ成功時に返す、作成したアカウント・従業員・メール。 */
 export const zAppBootstrapResult = z.object({
-  account_id: z.number(),
+  account_id: z.string(),
   employee_id: z.number(),
   email: z.string(),
 })
@@ -2289,7 +2289,7 @@ export type AppPermissionList = z.infer<typeof zAppPermissionList>
 
 /** アカウント 1 件のレスポンス(管理一覧)。 */
 export const zAppAccount = z.object({
-  id: z.number(),
+  id: z.string().min(1).max(255),
   employee_id: z.number().nullable(),
   employee_name: z.string().nullable(),
   status: z.string(),
@@ -2863,11 +2863,11 @@ export const zAppHeadcountPlanList = z.object({
 })
 
 export type AppHeadcountPlanList = z.infer<typeof zAppHeadcountPlanList>
-/** 監査イベント一覧の legacy-tolerant な公開投影。 */
+/** 監査イベント一覧の公開投影。 */
 export const zAppAuditEventSummary = z.strictObject({
   event_id: z.string(),
   request_id: z.string(),
-  actor_account_id: z.number().int().safe().nullable(),
+  actor_account_id: z.string().min(1).max(255).nullable(),
   actor_employee_id: z.number().int().safe().nullable(),
   action: z.string(),
   target_type: z.string().nullable(),

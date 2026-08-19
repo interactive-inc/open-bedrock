@@ -8,6 +8,7 @@ import { NotificationDeliveryBatch } from "@system/domain/notifications/notifica
 import { NotificationDelivery } from "@system/domain/notifications/notification-delivery.entity"
 import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
+import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
 
 export type EmployeeNotification = Readonly<{
   recipientEmployeeId: number
@@ -21,7 +22,7 @@ export type EmployeeNotification = Readonly<{
 
 export type PublishedEmployeeNotification = Readonly<{
   id: number
-  recipientAccountId: number
+  recipientAccountId: AccountId
   sourceDomain: string
   sourceId: number | null
   kind: CompanyNotificationKind
@@ -48,13 +49,11 @@ export class EmployeeNotificationGateway {
       })
     }
 
-    const legacyAccountId = Number(resolved.link.accountId)
-    if (
-      !Number.isSafeInteger(legacyAccountId) ||
-      legacyAccountId < 1 ||
-      String(legacyAccountId) !== resolved.link.accountId
-    ) {
-      return new Error("notification recipient account is not legacy-compatible")
+    const recipientAccountId = zAccountId.safeParse(resolved.link.accountId)
+    if (!recipientAccountId.success) {
+      return new Error("notification recipient account ID is invalid", {
+        cause: recipientAccountId.error,
+      })
     }
 
     const createdAt = new Date(props.createdAt)
@@ -81,7 +80,7 @@ export class EmployeeNotificationGateway {
     const delivery = NotificationDelivery.create({
       id: canonicalId,
       messageId: message.id,
-      recipientAccountId: resolved.link.accountId,
+      recipientAccountId: recipientAccountId.data,
       deliveredAt: createdAt,
       readAt: null,
     })
@@ -102,7 +101,7 @@ export class EmployeeNotificationGateway {
 
     return Object.freeze({
       id: notificationId,
-      recipientAccountId: legacyAccountId,
+      recipientAccountId: recipientAccountId.data,
       sourceDomain: props.sourceDomain,
       sourceId: props.sourceId,
       kind: props.kind,

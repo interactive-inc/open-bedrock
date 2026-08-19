@@ -1,4 +1,5 @@
 import type { PersonnelActionKind } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
+import type { AccountId } from "@system/domain/auth/account-id"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 import { check, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
@@ -12,7 +13,7 @@ export const personnelActions = sqliteTable(
     kind: text("kind").notNull().$type<PersonnelActionKind>(),
     eventOn: text("event_on").notNull(),
     recordedAt: integer("recorded_at").notNull(),
-    recordedByAccountId: integer("recorded_by_account_id"),
+    recordedByAccountId: text("recorded_by_account_id").$type<AccountId>(),
     requestedByEmployeeId: integer("requested_by_employee_id"),
     sourceType: text("source_type")
       .notNull()
@@ -274,7 +275,7 @@ export const lifecycleEffectTemplateBindings = sqliteTable("lifecycle_effect_tem
   effectType: text("effect_type").primaryKey().$type<"hire" | "retired">(),
   templateCode: text("template_code").notNull(),
   updatedAt: integer("updated_at").notNull(),
-  updatedByAccountId: integer("updated_by_account_id"),
+  updatedByAccountId: text("updated_by_account_id").$type<AccountId>(),
 })
 
 export type LifecycleEffectTemplateBindingRow = InferSelectModel<

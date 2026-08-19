@@ -3,6 +3,7 @@ import type { AuditEventRecord } from "@/contexts/company/application/audit/comp
 import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { ValidationError } from "@/lib/errors"
+import { testAccountId } from "@/api/test/support/test-account-id"
 
 const decisionId = "00000000-0000-4000-8000-000000000041"
 
@@ -10,7 +11,7 @@ function record(eventId: string, overrides: Partial<AuditEventRecord> = {}): Aud
   return {
     eventId,
     requestId: "00000000-0000-4000-8000-000000000001",
-    actorAccountId: 7,
+    actorAccountId: testAccountId(7),
     actorEmployeeId: 11,
     action: "auth.session.refreshed",
     targetType: "account",

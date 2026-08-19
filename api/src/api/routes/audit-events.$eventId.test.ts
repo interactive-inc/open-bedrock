@@ -127,7 +127,7 @@ describe("GET /audit-events/:eventId", () => {
       expect(body).toMatchObject({
         event_id: eventId,
         request_id: "legacy request",
-        actor_account_id: -41,
+        actor_account_id: "-41",
         actor_employee_id: null,
         action: "legacy.action",
         target_type: "legacy_target",

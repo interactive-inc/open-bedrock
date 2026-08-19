@@ -14,10 +14,11 @@ import { AccountAuthRepository } from "@/contexts/company/application/auth/accou
 import { LastRootError } from "@/contexts/company/infrastructure/iam/last-root-error"
 import { LivePermissionGuardError } from "@/contexts/company/infrastructure/iam/live-permission-guard-error"
 import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 export type Command = {
   session: Session
-  accountId: number
+  accountId: AccountId
   status: string
   now: number
 }

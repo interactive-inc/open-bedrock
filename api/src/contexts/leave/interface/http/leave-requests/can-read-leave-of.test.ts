@@ -2,11 +2,12 @@ import { Session } from "@/contexts/company/domain/iam/session"
 import { canReadLeaveOf } from "@/contexts/leave/interface/http/leave-requests/can-read-leave-of"
 import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
 import { makeTestSession } from "@/api/test/support/make-test-session"
+import { testAccountId } from "@/api/test/support/test-account-id"
 import { describe, expect, test } from "bun:test"
 
 function sessionWith(permissions: ReadonlyArray<string>): Session {
   return new Session({
-    accountId: 1,
+    accountId: testAccountId(1),
     employeeId: 1,
     employeeStatus: "active",
     permissions: new Set(permissions),

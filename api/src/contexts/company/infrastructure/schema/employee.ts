@@ -18,7 +18,7 @@ export const employees = sqliteTable("employees", {
   status: text("status").notNull().$type<EmployeeStatus>(),
   phone: text("phone"),
   archivedAt: integer("archived_at"),
-  archivedByAccountId: integer("archived_by_account_id"),
+  archivedByAccountId: text("archived_by_account_id").$type<AccountId>(),
 })
 
 export type EmployeeRow = InferSelectModel<typeof employees>

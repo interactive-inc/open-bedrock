@@ -7,10 +7,11 @@ import { LastRootError } from "@/contexts/company/infrastructure/iam/last-root-e
 import { LivePermissionGuardError } from "@/contexts/company/infrastructure/iam/live-permission-guard-error"
 import { RoleRepository } from "@/contexts/company/infrastructure/iam/role-repository"
 import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 export type Command = {
   session: Session
-  accountId: number
+  accountId: AccountId
   roleKey: string
   now: number
 }

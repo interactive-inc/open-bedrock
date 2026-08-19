@@ -1,5 +1,6 @@
 import { app } from "@/api/app"
 import type { Bindings } from "@/env"
+import { seedPepperSecret } from "@/contexts/company/infrastructure/seed/seed-password-hash"
 
 export type Props = {
   db: D1Database
@@ -46,6 +47,7 @@ export function requestWithContext(props: Props): Promise<Response> {
   const bindings: Bindings = {
     DB: props.db,
     JWT_SECRET: props.jwtSecret,
+    PEPPER_SECRET: seedPepperSecret,
     AUDIT_HMAC_SECRET: "request-with-context-audit-hmac-secret",
     COMPANY_TIME_ZONE: props.companyTimeZone ?? "Asia/Tokyo",
     NOW: props.now ?? defaultNow,

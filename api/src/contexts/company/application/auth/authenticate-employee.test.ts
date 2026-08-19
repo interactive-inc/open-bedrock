@@ -2,7 +2,8 @@ import { describe, expect, test } from "bun:test"
 import { AuthenticateEmployee } from "@/contexts/company/application/auth/authenticate-employee"
 import { accessTokenService } from "@/contexts/company/application/auth/jose-token-signer"
 import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service"
-import { toPasswordHash } from "@/lib/auth/to-password-hash"
+import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
+import { seedPepperSecret } from "@/contexts/company/infrastructure/seed/seed-password-hash"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
@@ -68,7 +69,7 @@ describe("AuthenticateEmployee", () => {
   test("returns an access token for valid new-format credentials", async () => {
     const { context, db } = createTestContext()
 
-    const hash = await toPasswordHash("supersecret")
+    const hash = await PasswordHashService.hash("supersecret", seedPepperSecret)
 
     await insertEmployee(db, { id: 1, email: "you+new@example.com", passwordHash: hash })
 
@@ -90,7 +91,7 @@ describe("AuthenticateEmployee", () => {
 
     expect(result.accessToken.length > 0).toBe(true)
     expect(result.refreshToken).toMatch(/^[0-9a-f]{64}$/)
-    expect(result.accountId).toBe(1)
+    expect(String(result.accountId)).toBe("1")
     expect(result.employeeId).toBe(1)
     expect((await accessTokenService.verify(result.accessToken, jwtSecret)).ver).toBe(0)
     const sessionAudit = await db
@@ -148,7 +149,7 @@ describe("AuthenticateEmployee", () => {
     ["locked", "UPDATE system_accounts SET status = 'locked', token_version = 1 WHERE id = '1'"],
   ])("fails closed without session material when the canonical account is %s", async (_, sql) => {
     const { context, db } = createTestContext()
-    const hash = await toPasswordHash("supersecret")
+    const hash = await PasswordHashService.hash("supersecret", seedPepperSecret)
     await insertEmployee(db, {
       id: 1,
       email: "you+canonical-rejected@example.com",
@@ -175,7 +176,7 @@ describe("AuthenticateEmployee", () => {
 
   test("uses canonical Account tokenVersion when issuing the access token", async () => {
     const { context, db } = createTestContext()
-    const hash = await toPasswordHash("supersecret")
+    const hash = await PasswordHashService.hash("supersecret", seedPepperSecret)
     await insertEmployee(db, {
       id: 1,
       email: "you+canonical-version@example.com",
@@ -200,7 +201,7 @@ describe("AuthenticateEmployee", () => {
 
   test("fails closed without session material when the canonical account cannot be read", async () => {
     const { context, db } = createTestContext()
-    const hash = await toPasswordHash("supersecret")
+    const hash = await PasswordHashService.hash("supersecret", seedPepperSecret)
     await insertEmployee(db, {
       id: 1,
       email: "you+canonical-error@example.com",
@@ -228,7 +229,7 @@ describe("AuthenticateEmployee", () => {
 
   test("does not persist or return a session after a canonical Account race", async () => {
     const { context, db } = createTestContext()
-    const hash = await toPasswordHash("supersecret")
+    const hash = await PasswordHashService.hash("supersecret", seedPepperSecret)
     await insertEmployee(db, {
       id: 1,
       email: "you+canonical-race@example.com",
@@ -261,7 +262,7 @@ describe("AuthenticateEmployee", () => {
   test("rejects the wrong password with invalid_credentials", async () => {
     const { context, db } = createTestContext()
 
-    const hash = await toPasswordHash("supersecret")
+    const hash = await PasswordHashService.hash("supersecret", seedPepperSecret)
 
     await insertEmployee(db, { id: 1, email: "you+new@example.com", passwordHash: hash })
 
@@ -293,7 +294,7 @@ describe("AuthenticateEmployee", () => {
   test("rejects a retired employee with the correct password as invalid_credentials (#775)", async () => {
     const { context, db } = createTestContext()
 
-    const hash = await toPasswordHash("supersecret")
+    const hash = await PasswordHashService.hash("supersecret", seedPepperSecret)
 
     await insertEmployee(db, {
       id: 1,
@@ -317,7 +318,7 @@ describe("AuthenticateEmployee", () => {
   test("allows a leave employee to authenticate (#775, leave は現状許可)", async () => {
     const { context, db } = createTestContext()
 
-    const hash = await toPasswordHash("supersecret")
+    const hash = await PasswordHashService.hash("supersecret", seedPepperSecret)
 
     await insertEmployee(db, {
       id: 1,
@@ -344,7 +345,7 @@ describe("AuthenticateEmployee", () => {
   test("does not rewrite a hash that is already in the new format", async () => {
     const { context, db } = createTestContext()
 
-    const hash = await toPasswordHash("already-modern")
+    const hash = await PasswordHashService.hash("already-modern", seedPepperSecret)
 
     await insertEmployee(db, { id: 1, email: "you+modern@example.com", passwordHash: hash })
 
@@ -372,7 +373,7 @@ describe("AuthenticateEmployee", () => {
 
   test("fails closed and rolls the refresh token back when the success audit insert fails", async () => {
     const { context, db } = createTestContext()
-    const hash = await toPasswordHash("supersecret")
+    const hash = await PasswordHashService.hash("supersecret", seedPepperSecret)
     await insertEmployee(db, { id: 1, email: "you+audit@example.com", passwordHash: hash })
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert

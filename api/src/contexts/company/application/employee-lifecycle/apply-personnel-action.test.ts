@@ -4,9 +4,10 @@ import type { Context } from "@/env"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
+import { zAccountId } from "@system/domain/auth/account-id"
 
 const session = new Session({
-  accountId: 1,
+  accountId: zAccountId.parse("1"),
   employeeId: 1,
   employeeStatus: "active",
   permissions: new Set(["employee:lifecycle:apply"]),
@@ -253,7 +254,7 @@ describe("ApplyPersonnelAction", () => {
     const denied = await new ApplyPersonnelAction(context).run({
       ...leaveCommand,
       session: new Session({
-        accountId: 1,
+        accountId: zAccountId.parse("1"),
         employeeId: 1,
         employeeStatus: "active",
         permissions: new Set(["employee:update"]),

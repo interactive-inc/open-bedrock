@@ -3,9 +3,9 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { zAccountId } from "@system/domain/auth/account-id"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する
@@ -15,14 +15,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      new_password: z
-        .string()
-        .min(8)
-        .max(200)
-        .regex(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,200}$/,
-          "パスワードは8文字以上で、大文字・小文字・数字をそれぞれ1つ以上含めてください",
-        ),
+      new_password: z.string().min(12).max(200),
     }),
   ),
   async (c) => {
@@ -32,13 +25,14 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const accountId = validateIntParam(c.req.param("id"), "account")
+    const accountId = zAccountId.safeParse(c.req.param("id"))
+    if (!accountId.success) throw new NotFoundError("account not found")
 
     const json = c.req.valid("json")
 
     const result = await new ResetAccountPassword(c).run({
       session: session,
-      accountId: accountId,
+      accountId: accountId.data,
       newPassword: json.new_password,
       now: c.env.NOW === undefined ? Date.now() : Date.parse(c.env.NOW),
     })

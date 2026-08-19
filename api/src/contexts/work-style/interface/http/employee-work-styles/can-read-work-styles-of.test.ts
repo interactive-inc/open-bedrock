@@ -1,10 +1,11 @@
 import { Session } from "@/contexts/company/domain/iam/session"
 import { canReadWorkStylesOf } from "@/contexts/work-style/interface/http/employee-work-styles/can-read-work-styles-of"
 import { describe, expect, test } from "bun:test"
+import { testAccountId } from "@/api/test/support/test-account-id"
 
 function sessionWith(props: { employeeId: number; permissions: ReadonlyArray<string> }): Session {
   return new Session({
-    accountId: 1,
+    accountId: testAccountId(1),
     employeeId: props.employeeId,
     employeeStatus: "active",
     permissions: new Set(props.permissions),

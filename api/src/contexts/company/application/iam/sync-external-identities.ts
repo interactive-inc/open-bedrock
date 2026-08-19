@@ -5,6 +5,7 @@ import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/au
 import { IdentityRepository } from "@/contexts/company/application/auth/identity-repository"
 import { AccountProvisioner } from "@/contexts/company/infrastructure/iam/account-provisioner"
 import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
+import type { AccountId } from "@system/domain/auth/account-id"
 
 /** 外部 identity provider は OIDC ブローカー。identity の provider 値に対応する。 */
 const EXTERNAL_PROVIDER = "oidc" as const
@@ -172,7 +173,7 @@ export class SyncExternalIdentities {
 
   private async audit(
     action: AuditAction,
-    accountId: number | null,
+    accountId: AccountId | null,
     employeeId: number | null,
     now: Date,
   ): Promise<null | ApplicationError> {

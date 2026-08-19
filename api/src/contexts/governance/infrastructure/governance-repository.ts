@@ -7,6 +7,7 @@ import {
   zProcedureDefinition,
 } from "@/contexts/governance/domain/governance-document"
 import type { Context } from "@/env"
+import type { AccountId } from "@system/domain/auth/account-id"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
@@ -173,7 +174,7 @@ export class GovernanceRepository {
     bodyMd: string
     contentHash: string
     references: ReadonlyArray<GovernanceReference>
-    accountId: number
+    accountId: AccountId
     now: string
     existingDocument: typeof governanceDocuments.$inferSelect | null
     existingVersion: GovernanceVersionRecord | null
@@ -360,7 +361,7 @@ export class GovernanceRepository {
   async publish(props: {
     document: typeof governanceDocuments.$inferSelect
     version: GovernanceVersionRecord
-    accountId: number
+    accountId: AccountId
     now: string
     auditStatements: ReadonlyArray<D1PreparedStatement>
   }): Promise<null | Error> {
@@ -540,7 +541,7 @@ export class GovernanceRepository {
     endsOn: string | null
     sourceDocumentCode: string | null
     cardinality: "one" | "per_department" | "many"
-    accountId: number
+    accountId: AccountId
     now: string
     auditStatements: ReadonlyArray<D1PreparedStatement>
   }) {
@@ -599,7 +600,7 @@ export class GovernanceRepository {
 
   async revokeAssignment(props: {
     id: number
-    accountId: number
+    accountId: AccountId
     revokedAt: string
     auditStatements: ReadonlyArray<D1PreparedStatement>
   }): Promise<boolean | Error> {

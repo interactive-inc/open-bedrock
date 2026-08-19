@@ -1,4 +1,5 @@
 import type { InferSelectModel } from "drizzle-orm"
+import type { AccountId } from "@system/domain/auth/account-id"
 import { sql } from "drizzle-orm"
 import { check, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
@@ -38,9 +39,9 @@ export const governanceOrgRoleAssignments = sqliteTable(
     startsOn: text("starts_on").notNull(),
     endsOn: text("ends_on"),
     sourceDocumentCode: text("source_document_code"),
-    createdByAccountId: integer("created_by_account_id").notNull(),
+    createdByAccountId: text("created_by_account_id").notNull().$type<AccountId>(),
     createdAt: text("created_at").notNull(),
-    revokedByAccountId: integer("revoked_by_account_id"),
+    revokedByAccountId: text("revoked_by_account_id").$type<AccountId>(),
     revokedAt: text("revoked_at"),
   },
   (table) => [
@@ -66,7 +67,7 @@ export const governanceDocuments = sqliteTable("governance_documents", {
   status: text("status").notNull().$type<"draft" | "published" | "retired">(),
   currentVersionId: text("current_version_id"),
   sourcePath: text("source_path").notNull().unique(),
-  createdByAccountId: integer("created_by_account_id").notNull(),
+  createdByAccountId: text("created_by_account_id").notNull().$type<AccountId>(),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 })
@@ -89,9 +90,9 @@ export const governanceDocumentVersions = sqliteTable(
     state: text("state")
       .notNull()
       .$type<"draft" | "in_review" | "published" | "superseded" | "rejected">(),
-    createdByAccountId: integer("created_by_account_id").notNull(),
+    createdByAccountId: text("created_by_account_id").notNull().$type<AccountId>(),
     createdAt: text("created_at").notNull(),
-    publishedByAccountId: integer("published_by_account_id"),
+    publishedByAccountId: text("published_by_account_id").$type<AccountId>(),
     publishedAt: text("published_at"),
   },
   (table) => [

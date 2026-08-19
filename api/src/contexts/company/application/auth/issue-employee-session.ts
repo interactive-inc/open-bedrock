@@ -1,5 +1,5 @@
 import type { AccessTokenView } from "@system/domain/auth/access-token-view"
-import { zAccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/auth/account-id"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import type { Context } from "@/env"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
@@ -7,7 +7,7 @@ import { JoseTokenSigner } from "@/contexts/company/application/auth/jose-token-
 import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
 
 export type IssueSessionCommand = {
-  accountId: number
+  accountId: AccountId
   employeeId: number
   tokenVersion: number
   jwtSecret: string
@@ -22,7 +22,7 @@ export type IssueSessionCommand = {
 }
 
 export type IssuedSession = AccessTokenView & {
-  accountId: number
+  accountId: AccountId
   employeeId: number
 }
 
@@ -43,12 +43,6 @@ export class IssueEmployeeSession {
   async run(
     command: IssueSessionCommand,
   ): Promise<IssuedSession | SessionIssuanceRejected | ApplicationError> {
-    const accountId = zAccountId.safeParse(String(command.accountId))
-
-    if (accountId.success === false) {
-      return new UnexpectedError("failed to authorize account session")
-    }
-
     const applications = createSystemSessionApplications({
       context: { env: { DB: this.c.env.DB } },
       sessionTtlMilliseconds: 7 * 24 * 60 * 60 * 1_000,
@@ -66,7 +60,7 @@ export class IssueEmployeeSession {
     if (metadataJson instanceof Error) return auditUnavailable(metadataJson)
 
     const issued = await applications.issue.execute({
-      accountId: accountId.data,
+      accountId: command.accountId,
       tokenVersion: command.tokenVersion,
       now: command.now,
       auditContext: { authorizationJson: null, metadataJson },

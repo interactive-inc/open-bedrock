@@ -2,6 +2,7 @@ import { createSystemAuditEvent as createSystemAuditEventEnvelope } from "@/cont
 import type { AuditJsonValue } from "@system/application/audit/to-stable-audit-json"
 import { toStableAuditJson } from "@system/application/audit/to-stable-audit-json"
 import { ValidationError } from "@/lib/errors"
+import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
 import { z } from "zod"
 
 export const auditOutcomeSchema = z.enum(["succeeded", "denied", "failed"])
@@ -13,7 +14,7 @@ export const auditRequestContextSchema = z.strictObject({
   externalRequestId: z.string().nullable(),
 })
 
-const actorIdSchema = z.number().int().safe().positive().nullable()
+const actorIdSchema = zAccountId.nullable()
 const actionSchema = z.string().regex(/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/u)
 const targetTypeSchema = z.string().regex(/^[a-z][a-z0-9_]*$/u)
 const targetSchema = z.strictObject({ type: targetTypeSchema, id: z.string().min(1).nullable() })
@@ -39,7 +40,7 @@ export type AuditRequestContext = z.infer<typeof auditRequestContextSchema>
 export type CompanyAuditRecord = Readonly<{
   eventId: string
   requestId: string
-  actorAccountId: number | null
+  actorAccountId: AccountId | null
   action: string
   targetType: string
   targetId: string | null
@@ -55,7 +56,7 @@ export type CompanyAuditRecord = Readonly<{
 }>
 
 export type CompanyAuditRecordInput = Readonly<{
-  actorAccountId: number | null
+  actorAccountId: AccountId | null
   action: string
   target: Readonly<{ type: string; id: string | null }>
   outcome: AuditOutcome
@@ -70,7 +71,7 @@ export type CompanyAuditRecordInput = Readonly<{
 export type CompanyAuditSummary = Readonly<{
   eventId: string
   requestId: string
-  actorAccountId: number | null
+  actorAccountId: AccountId | null
   action: string
   targetType: string | null
   targetId: string | null
@@ -139,10 +140,8 @@ export function createCompanyAuditRecord(
     throw new ValidationError("audit event time is invalid", "audit_invalid_timestamp")
   }
 
-  const actorAccountId =
-    eventInput.actorAccountId === null ? null : String(eventInput.actorAccountId)
   const event = createSystemAuditEventEnvelope({
-    actorAccountId,
+    actorAccountId: eventInput.actorAccountId,
     action: eventInput.action,
     targetType: eventInput.target.type,
     targetId: eventInput.target.id,

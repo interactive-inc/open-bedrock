@@ -1,12 +1,13 @@
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { zAccountId, type AccountId } from "@/contexts/system/domain/auth/account-id"
 
 export async function seedIamTestAccount(
   context: Context,
   code: string,
   systemRole: string = "member",
-): Promise<number> {
+): Promise<AccountId> {
   const created = await new EmployeeRepository(context).create({
     code: code,
     name: "Sam Rivers",
@@ -29,5 +30,5 @@ export async function seedIamTestAccount(
     },
   ])
 
-  return created.id
+  return zAccountId.parse(String(created.id))
 }
