@@ -57,6 +57,16 @@ export const systemRouteManifest = [
     },
   },
   {
+    method: "PATCH",
+    path: "/auth/password/reset",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/auth.password.reset",
+      exportName: "PATCH",
+    },
+  },
+  {
     method: "POST",
     path: "/oauth/token",
     phase: "public",

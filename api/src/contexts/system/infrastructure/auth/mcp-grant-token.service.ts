@@ -17,14 +17,6 @@ const grantPayloadSchema = z
   })
   .strict()
 
-const legacyGrantPayloadSchema = z.object({
-  userId: z.string().min(1),
-  challenge: z.string().min(1),
-  purpose: z.literal("mcp-grant"),
-  exp: z.number(),
-  iat: z.number(),
-})
-
 export type McpGrantPayload = z.infer<typeof grantPayloadSchema>
 
 export class McpGrantTokenService {
@@ -58,26 +50,9 @@ export class McpGrantTokenService {
     try {
       const verified = await JwtTokenService.verifyWithHeader(token, secret)
 
-      if (verified.protectedHeader.typ === GRANT_TOKEN_TYPE) {
-        return grantPayloadSchema.parse(verified.payload)
-      }
-
-      if (verified.protectedHeader.typ !== "JWT" && verified.protectedHeader.typ !== undefined) {
-        return new Error("invalid_grant")
-      }
-
-      const legacy = legacyGrantPayloadSchema.parse(verified.payload)
-      return {
-        accountId: legacy.userId,
-        tokenVersion: 0,
-        challenge: legacy.challenge,
-        purpose: legacy.purpose,
-        iss: McpGrantTokenService.ISSUER,
-        aud: McpGrantTokenService.AUDIENCE,
-        jti: "legacy",
-        exp: legacy.exp,
-        iat: legacy.iat,
-      }
+      return verified.protectedHeader.typ === GRANT_TOKEN_TYPE
+        ? grantPayloadSchema.parse(verified.payload)
+        : new Error("invalid_grant")
     } catch {
       return new Error("invalid_grant")
     }

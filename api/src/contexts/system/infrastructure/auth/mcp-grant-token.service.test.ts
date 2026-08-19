@@ -1,5 +1,4 @@
 import { McpGrantTokenService } from "@/contexts/system/infrastructure/auth/mcp-grant-token.service"
-import { SessionTokenService } from "@/contexts/system/infrastructure/auth/session-token.service"
 import { describe, expect, test } from "bun:test"
 import { JwtTokenService } from "@/contexts/system/infrastructure/auth/jwt-token.service"
 
@@ -60,6 +59,7 @@ describe("mcp-grant-token", () => {
         iat: expiredAt - McpGrantTokenService.MAX_AGE_SECONDS,
       },
       SECRET,
+      "mcp-grant+jwt",
     )
 
     expect(await McpGrantTokenService.verify(token, SECRET)).toBeInstanceOf(Error)
@@ -70,7 +70,20 @@ describe("mcp-grant-token", () => {
    * 署名検証だけで通ってしまう。session トークンを grant として持ち込む取り違えを塞ぐ回帰テスト。
    */
   test("セッショントークンを grant として持ち込んでも拒否する", async () => {
-    const sessionToken = await SessionTokenService.create("user-1", SECRET, 0)
+    const nowSeconds = Math.floor(Date.now() / 1000)
+    const sessionToken = await JwtTokenService.sign(
+      {
+        sub: "user-1",
+        ver: 0,
+        purpose: "web-session",
+        iss: "system",
+        aud: "system-web",
+        exp: nowSeconds + 120,
+        iat: nowSeconds,
+      },
+      SECRET,
+      "at+jwt",
+    )
 
     expect(await McpGrantTokenService.verify(sessionToken, SECRET)).toBeInstanceOf(Error)
   })
@@ -87,6 +100,7 @@ describe("mcp-grant-token", () => {
         iat: nowSeconds,
       },
       SECRET,
+      "mcp-grant+jwt",
     )
 
     expect(await McpGrantTokenService.verify(token, SECRET)).toBeInstanceOf(Error)

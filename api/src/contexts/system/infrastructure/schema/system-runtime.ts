@@ -106,53 +106,6 @@ export const userIdentities = sqliteTable(
 )
 
 /**
- * パスワード忘れ時のリセットトークン。invites と同型の使い捨てトークン設計。
- * 1 ユーザーが複数回発行できるため userId は unique にしない（再発行時に旧トークンは
- * 無効化せず expiresAt 切れに任せる。多重発行そのものはリスクではない）。
- */
-export const passwordResetTokens = sqliteTable("password_reset_tokens", {
-  id: text("id").primaryKey(),
-  token: text("token").notNull().unique(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  // 複数の password identity を持つユーザーでも、メールを受け取った identity だけを更新する。
-  // nullable は 0220 適用前に発行済みの短命トークンとの互換用。新規発行では必ず設定する。
-  identityId: text("identity_id").references(() => userIdentities.id, { onDelete: "cascade" }),
-  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
-  usedAt: integer("used_at", { mode: "timestamp_ms" }),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-})
-
-/**
- * ログイン試行の分散レートリミット用カウンタ (#715)。失敗した認証試行を 1 行 1 件として記録し、
- * 全 isolate が同じ D1 テーブルを参照することで per-isolate の in-memory Map で攻撃面が
- * isolate 数だけ倍増する問題を解消する。窓 (15 分) 内の行数が上限以上なら拒否する。
- * 認証成功時と窓外の古い行は削除する。FK は張らない。
- *
- * ip 列は #2392 で追加した。ログイン (login.ts) の原子的レートリミットゲートは identifier に
- * 実際のログイン識別子 (email / 社員番号)、ip に実際のクライアント IP (無ければ "anonymous") を
- * 素の値で書き込み、pair (identifier+ip) / account (identifier 単独) / ip (ip 単独) の
- * 3 バケットを同じ行から導出する (login-rate-limit.ts の recordAndCheckLoginAttempt 参照)。
- * forgot-password / internal-verify は従来どおり login-rate-limit.ts のキー生成関数
- * (loginRateLimitKey / internalVerifyRateLimitKey) が組み立てる合成キーを identifier に入れ、
- * ip 列は使わない (常に NULL)。
- */
-export const loginAttempts = sqliteTable(
-  "login_attempts",
-  {
-    id: text("id").primaryKey(),
-    identifier: text("identifier").notNull(),
-    ip: text("ip"),
-    attemptedAt: integer("attempted_at", { mode: "timestamp_ms" }).notNull(),
-  },
-  (table) => [
-    index("login_attempts_identifier_attempted_at_idx").on(table.identifier, table.attemptedAt),
-    index("login_attempts_ip_attempted_at_idx").on(table.ip, table.attemptedAt),
-  ],
-)
-
-/**
  * OIDC Authorization Code Flow の短命な認可コード。
  *
  * ブラウザへ返す code 自体は保存せず SHA-256 hash だけを保持する。token endpoint は
