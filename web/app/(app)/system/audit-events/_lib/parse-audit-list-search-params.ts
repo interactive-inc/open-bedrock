@@ -1,6 +1,6 @@
 import type { AuditListQuery, AuditOutcome } from "@/lib/api/types/audit-types"
 import { exactSecondEpoch } from "@/app/(app)/system/audit-events/_lib/exact-second-epoch"
-import { isCanonicalSafeInteger } from "@/app/(app)/system/audit-events/_lib/is-canonical-safe-integer"
+import { isOpaqueAccountId } from "@/app/(app)/system/audit-events/_lib/is-opaque-account-id"
 
 export type AuditSearchParams = Record<string, string | ReadonlyArray<string> | undefined>
 
@@ -37,7 +37,7 @@ export function parseAuditListSearchParams(input: AuditSearchParams): AuditListQ
   }
 
   const actorAccountId = values.get("actor_account_id")
-  if (actorAccountId !== undefined && !isCanonicalSafeInteger(actorAccountId)) {
+  if (actorAccountId !== undefined && !isOpaqueAccountId(actorAccountId)) {
     return { ok: false }
   }
 

@@ -53,7 +53,7 @@ export async function revokeAccountRoleAction(
     return { ok: false, error: "ロールを管理する権限がありません" }
   }
 
-  const accountId = toPositiveInt(formData.get("account_id"))
+  const accountId = toOpaqueAccountId(formData.get("account_id"))
 
   const roleKey = toText(formData.get("role_key"))
 
@@ -94,7 +94,7 @@ export async function resetPasswordAction(
     return { ok: false, error: "アカウントを管理する権限がありません" }
   }
 
-  const accountId = toPositiveInt(formData.get("account_id"))
+  const accountId = toOpaqueAccountId(formData.get("account_id"))
 
   const newPassword = toText(formData.get("new_password"))
 
@@ -102,8 +102,8 @@ export async function resetPasswordAction(
     return { ok: false, error: "アカウントとパスワードを指定してください" }
   }
 
-  if (newPassword.length < 8) {
-    return { ok: false, error: "パスワードは8文字以上にしてください" }
+  if (newPassword.length < 12) {
+    return { ok: false, error: "パスワードは12文字以上にしてください" }
   }
 
   const reset = await resetAccountPassword(accountId, newPassword)
@@ -112,7 +112,7 @@ export async function resetPasswordAction(
     const message = toActionErrorMessage(
       reset,
       {
-        weak_password: "パスワードは8文字以上にしてください",
+        weak_password: "パスワードは12文字以上にしてください",
         role_escalation: "自分より強い権限のアカウントは変更できません",
         account_not_found: "対象のアカウントが見つかりません",
         identity_not_found: "このアカウントにはパスワードが設定されていません",
@@ -140,7 +140,7 @@ export async function setAccountStatusAction(
     return { ok: false, error: "アカウントを管理する権限がありません" }
   }
 
-  const accountId = toPositiveInt(formData.get("account_id"))
+  const accountId = toOpaqueAccountId(formData.get("account_id"))
 
   const status = toStatus(formData.get("status"))
 
@@ -191,7 +191,7 @@ export async function grantAccountRoleAction(
     return { ok: false, error: "ロールを管理する権限がありません" }
   }
 
-  const accountId = toPositiveInt(formData.get("account_id"))
+  const accountId = toOpaqueAccountId(formData.get("account_id"))
 
   const roleKey = toText(formData.get("role_key"))
 
@@ -222,14 +222,8 @@ export async function grantAccountRoleAction(
   return { ok: true, error: null }
 }
 
-function toPositiveInt(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+function toOpaqueAccountId(value: FormDataEntryValue | null): string | null {
+  return typeof value === "string" && value.length >= 1 && value.length <= 255 ? value : null
 }
 
 function toText(value: FormDataEntryValue | null): string | null {

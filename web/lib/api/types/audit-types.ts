@@ -5,7 +5,7 @@ export type AuditClientName = "web" | "cli" | "api" | "system"
 export type AuditEventSummary = {
   event_id: string
   request_id: string
-  actor_account_id: number | null
+  actor_account_id: string | null
   actor_employee_id: number | null
   action: string
   target_type: string | null
@@ -43,7 +43,7 @@ export type AuditListQuery = {
 }
 
 export type AuditExportRequest = {
-  actor_account_id?: number
+  actor_account_id?: string
   action?: string
   target_type?: string
   target_id?: string

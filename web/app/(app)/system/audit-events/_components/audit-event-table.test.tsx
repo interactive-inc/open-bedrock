@@ -20,7 +20,7 @@ afterEach(cleanup)
 const baseEvent: AuditEventSummary = {
   event_id: "evt-001",
   request_id: "req-001",
-  actor_account_id: 10,
+  actor_account_id: "account-10",
   actor_employee_id: 20,
   action: "audit.event.read",
   target_type: "audit_event",
@@ -50,9 +50,9 @@ describe("AuditEventTable", () => {
     )
 
     const rows = screen.getAllByRole("row").slice(1)
-    expect(within(rows[0]).getByText("account:10 / employee:20")).toBeDefined()
+    expect(within(rows[0]).getByText("account:account-10 / employee:20")).toBeDefined()
     expect(within(rows[1]).getByText("account:— / employee:20")).toBeDefined()
-    expect(within(rows[2]).getByText("account:10 / employee:—")).toBeDefined()
+    expect(within(rows[2]).getByText("account:account-10 / employee:—")).toBeDefined()
     expect(within(rows[3]).getByText("未認証")).toBeDefined()
     expect(screen.queryByText(/example\.com/u)).toBeNull()
   })

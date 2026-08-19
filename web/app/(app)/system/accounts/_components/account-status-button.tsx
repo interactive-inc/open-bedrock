@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button"
 const initialState: AccountActionFormState = { ok: false, error: null }
 
 type Props = {
-  accountId: number
+  accountId: string
   status: string
 }
 

@@ -28,7 +28,7 @@ type ExpectedAuditDetailInput = { param: { eventId: string } }
 
 type ExpectedAuditExportInput = {
   json: {
-    actor_account_id?: number
+    actor_account_id?: string
     action?: string
     target_type?: string
     target_id?: string

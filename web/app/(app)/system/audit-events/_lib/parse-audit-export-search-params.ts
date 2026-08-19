@@ -1,6 +1,6 @@
 import type { AuditExportRequest, AuditOutcome } from "@/lib/api/types/audit-types"
 import { exactSecondEpoch } from "@/app/(app)/system/audit-events/_lib/exact-second-epoch"
-import { isCanonicalSafeInteger } from "@/app/(app)/system/audit-events/_lib/is-canonical-safe-integer"
+import { isOpaqueAccountId } from "@/app/(app)/system/audit-events/_lib/is-opaque-account-id"
 import { outcomes } from "@/app/(app)/system/audit-events/_lib/parse-audit-list-search-params"
 import type { AuditSearchParams } from "@/app/(app)/system/audit-events/_lib/parse-audit-list-search-params"
 
@@ -51,7 +51,7 @@ export function parseAuditExportSearchParams(
   }
 
   const actorAccountId = values.get("actor_account_id")
-  if (actorAccountId !== undefined && !isCanonicalSafeInteger(actorAccountId)) {
+  if (actorAccountId !== undefined && !isOpaqueAccountId(actorAccountId)) {
     return { ok: false, field: "form", message: "実行アカウントIDが無効です。" }
   }
 
@@ -96,7 +96,7 @@ export function parseAuditExportSearchParams(
   }
 
   const request: AuditExportRequest = { from, to }
-  if (actorAccountId !== undefined) request.actor_account_id = Number(actorAccountId)
+  if (actorAccountId !== undefined) request.actor_account_id = actorAccountId
   if (action !== undefined) request.action = action
   if (targetType !== undefined) request.target_type = targetType
   if (targetId !== undefined) request.target_id = targetId

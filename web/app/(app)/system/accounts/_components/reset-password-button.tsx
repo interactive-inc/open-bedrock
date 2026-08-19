@@ -22,7 +22,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 const initialState: AccountActionFormState = { ok: false, error: null }
 
 type Props = {
-  accountId: number
+  accountId: string
 }
 
 /** アカウントのパスワードを管理者が再設定するボタン。ダイアログで新パスワードを入力する。 */
@@ -71,9 +71,9 @@ export function ResetPasswordButton(props: Props) {
               name="new_password"
               autoComplete="new-password"
               required
-              minLength={8}
+              minLength={12}
               maxLength={200}
-              placeholder="8文字以上で入力…"
+              placeholder="12文字以上で入力…"
             />
           </Field>
 
