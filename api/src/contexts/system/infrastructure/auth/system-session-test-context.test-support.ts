@@ -13,6 +13,40 @@ const schema = `
     updated_at INTEGER NOT NULL CHECK (updated_at >= created_at)
   );
 
+  CREATE TABLE system_identity_bindings (
+    id TEXT PRIMARY KEY NOT NULL,
+    account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
+    provider TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    activated_at INTEGER,
+    revoked_at INTEGER
+  );
+
+  CREATE UNIQUE INDEX system_identity_bindings_provider_subject_uniq
+    ON system_identity_bindings (provider, subject);
+
+  CREATE TABLE system_password_credentials (
+    identity_id TEXT PRIMARY KEY NOT NULL
+      REFERENCES system_identity_bindings(id) ON DELETE CASCADE,
+    password_hash TEXT NOT NULL,
+    changed_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE system_authentication_attempts (
+    id TEXT PRIMARY KEY NOT NULL,
+    identifier TEXT NOT NULL,
+    ip TEXT,
+    attempted_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX system_authentication_attempts_identifier_attempted_at_idx
+    ON system_authentication_attempts (identifier, attempted_at);
+  CREATE INDEX system_authentication_attempts_ip_attempted_at_idx
+    ON system_authentication_attempts (ip, attempted_at);
+
   CREATE TABLE system_sessions (
     id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 255),
     account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,

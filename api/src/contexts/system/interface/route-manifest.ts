@@ -37,6 +37,16 @@ export const systemRouteManifest = [
     },
   },
   {
+    method: "PATCH",
+    path: "/system/v1/sessions",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.sessions",
+      exportName: "PATCH",
+    },
+  },
+  {
     method: "DELETE",
     path: "/system/v1/sessions",
     phase: "public",
