@@ -80,6 +80,7 @@ const COMPOSITION_MODULE = /^@\/(?:api\/)?composition(?:\/|$)/
 const CONTEXT_MODULE =
   /^@\/contexts\/([^/]+)\/(?:domain|application|infrastructure|interface)(?:\/|$)/
 const SYSTEM_SELF_REFERENCE_MODULE = /^@system\/(application|domain|infrastructure|interface)\/.+$/
+const SYSTEM_SCHEMA_REFERENCE_MODULE = /^@system\/infrastructure\/schema(?:\/|$)/
 
 /** 配置を固定せず、System所有schemaのproduction TypeScriptを再帰的に列挙する。 */
 export function discoverSystemSchemaPaths(root: string): ReadonlyArray<string> {
@@ -197,6 +198,86 @@ export function collectSystemSchemaTableNames(file: string, source: string): str
   }
 
   return tableNames.toSorted()
+}
+
+/** System schema が所有する物理SQL table名をsqliteTable宣言から集める。 */
+export function collectSystemSqlTableNames(file: string, source: string): string[] {
+  const sourceFile = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  )
+  const tableNames = new Set<string>()
+
+  function visit(node: ts.Node): void {
+    if (
+      ts.isCallExpression(node) &&
+      ((ts.isIdentifier(node.expression) && node.expression.text === "sqliteTable") ||
+        (ts.isPropertyAccessExpression(node.expression) &&
+          node.expression.name.text === "sqliteTable")) &&
+      node.arguments[0] !== undefined &&
+      ts.isStringLiteralLike(node.arguments[0])
+    ) {
+      tableNames.add(node.arguments[0].text)
+    }
+
+    ts.forEachChild(node, visit)
+  }
+
+  visit(sourceFile)
+  return [...tableNames].toSorted()
+}
+
+/** System外のproduction sourceからSystem所有tableを直接操作するSQLとschema importを拒否する。 */
+export function inspectSystemStorageAccess(
+  file: string,
+  source: string,
+  tableNames: ReadonlySet<string>,
+): SystemBoundaryViolation[] {
+  const sourceFile = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  )
+  const violations: SystemBoundaryViolation[] = []
+  const foundTables = new Set<string>()
+  const directSqlPrefix = "\\b(?:from|join|into|update|table|references)\\s+(?:\"|'|\\[|`)?"
+
+  function visit(node: ts.Node): void {
+    const moduleSpecifier = getModuleSpecifier(node)
+    if (
+      typeof moduleSpecifier === "string" &&
+      SYSTEM_SCHEMA_REFERENCE_MODULE.test(moduleSpecifier)
+    ) {
+      violations.push({
+        file,
+        reason: `System外からSystem schemaを直接importしています: ${moduleSpecifier}`,
+      })
+    }
+
+    if (ts.isStringLiteralLike(node) || ts.isTemplateLiteralToken(node)) {
+      for (const tableName of tableNames) {
+        const escapedTableName = tableName.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        const directSql = new RegExp(`${directSqlPrefix}${escapedTableName}\\b`, "iu")
+        if (directSql.test(node.text)) foundTables.add(tableName)
+      }
+    }
+
+    ts.forEachChild(node, visit)
+  }
+
+  visit(sourceFile)
+  for (const tableName of [...foundTables].toSorted()) {
+    violations.push({
+      file,
+      reason: `System外からSystem所有tableを直接操作しています: ${tableName}`,
+    })
+  }
+  return violations
 }
 
 /** application/domain/infrastructure の System 直下にある capability namespace を集める。 */
@@ -832,6 +913,43 @@ async function inspectSystemPath(
   )
 }
 
+async function inspectNonSystemStorageAccess(): Promise<SystemBoundaryViolation[]> {
+  const tableNames = new Set(
+    SYSTEM_SCHEMA_PATHS.flatMap((path) =>
+      collectSystemSqlTableNames(relative(PROJECT_ROOT, path), readFileSync(path, "utf8")),
+    ),
+  )
+  const violations: SystemBoundaryViolation[] = []
+
+  for await (const discoveredFile of new Glob("**/*.{ts,tsx}").scan(SOURCE_ROOT)) {
+    const file = resolve(SOURCE_ROOT, discoveredFile)
+    const normalizedFile = file.replaceAll("\\", "/")
+    if (
+      normalizedFile.startsWith(`${SYSTEM_CONTEXT_ROOT.replaceAll("\\", "/")}/`) ||
+      normalizedFile.includes("/application/system/") ||
+      normalizedFile.includes("/domain/system/") ||
+      normalizedFile.includes("/infrastructure/system/") ||
+      normalizedFile.includes("/interface/system/") ||
+      normalizedFile.includes("/infrastructure/schema/") ||
+      normalizedFile.includes("/src/schema/") ||
+      /\.(?:test|spec|test-support)\.tsx?$/.test(normalizedFile) ||
+      normalizedFile.includes("/test/")
+    ) {
+      continue
+    }
+
+    violations.push(
+      ...inspectSystemStorageAccess(
+        relative(PROJECT_ROOT, file),
+        readFileSync(file, "utf8"),
+        tableNames,
+      ),
+    )
+  }
+
+  return violations
+}
+
 function readForbiddenProductMarkers(): ReadonlySet<string> {
   try {
     const manifest: unknown = JSON.parse(readFileSync(SYSTEM_OWNERSHIP_MANIFEST_PATH, "utf8"))
@@ -923,6 +1041,8 @@ export async function checkSystemContextBoundary(): Promise<SystemBoundaryViolat
   for (const path of TYPESCRIPT_CONFIG_PATHS) {
     violations.push(...inspectTypeScriptConfig(path))
   }
+
+  violations.push(...(await inspectNonSystemStorageAccess()))
 
   return violations
 }

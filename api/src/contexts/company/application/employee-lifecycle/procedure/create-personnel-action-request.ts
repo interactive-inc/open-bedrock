@@ -10,7 +10,7 @@ import type { PersonnelActionInput } from "@/contexts/company/domain/employee-li
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
-import { PersonnelActionSystemWorkflowWriter } from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action-system-workflow-writer"
+import { createPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/create-personnel-action-request"
 import type { Context } from "@/env"
 import {
   ApplicationError,
@@ -20,10 +20,12 @@ import {
   UnprocessableError,
   ValidationError,
 } from "@/lib/errors"
+import { CancelSystemProcedure } from "@system/application/workflow/cancel-system-procedure"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
 import { procedureKeySchema } from "@system/domain/workflow/procedure-definition.entity"
 import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure-repository"
+import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer"
 
 export type CreatedPersonnelActionRequest = {
   id: string
@@ -183,7 +185,7 @@ export class CreatePersonnelActionRequest {
       },
       this.c.var.auditContext,
     )
-    const writer = new PersonnelActionSystemWorkflowWriter(this.c, {
+    const association = {
       id: requestId,
       targetEmployeeId: target?.id ?? null,
       subjectSnapshotJson:
@@ -202,7 +204,8 @@ export class CreatePersonnelActionRequest {
       baseOrganizationRevision: command.baseOrganizationRevision,
       createdAt: createdAtSeconds,
       auditStatements: new AuditEventRepository(this.c).prepareAppend(audit),
-    })
+    }
+    const writer = new SystemD1WorkflowWriter({ env: { DB: this.c.env.DB } })
     const started = await new StartSystemProcedure(writer).run({
       seriesId,
       version: 1,
@@ -222,6 +225,27 @@ export class CreatePersonnelActionRequest {
     })
     if (started instanceof Error) {
       return new UnexpectedError("人事変更申請を作成できません", { cause: started })
+    }
+    const associated = await createPersonnelActionRequest(this.c, {
+      ...association,
+      applicationId: started.number,
+      systemProposalSeriesId: seriesId,
+    })
+    if (associated instanceof Error) {
+      const cancelled = await new CancelSystemProcedure(writer).run({
+        number: started.number,
+        createdByAccountId: accountId,
+        cancelledAt: createdAt,
+      })
+      return new UnexpectedError("人事変更申請を作成できません", {
+        cause:
+          cancelled === true
+            ? associated
+            : new AggregateError(
+                [associated, cancelled instanceof Error ? cancelled : new Error(String(cancelled))],
+                "failed to associate and cancel System procedure",
+              ),
+      })
     }
 
     return {

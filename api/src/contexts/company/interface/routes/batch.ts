@@ -7,8 +7,7 @@ import {
 } from "@/contexts/company/interface/utils/to-bounded-int"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { systemBatchJobs } from "@system/infrastructure/schema/system-core"
-import { count, desc } from "drizzle-orm"
+import { readSystemBatchJobs } from "@system/infrastructure/batch/read-system-batch-jobs"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -49,16 +48,10 @@ export const GET = factory.createHandlers(
       max: MAX_LIST_OFFSET,
     })
 
-    const rows = await c.var.database
-      .select()
-      .from(systemBatchJobs)
-      .orderBy(desc(systemBatchJobs.id))
-      .limit(limit)
-      .offset(offset)
+    const result = await readSystemBatchJobs({ env: { DB: c.env.DB } }, { limit, offset })
+    if (result instanceof Error) throw result
 
-    const totalRows = await c.var.database.select({ total: count() }).from(systemBatchJobs)
-
-    const responseBody = rows.map((row) => ({
+    const responseBody = result.jobs.map((row) => ({
       id: row.id,
       name: row.name,
       status: row.status,
@@ -67,6 +60,6 @@ export const GET = factory.createHandlers(
       message: row.message,
     }))
 
-    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+    return c.json({ data: responseBody, total: result.total }, 200)
   },
 )

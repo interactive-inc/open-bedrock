@@ -1,4 +1,4 @@
-/** api の canAssignRoles と同一基準（permission ベース）。 */
+/** System Role Binding を変更できる正規 System permission。 */
 export function canAssignRoles(permissions: ReadonlyArray<string>): boolean {
-  return permissions.includes("iam:assign_roles")
+  return permissions.includes("system:admin") || permissions.includes("iam:write")
 }

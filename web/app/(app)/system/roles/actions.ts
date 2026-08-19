@@ -17,7 +17,7 @@ export type RoleUpdateFormState = {
   error: string | null
 }
 
-/** FormData からロール更新を実行するサーバーアクション。iam:manage_roles 権限が必要。 */
+/** FormData からロール更新を実行するサーバーアクション。iam:write 権限が必要。 */
 export async function updateRoleAction(
   _prevState: RoleUpdateFormState,
   formData: FormData,
@@ -59,14 +59,8 @@ export async function updateRoleAction(
   return { ok: true, error: null }
 }
 
-function toRoleId(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+function toRoleId(value: FormDataEntryValue | null): string | null {
+  return typeof value === "string" && value.length >= 1 && value.length <= 255 ? value : null
 }
 
 function toRoleText(value: FormDataEntryValue | null): string | null {
@@ -84,7 +78,7 @@ export type RoleDeleteFormState = {
   error: string | null
 }
 
-/** 動的ロールを削除する。iam:manage_roles 権限が必要。 */
+/** custom role を削除する。iam:write 権限が必要。 */
 export async function deleteRoleAction(
   _prevState: RoleDeleteFormState,
   formData: FormData,
@@ -95,7 +89,7 @@ export async function deleteRoleAction(
     return { ok: false, error: "ロールを管理する権限がありません" }
   }
 
-  const roleId = toPositiveInt(formData.get("role_id"))
+  const roleId = toRoleId(formData.get("role_id"))
 
   if (roleId === null) {
     return { ok: false, error: "ロールを指定してください" }
@@ -112,18 +106,8 @@ export async function deleteRoleAction(
   return { ok: true, error: null }
 }
 
-function toPositiveInt(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
-}
-
 /**
- * FormData からロール作成を実行するサーバーアクション。iam:manage_roles 権限が必要。
+ * FormData からロール作成を実行するサーバーアクション。iam:write 権限が必要。
  * permission_keys は同名の複数チェックボックスから配列で受け取る。
  */
 export async function createRoleAction(

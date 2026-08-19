@@ -112,8 +112,6 @@ const nextConfig: NextConfig = {
 
     return [
       // --- admin 系 ---
-      { source: "/admin/accounts", destination: "/accounts", permanent: false },
-      { source: "/admin/roles/:path*", destination: "/roles/:path*", permanent: false },
       {
         source: "/admin/audit-events/:path*",
         destination: "/audit-events/:path*",

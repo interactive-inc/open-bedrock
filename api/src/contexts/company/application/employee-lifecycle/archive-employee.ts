@@ -5,7 +5,6 @@ import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
-import { LastRootGuard } from "@/contexts/company/infrastructure/iam/last-root-guard"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
@@ -16,6 +15,10 @@ import {
   UnexpectedError,
 } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
+import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/contexts/company/domain/iam/effective-root-permission-key.catalog"
+import { zAccountId } from "@system/domain/auth/account-id"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
+import { PrepareSystemAccountSuspension } from "@system/infrastructure/iam/prepare-system-account-suspension"
 
 export class ArchiveEmployee {
   constructor(private readonly c: Context) {}
@@ -85,14 +88,35 @@ export class ArchiveEmployee {
         "employee_not_retired",
       )
     }
-    const account = await this.c.env.DB.prepare(
-      `SELECT account.id, account.token_version
-       FROM system_accounts account
-       JOIN account_employee_links link ON link.account_id = account.id
-       WHERE link.employee_id = ?1`,
+    const accountIdValue = await this.c.env.DB.prepare(
+      "SELECT account_id FROM account_employee_links WHERE employee_id = ?1",
     )
       .bind(employee.id)
-      .first<{ id: number; token_version: number }>()
+      .first<string>("account_id")
+    const accountId = zAccountId.safeParse(accountIdValue)
+    if (!accountId.success) {
+      return new UnexpectedError("従業員のSystem Accountを取得できません")
+    }
+    const account = await new SystemAccountRepository({ database: this.c.env.DB }).findById(
+      accountId.data,
+    )
+    if (account === null || account instanceof Error) {
+      return new UnexpectedError("従業員のSystem Accountを取得できません", {
+        cause: account instanceof Error ? account : undefined,
+      })
+    }
+    const archivedAt = new Date(command.archivedAt)
+    const systemStatements = new PrepareSystemAccountSuspension({
+      env: { DB: this.c.env.DB },
+    }).prepare({
+      actorAccountId: command.session.accountId,
+      targetAccountId: account.id,
+      protectedPermissionKeys: EFFECTIVE_ROOT_PERMISSION_KEYS,
+      now: archivedAt,
+    })
+    if (systemStatements instanceof Error) {
+      return new UnexpectedError("System Account停止を準備できません", { cause: systemStatements })
+    }
     const archivedAtSeconds = Math.floor(Date.parse(command.archivedAt) / 1_000)
     const audit = createAuditEvent(
       {
@@ -106,14 +130,14 @@ export class ArchiveEmployee {
         before: {
           employeeCode: employee.code,
           status: state.status,
-          accountId: account?.id ?? null,
-          tokenVersion: account?.token_version ?? null,
+          accountId: account.id,
+          tokenVersion: account.tokenVersion,
         },
         after: {
           employeeCode: employee.code,
           status: "archived",
-          accountId: account?.id ?? null,
-          tokenVersion: account === null ? null : account.token_version + 1,
+          accountId: account.id,
+          tokenVersion: account.tokenVersion + 1,
         },
         now: new Date(command.archivedAt),
       },
@@ -121,9 +145,6 @@ export class ArchiveEmployee {
     )
     try {
       await this.c.env.DB.batch([
-        new LastRootGuard(this.c).abortWhenRemovingLoginEnabledEffectiveRootWouldLeaveNone(
-          employee.id,
-        ),
         this.c.env.DB.prepare(
           `UPDATE employees SET archived_at = ?2, archived_by_account_id = ?3
              WHERE id = ?1 AND archived_at IS NULL AND status = 'retired'
@@ -132,13 +153,7 @@ export class ArchiveEmployee {
              RETURNING id`,
         ).bind(employee.id, archivedAtSeconds, command.session.accountId, state.employeeRevision),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-        this.c.env.DB.prepare(
-          `UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1,
-                                 updated_at = ?2
-             WHERE id = (
-               SELECT account_id FROM account_employee_links WHERE employee_id = ?1
-             )`,
-        ).bind(employee.id, archivedAtSeconds),
+        ...systemStatements,
         this.c.env.DB.prepare("DELETE FROM org_memberships WHERE employee_code = ?1").bind(
           employee.code,
         ),
@@ -146,8 +161,11 @@ export class ArchiveEmployee {
       ])
       return { status: "archived" }
     } catch (cause) {
-      if (LastRootGuard.isAbortedBy(cause)) {
+      if (cause instanceof Error && cause.message.includes("malformed JSON")) {
         return new ConflictError("最後の実効管理者はアーカイブできません", "last_admin")
+      }
+      if (cause instanceof Error && cause.message.includes("integer overflow")) {
+        return new ForbiddenError("System Accountを停止する権限がありません", "forbidden")
       }
       return isAbortedByGuard(cause)
         ? new ConflictError("従業員情報が更新されています", "personnel_action_stale")

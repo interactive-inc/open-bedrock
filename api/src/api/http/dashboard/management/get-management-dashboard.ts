@@ -10,7 +10,7 @@ import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
-import { systemCases } from "@system/infrastructure/schema/system-workflow"
+import { countPendingSystemCases } from "@system/infrastructure/workflow/count-pending-system-cases"
 import { and, count, eq, gte, like, sql } from "drizzle-orm"
 
 /**
@@ -30,6 +30,13 @@ export class GetManagementDashboard {
     try {
       const database = this.c.var.database
 
+      const pendingApplicationCount = await countPendingSystemCases({ env: { DB: this.c.env.DB } })
+      if (pendingApplicationCount instanceof Error) {
+        return new UnexpectedError("failed to aggregate management dashboard", {
+          cause: pendingApplicationCount,
+        })
+      }
+
       const [
         employeeRows,
         joinRows,
@@ -40,7 +47,6 @@ export class GetManagementDashboard {
         expenseMonthRows,
         expensePendingRows,
         openReviewCycleRows,
-        pendingApplicationRows,
       ] = await database.batch([
         database.select({ total: count() }).from(employees).where(eq(employees.status, "active")),
         database
@@ -76,10 +82,6 @@ export class GetManagementDashboard {
           .select({ total: count() })
           .from(reviewCycles)
           .where(eq(reviewCycles.status, "open")),
-        database
-          .select({ total: count() })
-          .from(systemCases)
-          .where(eq(systemCases.status, "pending")),
       ])
 
       const departmentRows = await database
@@ -115,7 +117,7 @@ export class GetManagementDashboard {
         expense_count: expenseMonthRows.at(0)?.total ?? 0,
         expense_pending_count: expensePendingRows.at(0)?.total ?? 0,
         open_review_cycle_count: openReviewCycleRows.at(0)?.total ?? 0,
-        pending_application_count: pendingApplicationRows.at(0)?.total ?? 0,
+        pending_application_count: pendingApplicationCount,
         goal_done_rates: this.toGoalDoneRates(goalRows),
       }
     } catch (error) {

@@ -2,7 +2,7 @@ import type { AppType } from "api/app"
 import { hc } from "hono/client"
 
 /**
- * POST /auth/refresh を refresh_token で呼び、新しい access_token を取得する。
+ * PATCH /system/v1/sessions を refresh_token で呼び、新しい access_token を取得する。
  * Middleware（Edge Runtime）から呼ぶため `createClient`（`next/headers` 依存）は使わず、
  * トークン不要のクライアントをその場で作る。
  */
@@ -11,7 +11,9 @@ export async function postRefreshToken(refreshToken: string) {
 
   const client = hc<AppType>(baseUrl)
 
-  const response = await client.auth.refresh.$post({ json: { refresh_token: refreshToken } })
+  const response = await client.system.v1.sessions.$patch({
+    json: { refresh_token: refreshToken },
+  })
 
   if (response.status >= 400) {
     return new Error("failed to refresh token")

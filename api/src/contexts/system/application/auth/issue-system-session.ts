@@ -4,6 +4,7 @@ import { resolveAccountSession } from "@system/application/auth/resolve-account-
 import type { SessionRepository } from "@system/application/auth/session-repository"
 import type { SystemSessionAuditContext } from "@system/application/auth/system-session-audit-context"
 import type { SystemSessionMaterialService } from "@system/application/auth/system-session-material-service"
+import type { SystemAccessTokenIssuer } from "@system/application/auth/system-access-token-issuer"
 import type { AccountId } from "@system/domain/auth/account-id"
 import type { AccountSessionRejection } from "@system/domain/auth/get-account-session-rejection"
 import type { SessionId } from "@system/domain/auth/session-id"
@@ -13,6 +14,7 @@ type Props = Readonly<{
   accountRepository: AccountRepository
   sessionRepository: SessionRepository
   materialService: SystemSessionMaterialService
+  accessTokenIssuer: SystemAccessTokenIssuer
   sessionTtlMilliseconds: number
 }>
 
@@ -28,6 +30,7 @@ export type IssueSystemSessionResult =
       kind: "issued"
       accountId: AccountId
       tokenVersion: number
+      accessToken: string
       rawToken: string
       sessionId: SessionId
       expiresAt: Date
@@ -101,6 +104,13 @@ export class IssueSystemSession {
     })
     if (audit instanceof Error) return audit
 
+    const accessToken = await this.props.accessTokenIssuer.issue({
+      accountId: session.accountId,
+      tokenVersion: session.tokenVersion,
+      now: command.now,
+    })
+    if (accessToken instanceof Error) return accessToken
+
     const creationError = await this.props.sessionRepository.createWithAudit(session, audit)
     if (creationError instanceof Error) return creationError
 
@@ -108,6 +118,7 @@ export class IssueSystemSession {
       kind: "issued" as const,
       accountId: session.accountId,
       tokenVersion: session.tokenVersion,
+      accessToken,
       rawToken,
       sessionId: session.id,
       expiresAt,

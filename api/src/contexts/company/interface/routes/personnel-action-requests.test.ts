@@ -104,6 +104,43 @@ describe("POST /personnel-action-requests", () => {
     ).toBe(1)
   })
 
+  test("cancels the System procedure when the Company association cannot be stored", async () => {
+    const db = await prepareDb()
+    await db.exec(`
+      CREATE TRIGGER reject_personnel_action_request
+      BEFORE INSERT ON personnel_action_requests
+      BEGIN
+        SELECT RAISE(ABORT, 'Company association unavailable');
+      END;
+    `)
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret: lifecycleRouteJwtSecret,
+      path: "/personnel-action-requests",
+      method: "POST",
+      token: await token(4),
+      body: {
+        action,
+        base_employee_revision: 0,
+        base_organization_revision: await readOrganizationRevision(db),
+      },
+      now: "2026-01-01T00:00:00.000Z",
+    })
+
+    expect(response.status).toBe(500)
+    expect(
+      await db
+        .prepare("SELECT count(*) AS total FROM personnel_action_requests")
+        .first<number>("total"),
+    ).toBe(0)
+    expect(
+      await db
+        .prepare("SELECT status FROM system_cases ORDER BY created_at DESC LIMIT 1")
+        .first<string>("status"),
+    ).toBe("cancelled")
+  })
+
   test("applies the action atomically when final approval succeeds", async () => {
     const db = await prepareDb()
     const { applicationId } = await createRequest(db)

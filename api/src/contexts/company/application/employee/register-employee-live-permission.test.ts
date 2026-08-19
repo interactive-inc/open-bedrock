@@ -3,7 +3,6 @@ import { RegisterEmployee } from "@/contexts/company/application/employee/regist
 import type { Context } from "@/env"
 import { AccountAuthRepository } from "@/contexts/company/application/auth/account-auth-repository"
 import { AccountEmployeeLinkRepository } from "@/contexts/company/infrastructure/employee/account-employee-link-repository"
-import { RoleRepository } from "@/contexts/company/infrastructure/iam/role-repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { replaceAccountRolesWithPermissionSets } from "@/api/test/support/replace-account-roles-with-permission-sets"
@@ -120,19 +119,20 @@ function employeeInput(code: string, role: string) {
 }
 
 async function createRole(context: Context, key: string, permissionKeys: ReadonlyArray<string>) {
-  const role = await new RoleRepository(context).createWithPermissions({
-    key,
-    name: key,
-    description: null,
-    createdAt: 0,
-    permissionKeys,
-  })
+  const id = crypto.randomUUID()
+  await context.env.DB.batch([
+    context.env.DB.prepare(
+      `INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
+         VALUES (?1, ?2, 'custom', ?3, 0, 0)`,
+    ).bind(id, `company:${key}`, key),
+    ...permissionKeys.map((permissionKey) =>
+      context.env.DB.prepare(
+        `INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES (?1, ?2)`,
+      ).bind(id, permissionKey),
+    ),
+  ])
 
-  if (role instanceof Error || typeof role === "string") {
-    throw new Error("role setup failed")
-  }
-
-  return role
+  return { id, key }
 }
 
 async function sessionFor(context: Context, accountId: AccountId): Promise<Session> {
@@ -188,7 +188,7 @@ function mutateBeforeNextBatch(
 
 async function removePermissionFromRole(
   db: D1Database,
-  roleId: number,
+  roleId: string,
   permissionKey: string,
 ): Promise<void> {
   await db

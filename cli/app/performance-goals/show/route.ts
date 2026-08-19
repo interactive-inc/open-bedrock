@@ -17,14 +17,14 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["performance-goals"][":goal_id"].$get({
-      param: { goal_id: query.id },
+    const response = await client["performance-goals"][":goalId"].$get({
+      param: { goalId: query.id },
     })
 
     const goal = await response.json()
 
-    const evaluationsResponse = await client["performance-goals"][":goal_id"].evaluations.$get({
-      param: { goal_id: query.id },
+    const evaluationsResponse = await client["performance-goals"][":goalId"].evaluations.$get({
+      param: { goalId: query.id },
     })
 
     const evaluations = await evaluationsResponse.json()

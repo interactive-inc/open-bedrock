@@ -1,16 +1,18 @@
 import { createClient } from "@/lib/api/hc-client"
 
-/** GET /roles/:id。ロール詳細（割当済み permission キー付き、iam:manage_roles が必要）。 */
-export async function getRole(roleId: number) {
+/** GET /system/v1/roles/:roleId。System Role 詳細を取得する。 */
+export async function getRole(roleId: string) {
   const client = await createClient()
 
-  const response = await client.roles[":id"].$get({
-    param: { id: String(roleId) },
+  const response = await client.system.v1.roles[":roleId"].$get({
+    param: { roleId },
   })
 
-  if (response.status >= 400) {
+  if (response.status !== 200) {
     return new Error("failed to load role")
   }
 
-  return response.json()
+  const role = await response.json()
+
+  return { ...role, is_system: role.kind === "managed" }
 }

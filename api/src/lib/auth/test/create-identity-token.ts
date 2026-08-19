@@ -42,7 +42,7 @@ export function createIdentityToken(
       kid: overrides.keyId ?? "identity-test-key",
     })
     .setIssuer(overrides.issuer ?? "https://identity-provider.example/")
-    .setAudience(overrides.audience ?? "open-karte")
+    .setAudience(overrides.audience ?? "urn:system:identity-test")
     .setIssuedAt(overrides.iat ?? nowEpoch)
     .setExpirationTime(overrides.exp ?? nowEpoch + 60)
     .sign(signingKey)

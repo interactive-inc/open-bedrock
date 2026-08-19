@@ -7,7 +7,6 @@ import { markAllNotificationsRead } from "@/lib/api/mark-all-notifications-read"
 import { markNotificationRead } from "@/lib/api/mark-notification-read"
 import type { NotificationKind } from "@/lib/api/types/notification-types"
 import { requireAuth } from "@/lib/auth/require-auth"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
 
 /** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
@@ -23,9 +22,10 @@ export async function markNotificationReadAction(
 ): Promise<NotificationFormState> {
   await requireAuth()
 
-  const notificationId = toPositiveIntId(formData.get("notification_id"))
+  const notificationIdValue = formData.get("notification_id")
+  const notificationId = typeof notificationIdValue === "string" ? notificationIdValue.trim() : ""
 
-  if (notificationId === null) {
+  if (notificationId === "") {
     return { ok: false, error: "通知 ID が不正です" }
   }
 

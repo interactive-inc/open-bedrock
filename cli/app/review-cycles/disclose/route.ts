@@ -17,8 +17,8 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["review-cycles"][":cycle_id"].disclose.$post({
-      param: { cycle_id: query["cycle-id"] },
+    const response = await client["review-cycles"][":cycleId"].disclose.$post({
+      param: { cycleId: query["cycle-id"] },
     })
 
     return c.json(await response.json())

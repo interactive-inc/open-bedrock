@@ -38,8 +38,8 @@ export default factory.createHandlers(
 
     // createClient の fetch ラッパーが 4xx/5xx を ApiError として throw するため、
     // ここに来た時点で response は必ず成功。手動の ok チェックは不要。
-    const response = await client.auth.login.$post({
-      json: { email: query.email, password: query.password },
+    const response = await client.system.v1.sessions.$post({
+      json: { subject: query.email, password: query.password },
     })
 
     const result = z

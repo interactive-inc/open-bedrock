@@ -18,8 +18,8 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["employee-skills"].me[":skill_code"].$get({
-      param: { skill_code: skillCode },
+    const response = await client["employee-skills"].me[":skillCode"].$get({
+      param: { skillCode: skillCode },
     })
 
     return c.json(await response.json())

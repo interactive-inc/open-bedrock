@@ -11,17 +11,3 @@ export class IamAccountNotFoundError extends Error {
     this.name = "IamAccountNotFoundError"
   }
 }
-
-export class IamIdentityDuplicateError extends Error {
-  constructor(cause?: unknown) {
-    super("同じメールアドレスの IAM identity が既に存在します。", { cause })
-    this.name = "IamIdentityDuplicateError"
-  }
-}
-
-export class IamIdentityWriteError extends Error {
-  constructor(operation: string, identityId: string, cause?: unknown) {
-    super(`IAM identity ${identityId} の ${operation} に失敗しました。`, { cause })
-    this.name = "IamIdentityWriteError"
-  }
-}

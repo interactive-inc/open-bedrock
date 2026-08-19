@@ -1,19 +1,14 @@
 import { createClient } from "@/lib/api/hc-client"
-import type { NotificationResponse } from "@/lib/api/types/notification-types"
-
-/** POST /notifications/:id/read。指定した通知を既読にする。 */
-export async function markNotificationRead(
-  notificationId: number,
-): Promise<NotificationResponse | Error> {
+/** PATCH /system/v1/notifications/:id。指定した通知を既読にする。 */
+export async function markNotificationRead(notificationId: string): Promise<void | Error> {
   const client = await createClient()
 
-  const response = await client.notifications[":id"].read.$post({
+  const response = await client.system.v1.notifications[":id"].$patch({
     param: { id: String(notificationId) },
+    json: { read: true },
   })
 
-  if (response.status >= 400) {
+  if (response.status !== 200) {
     return new Error("failed to mark notification as read")
   }
-
-  return response.json()
 }

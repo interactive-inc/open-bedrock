@@ -1,9 +1,9 @@
 import { ACCESS_TOKEN_TYPE } from "@/contexts/system/domain/auth/access-token-claims"
 import {
-  ACCESS_TOKEN_AUDIENCE,
-  ACCESS_TOKEN_ISSUER,
-  JoseTokenSigner,
-} from "@/contexts/company/application/auth/jose-token-signer"
+  SYSTEM_ACCESS_TOKEN_AUDIENCE,
+  SYSTEM_ACCESS_TOKEN_ISSUER,
+} from "@system/infrastructure/auth/system-access-token-profile"
+import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
@@ -40,10 +40,11 @@ async function request(token: string): Promise<Response> {
 
 describe("verifyBearer access token profile", () => {
   test("accepts the case-insensitive Bearer scheme through the shared parser", async () => {
-    const token = await new JoseTokenSigner().sign(
-      { accountId: testAccountId(1), tokenVersion: 0 },
-      secret,
-    )
+    const token = await new SystemAccessTokenIssuer(secret).issue({
+      accountId: testAccountId(1),
+      tokenVersion: 0,
+      now: new Date(),
+    })
 
     expect(token).not.toBeInstanceOf(Error)
     if (token instanceof Error) return
@@ -71,7 +72,7 @@ describe("verifyBearer access token profile", () => {
       .setProtectedHeader({ alg: "HS256", typ: ACCESS_TOKEN_TYPE })
       .setSubject("1")
       .setIssuer("another-issuer")
-      .setAudience(ACCESS_TOKEN_AUDIENCE)
+      .setAudience(SYSTEM_ACCESS_TOKEN_AUDIENCE)
       .setJti(crypto.randomUUID())
       .setIssuedAt(now)
       .setExpirationTime(now + 60)
@@ -79,7 +80,7 @@ describe("verifyBearer access token profile", () => {
     const wrongAudience = await new SignJWT(claims)
       .setProtectedHeader({ alg: "HS256", typ: ACCESS_TOKEN_TYPE })
       .setSubject("1")
-      .setIssuer(ACCESS_TOKEN_ISSUER)
+      .setIssuer(SYSTEM_ACCESS_TOKEN_ISSUER)
       .setAudience("another-audience")
       .setJti(crypto.randomUUID())
       .setIssuedAt(now)
@@ -88,8 +89,8 @@ describe("verifyBearer access token profile", () => {
     const wrongType = await new SignJWT(claims)
       .setProtectedHeader({ alg: "HS256", typ: "another+jwt" })
       .setSubject("1")
-      .setIssuer(ACCESS_TOKEN_ISSUER)
-      .setAudience(ACCESS_TOKEN_AUDIENCE)
+      .setIssuer(SYSTEM_ACCESS_TOKEN_ISSUER)
+      .setAudience(SYSTEM_ACCESS_TOKEN_AUDIENCE)
       .setJti(crypto.randomUUID())
       .setIssuedAt(now)
       .setExpirationTime(now + 60)

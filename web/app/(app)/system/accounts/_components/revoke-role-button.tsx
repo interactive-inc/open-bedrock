@@ -9,7 +9,8 @@ const initialState: AccountActionFormState = { ok: false, error: null }
 
 type Props = {
   accountId: string
-  roleKey: string
+  bindingId: string
+  roleLabel: string
 }
 
 /** アカウントから特定ロールを剥奪するボタン。 */
@@ -35,13 +36,13 @@ export function RevokeRoleButton(props: Props) {
     <form action={formAction} className="inline">
       <input type="hidden" name="account_id" value={props.accountId} />
 
-      <input type="hidden" name="role_key" value={props.roleKey} />
+      <input type="hidden" name="binding_id" value={props.bindingId} />
 
       <button
         type="submit"
         disabled={isPending}
         className="relative ml-1 text-muted-foreground transition-colors select-none hover:text-destructive focus-visible:rounded focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50 disabled:pointer-events-none max-md:after:absolute max-md:after:inset-[-14px] max-md:after:content-['']"
-        aria-label={`${props.roleKey} を剥奪`}
+        aria-label={`${props.roleLabel} を剥奪`}
       >
         ×
       </button>

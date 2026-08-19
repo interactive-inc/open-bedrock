@@ -28,6 +28,7 @@ export type SystemAuthorizationContext = Readonly<{
     accountTokenVersion: number
     permissions: ReadonlySet<string>
     role: string
+    roleKeys?: ReadonlyArray<string>
     userId: string
   }>
 }>
@@ -47,6 +48,20 @@ export type SystemJwtSecretContext = Readonly<{
   env: Readonly<{ JWT_SECRET?: string }>
 }>
 
+export type SystemSessionConfigurationContext = Readonly<{
+  env: Readonly<{ SYSTEM_SESSION_TTL_SECONDS?: string }>
+}>
+
+export type SystemExternalIdentityContext = Readonly<{
+  env: Readonly<{
+    IDENTITY_JWKS?: string
+    IDENTITY_ISSUER?: string
+    IDENTITY_AUDIENCE?: string
+    IDENTITY_LOGIN_URL?: string
+    API_ORIGIN?: string
+  }>
+}>
+
 export type SystemOidcSigningContext = Readonly<{
   env: Readonly<{ OIDC_SIGNING_KEYS?: string }>
 }>
@@ -60,6 +75,10 @@ export type SystemOidcConfigurationContext = Readonly<{
 
 export type SystemPasswordHashContext = Readonly<{
   env: Readonly<{ PEPPER_SECRET?: string }>
+}>
+
+export type SystemBootstrapContext = Readonly<{
+  env: Readonly<{ BOOTSTRAP_TOKEN?: string }>
 }>
 
 type SystemEmailAddress = Readonly<{

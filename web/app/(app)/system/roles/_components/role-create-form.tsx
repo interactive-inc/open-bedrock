@@ -52,13 +52,21 @@ export function RoleCreateForm(props: Props) {
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <Field>
-        <FieldLabel htmlFor="key">キー（英小文字・記号、不変）</FieldLabel>
-        <Input id="key" name="key" required maxLength={200} placeholder="auditor" />
+        <FieldLabel htmlFor="key">キー（名前空間:名前、不変）</FieldLabel>
+        <Input
+          id="key"
+          name="key"
+          required
+          minLength={3}
+          maxLength={100}
+          pattern="[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*"
+          placeholder="company:auditor"
+        />
       </Field>
 
       <Field>
         <FieldLabel htmlFor="name">名前</FieldLabel>
-        <Input id="name" name="name" required maxLength={200} placeholder="監査担当" />
+        <Input id="name" name="name" required maxLength={100} placeholder="監査担当" />
       </Field>
 
       <Field>

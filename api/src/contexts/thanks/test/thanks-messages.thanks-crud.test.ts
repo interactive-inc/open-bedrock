@@ -20,12 +20,11 @@ const thanksResponseSchema = z.object({
 })
 
 const notificationResponseSchema = z.object({
-  id: z.number().nullable(),
+  id: z.string(),
   kind: z.string(),
   title: z.string(),
   body: z.string().nullable(),
-  source_domain: z.string(),
-  source_id: z.number().nullable(),
+  source: z.object({ type: z.string(), id: z.string() }).nullable(),
 })
 
 const jwtSecret = "thanks-crud-test-secret"
@@ -199,34 +198,42 @@ describe("POST /thanks-messages", () => {
 
     const recipientInbox = await request({
       db,
-      path: "/notifications/me",
+      path: "/system/v1/notifications",
       token: await recipientToken(),
     })
 
     const recipientRows = z
-      .object({ data: z.array(notificationResponseSchema), total: z.number() })
+      .object({ notifications: z.array(notificationResponseSchema), total: z.number() })
       .safeParse(await recipientInbox.json())
 
     expect(recipientRows.success).toBe(true)
 
     if (recipientRows.success) {
-      const thanksNotifications = recipientRows.data.data.filter((row) => row.kind === "thanks")
+      const thanksNotifications = recipientRows.data.notifications.filter(
+        (row) => row.kind === "company:thanks",
+      )
 
       expect(thanksNotifications.length).toBe(1)
-      expect(thanksNotifications[0]?.source_domain).toBe("thanks")
+      expect(thanksNotifications[0]?.source?.type).toBe("company:notification.source")
       expect(thanksNotifications[0]?.body).toBe("サポートに感謝します")
     }
 
-    const senderInbox = await request({ db, path: "/notifications/me", token: await senderToken() })
+    const senderInbox = await request({
+      db,
+      path: "/system/v1/notifications",
+      token: await senderToken(),
+    })
 
     const senderRows = z
-      .object({ data: z.array(notificationResponseSchema), total: z.number() })
+      .object({ notifications: z.array(notificationResponseSchema), total: z.number() })
       .safeParse(await senderInbox.json())
 
     expect(senderRows.success).toBe(true)
 
     if (senderRows.success) {
-      expect(senderRows.data.data.filter((row) => row.kind === "thanks").length).toBe(0)
+      expect(
+        senderRows.data.notifications.filter((row) => row.kind === "company:thanks").length,
+      ).toBe(0)
     }
   })
 })

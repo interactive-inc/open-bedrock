@@ -7,18 +7,14 @@ const identityLoginResponseSchema = z.object({
 })
 
 /**
- * POST /auth/identity/login。外部 identity provider が発行した短命トークンを
+ * POST /system/v1/identity-sessions。外部 identity provider が発行した短命トークンを
  * サーバーサイドで交換し、アクセストークンを取得する。未認証フローで呼ばれる。
- * アカウント未登録（404）は "account_not_found" の Error として区別して返す。
+ * 拒否理由はアカウントの存在を外部へ漏らさないSystem APIの一律401へ従う。
  */
 export async function postIdentityLogin(body: { token: string }) {
   const client = await createClient()
 
-  const response = await client.auth.identity.login.$post({ json: body })
-
-  if (response.status === 404) {
-    return new Error("account_not_found")
-  }
+  const response = await client.system.v1["identity-sessions"].$post({ json: body })
 
   if (response.status >= 400) {
     return new Error("failed to login")

@@ -6,7 +6,7 @@ import { zAppPermissionList } from "@/lib/app-schemas"
 
 // @authorization permission - 権限キーで判定する
 /**
- * GET /permission-definitions — 権限カタログ全件（iam:manage_roles が必要）。
+ * GET /permission-definitions — 製品権限カタログ全件（iam:write が必要）。
  * ロール編集 UI の checkbox とカテゴリ表示に使う。正はコードの PERMISSION_CATALOG。
  */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -16,7 +16,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (session.hasPermission("iam:manage_roles") === false) {
+  if (
+    session.hasPermission("system:admin") === false &&
+    session.hasPermission("iam:write") === false
+  ) {
     throw new ForbiddenError("cannot manage roles")
   }
 

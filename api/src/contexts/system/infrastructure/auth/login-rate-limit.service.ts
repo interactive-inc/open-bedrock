@@ -4,13 +4,13 @@ import type {
   SystemDatabase,
   SystemDatabaseContext,
 } from "@system/infrastructure/configuration/system-context"
-import { loginAttempts } from "@/contexts/system/infrastructure/schema/system-runtime"
+import { systemAuthenticationAttempts } from "@system/infrastructure/schema/system-core"
 import { and, count, eq, gt, lte } from "drizzle-orm"
 
 /**
  * ログイン総当たり防止のレートリミット (#1103, #715, #2392)。
  *
- * 失敗した認証試行を D1 の login_attempts に 1 行 1 件で記録し、窓 (15 分) 内の行数が上限以上なら
+ * 失敗した認証試行を D1 の system_authentication_attempts に 1 行 1 件で記録し、窓 (15 分) 内の行数が上限以上なら
  * 拒否する分散カウンタ。全 isolate が同じテーブルを見るため、旧実装 (module-scope in-memory Map) で
  * 攻撃面が isolate 数だけ倍増していた問題を解消する (#715)。
  *
@@ -111,11 +111,11 @@ async function isLoginRateLimited(db: Db, key: string, now: number = Date.now())
   try {
     const rows = await db
       .select({ total: count() })
-      .from(loginAttempts)
+      .from(systemAuthenticationAttempts)
       .where(
         and(
-          eq(loginAttempts.identifier, key),
-          gt(loginAttempts.attemptedAt, new Date(now - WINDOW_MS)),
+          eq(systemAuthenticationAttempts.identifier, key),
+          gt(systemAuthenticationAttempts.attemptedAt, new Date(now - WINDOW_MS)),
         ),
       )
 
@@ -136,18 +136,18 @@ async function isLoginRateLimited(db: Db, key: string, now: number = Date.now())
  */
 async function recordLoginAttempt(db: Db, key: string, now: number = Date.now()): Promise<void> {
   try {
-    await db.insert(loginAttempts).values({
+    await db.insert(systemAuthenticationAttempts).values({
       id: IdValue.create().toString(),
       identifier: key,
       attemptedAt: new Date(now),
     })
 
     await db
-      .delete(loginAttempts)
+      .delete(systemAuthenticationAttempts)
       .where(
         and(
-          eq(loginAttempts.identifier, key),
-          lte(loginAttempts.attemptedAt, new Date(now - WINDOW_MS)),
+          eq(systemAuthenticationAttempts.identifier, key),
+          lte(systemAuthenticationAttempts.attemptedAt, new Date(now - WINDOW_MS)),
         ),
       )
   } catch (error) {
@@ -161,7 +161,9 @@ async function recordLoginAttempt(db: Db, key: string, now: number = Date.now())
  */
 async function resetLoginAttempts(db: Db, key: string): Promise<void> {
   try {
-    await db.delete(loginAttempts).where(eq(loginAttempts.identifier, key))
+    await db
+      .delete(systemAuthenticationAttempts)
+      .where(eq(systemAuthenticationAttempts.identifier, key))
   } catch (error) {
     console.error("login rate limit reset failed", error)
   }
@@ -234,7 +236,7 @@ export type LoginRateLimitGateResult = { limited: boolean }
  * - ip (IP単独) 50回/15分: 単一 IP からの password spray の上限。NAT 共有拠点の正常利用を
  *   巻き込まないよう pair より大きく緩める。
  *
- * 解除は窓 (15分) 経過による自動回復のみ。手動で解除したい場合は login_attempts の該当行を
+ * 解除は窓 (15分) 経過による自動回復のみ。手動で解除したい場合は system_authentication_attempts の該当行を
  * 直接 DELETE する (専用の管理 API は用意しない)。
  *
  * DB エラー時は fail-open で limited:false を返す (他の関数と同じ best-effort 方針)。
@@ -251,35 +253,48 @@ async function recordAndCheckLoginAttempt(
   const windowStart = new Date(now - WINDOW_MS)
 
   try {
-    const insert = db.insert(loginAttempts).values({ id, identifier, ip: ipPart, attemptedAt })
+    const insert = db
+      .insert(systemAuthenticationAttempts)
+      .values({ id, identifier, ip: ipPart, attemptedAt })
     const pairCount = db
       .select({ total: count() })
-      .from(loginAttempts)
+      .from(systemAuthenticationAttempts)
       .where(
         and(
-          eq(loginAttempts.identifier, identifier),
-          eq(loginAttempts.ip, ipPart),
-          gt(loginAttempts.attemptedAt, windowStart),
+          eq(systemAuthenticationAttempts.identifier, identifier),
+          eq(systemAuthenticationAttempts.ip, ipPart),
+          gt(systemAuthenticationAttempts.attemptedAt, windowStart),
         ),
       )
     const accountCount = db
       .select({ total: count() })
-      .from(loginAttempts)
+      .from(systemAuthenticationAttempts)
       .where(
-        and(eq(loginAttempts.identifier, identifier), gt(loginAttempts.attemptedAt, windowStart)),
+        and(
+          eq(systemAuthenticationAttempts.identifier, identifier),
+          gt(systemAuthenticationAttempts.attemptedAt, windowStart),
+        ),
       )
     const ipCount = db
       .select({ total: count() })
-      .from(loginAttempts)
-      .where(and(eq(loginAttempts.ip, ipPart), gt(loginAttempts.attemptedAt, windowStart)))
+      .from(systemAuthenticationAttempts)
+      .where(
+        and(
+          eq(systemAuthenticationAttempts.ip, ipPart),
+          gt(systemAuthenticationAttempts.attemptedAt, windowStart),
+        ),
+      )
     /**
      * 窓外に出た自分の identifier の古い行を opportunistic に掃除する (単一キー API の
      * recordLoginAttempt と同じ方針、全表 sweep はしない)。
      */
     const cleanup = db
-      .delete(loginAttempts)
+      .delete(systemAuthenticationAttempts)
       .where(
-        and(eq(loginAttempts.identifier, identifier), lte(loginAttempts.attemptedAt, windowStart)),
+        and(
+          eq(systemAuthenticationAttempts.identifier, identifier),
+          lte(systemAuthenticationAttempts.attemptedAt, windowStart),
+        ),
       )
 
     const [, pairRows, accountRows, ipRows] = await db.batch([
@@ -300,7 +315,7 @@ async function recordAndCheckLoginAttempt(
       ipTotal > MAX_ATTEMPTS_PER_IP
 
     if (limited) {
-      await db.delete(loginAttempts).where(eq(loginAttempts.id, id))
+      await db.delete(systemAuthenticationAttempts).where(eq(systemAuthenticationAttempts.id, id))
     }
 
     return { limited }
@@ -321,7 +336,9 @@ async function recordAndCheckLoginAttempt(
  */
 async function resetLoginAttemptsForIdentifier(db: Db, identifier: string): Promise<void> {
   try {
-    await db.delete(loginAttempts).where(eq(loginAttempts.identifier, identifier))
+    await db
+      .delete(systemAuthenticationAttempts)
+      .where(eq(systemAuthenticationAttempts.identifier, identifier))
   } catch (error) {
     console.error("login rate limit reset failed", error)
   }

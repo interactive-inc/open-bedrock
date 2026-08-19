@@ -31,8 +31,8 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["job-openings"][":job_opening_id"].$put({
-      param: { job_opening_id: id },
+    const response = await client["job-openings"][":jobOpeningId"].$put({
+      param: { jobOpeningId: id },
       json: {
         title: query.title,
         status: query.status,

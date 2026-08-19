@@ -1,11 +1,13 @@
 import { RequestPasswordReset } from "@/contexts/system/application/auth/request-password-reset"
+import { ResetPassword } from "@/contexts/system/application/auth/reset-password"
+import { PasswordResetRequestApplicationError } from "@system/application/auth/errors"
 import { EmailValue } from "@/contexts/system/domain/auth/email.value"
 import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
+import { findSystemPasswordResetRecipient } from "@system/infrastructure/auth/find-system-password-reset-recipient"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 import { zAppAuthAcknowledgement } from "@/contexts/system/interface/models/auth"
-import { userIdentities, users } from "@/contexts/system/infrastructure/schema/system-runtime"
+import { ApplicationError } from "@/lib/errors/application-error"
 import { zValidator } from "@hono/zod-validator"
-import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 
 /** パスワード再設定メールの受付。 */
@@ -22,44 +24,54 @@ export const POST = systemFactory.createHandlers(
     const action = new RequestPasswordReset(c)
     const clientIp = c.req.header("CF-Connecting-IP") ?? c.req.header("X-Forwarded-For") ?? null
     const accepted = await action.accept(body.email, clientIp)
-    const identity = accepted
-      ? (
-          await c.var.database
-            .select({
-              id: userIdentities.id,
-              email: userIdentities.email,
-              canReceiveEmail: userIdentities.canReceiveEmail,
-              user: { id: users.id, disabledAt: users.disabledAt },
-            })
-            .from(userIdentities)
-            .innerJoin(users, eq(users.id, userIdentities.userId))
-            .where(
-              and(
-                eq(userIdentities.provider, "password"),
-                eq(userIdentities.providerSubject, body.email),
-              ),
-            )
-            .limit(1)
-        )[0]
-      : undefined
-    const recipient =
-      identity?.canReceiveEmail === true &&
-      identity.email !== null &&
-      identity.user !== null &&
-      identity.user.disabledAt === null
-        ? { userId: identity.user.id, identityId: identity.id, email: identity.email }
-        : null
+    const recipient = accepted ? await findSystemPasswordResetRecipient(c, body.email) : null
+    if (recipient instanceof Error) {
+      const error = new PasswordResetRequestApplicationError(recipient)
 
-    const result = await action.execute({
+      return c.json(error.body, error.status)
+    }
+
+    const requestOutcome = await action.execute({
       email: body.email,
       origin: new URL(c.req.url).origin,
       recipient,
     })
 
-    if (result instanceof Error) {
-      throw result
+    if (requestOutcome instanceof Error) {
+      if (requestOutcome instanceof ApplicationError)
+        return c.json(requestOutcome.body, requestOutcome.status)
+
+      return c.json({ error: "internal_server_error", message: "処理に失敗しました。" }, 500)
     }
 
-    return c.json(zAppAuthAcknowledgement.parse({ item: result }))
+    return c.json(zAppAuthAcknowledgement.parse({ item: requestOutcome }))
+  },
+)
+
+/** raw tokenを消費し、password変更と全Session失効を不可分に行う。 */
+// @authorization public - challenge possessionを認証要素とし、拒否理由は同じ応答へ畳む
+export const PATCH = systemFactory.createHandlers(
+  zValidator(
+    "json",
+    z.object({
+      token: z.string().regex(/^[a-f0-9]{64}$/),
+      new_password: z.string().min(12).max(200),
+    }),
+  ),
+  async (c) => {
+    const body = c.req.valid("json")
+    const completionOutcome = await new ResetPassword(c).execute({
+      rawToken: body.token,
+      newPassword: body.new_password,
+    })
+
+    if (completionOutcome instanceof Error) {
+      if (completionOutcome instanceof ApplicationError)
+        return c.json(completionOutcome.body, completionOutcome.status)
+
+      return c.json({ error: "internal_server_error", message: "処理に失敗しました。" }, 500)
+    }
+
+    return c.json(zAppAuthAcknowledgement.parse({ item: completionOutcome }))
   },
 )

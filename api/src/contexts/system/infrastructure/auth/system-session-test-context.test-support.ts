@@ -13,6 +13,84 @@ const schema = `
     updated_at INTEGER NOT NULL CHECK (updated_at >= created_at)
   );
 
+  CREATE TABLE system_identity_bindings (
+    id TEXT PRIMARY KEY NOT NULL,
+    account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
+    provider TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    activated_at INTEGER,
+    revoked_at INTEGER
+  );
+
+  CREATE UNIQUE INDEX system_identity_bindings_provider_subject_uniq
+    ON system_identity_bindings (provider, subject);
+
+  CREATE TABLE system_identity_profiles (
+    identity_id TEXT PRIMARY KEY NOT NULL
+      REFERENCES system_identity_bindings(id) ON DELETE CASCADE,
+    email TEXT,
+    email_verified INTEGER NOT NULL DEFAULT 0,
+    last_used_at INTEGER,
+    updated_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE system_password_credentials (
+    identity_id TEXT PRIMARY KEY NOT NULL
+      REFERENCES system_identity_bindings(id) ON DELETE CASCADE,
+    password_hash TEXT NOT NULL,
+    changed_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE system_authentication_attempts (
+    id TEXT PRIMARY KEY NOT NULL,
+    identifier TEXT NOT NULL,
+    ip TEXT,
+    attempted_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX system_authentication_attempts_identifier_attempted_at_idx
+    ON system_authentication_attempts (identifier, attempted_at);
+  CREATE INDEX system_authentication_attempts_ip_attempted_at_idx
+    ON system_authentication_attempts (ip, attempted_at);
+
+  CREATE TABLE system_iam_roles (
+    id TEXT PRIMARY KEY NOT NULL,
+    key TEXT NOT NULL UNIQUE,
+    kind TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE system_iam_role_permissions (
+    role_id TEXT NOT NULL,
+    permission_key TEXT NOT NULL,
+    PRIMARY KEY (role_id, permission_key)
+  );
+
+  CREATE TABLE system_role_bindings (
+    id TEXT PRIMARY KEY NOT NULL,
+    account_id TEXT NOT NULL,
+    role_id TEXT NOT NULL,
+    resource_type TEXT,
+    resource_id TEXT,
+    created_at INTEGER NOT NULL,
+    revoked_at INTEGER
+  );
+
+  CREATE TABLE system_bootstrap_state (
+    singleton INTEGER PRIMARY KEY NOT NULL CHECK (singleton = 1),
+    completed_by_account_id TEXT NOT NULL UNIQUE
+      REFERENCES system_accounts(id) ON DELETE RESTRICT,
+    root_binding_id TEXT NOT NULL UNIQUE
+      REFERENCES system_role_bindings(id) ON DELETE RESTRICT,
+    completed_at INTEGER NOT NULL
+  );
+
   CREATE TABLE system_sessions (
     id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 255),
     account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
@@ -35,6 +113,37 @@ const schema = `
   CREATE INDEX system_sessions_account_idx ON system_sessions (account_id, created_at);
   CREATE INDEX system_sessions_active_family_idx
     ON system_sessions (family_id) WHERE revoked_at IS NULL;
+
+  CREATE TABLE system_identity_login_tokens (
+    jti TEXT PRIMARY KEY NOT NULL,
+    expires_at INTEGER NOT NULL,
+    used_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX system_identity_login_tokens_expires_idx
+    ON system_identity_login_tokens (expires_at);
+
+  CREATE TABLE system_cli_login_states (
+    state TEXT PRIMARY KEY NOT NULL,
+    port INTEGER NOT NULL,
+    cli_state TEXT NOT NULL,
+    code_verifier TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX system_cli_login_states_expires_idx
+    ON system_cli_login_states (expires_at);
+
+  CREATE TABLE system_cli_login_codes (
+    code_hash TEXT PRIMARY KEY NOT NULL,
+    account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE CASCADE,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX system_cli_login_codes_expires_idx
+    ON system_cli_login_codes (expires_at);
 
   CREATE TRIGGER system_sessions_monotonic_lifecycle
   BEFORE UPDATE ON system_sessions
@@ -81,6 +190,39 @@ const schema = `
   BEFORE DELETE ON system_audit_events
   BEGIN
     SELECT RAISE(ABORT, 'system audit event is append-only');
+  END;
+
+  CREATE TABLE system_notification_messages (
+    id TEXT PRIMARY KEY NOT NULL,
+    kind TEXT NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT,
+    source_type TEXT,
+    source_id TEXT,
+    created_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE system_notification_deliveries (
+    id TEXT PRIMARY KEY NOT NULL,
+    message_id TEXT NOT NULL REFERENCES system_notification_messages(id) ON DELETE RESTRICT,
+    recipient_account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
+    delivered_at INTEGER NOT NULL,
+    read_at INTEGER
+  );
+
+  CREATE UNIQUE INDEX system_notification_deliveries_message_account_uniq
+    ON system_notification_deliveries (message_id, recipient_account_id);
+
+  CREATE TRIGGER system_notification_deliveries_monotonic_read
+  BEFORE UPDATE ON system_notification_deliveries
+  WHEN
+    NEW.id IS NOT OLD.id
+    OR NEW.message_id IS NOT OLD.message_id
+    OR NEW.recipient_account_id IS NOT OLD.recipient_account_id
+    OR NEW.delivered_at IS NOT OLD.delivered_at
+    OR (OLD.read_at IS NOT NULL AND NEW.read_at IS NOT OLD.read_at)
+  BEGIN
+    SELECT RAISE(ABORT, 'notification delivery is immutable except first read');
   END;
 `
 

@@ -10,7 +10,7 @@ import { Suspense } from "react"
 export const metadata = { title: "ロール管理" }
 
 /**
- * ロール管理画面。system role と動的ロールの一覧を表示する（iam:manage_roles が必要）。
+ * ロール管理画面。managed role と custom role の一覧を表示する（iam:read が必要）。
  * 権限が無いユーザーには 404 を返し、管理機能の存在を露出しない。
  */
 export default async function AdminRolesPage() {
@@ -18,7 +18,8 @@ export default async function AdminRolesPage() {
 
   if (
     currentUser instanceof Error ||
-    currentUser.permissions.includes("iam:manage_roles") === false
+    (currentUser.permissions.includes("system:admin") === false &&
+      currentUser.permissions.includes("iam:read") === false)
   ) {
     notFound()
   }
@@ -28,9 +29,12 @@ export default async function AdminRolesPage() {
       <div className="flex items-center justify-between">
         <PageHeader title="ロール管理" description="ロールと割り当てられた権限を管理します。" />
 
-        <Link href="/system/roles/new" className={buttonVariants({ variant: "default" })}>
-          新規作成
-        </Link>
+        {currentUser.permissions.includes("system:admin") ||
+        currentUser.permissions.includes("iam:write") ? (
+          <Link href="/system/roles/new" className={buttonVariants({ variant: "default" })}>
+            新規作成
+          </Link>
+        ) : null}
       </div>
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>

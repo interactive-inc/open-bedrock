@@ -422,15 +422,6 @@ export const zAppBrowserLoginCode = z.object({
 
 export type AppBrowserLoginCode = z.infer<typeof zAppBrowserLoginCode>
 
-/** 初期 ROOT ブートストラップ成功時に返す、作成したアカウント・従業員・メール。 */
-export const zAppBootstrapResult = z.object({
-  account_id: z.string(),
-  employee_id: z.number(),
-  email: z.string(),
-})
-
-export type AppBootstrapResult = z.infer<typeof zAppBootstrapResult>
-
 /** 外部 identity 同期（プロビジョニング）の件数サマリ。 */
 export const zAppProvisioningSummary = z.object({
   created: z.number(),

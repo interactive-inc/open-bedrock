@@ -41,8 +41,8 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["review-cycles"][":cycle_id"].forms.bulk.$post({
-      param: { cycle_id: query["cycle-id"] },
+    const response = await client["review-cycles"][":cycleId"].forms.bulk.$post({
+      param: { cycleId: query["cycle-id"] },
       json: { forms: parsed.data },
     })
 

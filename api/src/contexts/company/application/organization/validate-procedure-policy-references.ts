@@ -1,4 +1,5 @@
 import type { Context } from "@/env"
+import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration-repository"
 
 export async function findUnknownApproverRoles(
   c: Context,
@@ -7,19 +8,9 @@ export async function findUnknownApproverRoles(
   const uniqueRoleKeys = [...new Set(roleKeys)]
   if (uniqueRoleKeys.length === 0) return []
 
-  try {
-    const existing = await c.env.DB.prepare(
-      `SELECT key FROM system_iam_roles
-         WHERE key IN (
-           SELECT 'company:' || CAST(value AS TEXT) FROM json_each(?1)
-         )`,
-    )
-      .bind(JSON.stringify(uniqueRoleKeys))
-      .all<{ key: string }>()
-    const existingKeys = new Set(existing.results.map((role) => role.key.replace(/^company:/, "")))
+  const roles = await new SystemRoleAdministrationRepository({ env: { DB: c.env.DB } }).list()
+  if (roles instanceof Error) return roles
+  const existingKeys = new Set(roles.map((role) => role.key.replace(/^company:/u, "")))
 
-    return uniqueRoleKeys.filter((roleKey) => existingKeys.has(roleKey) === false)
-  } catch (error) {
-    return error instanceof Error ? error : new Error("failed to validate approver roles")
-  }
+  return uniqueRoleKeys.filter((roleKey) => existingKeys.has(roleKey) === false)
 }

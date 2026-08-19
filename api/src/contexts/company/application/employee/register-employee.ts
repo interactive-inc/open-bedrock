@@ -4,9 +4,7 @@ import type { Employee } from "@/contexts/company/domain/employee/employee.entit
 import type { Context } from "@/env"
 import { IdentityRepository } from "@/contexts/company/application/auth/identity-repository"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
-import { AccountProvisioner } from "@/contexts/company/infrastructure/iam/account-provisioner"
-import { LivePermissionGuard } from "@/contexts/company/infrastructure/iam/live-permission-guard"
-import { RoleRepository } from "@/contexts/company/infrastructure/iam/role-repository"
+import { PrepareEmployeeAccountProvisioning } from "@/contexts/company/infrastructure/iam/prepare-employee-account-provisioning"
 import { validateSystemPassword } from "@system/domain/auth/system-password-policy"
 import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
@@ -18,6 +16,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
+import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration-repository"
 
 export type Command = {
   session: Session
@@ -57,17 +56,15 @@ export class RegisterEmployee {
         "role_escalation_forbidden",
       )
     }
-    const roleRepository = new RoleRepository(this.c)
-    const role = await roleRepository.findByKey(command.employee.role)
-    if (role instanceof Error) {
-      return new UnexpectedError("failed to find role", { cause: role })
+    const roles = await new SystemRoleAdministrationRepository({
+      env: { DB: this.c.env.DB },
+    }).list()
+    if (roles instanceof Error) {
+      return new UnexpectedError("failed to find role", { cause: roles })
     }
-    if (role === null) return new ValidationError("role not found", "role_not_found")
-    const rolePermissions = await roleRepository.permissionKeysOf(role.id)
-    if (rolePermissions instanceof Error) {
-      return new UnexpectedError("failed to load role permissions", { cause: rolePermissions })
-    }
-    if (!hasSystemPermissionSuperset(command.session, rolePermissions)) {
+    const role = roles.find((candidate) => candidate.key === `company:${command.employee.role}`)
+    if (role === undefined) return new ValidationError("role not found", "role_not_found")
+    if (!hasSystemPermissionSuperset(command.session, role.permissionKeys)) {
       return new ForbiddenError(
         "cannot assign a role with permissions you do not hold",
         "role_escalation_forbidden",
@@ -121,19 +118,25 @@ export class RegisterEmployee {
     if (prepared instanceof ApplicationError) return prepared
 
     const passwordHash = await PasswordHashService.hash(command.employee.password, pepper)
-    const now = Number(this.c.env.NOW === undefined ? Date.now() : Date.parse(this.c.env.NOW))
-    const accountStatements = new AccountProvisioner(this.c).prepareProvisionByEmployeeCode({
+    const now = new Date(this.c.env.NOW ?? Date.now())
+    const accountStatements = new PrepareEmployeeAccountProvisioning(this.c).prepare({
       employeeCode: command.employee.code,
       email: command.employee.email,
       passwordHash,
-      roleKey: command.employee.role,
-      grantedByAccountId: command.session.accountId,
+      roleId: role.id,
+      actorAccountId: command.session.accountId,
       now,
     })
+    if (accountStatements instanceof Error) {
+      return new UnexpectedError("failed to prepare employee Account", { cause: accountStatements })
+    }
     try {
       await this.c.env.DB.batch([...prepared.statements, ...accountStatements])
     } catch (cause) {
-      if (LivePermissionGuard.isAbortedBy(cause) || isAbortedByGuard(cause)) {
+      if (
+        (cause instanceof Error && cause.message.includes("integer overflow")) ||
+        isAbortedByGuard(cause)
+      ) {
         return new ForbiddenError(
           "live permissions changed while registering employee",
           "role_escalation_forbidden",

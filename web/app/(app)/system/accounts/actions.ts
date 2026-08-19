@@ -42,7 +42,7 @@ function toActionErrorMessage(
   return fallback
 }
 
-/** アカウントからロールを剥奪する。iam:assign_roles 権限が必要。 */
+/** アカウントから Role Binding を剥奪する。iam:write 権限が必要。 */
 export async function revokeAccountRoleAction(
   _prevState: AccountActionFormState,
   formData: FormData,
@@ -55,13 +55,13 @@ export async function revokeAccountRoleAction(
 
   const accountId = toOpaqueAccountId(formData.get("account_id"))
 
-  const roleKey = toText(formData.get("role_key"))
+  const bindingId = toOpaqueAccountId(formData.get("binding_id"))
 
-  if (accountId === null || roleKey === null) {
+  if (accountId === null || bindingId === null) {
     return { ok: false, error: "アカウントとロールを指定してください" }
   }
 
-  const revoked = await revokeAccountRole(accountId, roleKey)
+  const revoked = await revokeAccountRole(accountId, bindingId)
 
   if (revoked instanceof Error) {
     const message = toActionErrorMessage(
@@ -83,7 +83,7 @@ export async function revokeAccountRoleAction(
   return { ok: true, error: null }
 }
 
-/** 管理者がアカウントのパスワードを再設定する。account:manage 権限が必要。 */
+/** 管理者がアカウントのパスワードを再設定する。iam:write 権限が必要。 */
 export async function resetPasswordAction(
   _prevState: AccountActionFormState,
   formData: FormData,
@@ -129,7 +129,7 @@ export async function resetPasswordAction(
   return { ok: true, error: null }
 }
 
-/** アカウントの状態を変更する（停止・有効化）。account:manage 権限が必要。 */
+/** アカウントの状態を変更する（停止・有効化）。iam:write 権限が必要。 */
 export async function setAccountStatusAction(
   _prevState: AccountActionFormState,
   formData: FormData,
@@ -180,7 +180,7 @@ function toStatus(value: FormDataEntryValue | null): "active" | "suspended" | "l
   return null
 }
 
-/** FormData からアカウントへのロール付与を実行するサーバーアクション。iam:assign_roles 権限が必要。 */
+/** FormData からアカウントへの Role Binding 作成を実行する。iam:write 権限が必要。 */
 export async function grantAccountRoleAction(
   _prevState: GrantRoleFormState,
   formData: FormData,
@@ -193,13 +193,13 @@ export async function grantAccountRoleAction(
 
   const accountId = toOpaqueAccountId(formData.get("account_id"))
 
-  const roleKey = toText(formData.get("role_key"))
+  const roleId = toOpaqueAccountId(formData.get("role_id"))
 
-  if (accountId === null || roleKey === null) {
+  if (accountId === null || roleId === null) {
     return { ok: false, error: "アカウントとロールを指定してください" }
   }
 
-  const granted = await grantAccountRole(accountId, roleKey)
+  const granted = await grantAccountRole(accountId, roleId)
 
   if (granted instanceof Error) {
     const message = toActionErrorMessage(

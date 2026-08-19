@@ -1,8 +1,10 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { resolveBaseUrl } from "@/lib/config/resolve-base-url"
+import { SettingsFile } from "@/lib/config/settings-file"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
-import { UsageError } from "@/lib/errors"
+import { ApiError, UsageError } from "@/lib/errors"
 
 export const help = `bedrock bootstrap — 初期 ROOT アカウントを 1 度だけ作成する
 
@@ -39,30 +41,53 @@ export default factory.createHandlers(
       throw new UsageError("--token または環境変数 BOOTSTRAP_TOKEN が必要です")
     }
 
-    const client = await createClient(query["base-url"])
+    const baseUrl = resolveBaseUrl(query["base-url"])
+    const client = await createClient(baseUrl)
 
-    // createClient の fetch ラッパーが 4xx/5xx を ApiError として throw するため、
-    // ここに来た時点で response は必ず成功。
-    const response = await client.bootstrap.$post({
-      json: {
-        token,
-        email: query.email,
-        password: query.password,
-        name: query.name,
-        code: query.code,
-      },
-    })
-
-    const result = z
-      .object({
-        account_id: z.number(),
-        employee_id: z.number(),
-        email: z.string(),
+    try {
+      await client.system.v1.bootstrap.$post({
+        json: { token, email: query.email, password: query.password },
       })
-      .parse(await response.json())
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 409) throw error
+    }
+
+    const sessionResponse = await client.system.v1.sessions.$post({
+      json: { subject: query.email, password: query.password },
+    })
+    const session = z
+      .object({
+        account_id: z.string(),
+        access_token: z.string(),
+        refresh_token: z.string().nullable(),
+      })
+      .parse(await sessionResponse.json())
+
+    let employeeId: number | null = null
+    try {
+      const companyResponse = await client.company.v1.bootstrap.$post(
+        { json: { name: query.name, code: query.code } },
+        { headers: { Authorization: `Bearer ${session.access_token}` } },
+      )
+      const company = z
+        .object({ account_id: z.string(), employee_id: z.number() })
+        .parse(await companyResponse.json())
+      employeeId = company.employee_id
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 409) throw error
+    }
+
+    await new SettingsFile().saveLogin(
+      baseUrl,
+      { token: session.access_token, refresh_token: session.refresh_token },
+      query.email,
+      query.name,
+    )
 
     return c.text(
-      `初期 ROOT を作成しました account_id=${result.account_id} employee_id=${result.employee_id} email=${result.email}`,
+      employeeId === null
+        ? `初期化済みです account_id=${session.account_id} email=${query.email}`
+        : `初期 ROOT を作成しました account_id=${session.account_id} employee_id=${employeeId} email=${query.email}`,
     )
   },
 )

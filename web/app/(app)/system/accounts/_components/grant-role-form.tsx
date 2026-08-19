@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 
 type Props = {
   accountId: string
-  roleKeys: ReadonlyArray<string>
+  roles: ReadonlyArray<{ id: string; key: string }>
 }
 
 const initialState: GrantRoleFormState = { ok: false, error: null }
@@ -40,7 +40,7 @@ export function GrantRoleForm(props: Props) {
       <input type="hidden" name="account_id" value={props.accountId} />
 
       <select
-        name="role_key"
+        name="role_id"
         className={selectClassName}
         defaultValue=""
         aria-label="付与するロール"
@@ -49,9 +49,9 @@ export function GrantRoleForm(props: Props) {
           ロールを選択
         </option>
 
-        {props.roleKeys.map((roleKey) => (
-          <option key={roleKey} value={roleKey}>
-            {roleKey}
+        {props.roles.map((role) => (
+          <option key={role.id} value={role.id}>
+            {role.key}
           </option>
         ))}
       </select>

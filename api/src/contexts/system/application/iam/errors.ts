@@ -1,7 +1,5 @@
 import {
   ApplicationBadRequestError,
-  ApplicationForbiddenError,
-  ApplicationInternalError,
   ApplicationNotFoundError,
 } from "@/lib/errors/application-error"
 
@@ -51,42 +49,5 @@ export class InvalidIamAssignmentApplicationError extends ApplicationBadRequestE
     details: Readonly<Record<string, unknown>> = {},
   ) {
     super({ ...details, error, message, item: null }, { cause })
-  }
-}
-
-export class IamAssignmentForbiddenApplicationError extends ApplicationForbiddenError {
-  constructor(error: string, message: string) {
-    super({ error, message, item: null })
-  }
-}
-
-export class IamApplicationError extends ApplicationInternalError {
-  constructor(cause?: unknown) {
-    super(
-      {
-        error: "iam.operation_failed",
-        message: "アカウントとロールの情報を処理できませんでした。もう一度お試しください。",
-      },
-      { cause },
-    )
-  }
-}
-
-export class IamIdentityNotFoundApplicationError extends ApplicationNotFoundError {
-  constructor(cause?: unknown) {
-    super(
-      {
-        error: "identity.not_found",
-        message: "対象のログイン方法が見つかりません。画面を更新してください。",
-        item: null,
-      },
-      { cause },
-    )
-  }
-}
-
-export class InvalidIamIdentityApplicationError extends ApplicationBadRequestError {
-  constructor(error: string, message: string, cause?: unknown) {
-    super({ error, message, item: null }, { cause })
   }
 }

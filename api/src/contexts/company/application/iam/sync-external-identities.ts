@@ -3,7 +3,8 @@ import type { AuditAction } from "@/contexts/company/application/audit/company-a
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
 import { IdentityRepository } from "@/contexts/company/application/auth/identity-repository"
-import { AccountProvisioner } from "@/contexts/company/infrastructure/iam/account-provisioner"
+import { AttachExternalIdentity } from "@/contexts/company/infrastructure/iam/attach-external-identity"
+import { ProvisionExternalEmployee } from "@/contexts/company/infrastructure/iam/provision-external-employee"
 import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
 import type { AccountId } from "@system/domain/auth/account-id"
 
@@ -61,8 +62,6 @@ export class SyncExternalIdentities {
     now: Date,
   ): Promise<SyncOutcome | ApplicationError> {
     const identityRepository = new IdentityRepository(this.c)
-    const nowEpoch = now.getTime()
-
     const existing = await identityRepository.findByProviderSubject(
       EXTERNAL_PROVIDER,
       input.subject,
@@ -83,6 +82,7 @@ export class SyncExternalIdentities {
 
       const updated = await identityRepository.updateProvisionedIdentity(
         existing.identityId,
+        existing.accountId,
         existing.employeeId,
         input.email,
         input.name,
@@ -108,15 +108,13 @@ export class SyncExternalIdentities {
       return new UnexpectedError("failed to look up account by email", { cause: linkedAccountId })
     }
 
-    const provisioner = new AccountProvisioner(this.c)
-
     if (linkedAccountId !== null) {
-      const attached = await provisioner.attachExternalIdentity({
+      const attached = await new AttachExternalIdentity(this.c).run({
         accountId: linkedAccountId,
         provider: EXTERNAL_PROVIDER,
         subject: input.subject,
         email: input.email,
-        now: nowEpoch,
+        now,
       })
       if (attached instanceof Error) {
         if (attached.message.includes("UNIQUE constraint")) {
@@ -143,13 +141,13 @@ export class SyncExternalIdentities {
     }
 
     // 従業員も無ければ新規に一式を払い出す（code=null）。
-    const employeeId = await provisioner.provisionExternalEmployee({
+    const employeeId = await new ProvisionExternalEmployee(this.c).run({
       provider: EXTERNAL_PROVIDER,
       subject: input.subject,
       email: input.email,
       name: input.name,
       roleKey: DEFAULT_ROLE_KEY,
-      now: nowEpoch,
+      now,
     })
     if (employeeId instanceof Error) {
       if (employeeId.message.includes("UNIQUE constraint")) {

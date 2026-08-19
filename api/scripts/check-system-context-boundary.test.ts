@@ -1,12 +1,14 @@
 import {
   checkSystemContextBoundary,
   collectSystemSchemaTableNames,
+  collectSystemSqlTableNames,
   discoverSystemCapabilityNames,
   inspectSystemCapabilityCatalog,
   inspectSystemCapabilityRootEntries,
   inspectSystemOwnershipManifest,
   inspectSystemSelfReferencePathMappings,
   inspectSystemSource,
+  inspectSystemStorageAccess,
   selectDownstreamContextNames,
 } from "./check-system-context-boundary"
 import { describe, expect, test } from "bun:test"
@@ -145,6 +147,55 @@ describe("System ownership manifest", () => {
       "accounts",
       "auditLogs",
     ])
+  })
+
+  test("System所有の物理SQL table名をschema宣言から抽出する", () => {
+    expect(
+      collectSystemSqlTableNames(
+        "src/contexts/system/infrastructure/schema/system.ts",
+        [
+          'import { sqliteTable } from "drizzle-orm/sqlite-core"',
+          'export const accounts = sqliteTable("system_accounts", {})',
+          'export const sessions = sqliteTable("system_sessions", {})',
+        ].join("\n"),
+      ),
+    ).toEqual(["system_accounts", "system_sessions"])
+  })
+})
+
+describe("System storage ownership", () => {
+  const tableNames = new Set(["system_accounts", "system_sessions"])
+
+  test("System外のraw SQLとSystem schema直接importを拒否する", () => {
+    const violations = inspectSystemStorageAccess(
+      "src/contexts/company/infrastructure/accounts.ts",
+      [
+        'import { systemAccounts } from "@system/infrastructure/schema/system-core"',
+        "const read = `SELECT id FROM system_accounts WHERE id = ?1`",
+        'const write = "INSERT INTO system_sessions (id) VALUES (?1)"',
+      ].join("\n"),
+      tableNames,
+    )
+
+    expect(violations.map((violation) => violation.reason)).toEqual([
+      "System外からSystem schemaを直接importしています: @system/infrastructure/schema/system-core",
+      "System外からSystem所有tableを直接操作しています: system_accounts",
+      "System外からSystem所有tableを直接操作しています: system_sessions",
+    ])
+  })
+
+  test("System repository利用とtable名を含まないSQLは許可する", () => {
+    expect(
+      inspectSystemStorageAccess(
+        "src/contexts/company/application/accounts.ts",
+        [
+          'import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"',
+          'const path = "/system_accounts"',
+          'const read = "SELECT id FROM employees"',
+        ].join("\n"),
+        tableNames,
+      ),
+    ).toEqual([])
   })
 })
 

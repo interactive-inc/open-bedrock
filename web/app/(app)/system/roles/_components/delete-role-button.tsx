@@ -18,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button"
 
 type Props = {
-  roleId: number
+  roleId: string
   roleName: string
 }
 

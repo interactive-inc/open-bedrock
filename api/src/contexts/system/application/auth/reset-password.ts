@@ -1,88 +1,39 @@
 import { PasswordHashService } from "@/contexts/system/infrastructure/auth/password-hash.service"
-import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
-import { zAccountId } from "@system/domain/auth/account-id"
-import { WriteOperationEntity } from "@/lib/persistence/write-operation.entity"
-import { AccountTokenCollectionValue } from "@/contexts/system/domain/auth/account-token-collection.value"
-import { SessionTokenService } from "@/contexts/system/infrastructure/auth/session-token.service"
+import { validateSystemPassword } from "@system/domain/auth/system-password-policy"
 import {
-  JwtSecretMissingApplicationError,
-  PasswordResetRequestApplicationError,
-  PasswordResetTokenExpiredApplicationError,
   PasswordResetTokenInvalidApplicationError,
-  PasswordResetTokenUsedApplicationError,
   PepperSecretMissingApplicationError,
   SystemAuthPersistenceApplicationError,
 } from "@/contexts/system/application/auth/errors"
-import { PasswordResetCompletionWriteError } from "@/contexts/system/infrastructure/auth/errors"
-import { PasswordResetCompletionRepository } from "@/contexts/system/infrastructure/auth/password-reset-completion.repository"
-import { resolveExistingAccountTokens } from "@/contexts/system/infrastructure/auth/resolve-existing-account-tokens"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
+import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token"
+import { findSystemPasswordResetChallenge } from "@system/infrastructure/auth/find-system-password-reset-challenge"
+import { completeSystemPasswordResetChallenge } from "@system/infrastructure/auth/complete-system-password-reset-challenge"
+import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import type {
   SystemClockContext,
-  SystemDatabaseContext,
-  SystemJwtSecretContext,
+  SystemD1Context,
   SystemPasswordHashContext,
+  SystemRequestAuditContext,
 } from "@system/infrastructure/configuration/system-context"
-type PasswordResetTokenItem = Readonly<{
-  id: string
-  userId: string
-  identityId: string | null
-  expiresAt: Date
-  usedAt: Date | null
-}>
 
 type Props = Readonly<{
-  resetToken: PasswordResetTokenItem | null
+  rawToken: string
   newPassword: string
-  accountsCookie: string | undefined
-  identities: ReadonlyArray<{
-    id: string
-    email: string | null
-    providerSubject: string
-    emailVerifiedAt: Date | null
-    user: { id: string; disabledAt: Date | null } | null
-  }>
 }>
 
 export class ResetPassword {
   static readonly featureId = "00450023"
 
   constructor(
-    private readonly c: SystemDatabaseContext &
+    private readonly c: SystemD1Context &
       SystemClockContext &
-      SystemJwtSecretContext &
-      SystemPasswordHashContext,
+      SystemPasswordHashContext &
+      SystemRequestAuditContext,
   ) {}
 
   async execute(props: Props) {
-    const resetToken = props.resetToken
-
-    if (resetToken === null) {
-      return new PasswordResetTokenInvalidApplicationError()
-    }
-
-    if (resetToken.usedAt !== null) {
-      return new PasswordResetTokenUsedApplicationError()
-    }
-
     const now = this.c.var.now()
-
-    if (resetToken.expiresAt.getTime() < now.getTime()) {
-      return new PasswordResetTokenExpiredApplicationError()
-    }
-
-    const identity =
-      resetToken.identityId !== null
-        ? (props.identities.find((candidate) => candidate.id === resetToken.identityId) ?? null)
-        : props.identities.length === 1
-          ? props.identities[0]
-          : null
-
-    if (identity === null || identity === undefined) {
-      return new PasswordResetTokenInvalidApplicationError()
-    }
-
-    if (identity.user === null || identity.user.disabledAt !== null) {
+    if (validateSystemPassword(props.newPassword) !== null) {
       return new PasswordResetTokenInvalidApplicationError()
     }
 
@@ -90,70 +41,33 @@ export class ResetPassword {
       return new PepperSecretMissingApplicationError()
     }
 
-    const jwtSecret = this.c.env.JWT_SECRET as string | undefined
-    if (jwtSecret === undefined || jwtSecret === "") {
-      return new JwtSecretMissingApplicationError()
-    }
-
+    const tokenHash = await hashPasswordResetToken(props.rawToken)
+    if (tokenHash instanceof Error) return new PasswordResetTokenInvalidApplicationError()
+    const challenge = await findSystemPasswordResetChallenge(this.c, tokenHash, now)
+    if (challenge instanceof Error) return new SystemAuthPersistenceApplicationError(challenge)
+    if (challenge === null) return new PasswordResetTokenInvalidApplicationError()
     const passwordHash = await PasswordHashService.hash(props.newPassword, this.c.env.PEPPER_SECRET)
-    const writeResult = await new PasswordResetCompletionRepository(this.c).write(
-      WriteOperationEntity.create("complete", {
-        tokenId: resetToken.id,
-        tokenIdentityId: resetToken.identityId,
-        userId: resetToken.userId,
-        identityId: identity.id,
-        passwordHash,
-        emailVerifiedAt: identity.emailVerifiedAt ?? now,
-        changedAt: now,
-      }),
-    )
-
-    if (writeResult instanceof PasswordResetCompletionWriteError) {
-      return new PasswordResetRequestApplicationError(writeResult)
-    }
-
-    if (writeResult === null) {
-      return new PasswordResetTokenUsedApplicationError()
-    }
-
-    const accountId = zAccountId.safeParse(resetToken.userId)
-    if (accountId.success === false) {
-      return new SystemAuthPersistenceApplicationError()
-    }
-    const canonicalSession = await resolveAccountSession({
-      accountRepository: new SystemAccountRepository({ database: this.c.var.database }),
-      accountId: accountId.data,
-      sessionTokenVersion: writeResult,
+    const metadataJson = toStableSystemAuditJson({
+      client_ip: this.c.var.auditContext.clientIp,
+      client_name: this.c.var.auditContext.clientName,
+      request_id: this.c.var.auditContext.requestId,
+    })
+    if (metadataJson instanceof Error)
+      return new SystemAuthPersistenceApplicationError(metadataJson)
+    const completed = await completeSystemPasswordResetChallenge(this.c, {
+      challengeId: challenge.id,
+      tokenHash,
+      accountId: challenge.accountId,
+      identityId: challenge.identityId,
+      accountTokenVersion: challenge.accountTokenVersion,
+      passwordHash,
+      completedAt: now,
+      metadataJson,
     })
 
-    if (canonicalSession instanceof Error || canonicalSession.kind === "rejected") {
-      return new SystemAuthPersistenceApplicationError(
-        canonicalSession instanceof Error ? canonicalSession : undefined,
-      )
-    }
+    if (completed instanceof Error) return new SystemAuthPersistenceApplicationError(completed)
+    if (completed === false) return new PasswordResetTokenInvalidApplicationError()
 
-    const sessionToken = await SessionTokenService.create(
-      resetToken.userId,
-      jwtSecret,
-      canonicalSession.account.tokenVersion,
-    )
-    const existingTokens = await resolveExistingAccountTokens(props.accountsCookie, jwtSecret)
-    const accountTokens = AccountTokenCollectionValue.upsert(
-      existingTokens,
-      {
-        userId: resetToken.userId,
-        token: sessionToken,
-      },
-      AccountTokenCollectionValue.MAX_ACCOUNTS,
-    )
-
-    return {
-      sessionToken,
-      accountTokens,
-      account: {
-        userId: identity.user.id,
-        email: identity.email ?? identity.providerSubject,
-      },
-    }
+    return { ok: true as const }
   }
 }

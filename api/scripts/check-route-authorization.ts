@@ -150,9 +150,10 @@ export function inspectRouteFile(
 
     // middleware は createHandlers の引数として現れる。import 文やコメントの
     // 出現で通してしまわないよう、handler 本体の中だけを見る。
-    const hasVerifyBearer =
+    const hasUserAuthentication =
       globallyAuthenticated ||
       /\bverifyBearer\b/.test(entry.body) ||
+      /\bauthenticateSystemAccessToken\b/.test(entry.body) ||
       /\brequireSystemAuthentication\b/.test(entry.body)
     const hasMachineGuard = /\bverify[A-Z]\w*Key\b/.test(entry.body)
 
@@ -165,20 +166,20 @@ export function inspectRouteFile(
       continue
     }
 
-    if (!UNAUTHENTICATED_KINDS.has(kind) && !hasVerifyBearer) {
+    if (!UNAUTHENTICATED_KINDS.has(kind) && !hasUserAuthentication) {
       violations.push({
         file,
         method: entry.method,
-        reason: `"@authorization ${kind}" と宣言していますが verifyBearer を通っていません。認証を追加するか public / machine へ直してください。`,
+        reason: `"@authorization ${kind}" と宣言していますがユーザー認証を通っていません。認証を追加するか public / machine へ直してください。`,
       })
       continue
     }
 
-    if (kind === "public" && hasVerifyBearer) {
+    if (kind === "public" && hasUserAuthentication) {
       violations.push({
         file,
         method: entry.method,
-        reason: `"@authorization public" と宣言していますが verifyBearer を通っています。宣言を見直してください。`,
+        reason: `"@authorization public" と宣言していますがユーザー認証を通っています。宣言を見直してください。`,
       })
     }
   }

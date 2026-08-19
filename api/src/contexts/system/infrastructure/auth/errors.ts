@@ -29,33 +29,3 @@ export class PasswordIdentityWriteError extends InfrastructureError {
     )
   }
 }
-
-export class PasswordResetTokenWriteError extends InfrastructureError {
-  constructor(operation: "save", tokenId: string, cause: unknown) {
-    super(
-      "PasswordResetTokenWriteError",
-      "password reset token could not be written",
-      {
-        entity: "password_reset_token",
-        operation,
-        entityId: tokenId,
-      },
-      { cause },
-    )
-  }
-}
-
-export class PasswordResetCompletionWriteError extends InfrastructureError {
-  constructor(tokenId: string, cause: unknown) {
-    super(
-      "PasswordResetCompletionWriteError",
-      "password reset could not be completed atomically",
-      {
-        entity: "password_reset",
-        operation: "complete",
-        entityId: tokenId,
-      },
-      { cause },
-    )
-  }
-}

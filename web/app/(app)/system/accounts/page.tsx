@@ -8,7 +8,7 @@ import { Suspense } from "react"
 export const metadata = { title: "アカウント管理" }
 
 /**
- * アカウント管理画面。従業員に紐づくアカウントと割当ロール・状態を一覧する（account:manage が必要）。
+ * System Account と割当ロール・状態を一覧する（iam:read が必要）。
  * 権限が無いユーザーには 404 を返し、管理機能の存在を露出しない。
  */
 export default async function AdminAccountsPage() {
@@ -16,12 +16,15 @@ export default async function AdminAccountsPage() {
 
   if (
     currentUser instanceof Error ||
-    currentUser.permissions.includes("account:manage") === false
+    (currentUser.permissions.includes("system:admin") === false &&
+      currentUser.permissions.includes("iam:read") === false)
   ) {
     notFound()
   }
 
-  const canAssignRoles = currentUser.permissions.includes("iam:assign_roles")
+  const canWrite =
+    currentUser.permissions.includes("system:admin") ||
+    currentUser.permissions.includes("iam:write")
 
   return (
     <div className="flex flex-col gap-6">
@@ -31,10 +34,7 @@ export default async function AdminAccountsPage() {
       />
 
       <Suspense fallback={<ListSkeleton rows={5} rowClassName="h-10 w-full" />}>
-        <AccountListSection
-          canAssignRoles={canAssignRoles}
-          actorPermissionKeys={currentUser.permissions}
-        />
+        <AccountListSection canWrite={canWrite} actorPermissionKeys={currentUser.permissions} />
       </Suspense>
     </div>
   )

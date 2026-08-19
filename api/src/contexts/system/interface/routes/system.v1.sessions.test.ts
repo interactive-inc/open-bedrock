@@ -1,23 +1,29 @@
-import { zAccountId } from "@system/domain/auth/account-id"
-import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
+import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import {
   DELETE,
   GET,
+  PATCH,
   POST,
   type SystemSessionHttpEnvironment,
 } from "@system/interface/routes/system.v1.sessions"
 import { describe, expect, test } from "bun:test"
 import { Hono } from "hono"
+import { hc } from "hono/client"
 
 const issuedAt = new Date("2026-01-01T00:00:00.000Z")
 const rotatedAt = new Date("2026-01-02T00:00:00.000Z")
 const revokedAt = new Date("2026-01-03T00:00:00.000Z")
-const accountId = zAccountId.parse("system-route-account")
+const accountId = "system-route-account"
+const subject = "person@example.com"
+const password = "correct-password"
+const pepper = "system-session-test-pepper"
+const jwtSecret = "system-session-route-test-secret"
 
 describe("System Session HTTP", () => {
-  test("検証・rotation・reuse検知・冪等失効をcanonical Systemで実行する", async () => {
+  test("password認証・検証・rotation・reuse検知・冪等失効をcanonical Systemで実行する", async () => {
     const fixture = new SystemSessionTestContext()
+    const passwordHash = await PasswordHashService.hash(password, pepper)
     fixture.sqlite
       .query(
         `INSERT INTO system_accounts
@@ -25,88 +31,132 @@ describe("System Session HTTP", () => {
          VALUES (?1, 'active', 0, ?2, ?2)`,
       )
       .run(accountId, issuedAt.getTime())
-
-    const applications = createSystemSessionApplications({
-      context: fixture.context,
-      sessionTtlMilliseconds: 604_800_000,
-    })
-    if (applications instanceof Error) throw applications
-    const issued = await applications.issue.execute({
-      accountId,
-      tokenVersion: 0,
-      now: issuedAt,
-      auditContext: { authorizationJson: null, metadataJson: null },
-    })
-    if (issued instanceof Error || issued.kind !== "issued") throw new Error("issue failed")
+    fixture.sqlite
+      .query(
+        `INSERT INTO system_identity_bindings
+           (id, account_id, provider, subject, created_at, activated_at, revoked_at)
+         VALUES ('password-identity', ?1, 'password', ?2, ?3, ?3, NULL)`,
+      )
+      .run(accountId, subject, issuedAt.getTime())
+    fixture.sqlite
+      .query(
+        `INSERT INTO system_password_credentials
+           (identity_id, password_hash, changed_at, created_at, updated_at)
+         VALUES ('password-identity', ?1, ?2, ?2, ?2)`,
+      )
+      .run(passwordHash, issuedAt.getTime())
 
     const app = new Hono<SystemSessionHttpEnvironment>()
       .get("/system/v1/sessions", ...GET)
       .post("/system/v1/sessions", ...POST)
+      .patch("/system/v1/sessions", ...PATCH)
       .delete("/system/v1/sessions", ...DELETE)
+    const requestAtIssue = (
+      input: Parameters<typeof app.request>[0],
+      init?: Parameters<typeof app.request>[1],
+    ) =>
+      app.request(input, init, {
+        DB: fixture.context.env.DB,
+        JWT_SECRET: jwtSecret,
+        NOW: issuedAt.toISOString(),
+        PEPPER_SECRET: pepper,
+      })
+    const requestAtRotation = (
+      input: Parameters<typeof app.request>[0],
+      init?: Parameters<typeof app.request>[1],
+    ) =>
+      app.request(input, init, {
+        DB: fixture.context.env.DB,
+        JWT_SECRET: jwtSecret,
+        NOW: rotatedAt.toISOString(),
+        PEPPER_SECRET: pepper,
+      })
+    const requestAtRevocation = (
+      input: Parameters<typeof app.request>[0],
+      init?: Parameters<typeof app.request>[1],
+    ) =>
+      app.request(input, init, {
+        DB: fixture.context.env.DB,
+        JWT_SECRET: jwtSecret,
+        NOW: revokedAt.toISOString(),
+        PEPPER_SECRET: pepper,
+      })
+    const issueClient = hc<typeof app>("http://system.test", { fetch: requestAtIssue })
+    const rotationClient = hc<typeof app>("http://system.test", { fetch: requestAtRotation })
+    const revocationClient = hc<typeof app>("http://system.test", { fetch: requestAtRevocation })
 
-    const authenticated = await app.request(
-      "/system/v1/sessions",
-      { headers: { authorization: `Bearer ${issued.rawToken}` } },
-      { DB: fixture.context.env.DB, NOW: issuedAt.toISOString() },
-    )
+    const issued = await issueClient.system.v1.sessions.$post({
+      json: { subject, password },
+    })
+    expect(issued.status).toBe(201)
+    const issuedBody = await issued.json()
+    expect("access_token" in issuedBody).toBe(true)
+    expect("refresh_token" in issuedBody).toBe(true)
+    if (!("access_token" in issuedBody) || !("refresh_token" in issuedBody)) return
+    expect(issuedBody).toMatchObject({ account_id: accountId })
+
+    const authenticated = await issueClient.system.v1.sessions.$get({
+      header: { authorization: `Bearer ${issuedBody.refresh_token}` },
+    })
     expect(authenticated.status).toBe(200)
     expect(await authenticated.json()).toMatchObject({
       account_id: accountId,
-      session_id: issued.sessionId,
+      session_id: issuedBody.session_id,
     })
 
-    const rotated = await app.request(
-      "/system/v1/sessions",
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ refresh_token: issued.rawToken }),
-      },
-      { DB: fixture.context.env.DB, NOW: rotatedAt.toISOString() },
-    )
+    const rotated = await rotationClient.system.v1.sessions.$patch({
+      json: { refresh_token: issuedBody.refresh_token },
+    })
     expect(rotated.status).toBe(200)
-    const rotatedBody = (await rotated.json()) as { refresh_token: string }
-    expect(rotatedBody.refresh_token).not.toBe(issued.rawToken)
+    const rotatedBody = await rotated.json()
+    expect("access_token" in rotatedBody).toBe(true)
+    expect("refresh_token" in rotatedBody).toBe(true)
+    if (!("access_token" in rotatedBody) || !("refresh_token" in rotatedBody)) return
+    expect(rotatedBody.access_token).not.toBe(issuedBody.access_token)
+    expect(rotatedBody.refresh_token).not.toBe(issuedBody.refresh_token)
 
-    const reused = await app.request(
-      "/system/v1/sessions",
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ refresh_token: issued.rawToken }),
-      },
-      { DB: fixture.context.env.DB, NOW: revokedAt.toISOString() },
-    )
+    const reused = await revocationClient.system.v1.sessions.$patch({
+      json: { refresh_token: issuedBody.refresh_token },
+    })
     expect(reused.status).toBe(401)
 
-    const familyRevoked = await app.request(
-      "/system/v1/sessions",
-      { headers: { authorization: `Bearer ${rotatedBody.refresh_token}` } },
-      { DB: fixture.context.env.DB, NOW: revokedAt.toISOString() },
-    )
+    const familyRevoked = await revocationClient.system.v1.sessions.$get({
+      header: { authorization: `Bearer ${rotatedBody.refresh_token}` },
+    })
     expect(familyRevoked.status).toBe(401)
 
-    const logout = await app.request(
-      "/system/v1/sessions",
-      {
-        method: "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ refresh_token: rotatedBody.refresh_token }),
-      },
-      { DB: fixture.context.env.DB, NOW: revokedAt.toISOString() },
-    )
+    const logout = await revocationClient.system.v1.sessions.$delete({
+      json: { refresh_token: rotatedBody.refresh_token },
+    })
     expect(logout.status).toBe(204)
   })
 
-  test("credentialとruntime不備をfail closedにする", async () => {
+  test("未知subject・誤password・runtime不備を同じ安全な境界へ閉じる", async () => {
+    const fixture = new SystemSessionTestContext()
     const app = new Hono<SystemSessionHttpEnvironment>()
       .get("/system/v1/sessions", ...GET)
       .post("/system/v1/sessions", ...POST)
+      .patch("/system/v1/sessions", ...PATCH)
+    const request = (
+      input: Parameters<typeof app.request>[0],
+      init?: Parameters<typeof app.request>[1],
+    ) =>
+      app.request(input, init, {
+        DB: fixture.context.env.DB,
+        NOW: issuedAt.toISOString(),
+        PEPPER_SECRET: pepper,
+      })
+    const client = hc<typeof app>("http://system.test", { fetch: request })
 
-    expect((await app.request("/system/v1/sessions")).status).toBe(503)
-    expect((await app.request("/system/v1/sessions", {}, { DB: {} as D1Database })).status).toBe(
-      401,
-    )
+    const unknown = await client.system.v1.sessions.$post({
+      json: { subject: "unknown@example.com", password: "wrong-password" },
+    })
+    expect(unknown.status).toBe(401)
+    expect(await unknown.json()).toEqual({
+      error: "invalid credentials",
+      code: "invalid_credentials",
+    })
+
     expect(
       (
         await app.request(
@@ -114,9 +164,23 @@ describe("System Session HTTP", () => {
           {
             method: "POST",
             headers: { "content-type": "application/json" },
+            body: JSON.stringify({ subject, password }),
+          },
+          { DB: fixture.context.env.DB, NOW: issuedAt.toISOString() },
+        )
+      ).status,
+    ).toBe(503)
+    expect((await app.request("/system/v1/sessions")).status).toBe(503)
+    expect(
+      (
+        await app.request(
+          "/system/v1/sessions",
+          {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
             body: JSON.stringify({ refresh_token: "short" }),
           },
-          { DB: {} as D1Database },
+          { DB: fixture.context.env.DB },
         )
       ).status,
     ).toBe(400)

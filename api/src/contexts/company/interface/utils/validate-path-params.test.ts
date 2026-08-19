@@ -89,39 +89,6 @@ describe("UUID path param validation", () => {
   })
 })
 
-describe("integer path param validation", () => {
-  // notification は代表的な数値 ID ルート
-  test("returns 404 for a non-numeric string", async () => {
-    const response = await request({ path: "/notifications/abc" })
-
-    expect(response.status).toBe(404)
-  })
-
-  test("returns 404 for a decimal number", async () => {
-    const response = await request({ path: "/notifications/3.14" })
-
-    expect(response.status).toBe(404)
-  })
-
-  test("returns 404 for a negative number", async () => {
-    const response = await request({ path: "/notifications/-1" })
-
-    expect(response.status).toBe(404)
-  })
-
-  test("returns 404 for zero", async () => {
-    const response = await request({ path: "/notifications/0" })
-
-    expect(response.status).toBe(404)
-  })
-
-  test("returns 404 for a mixed string like '50abc'", async () => {
-    const response = await request({ path: "/notifications/50abc" })
-
-    expect(response.status).toBe(404)
-  })
-})
-
 describe("code path param validation", () => {
   // employee/:code は代表的なコード系ルート
   test("returns 404 for a code exceeding 64 characters", async () => {
