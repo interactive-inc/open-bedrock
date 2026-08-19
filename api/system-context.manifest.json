@@ -18,8 +18,6 @@
     "deletedRecords",
     "entityIdAliases",
     "loginAttempts",
-    "notificationReads",
-    "notifications",
     "oidcAccessTokens",
     "oidcAuthorizationCodes",
     "passwordResetTokens",

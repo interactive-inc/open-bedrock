@@ -159,7 +159,6 @@
     "src/contexts/system/domain/notifications/notification-delivery.entity.ts": "6f06b55e6bf2100d7baa371e8a698bedb0d6780c63440eaf6c8be61bebe49cbd",
     "src/contexts/system/domain/notifications/notification-message.entity.test.ts": "7dae3e2d76921332d6da2ec65542402f223a9488f693ca3f8bcdb13a29cc3f40",
     "src/contexts/system/domain/notifications/notification-message.entity.ts": "86145b7d16578e38889d34b054b3153f178282424305266058a2f6456a73493d",
-    "src/contexts/system/domain/notifications/notification-read.entity.ts": "79ce387622b04c989b358866109007c331611250430bcf812a3016bc81eeec28",
     "src/contexts/system/domain/workflow/decision-task-candidate.entity.ts": "f609a5c459d744928ac9776195fd6ba0e817c61fe13dc7654576fc7ee937ca4e",
     "src/contexts/system/domain/workflow/decision-task.entity.test.ts": "75058064ad9d6d664c73e827c7002404ae4fcc1ef8a78ad33d1a07923233da04",
     "src/contexts/system/domain/workflow/decision-task.entity.ts": "11fa35ef4c476c4b4811b0992889049b3c72bdf9e1cb435615d47dfd08c47b18",
@@ -273,9 +272,6 @@
     "src/contexts/system/infrastructure/identity/oidc-id-token.service.ts": "8e15526e3dc384f6e578d3fccae02a8f3238cd13d9c3dcde904fe5faf2863086",
     "src/contexts/system/infrastructure/identity/oidc-signing-key.service.test.ts": "630386ed9e0b651da359a2a868fe3c0f8384feb332beb2a0b0230e5a08c6962d",
     "src/contexts/system/infrastructure/identity/oidc-signing-key.service.ts": "71dd42869b1a5bc187048ed9053bdcc2ccf7e2cf1bc2919b682be36bd56a2c10",
-    "src/contexts/system/infrastructure/notifications/errors.ts": "889b14f4348087a50912520f57b0429a7d935727bc51a299879c8bdd2e15c1cd",
-    "src/contexts/system/infrastructure/notifications/notification-read.repository.test.ts": "6122603bdd2997f0c02c4b99dc3c3d5714857dd140adf8c3c2cc9fd66bc6ddf9",
-    "src/contexts/system/infrastructure/notifications/notification-read.repository.ts": "0a9dd3c8493fbcab0db51388d937fa69119bdc3fd57e7e4a3818b8cc23935626",
     "src/contexts/system/infrastructure/notifications/system-notification-repository.ts": "50d0abc37b532d56ad510b747c847e3331bdf0b04e1b103f10badc5510701000",
     "src/contexts/system/infrastructure/notifications/to-system-notification.test.ts": "5837626c57db3baffd0785d288327e7b5b24852184486097368922e41c212cd9",
     "src/contexts/system/infrastructure/notifications/to-system-notification.ts": "c766b2bd83ab14f2b55fd228b8eef2a1399e3d7417d1c0dfac5770928829bdb8",
@@ -288,7 +284,7 @@
     "src/contexts/system/infrastructure/schema/system-procedure.sql": "7c9d13e8e931548160c393c00db57735220fbf550c9c82428ef6483ce01e608a",
     "src/contexts/system/infrastructure/schema/system-procedure.test.ts": "a3ddfb7b44420e28c0b3d78f7d5dd54f6fb0ab029473f572b4333113424be707",
     "src/contexts/system/infrastructure/schema/system-procedure.ts": "f72decc67cc43c12eb6bdcdc324b1fb28e0e5f7f9fb2037f7bbfc094ebe5011a",
-    "src/contexts/system/infrastructure/schema/system-runtime.ts": "eae3afd09cfcc21cb026dfc40133f64b5515bd2df1c086590cba817b17681a0a",
+    "src/contexts/system/infrastructure/schema/system-runtime.ts": "0ed6e6ccd37a51e1226f27fd77a71087b7fd3f207933cee05b5b8f6fca798b23",
     "src/contexts/system/infrastructure/schema/system-workflow.sql": "9672fe2bfc3f47167c036bf383ca45c6e67ee3a3bb61a303437546a6b34f1378",
     "src/contexts/system/infrastructure/schema/system-workflow.test.ts": "1d2dd51b200f113f2112f898fe40ae6150222f24369ad0a32b534985ee4d1bf8",
     "src/contexts/system/infrastructure/schema/system-workflow.ts": "1e4a8f69f07926e0f5ad9de47707e2213b1aeda1013ead3f13eefa9e28c1f8c1",
@@ -326,6 +322,7 @@
     "src/contexts/system/interface/routes/system.v1.sessions.ts": "591a1c6e792abbdcba42e97e2541c4663a140774866c58b1f7c4f590b9f5581e",
     "src/contexts/system/test/system-authorization.integration.test.ts": "667fed0a37d6f98847886c39cb7471e92f6d3b9dc57ecef305f19a945d0e697b",
     "src/contexts/system/test/system-notification-application.integration.test.ts": "cbad78ebfb7da628abe5c64325461b08c286a334c014a5eb9ce12397a6084b49",
+    "src/contexts/system/test/system-notification-legacy-boundary.contract.test.ts": "bdd09dfd618c7ffea001969315c95899b2b640c34968372a234f126fae591924",
     "src/contexts/system/test/system-password-authentication.integration.test.ts": "ba3a0260ceed0301afaa67c8c6de5d80d1d41ca8bb7454a827b80ae3273c3c64",
     "src/contexts/system/test/system-procedure-application.integration.test.ts": "1909ccfb7a76d727710070dfcf5f73cce3ded6916f499f090fa1c37a67d08063",
     "src/contexts/system/test/system-root-bootstrap.integration.test.ts": "69617e14cdae99ca230b31fe9f874adc1109ad57639fb0b147e1e8e033f3239a",
@@ -333,6 +330,6 @@
     "src/contexts/system/test/system-session-application.integration.test.ts": "18368d901ee4f2da4853a3fb06634bf5390e62720b228ad9090645c2c7060557",
     "src/contexts/system/test/system-session-applications.factory.integration.test.ts": "5ee9d674291858f52d86ddd3413e4b07d9b0ea7c96af2114a3e4022ac2d55828",
     "src/contexts/system/test/system-workflow-application.integration.test.ts": "c47fed898e4194fcbd4bd9a61bd721b8267268a72a6bd33328c41f88de27c5fa",
-    "system-context.manifest.json": "af227d14b49f475cc92f2ee0a10519f12d08c1d690876bc04683fbaa96c97fe2"
+    "system-context.manifest.json": "5f11e99a599236b688df9e19aa20bfe25bc59682ab86e6ed5d118cc33b54cb70"
   }
 }
