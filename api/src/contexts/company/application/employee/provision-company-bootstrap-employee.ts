@@ -13,6 +13,7 @@ export type ProvisionCompanyBootstrapEmployeeCommand = Readonly<{
   accountId: AccountId
   employeeCode: string
   name: string
+  now: Date
 }>
 
 export type ProvisionCompanyBootstrapEmployeeResult =
@@ -37,14 +38,16 @@ export class ProvisionCompanyBootstrapEmployee {
           .min(1)
           .max(200)
           .refine((value) => !value.includes("\0")),
+        now: z.date().refine((value) => Number.isSafeInteger(value.getTime())),
       })
-      .safeParse({ employeeCode: command.employeeCode, name: command.name })
+      .safeParse({ employeeCode: command.employeeCode, name: command.name, now: command.now })
     if (!parsed.success) return Promise.resolve(Object.freeze({ kind: "invalid_input" as const }))
 
     return this.props.repository.provision({
       accountId: command.accountId,
       employeeCode: parsed.data.employeeCode,
       name: parsed.data.name,
+      occurredAt: parsed.data.now,
     })
   }
 }

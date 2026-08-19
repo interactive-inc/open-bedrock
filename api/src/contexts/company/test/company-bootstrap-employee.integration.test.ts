@@ -37,6 +37,18 @@ function createFixture(): {
       account_id TEXT PRIMARY KEY NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
       employee_id INTEGER NOT NULL UNIQUE REFERENCES employees(id) ON DELETE RESTRICT
     );
+    CREATE TABLE company_organizations (
+      id TEXT PRIMARY KEY NOT NULL
+    );
+    CREATE TABLE company_account_profiles (
+      organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE CASCADE,
+      account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE CASCADE,
+      display_name TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (organization_id, account_id)
+    );
+    INSERT INTO company_organizations VALUES ('organization:default');
     INSERT INTO system_accounts VALUES ('account-root', 'active', 0, 0, 0);
   `)
   const repository = new CompanyBootstrapEmployeeRepositoryD1({
@@ -50,7 +62,7 @@ function createFixture(): {
 }
 
 function command() {
-  return { accountId, employeeCode: " ROOT ", name: " Initial Admin " }
+  return { accountId, employeeCode: " ROOT ", name: " Initial Admin ", now: new Date(100) }
 }
 
 describe("Company bootstrap Employee", () => {
@@ -82,6 +94,9 @@ describe("Company bootstrap Employee", () => {
     expect(database.query("SELECT COUNT(*) AS count FROM system_accounts").get()).toEqual({
       count: 1,
     })
+    expect(
+      database.query("SELECT account_id, display_name FROM company_account_profiles").get(),
+    ).toEqual({ account_id: "account-root", display_name: "Initial Admin" })
   })
 
   test("再実行と同時実行でEmployeeとlinkを増殖させない", async () => {
@@ -116,6 +131,9 @@ describe("Company bootstrap Employee", () => {
     })
     expect(
       second.database.query("SELECT COUNT(*) AS count FROM account_employee_links").get(),
+    ).toEqual({ count: 1 })
+    expect(
+      second.database.query("SELECT COUNT(*) AS count FROM company_account_profiles").get(),
     ).toEqual({ count: 1 })
   })
 

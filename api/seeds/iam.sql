@@ -23,6 +23,12 @@ INSERT INTO account_employee_links (account_id, employee_id) VALUES
   ('13', 13),
   ('16', 16);
 
+INSERT INTO company_account_profiles
+  (organization_id, account_id, display_name, created_at, updated_at)
+SELECT 'organization:default', link.account_id, employee.name, 0, 0
+FROM account_employee_links link
+INNER JOIN employees employee ON employee.id = link.employee_id;
+
 INSERT INTO system_identity_bindings
   (id, account_id, provider, subject, created_at, activated_at, revoked_at)
 VALUES

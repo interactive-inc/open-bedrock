@@ -25,7 +25,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     data: result.map((account) => ({
       id: account.id,
       employee_id: account.employeeId,
-      employee_name: account.employeeName,
+      employee_name: account.displayName,
       status: account.status,
       role_keys: [...account.roleKeys],
       can_manage: account.canManage,

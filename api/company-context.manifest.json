@@ -3,6 +3,8 @@
   "coverage": "shared-company-core",
   "sharedSourcePaths": [
     "src/contexts/company/README.md",
+    "src/contexts/company/application/account-profile/company-account-profile-repository.ts",
+    "src/contexts/company/application/account-profile/update-company-account-profile.ts",
     "src/contexts/company/application/core/can-access-company-organization.ts",
     "src/contexts/company/application/core/company-actor.ts",
     "src/contexts/company/application/core/company-resource-persistence.ts",
@@ -41,6 +43,7 @@
     "src/contexts/company/application/workforce/validate-organization-change-identities.ts",
     "src/contexts/company/application/workforce/validate-organization-change.ts",
     "src/contexts/company/application/workforce/workforce-snapshot-changed-error.ts",
+    "src/contexts/company/domain/account-profile/company-account-profile.entity.ts",
     "src/contexts/company/domain/core/company-resource-contains-period.ts",
     "src/contexts/company/domain/core/company-resource-has-containing-organization-unit.ts",
     "src/contexts/company/domain/core/company-resource-periods-overlap.ts",
@@ -149,6 +152,7 @@
     "src/contexts/company/domain/workforce/workforce-periods-overlap.ts",
     "src/contexts/company/domain/workforce/workforce-schedule.ts",
     "src/contexts/company/domain/workforce/workforce-state-resolution-error.ts",
+    "src/contexts/company/infrastructure/account-profile/company-account-profile.repository.ts",
     "src/contexts/company/infrastructure/core/company-bytes-to-hex.ts",
     "src/contexts/company/infrastructure/core/company-resource-placeholders.ts",
     "src/contexts/company/infrastructure/core/company-resource-row.ts",
@@ -184,12 +188,14 @@
     "src/contexts/company/interface/routes/company.v1.people.ts",
     "src/contexts/company/interface/routes/company.v1.personnel-actions.ts",
     "src/contexts/company/interface/routes/company.v1.profile.ts",
+    "src/contexts/company/test/company-account-profile.integration.test.ts",
     "src/contexts/company/test/company-api.integration.test.ts",
     "src/contexts/company/test/company-file-responsibility.contract.test.ts",
     "src/contexts/company/test/d1-test-database.test-support.ts"
   ],
   "implementedCapabilities": [
     "account-employee-link",
+    "account-profile",
     "collective-body",
     "company-profile",
     "employee",
@@ -205,6 +211,7 @@
   ],
   "targetCapabilities": [
     "account-employee-link",
+    "account-profile",
     "collective-body",
     "company-profile",
     "employee",

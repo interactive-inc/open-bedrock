@@ -54,7 +54,6 @@ export class GetOidcUserinfo {
 
     return {
       sub: props.identity.subject,
-      ...(props.prepared.scope.includes("profile") ? { name: props.identity.name } : {}),
       ...(props.prepared.scope.includes("email") && props.identity.email !== null
         ? { email: props.identity.email, email_verified: props.identity.emailVerified }
         : {}),

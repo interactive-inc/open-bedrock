@@ -2291,7 +2291,7 @@ export type AppPermissionList = z.infer<typeof zAppPermissionList>
 export const zAppAccount = z.object({
   id: z.string().min(1).max(255),
   employee_id: z.number().nullable(),
-  employee_name: z.string().nullable(),
+  employee_name: z.string(),
   status: z.string(),
   role_keys: z.array(z.string()),
   can_manage: z.boolean(),

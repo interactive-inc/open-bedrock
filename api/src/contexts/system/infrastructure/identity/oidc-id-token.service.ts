@@ -6,7 +6,6 @@ import { importJWK, SignJWT } from "jose"
 
 export type OidcIdentity = Readonly<{
   subject: string
-  name: string
   email: string | null
   emailVerified: boolean
 }>
@@ -29,9 +28,6 @@ export class OidcIdTokenService {
       const nowSeconds = Math.floor(this.c.var.now().getTime() / 1000)
       const payload: Record<string, unknown> = { nonce: props.nonce }
 
-      if (props.scope.includes("profile")) {
-        payload.name = props.identity.name
-      }
       if (props.scope.includes("email") && props.identity.email !== null) {
         payload.email = props.identity.email
         payload.email_verified = props.identity.emailVerified

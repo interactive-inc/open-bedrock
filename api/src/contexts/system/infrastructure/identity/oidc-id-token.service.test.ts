@@ -36,7 +36,6 @@ describe("OidcIdTokenService", () => {
       clientId: "system-console",
       identity: {
         subject: "user-1",
-        name: "Test User",
         email: "user@example.com",
         emailVerified: true,
       },
@@ -63,9 +62,9 @@ describe("OidcIdTokenService", () => {
     expect(verified.payload).toMatchObject({
       sub: "user-1",
       nonce: "nonce-with-enough-entropy",
-      name: "Test User",
       email: "user@example.com",
       email_verified: true,
     })
+    expect(verified.payload).not.toHaveProperty("name")
   })
 })

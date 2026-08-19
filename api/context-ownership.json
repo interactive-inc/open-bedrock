@@ -1,8 +1,9 @@
 {
-  "companyCoreAreas": ["core", "workforce"],
+  "companyCoreAreas": ["account-profile", "core", "workforce"],
   "companySystemAdapterAreas": [],
   "companyAreasByLayer": {
     "domain": [
+      "account-profile",
       "core",
       "employee",
       "employee-event",
@@ -16,6 +17,7 @@
     ],
     "application": [
       "account-employee-links",
+      "account-profile",
       "audit",
       "auth",
       "core",
@@ -36,6 +38,7 @@
       "workforce"
     ],
     "infrastructure": [
+      "account-profile",
       "audit",
       "core",
       "employee",

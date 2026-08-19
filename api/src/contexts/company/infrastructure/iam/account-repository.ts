@@ -6,13 +6,12 @@ import { LastRootError } from "@/contexts/company/infrastructure/iam/last-root-e
 import { LastRootGuard } from "@/contexts/company/infrastructure/iam/last-root-guard"
 import { LivePermissionGuard } from "@/contexts/company/infrastructure/iam/live-permission-guard"
 import { LivePermissionGuardError } from "@/contexts/company/infrastructure/iam/live-permission-guard-error"
-import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
-import { inArray } from "drizzle-orm"
+import { accountEmployeeLinks } from "@/contexts/company/infrastructure/schema/employee"
 
 export type AccountSummary = {
   id: AccountId
   employeeId: number | null
-  employeeName: string | null
+  displayName: string
   status: string
   roleKeys: ReadonlyArray<string>
 }
@@ -26,29 +25,27 @@ export class AccountRepository {
     Object.freeze(this)
   }
 
-  /**
-   * 全アカウントを従業員名・割当ロール付きで返す。
-   */
+  /** Companyに属する全Accountを表示プロフィール・割当ロール付きで返す。 */
   async listSummaries(): Promise<ReadonlyArray<AccountSummary> | Error> {
     try {
       const db = this.c.var.database
       const accountRows = await this.c.env.DB.prepare(
-        "SELECT id, status FROM system_accounts ORDER BY id",
-      ).all<{ id: string; status: string }>()
+        `SELECT account.id, account.status, profile.display_name
+         FROM system_accounts account
+         LEFT JOIN company_account_profiles profile
+           ON profile.organization_id = 'organization:default'
+          AND profile.account_id = account.id
+         WHERE account.id <> 'system:migration'
+         ORDER BY account.id`,
+      ).all<{ id: string; status: string; display_name: string | null }>()
+      if (accountRows.results.some((account) => account.display_name === null)) {
+        return new Error("Company Account Profile is missing")
+      }
 
       const linkRows = await db.select().from(accountEmployeeLinks)
       const employeeIdByAccountId = new Map(
         linkRows.map((link) => [link.accountId, link.employeeId]),
       )
-
-      const employeeIds = linkRows.map((link) => link.employeeId)
-
-      const employeeRows =
-        employeeIds.length === 0
-          ? []
-          : await db.select().from(employees).where(inArray(employees.id, employeeIds))
-
-      const nameByEmployeeId = new Map(employeeRows.map((row) => [row.id, row.name]))
 
       const grantRows = await this.c.env.DB.prepare(
         `SELECT binding.account_id, role.key
@@ -61,11 +58,12 @@ export class AccountRepository {
       return accountRows.results.map((account) => {
         const accountId = zAccountId.parse(account.id)
         const employeeId = employeeIdByAccountId.get(accountId) ?? null
+        if (account.display_name === null) throw new Error("Company Account Profile is missing")
 
         return {
           id: accountId,
           employeeId,
-          employeeName: employeeId === null ? null : (nameByEmployeeId.get(employeeId) ?? null),
+          displayName: account.display_name,
           status: account.status,
           roleKeys: grantRows.results
             .filter((grant) => grant.account_id === account.id)

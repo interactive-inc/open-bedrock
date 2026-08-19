@@ -4,6 +4,7 @@ export type CompanyBootstrapEmployeeWrite = Readonly<{
   accountId: AccountId
   employeeCode: string
   name: string
+  occurredAt: Date
 }>
 
 export type CompanyBootstrapEmployeeResult = Readonly<{

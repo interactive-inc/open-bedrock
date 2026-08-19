@@ -4,20 +4,17 @@ import { toOidcIdentity } from "@/contexts/system/interface/identity/to-oidc-ide
 describe("toOidcIdentity", () => {
   test("有効ユーザーの確認済みメールをclaim用に詰め替える", () => {
     expect(
-      toOidcIdentity({ id: "active", name: "Active User", disabledAt: null }, [
+      toOidcIdentity({ id: "active", disabledAt: null }, [
         { email: "user@example.com", emailVerifiedAt: new Date(1) },
       ]),
     ).toEqual({
       subject: "active",
-      name: "Active User",
       email: "user@example.com",
       emailVerified: true,
     })
   })
 
   test("無効ユーザーはclaimへ変換しない", () => {
-    expect(
-      toOidcIdentity({ id: "disabled", name: "Disabled User", disabledAt: new Date(1) }, []),
-    ).toBeNull()
+    expect(toOidcIdentity({ id: "disabled", disabledAt: new Date(1) }, [])).toBeNull()
   })
 })

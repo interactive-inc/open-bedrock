@@ -17,15 +17,14 @@ import type { IdentitySubject } from "@/contexts/system/domain/identity/identity
  */
 
 /**
- * Account。Identity 境界のアンカーで、無効化状態・token 失効世代と、認証・session 互換用の
- * 最小表示ラベルを保持する。表示名の業務ルールと更新は Company の UserProfile が所有し、
- * System は意味を解釈しない。認証手段(password/Google/etc.) は user_identities が管理する。
+ * Account。Identity 境界のアンカーで、無効化状態とtoken失効世代だけを保持する。
+ * 表示名は利用側のプロフィールが所有し、System Accountへ保存しない。
+ * 認証手段(password/Google/etc.) は user_identities が管理する。
  * 利用側の人物プロフィールやメンバーシップは Account ID を外部キーとして参照し、System 側に
  * 逆向きポインタを持たせない。
  */
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
-  name: text("name").notNull(),
   // 権限割当の変更時刻 (IAM RBAC)。ロール割当の編集時に現在時刻を書き込むだけで、
   // 参照箇所はまだ無い。将来のセッション再評価・キャッシュ無効化用の予約 (#1104)。
   permissionsChangedAt: integer("permissions_changed_at", { mode: "timestamp_ms" }),

@@ -54,8 +54,21 @@ async function request(props: { token: string | null }): Promise<Response> {
 }
 
 describe("GET /accounts", () => {
-  test("returns accounts with employee name and roles for an admin", async () => {
-    const response = await request({ token: await adminToken() })
+  test("returns accounts with the Company profile display name and roles for an admin", async () => {
+    const db = await createTestDb()
+    await db
+      .prepare(
+        `UPDATE company_account_profiles
+         SET display_name = 'Company Profile Name'
+         WHERE account_id = '1'`,
+      )
+      .run()
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/accounts",
+      token: await adminToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -65,7 +78,7 @@ describe("GET /accounts", () => {
           z.object({
             id: z.string(),
             employee_id: z.number().nullable(),
-            employee_name: z.string().nullable(),
+            employee_name: z.string(),
             status: z.string(),
             role_keys: z.array(z.string()),
             can_manage: z.boolean(),
@@ -84,6 +97,7 @@ describe("GET /accounts", () => {
       const adminAccount = parsed.data.data.find((account) => account.role_keys.includes("root"))
 
       expect(adminAccount).toBeDefined()
+      expect(adminAccount?.employee_name).toBe("Company Profile Name")
       expect(adminAccount?.can_manage).toBe(true)
       expect(adminAccount?.is_self).toBe(true)
     }
@@ -93,6 +107,20 @@ describe("GET /accounts", () => {
     const response = await request({ token: await memberToken() })
 
     expect(response.status).toBe(403)
+  })
+
+  test("fails closed when a Company-visible Account profile is missing", async () => {
+    const db = await createTestDb()
+    await db.prepare("DELETE FROM company_account_profiles WHERE account_id = '2'").run()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/accounts",
+      token: await adminToken(),
+    })
+
+    expect(response.status).toBe(500)
   })
 
   test("returns 401 without a bearer token", async () => {

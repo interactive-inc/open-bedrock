@@ -1,6 +1,7 @@
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@/contexts/system/domain/identity/identity-provider"
 import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
 import { zIdentityId, type IdentityId } from "@system/domain/identity/identity-id"
 
@@ -12,6 +13,7 @@ export type ProviderIdentity = {
   employeeId: number | null
   email: string | null
   employeeName: string | null
+  profileDisplayName: string | null
 }
 
 export type AccountAuthState = {
@@ -29,6 +31,7 @@ type IdentityRow = {
   employee_id: number | null
   email: string | null
   employee_name: string | null
+  profile_display_name: string | null
 }
 
 /** Product APIのopaque IDをcanonical System Identity / Accountへ接続する。 */
@@ -59,6 +62,7 @@ export class IdentityRepository {
       employeeId: found.employee_id,
       email: found.email,
       employeeName: found.employee_name,
+      profileDisplayName: found.profile_display_name,
     }
   }
 
@@ -130,6 +134,17 @@ export class IdentityRepository {
            SET email = ?2, updated_at = max(updated_at + 1, CAST(strftime('%s', 'now') AS INTEGER) * 1000)
            WHERE identity_id = ?1`,
         ).bind(String(identityId), email),
+        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+        this.c.env.DB.prepare(
+          `UPDATE company_account_profiles
+           SET display_name = ?2,
+               updated_at = max(updated_at + 1, CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+           WHERE organization_id = 'organization:default'
+             AND account_id = (
+               SELECT account_id FROM system_identity_bindings WHERE id = ?1
+             )`,
+        ).bind(String(identityId), name),
+        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
       ]
       if (employeeId !== null) {
         statements.push(
@@ -137,6 +152,7 @@ export class IdentityRepository {
             employeeId,
             name,
           ),
+          abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
         )
       }
       await this.c.env.DB.batch(statements)
@@ -211,13 +227,17 @@ export class IdentityRepository {
            account.token_version,
            link.employee_id,
            profile.email,
-           employee.name AS employee_name
+           employee.name AS employee_name,
+           account_profile.display_name AS profile_display_name
          FROM system_identity_bindings identity
          INNER JOIN system_accounts account ON account.id = identity.account_id
          LEFT JOIN system_identity_profiles profile ON profile.identity_id = identity.id
          LEFT JOIN account_employee_links link
            ON link.account_id = account.id
          LEFT JOIN employees employee ON employee.id = link.employee_id
+         LEFT JOIN company_account_profiles account_profile
+           ON account_profile.organization_id = 'organization:default'
+          AND account_profile.account_id = account.id
          WHERE identity.provider = ?1
            AND identity.subject = ?2
            AND identity.activated_at IS NOT NULL

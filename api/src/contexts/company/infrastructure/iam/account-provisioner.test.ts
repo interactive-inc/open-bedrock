@@ -48,6 +48,17 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
 
     expect(account).not.toBeNull()
 
+    expect(
+      await db
+        .prepare(
+          `SELECT display_name, created_at, updated_at
+           FROM company_account_profiles
+           WHERE account_id = ?1`,
+        )
+        .bind(String((account as { id: number }).id))
+        .first<{ display_name: string; created_at: number; updated_at: number }>(),
+    ).toEqual({ display_name: "Atomic User", created_at: 1000, updated_at: 1000 })
+
     const identity = await db
       .prepare(
         `SELECT profile.email

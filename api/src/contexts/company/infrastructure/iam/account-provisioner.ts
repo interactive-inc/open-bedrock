@@ -86,6 +86,15 @@ export class AccountProvisioner {
           .bind(String(accountId), input.employeeId),
         db
           .prepare(
+            `INSERT INTO company_account_profiles
+               (organization_id, account_id, display_name, created_at, updated_at)
+             SELECT 'organization:default', ?1, name, ?3, ?3
+             FROM employees WHERE id = ?2`,
+          )
+          .bind(String(accountId), input.employeeId, input.now),
+        abortWhenPreviousStatementChangedNoRows(db),
+        db
+          .prepare(
             `INSERT INTO system_identity_bindings
                (id, account_id, provider, subject, created_at, activated_at, revoked_at)
              VALUES (?1, ?2, ?3, ?4, ?5, ?5, NULL)`,
@@ -147,6 +156,13 @@ export class AccountProvisioner {
              VALUES (?1, (SELECT id FROM employees WHERE code IS NULL ORDER BY id DESC LIMIT 1))`,
           )
           .bind(String(accountId)),
+        db
+          .prepare(
+            `INSERT INTO company_account_profiles
+               (organization_id, account_id, display_name, created_at, updated_at)
+             VALUES ('organization:default', ?1, ?2, ?3, ?3)`,
+          )
+          .bind(String(accountId), input.name, input.now),
         db
           .prepare(
             `INSERT INTO system_identity_bindings
@@ -242,6 +258,15 @@ export class AccountProvisioner {
       abortWhenPreviousStatementChangedNoRows(db),
       db
         .prepare(
+          `INSERT INTO company_account_profiles
+             (organization_id, account_id, display_name, created_at, updated_at)
+           SELECT 'organization:default', ?2, name, ?3, ?3
+           FROM employees WHERE code = ?1`,
+        )
+        .bind(input.employeeCode, String(accountId), input.now),
+      abortWhenPreviousStatementChangedNoRows(db),
+      db
+        .prepare(
           `INSERT INTO system_identity_bindings
              (id, account_id, provider, subject, created_at, activated_at, revoked_at)
            VALUES (?1, ?2, 'password', ?3, ?4, ?4, NULL)`,
@@ -322,6 +347,13 @@ export class AccountProvisioner {
              SELECT ?2, id FROM employees WHERE code = ?1`,
           )
           .bind(input.employee.code, String(accountId)),
+        db
+          .prepare(
+            `INSERT INTO company_account_profiles
+               (organization_id, account_id, display_name, created_at, updated_at)
+             VALUES ('organization:default', ?1, ?2, ?3, ?3)`,
+          )
+          .bind(String(accountId), input.employee.name, input.now),
         db
           .prepare(
             `INSERT INTO system_identity_bindings

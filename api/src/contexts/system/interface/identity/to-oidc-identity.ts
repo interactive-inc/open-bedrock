@@ -1,7 +1,7 @@
 import type { OidcIdentity } from "@/contexts/system/infrastructure/identity/oidc-id-token.service"
 import type { userIdentities, users } from "@/contexts/system/infrastructure/schema/system-runtime"
 
-type UserRow = Pick<typeof users.$inferSelect, "id" | "name" | "disabledAt">
+type UserRow = Pick<typeof users.$inferSelect, "id" | "disabledAt">
 type IdentityRow = Pick<typeof userIdentities.$inferSelect, "email" | "emailVerifiedAt">
 
 export function toOidcIdentity(
@@ -16,7 +16,6 @@ export function toOidcIdentity(
 
   return {
     subject: user.id,
-    name: user.name,
     email: primary?.email ?? null,
     emailVerified: primary?.emailVerifiedAt !== null && primary?.emailVerifiedAt !== undefined,
   }

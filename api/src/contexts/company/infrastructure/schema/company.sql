@@ -5,6 +5,22 @@ CREATE TABLE company_organizations (
   updated_at INTEGER NOT NULL CHECK (updated_at >= created_at)
 );
 
+CREATE TABLE company_account_profiles (
+  organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE CASCADE,
+  display_name TEXT NOT NULL CHECK (
+    length(display_name) BETWEEN 1 AND 200
+    AND trim(display_name) = display_name
+    AND instr(display_name, char(0)) = 0
+  ),
+  created_at INTEGER NOT NULL CHECK (created_at >= 0),
+  updated_at INTEGER NOT NULL CHECK (updated_at >= created_at),
+  PRIMARY KEY (organization_id, account_id)
+);
+
+CREATE INDEX company_account_profiles_account_idx
+  ON company_account_profiles (account_id);
+
 CREATE TABLE company_resource_heads (
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   resource_type TEXT NOT NULL,

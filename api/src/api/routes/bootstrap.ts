@@ -102,6 +102,7 @@ export const POST = factory.createHandlers(
       accountId: systemResult.accountId,
       employeeCode: json.code ?? "E001",
       name: json.name,
+      now: c.var.now(),
     })
     if (companyResult instanceof Error) {
       return c.json({ error: "bootstrap_failed" }, 500)

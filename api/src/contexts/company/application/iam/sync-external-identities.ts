@@ -75,6 +75,7 @@ export class SyncExternalIdentities {
       // email も name も一致していれば書き込みも監査も行わず skip する（冪等な再送のno-op）。
       const unchanged =
         existing.email === input.email &&
+        existing.profileDisplayName === input.name &&
         (existing.employeeId === null || existing.employeeName === input.name)
       if (unchanged) {
         return "skipped"
