@@ -11,11 +11,7 @@ export type NotificationKind =
  * POST /notifications/:id/read のレスポンスも同形。
  */
 export type NotificationResponse = {
-  // 作成系は insert 直後の autoincrement id（number | null）を返す。
-  id: number | null
-  recipient_employee_id: number
-  source_domain: string
-  source_id: number | null
+  id: string
   kind: NotificationKind
   title: string
   body: string | null

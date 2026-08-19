@@ -36,11 +36,6 @@ import * as governanceDocumentsImpactRoute from "@/api/routes/governance-documen
 import * as governanceDocumentsSyncRoute from "@/api/routes/governance-documents.sync"
 import * as inboxCountsRoute from "@/api/routes/inbox.counts"
 import * as notificationsRoute from "@/api/routes/notifications"
-import * as notificationsIdRoute from "@/api/routes/notifications.$id"
-import * as notificationsIdReadRoute from "@/api/routes/notifications.$id.read"
-import * as notificationsMeRoute from "@/api/routes/notifications.me"
-import * as notificationsMeUnreadCountRoute from "@/api/routes/notifications.me.unread-count"
-import * as notificationsReadAllRoute from "@/api/routes/notifications.read-all"
 import * as permissionDefinitionsRoute from "@/api/routes/permission-definitions"
 import * as provisioningIdentitiesRoute from "@/api/routes/provisioning.identities"
 import * as announcementsRoute from "@/contexts/announcement/interface/routes/announcements"
@@ -723,14 +718,6 @@ const routePart28 = createRouteApp()
   .get("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.GET)
   .post("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.POST)
   .post("/notifications", ...notificationsRoute.POST)
-  .get("/notifications/me", ...notificationsMeRoute.GET)
-  .get("/notifications/me/unread-count", ...notificationsMeUnreadCountRoute.GET)
-  .post("/notifications/read-all", ...notificationsReadAllRoute.POST)
-  .get("/notifications/:id", ...notificationsIdRoute.GET)
-  .delete("/notifications/:id", ...notificationsIdRoute.DELETE)
-  .post("/notifications/:id/read", ...notificationsIdReadRoute.POST)
-
-const routePart29 = createRouteApp()
   .post("/oauth/authorizations", ...oauthAuthorizationsRoute.POST)
   .post("/oauth/mcp-grants", ...oauthMcpGrantsRoute.POST)
   .post("/oauth/token", ...oauthTokenRoute.POST)
@@ -740,6 +727,8 @@ const routePart29 = createRouteApp()
     "/onboarding-assignments/employees/:employeeCode",
     ...onboardingAssignmentsEmployeesEmployeeCodeRoute.GET,
   )
+
+const routePart29 = createRouteApp()
   .get("/onboarding-assignments/me", ...onboardingAssignmentsMeRoute.GET)
   .get("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.GET)
   .put("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.PUT)

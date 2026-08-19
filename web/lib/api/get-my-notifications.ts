@@ -7,7 +7,7 @@ type NotificationListResult = {
 }
 
 /**
- * GET /notifications/me。自分宛ての通知一覧（新着順）を取得する。
+ * GET /system/v1/notifications。自分の System Account 宛て通知を取得する。
  * isRead を渡すと既読/未読で絞り込む（省略時はすべて）。
  */
 export async function getMyNotifications(props: {
@@ -23,16 +23,26 @@ export async function getMyNotifications(props: {
   }
 
   if (props.isRead !== undefined) {
-    query.is_read = props.isRead ? "true" : "false"
+    query.read = props.isRead ? "true" : "false"
   }
 
-  const response = await client.notifications.me.$get({ query })
+  const response = await client.system.v1.notifications.$get({ query })
 
-  if (response.status >= 400) {
+  if (response.status !== 200) {
     return new Error("failed to load my notifications")
   }
 
   const body = await response.json()
 
-  return { data: body.data, total: body.total }
+  return {
+    data: body.notifications.map((notification) => ({
+      id: notification.id,
+      kind: notification.kind.replace(/^company:/u, "") as NotificationResponse["kind"],
+      title: notification.title,
+      body: notification.body,
+      is_read: notification.read_at !== null,
+      created_at: notification.delivered_at,
+    })),
+    total: body.total,
+  }
 }
