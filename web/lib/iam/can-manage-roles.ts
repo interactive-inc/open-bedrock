@@ -1,4 +1,4 @@
-/** api の canManageRoles と同一基準（permission ベース）。 */
+/** System Role を変更できる正規 System permission。 */
 export function canManageRoles(permissions: ReadonlyArray<string>): boolean {
-  return permissions.includes("iam:manage_roles")
+  return permissions.includes("system:admin") || permissions.includes("iam:write")
 }

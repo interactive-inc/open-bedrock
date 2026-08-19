@@ -17,22 +17,19 @@ import { getAccounts } from "@/lib/api/get-accounts"
 import { getRoles } from "@/lib/api/get-roles"
 
 /**
- * GET /accounts を実行しアカウント一覧テーブルを描画する非同期 RSC。
- * 各行にロール付与フォームを置く。割当可能なロールは GET /roles から取得する。
+ * 正規 System API から Account・Role・Role Binding を読み、管理表を描画する。
  */
 export async function AccountListSection(props: {
-  canAssignRoles: boolean
+  canWrite: boolean
   actorPermissionKeys: ReadonlyArray<string>
 }) {
   const actorPermissionKeys = new Set(props.actorPermissionKeys)
 
-  const accounts = await getAccounts()
+  const [accounts, roles] = await Promise.all([getAccounts(), props.canWrite ? getRoles() : []])
 
   if (accounts instanceof Error) {
     return <FetchError message="アカウント一覧の取得に失敗しました" />
   }
-
-  const roles = props.canAssignRoles ? await getRoles() : []
 
   const assignableRoles =
     roles instanceof Error
@@ -41,11 +38,9 @@ export async function AccountListSection(props: {
           role.permission_keys.every((permissionKey) => actorPermissionKeys.has(permissionKey)),
         )
 
-  const roleByKey = new Map(
-    (roles instanceof Error ? [] : roles).map((role) => [role.key, role] as const),
+  const roleById = new Map(
+    (roles instanceof Error ? [] : roles).map((role) => [role.id, role] as const),
   )
-
-  const roleKeys = assignableRoles.map((role) => role.key)
 
   return (
     <div className="flex flex-col gap-2">
@@ -54,7 +49,7 @@ export async function AccountListSection(props: {
       <Table aria-label="一覧">
         <TableHeader>
           <TableRow>
-            <TableHead>従業員</TableHead>
+            <TableHead>Account ID</TableHead>
             <TableHead>状態</TableHead>
             <TableHead>ロール</TableHead>
             <TableHead>ロール付与</TableHead>
@@ -65,49 +60,63 @@ export async function AccountListSection(props: {
         <TableBody>
           {accounts.map((account) => (
             <TableRow key={account.id}>
-              <TableCell>{account.employee_name ?? "（未紐付け）"}</TableCell>
+              <TableCell className="font-mono text-xs">{account.id}</TableCell>
               <TableCell>
                 <Badge variant={account.status === "active" ? "secondary" : "outline"}>
                   {account.status}
                 </Badge>
               </TableCell>
               <TableCell className="flex flex-wrap gap-1">
-                {account.role_keys.length === 0 ? (
+                {account.role_bindings.length === 0 ? (
                   <span className="text-muted-foreground">—</span>
                 ) : (
-                  account.role_keys.map((roleKey) => (
-                    <Badge key={roleKey} variant="outline" className="font-mono text-xs">
-                      {roleKey}
-                      {props.canAssignRoles &&
-                      roleByKey
-                        .get(roleKey)
-                        ?.permission_keys.every((permissionKey) =>
-                          actorPermissionKeys.has(permissionKey),
-                        ) ? (
-                        <RevokeRoleButton accountId={account.id} roleKey={roleKey} />
-                      ) : null}
-                    </Badge>
-                  ))
+                  account.role_bindings.map((binding) => {
+                    const role = roleById.get(binding.role_id)
+                    const roleLabel = role?.key ?? binding.role_id
+                    const canRevoke =
+                      props.canWrite &&
+                      role?.permission_keys.every((permissionKey) =>
+                        actorPermissionKeys.has(permissionKey),
+                      )
+
+                    return (
+                      <Badge key={binding.id} variant="outline" className="font-mono text-xs">
+                        {roleLabel}
+                        {canRevoke ? (
+                          <RevokeRoleButton
+                            accountId={account.id}
+                            bindingId={binding.id}
+                            roleLabel={roleLabel}
+                          />
+                        ) : null}
+                      </Badge>
+                    )
+                  })
                 )}
               </TableCell>
               <TableCell>
-                {props.canAssignRoles && account.is_self === false ? (
-                  <GrantRoleForm accountId={account.id} roleKeys={roleKeys} />
+                {props.canWrite ? (
+                  <GrantRoleForm
+                    accountId={account.id}
+                    roles={assignableRoles.filter(
+                      (role) =>
+                        account.role_bindings.some((binding) => binding.role_id === role.id) ===
+                        false,
+                    )}
+                  />
                 ) : (
                   <span className="text-muted-foreground">—</span>
                 )}
               </TableCell>
               <TableCell>
-                {account.can_manage ? (
+                {props.canWrite ? (
                   <TableRowActions>
-                    {account.is_self === false ? (
-                      <AccountStatusButton accountId={account.id} status={account.status} />
-                    ) : null}
+                    <AccountStatusButton accountId={account.id} status={account.status} />
 
                     <ResetPasswordButton accountId={account.id} />
                   </TableRowActions>
                 ) : (
-                  <span className="text-sm text-muted-foreground">上位アカウント</span>
+                  <span className="text-sm text-muted-foreground">閲覧のみ</span>
                 )}
               </TableCell>
             </TableRow>

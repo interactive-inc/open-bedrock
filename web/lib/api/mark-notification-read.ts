@@ -11,5 +11,4 @@ export async function markNotificationRead(notificationId: string): Promise<void
   if (response.status !== 200) {
     return new Error("failed to mark notification as read")
   }
-
 }

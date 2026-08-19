@@ -23,8 +23,7 @@ export async function markNotificationReadAction(
   await requireAuth()
 
   const notificationIdValue = formData.get("notification_id")
-  const notificationId =
-    typeof notificationIdValue === "string" ? notificationIdValue.trim() : ""
+  const notificationId = typeof notificationIdValue === "string" ? notificationIdValue.trim() : ""
 
   if (notificationId === "") {
     return { ok: false, error: "通知 ID が不正です" }

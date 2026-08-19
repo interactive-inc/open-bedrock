@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/api/hc-client"
 
-/** PATCH /roles/:id。ロールの名前・説明・権限を更新する（iam:manage_roles が必要）。 */
+/** PATCH /system/v1/roles/:roleId。custom System Role を更新する。 */
 export async function updateRole(
-  roleId: number,
+  roleId: string,
   request: {
     name: string
     description: string | null
@@ -11,8 +11,8 @@ export async function updateRole(
 ): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.roles[":id"].$patch({
-    param: { id: String(roleId) },
+  const response = await client.system.v1.roles[":roleId"].$patch({
+    param: { roleId },
     json: {
       name: request.name,
       description: request.description,
@@ -20,7 +20,7 @@ export async function updateRole(
     },
   })
 
-  if (response.status >= 400) {
+  if (response.status !== 200) {
     return new Error("failed to update role")
   }
 

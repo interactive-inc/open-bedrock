@@ -4,11 +4,6 @@
 
 import { hc } from "hono/client"
 import { appBase, createRouteApp } from "@/api/app-base"
-import * as accountsRoute from "@/api/routes/accounts"
-import * as accountsIdResetPasswordRoute from "@/api/routes/accounts.$id.reset-password"
-import * as accountsIdRolesRoute from "@/api/routes/accounts.$id.roles"
-import * as accountsIdRolesRoleKeyRoute from "@/api/routes/accounts.$id.roles.$roleKey"
-import * as accountsIdStatusRoute from "@/api/routes/accounts.$id.status"
 import * as applicationRequestsRoute from "@/api/routes/application-requests"
 import * as applicationRequestsIdRoute from "@/api/routes/application-requests.$id"
 import * as applicationRequestsIdApproveRoute from "@/api/routes/application-requests.$id.approve"
@@ -130,8 +125,6 @@ import * as personnelActionsRoute from "@/contexts/company/interface/routes/pers
 import * as personnelActionsIdCorrectRoute from "@/contexts/company/interface/routes/personnel-actions.$id.correct"
 import * as positionDefinitionsRoute from "@/contexts/company/interface/routes/position-definitions"
 import * as positionDefinitionsIdRoute from "@/contexts/company/interface/routes/position-definitions.$id"
-import * as rolesRoute from "@/contexts/company/interface/routes/roles"
-import * as rolesIdRoute from "@/contexts/company/interface/routes/roles.$id"
 import * as salaryRevisionsRoute from "@/contexts/compensation-change/interface/routes/salary-revisions"
 import * as disciplinaryActionsRoute from "@/contexts/disciplinary-action/interface/routes/disciplinary-actions"
 import * as documentLedgerEntriesRoute from "@/contexts/document/interface/routes/document-ledger-entries"
@@ -342,11 +335,6 @@ import * as systemV1RolesRoleIdRoute from "@system/interface/routes/system.v1.ro
 import * as systemV1SessionsRoute from "@system/interface/routes/system.v1.sessions"
 
 const routePart0 = createRouteApp()
-  .get("/accounts", ...accountsRoute.GET)
-  .post("/accounts/:id/reset-password", ...accountsIdResetPasswordRoute.POST)
-  .post("/accounts/:id/roles", ...accountsIdRolesRoute.POST)
-  .delete("/accounts/:id/roles/:roleKey", ...accountsIdRolesRoleKeyRoute.DELETE)
-  .post("/accounts/:id/status", ...accountsIdStatusRoute.POST)
   .get("/announcements", ...announcementsRoute.GET)
   .post("/announcements", ...announcementsRoute.POST)
   .get("/announcements/:id", ...announcementsIdRoute.GET)
@@ -849,11 +837,6 @@ const routePart34 = createRouteApp()
 const routePart35 = createRouteApp()
   .post("/ringi-requests/:id/approve", ...ringiRequestsIdApproveRoute.POST)
   .post("/ringi-requests/:id/reject", ...ringiRequestsIdRejectRoute.POST)
-  .get("/roles", ...rolesRoute.GET)
-  .post("/roles", ...rolesRoute.POST)
-  .get("/roles/:id", ...rolesIdRoute.GET)
-  .patch("/roles/:id", ...rolesIdRoute.PATCH)
-  .delete("/roles/:id", ...rolesIdRoute.DELETE)
   .get("/rooms", ...roomsRoute.GET)
   .post("/rooms", ...roomsRoute.POST)
   .get("/rooms/availability", ...roomsAvailabilityRoute.GET)
@@ -895,13 +878,13 @@ const routePart35 = createRouteApp()
   .post("/stocktakes", ...stocktakesRoute.POST)
   .get("/stocktakes/:id", ...stocktakesIdRoute.GET)
   .post("/stocktakes/:id/assets/:code/check", ...stocktakesIdAssetsCodeCheckRoute.POST)
-
-const routePart36 = createRouteApp()
   .post("/stocktakes/:id/close", ...stocktakesIdCloseRoute.POST)
   .get("/surveys", ...surveysRoute.GET)
   .post("/surveys", ...surveysRoute.POST)
   .get("/surveys/responses/me", ...surveysResponsesMeRoute.GET)
   .get("/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.GET)
+
+const routePart36 = createRouteApp()
   .put("/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.PUT)
   .delete("/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.DELETE)
   .get("/surveys/:surveyId", ...surveysSurveyIdRoute.GET)
@@ -966,13 +949,13 @@ const routePart36 = createRouteApp()
   .delete("/system/v1/roles/:roleId", ...systemV1RolesRoleIdRoute.DELETE)
   .get("/system/v1/sessions", ...systemV1SessionsRoute.GET)
   .post("/system/v1/sessions", ...systemV1SessionsRoute.POST)
-
-const routePart37 = createRouteApp()
   .patch("/system/v1/sessions", ...systemV1SessionsRoute.PATCH)
   .delete("/system/v1/sessions", ...systemV1SessionsRoute.DELETE)
   .get("/thanks-messages", ...thanksMessagesRoute.GET)
   .post("/thanks-messages", ...thanksMessagesRoute.POST)
   .get("/thanks-messages/me", ...thanksMessagesMeRoute.GET)
+
+const routePart37 = createRouteApp()
   .get("/thanks-point-balances/me", ...thanksPointBalancesMeRoute.GET)
   .get("/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
   .post("/thanks-redemptions", ...thanksRedemptionsRoute.POST)
