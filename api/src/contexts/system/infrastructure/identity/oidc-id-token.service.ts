@@ -1,5 +1,5 @@
 import { OidcValue } from "@system/domain/identity/oidc.value"
-import { OidcCryptographyService } from "@/contexts/system/infrastructure/identity/oidc-cryptography.service"
+import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret"
 import type { OidcSigningKeys } from "@/contexts/system/infrastructure/identity/oidc-signing-key.service"
 import type { SystemClockContext } from "@system/infrastructure/configuration/system-context"
 import { importJWK, SignJWT } from "jose"
@@ -44,7 +44,7 @@ export class OidcIdTokenService {
         .setAudience(props.clientId)
         .setIssuedAt(nowSeconds)
         .setExpirationTime(nowSeconds + OidcValue.TOKEN_MAX_AGE_SECONDS)
-        .setJti(OidcCryptographyService.createSecret())
+        .setJti(createOidcSecret())
         .sign(signingKey)
     } catch {
       return new Error("id_token_signing_failed")
