@@ -20,9 +20,9 @@ describe("parseAuditListSearchParams", () => {
     ).toEqual({ ok: true, query: { limit: "50" } })
   })
 
-  test("accepts the complete canonical query without interpreting the opaque cursor", () => {
+  test("accepts opaque Account IDs without interpreting the ID or cursor", () => {
     const query = {
-      actor_account_id: "-41",
+      actor_account_id: "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y",
       action: "legacy.action",
       target_type: "legacy_target",
       target_id: "target/value",
@@ -39,11 +39,7 @@ describe("parseAuditListSearchParams", () => {
   test.each([
     { unknown: "1" },
     { action: ["one", "two"] },
-    { actor_account_id: " 1" },
-    { actor_account_id: "+1" },
-    { actor_account_id: "1.0" },
-    { actor_account_id: "1e2" },
-    { actor_account_id: "9007199254740992" },
+    { actor_account_id: "a".repeat(256) },
     { action: "a".repeat(201) },
     { target_type: "t".repeat(201) },
     { target_id: "i".repeat(513) },
@@ -98,10 +94,10 @@ describe("buildAuditEventsHref", () => {
 })
 
 describe("parseAuditExportSearchParams", () => {
-  test("accepts an exact thirty-one day range and converts the actor to a number", () => {
+  test("accepts an exact thirty-one day range and preserves the opaque actor", () => {
     expect(
       parseAuditExportSearchParams({
-        actor_account_id: "-41",
+        actor_account_id: "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y",
         action: "legacy.action",
         target_type: "legacy_target",
         target_id: "target-1",
@@ -112,7 +108,7 @@ describe("parseAuditExportSearchParams", () => {
     ).toEqual({
       ok: true,
       request: {
-        actor_account_id: -41,
+        actor_account_id: "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y",
         action: "legacy.action",
         target_type: "legacy_target",
         target_id: "target-1",
@@ -132,7 +128,11 @@ describe("parseAuditExportSearchParams", () => {
     { from: "2026-01-01T00:00:00.000Z", to: "2026-01-02T00:00:00Z" },
     { from: "2026-01-01T00:00:00Z", to: "2026-01-02T00:00:00Z", cursor: "no" },
     { from: ["2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z"], to: "2026-01-03T00:00:00Z" },
-    { actor_account_id: "+1", from: "2026-01-01T00:00:00Z", to: "2026-01-02T00:00:00Z" },
+    {
+      actor_account_id: "a".repeat(256),
+      from: "2026-01-01T00:00:00Z",
+      to: "2026-01-02T00:00:00Z",
+    },
   ])("rejects malformed, excessive, unknown, or repeated export input %#", (input) => {
     expect(parseAuditExportSearchParams(input)).toMatchObject({ ok: false })
   })
