@@ -18,8 +18,8 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["employee-skills"].me[":skill_code"].$delete({
-      param: { skill_code: skillCode },
+    const response = await client["employee-skills"].me[":skillCode"].$delete({
+      param: { skillCode: skillCode },
     })
 
     if (response.status !== 204) {

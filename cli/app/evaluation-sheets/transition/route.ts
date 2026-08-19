@@ -50,8 +50,8 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["evaluation-sheets"][":sheet_id"].transition.$post({
-      param: { sheet_id: query.id },
+    const response = await client["evaluation-sheets"][":sheetId"].transition.$post({
+      param: { sheetId: query.id },
       json: {
         status: query.status,
         expected_revision: expectedRevision,

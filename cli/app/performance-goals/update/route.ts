@@ -29,8 +29,8 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["performance-goals"][":goal_id"].$put({
-      param: { goal_id: query.id },
+    const response = await client["performance-goals"][":goalId"].$put({
+      param: { goalId: query.id },
       json: {
         period: query.period,
         title: query.title,
