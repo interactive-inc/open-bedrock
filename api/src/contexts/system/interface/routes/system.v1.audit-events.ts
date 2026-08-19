@@ -37,7 +37,10 @@ export const GET = systemFactory.createHandlers(
     if (authorizationJson instanceof Error) {
       return context.json({ error: "audit service unavailable", code: "audit_unavailable" }, 503)
     }
-    if (!context.var.permissions.has("audit:read")) {
+    if (
+      !context.var.permissions.has("system:admin") &&
+      !context.var.permissions.has("audit:read")
+    ) {
       const deniedAudit = createSystemAuditEvent({
         actorAccountId: context.var.userId,
         action: "system.audit.list",

@@ -26,6 +26,15 @@ const schema = `
   CREATE UNIQUE INDEX system_identity_bindings_provider_subject_uniq
     ON system_identity_bindings (provider, subject);
 
+  CREATE TABLE system_identity_profiles (
+    identity_id TEXT PRIMARY KEY NOT NULL
+      REFERENCES system_identity_bindings(id) ON DELETE CASCADE,
+    email TEXT,
+    email_verified INTEGER NOT NULL DEFAULT 0,
+    last_used_at INTEGER,
+    updated_at INTEGER NOT NULL
+  );
+
   CREATE TABLE system_password_credentials (
     identity_id TEXT PRIMARY KEY NOT NULL
       REFERENCES system_identity_bindings(id) ON DELETE CASCADE,
@@ -52,6 +61,7 @@ const schema = `
     key TEXT NOT NULL UNIQUE,
     kind TEXT NOT NULL,
     name TEXT NOT NULL,
+    description TEXT,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
   );
@@ -70,6 +80,15 @@ const schema = `
     resource_id TEXT,
     created_at INTEGER NOT NULL,
     revoked_at INTEGER
+  );
+
+  CREATE TABLE system_bootstrap_state (
+    singleton INTEGER PRIMARY KEY NOT NULL CHECK (singleton = 1),
+    completed_by_account_id TEXT NOT NULL UNIQUE
+      REFERENCES system_accounts(id) ON DELETE RESTRICT,
+    root_binding_id TEXT NOT NULL UNIQUE
+      REFERENCES system_role_bindings(id) ON DELETE RESTRICT,
+    completed_at INTEGER NOT NULL
   );
 
   CREATE TABLE system_sessions (

@@ -97,7 +97,10 @@ export const POST = systemFactory.createHandlers(
     }),
   ),
   async (context) => {
-    if (!context.var.permissions.has("notification:send")) {
+    if (
+      !context.var.permissions.has("system:admin") &&
+      !context.var.permissions.has("notification:send")
+    ) {
       return context.json({ error: "forbidden", code: "forbidden" }, 403)
     }
     const now = context.var.now()

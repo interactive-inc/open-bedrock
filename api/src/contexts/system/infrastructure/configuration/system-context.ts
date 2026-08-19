@@ -62,6 +62,10 @@ export type SystemPasswordHashContext = Readonly<{
   env: Readonly<{ PEPPER_SECRET?: string }>
 }>
 
+export type SystemBootstrapContext = Readonly<{
+  env: Readonly<{ BOOTSTRAP_TOKEN?: string }>
+}>
+
 type SystemEmailAddress = Readonly<{
   name: string
   email: string

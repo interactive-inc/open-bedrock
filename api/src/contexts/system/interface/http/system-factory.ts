@@ -1,5 +1,6 @@
 import type {
   SystemAuthorizationContext,
+  SystemBootstrapContext,
   SystemClockContext,
   SystemD1Context,
   SystemDatabaseContext,
@@ -16,6 +17,7 @@ type SystemInterfaceContext = SystemDatabaseContext &
   SystemD1Context &
   SystemClockContext &
   SystemAuthorizationContext &
+  SystemBootstrapContext &
   SystemJwtSecretContext &
   SystemOidcConfigurationContext &
   SystemOidcSigningContext &
