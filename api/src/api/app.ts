@@ -23,7 +23,6 @@ import * as attendanceRecordsOvertimeSummaryRoute from "@/api/routes/attendance-
 import * as auditEventExportsRoute from "@/api/routes/audit-event-exports"
 import * as auditEventsRoute from "@/api/routes/audit-events"
 import * as auditEventsEventIdRoute from "@/api/routes/audit-events.$eventId"
-import * as bootstrapRoute from "@/api/routes/bootstrap"
 import * as dashboardRoute from "@/api/routes/dashboard"
 import * as dashboardManagementRoute from "@/api/routes/dashboard.management"
 import * as featuresRoute from "@/api/routes/features"
@@ -90,6 +89,7 @@ import * as batchEmployeeLifecycleProcessOutboxRoute from "@/contexts/company/in
 import * as batchEmployeeLifecycleRebuildProjectionsRoute from "@/contexts/company/interface/routes/batch.employee-lifecycle.rebuild-projections"
 import * as batchEmployeeLifecycleVerifyRoute from "@/contexts/company/interface/routes/batch.employee-lifecycle.verify"
 import * as companyV1AccountEmployeeLinksRoute from "@/contexts/company/interface/routes/company.v1.account-employee-links"
+import * as companyV1BootstrapRoute from "@/contexts/company/interface/routes/company.v1.bootstrap"
 import * as companyV1CapabilitiesRoute from "@/contexts/company/interface/routes/company.v1.capabilities"
 import * as companyV1DefinitionsRoute from "@/contexts/company/interface/routes/company.v1.definitions"
 import * as companyV1EmployeesRoute from "@/contexts/company/interface/routes/company.v1.employees"
@@ -482,7 +482,6 @@ const routePart24 = createRouteApp()
     ...batchEmployeeLifecycleRebuildProjectionsRoute.POST,
   )
   .post("/batch/employee-lifecycle/verify", ...batchEmployeeLifecycleVerifyRoute.POST)
-  .post("/bootstrap", ...bootstrapRoute.POST)
   .post("/business-trips", ...businessTripsRoute.POST)
   .get("/business-trips/admin", ...businessTripsAdminRoute.GET)
   .get("/business-trips/me", ...businessTripsMeRoute.GET)
@@ -503,9 +502,9 @@ const routePart24 = createRouteApp()
   .post("/career-postings/:postingId/apply", ...careerPostingsPostingIdApplyRoute.POST)
   .get("/career-sheets/me", ...careerSheetsMeRoute.GET)
   .put("/career-sheets/me", ...careerSheetsMeRoute.PUT)
+  .delete("/career-sheets/me", ...careerSheetsMeRoute.DELETE)
 
 const routePart25 = createRouteApp()
-  .delete("/career-sheets/me", ...careerSheetsMeRoute.DELETE)
   .post("/certificate-requests", ...certificateRequestsRoute.POST)
   .get("/certificate-requests/admin", ...certificateRequestsAdminRoute.GET)
   .get("/certificate-requests/me", ...certificateRequestsMeRoute.GET)
@@ -522,6 +521,7 @@ const routePart25 = createRouteApp()
   .delete("/commendations/:id", ...commendationsIdRoute.DELETE)
   .get("/company/v1/account-employee-links", ...companyV1AccountEmployeeLinksRoute.GET)
   .post("/company/v1/account-employee-links", ...companyV1AccountEmployeeLinksRoute.POST)
+  .post("/company/v1/bootstrap", ...companyV1BootstrapRoute.POST)
   .get("/company/v1/capabilities", ...companyV1CapabilitiesRoute.GET)
   .get("/company/v1/definitions", ...companyV1DefinitionsRoute.GET)
   .post("/company/v1/definitions", ...companyV1DefinitionsRoute.POST)

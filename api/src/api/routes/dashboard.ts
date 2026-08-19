@@ -4,8 +4,9 @@ import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-be
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { surveys } from "@/contexts/survey/infrastructure/schema/survey"
-import { systemCases } from "@system/infrastructure/schema/system-workflow"
-import { count, eq, gte, sql } from "drizzle-orm"
+import { countPendingSystemCases } from "@system/infrastructure/workflow/count-pending-system-cases"
+import { listSystemCaseMonthlyCounts } from "@system/infrastructure/workflow/list-system-case-monthly-counts"
+import { count, eq } from "drizzle-orm"
 
 /**
  * NOW から 6 か月分の YYYY-MM ラベルを古い順に返す（当月を含む）。
@@ -43,43 +44,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const windowStart = `${monthLabels[0]}-01T00:00:00`
   const windowStartDate = new Date(`${windowStart}Z`)
 
-  const [
-    employeeRows,
-    openGoalRows,
-    pendingApplicationRows,
-    openSurveyRows,
-    deptBreakdownRows,
-    goalStatusRows,
-    applicationTrendRows,
-  ] = await c.var.database.batch([
-    // 既存 4 カウント
-    c.var.database.select({ total: count() }).from(employees),
-    c.var.database.select({ total: count() }).from(goals).where(eq(goals.status, "in_progress")),
-    c.var.database
-      .select({ total: count() })
-      .from(systemCases)
-      .where(eq(systemCases.status, "pending")),
-    c.var.database.select({ total: count() }).from(surveys).where(eq(surveys.status, "open")),
-    // 部署別従業員数
-    c.var.database
-      .select({ dept_name: employees.deptName, total: count() })
-      .from(employees)
-      .groupBy(employees.deptName),
-    // 目標ステータス別件数
-    c.var.database
-      .select({ status: goals.status, total: count() })
-      .from(goals)
-      .groupBy(goals.status),
-    // 申請月別推移（直近 6 か月）
-    c.var.database
-      .select({
-        month: sql<string>`strftime('%Y-%m', ${systemCases.createdAt} / 1000, 'unixepoch')`,
-        total: count(),
-      })
-      .from(systemCases)
-      .where(gte(systemCases.createdAt, windowStartDate))
-      .groupBy(sql`strftime('%Y-%m', ${systemCases.createdAt} / 1000, 'unixepoch')`),
+  const [pendingApplicationCount, applicationTrendRows, dashboardRows] = await Promise.all([
+    countPendingSystemCases({ env: { DB: c.env.DB } }),
+    listSystemCaseMonthlyCounts({ env: { DB: c.env.DB } }, windowStartDate),
+    c.var.database.batch([
+      c.var.database.select({ total: count() }).from(employees),
+      c.var.database.select({ total: count() }).from(goals).where(eq(goals.status, "in_progress")),
+      c.var.database.select({ total: count() }).from(surveys).where(eq(surveys.status, "open")),
+      c.var.database
+        .select({ dept_name: employees.deptName, total: count() })
+        .from(employees)
+        .groupBy(employees.deptName),
+      c.var.database
+        .select({ status: goals.status, total: count() })
+        .from(goals)
+        .groupBy(goals.status),
+    ]),
   ])
+  if (pendingApplicationCount instanceof Error) throw pendingApplicationCount
+  if (applicationTrendRows instanceof Error) throw applicationTrendRows
+  const [employeeRows, openGoalRows, openSurveyRows, deptBreakdownRows, goalStatusRows] =
+    dashboardRows
 
   // 部署別内訳（dept_name が null の行は "未所属" にまとめる）
   const department_breakdown = deptBreakdownRows.map((row) => ({
@@ -115,7 +100,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const body = {
     employee_count: employeeRows.at(0)?.total ?? 0,
     open_goal_count: openGoalRows.at(0)?.total ?? 0,
-    pending_application_count: pendingApplicationRows.at(0)?.total ?? 0,
+    pending_application_count: pendingApplicationCount,
     open_survey_count: openSurveyRows.at(0)?.total ?? 0,
     department_breakdown,
     goal_status_summary,

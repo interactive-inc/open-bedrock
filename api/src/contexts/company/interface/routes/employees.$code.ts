@@ -6,7 +6,6 @@ import type { Context } from "@/env"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { IdentityRepository } from "@/contexts/company/application/auth/identity-repository"
-import { AccountRepository } from "@/contexts/company/infrastructure/iam/account-repository"
 import { toPrimaryRole } from "@/contexts/company/interface/utils/to-primary-role"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
@@ -24,6 +23,10 @@ import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructur
 import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
 import { CanonicalCompanyAccess } from "@/contexts/company/interface/utils/canonical-company-access"
 import { requireCanonicalCompany } from "@/contexts/company/interface/utils/require-canonical-company"
+import { accountEmployeeLinks } from "@/contexts/company/infrastructure/schema/employee"
+import { zAccountId } from "@system/domain/auth/account-id"
+import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization-repository"
+import { eq } from "drizzle-orm"
 
 /** 従業員をレスポンス用の snake_case に整形する。email/role は IAM(identities/account_roles)から解決する。 */
 async function toResponseBody(
@@ -41,11 +44,28 @@ async function toResponseBody(
     return new UnexpectedError("failed to resolve email", { cause: emailByEmployeeId })
   }
 
-  const roleKeys = await new AccountRepository(c).findRoleKeysByEmployeeId(employee.id)
-
-  if (roleKeys instanceof Error) {
-    return new UnexpectedError("failed to resolve role", { cause: roleKeys })
+  const links = await c.var.database
+    .select({ accountId: accountEmployeeLinks.accountId })
+    .from(accountEmployeeLinks)
+    .where(eq(accountEmployeeLinks.employeeId, employee.id))
+    .limit(1)
+  const accountId = zAccountId.safeParse(links.at(0)?.accountId)
+  const authorization = accountId.success
+    ? await new SystemD1AuthorizationRepository({ env: { DB: c.env.DB } }).loadForAccount(
+        accountId.data,
+      )
+    : null
+  if (authorization instanceof Error) {
+    return new UnexpectedError("failed to resolve role", { cause: authorization })
   }
+  const roleById = new Map(authorization?.roles.map((role) => [role.id, role]) ?? [])
+  const roleKeys =
+    authorization?.bindings.flatMap((binding) => {
+      const role = roleById.get(binding.roleId)
+      return binding.revokedAt === null && binding.resource === null && role !== undefined
+        ? [role.key.replace(/^company:/u, "")]
+        : []
+    }) ?? []
 
   return zAppEmployee.parse({
     code: employee.code,

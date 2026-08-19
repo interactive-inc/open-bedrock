@@ -1,5 +1,5 @@
 import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
-import { PersonnelActionRequestAccess } from "@/contexts/company/application/employee-lifecycle/procedure/personnel-action-request-access"
+import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request"
 import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
@@ -23,10 +23,9 @@ export class CompleteApprovedPersonnelActionRequest {
       completedAt: Date
     }>,
   ): Promise<Readonly<{ actionId: string }> | ApplicationError> {
-    const request = await new PersonnelActionRequestAccess({
-      c: this.c,
-      session: command.session,
-    }).findByApplicationId(command.applicationId)
+    const request = await findPersonnelActionRequest(this.c, command.session, {
+      applicationId: command.applicationId,
+    })
     if (request instanceof ApplicationError) return request
     if (request === null) {
       return new NotFoundError("人事変更申請が見つかりません", "personnel_action_request_not_found")
@@ -89,10 +88,9 @@ export class CompleteApprovedPersonnelActionRequest {
       ],
     })
     if (executed instanceof Error) {
-      const replay = await new PersonnelActionRequestAccess({
-        c: this.c,
-        session: command.session,
-      }).findByApplicationId(command.applicationId)
+      const replay = await findPersonnelActionRequest(this.c, command.session, {
+        applicationId: command.applicationId,
+      })
       if (
         !(replay instanceof ApplicationError) &&
         replay !== null &&

@@ -28,6 +28,7 @@ export type SystemAuthorizationContext = Readonly<{
     accountTokenVersion: number
     permissions: ReadonlySet<string>
     role: string
+    roleKeys?: ReadonlyArray<string>
     userId: string
   }>
 }>

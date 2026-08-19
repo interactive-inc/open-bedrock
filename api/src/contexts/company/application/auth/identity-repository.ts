@@ -1,9 +1,14 @@
 import type { Context } from "@/env"
-import type { IdentityProvider } from "@/contexts/system/domain/identity/identity-provider"
-import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
+import type { IdentityProvider } from "@system/domain/identity/identity-provider"
+import { identitySubjectSchema } from "@system/domain/identity/identity-subject"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
-import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
-import { zIdentityId, type IdentityId } from "@system/domain/identity/identity-id"
+import type { AccountId } from "@system/domain/auth/account-id"
+import type { IdentityId } from "@system/domain/identity/identity-id"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
+import { SystemIdentityLoginRepository } from "@system/infrastructure/auth/system-identity-login-repository"
+import { FindSystemIdentityByEmail } from "@system/infrastructure/identity/find-system-identity-by-email"
+import { PrepareSystemIdentityProfileUpdate } from "@system/infrastructure/identity/prepare-system-identity-profile-update"
+import { SystemIdentityAdministrationRepository } from "@system/infrastructure/identity/system-identity-administration-repository"
 
 export type ProviderIdentity = {
   identityId: IdentityId
@@ -23,18 +28,13 @@ export type AccountAuthState = {
   employeeId: number | null
 }
 
-type IdentityRow = {
-  identity_id: string
-  account_id: string
-  account_status: string
-  token_version: number
+type CompanyIdentityProjection = Readonly<{
   employee_id: number | null
-  email: string | null
   employee_name: string | null
   profile_display_name: string | null
-}
+}>
 
-/** Product APIのopaque IDをcanonical System Identity / Accountへ接続する。 */
+/** System Identity と Company Employee/Profile の明示的な読み取り合成。 */
 export class IdentityRepository {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -46,104 +46,98 @@ export class IdentityRepository {
   ): Promise<ProviderIdentity | null | Error> {
     const subject = identitySubjectSchema.safeParse(subjectInput)
     if (!subject.success) return null
+    const login = await new SystemIdentityLoginRepository({ env: { DB: this.c.env.DB } }).find(
+      provider,
+      subject.data,
+    )
+    if (login === null || login instanceof Error) return login
+    const identity = await new SystemIdentityAdministrationRepository({
+      env: { DB: this.c.env.DB },
+    }).findById(login.identity.id)
+    if (identity === null || identity instanceof Error) return identity
 
-    const found = await this.findIdentity(provider, subject.data)
-    if (found === null || found instanceof Error) return found
-    const identityId = zIdentityId.safeParse(found.identity_id)
-    const accountId = zAccountId.safeParse(found.account_id)
-    if (!identityId.success) return identityId.error
-    if (!accountId.success) return accountId.error
+    try {
+      const company = await this.c.env.DB.prepare(
+        `SELECT link.employee_id, employee.name AS employee_name,
+                profile.display_name AS profile_display_name
+         FROM (SELECT ?1 AS account_id) source
+         LEFT JOIN account_employee_links link ON link.account_id = source.account_id
+         LEFT JOIN employees employee ON employee.id = link.employee_id
+         LEFT JOIN company_account_profiles profile
+           ON profile.organization_id = 'organization:default'
+          AND profile.account_id = source.account_id
+         LIMIT 1`,
+      )
+        .bind(login.account.id)
+        .first<CompanyIdentityProjection>()
 
-    return {
-      identityId: identityId.data,
-      accountId: accountId.data,
-      accountStatus: found.account_status,
-      tokenVersion: found.token_version,
-      employeeId: found.employee_id,
-      email: found.email,
-      employeeName: found.employee_name,
-      profileDisplayName: found.profile_display_name,
+      return {
+        identityId: login.identity.id,
+        accountId: login.account.id,
+        accountStatus: login.account.status,
+        tokenVersion: login.account.tokenVersion,
+        employeeId: company?.employee_id ?? null,
+        email: identity.email,
+        employeeName: company?.employee_name ?? null,
+        profileDisplayName: company?.profile_display_name ?? null,
+      }
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to compose Company Identity")
     }
   }
 
   async findAccountIdByEmail(email: string): Promise<AccountId | null | Error> {
-    try {
-      const row = await this.c.env.DB.prepare(
-        `SELECT binding.account_id
-         FROM system_identity_profiles profile
-         INNER JOIN system_identity_bindings binding ON binding.id = profile.identity_id
-         WHERE lower(profile.email) = lower(?1)
-         ORDER BY binding.id
-         LIMIT 1`,
-      )
-        .bind(email)
-        .first<{ account_id: string }>()
-      if (row === null) return null
-      const accountId = zAccountId.safeParse(row.account_id)
-      return accountId.success ? accountId.data : accountId.error
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to find identity by email")
-    }
+    const identity = await new FindSystemIdentityByEmail({ env: { DB: this.c.env.DB } }).execute(
+      email,
+    )
+    return identity instanceof Error ? identity : (identity?.accountId ?? null)
   }
 
   async findAccountById(accountId: AccountId): Promise<AccountAuthState | null | Error> {
+    const account = await new SystemAccountRepository({ database: this.c.env.DB }).findById(
+      accountId,
+    )
+    if (account === null || account instanceof Error) return account
+
     try {
-      const row = await this.c.env.DB.prepare(
-        `SELECT
-           account.id AS account_id,
-           account.status AS account_status,
-           account.token_version,
-           link.employee_id
-         FROM system_accounts account
-         LEFT JOIN account_employee_links link
-           ON account.id = link.account_id
-         WHERE account.id = ?1
-         LIMIT 1`,
+      const employeeId = await this.c.env.DB.prepare(
+        "SELECT employee_id FROM account_employee_links WHERE account_id = ?1 LIMIT 1",
       )
         .bind(accountId)
-        .first<{
-          account_id: string
-          account_status: string
-          token_version: number
-          employee_id: number | null
-        }>()
-      if (row === null) return null
-      const parsedAccountId = zAccountId.safeParse(row.account_id)
-      if (!parsedAccountId.success) return parsedAccountId.error
+        .first<number>("employee_id")
+
       return {
-        accountId: parsedAccountId.data,
-        accountStatus: row.account_status,
-        tokenVersion: row.token_version,
-        employeeId: row.employee_id,
+        accountId: account.id,
+        accountStatus: account.status,
+        tokenVersion: account.tokenVersion,
+        employeeId,
       }
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to find account")
+      return caught instanceof Error ? caught : new Error("failed to compose Company Account")
     }
   }
 
   async updateProvisionedIdentity(
     identityId: IdentityId,
+    accountId: AccountId,
     employeeId: number | null,
     email: string,
     name: string,
   ): Promise<null | Error> {
     try {
       const statements: D1PreparedStatement[] = [
-        this.c.env.DB.prepare(
-          `UPDATE system_identity_profiles
-           SET email = ?2, updated_at = max(updated_at + 1, CAST(strftime('%s', 'now') AS INTEGER) * 1000)
-           WHERE identity_id = ?1`,
-        ).bind(String(identityId), email),
+        new PrepareSystemIdentityProfileUpdate({ env: { DB: this.c.env.DB } }).prepare(
+          identityId,
+          email,
+          new Date(this.c.env.NOW ?? Date.now()),
+        ),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
         this.c.env.DB.prepare(
           `UPDATE company_account_profiles
            SET display_name = ?2,
                updated_at = max(updated_at + 1, CAST(strftime('%s', 'now') AS INTEGER) * 1000)
-           WHERE organization_id = 'organization:default'
-             AND account_id = (
-               SELECT account_id FROM system_identity_bindings WHERE id = ?1
-             )`,
-        ).bind(String(identityId), name),
+           WHERE organization_id = 'organization:default' AND account_id = ?1`,
+        ).bind(accountId, name),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
       ]
       if (employeeId !== null) {
@@ -163,22 +157,19 @@ export class IdentityRepository {
   }
 
   async findEmployeeIdByEmail(email: string): Promise<number | null | Error> {
-    const subject = identitySubjectSchema.safeParse(email.toLowerCase())
-    if (!subject.success) return null
+    const identity = await new FindSystemIdentityByEmail({ env: { DB: this.c.env.DB } }).execute(
+      email,
+    )
+    if (identity === null || identity instanceof Error) return identity
 
     try {
       return await this.c.env.DB.prepare(
-        `SELECT link.employee_id
-         FROM system_identity_bindings identity
-         INNER JOIN account_employee_links link
-           ON link.account_id = identity.account_id
-         WHERE identity.provider = 'password' AND identity.subject = ?1
-         LIMIT 1`,
+        "SELECT employee_id FROM account_employee_links WHERE account_id = ?1 LIMIT 1",
       )
-        .bind(subject.data)
+        .bind(identity.accountId)
         .first<number>("employee_id")
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to find identity")
+      return caught instanceof Error ? caught : new Error("failed to find Company Employee link")
     }
   }
 
@@ -188,66 +179,46 @@ export class IdentityRepository {
     if (employeeIds.length === 0) return new Map()
 
     try {
-      const rows = await this.c.env.DB.prepare(
-        `SELECT link.employee_id, profile.email
-         FROM account_employee_links link
-         INNER JOIN system_identity_bindings identity
-           ON identity.account_id = link.account_id
-         INNER JOIN system_identity_profiles profile ON profile.identity_id = identity.id
-         WHERE link.employee_id IN (SELECT CAST(value AS INTEGER) FROM json_each(?1))
-           AND profile.email IS NOT NULL
-         ORDER BY
-           link.employee_id,
-           CASE WHEN identity.provider = 'password' THEN 0 ELSE 1 END,
-           identity.created_at,
-           identity.id`,
+      const links = await this.c.env.DB.prepare(
+        `SELECT employee_id, account_id
+         FROM account_employee_links
+         WHERE employee_id IN (SELECT CAST(value AS INTEGER) FROM json_each(?1))
+         ORDER BY employee_id, account_id`,
       )
         .bind(JSON.stringify(employeeIds))
-        .all<{ employee_id: number; email: string }>()
+        .all<{ employee_id: number; account_id: AccountId }>()
+      const identities = await Promise.all(
+        links.results.map((link) =>
+          new SystemIdentityAdministrationRepository({ env: { DB: this.c.env.DB } }).listForAccount(
+            link.account_id,
+          ),
+        ),
+      )
+      const unavailable = identities.find((entries) => entries instanceof Error)
+      if (unavailable instanceof Error) return unavailable
+
       const emails = new Map<number, string>()
-      for (const row of rows.results) {
-        if (!emails.has(row.employee_id)) emails.set(row.employee_id, row.email)
+      for (const [index, link] of links.results.entries()) {
+        const entries = identities[index]
+        if (entries instanceof Error || entries === undefined) continue
+        const preferred = entries
+          .filter((entry) => entry.binding.state === "active" && entry.email !== null)
+          .toSorted((left, right) =>
+            left.binding.provider === right.binding.provider
+              ? left.binding.createdAt.getTime() - right.binding.createdAt.getTime()
+              : left.binding.provider === "password"
+                ? -1
+                : 1,
+          )
+          .at(0)
+        if (preferred?.email !== null && preferred?.email !== undefined) {
+          emails.set(link.employee_id, preferred.email)
+        }
       }
+
       return emails
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to resolve emails")
-    }
-  }
-
-  private async findIdentity(
-    provider: IdentityProvider,
-    subject: string,
-  ): Promise<IdentityRow | null | Error> {
-    try {
-      return await this.c.env.DB.prepare(
-        `SELECT
-           identity.id AS identity_id,
-           identity.account_id,
-           account.status AS account_status,
-           account.token_version,
-           link.employee_id,
-           profile.email,
-           employee.name AS employee_name,
-           account_profile.display_name AS profile_display_name
-         FROM system_identity_bindings identity
-         INNER JOIN system_accounts account ON account.id = identity.account_id
-         LEFT JOIN system_identity_profiles profile ON profile.identity_id = identity.id
-         LEFT JOIN account_employee_links link
-           ON link.account_id = account.id
-         LEFT JOIN employees employee ON employee.id = link.employee_id
-         LEFT JOIN company_account_profiles account_profile
-           ON account_profile.organization_id = 'organization:default'
-          AND account_profile.account_id = account.id
-         WHERE identity.provider = ?1
-           AND identity.subject = ?2
-           AND identity.activated_at IS NOT NULL
-           AND identity.revoked_at IS NULL
-         LIMIT 1`,
-      )
-        .bind(provider, subject)
-        .first<IdentityRow>()
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to find identity")
+      return caught instanceof Error ? caught : new Error("failed to resolve Company emails")
     }
   }
 }

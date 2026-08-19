@@ -6,11 +6,12 @@ import type {
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import type { Context } from "@/env"
+import { zAccountId } from "@system/domain/auth/account-id"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 
 type LinkRow = Readonly<{
   account_id: string
   employee_id: number
-  account_status: string | null
 }>
 
 function storageEmployeeId(employeeId: string): number | null {
@@ -37,25 +38,31 @@ export class AccountEmployeeLinkReadRepository implements AccountEmployeeLinkRea
 
     try {
       const statement = this.c.env.DB.prepare(
-        `SELECT
-           link.account_id,
-           link.employee_id AS employee_id,
-           account.status AS account_status
-         FROM account_employee_links link
-         LEFT JOIN system_accounts account
-           ON account.id = link.account_id
-         WHERE ${query.kind === "by_account" ? "link.account_id = ?1" : "link.employee_id = ?1"}`,
+        `SELECT account_id, employee_id
+         FROM account_employee_links
+         WHERE ${query.kind === "by_account" ? "account_id = ?1" : "employee_id = ?1"}`,
       ).bind(query.kind === "by_account" ? query.accountId : employeeId)
       const rows = await statement.all<LinkRow>()
+      const accounts = await Promise.all(
+        rows.results.map(async (row) => {
+          const accountId = zAccountId.safeParse(row.account_id)
+          return accountId.success
+            ? new SystemAccountRepository({ database: this.c.env.DB }).findById(accountId.data)
+            : null
+        }),
+      )
+      const unavailable = accounts.find((account) => account instanceof Error)
+      if (unavailable instanceof Error) return { ok: false, cause: unavailable }
 
       return {
         ok: true,
-        records: rows.results.map((row) => ({
+        records: rows.results.map((row, index) => ({
           link: {
             accountId: restoreWorkforceId("system_account", row.account_id),
             employeeId: toWorkforceEmployeeId(row.employee_id),
           },
-          accountEligible: row.account_status === "active",
+          accountEligible:
+            !(accounts[index] instanceof Error) && accounts[index]?.status === "active",
         })),
       }
     } catch (cause) {

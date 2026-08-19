@@ -3,7 +3,7 @@ import type { HonoEnv } from "@/env"
 import { AccountEmployeeLinkRepository } from "@/contexts/company/infrastructure/employee/account-employee-link-repository"
 import { resolveLiveEmployeeAccess } from "@/contexts/company/application/auth/resolve-live-employee-access"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { SystemAccessTokenAuthenticator } from "@system/interface/runtime/system-access-token-authenticator"
+import { authenticateSystemAccessTokenRequest } from "@system/interface/runtime/authenticate-system-access-token-request"
 import { createMiddleware } from "hono/factory"
 
 /**
@@ -12,10 +12,17 @@ import { createMiddleware } from "hono/factory"
  * tokenVersion 不一致・account 非 active・employee retired は即 401。
  */
 export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
-  const header = c.req.header("Authorization")
-  const authentication = await new SystemAccessTokenAuthenticator({
+  if (c.req.path === "/company/v1/bootstrap") {
+    await next()
+    return
+  }
+
+  const authentication = await authenticateSystemAccessTokenRequest({
     database: c.env.DB,
-  }).authenticate(header, c.env.JWT_SECRET, new Date(c.env.NOW ?? Date.now()))
+    authorizationHeader: c.req.header("Authorization"),
+    jwtSecret: c.env.JWT_SECRET,
+    now: new Date(c.env.NOW ?? Date.now()),
+  })
 
   if (authentication.kind === "unavailable") {
     throw new UnauthorizedError(
@@ -24,7 +31,6 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
         : "account authentication is unavailable",
     )
   }
-
   if (authentication.kind === "rejected") {
     if (authentication.reason === "account_not_found") {
       throw new UnauthorizedError("account not found")
@@ -35,27 +41,22 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     if (authentication.reason === "token_version_mismatch") {
       throw new UnauthorizedError("token has been revoked")
     }
-
     throw new UnauthorizedError("invalid token")
   }
 
   const account = await new AccountEmployeeLinkRepository(c).findLinkedAccount(
     authentication.accountId,
   )
-
   if (account instanceof Error) {
     throw new UnauthorizedError("account authentication is unavailable")
   }
-
-  if (account === null) {
-    throw new UnauthorizedError("account not found")
-  }
+  if (account === null) throw new UnauthorizedError("account not found")
 
   c.set("accountTokenVersion", authentication.tokenVersion)
-
   const access = await resolveLiveEmployeeAccess(c, account.employeeId)
-  if (access === null || access instanceof Error)
+  if (access === null || access instanceof Error) {
     throw new UnauthorizedError("employee is unavailable")
+  }
 
   c.set(
     "session",

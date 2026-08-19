@@ -1,8 +1,6 @@
 import { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import { restoreEmployee } from "@/contexts/company/infrastructure/employee/employee.mapper"
 import type { Context } from "@/env"
-import { LastRootError } from "@/contexts/company/infrastructure/iam/last-root-error"
-import { LastRootGuard } from "@/contexts/company/infrastructure/iam/last-root-guard"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
@@ -93,53 +91,6 @@ export class EmployeeRepository {
 
       return row === undefined ? null : restoreEmployee(row)
     } catch (error) {
-      if (isUniqueConstraintError(error)) {
-        return new UniqueConstraintError("employee unique constraint violated", {
-          cause: error,
-        })
-      }
-
-      return error instanceof Error ? error : new Error("failed to update employee")
-    }
-  }
-
-  /** 氏名・部署・役職・在籍状況を更新し、最後の実効管理者の退職なら batch ごと戻す。 */
-  async updateProfileGuardingLastRoot(
-    employee: Employee,
-  ): Promise<Employee | null | Error | LastRootError> {
-    try {
-      const db = this.c.env.DB
-
-      await db.batch([
-        db
-          .prepare(
-            `UPDATE employees
-             SET name = ?2,
-                 dept_id = ?3,
-                 dept_name = ?4,
-                 position = ?5,
-                 status = ?6
-             WHERE id = ?1`,
-          )
-          .bind(
-            employee.id,
-            employee.name,
-            employee.deptId,
-            employee.deptName,
-            employee.position,
-            employee.status,
-          ),
-        new LastRootGuard(this.c).abortWhenRemovingLoginEnabledEffectiveRootWouldLeaveNone(
-          employee.id,
-        ),
-      ])
-
-      return await this.findById(employee.id)
-    } catch (error) {
-      if (LastRootGuard.isAbortedBy(error)) {
-        return new LastRootError()
-      }
-
       if (isUniqueConstraintError(error)) {
         return new UniqueConstraintError("employee unique constraint violated", {
           cause: error,

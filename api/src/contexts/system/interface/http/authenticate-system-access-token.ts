@@ -1,5 +1,5 @@
 import { systemFactory } from "@system/interface/http/system-factory"
-import { SystemAccessTokenAuthenticator } from "@system/interface/runtime/system-access-token-authenticator"
+import { authenticateSystemAccessTokenRequest } from "@system/interface/runtime/authenticate-system-access-token-request"
 
 /** access tokenと現在のAccount / IAM状態を検証してSystem主体だけを注入する。 */
 export const authenticateSystemAccessToken = systemFactory.createMiddleware(
@@ -12,9 +12,12 @@ export const authenticateSystemAccessToken = systemFactory.createMiddleware(
       )
     }
 
-    const authentication = await new SystemAccessTokenAuthenticator({
+    const authentication = await authenticateSystemAccessTokenRequest({
       database: context.env.DB,
-    }).authenticate(context.req.header("authorization"), context.env.JWT_SECRET ?? "", now)
+      authorizationHeader: context.req.header("authorization"),
+      jwtSecret: context.env.JWT_SECRET ?? "",
+      now,
+    })
     if (authentication.kind === "unavailable") {
       return context.json(
         { error: "session service unavailable", code: "session_unavailable" },
@@ -29,6 +32,7 @@ export const authenticateSystemAccessToken = systemFactory.createMiddleware(
     context.set("accountTokenVersion", authentication.tokenVersion)
     context.set("permissions", authentication.permissionKeys)
     context.set("role", authentication.roleKeys[0] ?? "authenticated")
+    context.set("roleKeys", authentication.roleKeys)
     await next()
   },
 )
