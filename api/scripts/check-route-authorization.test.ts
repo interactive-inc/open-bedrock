@@ -109,7 +109,7 @@ describe("inspectRouteFile", () => {
     ).replace("verifyBearer, ", "")
     const violations = inspectRouteFile("employees/route.ts", unauthenticated)
     expect(violations).toHaveLength(1)
-    expect(violations[0]?.reason).toContain("verifyBearer を通っていません")
+    expect(violations[0]?.reason).toContain("ユーザー認証を通っていません")
   })
 
   test("System context自身のfail-closed認証guardを認証として扱う", () => {
@@ -118,6 +118,16 @@ describe("inspectRouteFile", () => {
       "export const POST = factory.createHandlers(requireSystemAuthentication, handler)\n"
 
     expect(inspectRouteFile("contexts/system/interface/routes/oauth.ts", source)).toEqual([])
+  })
+
+  test("opaque System Sessionの認証guardを認証として扱う", () => {
+    const source =
+      "// @authorization authenticated - System Sessionを要求する\n" +
+      "export const GET = factory.createHandlers(authenticateSystemSession, handler)\n"
+
+    expect(inspectRouteFile("contexts/system/interface/routes/notifications.ts", source)).toEqual(
+      [],
+    )
   })
 
   test("API compositionでglobal bearerを通すrouteはhandler内の重複guardを要求しない", () => {
@@ -135,7 +145,7 @@ describe("inspectRouteFile", () => {
       "export const GET = factory.createHandlers(async (c) => c.json({}, 200))\n"
     const violations = inspectRouteFile("employees/route.ts", importOnly)
     expect(violations).toHaveLength(1)
-    expect(violations[0]?.reason).toContain("verifyBearer を通っていません")
+    expect(violations[0]?.reason).toContain("ユーザー認証を通っていません")
   })
 
   // 認証付きの GET が、隣の無防備な POST を隠さないこと。
@@ -155,7 +165,7 @@ describe("inspectRouteFile", () => {
     const source = "// @authorization owner - 本人のリソースに限定する\nexport const GET = 1\n"
     const violations = inspectRouteFile("expenses/me/route.ts", source)
     expect(violations).toHaveLength(1)
-    expect(violations[0]?.reason).toContain("verifyBearer を通っていません")
+    expect(violations[0]?.reason).toContain("ユーザー認証を通っていません")
   })
 
   test("public は認証不要", () => {
@@ -169,7 +179,7 @@ describe("inspectRouteFile", () => {
       "export const POST = factory.createHandlers(verifyBearer, handler)\n"
     const violations = inspectRouteFile("auth/browser/code/route.ts", source)
     expect(violations).toHaveLength(1)
-    expect(violations[0]?.reason).toContain("verifyBearer を通っています")
+    expect(violations[0]?.reason).toContain("ユーザー認証を通っています")
   })
 
   test("machine は機械用 middleware があればよい", () => {

@@ -57,6 +57,96 @@ export const systemRouteManifest = [
     },
   },
   {
+    method: "GET",
+    path: "/system/v1/notifications",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.notifications",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/notifications",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.notifications",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "PATCH",
+    path: "/system/v1/notifications",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.notifications",
+      exportName: "PATCH",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/notifications/unread-count",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.notifications.unread-count",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/notifications/:id",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.notifications.$id",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "PATCH",
+    path: "/system/v1/notifications/:id",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.notifications.$id",
+      exportName: "PATCH",
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/system/v1/notifications/:id",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.notifications.$id",
+      exportName: "DELETE",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/audit-events",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.audit-events",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/audit-events/:eventId",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.audit-events.$eventId",
+      exportName: "GET",
+    },
+  },
+  {
     method: "POST",
     path: "/auth/password/reset",
     phase: "public",

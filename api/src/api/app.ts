@@ -331,7 +331,12 @@ import * as oauthAuthorizationsRoute from "@system/interface/routes/oauth.author
 import * as oauthMcpGrantsRoute from "@system/interface/routes/oauth.mcp-grants"
 import * as oauthTokenRoute from "@system/interface/routes/oauth.token"
 import * as oauthUserinfoRoute from "@system/interface/routes/oauth.userinfo"
+import * as systemV1AuditEventsRoute from "@system/interface/routes/system.v1.audit-events"
+import * as systemV1AuditEventsEventIdRoute from "@system/interface/routes/system.v1.audit-events.$eventId"
 import * as systemV1HealthRoute from "@system/interface/routes/system.v1.health"
+import * as systemV1NotificationsRoute from "@system/interface/routes/system.v1.notifications"
+import * as systemV1NotificationsIdRoute from "@system/interface/routes/system.v1.notifications.$id"
+import * as systemV1NotificationsUnreadCountRoute from "@system/interface/routes/system.v1.notifications.unread-count"
 import * as systemV1SessionsRoute from "@system/interface/routes/system.v1.sessions"
 
 const routePart0 = createRouteApp()
@@ -919,7 +924,16 @@ const routePart37 = createRouteApp()
   .delete("/surveys/:surveyId", ...surveysSurveyIdRoute.DELETE)
   .post("/surveys/:surveyId/responses", ...surveysSurveyIdResponsesRoute.POST)
   .get("/surveys/:surveyId/summary", ...surveysSurveyIdSummaryRoute.GET)
+  .get("/system/v1/audit-events", ...systemV1AuditEventsRoute.GET)
+  .get("/system/v1/audit-events/:eventId", ...systemV1AuditEventsEventIdRoute.GET)
   .get("/system/v1/health", ...systemV1HealthRoute.GET)
+  .get("/system/v1/notifications", ...systemV1NotificationsRoute.GET)
+  .post("/system/v1/notifications", ...systemV1NotificationsRoute.POST)
+  .patch("/system/v1/notifications", ...systemV1NotificationsRoute.PATCH)
+  .get("/system/v1/notifications/unread-count", ...systemV1NotificationsUnreadCountRoute.GET)
+  .get("/system/v1/notifications/:id", ...systemV1NotificationsIdRoute.GET)
+  .patch("/system/v1/notifications/:id", ...systemV1NotificationsIdRoute.PATCH)
+  .delete("/system/v1/notifications/:id", ...systemV1NotificationsIdRoute.DELETE)
   .get("/system/v1/sessions", ...systemV1SessionsRoute.GET)
   .post("/system/v1/sessions", ...systemV1SessionsRoute.POST)
   .patch("/system/v1/sessions", ...systemV1SessionsRoute.PATCH)
@@ -946,6 +960,8 @@ const routePart37 = createRouteApp()
   .get("/training-enrollments", ...trainingEnrollmentsRoute.GET)
   .post("/training-enrollments", ...trainingEnrollmentsRoute.POST)
   .get("/training-enrollments/me", ...trainingEnrollmentsMeRoute.GET)
+
+const routePart38 = createRouteApp()
   .get("/training-enrollments/:id", ...trainingEnrollmentsIdRoute.GET)
   .put("/training-enrollments/:id", ...trainingEnrollmentsIdRoute.PUT)
   .delete("/training-enrollments/:id", ...trainingEnrollmentsIdRoute.DELETE)
@@ -993,6 +1009,7 @@ export const app = appBase
   .route("/", routePart35)
   .route("/", routePart36)
   .route("/", routePart37)
+  .route("/", routePart38)
 
 export type AppType = typeof app
 
@@ -1039,6 +1056,7 @@ type ApiClientPart34 = ReturnType<typeof hc<typeof routePart34>>
 type ApiClientPart35 = ReturnType<typeof hc<typeof routePart35>>
 type ApiClientPart36 = ReturnType<typeof hc<typeof routePart36>>
 type ApiClientPart37 = ReturnType<typeof hc<typeof routePart37>>
+type ApiClientPart38 = ReturnType<typeof hc<typeof routePart38>>
 export type ApiClient = ApiClientPart0 &
   ApiClientPart1 &
   ApiClientPart2 &
@@ -1076,4 +1094,5 @@ export type ApiClient = ApiClientPart0 &
   ApiClientPart34 &
   ApiClientPart35 &
   ApiClientPart36 &
-  ApiClientPart37
+  ApiClientPart37 &
+  ApiClientPart38
