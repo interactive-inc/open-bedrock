@@ -1,14 +1,14 @@
 import { createClient } from "@/lib/api/hc-client"
 
-/** DELETE /roles/:id。動的ロールを削除する（iam:manage_roles が必要）。 */
-export async function deleteRole(roleId: number): Promise<null | Error> {
+/** DELETE /system/v1/roles/:roleId。custom System Role を削除する。 */
+export async function deleteRole(roleId: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.roles[":id"].$delete({
-    param: { id: String(roleId) },
+  const response = await client.system.v1.roles[":roleId"].$delete({
+    param: { roleId },
   })
 
-  if (response.status >= 400) {
+  if (response.status !== 204) {
     return new Error("failed to delete role")
   }
 

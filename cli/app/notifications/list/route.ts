@@ -1,6 +1,7 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
+import { UsageError } from "@/lib/errors"
 import { factory } from "@/factory"
 
 export const help = `bedrock notifications list [--unread]`
@@ -20,9 +21,10 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.notifications.me.$get({
-      query: { is_read: query.unread ? "false" : undefined },
+    const response = await client.system.v1.notifications.$get({
+      query: { read: query.unread ? "false" : undefined },
     })
+    if (response.status !== 200) throw new UsageError("通知一覧の取得に失敗しました")
 
     const rows = await response.json()
 

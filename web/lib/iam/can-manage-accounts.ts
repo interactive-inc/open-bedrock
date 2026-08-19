@@ -1,4 +1,4 @@
-/** api の canManageAccounts と同一基準（permission ベース）。 */
+/** System Account を変更できる正規 System permission。 */
 export function canManageAccounts(permissions: ReadonlyArray<string>): boolean {
-  return permissions.includes("account:manage")
+  return permissions.includes("system:admin") || permissions.includes("iam:write")
 }

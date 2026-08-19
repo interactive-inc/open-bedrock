@@ -17,6 +17,8 @@ import {
 import type { Context } from "@/env"
 import { ApplicationError } from "@/lib/errors"
 import { readWorkforceBaselineStates } from "@/contexts/company/infrastructure/workforce/read-workforce-baseline-states"
+import { zAccountId } from "@system/domain/auth/account-id"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 
 type EmployeeRow = Readonly<{
   id: number
@@ -55,11 +57,9 @@ export class OrganizationWorkforceSnapshotRepository implements WorkforceSnapsho
             "SELECT id, code, name, phone FROM employees ORDER BY id",
           ).all<EmployeeRow>(),
           this.c.env.DB.prepare(
-            `SELECT link.account_id, link.employee_id
-             FROM account_employee_links AS link
-             JOIN system_accounts AS account ON account.id = link.account_id
-             WHERE account.status = 'active'
-             ORDER BY link.employee_id, account.id`,
+            `SELECT account_id, employee_id
+             FROM account_employee_links
+             ORDER BY employee_id, account_id`,
           ).all<LinkRow>(),
           this.c.env.DB.prepare(
             `SELECT period_id AS periodId, revision, employment_id AS employmentId,
@@ -97,7 +97,23 @@ export class OrganizationWorkforceSnapshotRepository implements WorkforceSnapsho
       const schedules = new Map(
         canonicalSchedules.map((schedule) => [schedule.employeeId, schedule]),
       )
-      const linksByEmployee = new Map(links.results.map((link) => [link.employee_id, link]))
+      const accountRows = await Promise.all(
+        links.results.map(async (link) => {
+          const accountId = zAccountId.safeParse(link.account_id)
+          return accountId.success
+            ? new SystemAccountRepository({ database: this.c.env.DB }).findById(accountId.data)
+            : null
+        }),
+      )
+      const unavailableAccount = accountRows.find((account) => account instanceof Error)
+      if (unavailableAccount instanceof Error) return { ok: false, cause: unavailableAccount }
+      const linksByEmployee = new Map(
+        links.results.flatMap((link, index) =>
+          !(accountRows[index] instanceof Error) && accountRows[index]?.status === "active"
+            ? [[link.employee_id, link] as const]
+            : [],
+        ),
+      )
 
       return {
         ok: true,

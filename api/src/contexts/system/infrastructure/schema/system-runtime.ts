@@ -106,53 +106,6 @@ export const userIdentities = sqliteTable(
 )
 
 /**
- * パスワード忘れ時のリセットトークン。invites と同型の使い捨てトークン設計。
- * 1 ユーザーが複数回発行できるため userId は unique にしない（再発行時に旧トークンは
- * 無効化せず expiresAt 切れに任せる。多重発行そのものはリスクではない）。
- */
-export const passwordResetTokens = sqliteTable("password_reset_tokens", {
-  id: text("id").primaryKey(),
-  token: text("token").notNull().unique(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  // 複数の password identity を持つユーザーでも、メールを受け取った identity だけを更新する。
-  // nullable は 0220 適用前に発行済みの短命トークンとの互換用。新規発行では必ず設定する。
-  identityId: text("identity_id").references(() => userIdentities.id, { onDelete: "cascade" }),
-  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
-  usedAt: integer("used_at", { mode: "timestamp_ms" }),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-})
-
-/**
- * ログイン試行の分散レートリミット用カウンタ (#715)。失敗した認証試行を 1 行 1 件として記録し、
- * 全 isolate が同じ D1 テーブルを参照することで per-isolate の in-memory Map で攻撃面が
- * isolate 数だけ倍増する問題を解消する。窓 (15 分) 内の行数が上限以上なら拒否する。
- * 認証成功時と窓外の古い行は削除する。FK は張らない。
- *
- * ip 列は #2392 で追加した。ログイン (login.ts) の原子的レートリミットゲートは identifier に
- * 実際のログイン識別子 (email / 社員番号)、ip に実際のクライアント IP (無ければ "anonymous") を
- * 素の値で書き込み、pair (identifier+ip) / account (identifier 単独) / ip (ip 単独) の
- * 3 バケットを同じ行から導出する (login-rate-limit.ts の recordAndCheckLoginAttempt 参照)。
- * forgot-password / internal-verify は従来どおり login-rate-limit.ts のキー生成関数
- * (loginRateLimitKey / internalVerifyRateLimitKey) が組み立てる合成キーを identifier に入れ、
- * ip 列は使わない (常に NULL)。
- */
-export const loginAttempts = sqliteTable(
-  "login_attempts",
-  {
-    id: text("id").primaryKey(),
-    identifier: text("identifier").notNull(),
-    ip: text("ip"),
-    attemptedAt: integer("attempted_at", { mode: "timestamp_ms" }).notNull(),
-  },
-  (table) => [
-    index("login_attempts_identifier_attempted_at_idx").on(table.identifier, table.attemptedAt),
-    index("login_attempts_ip_attempted_at_idx").on(table.ip, table.attemptedAt),
-  ],
-)
-
-/**
  * OIDC Authorization Code Flow の短命な認可コード。
  *
  * ブラウザへ返す code 自体は保存せず SHA-256 hash だけを保持する。token endpoint は
@@ -251,70 +204,6 @@ export const entityIdAliases = sqliteTable(
         AND substr(${table.entityId}, 20, 1) GLOB '[89ab]'
       `,
     ),
-  ],
-)
-
-// 通知
-// dedupeKey は「同一の通知を再送しない」目的の rate-limit キー。
-// 利用側が `"event:{subjectId}:{date}"` のような安定キーを入れ、
-// 同日に同じ recipient へ複数 insert されるのを DB の UNIQUE 制約で塞ぐ。
-// 既存通知や dedupe 不要なものは NULL のまま。SQLite は UNIQUE インデックスでも
-// NULL 同士は別物として扱う（distinct NULL）ので、partial 指定なしでも衝突しない。
-// partial にすると SQLite の `ON CONFLICT(col) DO NOTHING` 句が UNIQUE 制約を
-// 解決できないため、ここでは通常の UNIQUE インデックスを使う。
-
-export const notifications = sqliteTable(
-  "notifications",
-  {
-    id: text("id").primaryKey(),
-    // 宛先は Account。NULL は broadcast を表す。
-    recipientUserId: text("recipient_user_id").references(() => users.id),
-    notifiedAt: integer("notified_at", { mode: "timestamp_ms" }).notNull(),
-    type: text("type").notNull(),
-    title: text("title").notNull(),
-    body: text("body").notNull(),
-    link: text("link"),
-    read: integer("read", { mode: "boolean" }).notNull().default(false),
-    // 緊急度。"low" | "normal" | "high" | "critical" の 4 段階を取り、
-    // critical と high は UI で枠線・バッジ強調表示される。null 許容にせず
-    // default "normal" で埋めることで、既存通知も並び替え対象に含める。
-    // text() の enum オプションは Drizzle の TypeScript 推論を union 型に絞るだけで、
-    // SQLite 側に CHECK 制約は生成されない。DB に入る値域を保証しているのは書き込み経路の
-    // アプリ層（zod / TS 型）のみで、生 SQL や migration から範囲外の値を入れれば通ってしまう。
-    priority: text("priority", {
-      enum: ["low", "normal", "high", "critical"],
-    })
-      .notNull()
-      .default("normal"),
-    dedupeKey: text("dedupe_key"),
-    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
-  },
-  (table) => [
-    index("notifications_recipient_idx").on(table.recipientUserId),
-    index("notifications_notified_at_idx").on(table.notifiedAt),
-    index("notifications_read_idx").on(table.read),
-    index("notifications_priority_idx").on(table.priority),
-    uniqueIndex("notifications_dedupe_key_unique").on(table.dedupeKey),
-  ],
-)
-
-export const notificationReads = sqliteTable(
-  "notification_reads",
-  {
-    id: text("id").primaryKey(),
-    notificationId: text("notification_id")
-      .notNull()
-      .references(() => notifications.id),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id),
-    readAt: integer("read_at", { mode: "timestamp_ms" }).notNull(),
-    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-  },
-  (table) => [
-    uniqueIndex("notification_reads_notification_user_uniq").on(table.notificationId, table.userId),
-    index("notification_reads_user_idx").on(table.userId),
   ],
 )
 

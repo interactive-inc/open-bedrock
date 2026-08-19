@@ -16,7 +16,8 @@ export default async function AdminRoleNewPage() {
 
   if (
     currentUser instanceof Error ||
-    currentUser.permissions.includes("iam:manage_roles") === false
+    (currentUser.permissions.includes("system:admin") === false &&
+      currentUser.permissions.includes("iam:write") === false)
   ) {
     notFound()
   }

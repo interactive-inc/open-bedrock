@@ -1,10 +1,11 @@
 import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
-import { PersonnelActionRequestAccess } from "@/contexts/company/application/employee-lifecycle/procedure/personnel-action-request-access"
+import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request"
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
+import { prepareSystemProcedureCancellation } from "@system/infrastructure/workflow/prepare-system-procedure-cancellation"
 import {
   ApplicationError,
   ConflictError,
@@ -21,10 +22,9 @@ export class WithdrawPersonnelActionRequest {
     requestId: string
     withdrawnAt: string
   }): Promise<{ status: "withdrawn" } | ApplicationError> {
-    const request = await new PersonnelActionRequestAccess({
-      c: this.c,
-      session: command.session,
-    }).find(command.requestId)
+    const request = await findPersonnelActionRequest(this.c, command.session, {
+      id: command.requestId,
+    })
     if (request instanceof ApplicationError) return request
     if (request === null) {
       return new NotFoundError("人事変更申請が見つかりません", "personnel_action_request_not_found")
@@ -58,6 +58,19 @@ export class WithdrawPersonnelActionRequest {
       },
       this.c.var.auditContext,
     )
+    const cancellationStatements = prepareSystemProcedureCancellation(
+      { env: { DB: this.c.env.DB } },
+      {
+        number: request.applicationId,
+        createdByAccountId: command.session.accountId,
+        cancelledAt: withdrawnAt,
+      },
+    )
+    if (cancellationStatements instanceof Error) {
+      return new UnexpectedError("人事変更申請を取り下げられません", {
+        cause: cancellationStatements,
+      })
+    }
     try {
       await this.c.env.DB.batch([
         this.c.env.DB.prepare(
@@ -68,17 +81,7 @@ export class WithdrawPersonnelActionRequest {
              RETURNING id`,
         ).bind(command.requestId, seconds, command.session.employeeId),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-        this.c.env.DB.prepare(
-          `UPDATE system_decision_tasks
-             SET outcome = 'cancelled', closed_at = ?2
-             WHERE case_id = ?1 AND outcome IS NULL`,
-        ).bind(request.systemCaseId, milliseconds),
-        this.c.env.DB.prepare(
-          `UPDATE system_cases
-             SET status = 'cancelled', updated_at = ?2
-             WHERE id = ?1 AND status = 'pending'`,
-        ).bind(request.systemCaseId, milliseconds),
-        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+        ...cancellationStatements,
         ...new AuditEventRepository(this.c).prepareAppend(audit),
       ])
       return { status: "withdrawn" }

@@ -16,7 +16,7 @@ type PermissionOption = {
 }
 
 type Props = {
-  roleId: number
+  roleId: string
   name: string
   description: string | null
   grantedPermissionKeys: ReadonlyArray<string>

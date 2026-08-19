@@ -10,7 +10,7 @@ import { LoginRateLimitService } from "@/contexts/system/infrastructure/auth/log
 import * as schema from "@/contexts/system/infrastructure/schema/system-runtime"
 
 /**
- * #715: レートリミットを module-scope Map から D1 の login_attempts へ移した分散カウンタの検証。
+ * #715: レートリミットを module-scope Map から D1 の system_authentication_attempts へ移した分散カウンタの検証。
  * 実 migration を全適用した bun:sqlite 上で、窓境界・失敗のみカウント・成功リセット・掃除・
  * 別インスタンス (=別 isolate 相当) からの可視性を固定する。窓判定は timestamp_ms 列の Date 比較に
  * 依存するため、窓境界を「now で拒否 / now-WINDOW 直後で許可」の両端で assert して silent break を防ぐ。
@@ -23,7 +23,7 @@ const MAX_ATTEMPTS_PER_IP = 50
 
 const sqlite = new Database(":memory:")
 sqlite.run(`
-  CREATE TABLE login_attempts (
+  CREATE TABLE system_authentication_attempts (
     id text PRIMARY KEY,
     identifier text NOT NULL,
     ip text,
@@ -98,14 +98,14 @@ withBatch.batch = (statements) => {
 
 function countRows(identifier: string): number {
   const row = sqlite
-    .query("SELECT count(*) as total FROM login_attempts WHERE identifier = ?")
+    .query("SELECT count(*) as total FROM system_authentication_attempts WHERE identifier = ?")
     .get(identifier) as { total: number }
 
   return row.total
 }
 
 afterEach(() => {
-  sqlite.exec("DELETE FROM login_attempts")
+  sqlite.exec("DELETE FROM system_authentication_attempts")
 })
 
 describe("loginRateLimitKey", () => {
@@ -243,7 +243,7 @@ describe("分散カウンタ (別インスタンス = 別 isolate 相当)", () =
 })
 
 describe("DB 障害時は fail-open", () => {
-  test("login_attempts が無い DB でも throw せず判定 false・記録/リセットは黙って失敗する", async () => {
+  test("system_authentication_attempts が無い DB でも throw せず判定 false・記録/リセットは黙って失敗する", async () => {
     /**
      * migration 未適用の空 DB を渡すと全クエリが "no such table" になる。fail-open なので
      * 判定は false を返し、記録・リセットは throw せずログイン処理を巻き戻さない。

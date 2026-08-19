@@ -6,6 +6,7 @@ import { resolveAccountSession } from "@system/application/auth/resolve-account-
 import type { SessionRepository } from "@system/application/auth/session-repository"
 import type { SystemSessionAuditContext } from "@system/application/auth/system-session-audit-context"
 import type { SystemSessionMaterialService } from "@system/application/auth/system-session-material-service"
+import type { SystemAccessTokenIssuer } from "@system/application/auth/system-access-token-issuer"
 import type { AccountId } from "@system/domain/auth/account-id"
 import type { SessionId } from "@system/domain/auth/session-id"
 import { SessionRotation } from "@system/domain/auth/session-rotation"
@@ -16,6 +17,7 @@ type Props = Readonly<{
   sessionRepository: SessionRepository
   auditAppender: SystemAuditEventAppender
   materialService: SystemSessionMaterialService
+  accessTokenIssuer: SystemAccessTokenIssuer
   sessionTtlMilliseconds: number
 }>
 
@@ -30,6 +32,7 @@ export type RotateSystemSessionResult =
       kind: "rotated"
       accountId: AccountId
       tokenVersion: number
+      accessToken: string
       rawToken: string
       sessionId: SessionId
       expiresAt: Date
@@ -103,6 +106,13 @@ export class RotateSystemSession {
     const audits = createSystemSessionRotationAudits(rotation, command.auditContext)
     if (audits instanceof Error) return audits
 
+    const accessToken = await this.props.accessTokenIssuer.issue({
+      accountId: successor.accountId,
+      tokenVersion: successor.tokenVersion,
+      now: command.now,
+    })
+    if (accessToken instanceof Error) return accessToken
+
     const decision = await this.props.sessionRepository.rotateWithAudit(rotation, audits)
     if (decision instanceof Error) return decision
     if (decision !== "rotated") {
@@ -113,6 +123,7 @@ export class RotateSystemSession {
       kind: "rotated" as const,
       accountId: successor.accountId,
       tokenVersion: successor.tokenVersion,
+      accessToken,
       rawToken,
       sessionId: successor.id,
       expiresAt,

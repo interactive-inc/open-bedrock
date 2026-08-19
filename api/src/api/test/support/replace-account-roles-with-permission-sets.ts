@@ -6,7 +6,7 @@ export async function replaceAccountRolesWithPermissionSets(
   accountId: AccountId,
   roleKeyPrefix: string,
   permissionSets: ReadonlyArray<ReadonlyArray<string>>,
-): Promise<ReadonlyArray<{ id: number; key: string }>> {
+): Promise<ReadonlyArray<{ id: string; key: string }>> {
   const db = context.env.DB
 
   await db
@@ -14,7 +14,7 @@ export async function replaceAccountRolesWithPermissionSets(
     .bind(String(accountId))
     .run()
 
-  const createdRoles: Array<{ id: number; key: string }> = []
+  const createdRoles: Array<{ id: string; key: string }> = []
 
   for (const [index, permissionKeys] of permissionSets.entries()) {
     const roleKey = `${roleKeyPrefix}-${index + 1}`
@@ -55,7 +55,7 @@ export async function replaceAccountRolesWithPermissionSets(
       .bind(`test:${accountId}:${roleId}`, String(accountId), String(roleId))
       .run()
 
-    createdRoles.push({ id: roleId, key: roleKey })
+    createdRoles.push({ id: String(roleId), key: roleKey })
   }
 
   return createdRoles

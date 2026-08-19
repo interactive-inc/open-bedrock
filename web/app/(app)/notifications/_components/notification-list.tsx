@@ -102,9 +102,9 @@ export function NotificationList(props: Props) {
             <CardContent className="flex items-start justify-between gap-4">
               <p className="whitespace-pre-wrap text-sm">{notification.body}</p>
 
-              {notification.is_read || notification.id === null ? null : (
+              {notification.is_read ? null : (
                 <form action={markDispatch}>
-                  <input type="hidden" name="notification_id" value={notification.id ?? ""} />
+                  <input type="hidden" name="notification_id" value={notification.id} />
 
                   <Button type="submit" variant="secondary" size="sm">
                     既読にする

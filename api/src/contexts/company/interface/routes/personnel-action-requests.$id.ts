@@ -1,4 +1,4 @@
-import { PersonnelActionRequestAccess } from "@/contexts/company/application/employee-lifecycle/procedure/personnel-action-request-access"
+import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request"
 import { WithdrawPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/withdraw-personnel-action-request"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
@@ -11,9 +11,9 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()
-  const request = await new PersonnelActionRequestAccess({ c, session }).find(
-    validateUuidParam(c.req.param("id"), "personnel action request"),
-  )
+  const request = await findPersonnelActionRequest(c, session, {
+    id: validateUuidParam(c.req.param("id"), "personnel action request"),
+  })
   if (request instanceof ApplicationError) throw toHttpException(request)
   if (request === null) {
     throw toHttpException(

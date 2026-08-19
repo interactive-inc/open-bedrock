@@ -39,8 +39,8 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["evaluation-sheets"][":sheet_id"].evaluators.$put({
-      param: { sheet_id: query.id },
+    const response = await client["evaluation-sheets"][":sheetId"].evaluators.$put({
+      param: { sheetId: query.id },
       json: {
         primary_evaluator_id: primaryEvaluatorId,
         secondary_evaluator_id: query["secondary-evaluator-id"]

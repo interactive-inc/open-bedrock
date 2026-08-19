@@ -21,14 +21,15 @@ export default async function AdminRoleEditPage(props: Props) {
 
   if (
     currentUser instanceof Error ||
-    currentUser.permissions.includes("iam:manage_roles") === false
+    (currentUser.permissions.includes("system:admin") === false &&
+      currentUser.permissions.includes("iam:write") === false)
   ) {
     notFound()
   }
 
-  const roleId = Number(params.role)
+  const roleId = params.role
 
-  if (Number.isInteger(roleId) === false || roleId <= 0) {
+  if (roleId.length < 1 || roleId.length > 255) {
     notFound()
   }
 

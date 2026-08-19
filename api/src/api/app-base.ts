@@ -92,6 +92,11 @@ const globalBodyLimitExceptAuditExport = factory.createMiddleware(async (c, next
 })
 
 const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
+  if (c.req.path === "/company/v1/bootstrap") {
+    await next()
+    return
+  }
+
   const session = c.var.session
   if (session === null) throw new HTTPException(401, { message: "authentication required" })
 

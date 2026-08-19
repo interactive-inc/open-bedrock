@@ -101,16 +101,6 @@ export class SystemAuthPersistenceApplicationError extends ApplicationInternalEr
   }
 }
 
-export class CurrentPasswordIncorrectApplicationError extends ApplicationBadRequestError {
-  constructor() {
-    super({
-      error: "current_password_incorrect",
-      message: "現在のパスワードが正しくありません。入力内容を確認してください。",
-      item: null,
-    })
-  }
-}
-
 export class JwtSecretMissingApplicationError extends ApplicationInternalError {
   constructor() {
     super({
@@ -142,26 +132,6 @@ export class PasswordResetTokenInvalidApplicationError extends ApplicationBadReq
       },
       { cause },
     )
-  }
-}
-
-export class PasswordResetTokenUsedApplicationError extends ApplicationBadRequestError {
-  constructor() {
-    super({
-      error: "reset.token_used",
-      message: "この再設定リンクはすでに使用されています。新しいメールを発行してください。",
-      item: null,
-    })
-  }
-}
-
-export class PasswordResetTokenExpiredApplicationError extends ApplicationBadRequestError {
-  constructor() {
-    super({
-      error: "reset.token_expired",
-      message: "再設定リンクの有効期限が切れています。新しいメールを発行してください。",
-      item: null,
-    })
   }
 }
 

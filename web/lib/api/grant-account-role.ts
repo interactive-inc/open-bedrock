@@ -1,16 +1,16 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
-/** POST /accounts/:id/roles。アカウントにロールを付与する（iam:assign_roles が必要）。 */
-export async function grantAccountRole(accountId: string, roleKey: string): Promise<null | Error> {
+/** POST /system/v1/accounts/:accountId/role-bindings。System Role を付与する。 */
+export async function grantAccountRole(accountId: string, roleId: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.accounts[":id"].roles.$post({
-    param: { id: accountId },
-    json: { role_key: roleKey },
+  const response = await client.system.v1.accounts[":accountId"]["role-bindings"].$post({
+    param: { accountId },
+    json: { role_id: roleId, resource: null },
   })
 
-  if (response.status >= 400) {
+  if (response.status !== 201) {
     return await toApiResponseError(response, "failed to grant role")
   }
 

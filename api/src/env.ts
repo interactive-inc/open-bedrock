@@ -51,13 +51,13 @@ export type Bindings = {
   IDENTITY_JWKS?: string
   // 外部 identity トークンに期待する iss（発行者）。未設定なら identity ログインを拒否する。
   IDENTITY_ISSUER?: string
-  // 外部 identity トークンに期待する aud（想定受信者）。未設定時は "open-karte" を既定とする。
+  // 外部 identity トークンに期待する aud（想定受信者）。未設定なら identity ログインを拒否する。
   IDENTITY_AUDIENCE?: string
   // 初期 ROOT 作成用。`wrangler secret put BOOTSTRAP_TOKEN` で登録し、初期化完了後は削除を推奨。
-  // 未設定時は機能無効（POST /bootstrap は 404 を返す）。
+  // 未設定時は機能無効（POST /system/v1/bootstrap は 404 を返す）。
   BOOTSTRAP_TOKEN?: string
   // CLI（ネイティブアプリ）ログインで、本人確認を委ねる外部 identity provider（ブローカー）のログイン URL。
-  // GET /auth/cli/login はこの URL へcallback/state/PKCE challengeを付けて302する。
+  // canonical System CLI authorization APIはこのURLへcallback/state/PKCE challengeを付けて302する。
   // 未設定なら CLI ログインを一律拒否する。
   IDENTITY_LOGIN_URL?: string
   // この API 自身の外部公開 origin（例: "https://api.example.com"）。
@@ -79,6 +79,7 @@ export type Variables = {
   accountTokenVersion: number
   permissions: ReadonlySet<string>
   role: string
+  roleKeys?: ReadonlyArray<string>
   oidcClientRegistry: OidcClientRegistry
   oidcIssuerConfiguration: OidcIssuerConfiguration
 }

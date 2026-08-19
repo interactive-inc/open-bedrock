@@ -123,7 +123,7 @@ describe("request audit context", () => {
 
   test("adds the internal request ID to a body-limit response", async () => {
     const response = await app.request(
-      "/auth/login",
+      "/system/v1/sessions",
       {
         method: "POST",
         headers: {

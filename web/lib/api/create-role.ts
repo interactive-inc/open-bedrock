@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-/** POST /roles。動的ロールを作成する（iam:manage_roles が必要）。 */
+/** POST /system/v1/roles。custom System Role を作成する。 */
 export async function createRole(request: {
   key: string
   name: string
@@ -9,7 +9,7 @@ export async function createRole(request: {
 }) {
   const client = await createClient()
 
-  const response = await client.roles.$post({
+  const response = await client.system.v1.roles.$post({
     json: {
       key: request.key,
       name: request.name,
@@ -18,7 +18,7 @@ export async function createRole(request: {
     },
   })
 
-  if (response.status >= 400) {
+  if (response.status !== 201) {
     return new Error("failed to create role")
   }
 

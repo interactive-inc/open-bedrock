@@ -17,8 +17,8 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["performance-goals"][":goal_id"].$delete({
-      param: { goal_id: query.id },
+    const response = await client["performance-goals"][":goalId"].$delete({
+      param: { goalId: query.id },
     })
 
     if (response.status !== 204) {

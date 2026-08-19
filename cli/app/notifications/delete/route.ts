@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.notifications[":id"].$delete({
+    const response = await client.system.v1.notifications[":id"].$delete({
       param: { id: query.id },
     })
 

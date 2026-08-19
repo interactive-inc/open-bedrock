@@ -7,7 +7,7 @@ import { type CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/o
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/parse-company-procedure-decision-policy"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
-import { PersonnelActionRequestAccess } from "@/contexts/company/application/employee-lifecycle/procedure/personnel-action-request-access"
+import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request"
 import type { Context } from "@/env"
 import {
   ApplicationError,
@@ -307,10 +307,9 @@ export async function decideSystemApplication(
     let targetDepartmentCode: string | null | undefined
     let excludedEmployeeIds: ReadonlySet<number> | undefined
     if (proposal.completionOperationKey === "company.personnel-action.apply") {
-      const personnelRequest = await new PersonnelActionRequestAccess({
-        c,
-        session,
-      }).findByApplicationId(proposal.number)
+      const personnelRequest = await findPersonnelActionRequest(c, session, {
+        applicationId: proposal.number,
+      })
       if (personnelRequest instanceof ApplicationError) return personnelRequest
       if (personnelRequest === null) {
         return new UnexpectedError("Company personnel action association is missing")

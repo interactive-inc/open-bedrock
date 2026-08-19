@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-/** GET /permission-definitions。権限カタログ全件（iam:manage_roles が必要）。ロール編集 UI の選択肢に使う。 */
+/** GET /permission-definitions。製品権限カタログ全件（iam:write が必要）。 */
 export async function getPermissions() {
   const client = await createClient()
 

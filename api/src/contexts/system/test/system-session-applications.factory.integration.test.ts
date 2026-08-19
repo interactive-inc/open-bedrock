@@ -2,7 +2,7 @@ import { zAccountId } from "@system/domain/auth/account-id"
 import {
   createSystemSessionApplications,
   type SystemSessionApplications,
-} from "@system/infrastructure/auth/create-system-session-applications"
+} from "@system/interface/runtime/create-system-session-applications"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import { describe, expect, test } from "bun:test"
 
@@ -11,6 +11,7 @@ const issuedAt = new Date("2026-01-01T00:00:00.000Z")
 const rotatedAt = new Date("2026-01-02T00:00:00.000Z")
 const revokedAt = new Date("2026-01-02T00:00:01.000Z")
 const sessionTtlMilliseconds = 7 * 24 * 60 * 60 * 1_000
+const jwtSecret = "system-session-factory-test-secret"
 const auditContext = Object.freeze({
   authorizationJson: '{"permission":"auth:session"}',
   metadataJson: '{"client":"factory-test"}',
@@ -29,6 +30,7 @@ function insertAccount(fixture: SystemSessionTestContext): void {
 function requireApplications(fixture: SystemSessionTestContext): SystemSessionApplications {
   const applications = createSystemSessionApplications({
     context: fixture.context,
+    jwtSecret,
     sessionTtlMilliseconds,
   })
 
@@ -47,6 +49,7 @@ describe("createSystemSessionApplications", () => {
       expect(
         createSystemSessionApplications({
           context: fixture.context,
+          jwtSecret,
           sessionTtlMilliseconds: invalidLifetime,
         }),
       ).toEqual(new Error("System Session lifetime is invalid"))

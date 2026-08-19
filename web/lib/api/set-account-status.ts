@@ -1,19 +1,19 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
-/** POST /accounts/:id/status。アカウントの状態を変更する（account:manage が必要）。 */
+/** PATCH /system/v1/accounts/:accountId。System Account の状態を変更する。 */
 export async function setAccountStatus(
   accountId: string,
   status: "active" | "suspended" | "locked",
 ): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.accounts[":id"].status.$post({
-    param: { id: accountId },
+  const response = await client.system.v1.accounts[":accountId"].$patch({
+    param: { accountId },
     json: { status: status },
   })
 
-  if (response.status >= 400) {
+  if (response.status !== 200) {
     return await toApiResponseError(response, "failed to set account status")
   }
 
