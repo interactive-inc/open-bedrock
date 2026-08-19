@@ -50,7 +50,9 @@ describe("GET /auth/cli/login", () => {
     expect(brokerState).not.toBe("cli-opaque-state-1")
 
     const row = await db
-      .prepare("SELECT port, cli_state, code_verifier FROM system_cli_login_states WHERE state = ?1")
+      .prepare(
+        "SELECT port, cli_state, code_verifier FROM system_cli_login_states WHERE state = ?1",
+      )
       .bind(brokerState)
       .first<{ port: number; cli_state: string; code_verifier: string }>()
     expect(row).toEqual({

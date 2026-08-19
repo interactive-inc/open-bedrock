@@ -1,6 +1,6 @@
 import { SendThanks } from "@/contexts/thanks/application/send-thanks"
 import { Thanks } from "@/contexts/thanks/domain/thanks.entity"
-import { EmployeeRepository } from "@/contexts/company-compatibility/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { NotFoundError, ValidationError } from "@/lib/errors"

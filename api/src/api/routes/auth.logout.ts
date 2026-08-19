@@ -1,4 +1,4 @@
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
 import { zValidator } from "@hono/zod-validator"

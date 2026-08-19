@@ -1,17 +1,17 @@
-import { resolveCompanyAccountParticipants } from "@/contexts/company-compatibility/application/iam/resolve-company-account-participants"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+} from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

@@ -1,11 +1,11 @@
-import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import {
   GoalEvaluation,
   type GoalEvaluationKind,
 } from "@/contexts/performance-review/domain/goal/goal-evaluation.entity"
 import { resolveEvaluationPermission } from "@/contexts/performance-review/application/goal/resolve-evaluation-permission"
-import { resolveEmployeeRelation } from "@/contexts/company-compatibility/application/organization/resolve-employee-relation"
-import type { EmployeeRelation } from "@/contexts/company-compatibility/domain/organization/employee-relation"
+import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
+import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

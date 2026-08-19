@@ -1,16 +1,16 @@
 import { ListMyCertificateRequests } from "@/contexts/certificate-request/application/list-my-certificate-requests"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppCertificateRequestList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { certificateRequests } from "@/contexts/certificate-request/infrastructure/schema/certificate-request"
 import { count, eq } from "drizzle-orm"
 

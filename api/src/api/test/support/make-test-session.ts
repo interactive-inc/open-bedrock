@@ -1,4 +1,4 @@
-import { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { SYSTEM_ROLE_PERMISSIONS } from "@/api/test/support/system-roles"
 
 /**

@@ -1,4 +1,4 @@
-import { seedEmployees } from "@/contexts/company-compatibility/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
 
 /** 認証・認可情報を持つ seed 従業員の最小形。 */
 export type IamSeedEmployee = {

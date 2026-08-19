@@ -1,17 +1,17 @@
 import { ListMyOneOnOnes } from "@/contexts/one-on-one/application/oneonone/list-my-one-on-ones"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppOneOnOneList } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { oneOnOnes } from "@/contexts/one-on-one/infrastructure/schema/one-on-one"
 import { aliasedTable, count, eq, inArray, or } from "drizzle-orm"
 

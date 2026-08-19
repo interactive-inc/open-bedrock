@@ -1,11 +1,11 @@
-import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftSwapRequest } from "@/contexts/shift/domain/shift-swap-request.entity"
 import type { Context } from "@/env"
-import { EmployeeNotificationGateway } from "@/contexts/company-compatibility/infrastructure/company/notifications/employee-notification.gateway"
+import { EmployeeNotificationGateway } from "@/contexts/company/infrastructure/notifications/employee-notification.gateway"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment-repository"
 import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/shift-swap-request-repository"
 

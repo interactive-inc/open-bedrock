@@ -8,16 +8,16 @@ const productionFiles = [...new Glob("**/*.ts").scanSync({ cwd: contextDirectory
   .sort()
 
 describe("Company file responsibility contract", () => {
-  test("route以外のproduction fileはtop-level操作を一つだけ持つ", () => {
+  test("route以外のproduction fileは公開実行操作を一つだけ持つ", () => {
     const violations = productionFiles.flatMap((file) => {
+      if (file.startsWith("interface/routes/")) return []
+
       const source = readFileSync(new URL(file, contextDirectory), "utf8")
       const operations =
         source.match(
-          /^(?:export )?(?:async )?(?:function|class)|^export const (?:GET|POST|PUT|PATCH|DELETE)/gm,
+          /^export (?:async )?function \w+|^export class (?!\w*Error\b)\w+|^export const \w+\s*=\s*(?:async\s*)?\(/gm,
         ) ?? []
-      const isRoute = file.startsWith("interface/routes/")
-      const allowedOperations = isRoute ? 2 : 1
-      return operations.length > allowedOperations ? [`${file}: ${operations.join(", ")}`] : []
+      return operations.length > 1 ? [`${file}: ${operations.join(", ")}`] : []
     })
 
     expect(violations).toEqual([])

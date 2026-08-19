@@ -1,16 +1,16 @@
 import { GovernanceAccess } from "@/contexts/governance/application/governance-access"
 import { resolveGovernanceOrgRole } from "@/contexts/governance/application/resolve-governance-org-role"
 import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance-repository"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { parseGovernanceCode } from "@/contexts/company-compatibility/interface/utils/parse-governance-code"
+} from "@/contexts/company/interface/lib/errors"
+import { parseGovernanceCode } from "@/contexts/company/interface/utils/parse-governance-code"
 import { toGovernanceDocumentResponse } from "@/contexts/governance/interface/lib/to-governance-document-response"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

@@ -3,7 +3,7 @@ import type { Context } from "@/env"
 import { BudgetRepository } from "@/contexts/expense/infrastructure/budget/budget-repository"
 import { NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { departments } from "@/contexts/company-compatibility/infrastructure/schema/organization"
+import { departments } from "@/contexts/company/infrastructure/schema/organization"
 import { eq } from "drizzle-orm"
 
 export type Command = {

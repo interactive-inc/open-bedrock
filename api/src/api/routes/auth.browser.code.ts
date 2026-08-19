@@ -1,8 +1,8 @@
 import { zAccountId } from "@system/domain/auth/account-id"
 import { createSystemBrowserLoginCode } from "@system/infrastructure/auth/create-system-browser-login-code"
-import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppBrowserLoginCode } from "@/lib/app-schemas"
 import { loginCodeHash } from "@/lib/auth/login-code-hash"
 

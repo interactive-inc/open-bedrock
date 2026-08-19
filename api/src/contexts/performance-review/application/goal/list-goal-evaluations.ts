@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { GetGoal } from "@/contexts/performance-review/application/goal/get-goal"
 import type { GoalEvaluation } from "@/contexts/performance-review/domain/goal/goal-evaluation.entity"
 import type { Context } from "@/env"

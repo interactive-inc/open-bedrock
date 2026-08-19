@@ -1,19 +1,16 @@
 import { DeleteAsset } from "@/contexts/asset/application/delete-asset"
 import { UpdateAsset } from "@/contexts/asset/application/update-asset"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { toAssetResponse } from "@/contexts/asset/interface/http/assets/to-asset-response"
 import { isoDate } from "@/lib/schemas"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { assets } from "@/contexts/asset/infrastructure/schema/asset"
 import { eq } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
-import {
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppAsset } from "@/lib/app-schemas"
-import { validateCodeParam } from "@/contexts/company-compatibility/interface/utils/validate-code-param"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

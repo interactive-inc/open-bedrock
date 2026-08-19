@@ -1,9 +1,9 @@
 import { CreateDecision } from "@/contexts/meeting/application/decision/create-decision"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppDecision, zAppDecisionList } from "@/lib/app-schemas"
 import { decisions } from "@/contexts/meeting/infrastructure/schema/meeting"
 import { count, desc } from "drizzle-orm"
@@ -12,7 +12,7 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

@@ -3,7 +3,6 @@ import { companyContextModule } from "@/contexts/company/interface/module"
 import type { ApiRouteModuleRegistration } from "@/api/api-route-module"
 
 const BUSINESS_CONTEXTS: ReadonlyArray<string> = [
-  "company-compatibility",
   "announcement",
   "antisocial-check",
   "asset",

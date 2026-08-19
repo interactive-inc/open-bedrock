@@ -11,8 +11,8 @@ import type { ApplicationError } from "@/lib/errors"
 import { periodOf } from "@/contexts/thanks/domain/thanks-points/period-of"
 import { toNonNegativePoints } from "@/contexts/thanks/application/to-non-negative-points"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company-compatibility/infrastructure/employee/employee-repository"
-import { EmployeeNotificationGateway } from "@/contexts/company-compatibility/infrastructure/company/notifications/employee-notification.gateway"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { EmployeeNotificationGateway } from "@/contexts/company/infrastructure/notifications/employee-notification.gateway"
 import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-budget-repository"
 
 export type Command = {

@@ -1,13 +1,13 @@
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { RegulationRepository } from "@/contexts/regulation/infrastructure/regulation-repository"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 import { zAppRegulationDetail } from "@/lib/app-schemas"
-import { validateCodeParam } from "@/contexts/company-compatibility/interface/utils/validate-code-param"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 import type { RegulationVersion } from "@/contexts/regulation/domain/regulation-version.entity"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ

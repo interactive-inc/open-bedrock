@@ -25,15 +25,11 @@ describe("toUrl", () => {
 
   test("動的セグメントは :param になる", () => {
     expect(toUrl("employees.$code.ts")).toBe("/employees/:code")
-    expect(toUrl("job-openings.$jobOpeningId.ts")).toBe(
-      "/job-openings/:jobOpeningId",
-    )
+    expect(toUrl("job-openings.$jobOpeningId.ts")).toBe("/job-openings/:jobOpeningId")
   })
 
   test("動的セグメントが複数でも対応づく", () => {
-    expect(toUrl("stocktakes.$id.assets.$code.check.ts")).toBe(
-      "/stocktakes/:id/assets/:code/check",
-    )
+    expect(toUrl("stocktakes.$id.assets.$code.check.ts")).toBe("/stocktakes/:id/assets/:code/check")
   })
 
   test("<動詞>-route.ts は隣の route.ts と同じ URL になる", () => {
@@ -67,9 +63,7 @@ describe("toAlias", () => {
   test("dot区切りも有効なcamelCase別名へ畳む", () => {
     expect(toAlias("company.v1.capabilities.ts")).toBe("companyV1CapabilitiesRoute")
     expect(toAlias("system.v1.sessions.ts")).toBe("systemV1SessionsRoute")
-    expect(toAlias("application-requests.$id.approve.ts")).toBe(
-      "applicationRequestsIdApproveRoute",
-    )
+    expect(toAlias("application-requests.$id.approve.ts")).toBe("applicationRequestsIdApproveRoute")
   })
 
   // 並置ファイルは隣の route.ts と別名が衝突してはいけない。
@@ -222,7 +216,7 @@ describe("collectRegistrations", () => {
       alias: "healthRoute",
     })
     expect(registrations).toContainEqual({
-      module: "@/contexts/company-compatibility/interface/routes/departments",
+      module: "@/contexts/company/interface/routes/departments",
       url: "/departments",
       method: "GET",
       alias: "departmentsRoute",
