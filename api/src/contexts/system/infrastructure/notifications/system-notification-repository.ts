@@ -13,10 +13,8 @@ import type {
 import type { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
 import type { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context"
-import {
-  toSystemNotificationDelivery,
-  toSystemNotificationMessage,
-} from "@system/infrastructure/notifications/to-system-notification"
+import { toSystemNotificationDelivery } from "@system/infrastructure/notifications/to-system-notification-delivery"
+import { toSystemNotificationMessage } from "@system/infrastructure/notifications/to-system-notification-message"
 
 const maximumPublicationPayloadBytes = 1_000_000
 

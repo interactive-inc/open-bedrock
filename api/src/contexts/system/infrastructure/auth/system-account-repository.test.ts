@@ -3,7 +3,7 @@ import { zAccountId } from "@system/domain/auth/account-id"
 import { Account } from "@system/domain/auth/account.entity"
 import { InvalidAccountError } from "@system/domain/auth/invalid-account.error"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/system-d1-test-database.test-support"
+import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
 import { describe, expect, test } from "bun:test"
 
 const schema = `

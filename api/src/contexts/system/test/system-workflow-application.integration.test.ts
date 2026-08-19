@@ -8,7 +8,7 @@ import { DecisionTaskCandidate } from "@system/domain/workflow/decision-task-can
 import { DecisionTask } from "@system/domain/workflow/decision-task.entity"
 import { InvalidSystemWorkflowError } from "@system/domain/workflow/invalid-system-workflow.error"
 import { proposalDigestSchema } from "@system/domain/workflow/system-case-reference"
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/system-d1-test-database.test-support"
+import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
 import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer"
 import { readFileSync } from "node:fs"
 

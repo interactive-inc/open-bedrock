@@ -1,5 +1,6 @@
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
-import { OidcCryptographyService } from "@system/infrastructure/identity/oidc-cryptography.service"
+import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret"
+import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { GET } from "@system/interface/routes/oauth.userinfo"
@@ -13,8 +14,8 @@ const issuer = "https://identity.example.test"
 describe("GET /oauth/userinfo", () => {
   test("canonical AccountとIdentity profileだけからclaimを返す", async () => {
     const fixture = new SystemSessionTestContext()
-    const accessToken = OidcCryptographyService.createSecret()
-    const tokenHash = await OidcCryptographyService.hashSecret(accessToken)
+    const accessToken = createOidcSecret()
+    const tokenHash = await hashOidcSecret(accessToken)
     fixture.sqlite
       .query(
         `INSERT INTO system_accounts
@@ -78,8 +79,8 @@ describe("GET /oauth/userinfo", () => {
 
   test("suspended Accountの有効期限内tokenも拒否する", async () => {
     const fixture = new SystemSessionTestContext()
-    const accessToken = OidcCryptographyService.createSecret()
-    const tokenHash = await OidcCryptographyService.hashSecret(accessToken)
+    const accessToken = createOidcSecret()
+    const tokenHash = await hashOidcSecret(accessToken)
     fixture.sqlite.exec(`
       INSERT INTO system_accounts VALUES ('account-1', 'suspended', 1, 0, 1);
       INSERT INTO system_oidc_access_tokens

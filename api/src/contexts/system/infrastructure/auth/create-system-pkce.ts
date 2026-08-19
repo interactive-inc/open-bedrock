@@ -1,5 +1,5 @@
 import { generateOpaqueToken } from "@system/infrastructure/auth/generate-opaque-token"
-import { toPkceS256Challenge } from "@system/infrastructure/auth/pkce-s256"
+import { toPkceS256Challenge } from "@system/infrastructure/auth/to-pkce-s256-challenge"
 
 /** RFC 7636 S256のverifierとchallengeを暗号学的乱数から生成する。 */
 export async function createSystemPkce(): Promise<

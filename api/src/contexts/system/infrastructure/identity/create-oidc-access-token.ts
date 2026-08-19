@@ -4,7 +4,8 @@ import type {
   SystemClockContext,
   SystemDatabaseContext,
 } from "@system/infrastructure/configuration/system-context"
-import { OidcCryptographyService } from "@system/infrastructure/identity/oidc-cryptography.service"
+import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret"
+import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret"
 import { systemOidcAccessTokens } from "@system/infrastructure/schema/system-core"
 import { lte } from "drizzle-orm"
 
@@ -22,8 +23,8 @@ export async function createOidcAccessToken(
 ): Promise<Readonly<{ accessToken: string; expiresAt: Date }> | Error> {
   const now = context.var.now()
   const expiresAt = new Date(now.getTime() + OidcValue.TOKEN_MAX_AGE_MS)
-  const accessToken = OidcCryptographyService.createSecret()
-  const tokenHash = await OidcCryptographyService.hashSecret(accessToken)
+  const accessToken = createOidcSecret()
+  const tokenHash = await hashOidcSecret(accessToken)
 
   try {
     await context.var.database

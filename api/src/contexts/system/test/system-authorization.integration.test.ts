@@ -1,6 +1,6 @@
 import { ResolveSystemAuthorization } from "@system/application/iam/resolve-system-authorization"
 import { zAccountId } from "@system/domain/auth/account-id"
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/system-d1-test-database.test-support"
+import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
 import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization-repository"
 import { describe, expect, test } from "bun:test"
 

@@ -3,7 +3,7 @@ import type { SystemPasswordMaterialService } from "@system/application/auth/sys
 import { zAccountId } from "@system/domain/auth/account-id"
 import { zIdentityId } from "@system/domain/identity/identity-id"
 import { identitySubjectSchema } from "@system/domain/identity/identity-subject"
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/system-d1-test-database.test-support"
+import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
 import { SystemPasswordCredentialRepository } from "@system/infrastructure/auth/system-password-credential-repository"
 import { describe, expect, test } from "bun:test"
 

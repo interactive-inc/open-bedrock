@@ -2,7 +2,7 @@ import { zAccountId } from "@system/domain/auth/account-id"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import { consumeOidcAuthorizationCode } from "@system/infrastructure/identity/consume-oidc-authorization-code"
 import { createOidcAuthorizationCode } from "@system/infrastructure/identity/create-oidc-authorization-code"
-import { OidcCryptographyService } from "@system/infrastructure/identity/oidc-cryptography.service"
+import { toPkceS256Challenge } from "@system/infrastructure/auth/to-pkce-s256-challenge"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
@@ -26,7 +26,7 @@ describe("consumeOidcAuthorizationCode", () => {
       clientId: "system-console",
       redirectUri: "https://console.example.test/callback",
       accountId,
-      codeChallenge: await OidcCryptographyService.createPkceChallenge(verifier),
+      codeChallenge: await toPkceS256Challenge(verifier),
       nonce: "nonce-with-enough-entropy",
       scope: ["openid"],
     })
@@ -83,7 +83,7 @@ describe("consumeOidcAuthorizationCode", () => {
         clientId: "system-console",
         redirectUri: "https://console.example.test/callback",
         accountId,
-        codeChallenge: await OidcCryptographyService.createPkceChallenge(verifier),
+        codeChallenge: await toPkceS256Challenge(verifier),
         nonce: "nonce-with-enough-entropy",
         scope: ["openid"],
       },
@@ -121,7 +121,7 @@ describe("consumeOidcAuthorizationCode", () => {
       clientId: "system-console",
       redirectUri: "https://console.example.test/callback",
       accountId,
-      codeChallenge: await OidcCryptographyService.createPkceChallenge(verifier),
+      codeChallenge: await toPkceS256Challenge(verifier),
       nonce: "nonce-with-enough-entropy",
       scope: ["openid", "email"],
     })

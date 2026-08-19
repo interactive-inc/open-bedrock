@@ -24,12 +24,12 @@ import {
 } from "@/api/http/application-templates/lib/system-procedure-route"
 import { validateAndNormalizeApplicationPayload } from "@/api/http/application-requests/lib/validate-system-procedure-payload"
 import { CancelSystemProcedure } from "@system/application/workflow/cancel-system-procedure"
-import { DecideSystemTask } from "@system/application/workflow/decide-system-task"
 import {
-  StartSystemProcedure,
   createSystemTaskPersistence,
   type StartSystemProcedureTask,
-} from "@system/application/workflow/start-system-procedure"
+} from "@system/application/workflow/create-system-task-persistence"
+import { DecideSystemTask } from "@system/application/workflow/decide-system-task"
+import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
 import type { SystemProposalView } from "@system/application/workflow/system-proposal-query"
 import { systemCaseIdSchema } from "@system/domain/workflow/system-case.entity"
 import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
