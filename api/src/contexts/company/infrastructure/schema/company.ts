@@ -8,6 +8,7 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
+import { systemAccounts } from "@system/infrastructure/schema/system-core"
 
 /** Company全体のoptimistic revision。全writeはこのrevisionをCASする。 */
 export const companyOrganizations = sqliteTable("company_organizations", {
@@ -16,6 +17,36 @@ export const companyOrganizations = sqliteTable("company_organizations", {
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at").notNull(),
 })
+
+/** Company内でAccountを表示するときのプロフィール。認証主体のSystem Accountへ表示名を持たせない。 */
+export const companyAccountProfiles = sqliteTable(
+  "company_account_profiles",
+  {
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => companyOrganizations.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => systemAccounts.id, { onDelete: "cascade" }),
+    displayName: text("display_name").notNull(),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.organizationId, table.accountId] }),
+    index("company_account_profiles_account_idx").on(table.accountId),
+    check(
+      "company_account_profiles_display_name",
+      sql`length(${table.displayName}) BETWEEN 1 AND 200
+          AND trim(${table.displayName}) = ${table.displayName}
+          AND instr(${table.displayName}, char(0)) = 0`,
+    ),
+    check(
+      "company_account_profiles_chronology",
+      sql`${table.createdAt} >= 0 AND ${table.updatedAt} >= ${table.createdAt}`,
+    ),
+  ],
+)
 
 /** 各Company resourceの現在projection。履歴はcompanyResourceRevisionsだけへ追記する。 */
 export const companyResourceHeads = sqliteTable(
@@ -121,6 +152,7 @@ export const companyCommandReceipts = sqliteTable(
 
 export const companySchema = {
   companyOrganizations,
+  companyAccountProfiles,
   companyResourceHeads,
   companyResourceRevisions,
   companyCommandReceipts,

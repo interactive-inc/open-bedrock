@@ -39,6 +39,17 @@ export async function seedIamForEmployees(
 
     await db
       .prepare(
+        `INSERT OR IGNORE INTO company_account_profiles
+           (organization_id, account_id, display_name, created_at, updated_at)
+         SELECT 'organization:default', ?1, name, 0, 0
+         FROM employees
+         WHERE id = ?2`,
+      )
+      .bind(String(employee.id), employee.id)
+      .run()
+
+    await db
+      .prepare(
         `INSERT OR IGNORE INTO system_identity_bindings
            (id, account_id, provider, subject, created_at, activated_at, revoked_at)
          VALUES ('password:' || ?1, ?1, 'password', lower(?2), 0, 0, NULL)`,

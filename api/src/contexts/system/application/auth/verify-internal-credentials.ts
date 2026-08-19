@@ -21,7 +21,7 @@ type PasswordIdentityForVerification = Readonly<{
   email: string | null
   providerSubject: string
   passwordHash: string | null
-  user: { id: string; name: string; disabledAt: Date | null } | null
+  user: { id: string; disabledAt: Date | null } | null
 }>
 
 type Props = Readonly<{
@@ -140,7 +140,6 @@ export class VerifyInternalCredentials {
       item: {
         userId: matched.user.id,
         email: matched.email ?? matched.providerSubject,
-        name: matched.user.name,
       },
     }
   }

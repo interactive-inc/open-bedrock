@@ -58,4 +58,59 @@ describe("SyncExternalIdentities", () => {
     expect(await sync.run(inputs, now)).toEqual({ created: 1, updated: 0, skipped: 0 })
     expect(await sync.run(inputs, now)).toEqual({ created: 0, updated: 0, skipped: 1 })
   })
+
+  test("updates the Company profile atomically with an existing external identity", async () => {
+    const { context, db } = createTestContext()
+    const sync = new SyncExternalIdentities(context)
+    await sync.run([{ subject: "ext-update", email: "before@example.com", name: "Before" }], now)
+
+    expect(
+      await sync.run(
+        [{ subject: "ext-update", email: "after@example.com", name: "After" }],
+        new Date(now.getTime() + 1),
+      ),
+    ).toEqual({ created: 0, updated: 1, skipped: 0 })
+    expect(
+      await db
+        .prepare(
+          `SELECT profile.display_name, identity.email, employee.name
+           FROM company_account_profiles profile
+           INNER JOIN system_identity_bindings binding ON binding.account_id = profile.account_id
+           INNER JOIN system_identity_profiles identity ON identity.identity_id = binding.id
+           INNER JOIN account_employee_links link ON link.account_id = profile.account_id
+           INNER JOIN employees employee ON employee.id = link.employee_id
+           WHERE binding.provider = 'oidc' AND binding.subject = 'ext-update'`,
+        )
+        .first<{ display_name: string; email: string; name: string }>(),
+    ).toEqual({ display_name: "After", email: "after@example.com", name: "After" })
+  })
+
+  test("rolls back identity changes when the required Company profile is missing", async () => {
+    const { context, db } = createTestContext()
+    const sync = new SyncExternalIdentities(context)
+    await sync.run(
+      [{ subject: "ext-incomplete", email: "before@example.com", name: "Before" }],
+      now,
+    )
+    await db.prepare("DELETE FROM company_account_profiles").run()
+
+    const result = await sync.run(
+      [{ subject: "ext-incomplete", email: "after@example.com", name: "After" }],
+      new Date(now.getTime() + 1),
+    )
+
+    expect(result).toBeInstanceOf(Error)
+    expect(
+      await db
+        .prepare(
+          `SELECT identity.email, employee.name
+           FROM system_identity_bindings binding
+           INNER JOIN system_identity_profiles identity ON identity.identity_id = binding.id
+           INNER JOIN account_employee_links link ON link.account_id = binding.account_id
+           INNER JOIN employees employee ON employee.id = link.employee_id
+           WHERE binding.provider = 'oidc' AND binding.subject = 'ext-incomplete'`,
+        )
+        .first<{ email: string; name: string }>(),
+    ).toEqual({ email: "before@example.com", name: "Before" })
+  })
 })

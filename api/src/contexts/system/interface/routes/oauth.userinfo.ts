@@ -46,7 +46,7 @@ export const GET = systemFactory.createHandlers(async (c) => {
 
   const [userRows, identities] = await Promise.all([
     c.var.database
-      .select({ id: users.id, name: users.name, disabledAt: users.disabledAt })
+      .select({ id: users.id, disabledAt: users.disabledAt })
       .from(users)
       .where(eq(users.id, prepared.userId))
       .limit(1),

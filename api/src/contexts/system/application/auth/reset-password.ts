@@ -40,7 +40,7 @@ type Props = Readonly<{
     email: string | null
     providerSubject: string
     emailVerifiedAt: Date | null
-    user: { id: string; name: string; disabledAt: Date | null } | null
+    user: { id: string; disabledAt: Date | null } | null
   }>
 }>
 
@@ -153,7 +153,6 @@ export class ResetPassword {
       account: {
         userId: identity.user.id,
         email: identity.email ?? identity.providerSubject,
-        name: identity.user.name,
       },
     }
   }

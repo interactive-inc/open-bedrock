@@ -46,6 +46,13 @@ export class CompanyBootstrapEmployeeRepositoryD1 implements CompanyBootstrapEmp
         database.prepare(
           `SELECT CASE WHEN changes() = 1 THEN 1 ELSE json_extract('', '$') END AS ok`,
         ),
+        database
+          .prepare(
+            `INSERT INTO company_account_profiles
+               (organization_id, account_id, display_name, created_at, updated_at)
+             VALUES ('organization:default', ?1, ?2, ?3, ?3)`,
+          )
+          .bind(write.accountId, write.name, write.occurredAt.getTime()),
       ]
       const results = await database.batch(statements)
       if (results.length !== statements.length || results.some((result) => !result.success)) {
