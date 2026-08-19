@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
@@ -6,7 +6,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-repository"
 import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form-repository"
 import type { ReviewFormDraft } from "@/contexts/performance-review/infrastructure/review/review-form-repository"
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { inArray } from "drizzle-orm"
 
 export type BulkFormInput = {

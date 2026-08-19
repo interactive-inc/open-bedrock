@@ -158,7 +158,7 @@ describe("POST /provisioning/identities", () => {
 
     const employee = await db
       .prepare(
-         `SELECT e.name FROM employees e
+        `SELECT e.name FROM employees e
          JOIN account_employee_links link ON link.employee_id = e.id
          JOIN system_identity_bindings i ON i.account_id = link.account_id
          WHERE i.subject = 'ext-300'`,
@@ -181,9 +181,7 @@ describe("POST /provisioning/identities", () => {
       updated: 0,
       skipped: 1,
     })
-    expect(
-      await count(db, "system_identity_bindings", "subject IN ('ext-400', 'ext-401')"),
-    ).toBe(2)
+    expect(await count(db, "system_identity_bindings", "subject IN ('ext-400', 'ext-401')")).toBe(2)
   })
 
   test("returns 401 when the API key does not match", async () => {

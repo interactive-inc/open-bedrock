@@ -1,10 +1,10 @@
-import type { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template-repository"
-import { lifecycleEffectTemplateBindings } from "@/contexts/company-compatibility/infrastructure/schema/employee-lifecycle"
+import { lifecycleEffectTemplateBindings } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
 import { eq } from "drizzle-orm"
 
 export type Command = {

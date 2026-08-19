@@ -1,6 +1,6 @@
-import { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { canReadAttendanceOf } from "@/contexts/attendance/interface/http/attendance-records/can-read-attendance-of"
-import type { EmployeeRelation } from "@/contexts/company-compatibility/domain/organization/employee-relation"
+import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { describe, expect, test } from "bun:test"
 

@@ -1,4 +1,4 @@
-import { Session } from "@/contexts/company-compatibility/domain/iam/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { describe, expect, test } from "bun:test"
 import { canWriteDepartmentGoal } from "@/contexts/performance-review/interface/http/performance-goals/can-write-department-goal"
 import { makeTestSession } from "@/api/test/support/make-test-session"

@@ -1,20 +1,20 @@
 import { resolveAttendanceSearchQuery } from "@/contexts/attendance/interface/http/attendance-records/resolve-attendance-search-query"
-import { resolveEmployeeRelation } from "@/contexts/company-compatibility/application/organization/resolve-employee-relation"
-import type { EmployeeRelation } from "@/contexts/company-compatibility/domain/organization/employee-relation"
-import { listDepartmentEmployeeIds } from "@/contexts/company-compatibility/interface/utils/list-department-employee-ids"
-import { listReportEmployeeIds } from "@/contexts/company-compatibility/interface/utils/list-report-employee-ids"
+import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
+import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
+import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
+import { listReportEmployeeIds } from "@/contexts/company/interface/utils/list-report-employee-ids"
 import { attendanceListQuerySchema } from "@/contexts/attendance/interface/http/attendance-records/attendance-list-query"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+} from "@/contexts/company/interface/utils/to-bounded-int"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppAttendanceRecordList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { attendanceRecords } from "@/contexts/attendance/infrastructure/schema/attendance"
 import type { SQL } from "drizzle-orm"
 import { and, asc, count, gte, inArray, lte } from "drizzle-orm"
@@ -24,7 +24,7 @@ import {
   InternalError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
+} from "@/contexts/company/interface/lib/errors"
 
 // @authorization permission - 権限キーで判定する
 /**

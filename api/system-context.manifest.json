@@ -13,6 +13,16 @@
   ],
   "forbiddenProductMarkers": ["bedrock", "cclcc", "cocolococo", "hiract", "inta"],
   "schemaTables": [
+    "auditLogs",
+    "bootstrapState",
+    "deletedRecords",
+    "entityIdAliases",
+    "loginAttempts",
+    "notificationReads",
+    "notifications",
+    "oidcAccessTokens",
+    "oidcAuthorizationCodes",
+    "passwordResetTokens",
     "systemAccounts",
     "systemAuditEvents",
     "systemBatchJobs",
@@ -45,7 +55,9 @@
     "systemProposalSeries",
     "systemProposals",
     "systemRoleBindings",
-    "systemSessions"
+    "systemSessions",
+    "userIdentities",
+    "users"
   ],
   "targetCapabilities": [
     "audit",

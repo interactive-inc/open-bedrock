@@ -1,13 +1,32 @@
-import { submitSystemApplication, systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
-import { parseSystemApplicationBody, toApplicationCurrentStep, toApplicationStatus, toSystemStatuses } from "@/api/http/application-requests/lib/system-application-view"
-import { resolveCompanyAccountParticipants, resolveSystemAccountIdsForEmployees } from "@/contexts/company-compatibility/application/iam/resolve-company-account-participants"
-import { ForbiddenError, InternalError, UnauthorizedError, UnprocessableEntityError } from "@/contexts/company-compatibility/interface/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { jsonPayloadSchema } from "@/contexts/company-compatibility/interface/utils/json-payload-schema"
-import { listDepartmentEmployeeIds } from "@/contexts/company-compatibility/interface/utils/list-department-employee-ids"
-import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, MAX_LIST_OFFSET, toBoundedInt } from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import {
+  submitSystemApplication,
+  systemProposalQuery,
+} from "@/api/http/application-requests/lib/system-application-operation"
+import {
+  parseSystemApplicationBody,
+  toApplicationCurrentStep,
+  toApplicationStatus,
+  toSystemStatuses,
+} from "@/api/http/application-requests/lib/system-application-view"
+import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
+import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/application/iam/resolve-system-account-ids-for-employees"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+  UnprocessableEntityError,
+} from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
+import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { zAppApplication, zAppApplicationAdminList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { codeSchema } from "@/lib/schemas"

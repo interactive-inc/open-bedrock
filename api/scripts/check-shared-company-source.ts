@@ -9,9 +9,9 @@ const MANIFEST_PATH = resolve(PROJECT_ROOT, "company-context.manifest.json")
 const LOCK_PATH = resolve(PROJECT_ROOT, "company-context.lock.json")
 
 const companySourceManifestSchema = z.strictObject({
-  version: z.literal(1),
-  coverage: z.enum(["workforce-foundation", "company"]),
-  sourceRoots: z.array(z.string().min(1)).min(1),
+  version: z.literal(2),
+  coverage: z.literal("shared-company-core"),
+  sharedSourcePaths: z.array(z.string().min(1)).min(1),
   implementedCapabilities: z.array(z.string().min(1)),
   targetCapabilities: z.array(z.string().min(1)),
 })
@@ -33,23 +33,28 @@ function readManifest() {
 
 export async function collectSharedCompanySourceHashes(): Promise<ReadonlyMap<string, string>> {
   const manifest = readManifest()
-  const sourceRoots = manifest.sourceRoots.toSorted()
+  const sharedSourcePaths = manifest.sharedSourcePaths.toSorted()
   if (
-    sourceRoots.some((sourceRoot, index) => sourceRoot !== manifest.sourceRoots[index]) ||
-    new Set(sourceRoots).size !== sourceRoots.length
+    sharedSourcePaths.some(
+      (relativePath, index) => relativePath !== manifest.sharedSourcePaths[index],
+    ) ||
+    new Set(sharedSourcePaths).size !== sharedSourcePaths.length
   ) {
     throw new Error(
-      "company-context.manifest.json の sourceRoots は重複なくpath昇順で宣言してください",
+      "company-context.manifest.json の sharedSourcePaths は重複なくpath昇順で宣言してください",
     )
   }
 
-  const paths = ["company-context.manifest.json"]
-  for (const sourceRoot of sourceRoots) {
-    const glob = new Glob(`${sourceRoot}/**/*`)
-    for await (const relativePath of glob.scan({ cwd: PROJECT_ROOT, onlyFiles: true })) {
-      paths.push(relativePath)
+  for (const relativePath of sharedSourcePaths) {
+    const matches = Array.from(
+      new Glob(relativePath).scanSync({ cwd: PROJECT_ROOT, onlyFiles: true }),
+    )
+    if (matches.length !== 1 || matches[0] !== relativePath) {
+      throw new Error(`Company共通sourceが存在しません: ${relativePath}`)
     }
   }
+
+  const paths = ["company-context.manifest.json", ...sharedSourcePaths]
 
   return new Map(
     [...new Set(paths)].toSorted().map((relativePath) => [relativePath, hashFile(relativePath)]),

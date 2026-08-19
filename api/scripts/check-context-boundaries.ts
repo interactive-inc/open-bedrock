@@ -148,9 +148,7 @@ export function inspectOwnershipManifest(): ContextBoundaryViolation[] {
   }
 
   for (const [routePrefix, owner] of Object.entries(ownershipManifest.routeOwners)) {
-    if (
-      !hasFlatRoutePrefix(resolve(CONTEXTS_ROOT, owner, "interface", "routes"), routePrefix)
-    ) {
+    if (!hasFlatRoutePrefix(resolve(CONTEXTS_ROOT, owner, "interface", "routes"), routePrefix)) {
       violations.push({
         file: "context-ownership.json",
         reason: `route所有fileが存在しません: ${owner}/${routePrefix}`,
@@ -242,7 +240,8 @@ export function inspectRetiredContextPath(file: string): ContextBoundaryViolatio
   const match = normalized.match(/(?:^|\/)src\/contexts\/([^/]+)(?:\/|$)/)
   const contextName = match?.[1]
 
-  return contextName !== undefined && RETIRED_CONTEXT_NAMES.has(contextName)
+  return contextName !== undefined &&
+    (RETIRED_CONTEXT_NAMES.has(contextName) || contextName.endsWith("-compatibility"))
     ? [
         {
           file,
@@ -336,11 +335,6 @@ export function canContextDependOn(sourceContext: string, targetContext: string)
   if (sourceContext === targetContext) return true
   if (sourceContext === "system") return false
   if (sourceContext === "company") return targetContext === "system"
-
-  if (sourceContext === "company-compatibility") {
-    return targetContext === "system" || targetContext === "company"
-  }
-  if (targetContext === "company-compatibility") return true
 
   return targetContext === "system" || targetContext === "company"
 }

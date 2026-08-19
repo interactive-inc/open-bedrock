@@ -2,10 +2,10 @@ import { toReviewCycleStatus } from "@/contexts/performance-review/domain/review
 import { ReviewCycle } from "@/contexts/performance-review/domain/review/review-cycle.entity"
 import { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
 import { toReviewResultView } from "@/contexts/performance-review/interface/http/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
+import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppReviewResult } from "@/lib/app-schemas"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import {
   reviewCycles,
   reviewForms,
@@ -16,9 +16,9 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { validateCodeParam } from "@/contexts/company-compatibility/interface/utils/validate-code-param"
-import { validateIntParam } from "@/contexts/company-compatibility/interface/utils/validate-int-param"
+} from "@/contexts/company/interface/lib/errors"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
 
 // @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

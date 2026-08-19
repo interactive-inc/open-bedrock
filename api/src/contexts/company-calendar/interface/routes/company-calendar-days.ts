@@ -1,10 +1,19 @@
 import { CreateCompanyCalendarDay } from "@/contexts/company-calendar/application/calendar/create-company-calendar-day"
 import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/calendar/company-calendar-day-repository"
-import { BadRequestError, InternalError, UnauthorizedError } from "@/contexts/company-compatibility/interface/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, MAX_LIST_OFFSET, toBoundedInt } from "@/contexts/company-compatibility/interface/utils/to-bounded-int"
+import {
+  BadRequestError,
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/contexts/company/interface/utils/to-bounded-int"
 import { zAppCompanyCalendarDay, zAppCompanyCalendarDayList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { calendarDayKindSchema, isoDate } from "@/lib/schemas"

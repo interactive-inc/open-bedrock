@@ -1,8 +1,8 @@
 import {
   zApplicationWorkflow,
   type ApplicationWorkflow,
-} from "@/contexts/company-compatibility/domain/organization/company-procedure-workflow"
-import { createCompanyProcedureDecisionPolicy } from "@/contexts/company-compatibility/domain/organization/company-procedure-decision-policy"
+} from "@/contexts/company/domain/organization/company-procedure-workflow"
+import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
 import {
   loadSystemProcedure,
   parseSystemProcedureInputSchema,
@@ -15,15 +15,15 @@ import {
   NotFoundError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { validateCodeParam } from "@/contexts/company-compatibility/interface/utils/validate-code-param"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
+} from "@/contexts/company/interface/lib/errors"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import type { Context } from "@/env"
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { ConflictError as ApplicationConflictError } from "@/lib/errors"
 
 async function validateReferences(c: Context, workflow: ApplicationWorkflow): Promise<void> {

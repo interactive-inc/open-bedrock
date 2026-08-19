@@ -3,7 +3,7 @@ import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/evaluation-sheet/evaluation-sheet-repository"
-import { employees } from "@/contexts/company-compatibility/infrastructure/schema/employee"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { inArray } from "drizzle-orm"
 
 export type Command = {

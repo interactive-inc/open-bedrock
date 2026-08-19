@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
 import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance-repository"
-import { loadCurrentOrganization } from "@/contexts/company-compatibility/application/organization/current-organization-read-model"
+import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 
 export type GovernanceOrgRoleAssignee = {

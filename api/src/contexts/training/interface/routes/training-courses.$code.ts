@@ -1,15 +1,12 @@
 import { ArchiveTrainingCourse } from "@/contexts/training/application/archive-training-course"
 import { UpdateTrainingCourse } from "@/contexts/training/application/update-training-course"
 import type { TrainingCourse } from "@/contexts/training/domain/training-course.entity"
-import { factory } from "@/contexts/company-compatibility/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company-compatibility/interface/middlewares/verify-bearer"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company-compatibility/interface/lib/to-http-exception"
-import {
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company-compatibility/interface/lib/errors"
-import { validateCodeParam } from "@/contexts/company-compatibility/interface/utils/validate-code-param"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 import { zAppTrainingCourse } from "@/lib/app-schemas"
 import { trainingCourses } from "@/contexts/training/infrastructure/schema/training"
 import { zValidator } from "@hono/zod-validator"
