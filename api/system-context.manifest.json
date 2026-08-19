@@ -17,8 +17,6 @@
     "bootstrapState",
     "deletedRecords",
     "entityIdAliases",
-    "notificationReads",
-    "notifications",
     "oidcAccessTokens",
     "oidcAuthorizationCodes",
     "systemAccounts",
