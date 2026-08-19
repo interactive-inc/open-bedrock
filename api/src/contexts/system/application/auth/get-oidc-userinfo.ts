@@ -1,61 +1,45 @@
 import {
   OidcInvalidTokenApplicationError,
   OidcTemporarilyUnavailableApplicationError,
-} from "@/contexts/system/application/auth/errors"
-import { OidcAccessTokenRepository } from "@/contexts/system/infrastructure/identity/oidc-access-token.repository"
-import type { OidcIdentity } from "@/contexts/system/infrastructure/identity/oidc-id-token.service"
+} from "@system/application/auth/errors"
 import { OidcScopeValue } from "@system/domain/identity/oidc-scope.value"
 import type {
   SystemClockContext,
   SystemDatabaseContext,
 } from "@system/infrastructure/configuration/system-context"
+import { findOidcAccessToken } from "@system/infrastructure/identity/find-oidc-access-token"
+import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity-repository"
 
-type PrepareProps = Readonly<{ issuer: string; accessToken: string }>
-type PreparedUserinfo = Readonly<{
-  userId: string
-  scope: ReadonlyArray<string>
-}>
-type Props = Readonly<{ prepared: PreparedUserinfo; identity: OidcIdentity | null }>
+type Props = Readonly<{ issuer: string; accessToken: string }>
 
+/** OIDC access tokenを検証し、active Accountの公開可能なclaimだけを返す。 */
 export class GetOidcUserinfo {
-  constructor(private readonly c: SystemDatabaseContext & SystemClockContext) {}
+  constructor(private readonly context: SystemDatabaseContext & SystemClockContext) {
+    Object.freeze(this)
+  }
 
-  async prepare(
-    props: PrepareProps,
-  ): Promise<
-    PreparedUserinfo | OidcInvalidTokenApplicationError | OidcTemporarilyUnavailableApplicationError
-  > {
-    const accessToken = await new OidcAccessTokenRepository(this.c).find({
-      issuer: props.issuer,
-      accessToken: props.accessToken,
-    })
-
+  async execute(props: Props) {
+    const accessToken = await findOidcAccessToken(this.context, props)
     if (accessToken instanceof Error) {
       return new OidcTemporarilyUnavailableApplicationError(accessToken)
     }
-
-    if (accessToken === null) {
-      return new OidcInvalidTokenApplicationError()
-    }
+    if (accessToken === null) return new OidcInvalidTokenApplicationError()
 
     const scope = OidcScopeValue.parse(accessToken.scope)
+    if (scope instanceof Error) return new OidcInvalidTokenApplicationError(scope)
 
-    if (scope instanceof Error) {
-      return new OidcInvalidTokenApplicationError(scope)
+    const identity = await new SystemOidcIdentityRepository(this.context).findByAccountId(
+      accessToken.accountId,
+    )
+    if (identity instanceof Error) {
+      return new OidcTemporarilyUnavailableApplicationError(identity)
     }
-
-    return { userId: accessToken.userId, scope }
-  }
-
-  execute(props: Props) {
-    if (props.identity === null) {
-      return new OidcInvalidTokenApplicationError()
-    }
+    if (identity === null) return new OidcInvalidTokenApplicationError()
 
     return {
-      sub: props.identity.subject,
-      ...(props.prepared.scope.includes("email") && props.identity.email !== null
-        ? { email: props.identity.email, email_verified: props.identity.emailVerified }
+      sub: identity.subject,
+      ...(scope.includes("email") && identity.email !== null
+        ? { email: identity.email, email_verified: identity.emailVerified }
         : {}),
     }
   }

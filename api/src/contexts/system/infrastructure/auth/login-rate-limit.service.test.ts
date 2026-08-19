@@ -7,7 +7,7 @@ import type {
   SystemDatabaseContext,
 } from "@system/infrastructure/configuration/system-context"
 import { LoginRateLimitService } from "@/contexts/system/infrastructure/auth/login-rate-limit.service"
-import * as schema from "@/contexts/system/infrastructure/schema/system-runtime"
+import * as schema from "@system/infrastructure/schema/system-core"
 
 /**
  * #715: レートリミットを module-scope Map から D1 の system_authentication_attempts へ移した分散カウンタの検証。

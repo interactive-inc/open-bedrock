@@ -6,10 +6,7 @@ import { ExchangeOidcAuthorizationCode } from "@/contexts/system/application/aut
 import { OidcValue } from "@/contexts/system/domain/identity/oidc.value"
 import { OidcResponse } from "@/contexts/system/interface/http/oidc-response"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
-import { toOidcIdentity } from "@/contexts/system/interface/identity/to-oidc-identity"
-import { userIdentities, users } from "@/contexts/system/infrastructure/schema/system-runtime"
 import { zValidator } from "@hono/zod-validator"
-import { desc, eq } from "drizzle-orm"
 import { z } from "zod"
 
 // @authorization public - authorization codeとPKCE verifierをcredentialとして検証する
@@ -46,8 +43,7 @@ export const POST = systemFactory.createHandlers(
     }
 
     const service = new ExchangeOidcAuthorizationCode(c)
-
-    const prepared = await service.prepare({
+    const result = await service.execute({
       issuer,
       code: body.code,
       clientId: body.client_id,
@@ -55,34 +51,6 @@ export const POST = systemFactory.createHandlers(
       codeVerifier: body.code_verifier,
       clientRegistry: c.var.oidcClientRegistry,
     })
-
-    if (prepared instanceof OidcInvalidGrantApplicationError) {
-      return OidcResponse.error("invalid_grant")
-    }
-
-    if (prepared instanceof OidcTemporarilyUnavailableApplicationError) {
-      return OidcResponse.error("temporarily_unavailable", 503)
-    }
-
-    const [userRows, identities] = await Promise.all([
-      c.var.database
-        .select({ id: users.id, disabledAt: users.disabledAt })
-        .from(users)
-        .where(eq(users.id, prepared.authorizationCode.userId))
-        .limit(1),
-      c.var.database
-        .select({
-          email: userIdentities.email,
-          emailVerifiedAt: userIdentities.emailVerifiedAt,
-        })
-        .from(userIdentities)
-        .where(eq(userIdentities.userId, prepared.authorizationCode.userId))
-        .orderBy(desc(userIdentities.emailVerifiedAt)),
-    ])
-    const [user] = userRows
-    const identity = toOidcIdentity(user, identities)
-
-    const result = await service.execute({ issuer, prepared, identity })
 
     if (result instanceof OidcInvalidGrantApplicationError) {
       return OidcResponse.error("invalid_grant")

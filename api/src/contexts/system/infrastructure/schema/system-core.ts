@@ -327,6 +327,66 @@ export const systemBrowserLoginCodes = sqliteTable(
 
 export type SystemBrowserLoginCodeRow = InferSelectModel<typeof systemBrowserLoginCodes>
 
+/** raw codeを保存せず、PKCE条件で一度だけ消費するOIDC authorization code。 */
+export const systemOidcAuthorizationCodes = sqliteTable(
+  "system_oidc_authorization_codes",
+  {
+    codeHash: text("code_hash").primaryKey(),
+    issuer: text("issuer").notNull(),
+    clientId: text("client_id").notNull(),
+    redirectUri: text("redirect_uri").notNull(),
+    accountId: text("account_id")
+      .notNull()
+      .$type<AccountId>()
+      .references(() => systemAccounts.id, { onDelete: "cascade" }),
+    codeChallenge: text("code_challenge").notNull(),
+    nonce: text("nonce").notNull(),
+    scope: text("scope").notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    index("system_oidc_authorization_codes_expires_idx").on(table.expiresAt),
+    check(
+      "system_oidc_authorization_codes_hash_length",
+      sql`length(${table.codeHash}) = 64 AND ${table.codeHash} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+    check(
+      "system_oidc_authorization_codes_expiration",
+      sql`${table.expiresAt} > ${table.createdAt}`,
+    ),
+  ],
+)
+
+export type SystemOidcAuthorizationCodeRow = InferSelectModel<typeof systemOidcAuthorizationCodes>
+
+/** raw tokenを保存しない、短命なOIDC UserInfo access token。 */
+export const systemOidcAccessTokens = sqliteTable(
+  "system_oidc_access_tokens",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    issuer: text("issuer").notNull(),
+    clientId: text("client_id").notNull(),
+    accountId: text("account_id")
+      .notNull()
+      .$type<AccountId>()
+      .references(() => systemAccounts.id, { onDelete: "cascade" }),
+    scope: text("scope").notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    index("system_oidc_access_tokens_expires_idx").on(table.expiresAt),
+    check(
+      "system_oidc_access_tokens_hash_length",
+      sql`length(${table.tokenHash}) = 64 AND ${table.tokenHash} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+    check("system_oidc_access_tokens_expiration", sql`${table.expiresAt} > ${table.createdAt}`),
+  ],
+)
+
+export type SystemOidcAccessTokenRow = InferSelectModel<typeof systemOidcAccessTokens>
+
 /** namespaced permissionを束ねるSystem Role。permission vocabulary自体は各contextが所有する。 */
 export const systemIamRoles = sqliteTable(
   "system_iam_roles",
@@ -602,6 +662,8 @@ export const systemCoreSchema = {
   systemCliLoginStates,
   systemCliLoginCodes,
   systemBrowserLoginCodes,
+  systemOidcAuthorizationCodes,
+  systemOidcAccessTokens,
   systemIamRoles,
   systemIamRolePermissions,
   systemRoleBindings,

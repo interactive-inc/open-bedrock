@@ -81,6 +81,27 @@ const CONTEXT_MODULE =
   /^@\/contexts\/([^/]+)\/(?:domain|application|infrastructure|interface)(?:\/|$)/
 const SYSTEM_SELF_REFERENCE_MODULE = /^@system\/(application|domain|infrastructure|interface)\/.+$/
 const SYSTEM_SCHEMA_REFERENCE_MODULE = /^@system\/infrastructure\/schema(?:\/|$)/
+const LEGACY_SYSTEM_SCHEMA_MODULE = /(?:^|\/)system-runtime$/
+const LEGACY_SYSTEM_SCHEMA_SYMBOLS = new Set([
+  "auditLogs",
+  "bootstrapState",
+  "deletedRecords",
+  "entityIdAliases",
+  "oidcAccessTokens",
+  "oidcAuthorizationCodes",
+  "userIdentities",
+  "users",
+])
+const LEGACY_SYSTEM_SQL_TABLES = [
+  "audit_logs",
+  "bootstrap_state",
+  "deleted_records",
+  "entity_id_aliases",
+  "oidc_access_tokens",
+  "oidc_authorization_codes",
+  "user_identities",
+  "users",
+] as const
 
 /** 配置を固定せず、System所有schemaのproduction TypeScriptを再帰的に列挙する。 */
 export function discoverSystemSchemaPaths(root: string): ReadonlyArray<string> {
@@ -278,6 +299,40 @@ export function inspectSystemStorageAccess(
     })
   }
   return violations
+}
+
+/** System内へ旧schema exportや旧物理tableの実行経路が戻ることを拒否する。 */
+export function inspectLegacySystemRuntime(
+  file: string,
+  source: string,
+): SystemBoundaryViolation[] {
+  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true)
+  const violations = new Set<string>()
+
+  function visit(node: ts.Node): void {
+    const moduleSpecifier = getModuleSpecifier(node)
+    if (typeof moduleSpecifier === "string" && LEGACY_SYSTEM_SCHEMA_MODULE.test(moduleSpecifier)) {
+      violations.add(`旧System schema moduleをimportしています: ${moduleSpecifier}`)
+    }
+    if (ts.isIdentifier(node) && LEGACY_SYSTEM_SCHEMA_SYMBOLS.has(node.text)) {
+      violations.add(`旧System schema exportを参照しています: ${node.text}`)
+    }
+    if (ts.isStringLiteralLike(node) || ts.isTemplateLiteralToken(node)) {
+      for (const table of LEGACY_SYSTEM_SQL_TABLES) {
+        const directSql = new RegExp(
+          `\\b(?:from|join|into|update|table|references)\\s+(?:"|'|\\[|\`)?${table}\\b`,
+          "iu",
+        )
+        if (directSql.test(node.text)) violations.add(`旧System tableを参照しています: ${table}`)
+      }
+    }
+
+    ts.forEachChild(node, visit)
+  }
+
+  visit(sourceFile)
+
+  return [...violations].toSorted().map((reason) => ({ file, reason }))
 }
 
 /** application/domain/infrastructure の System 直下にある capability namespace を集める。 */
@@ -878,6 +933,8 @@ export function inspectSystemSource(
       reason: `System core に製品 marker "${forbiddenProductMarker}" があります`,
     })
   }
+
+  violations.push(...inspectLegacySystemRuntime(file, source))
 
   return violations
 }

@@ -3,17 +3,20 @@ import {
   OidcInvalidScopeApplicationError,
   OidcTemporarilyUnavailableApplicationError,
 } from "@/contexts/system/application/auth/errors"
-import { AuthAuditLogRepository } from "@/contexts/system/infrastructure/audit/auth-audit-log.repository"
-import { OidcAuthorizationCodeRepository } from "@/contexts/system/infrastructure/identity/oidc-authorization-code.repository"
+import { createSystemOidcAudit } from "@system/application/auth/create-system-oidc-audit"
+import type { AccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/auth/account-id"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
+import { createOidcAuthorizationCode } from "@system/infrastructure/identity/create-oidc-authorization-code"
 import {
   OidcClientPolicy,
   type OidcClientRegistry,
 } from "@system/domain/identity/oidc-client.policy"
 import { OidcScopeValue } from "@system/domain/identity/oidc-scope.value"
-import { WriteOperationEntity } from "@/lib/persistence/write-operation.entity"
 import type {
   SystemAuthorizationContext,
   SystemClockContext,
+  SystemD1Context,
   SystemDatabaseContext,
 } from "@system/infrastructure/configuration/system-context"
 
@@ -29,9 +32,21 @@ type Props = Readonly<{
   clientRegistry: OidcClientRegistry
 }>
 
+type AuditProps = Readonly<{
+  accountId: AccountId
+  outcome: "succeeded" | "denied"
+  reasonCode: "user_denied" | null
+  issuer: string
+  clientId: string
+  scope: ReadonlyArray<string>
+}>
+
 export class CreateOidcAuthorization {
   constructor(
-    private readonly c: SystemDatabaseContext & SystemClockContext & SystemAuthorizationContext,
+    private readonly c: SystemDatabaseContext &
+      SystemD1Context &
+      SystemClockContext &
+      SystemAuthorizationContext,
   ) {}
 
   async execute(props: Props) {
@@ -54,6 +69,12 @@ export class CreateOidcAuthorization {
       return new OidcInvalidScopeApplicationError(scope)
     }
 
+    const accountId = zAccountId.safeParse(this.c.var.userId)
+
+    if (!accountId.success) {
+      return new OidcTemporarilyUnavailableApplicationError(accountId.error)
+    }
+
     const redirect = new URL(props.redirectUri)
     redirect.searchParams.set("state", props.state)
     redirect.searchParams.set("iss", props.issuer)
@@ -61,22 +82,31 @@ export class CreateOidcAuthorization {
     if (props.decision === "deny") {
       redirect.searchParams.set("error", "access_denied")
 
-      await this.recordAudit("oidc:deny", props.issuer, client.id, scope)
+      const auditError = await this.recordAudit({
+        accountId: accountId.data,
+        outcome: "denied",
+        reasonCode: "user_denied",
+        issuer: props.issuer,
+        clientId: client.id,
+        scope,
+      })
+
+      if (auditError !== null) {
+        return new OidcTemporarilyUnavailableApplicationError(auditError)
+      }
 
       return { redirect_uri: redirect.toString() }
     }
 
-    const authorizationCode = await new OidcAuthorizationCodeRepository(this.c).write(
-      WriteOperationEntity.create("create", {
-        issuer: props.issuer,
-        clientId: client.id,
-        redirectUri: props.redirectUri,
-        userId: this.c.var.userId,
-        codeChallenge: props.codeChallenge,
-        nonce: props.nonce,
-        scope,
-      }),
-    )
+    const authorizationCode = await createOidcAuthorizationCode(this.c, {
+      issuer: props.issuer,
+      clientId: client.id,
+      redirectUri: props.redirectUri,
+      accountId: accountId.data,
+      codeChallenge: props.codeChallenge,
+      nonce: props.nonce,
+      scope,
+    })
 
     if (authorizationCode instanceof Error) {
       return new OidcTemporarilyUnavailableApplicationError(authorizationCode)
@@ -84,25 +114,41 @@ export class CreateOidcAuthorization {
 
     redirect.searchParams.set("code", authorizationCode.code)
 
-    await this.recordAudit("oidc:authorize", props.issuer, client.id, scope)
+    const auditError = await this.recordAudit({
+      accountId: accountId.data,
+      outcome: "succeeded",
+      reasonCode: null,
+      issuer: props.issuer,
+      clientId: client.id,
+      scope,
+    })
+
+    if (auditError !== null) {
+      return new OidcTemporarilyUnavailableApplicationError(auditError)
+    }
 
     return { redirect_uri: redirect.toString() }
   }
 
-  private async recordAudit(
-    action: "oidc:deny" | "oidc:authorize",
-    issuer: string,
-    clientId: string,
-    scope: ReadonlyArray<string>,
-  ): Promise<void> {
-    await new AuthAuditLogRepository(this.c).write(
-      WriteOperationEntity.create("record", {
-        userId: this.c.var.userId,
-        role: this.c.var.role,
-        action,
-        resourceId: this.c.var.userId,
-        metadata: { issuer, clientId, scope: scope.join(" ") },
-      }),
-    )
+  private async recordAudit(props: AuditProps): Promise<Error | null> {
+    const audit = createSystemOidcAudit({
+      accountId: props.accountId,
+      action: "auth.oidc.authorization",
+      outcome: props.outcome,
+      reasonCode: props.reasonCode,
+      authorization: { role: this.c.var.role },
+      metadata: {
+        issuer: props.issuer,
+        clientId: props.clientId,
+        scope: props.scope.join(" "),
+      },
+      occurredAt: this.c.var.now(),
+    })
+
+    if (audit instanceof Error) return audit
+
+    const appended = await new SystemAuditEventRepository(this.c).append(audit)
+
+    return appended instanceof Error ? appended : null
   }
 }
