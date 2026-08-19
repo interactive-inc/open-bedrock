@@ -145,6 +145,35 @@ const schema = `
   CREATE INDEX system_cli_login_codes_expires_idx
     ON system_cli_login_codes (expires_at);
 
+  CREATE TABLE system_oidc_authorization_codes (
+    code_hash TEXT PRIMARY KEY NOT NULL,
+    issuer TEXT NOT NULL,
+    client_id TEXT NOT NULL,
+    redirect_uri TEXT NOT NULL,
+    account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE CASCADE,
+    code_challenge TEXT NOT NULL,
+    nonce TEXT NOT NULL,
+    scope TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX system_oidc_authorization_codes_expires_idx
+    ON system_oidc_authorization_codes (expires_at);
+
+  CREATE TABLE system_oidc_access_tokens (
+    token_hash TEXT PRIMARY KEY NOT NULL,
+    issuer TEXT NOT NULL,
+    client_id TEXT NOT NULL,
+    account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE CASCADE,
+    scope TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX system_oidc_access_tokens_expires_idx
+    ON system_oidc_access_tokens (expires_at);
+
   CREATE TRIGGER system_sessions_monotonic_lifecycle
   BEFORE UPDATE ON system_sessions
   WHEN

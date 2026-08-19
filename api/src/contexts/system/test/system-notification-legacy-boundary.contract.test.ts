@@ -2,14 +2,11 @@ import { describe, expect, test } from "bun:test"
 import { Glob } from "bun"
 import { readFileSync } from "node:fs"
 import * as systemCoreSchema from "@system/infrastructure/schema/system-core"
-import * as systemRuntimeSchema from "@system/infrastructure/schema/system-runtime"
 
 const systemDirectory = new URL("../", import.meta.url)
 
 describe("System notification boundary", () => {
   test("旧 Notification / NotificationRead schemaを公開しない", () => {
-    expect(systemRuntimeSchema).not.toHaveProperty("notifications")
-    expect(systemRuntimeSchema).not.toHaveProperty("notificationReads")
     expect(systemCoreSchema).toHaveProperty("systemNotificationMessages")
     expect(systemCoreSchema).toHaveProperty("systemNotificationDeliveries")
   })
