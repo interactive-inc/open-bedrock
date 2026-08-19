@@ -1,17 +1,6 @@
 import { Database } from "bun:sqlite"
 
-type Options = Readonly<{
-  onQuery?: () => void
-}>
-
-/** Bun SQLiteをportable System infrastructure test向けのD1境界へ適応する。 */
-export function createSystemD1TestDatabase(schema: string, options?: Options): D1Database {
-  const sqlite = new Database(":memory:")
-
-  sqlite.exec(schema)
-
-  return wrapSystemD1TestDatabase(sqlite, options)
-}
+type Options = Readonly<{ onQuery?: () => void }>
 
 /** 既存のBun SQLite fixtureへportable System test用のD1境界を載せる。 */
 export function wrapSystemD1TestDatabase(sqlite: Database, options?: Options): D1Database {
@@ -82,9 +71,7 @@ function toPreparedStatement(
   return castToD1PreparedStatement(statement)
 }
 
-function toPreparedStatementSync(statement: D1PreparedStatement): {
-  all: () => D1Result<unknown>
-} {
+function toPreparedStatementSync(statement: D1PreparedStatement): { all: () => D1Result<unknown> } {
   const maybeSync = statement as unknown as SynchronousD1TestStatement
 
   if (maybeSync.__systemAllSync === undefined) {
@@ -131,12 +118,10 @@ function toSqliteBinding(value: unknown): SqliteBinding {
   return JSON.stringify(value)
 }
 
-/** D1Databaseはabstract classのため、test adapter境界でのみ構造型を接続する。 */
 function castToD1Database(mock: Record<string, unknown>): D1Database {
   return mock as unknown as D1Database
 }
 
-/** D1PreparedStatementはabstract classのため、test adapter境界でのみ構造型を接続する。 */
 function castToD1PreparedStatement(mock: Record<string, unknown>): D1PreparedStatement {
   return mock as unknown as D1PreparedStatement
 }

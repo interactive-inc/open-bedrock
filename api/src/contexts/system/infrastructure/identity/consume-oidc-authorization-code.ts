@@ -1,4 +1,5 @@
-import { OidcCryptographyService } from "@system/infrastructure/identity/oidc-cryptography.service"
+import { toPkceS256Challenge } from "@system/infrastructure/auth/to-pkce-s256-challenge"
+import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret"
 import type { AccountId } from "@system/domain/auth/account-id"
 import type {
   SystemClockContext,
@@ -28,8 +29,8 @@ export async function consumeOidcAuthorizationCode(
 ): Promise<ConsumedAuthorizationCode | null | Error> {
   const now = context.var.now()
   const secrets = await Promise.all([
-    OidcCryptographyService.hashSecret(props.code),
-    OidcCryptographyService.createPkceChallenge(props.verifier),
+    hashOidcSecret(props.code),
+    toPkceS256Challenge(props.verifier),
   ])
 
   try {

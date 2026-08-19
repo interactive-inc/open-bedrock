@@ -1,7 +1,7 @@
 import { zAccountId } from "@system/domain/auth/account-id"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import { createOidcAuthorizationCode } from "@system/infrastructure/identity/create-oidc-authorization-code"
-import { OidcCryptographyService } from "@system/infrastructure/identity/oidc-cryptography.service"
+import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
@@ -35,7 +35,7 @@ describe("createOidcAuthorizationCode", () => {
       .get()
 
     expect(stored).toEqual({
-      code_hash: await OidcCryptographyService.hashSecret(result.code),
+      code_hash: await hashOidcSecret(result.code),
       account_id: "account-1",
     })
     expect(stored).not.toEqual({ code_hash: result.code, account_id: "account-1" })

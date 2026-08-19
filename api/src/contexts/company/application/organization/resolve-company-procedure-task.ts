@@ -3,7 +3,7 @@ import { resolveWorkflowStepSnapshot } from "@/contexts/company/application/orga
 import type { CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
 import type { ApplicationWorkflowStep } from "@/contexts/company/domain/organization/company-procedure-workflow"
 import type { Context } from "@/env"
-import type { StartSystemProcedureTask } from "@system/application/workflow/start-system-procedure"
+import type { StartSystemProcedureTask } from "@system/application/workflow/create-system-task-persistence"
 import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
 import { toSystemProposalDigest } from "@system/domain/workflow/to-system-proposal-digest"
 

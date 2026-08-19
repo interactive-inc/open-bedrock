@@ -1,5 +1,7 @@
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
-import { OidcCryptographyService } from "@system/infrastructure/identity/oidc-cryptography.service"
+import { toPkceS256Challenge } from "@system/infrastructure/auth/to-pkce-s256-challenge"
+import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret"
+import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { POST } from "@system/interface/routes/oauth.token"
@@ -40,9 +42,9 @@ async function createSigningKeys(): Promise<string> {
 describe("POST /oauth/token", () => {
   test("canonical Account・Identity・OIDC storageからtokenを発行してSystem監査を残す", async () => {
     const fixture = new SystemSessionTestContext()
-    const code = OidcCryptographyService.createSecret()
-    const codeHash = await OidcCryptographyService.hashSecret(code)
-    const codeChallenge = await OidcCryptographyService.createPkceChallenge(verifier)
+    const code = createOidcSecret()
+    const codeHash = await hashOidcSecret(code)
+    const codeChallenge = await toPkceS256Challenge(verifier)
     fixture.sqlite
       .query(
         `INSERT INTO system_accounts

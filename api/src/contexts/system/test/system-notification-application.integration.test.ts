@@ -5,7 +5,7 @@ import { zAccountId } from "@system/domain/auth/account-id"
 import { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
 import { NotificationDelivery } from "@system/domain/notifications/notification-delivery.entity"
 import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/system-d1-test-database.test-support"
+import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
 import { describe, expect, test } from "bun:test"
 

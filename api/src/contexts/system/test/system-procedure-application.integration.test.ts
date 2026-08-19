@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { PublishSystemProcedure } from "@system/application/workflow/publish-system-procedure"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { procedureKeySchema } from "@system/domain/workflow/procedure-definition.entity"
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/system-d1-test-database.test-support"
+import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure-repository"
 import { readFileSync } from "node:fs"
 

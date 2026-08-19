@@ -1,4 +1,4 @@
-import { OidcCryptographyService } from "@system/infrastructure/identity/oidc-cryptography.service"
+import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret"
 import type { AccountId } from "@system/domain/auth/account-id"
 import type {
   SystemClockContext,
@@ -21,7 +21,7 @@ export async function findOidcAccessToken(
   props: Props,
 ): Promise<OidcAccessToken | null | Error> {
   const now = context.var.now()
-  const tokenHash = await OidcCryptographyService.hashSecret(props.accessToken)
+  const tokenHash = await hashOidcSecret(props.accessToken)
 
   try {
     const tokens = await context.var.database

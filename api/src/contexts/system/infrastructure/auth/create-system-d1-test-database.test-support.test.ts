@@ -1,4 +1,4 @@
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/system-d1-test-database.test-support"
+import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
 import { describe, expect, test } from "bun:test"
 
 const schema = `
@@ -8,7 +8,7 @@ const schema = `
   );
 `
 
-describe("System D1 test database", () => {
+describe("createSystemD1TestDatabase", () => {
   test("prepareのrun・first・all・rawをD1互換結果へ適応する", async () => {
     const database = createSystemD1TestDatabase(schema)
     const inserted = await database
