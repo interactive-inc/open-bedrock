@@ -123,7 +123,7 @@ describe("inspectRouteFile", () => {
   test("opaque System Sessionの認証guardを認証として扱う", () => {
     const source =
       "// @authorization authenticated - System Sessionを要求する\n" +
-      "export const GET = factory.createHandlers(authenticateSystemSession, handler)\n"
+      "export const GET = factory.createHandlers(authenticateSystemAccessToken, handler)\n"
 
     expect(inspectRouteFile("contexts/system/interface/routes/notifications.ts", source)).toEqual(
       [],

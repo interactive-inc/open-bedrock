@@ -8,13 +8,13 @@ import { PasswordHashService } from "@system/infrastructure/auth/password-hash.s
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 import { SystemAccountAdministrationRepository } from "@system/infrastructure/iam/system-account-administration-repository"
 import { SystemIdentityAdministrationRepository } from "@system/infrastructure/identity/system-identity-administration-repository"
-import { authenticateSystemSession } from "@system/interface/http/authenticate-system-session"
+import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // @authorization permission iam:read - AccountのIdentity bindingと公開profileだけを読む
-export const GET = systemFactory.createHandlers(authenticateSystemSession, async (context) => {
+export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
     return context.json({ error: "forbidden", code: "forbidden" }, 403)
   }
@@ -67,7 +67,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemSession, async
 
 // @authorization permission iam:write - provider credentialをIdentityと同じtransactionで作る
 export const POST = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator(
     "json",
     z.discriminatedUnion("provider", [

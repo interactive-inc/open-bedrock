@@ -1,5 +1,5 @@
 import { zAccountId } from "@system/domain/auth/account-id"
-import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
+import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import {
   DELETE as DELETE_ONE,
@@ -53,6 +53,7 @@ describe("System Notification HTTP", () => {
 
     const applications = createSystemSessionApplications({
       context: fixture.context,
+      jwtSecret: "system-session-test-jwt-secret",
       sessionTtlMilliseconds: 604_800_000,
     })
     expect(applications).not.toBeInstanceOf(Error)
@@ -60,7 +61,7 @@ describe("System Notification HTTP", () => {
     const issuance = await applications.issue.execute({
       accountId,
       tokenVersion: 0,
-      now,
+      now: new Date(),
       auditContext: { authorizationJson: null, metadataJson: null },
     })
     expect(issuance).not.toBeInstanceOf(Error)
@@ -82,10 +83,14 @@ describe("System Notification HTTP", () => {
     const request = (
       input: Parameters<typeof app.request>[0],
       init?: Parameters<typeof app.request>[1],
-    ) => app.request(input, init, { DB: fixture.context.env.DB })
+    ) =>
+      app.request(input, init, {
+        DB: fixture.context.env.DB,
+        JWT_SECRET: "system-session-test-jwt-secret",
+      })
     const client = hc<typeof app>("http://system.test", {
       fetch: request,
-      headers: { authorization: `Bearer ${issuance.rawToken}` },
+      headers: { authorization: `Bearer ${issuance.accessToken}` },
     })
 
     const published = await client.system.v1.notifications.$post({

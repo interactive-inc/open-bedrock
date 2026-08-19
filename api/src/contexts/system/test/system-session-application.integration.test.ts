@@ -1,4 +1,5 @@
 import type { SystemSessionMaterialService as SystemSessionMaterialServicePort } from "@system/application/auth/system-session-material-service"
+import type { SystemAccessTokenIssuer as SystemAccessTokenIssuerPort } from "@system/application/auth/system-access-token-issuer"
 import { AuthenticateSystemSession } from "@system/application/auth/authenticate-system-session"
 import { IssueSystemSession } from "@system/application/auth/issue-system-session"
 import { RevokeSystemSession } from "@system/application/auth/revoke-system-session"
@@ -27,6 +28,9 @@ const thirdTokenHash = "c".repeat(64)
 const auditContext = Object.freeze({
   authorizationJson: '{"permission":"auth:session"}',
   metadataJson: '{"client":"test"}',
+})
+const accessTokenIssuer: SystemAccessTokenIssuerPort = Object.freeze({
+  issue: async (input) => `access-token-${input.tokenVersion}-${input.now.toISOString()}`,
 })
 
 type MaterialProps = Readonly<{
@@ -77,6 +81,7 @@ function createIssueSystemSession(
     accountRepository: new SystemAccountRepository({ database: fixture.context.env.DB }),
     sessionRepository: new SystemSessionRepository({ context: fixture.context }),
     materialService,
+    accessTokenIssuer,
     sessionTtlMilliseconds: ttlMilliseconds,
   })
 }
@@ -91,6 +96,7 @@ function createRotateSystemSession(
     sessionRepository: new SystemSessionRepository({ context: fixture.context }),
     auditAppender: new SystemAuditEventRepository(fixture.context),
     materialService,
+    accessTokenIssuer,
     sessionTtlMilliseconds: ttlMilliseconds,
   })
 }
@@ -174,6 +180,7 @@ describe("IssueSystemSession", () => {
       kind: "issued",
       accountId,
       tokenVersion: 0,
+      accessToken: "access-token-0-2026-01-01T00:00:00.000Z",
       rawToken: firstRawToken,
       sessionId: zSessionId.parse("session-1"),
       expiresAt: new Date(now.getTime() + sessionTtlMilliseconds),
@@ -252,6 +259,7 @@ describe("RotateSystemSession", () => {
       kind: "rotated",
       accountId,
       tokenVersion: 0,
+      accessToken: "access-token-0-2026-01-02T00:00:00.000Z",
       rawToken: secondRawToken,
       sessionId: zSessionId.parse("session-2"),
       expiresAt: new Date(rotateAt.getTime() + sessionTtlMilliseconds),

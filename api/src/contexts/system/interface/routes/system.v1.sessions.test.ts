@@ -18,6 +18,7 @@ const accountId = "system-route-account"
 const subject = "person@example.com"
 const password = "correct-password"
 const pepper = "system-session-test-pepper"
+const jwtSecret = "system-session-route-test-secret"
 
 describe("System Session HTTP", () => {
   test("password認証・検証・rotation・reuse検知・冪等失効をcanonical Systemで実行する", async () => {
@@ -56,6 +57,7 @@ describe("System Session HTTP", () => {
     ) =>
       app.request(input, init, {
         DB: fixture.context.env.DB,
+        JWT_SECRET: jwtSecret,
         NOW: issuedAt.toISOString(),
         PEPPER_SECRET: pepper,
       })
@@ -65,6 +67,7 @@ describe("System Session HTTP", () => {
     ) =>
       app.request(input, init, {
         DB: fixture.context.env.DB,
+        JWT_SECRET: jwtSecret,
         NOW: rotatedAt.toISOString(),
         PEPPER_SECRET: pepper,
       })
@@ -74,6 +77,7 @@ describe("System Session HTTP", () => {
     ) =>
       app.request(input, init, {
         DB: fixture.context.env.DB,
+        JWT_SECRET: jwtSecret,
         NOW: revokedAt.toISOString(),
         PEPPER_SECRET: pepper,
       })
@@ -86,8 +90,9 @@ describe("System Session HTTP", () => {
     })
     expect(issued.status).toBe(201)
     const issuedBody = await issued.json()
+    expect("access_token" in issuedBody).toBe(true)
     expect("refresh_token" in issuedBody).toBe(true)
-    if (!("refresh_token" in issuedBody)) return
+    if (!("access_token" in issuedBody) || !("refresh_token" in issuedBody)) return
     expect(issuedBody).toMatchObject({ account_id: accountId })
 
     const authenticated = await issueClient.system.v1.sessions.$get({
@@ -104,8 +109,10 @@ describe("System Session HTTP", () => {
     })
     expect(rotated.status).toBe(200)
     const rotatedBody = await rotated.json()
+    expect("access_token" in rotatedBody).toBe(true)
     expect("refresh_token" in rotatedBody).toBe(true)
-    if (!("refresh_token" in rotatedBody)) return
+    if (!("access_token" in rotatedBody) || !("refresh_token" in rotatedBody)) return
+    expect(rotatedBody.access_token).not.toBe(issuedBody.access_token)
     expect(rotatedBody.refresh_token).not.toBe(issuedBody.refresh_token)
 
     const reused = await revocationClient.system.v1.sessions.$patch({

@@ -153,7 +153,7 @@ export function inspectRouteFile(
     const hasUserAuthentication =
       globallyAuthenticated ||
       /\bverifyBearer\b/.test(entry.body) ||
-      /\bauthenticateSystemSession\b/.test(entry.body) ||
+      /\bauthenticateSystemAccessToken\b/.test(entry.body) ||
       /\brequireSystemAuthentication\b/.test(entry.body)
     const hasMachineGuard = /\bverify[A-Z]\w*Key\b/.test(entry.body)
 

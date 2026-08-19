@@ -1,16 +1,17 @@
 import { zAccountId } from "@system/domain/auth/account-id"
-import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
-import { authenticateSystemSession } from "@system/interface/http/authenticate-system-session"
+import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
+import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
 
 const now = new Date("2026-01-01T00:00:00.000Z")
 const accountId = zAccountId.parse("system-middleware-account")
+const jwtSecret = "system-session-test-jwt-secret"
 
-describe("authenticateSystemSession", () => {
-  test("opaque Sessionと現在のSystem IAMだけで主体を注入する", async () => {
+describe("authenticateSystemAccessToken", () => {
+  test("access tokenと現在のSystem Account・IAMだけで主体を注入する", async () => {
     const fixture = new SystemSessionTestContext()
     fixture.sqlite
       .query(
@@ -42,6 +43,7 @@ describe("authenticateSystemSession", () => {
 
     const applications = createSystemSessionApplications({
       context: fixture.context,
+      jwtSecret,
       sessionTtlMilliseconds: 604_800_000,
     })
     expect(applications).not.toBeInstanceOf(Error)
@@ -49,7 +51,7 @@ describe("authenticateSystemSession", () => {
     const issuance = await applications.issue.execute({
       accountId,
       tokenVersion: 0,
-      now,
+      now: new Date(),
       auditContext: { authorizationJson: null, metadataJson: null },
     })
     expect(issuance).not.toBeInstanceOf(Error)
@@ -61,7 +63,7 @@ describe("authenticateSystemSession", () => {
         context.set("now", () => now)
         await next()
       })
-      .get("/protected", authenticateSystemSession, (context) =>
+      .get("/protected", authenticateSystemAccessToken, (context) =>
         context.json({
           user_id: context.var.userId,
           role: context.var.role,
@@ -71,11 +73,11 @@ describe("authenticateSystemSession", () => {
     const request = (
       input: Parameters<typeof app.request>[0],
       init?: Parameters<typeof app.request>[1],
-    ) => app.request(input, init, { DB: fixture.context.env.DB })
+    ) => app.request(input, init, { DB: fixture.context.env.DB, JWT_SECRET: jwtSecret })
     const client = hc<typeof app>("http://system.test", { fetch: request })
 
     const accepted = await client.protected.$get({
-      header: { authorization: `Bearer ${issuance.rawToken}` },
+      header: { authorization: `Bearer ${issuance.accessToken}` },
     })
     const acceptedBody = await accepted.json()
     expect(acceptedBody).toEqual({

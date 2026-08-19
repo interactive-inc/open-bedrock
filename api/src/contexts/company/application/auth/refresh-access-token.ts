@@ -1,11 +1,10 @@
 import type { AccessTokenView } from "@system/domain/auth/access-token-view"
 import { AccountEmployeeLinkRepository } from "@/contexts/company/infrastructure/employee/account-employee-link-repository"
-import { JoseTokenSigner } from "@/contexts/company/application/auth/jose-token-signer"
 import { resolveLiveEmployeeAccess } from "@/contexts/company/application/auth/resolve-live-employee-access"
 import type { Context } from "@/env"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
+import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 
 export type Command = {
   refreshToken: string
@@ -30,6 +29,7 @@ export class RefreshAccessToken {
   async run(command: Command): Promise<AccessTokenView | InvalidToken | ApplicationError> {
     const applications = createSystemSessionApplications({
       context: { env: { DB: this.c.env.DB } },
+      jwtSecret: command.jwtSecret,
       sessionTtlMilliseconds: 7 * 24 * 60 * 60 * 1_000,
     })
     if (applications instanceof Error) {
@@ -66,12 +66,7 @@ export class RefreshAccessToken {
     if (account instanceof Error) {
       return new UnexpectedError("failed to find account", { cause: account })
     }
-    if (
-      account === null ||
-      account.status !== "active" ||
-      account.tokenVersion !== authenticated.tokenVersion ||
-      account.employeeId === null
-    ) {
+    if (account === null || account.employeeId === null) {
       const revoked = await applications.revoke.execute({
         rawToken: command.refreshToken,
         now: command.now,
@@ -99,21 +94,6 @@ export class RefreshAccessToken {
     if (rotated instanceof Error) return auditUnavailable(rotated)
     if (rotated.kind === "rejected") return { reason: "invalid_token" }
 
-    const accessToken = await new JoseTokenSigner().sign(
-      { accountId, tokenVersion: rotated.tokenVersion },
-      command.jwtSecret,
-    )
-    if (accessToken instanceof Error) {
-      const revoked = await applications.revoke.execute({
-        rawToken: rotated.rawToken,
-        now: command.now,
-        auditContext,
-      })
-      return revoked instanceof Error
-        ? auditUnavailable(revoked)
-        : new UnexpectedError("failed to sign access token", { cause: accessToken })
-    }
-
-    return { accessToken, refreshToken: rotated.rawToken }
+    return { accessToken: rotated.accessToken, refreshToken: rotated.rawToken }
   }
 }

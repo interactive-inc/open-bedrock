@@ -2,14 +2,14 @@
 import { MarkSystemNotificationRead } from "@system/application/notifications/mark-system-notification-read"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
-import { authenticateSystemSession } from "@system/interface/http/authenticate-system-session"
+import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // @authorization owner - 自分のAccount Deliveryだけを読む
 export const GET = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator(
     "param",
     z.object({ id: z.string().min(1).max(255).brand<"NotificationDeliveryId">() }),
@@ -56,7 +56,7 @@ export const GET = systemFactory.createHandlers(
 
 // @authorization owner - 自分のAccount Deliveryだけを単調に既読化する
 export const PATCH = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator(
     "param",
     z.object({ id: z.string().min(1).max(255).brand<"NotificationDeliveryId">() }),
@@ -111,7 +111,7 @@ export const PATCH = systemFactory.createHandlers(
 
 // @authorization owner - 自分のAccount Deliveryだけを非表示にする
 export const DELETE = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator(
     "param",
     z.object({ id: z.string().min(1).max(255).brand<"NotificationDeliveryId">() }),

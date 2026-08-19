@@ -3,14 +3,14 @@ import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { SystemAuditEventQuery } from "@system/infrastructure/audit/system-audit-event-query"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
-import { authenticateSystemSession } from "@system/interface/http/authenticate-system-session"
+import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // @authorization permission audit:read - 一つのSystem監査イベントを完全な固定列で読む
 export const GET = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator("param", z.object({ eventId: z.string().uuid() })),
   async (context) => {
     const now = context.var.now()

@@ -1,11 +1,11 @@
 /** /system/v1/notifications/unread-count */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
-import { authenticateSystemSession } from "@system/interface/http/authenticate-system-session"
+import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 
 // @authorization authenticated - 自分のAccount Deliveryだけを集計する
-export const GET = systemFactory.createHandlers(authenticateSystemSession, async (context) => {
+export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   const accountId = zAccountId.safeParse(context.var.userId)
   if (!accountId.success) {
     return context.json({ error: "invalid session", code: "invalid_session" }, 401)

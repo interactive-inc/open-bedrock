@@ -1,7 +1,7 @@
 /** /system/v1/sessions */
 import { AuthenticateSystemPassword } from "@system/application/auth/authenticate-system-password"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
+import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { decoySystemPasswordHash } from "@system/infrastructure/auth/decoy-system-password-hash"
 import { LoginRateLimitService } from "@system/infrastructure/auth/login-rate-limit.service"
 import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
@@ -17,6 +17,7 @@ export type SystemSessionHttpEnvironment = {
     DB?: D1Database
     NOW?: string | number
     PEPPER_SECRET?: string
+    JWT_SECRET?: string
     SYSTEM_SESSION_TTL_SECONDS?: string
   }
 }
@@ -52,6 +53,7 @@ export const GET = factory.createHandlers(
 
     const applications = createSystemSessionApplications({
       context: { env: { DB: database } },
+      jwtSecret: context.env.JWT_SECRET ?? "",
       sessionTtlMilliseconds,
     })
     if (applications instanceof Error) {
@@ -172,6 +174,7 @@ export const POST = factory.createHandlers(
     }
     const applications = createSystemSessionApplications({
       context: { env: { DB: database } },
+      jwtSecret: context.env.JWT_SECRET ?? "",
       sessionTtlMilliseconds,
     })
     if (applications instanceof Error) {
@@ -199,6 +202,7 @@ export const POST = factory.createHandlers(
     return context.json(
       {
         account_id: issuance.accountId,
+        access_token: issuance.accessToken,
         refresh_token: issuance.rawToken,
         session_id: issuance.sessionId,
         expires_at: issuance.expiresAt.toISOString(),
@@ -239,6 +243,7 @@ export const PATCH = factory.createHandlers(
 
     const applications = createSystemSessionApplications({
       context: { env: { DB: database } },
+      jwtSecret: context.env.JWT_SECRET ?? "",
       sessionTtlMilliseconds,
     })
     if (applications instanceof Error) {
@@ -266,6 +271,7 @@ export const PATCH = factory.createHandlers(
     return context.json(
       {
         account_id: rotation.accountId,
+        access_token: rotation.accessToken,
         refresh_token: rotation.rawToken,
         session_id: rotation.sessionId,
         expires_at: rotation.expiresAt.toISOString(),
@@ -306,6 +312,7 @@ export const DELETE = factory.createHandlers(
 
     const applications = createSystemSessionApplications({
       context: { env: { DB: database } },
+      jwtSecret: context.env.JWT_SECRET ?? "",
       sessionTtlMilliseconds,
     })
     if (applications instanceof Error) {

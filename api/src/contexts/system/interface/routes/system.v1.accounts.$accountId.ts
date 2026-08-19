@@ -4,13 +4,13 @@ import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 import { SystemAccountAdministrationRepository } from "@system/infrastructure/iam/system-account-administration-repository"
-import { authenticateSystemSession } from "@system/interface/http/authenticate-system-session"
+import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // @authorization permission iam:read - 一つのSystem AccountをCompany情報なしで読む
-export const GET = systemFactory.createHandlers(authenticateSystemSession, async (context) => {
+export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
     return context.json({ error: "forbidden", code: "forbidden" }, 403)
   }
@@ -43,7 +43,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemSession, async
 
 // @authorization permission iam:write - live権限・自己停止・last-rootを同じ更新境界で検査する
 export const PATCH = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator("json", z.object({ status: z.enum(["active", "suspended", "locked"]) }).strict()),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {

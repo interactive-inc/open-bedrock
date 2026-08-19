@@ -1,8 +1,8 @@
 import {
-  ACCESS_TOKEN_AUDIENCE,
-  ACCESS_TOKEN_ISSUER,
-  JoseTokenSigner,
-} from "@/contexts/company/application/auth/jose-token-signer"
+  SYSTEM_ACCESS_TOKEN_AUDIENCE,
+  SYSTEM_ACCESS_TOKEN_ISSUER,
+} from "@system/infrastructure/auth/system-access-token-profile"
+import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer"
 import { ACCESS_TOKEN_TYPE } from "@/contexts/system/domain/auth/access-token-claims"
 import { zAccountId } from "@/contexts/system/domain/auth/account-id"
 import { SignJWT } from "jose"
@@ -30,13 +30,11 @@ export async function createTestToken(
   options?: { expirationTime?: string | number },
 ): Promise<string> {
   if (options?.expirationTime === undefined) {
-    const token = await new JoseTokenSigner().sign(
-      {
-        accountId: zAccountId.parse(String(payload.accountId ?? payload.employeeId)),
-        tokenVersion: payload.tokenVersion ?? 0,
-      },
-      secret,
-    )
+    const token = await new SystemAccessTokenIssuer(secret).issue({
+      accountId: zAccountId.parse(String(payload.accountId ?? payload.employeeId)),
+      tokenVersion: payload.tokenVersion ?? 0,
+      now: new Date(),
+    })
 
     if (token instanceof Error) throw token
 
@@ -50,8 +48,8 @@ export async function createTestToken(
   })
     .setProtectedHeader({ alg: "HS256", typ: ACCESS_TOKEN_TYPE })
     .setSubject(String(payload.accountId ?? payload.employeeId))
-    .setIssuer(ACCESS_TOKEN_ISSUER)
-    .setAudience(ACCESS_TOKEN_AUDIENCE)
+    .setIssuer(SYSTEM_ACCESS_TOKEN_ISSUER)
+    .setAudience(SYSTEM_ACCESS_TOKEN_AUDIENCE)
     .setJti(crypto.randomUUID())
     .setIssuedAt()
     .setExpirationTime(options.expirationTime)

@@ -1,7 +1,7 @@
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
-import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
+import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { GET as GET_ONE } from "@system/interface/routes/system.v1.audit-events.$eventId"
@@ -64,6 +64,7 @@ describe("System Audit HTTP", () => {
 
     const applications = createSystemSessionApplications({
       context: fixture.context,
+      jwtSecret: "system-session-test-jwt-secret",
       sessionTtlMilliseconds: 604_800_000,
     })
     expect(applications).not.toBeInstanceOf(Error)
@@ -71,13 +72,13 @@ describe("System Audit HTTP", () => {
     const readerSession = await applications.issue.execute({
       accountId: readerAccountId,
       tokenVersion: 0,
-      now,
+      now: new Date(),
       auditContext: { authorizationJson: null, metadataJson: null },
     })
     const deniedSession = await applications.issue.execute({
       accountId: deniedAccountId,
       tokenVersion: 0,
-      now,
+      now: new Date(),
       auditContext: { authorizationJson: null, metadataJson: null },
     })
     expect(readerSession).not.toBeInstanceOf(Error)
@@ -102,14 +103,18 @@ describe("System Audit HTTP", () => {
     const request = (
       input: Parameters<typeof app.request>[0],
       init?: Parameters<typeof app.request>[1],
-    ) => app.request(input, init, { DB: fixture.context.env.DB })
+    ) =>
+      app.request(input, init, {
+        DB: fixture.context.env.DB,
+        JWT_SECRET: "system-session-test-jwt-secret",
+      })
     const reader = hc<typeof app>("http://system.test", {
       fetch: request,
-      headers: { authorization: `Bearer ${readerSession.rawToken}` },
+      headers: { authorization: `Bearer ${readerSession.accessToken}` },
     })
     const denied = hc<typeof app>("http://system.test", {
       fetch: request,
-      headers: { authorization: `Bearer ${deniedSession.rawToken}` },
+      headers: { authorization: `Bearer ${deniedSession.accessToken}` },
     })
 
     const listed = await reader.system.v1["audit-events"].$get({ query: {} })

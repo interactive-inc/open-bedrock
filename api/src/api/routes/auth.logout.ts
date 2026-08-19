@@ -1,6 +1,6 @@
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
+import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -18,6 +18,7 @@ export const POST = factory.createHandlers(
     const now = c.env.NOW === undefined ? new Date() : new Date(c.env.NOW)
     const applications = createSystemSessionApplications({
       context: { env: { DB: c.env.DB } },
+      jwtSecret: c.env.JWT_SECRET,
       sessionTtlMilliseconds: 7 * 24 * 60 * 60 * 1_000,
     })
     if (applications instanceof Error) {

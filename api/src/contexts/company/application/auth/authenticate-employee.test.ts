@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { AuthenticateEmployee } from "@/contexts/company/application/auth/authenticate-employee"
-import { accessTokenService } from "@/contexts/company/application/auth/jose-token-signer"
+import { AccessTokenService } from "@system/infrastructure/auth/access-token-service"
+import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/infrastructure/auth/system-access-token-profile"
 import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service"
 import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
 import { seedPepperSecret } from "@/contexts/company/infrastructure/seed/seed-password-hash"
@@ -12,6 +13,7 @@ import type { Context } from "@/env"
 
 const jwtSecret = "authenticate-employee-test-secret"
 const now = new Date("2026-01-01T00:00:00.000Z")
+const accessTokenService = new AccessTokenService({ profile: SYSTEM_ACCESS_TOKEN_PROFILE })
 
 function mutateBeforeNextBatch(context: Context, mutation: () => Promise<unknown>): void {
   const source = context.env.DB
@@ -93,7 +95,10 @@ describe("AuthenticateEmployee", () => {
     expect(result.refreshToken).toMatch(/^[0-9a-f]{64}$/)
     expect(String(result.accountId)).toBe("1")
     expect(result.employeeId).toBe(1)
-    expect((await accessTokenService.verify(result.accessToken, jwtSecret)).ver).toBe(0)
+    const claims = await accessTokenService.verify(result.accessToken, jwtSecret, now)
+    expect(claims).not.toBeInstanceOf(Error)
+    if (claims instanceof Error) return
+    expect(claims.ver).toBe(0)
     const sessionAudit = await db
       .prepare(
         `SELECT actor_account_id, action, target_type, target_id, outcome, reason_code,
@@ -196,7 +201,10 @@ describe("AuthenticateEmployee", () => {
       throw new Error("expected access token")
     }
 
-    expect((await accessTokenService.verify(result.accessToken, jwtSecret)).ver).toBe(1)
+    const claims = await accessTokenService.verify(result.accessToken, jwtSecret, now)
+    expect(claims).not.toBeInstanceOf(Error)
+    if (claims instanceof Error) return
+    expect(claims.ver).toBe(1)
   })
 
   test("fails closed without session material when the canonical account cannot be read", async () => {

@@ -5,13 +5,13 @@ import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-a
 import { IamRole } from "@system/domain/iam/iam-role.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration-repository"
-import { authenticateSystemSession } from "@system/interface/http/authenticate-system-session"
+import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // @authorization permission iam:read - namespaced permissionを持つSystem Roleだけを読む
-export const GET = systemFactory.createHandlers(authenticateSystemSession, async (context) => {
+export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
     return context.json({ error: "forbidden", code: "forbidden" }, 403)
   }
@@ -40,7 +40,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemSession, async
 
 // @authorization permission iam:write - actorが保持しないpermissionをRoleへ追加できない
 export const POST = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator(
     "json",
     z

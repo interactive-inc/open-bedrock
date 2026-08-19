@@ -4,11 +4,11 @@ import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 import { SystemAccountAdministrationRepository } from "@system/infrastructure/iam/system-account-administration-repository"
-import { authenticateSystemSession } from "@system/interface/http/authenticate-system-session"
+import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 
 // @authorization permission iam:read - Company profileを含まないSystem Accountだけを読む
-export const GET = systemFactory.createHandlers(authenticateSystemSession, async (context) => {
+export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
     return context.json({ error: "forbidden", code: "forbidden" }, 403)
   }
@@ -37,7 +37,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemSession, async
 })
 
 // @authorization permission iam:write - Company主体を作らずopaque System Accountだけを作る
-export const POST = systemFactory.createHandlers(authenticateSystemSession, async (context) => {
+export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
     return context.json({ error: "forbidden", code: "forbidden" }, 403)
   }

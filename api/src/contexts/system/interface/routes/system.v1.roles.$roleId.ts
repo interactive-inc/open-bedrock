@@ -5,13 +5,13 @@ import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-a
 import { iamRoleIdSchema } from "@system/domain/iam/iam-role.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration-repository"
-import { authenticateSystemSession } from "@system/interface/http/authenticate-system-session"
+import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // @authorization permission iam:read - 一つのSystem Roleをpermission集合付きで読む
-export const GET = systemFactory.createHandlers(authenticateSystemSession, async (context) => {
+export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
     return context.json({ error: "forbidden", code: "forbidden" }, 403)
   }
@@ -46,7 +46,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemSession, async
 
 // @authorization permission iam:write - managed Role不変・permission昇格・last-rootを検査する
 export const PATCH = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator(
     "json",
     z
@@ -180,75 +180,78 @@ export const PATCH = systemFactory.createHandlers(
 )
 
 // @authorization permission iam:write - active bindingを持つRoleとmanaged Roleは削除しない
-export const DELETE = systemFactory.createHandlers(authenticateSystemSession, async (context) => {
-  if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-    return context.json({ error: "forbidden", code: "forbidden" }, 403)
-  }
-  const actorAccountId = zAccountId.safeParse(context.var.userId)
-  const roleId = iamRoleIdSchema.safeParse(context.req.param("roleId"))
-  if (!actorAccountId.success) {
-    return context.json({ error: "invalid session", code: "invalid_session" }, 401)
-  }
-  if (!roleId.success) {
-    return context.json({ error: "role not found", code: "role_not_found" }, 404)
-  }
-  const repository = new SystemRoleAdministrationRepository({ env: { DB: context.env.DB } })
-  const role = await repository.findById(roleId.data)
-  if (role instanceof Error) {
-    return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
-  }
-  if (role === null) {
-    return context.json({ error: "role not found", code: "role_not_found" }, 404)
-  }
-  if (role.kind === "managed") {
-    return context.json({ error: "managed role is immutable", code: "managed_role" }, 409)
-  }
-  const now = context.var.now()
-  if (!Number.isSafeInteger(now.getTime())) {
-    return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
-  }
-  const beforeJson = toStableSystemAuditJson({
-    description: role.description,
-    key: role.key,
-    kind: role.kind,
-    name: role.name,
-    permission_keys: role.permissionKeys,
-  })
-  if (beforeJson instanceof Error) {
-    return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
-  }
-  const auditEvent = createSystemAuditEvent({
-    actorAccountId: actorAccountId.data,
-    action: "system.iam.role.deleted",
-    targetType: "system:iam-role",
-    targetId: role.id,
-    outcome: "succeeded",
-    reasonCode: null,
-    authorizationJson: null,
-    beforeJson,
-    afterJson: null,
-    metadataJson: null,
-    occurredAt: now,
-  })
-  if (auditEvent instanceof Error) {
-    return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
-  }
-  const auditStatements = new SystemAuditEventRepository({
-    env: { DB: context.env.DB },
-  }).prepareAppend(auditEvent)
-  const deletion = await repository.delete(actorAccountId.data, role, auditStatements)
-  if (deletion instanceof Error) {
-    return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
-  }
-  if (deletion === "forbidden") {
-    return context.json({ error: "forbidden", code: "forbidden" }, 403)
-  }
-  if (deletion === "managed_role") {
-    return context.json({ error: "managed role is immutable", code: "managed_role" }, 409)
-  }
-  if (deletion === "role_in_use") {
-    return context.json({ error: "role is in use", code: "role_in_use" }, 409)
-  }
+export const DELETE = systemFactory.createHandlers(
+  authenticateSystemAccessToken,
+  async (context) => {
+    if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
+      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+    }
+    const actorAccountId = zAccountId.safeParse(context.var.userId)
+    const roleId = iamRoleIdSchema.safeParse(context.req.param("roleId"))
+    if (!actorAccountId.success) {
+      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+    }
+    if (!roleId.success) {
+      return context.json({ error: "role not found", code: "role_not_found" }, 404)
+    }
+    const repository = new SystemRoleAdministrationRepository({ env: { DB: context.env.DB } })
+    const role = await repository.findById(roleId.data)
+    if (role instanceof Error) {
+      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+    }
+    if (role === null) {
+      return context.json({ error: "role not found", code: "role_not_found" }, 404)
+    }
+    if (role.kind === "managed") {
+      return context.json({ error: "managed role is immutable", code: "managed_role" }, 409)
+    }
+    const now = context.var.now()
+    if (!Number.isSafeInteger(now.getTime())) {
+      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+    }
+    const beforeJson = toStableSystemAuditJson({
+      description: role.description,
+      key: role.key,
+      kind: role.kind,
+      name: role.name,
+      permission_keys: role.permissionKeys,
+    })
+    if (beforeJson instanceof Error) {
+      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+    }
+    const auditEvent = createSystemAuditEvent({
+      actorAccountId: actorAccountId.data,
+      action: "system.iam.role.deleted",
+      targetType: "system:iam-role",
+      targetId: role.id,
+      outcome: "succeeded",
+      reasonCode: null,
+      authorizationJson: null,
+      beforeJson,
+      afterJson: null,
+      metadataJson: null,
+      occurredAt: now,
+    })
+    if (auditEvent instanceof Error) {
+      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+    }
+    const auditStatements = new SystemAuditEventRepository({
+      env: { DB: context.env.DB },
+    }).prepareAppend(auditEvent)
+    const deletion = await repository.delete(actorAccountId.data, role, auditStatements)
+    if (deletion instanceof Error) {
+      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+    }
+    if (deletion === "forbidden") {
+      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+    }
+    if (deletion === "managed_role") {
+      return context.json({ error: "managed role is immutable", code: "managed_role" }, 409)
+    }
+    if (deletion === "role_in_use") {
+      return context.json({ error: "role is in use", code: "role_in_use" }, 409)
+    }
 
-  return context.body(null, 204)
-})
+    return context.body(null, 204)
+  },
+)

@@ -6,14 +6,14 @@ import { NotificationDelivery } from "@system/domain/notifications/notification-
 import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
 import { SystemActiveAccountSet } from "@system/infrastructure/auth/system-active-account-set"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
-import { authenticateSystemSession } from "@system/interface/http/authenticate-system-session"
+import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // @authorization authenticated - 自分のAccount Deliveryだけを読む
 export const GET = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator(
     "query",
     z.object({
@@ -67,7 +67,7 @@ export const GET = systemFactory.createHandlers(
 
 // @authorization permission notification:send - 任意のactive System Accountへ配信する
 export const POST = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator(
     "json",
     z.object({
@@ -182,7 +182,7 @@ export const POST = systemFactory.createHandlers(
 
 // @authorization authenticated - 自分の未読Deliveryを一括で既読にする
 export const PATCH = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator("json", z.object({ read: z.literal(true) })),
   async (context) => {
     const accountId = zAccountId.safeParse(context.var.userId)

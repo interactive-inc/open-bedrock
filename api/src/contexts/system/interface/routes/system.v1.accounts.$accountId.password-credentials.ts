@@ -6,14 +6,14 @@ import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-a
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
 import { SystemPasswordAdministrationRepository } from "@system/infrastructure/auth/system-password-administration-repository"
-import { authenticateSystemSession } from "@system/interface/http/authenticate-system-session"
+import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // @authorization permission iam:write - credential変更・token失効・監査を同じtransactionで確定する
 export const PATCH = systemFactory.createHandlers(
-  authenticateSystemSession,
+  authenticateSystemAccessToken,
   zValidator("json", z.object({ password: z.string().min(12).max(200) }).strict()),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {

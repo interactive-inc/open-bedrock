@@ -3,8 +3,7 @@ import type { AccountId } from "@system/domain/auth/account-id"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import type { Context } from "@/env"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
-import { JoseTokenSigner } from "@/contexts/company/application/auth/jose-token-signer"
-import { createSystemSessionApplications } from "@system/infrastructure/auth/create-system-session-applications"
+import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 
 export type IssueSessionCommand = {
   accountId: AccountId
@@ -45,6 +44,7 @@ export class IssueEmployeeSession {
   ): Promise<IssuedSession | SessionIssuanceRejected | ApplicationError> {
     const applications = createSystemSessionApplications({
       context: { env: { DB: this.c.env.DB } },
+      jwtSecret: command.jwtSecret,
       sessionTtlMilliseconds: 7 * 24 * 60 * 60 * 1_000,
     })
     if (applications instanceof Error) {
@@ -68,21 +68,8 @@ export class IssueEmployeeSession {
     if (issued instanceof Error) return auditUnavailable(issued)
     if (issued.kind === "rejected") return { reason: "account_session_rejected" }
 
-    const accessToken = await new JoseTokenSigner().sign(
-      { accountId: command.accountId, tokenVersion: issued.tokenVersion },
-      command.jwtSecret,
-    )
-    if (accessToken instanceof Error) {
-      await applications.revoke.execute({
-        rawToken: issued.rawToken,
-        now: command.now,
-        auditContext: { authorizationJson: null, metadataJson },
-      })
-      return new UnexpectedError("failed to sign access token", { cause: accessToken })
-    }
-
     return {
-      accessToken,
+      accessToken: issued.accessToken,
       refreshToken: issued.rawToken,
       accountId: command.accountId,
       employeeId: command.employeeId,
