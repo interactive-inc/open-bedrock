@@ -1,6 +1,6 @@
 import type { ExpenseApprovalAction, ExpenseCategory, ExpenseStatus } from "@/lib/schemas"
 import type { InferSelectModel } from "drizzle-orm"
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** 経費申請（申請者・カテゴリ・金額・ステータス）。 */
 export const expenses = sqliteTable("expenses", {
@@ -27,3 +27,22 @@ export const expenseApprovals = sqliteTable("expense_approvals", {
 })
 
 export type ExpenseApprovalRow = InferSelectModel<typeof expenseApprovals>
+
+/**
+ * 経費と添付の対応。どの経費がどの添付を持つかは経費contextが所有し、
+ * 添付本体と復号鍵は System が持つ（System は経費を知らない）。
+ */
+export const expenseAttachments = sqliteTable(
+  "expense_attachments",
+  {
+    expenseId: integer("expense_id").notNull(),
+    attachmentId: text("attachment_id").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.expenseId, table.attachmentId] }),
+    index("idx_expense_attachments_expense").on(table.expenseId),
+  ],
+)
+
+export type ExpenseAttachmentRow = InferSelectModel<typeof expenseAttachments>

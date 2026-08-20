@@ -74,7 +74,7 @@ commands:
   leave-requests approve <id>                 休暇申請を承認
   leave-requests reject <id>                  休暇申請を却下
   leave-balances list                         休暇残数
-  expenses submit                             経費申請 (--category --amount --spent-at [--note])
+  expenses submit                             経費申請 (--category --amount --spent-at [--note --file])
   expenses mine                               自分の経費申請一覧
   expenses update <id>                        経費申請を変更
   expenses delete <id>                        経費申請を取り下げ

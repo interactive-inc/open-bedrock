@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod"
 import { apiRequest } from "@/lib/api-client.ts"
+import { uploadAttachment } from "@/lib/upload-attachment.ts"
 
 const server = new McpServer({
   name: "bedrock",
@@ -464,6 +465,71 @@ server.tool(
     return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
   },
 )
+
+// ---------------------------------------------------------------------------
+// Expenses and attachments
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "attachments_upload",
+  "Upload a local file (receipt, certificate) and get an attachment_id to submit with a record. The file is read from the machine running this MCP server.",
+  {
+    file_path: z
+      .string()
+      .describe("Absolute path to a local file (.pdf, .jpg, .jpeg, .png, .heic)"),
+  },
+  async (args) => {
+    const attachmentId = await uploadAttachment(args.file_path)
+
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify({ attachment_id: attachmentId }) }],
+    }
+  },
+)
+
+server.tool(
+  "expenses_submit",
+  "Submit an expense claim, optionally attaching local receipt files.",
+  {
+    category: z.enum(["transport", "supplies", "entertainment", "books", "other"]),
+    amount: z.number().int().positive().describe("Amount in JPY"),
+    spent_at: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .describe("Date of spending (YYYY-MM-DD)"),
+    note: z.string().optional().describe("Optional note"),
+    file_paths: z
+      .array(z.string())
+      .optional()
+      .describe("Local receipt files to attach. Read from this machine and uploaded first."),
+  },
+  async (args) => {
+    const attachmentIds: string[] = []
+
+    for (const path of args.file_paths ?? []) {
+      attachmentIds.push(await uploadAttachment(path))
+    }
+
+    const data = await apiRequest("/expenses", {
+      method: "POST",
+      json: {
+        category: args.category,
+        amount: args.amount,
+        spent_at: args.spent_at,
+        note: args.note,
+        attachment_ids: attachmentIds.length === 0 ? undefined : attachmentIds,
+      },
+    })
+
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
+  },
+)
+
+server.tool("expenses_mine", "List my own expense claims.", {}, async () => {
+  const data = await apiRequest("/expenses/me")
+
+  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
+})
 
 // ---------------------------------------------------------------------------
 // Start
