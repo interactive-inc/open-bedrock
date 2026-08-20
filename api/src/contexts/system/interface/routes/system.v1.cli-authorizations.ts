@@ -1,4 +1,4 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { SystemCliLoginUnavailableError } from "@system/interface/errors"
 /** /system/v1/cli-authorizations */
 import { isSecureSystemIdentityIssuer } from "@system/domain/identity/is-secure-system-identity-issuer"
 import { systemCliIdentityRedirectUri } from "@system/domain/identity/system-cli-identity-redirect-uri"
@@ -26,19 +26,11 @@ export const GET = systemFactory.createHandlers(
       apiOrigin === undefined ||
       apiOrigin.length === 0
     ) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCliLoginUnavailableError()
     }
 
     if (!URL.canParse(identityLoginUrl)) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCliLoginUnavailableError()
     }
     const brokerUrl = new URL(identityLoginUrl)
     const redirectUri = systemCliIdentityRedirectUri(apiOrigin)
@@ -49,20 +41,12 @@ export const GET = systemFactory.createHandlers(
       brokerUrl.hash !== "" ||
       redirectUri instanceof Error
     ) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCliLoginUnavailableError()
     }
 
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCliLoginUnavailableError()
     }
     const pkce = await createSystemPkce()
     const brokerState = crypto.randomUUID()
@@ -76,11 +60,7 @@ export const GET = systemFactory.createHandlers(
       expiresAt: new Date(now.getTime() + 600_000),
     })
     if (created instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCliLoginUnavailableError()
     }
 
     brokerUrl.searchParams.set("callback", redirectUri)

@@ -1,4 +1,9 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import {
+  SystemAuthenticationRateLimitedError,
+  SystemInvalidCredentialsError,
+  SystemInvalidSessionError,
+  SystemSessionUnavailableError,
+} from "@system/interface/errors"
 /** /system/v1/sessions */
 import { AuthenticateSystemPassword } from "@system/application/auth/authenticate-system-password"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
@@ -32,31 +37,19 @@ export const GET = factory.createHandlers(
   async (context) => {
     const database = context.env?.DB
     if (database === undefined) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const authorization = context.req.valid("header").authorization
     const token = authorization?.match(/^Bearer[ \t]+([0-9a-f]{64})$/iu)?.[1]
     if (token === undefined) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      throw new SystemInvalidSessionError()
     }
 
     const now = new Date(context.env.NOW ?? Date.now())
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
     if (!Number.isSafeInteger(now.getTime()) || !Number.isSafeInteger(sessionTtlMilliseconds)) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const applications = createSystemSessionApplications({
@@ -65,27 +58,15 @@ export const GET = factory.createHandlers(
       sessionTtlMilliseconds,
     })
     if (applications instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const authentication = await applications.authenticate.execute({ rawToken: token, now })
     if (authentication instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
     if (authentication.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      throw new SystemInvalidSessionError()
     }
 
     return context.json(
@@ -120,21 +101,13 @@ export const POST = factory.createHandlers(
     const database = context.env?.DB
     const pepper = context.env?.PEPPER_SECRET
     if (database === undefined || pepper === undefined || pepper.length === 0) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const now = new Date(context.env.NOW ?? Date.now())
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
     if (!Number.isSafeInteger(now.getTime()) || !Number.isSafeInteger(sessionTtlMilliseconds)) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const body = context.req.valid("json")
@@ -150,11 +123,7 @@ export const POST = factory.createHandlers(
       now: now.getTime(),
     })
     if (gate.limited) {
-      throw new SystemHttpError({
-        status: 429,
-        code: "authentication_rate_limited",
-        detail: "too many requests",
-      })
+      throw new SystemAuthenticationRateLimitedError()
     }
 
     const authentication = await new AuthenticateSystemPassword({
@@ -166,18 +135,10 @@ export const POST = factory.createHandlers(
       },
     }).execute({ subject: body.subject, password: body.password, now })
     if (authentication instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
     if (authentication.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_credentials",
-        detail: "invalid credentials",
-      })
+      throw new SystemInvalidCredentialsError()
     }
 
     await rateLimit.resetForIdentifier({ identifier: body.subject })
@@ -186,11 +147,7 @@ export const POST = factory.createHandlers(
       transport: "system.v1.sessions.password",
     })
     if (metadataJson instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
     const applications = createSystemSessionApplications({
       context: { env: { DB: database } },
@@ -198,11 +155,7 @@ export const POST = factory.createHandlers(
       sessionTtlMilliseconds,
     })
     if (applications instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
     const issuance = await applications.issue.execute({
       accountId: authentication.accountId,
@@ -211,18 +164,10 @@ export const POST = factory.createHandlers(
       auditContext: { authorizationJson: null, metadataJson },
     })
     if (issuance instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
     if (issuance.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_credentials",
-        detail: "invalid credentials",
-      })
+      throw new SystemInvalidCredentialsError()
     }
 
     return context.json(
@@ -252,21 +197,13 @@ export const PATCH = factory.createHandlers(
   async (context) => {
     const database = context.env?.DB
     if (database === undefined) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const now = new Date(context.env.NOW ?? Date.now())
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
     if (!Number.isSafeInteger(now.getTime()) || !Number.isSafeInteger(sessionTtlMilliseconds)) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const applications = createSystemSessionApplications({
@@ -275,11 +212,7 @@ export const PATCH = factory.createHandlers(
       sessionTtlMilliseconds,
     })
     if (applications instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const rotation = await applications.rotate.execute({
@@ -288,18 +221,10 @@ export const PATCH = factory.createHandlers(
       auditContext: { authorizationJson: null, metadataJson: null },
     })
     if (rotation instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
     if (rotation.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      throw new SystemInvalidSessionError()
     }
 
     return context.json(
@@ -329,21 +254,13 @@ export const DELETE = factory.createHandlers(
   async (context) => {
     const database = context.env?.DB
     if (database === undefined) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const now = new Date(context.env.NOW ?? Date.now())
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
     if (!Number.isSafeInteger(now.getTime()) || !Number.isSafeInteger(sessionTtlMilliseconds)) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const applications = createSystemSessionApplications({
@@ -352,11 +269,7 @@ export const DELETE = factory.createHandlers(
       sessionTtlMilliseconds,
     })
     if (applications instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const revocation = await applications.revoke.execute({
@@ -365,11 +278,7 @@ export const DELETE = factory.createHandlers(
       auditContext: { authorizationJson: null, metadataJson: null },
     })
     if (revocation instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     return context.body(null, 204)

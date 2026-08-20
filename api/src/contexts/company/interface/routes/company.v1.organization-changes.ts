@@ -4,7 +4,19 @@ import type { CompanyJsonObject } from "@/contexts/company/domain/core/company-r
 import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { readCompanyResourcesFromD1 } from "@/contexts/company/infrastructure/core/read-company-resources-from-d1"
 import { writeCompanyResourcesToD1 } from "@/contexts/company/infrastructure/core/write-company-resources-to-d1"
-import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
+import {
+  CompanyAccessDeniedError,
+  CompanyAuthenticationRequiredError,
+  CompanyCommandConflictError,
+  CompanyDatabaseUnavailableError,
+  CompanyHttpError,
+  CompanyInvalidBodyError,
+  CompanyInvalidHeadersError,
+  CompanyInvalidResourceError,
+  CompanyResourceConflictError,
+  CompanyRevisionConflictError,
+  CompanyWriteUnavailableError,
+} from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/http/company-http-environment"
 import { zValidator } from "@hono/zod-validator"
 import { createFactory } from "hono/factory"
@@ -23,12 +35,7 @@ export const POST = factory.createHandlers(
     }),
     (validation) => {
       if (!validation.success) {
-        throw new CompanyHttpError({
-          status: 400,
-          code: "invalid_company_headers",
-          detail: "Company request headers are invalid",
-          cause: validation.error,
-        })
+        throw new CompanyInvalidHeadersError({ cause: validation.error })
       }
     },
   ),
@@ -119,43 +126,26 @@ export const POST = factory.createHandlers(
     }),
     (validation) => {
       if (!validation.success) {
-        throw new CompanyHttpError({
-          status: 400,
-          code: "invalid_company_body",
-          detail: "Company request body is invalid",
-          cause: validation.error,
-        })
+        throw new CompanyInvalidBodyError({ cause: validation.error })
       }
     },
   ),
   async (context) => {
     const actor = context.var.companyActor
     if (actor === undefined) {
-      throw new CompanyHttpError({
-        status: 401,
-        code: "authentication_required",
-        detail: "Authentication is required",
-      })
+      throw new CompanyAuthenticationRequiredError()
     }
 
     const database = context.env.DB
     if (database === undefined) {
-      throw new CompanyHttpError({
-        status: 503,
-        code: "company_database_unavailable",
-        detail: "Company storage is unavailable",
-      })
+      throw new CompanyDatabaseUnavailableError()
     }
 
     const headers = context.req.valid("header")
     const body = context.req.valid("json")
     const organizationId = headers["x-company-organization-id"]
     if (body.resources.some((resource) => resource.organizationId !== organizationId)) {
-      throw new CompanyHttpError({
-        status: 422,
-        code: "invalid_company_resource",
-        detail: "A Company resource is outside the requested organization",
-      })
+      throw new CompanyInvalidResourceError()
     }
 
     const change = {
@@ -179,11 +169,7 @@ export const POST = factory.createHandlers(
     )
 
     if (result.kind === "forbidden") {
-      throw new CompanyHttpError({
-        status: 403,
-        code: "company_access_denied",
-        detail: "Company scope or capability is missing",
-      })
+      throw new CompanyAccessDeniedError()
     }
     if (result.kind === "invalid") {
       throw new CompanyHttpError({
@@ -194,34 +180,16 @@ export const POST = factory.createHandlers(
       })
     }
     if (result.kind === "conflict") {
-      throw new CompanyHttpError({
-        status: 409,
-        code: "company_revision_conflict",
-        detail: "Company revision has changed",
-        etag: `"${result.actualRevision}"`,
-      })
+      throw new CompanyRevisionConflictError({ etag: `"${result.actualRevision}"` })
     }
     if (result.kind === "resource_conflict") {
-      throw new CompanyHttpError({
-        status: 409,
-        code: "company_resource_conflict",
-        detail: "Resource revision has changed",
-      })
+      throw new CompanyResourceConflictError()
     }
     if (result.kind === "command_conflict") {
-      throw new CompanyHttpError({
-        status: 409,
-        code: "company_command_conflict",
-        detail: "Idempotency key was reused",
-      })
+      throw new CompanyCommandConflictError()
     }
     if (result.kind === "unavailable") {
-      throw new CompanyHttpError({
-        status: 503,
-        code: "company_write_unavailable",
-        detail: "Company change was not applied",
-        cause: result.cause,
-      })
+      throw new CompanyWriteUnavailableError({ cause: result.cause })
     }
 
     context.header("etag", `"${result.organizationRevision}"`)

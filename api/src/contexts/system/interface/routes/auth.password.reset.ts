@@ -5,7 +5,7 @@ import { EmailValue } from "@/contexts/system/domain/auth/email.value"
 import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
 import { findSystemPasswordResetRecipient } from "@system/infrastructure/auth/find-system-password-reset-recipient"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { SystemHttpError, SystemInternalServerError } from "@system/interface/errors"
 import { zAppAuthAcknowledgement } from "@/contexts/system/interface/models/auth"
 import { ApplicationError } from "@/lib/errors/application-error"
 import { zValidator } from "@hono/zod-validator"
@@ -52,12 +52,7 @@ export const POST = systemFactory.createHandlers(
         })
       }
 
-      throw new SystemHttpError({
-        status: 500,
-        code: "internal_server_error",
-        detail: "処理に失敗しました。",
-        cause: requestOutcome,
-      })
+      throw new SystemInternalServerError({ cause: requestOutcome })
     }
 
     return c.json(zAppAuthAcknowledgement.parse({ item: requestOutcome }))
@@ -91,12 +86,7 @@ export const PATCH = systemFactory.createHandlers(
         })
       }
 
-      throw new SystemHttpError({
-        status: 500,
-        code: "internal_server_error",
-        detail: "処理に失敗しました。",
-        cause: completionOutcome,
-      })
+      throw new SystemInternalServerError({ cause: completionOutcome })
     }
 
     return c.json(zAppAuthAcknowledgement.parse({ item: completionOutcome }))

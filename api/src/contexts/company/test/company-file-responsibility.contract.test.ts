@@ -120,7 +120,6 @@ describe("Company file responsibility contract", () => {
 
   test("routeの失敗はHTTPException派生errorをthrowしResponseを直接生成しない", () => {
     const allowedThrownErrors = new Set([
-      "CompanyHttpError",
       "UnauthorizedError",
       "ForbiddenError",
       "NotFoundError",
@@ -129,6 +128,28 @@ describe("Company file responsibility contract", () => {
       "UnprocessableEntityError",
       "InternalError",
     ])
+    const errorsSourceFile = ts.createSourceFile(
+      "interface/errors.ts",
+      readFileSync(new URL("interface/errors.ts", contextDirectory), "utf8"),
+      ts.ScriptTarget.Latest,
+      true,
+    )
+    errorsSourceFile.forEachChild((node) => {
+      if (!ts.isClassDeclaration(node) || node.name === undefined) return
+
+      const extendsClause = node.heritageClauses?.find(
+        (clause) => clause.token === ts.SyntaxKind.ExtendsKeyword,
+      )
+      const parentExpression = extendsClause?.types[0]?.expression
+      if (parentExpression === undefined || !ts.isIdentifier(parentExpression)) return
+
+      if (
+        parentExpression.text === "HTTPException" ||
+        allowedThrownErrors.has(parentExpression.text)
+      ) {
+        allowedThrownErrors.add(node.name.text)
+      }
+    })
     const violations: string[] = []
 
     for (const file of productionFiles.filter((path) => path.startsWith("interface/routes/"))) {

@@ -1,5 +1,5 @@
 import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
+import { CompanyBatchReadFailedError } from "@/contexts/company/interface/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -51,12 +51,7 @@ export const GET = factory.createHandlers(
 
     const result = await readSystemBatchJobs({ env: { DB: c.env.DB } }, { limit, offset })
     if (result instanceof Error) {
-      throw new CompanyHttpError({
-        status: 500,
-        code: "batch_read_failed",
-        detail: "バッチ実行状況を取得できませんでした。",
-        cause: result,
-      })
+      throw new CompanyBatchReadFailedError({ cause: result })
     }
 
     const responseBody = result.jobs.map((row) => ({

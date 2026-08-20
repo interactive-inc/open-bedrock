@@ -1,6 +1,6 @@
 import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { SystemHttpError } from "@system/interface/errors"
 import {
   DELETE,
   GET,

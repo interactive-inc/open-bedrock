@@ -23,8 +23,30 @@ function lineOf(sourceFile: ts.SourceFile, node: ts.Node): number {
   return sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1
 }
 
+function collectErrorClassNames(): ReadonlySet<string> {
+  const sourceFile = readRoute("interface/errors.ts")
+  const names = new Set<string>()
+
+  sourceFile.forEachChild((node) => {
+    if (!ts.isClassDeclaration(node) || node.name === undefined) return
+
+    const extendsClause = node.heritageClauses?.find(
+      (clause) => clause.token === ts.SyntaxKind.ExtendsKeyword,
+    )
+    const parentExpression = extendsClause?.types[0]?.expression
+    if (parentExpression === undefined || !ts.isIdentifier(parentExpression)) return
+
+    if (parentExpression.text === "HTTPException" || names.has(parentExpression.text)) {
+      names.add(node.name.text)
+    }
+  })
+
+  return names
+}
+
 describe("System route error boundary", () => {
   test("失敗はHTTPException派生のSystemまたはOIDC errorだけをthrowする", () => {
+    const allowedThrownErrors = collectErrorClassNames()
     const violations: string[] = []
 
     for (const file of routeFiles) {
@@ -39,7 +61,7 @@ describe("System route error boundary", () => {
               ? expression.expression.text
               : null
 
-          if (name !== "SystemHttpError" && name !== "OidcHttpError") {
+          if (!allowedThrownErrors.has(name ?? "")) {
             violations.push(`${file}:${lineOf(sourceFile, node)}`)
           }
         }

@@ -1,3 +1,4 @@
+import { SystemInvalidSessionError, SystemSessionUnavailableError } from "@system/interface/errors"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { authenticateSystemAccessTokenRequest } from "@system/interface/runtime/authenticate-system-access-token-request"
 
@@ -6,10 +7,7 @@ export const authenticateSystemAccessToken = systemFactory.createMiddleware(
   async (context, next) => {
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      return context.json(
-        { error: "session service unavailable", code: "session_unavailable" },
-        503,
-      )
+      throw new SystemSessionUnavailableError()
     }
 
     const authentication = await authenticateSystemAccessTokenRequest({
@@ -19,13 +17,10 @@ export const authenticateSystemAccessToken = systemFactory.createMiddleware(
       now,
     })
     if (authentication.kind === "unavailable") {
-      return context.json(
-        { error: "session service unavailable", code: "session_unavailable" },
-        503,
-      )
+      throw new SystemSessionUnavailableError()
     }
     if (authentication.kind === "rejected") {
-      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+      throw new SystemInvalidSessionError()
     }
 
     context.set("userId", authentication.accountId)

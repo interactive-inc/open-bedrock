@@ -4,7 +4,11 @@ import {
 } from "@/contexts/system/application/auth/errors"
 import { ExchangeOidcAuthorizationCode } from "@/contexts/system/application/auth/exchange-oidc-authorization-code"
 import { OidcValue } from "@/contexts/system/domain/identity/oidc.value"
-import { OidcHttpError } from "@/contexts/system/interface/http/errors/oidc-http-error"
+import {
+  OidcInvalidGrantError,
+  OidcInvalidRequestError,
+  OidcTemporarilyUnavailableError,
+} from "@system/interface/errors"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -24,10 +28,7 @@ export const POST = systemFactory.createHandlers(
       .strict(),
     (result) => {
       if (!result.success) {
-        throw new OidcHttpError({
-          code: "invalid_request",
-          cause: result.error,
-        })
+        throw new OidcInvalidRequestError({ cause: result.error })
       }
     },
   ),
@@ -42,7 +43,7 @@ export const POST = systemFactory.createHandlers(
     )
 
     if (issuer instanceof Error) {
-      throw new OidcHttpError({ code: "invalid_grant", cause: issuer })
+      throw new OidcInvalidGrantError({ cause: issuer })
     }
 
     const service = new ExchangeOidcAuthorizationCode(c)
@@ -56,15 +57,11 @@ export const POST = systemFactory.createHandlers(
     })
 
     if (result instanceof OidcInvalidGrantApplicationError) {
-      throw new OidcHttpError({ code: "invalid_grant", cause: result })
+      throw new OidcInvalidGrantError({ cause: result })
     }
 
     if (result instanceof OidcTemporarilyUnavailableApplicationError) {
-      throw new OidcHttpError({
-        code: "temporarily_unavailable",
-        status: 503,
-        cause: result,
-      })
+      throw new OidcTemporarilyUnavailableError({ cause: result })
     }
 
     return c.json(result, 200, {

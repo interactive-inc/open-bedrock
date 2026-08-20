@@ -1,4 +1,4 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { SystemCliLoginUnavailableError, SystemInvalidCliCodeError } from "@system/interface/errors"
 /** /system/v1/cli-sessions */
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { validateSystemAccessTokenSecret } from "@system/domain/auth/validate-system-access-token-secret"
@@ -26,54 +26,30 @@ export const POST = systemFactory.createHandlers(
       metadataJson instanceof Error ||
       validateSystemAccessTokenSecret(context.env.JWT_SECRET ?? "") !== null
     ) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCliLoginUnavailableError()
     }
 
     const codeHash = await systemLoginCodeHash(context.req.valid("json").code)
     if (codeHash instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCliLoginUnavailableError()
     }
 
     const consumed = await consumeSystemCliLoginCode(context, codeHash, now)
     if (consumed instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCliLoginUnavailableError()
     }
     if (consumed === null) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_cli_code",
-        detail: "invalid CLI code",
-      })
+      throw new SystemInvalidCliCodeError()
     }
 
     const account = await new SystemAccountRepository({ database: context.env.DB }).findById(
       consumed.accountId,
     )
     if (account instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCliLoginUnavailableError()
     }
     if (account === null || account.status !== "active") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_cli_code",
-        detail: "invalid CLI code",
-      })
+      throw new SystemInvalidCliCodeError()
     }
     const issued = await applications.issue.execute({
       accountId: account.id,
@@ -82,18 +58,10 @@ export const POST = systemFactory.createHandlers(
       auditContext: { authorizationJson: null, metadataJson },
     })
     if (issued instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCliLoginUnavailableError()
     }
     if (issued.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_cli_code",
-        detail: "invalid CLI code",
-      })
+      throw new SystemInvalidCliCodeError()
     }
 
     return context.json(

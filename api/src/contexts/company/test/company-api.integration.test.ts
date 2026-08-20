@@ -6,7 +6,7 @@ import {
   GET as GET_ORGANIZATION_PROFILE,
   PUT as PUT_ORGANIZATION_PROFILE,
 } from "@/contexts/company/interface/routes/company.organization-profile"
-import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
+import { CompanyHttpError } from "@/contexts/company/interface/errors"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { Hono } from "hono"
 import { hc } from "hono/client"

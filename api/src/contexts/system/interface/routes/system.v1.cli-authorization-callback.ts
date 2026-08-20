@@ -1,4 +1,7 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import {
+  SystemCliLoginUnavailableError,
+  SystemInvalidCliAuthorizationError,
+} from "@system/interface/errors"
 /** /system/v1/cli-authorization-callback */
 import { systemCliIdentityRedirectUri } from "@system/domain/identity/system-cli-identity-redirect-uri"
 import { SystemCliLoginAuditRecorder } from "@system/infrastructure/audit/system-cli-login-audit-recorder"
@@ -28,27 +31,15 @@ export const GET = systemFactory.createHandlers(
     const now = context.var.now()
     const query = context.req.valid("query")
     if (query.state === undefined) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_cli_authorization",
-        detail: "invalid CLI authorization",
-      })
+      throw new SystemInvalidCliAuthorizationError()
     }
 
     const consumed = await consumeSystemCliLoginState(context, query.state, now)
     if (consumed instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCliLoginUnavailableError()
     }
     if (consumed === null) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_cli_authorization",
-        detail: "invalid CLI authorization",
-      })
+      throw new SystemInvalidCliAuthorizationError()
     }
 
     const loopbackUrl = new URL(`http://127.0.0.1:${consumed.port}/callback`)

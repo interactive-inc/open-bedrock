@@ -1,7 +1,13 @@
 /** /company/v1/bootstrap */
 import { ProvisionCompanyBootstrapEmployee } from "@/contexts/company/application/employee/provision-company-bootstrap-employee"
 import { CompanyBootstrapEmployeeRepositoryD1 } from "@/contexts/company/infrastructure/employee/company-bootstrap-employee-repository"
-import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
+import {
+  CompanyAlreadyInitializedError,
+  CompanyBootstrapConflictError,
+  CompanyBootstrapUnavailableError,
+  CompanyForbiddenError,
+  CompanyInvalidBootstrapInputError,
+} from "@/contexts/company/interface/errors"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
@@ -26,32 +32,18 @@ export const POST = systemFactory.createHandlers(
       .strict(),
     (validation) => {
       if (!validation.success) {
-        throw new CompanyHttpError({
-          status: 400,
-          code: "invalid_company_bootstrap_input",
-          detail: "Company bootstrap request body is invalid",
-          cause: validation.error,
-        })
+        throw new CompanyInvalidBootstrapInputError({ cause: validation.error })
       }
     },
   ),
   async (context) => {
     if (!context.var.permissions.has("system:admin")) {
-      throw new CompanyHttpError({
-        status: 403,
-        code: "forbidden",
-        detail: "System administrator permission is required",
-      })
+      throw new CompanyForbiddenError()
     }
 
     const accountId = zAccountId.safeParse(context.var.userId)
     if (!accountId.success) {
-      throw new CompanyHttpError({
-        status: 503,
-        code: "company_bootstrap_unavailable",
-        detail: "Company bootstrap service is unavailable",
-        cause: accountId.error,
-      })
+      throw new CompanyBootstrapUnavailableError({ cause: accountId.error })
     }
     const body = context.req.valid("json")
 
@@ -64,33 +56,16 @@ export const POST = systemFactory.createHandlers(
       now: context.var.now(),
     })
     if (result instanceof Error) {
-      throw new CompanyHttpError({
-        status: 503,
-        code: "company_bootstrap_unavailable",
-        detail: "Company bootstrap service is unavailable",
-        cause: result,
-      })
+      throw new CompanyBootstrapUnavailableError({ cause: result })
     }
     if (result.kind === "invalid_input") {
-      throw new CompanyHttpError({
-        status: 400,
-        code: "invalid_company_bootstrap_input",
-        detail: "Company bootstrap request body is invalid",
-      })
+      throw new CompanyInvalidBootstrapInputError()
     }
     if (result.state === "company_exists_without_account_link") {
-      throw new CompanyHttpError({
-        status: 409,
-        code: "company_bootstrap_conflict",
-        detail: "Company is already initialized without this account link",
-      })
+      throw new CompanyBootstrapConflictError()
     }
     if (result.kind === "already_initialized") {
-      throw new CompanyHttpError({
-        status: 409,
-        code: "already_initialized",
-        detail: "Company is already initialized",
-      })
+      throw new CompanyAlreadyInitializedError()
     }
 
     return context.json(

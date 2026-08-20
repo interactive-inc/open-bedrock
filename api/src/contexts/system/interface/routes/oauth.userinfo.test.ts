@@ -3,7 +3,7 @@ import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-se
 import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { systemFactory } from "@system/interface/http/system-factory"
-import { OidcHttpError } from "@system/interface/http/errors/oidc-http-error"
+import { OidcHttpError } from "@system/interface/errors"
 import { GET } from "@system/interface/routes/oauth.userinfo"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"

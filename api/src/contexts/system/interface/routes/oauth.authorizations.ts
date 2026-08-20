@@ -5,7 +5,11 @@ import {
   OidcTemporarilyUnavailableApplicationError,
 } from "@/contexts/system/application/auth/errors"
 import { OidcValue } from "@/contexts/system/domain/identity/oidc.value"
-import { OidcHttpError } from "@/contexts/system/interface/http/errors/oidc-http-error"
+import {
+  OidcInvalidRequestError,
+  OidcInvalidScopeError,
+  OidcTemporarilyUnavailableError,
+} from "@system/interface/errors"
 import { requireSystemAuthentication } from "@system/interface/http/require-system-authentication"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
@@ -36,10 +40,7 @@ export const POST = systemFactory.createHandlers(
     }),
     (result) => {
       if (!result.success) {
-        throw new OidcHttpError({
-          code: "invalid_request",
-          cause: result.error,
-        })
+        throw new OidcInvalidRequestError({ cause: result.error })
       }
     },
   ),
@@ -54,7 +55,7 @@ export const POST = systemFactory.createHandlers(
     )
 
     if (issuer instanceof Error) {
-      throw new OidcHttpError({ code: "invalid_request", cause: issuer })
+      throw new OidcInvalidRequestError({ cause: issuer })
     }
 
     const service = new CreateOidcAuthorization(c)
@@ -66,19 +67,15 @@ export const POST = systemFactory.createHandlers(
     })
 
     if (result instanceof OidcInvalidRequestApplicationError) {
-      throw new OidcHttpError({ code: "invalid_request", cause: result })
+      throw new OidcInvalidRequestError({ cause: result })
     }
 
     if (result instanceof OidcInvalidScopeApplicationError) {
-      throw new OidcHttpError({ code: "invalid_scope", cause: result })
+      throw new OidcInvalidScopeError({ cause: result })
     }
 
     if (result instanceof OidcTemporarilyUnavailableApplicationError) {
-      throw new OidcHttpError({
-        code: "temporarily_unavailable",
-        status: 503,
-        cause: result,
-      })
+      throw new OidcTemporarilyUnavailableError({ cause: result })
     }
 
     return c.json(zAppOidcAuthorizationResponse.parse(result), 200, {

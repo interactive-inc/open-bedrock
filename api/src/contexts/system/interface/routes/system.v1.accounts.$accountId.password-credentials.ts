@@ -1,4 +1,10 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import {
+  SystemForbiddenError,
+  SystemInvalidPasswordError,
+  SystemInvalidSessionError,
+  SystemPasswordCredentialNotFoundError,
+  SystemPasswordUnavailableError,
+} from "@system/interface/errors"
 /** /system/v1/accounts/:accountId/password-credentials */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { validateSystemPassword } from "@system/domain/auth/system-password-policy"
@@ -18,61 +24,33 @@ export const PATCH = systemFactory.createHandlers(
   zValidator("json", z.object({ password: z.string().min(12).max(200) }).strict()),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-      throw new SystemHttpError({
-        status: 403,
-        code: "forbidden",
-        detail: "forbidden",
-      })
+      throw new SystemForbiddenError()
     }
     const actorAccountId = zAccountId.safeParse(context.var.userId)
     const targetAccountId = zAccountId.safeParse(context.req.param("accountId"))
     if (!actorAccountId.success) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      throw new SystemInvalidSessionError()
     }
     if (!targetAccountId.success) {
-      throw new SystemHttpError({
-        status: 404,
-        code: "password_credential_not_found",
-        detail: "password credential not found",
-      })
+      throw new SystemPasswordCredentialNotFoundError()
     }
     const body = context.req.valid("json")
     if (validateSystemPassword(body.password) !== null) {
-      throw new SystemHttpError({
-        status: 400,
-        code: "invalid_password",
-        detail: "invalid password",
-      })
+      throw new SystemInvalidPasswordError()
     }
     const pepper = context.env.PEPPER_SECRET
     if (pepper === undefined || pepper.length === 0) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "password_unavailable",
-        detail: "password service unavailable",
-      })
+      throw new SystemPasswordUnavailableError()
     }
     const repository = new SystemPasswordAdministrationRepository({
       env: { DB: context.env.DB },
     })
     const identityId = await repository.findIdentityId(targetAccountId.data)
     if (identityId instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "password_unavailable",
-        detail: "password service unavailable",
-      })
+      throw new SystemPasswordUnavailableError()
     }
     if (identityId === null) {
-      throw new SystemHttpError({
-        status: 404,
-        code: "password_credential_not_found",
-        detail: "password credential not found",
-      })
+      throw new SystemPasswordCredentialNotFoundError()
     }
     const passwordHash = await PasswordHashService.hash(body.password, pepper).catch(
       (caught: unknown) =>
@@ -82,27 +60,15 @@ export const PATCH = systemFactory.createHandlers(
       console.error(
         JSON.stringify({ event: "system_password_reset_hash_failed", error: passwordHash.name }),
       )
-      throw new SystemHttpError({
-        status: 503,
-        code: "password_unavailable",
-        detail: "password service unavailable",
-      })
+      throw new SystemPasswordUnavailableError()
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "password_unavailable",
-        detail: "password service unavailable",
-      })
+      throw new SystemPasswordUnavailableError()
     }
     const afterJson = toStableSystemAuditJson({ changed_at: now.toISOString() })
     if (afterJson instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "password_unavailable",
-        detail: "password service unavailable",
-      })
+      throw new SystemPasswordUnavailableError()
     }
     const auditEvent = createSystemAuditEvent({
       actorAccountId: actorAccountId.data,
@@ -118,11 +84,7 @@ export const PATCH = systemFactory.createHandlers(
       occurredAt: now,
     })
     if (auditEvent instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "password_unavailable",
-        detail: "password service unavailable",
-      })
+      throw new SystemPasswordUnavailableError()
     }
     const auditStatements = new SystemAuditEventRepository({
       env: { DB: context.env.DB },
@@ -136,25 +98,13 @@ export const PATCH = systemFactory.createHandlers(
       auditStatements,
     })
     if (reset instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "password_unavailable",
-        detail: "password service unavailable",
-      })
+      throw new SystemPasswordUnavailableError()
     }
     if (reset === "forbidden") {
-      throw new SystemHttpError({
-        status: 403,
-        code: "forbidden",
-        detail: "forbidden",
-      })
+      throw new SystemForbiddenError()
     }
     if (reset === "not_found") {
-      throw new SystemHttpError({
-        status: 404,
-        code: "password_credential_not_found",
-        detail: "password credential not found",
-      })
+      throw new SystemPasswordCredentialNotFoundError()
     }
 
     return context.body(null, 204)

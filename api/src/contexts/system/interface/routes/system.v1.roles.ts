@@ -1,4 +1,10 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import {
+  SystemForbiddenError,
+  SystemIamUnavailableError,
+  SystemInvalidRoleError,
+  SystemInvalidSessionError,
+  SystemRoleConflictError,
+} from "@system/interface/errors"
 /** /system/v1/roles */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
@@ -14,21 +20,13 @@ import { z } from "zod"
 // @authorization permission iam:read - namespaced permissionを持つSystem Roleだけを読む
 export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
-    throw new SystemHttpError({
-      status: 403,
-      code: "forbidden",
-      detail: "forbidden",
-    })
+    throw new SystemForbiddenError()
   }
   const roles = await new SystemRoleAdministrationRepository({
     env: { DB: context.env.DB },
   }).list()
   if (roles instanceof Error) {
-    throw new SystemHttpError({
-      status: 503,
-      code: "iam_unavailable",
-      detail: "IAM service unavailable",
-    })
+    throw new SystemIamUnavailableError()
   }
 
   return context.json(
@@ -77,27 +75,15 @@ export const POST = systemFactory.createHandlers(
   ),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-      throw new SystemHttpError({
-        status: 403,
-        code: "forbidden",
-        detail: "forbidden",
-      })
+      throw new SystemForbiddenError()
     }
     const actorAccountId = zAccountId.safeParse(context.var.userId)
     const now = context.var.now()
     if (!actorAccountId.success) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      throw new SystemInvalidSessionError()
     }
     if (!Number.isSafeInteger(now.getTime())) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "iam_unavailable",
-        detail: "IAM service unavailable",
-      })
+      throw new SystemIamUnavailableError()
     }
     const body = context.req.valid("json")
     const role = IamRole.create({
@@ -111,11 +97,7 @@ export const POST = systemFactory.createHandlers(
       updatedAt: now,
     })
     if (role instanceof Error) {
-      throw new SystemHttpError({
-        status: 400,
-        code: "invalid_role",
-        detail: "invalid role",
-      })
+      throw new SystemInvalidRoleError()
     }
     const afterJson = toStableSystemAuditJson({
       description: role.description,
@@ -125,11 +107,7 @@ export const POST = systemFactory.createHandlers(
       permission_keys: role.permissionKeys,
     })
     if (afterJson instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "iam_unavailable",
-        detail: "IAM service unavailable",
-      })
+      throw new SystemIamUnavailableError()
     }
     const auditEvent = createSystemAuditEvent({
       actorAccountId: actorAccountId.data,
@@ -145,11 +123,7 @@ export const POST = systemFactory.createHandlers(
       occurredAt: now,
     })
     if (auditEvent instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "iam_unavailable",
-        detail: "IAM service unavailable",
-      })
+      throw new SystemIamUnavailableError()
     }
     const auditStatements = new SystemAuditEventRepository({
       env: { DB: context.env.DB },
@@ -158,25 +132,13 @@ export const POST = systemFactory.createHandlers(
       env: { DB: context.env.DB },
     }).create(actorAccountId.data, role, auditStatements)
     if (creation instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "iam_unavailable",
-        detail: "IAM service unavailable",
-      })
+      throw new SystemIamUnavailableError()
     }
     if (creation === "forbidden") {
-      throw new SystemHttpError({
-        status: 403,
-        code: "forbidden",
-        detail: "forbidden",
-      })
+      throw new SystemForbiddenError()
     }
     if (creation === "conflict") {
-      throw new SystemHttpError({
-        status: 409,
-        code: "role_conflict",
-        detail: "role conflict",
-      })
+      throw new SystemRoleConflictError()
     }
 
     return context.json(

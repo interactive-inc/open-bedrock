@@ -1,4 +1,4 @@
-import { OidcHttpError } from "@system/interface/http/errors/oidc-http-error"
+import { OidcHttpError } from "@system/interface/errors"
 import { describe, expect, test } from "bun:test"
 import { HTTPException } from "hono/http-exception"
 

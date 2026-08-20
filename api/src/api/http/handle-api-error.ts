@@ -1,10 +1,6 @@
 import { toNegotiatedHttpExceptionResponse } from "@/api/to-negotiated-http-exception-response"
-import {
-  CompanyHttpError,
-  type CompanyHttpErrorStatus,
-} from "@/contexts/company/interface/http/errors/company-http-error"
-import { OidcHttpError } from "@system/interface/http/errors/oidc-http-error"
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { CompanyHttpError, type CompanyHttpErrorStatus } from "@/contexts/company/interface/errors"
+import { OidcHttpError, SystemHttpError } from "@system/interface/errors"
 import { ApplicationError } from "@/lib/errors"
 import type { HonoEnv } from "@/env"
 import type { Context } from "hono"

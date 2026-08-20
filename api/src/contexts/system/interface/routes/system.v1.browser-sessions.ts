@@ -1,4 +1,7 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import {
+  SystemBrowserLoginCodeUnavailableError,
+  SystemInvalidLoginCodeError,
+} from "@system/interface/errors"
 /** /system/v1/browser-sessions */
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { consumeSystemBrowserLoginCode } from "@system/infrastructure/auth/consume-system-browser-login-code"
@@ -15,20 +18,12 @@ export const POST = systemFactory.createHandlers(
   async (context) => {
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "browser_login_code_unavailable",
-        detail: "browser login is unavailable",
-      })
+      throw new SystemBrowserLoginCodeUnavailableError()
     }
 
     const codeHash = await systemLoginCodeHash(context.req.valid("json").code)
     if (codeHash instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "browser_login_code_unavailable",
-        detail: "browser login is unavailable",
-      })
+      throw new SystemBrowserLoginCodeUnavailableError()
     }
     const consumed = await consumeSystemBrowserLoginCode(
       { env: { DB: context.env.DB } },
@@ -36,36 +31,20 @@ export const POST = systemFactory.createHandlers(
       now,
     )
     if (consumed instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "browser_login_code_unavailable",
-        detail: "browser login is unavailable",
-      })
+      throw new SystemBrowserLoginCodeUnavailableError()
     }
     if (consumed === null) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_login_code",
-        detail: "invalid or expired code",
-      })
+      throw new SystemInvalidLoginCodeError()
     }
 
     const account = await new SystemAccountRepository({ database: context.env.DB }).findById(
       consumed.accountId,
     )
     if (account instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "browser_login_code_unavailable",
-        detail: "browser login is unavailable",
-      })
+      throw new SystemBrowserLoginCodeUnavailableError()
     }
     if (account === null || account.status !== "active") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_login_code",
-        detail: "invalid or expired code",
-      })
+      throw new SystemInvalidLoginCodeError()
     }
 
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
@@ -76,11 +55,7 @@ export const POST = systemFactory.createHandlers(
     })
     const metadataJson = toStableSystemAuditJson({ transport: "system.v1.browser-sessions" })
     if (applications instanceof Error || metadataJson instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "browser_login_code_unavailable",
-        detail: "browser login is unavailable",
-      })
+      throw new SystemBrowserLoginCodeUnavailableError()
     }
 
     const issuance = await applications.issue.execute({
@@ -90,18 +65,10 @@ export const POST = systemFactory.createHandlers(
       auditContext: { authorizationJson: null, metadataJson },
     })
     if (issuance instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "browser_login_code_unavailable",
-        detail: "browser login is unavailable",
-      })
+      throw new SystemBrowserLoginCodeUnavailableError()
     }
     if (issuance.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_login_code",
-        detail: "invalid or expired code",
-      })
+      throw new SystemInvalidLoginCodeError()
     }
 
     return context.json(
