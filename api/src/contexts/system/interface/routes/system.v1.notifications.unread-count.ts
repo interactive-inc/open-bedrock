@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/notifications/unread-count */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
@@ -8,16 +9,21 @@ import { systemFactory } from "@system/interface/http/system-factory"
 export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   const accountId = zAccountId.safeParse(context.var.userId)
   if (!accountId.success) {
-    return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+    throw new SystemHttpError({
+      status: 401,
+      code: "invalid_session",
+      detail: "invalid session",
+    })
   }
   const unreadCount = await new SystemNotificationRepository({
     context: { env: { DB: context.env.DB } },
   }).countUnreadForAccount(accountId.data)
   if (unreadCount instanceof Error) {
-    return context.json(
-      { error: "notification service unavailable", code: "notification_unavailable" },
-      503,
-    )
+    throw new SystemHttpError({
+      status: 503,
+      code: "notification_unavailable",
+      detail: "notification service unavailable",
+    })
   }
 
   return context.json({ unread_count: unreadCount }, 200)

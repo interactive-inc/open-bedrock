@@ -3,6 +3,7 @@ import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-se
 import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { systemFactory } from "@system/interface/http/system-factory"
+import { OidcHttpError } from "@system/interface/http/oidc-http-error"
 import { GET } from "@system/interface/routes/oauth.userinfo"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
@@ -48,6 +49,13 @@ describe("GET /oauth/userinfo", () => {
     const database = drizzle(fixture.context.env.DB, { schema: systemCoreSchema })
     const app = systemFactory
       .createApp()
+      .onError((error, context) => {
+        if (!(error instanceof OidcHttpError)) throw error
+        if (error.authenticate !== null) {
+          context.header("WWW-Authenticate", error.authenticate)
+        }
+        return context.body(null, error.status)
+      })
       .use("*", async (context, next) => {
         context.set("database", database)
         context.set("now", () => now)
@@ -99,6 +107,13 @@ describe("GET /oauth/userinfo", () => {
     const database = drizzle(fixture.context.env.DB, { schema: systemCoreSchema })
     const app = systemFactory
       .createApp()
+      .onError((error, context) => {
+        if (!(error instanceof OidcHttpError)) throw error
+        if (error.authenticate !== null) {
+          context.header("WWW-Authenticate", error.authenticate)
+        }
+        return context.body(null, error.status)
+      })
       .use("*", async (context, next) => {
         context.set("database", database)
         context.set("now", () => now)

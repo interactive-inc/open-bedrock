@@ -2,6 +2,10 @@ import { describe, expect, test } from "bun:test"
 import type { CompanyActor } from "@/contexts/company/application/core/company-actor"
 import { POST as POST_ORGANIZATION_CHANGE } from "@/contexts/company/interface/routes/company.v1.organization-changes"
 import { GET, POST } from "@/contexts/company/interface/routes/company.v1.people"
+import {
+  GET as GET_ORGANIZATION_PROFILE,
+  PUT as PUT_ORGANIZATION_PROFILE,
+} from "@/contexts/company/interface/routes/company.organization-profile"
 import { CompanyHttpError } from "@/contexts/company/interface/http/company-http-error"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { Hono } from "hono"
@@ -25,10 +29,10 @@ const actor: CompanyActor = {
   capabilities: ["company:read", "company:write"],
 }
 
-function createClient(database: D1Database) {
+function createClient(database: D1Database, currentActor: CompanyActor = actor) {
   const app = new Hono<TestEnv>()
     .use("*", async (context, next) => {
-      context.set("companyActor", actor)
+      context.set("companyActor", currentActor)
       await next()
     })
     .onError((error, context) => {
@@ -39,12 +43,25 @@ function createClient(database: D1Database) {
     .get("/company/v1/people", ...GET)
     .post("/company/v1/people", ...POST)
     .post("/company/v1/organization-changes", ...POST_ORGANIZATION_CHANGE)
+    .get("/company/organization-profile", ...GET_ORGANIZATION_PROFILE)
+    .put("/company/organization-profile", ...PUT_ORGANIZATION_PROFILE)
 
   const request = (
     input: Parameters<typeof app.request>[0],
     init?: Parameters<typeof app.request>[1],
   ) => app.request(input, init, { DB: database })
   return hc<typeof app>("http://company.test", { fetch: request })
+}
+
+async function seedOrganization(database: D1Database): Promise<void> {
+  await database
+    .prepare(
+      `INSERT INTO company_organizations
+         (id, revision, name, representative_name, created_at, updated_at)
+       VALUES (?, 0, '', '', 0, 0)`,
+    )
+    .bind("organization:default")
+    .run()
 }
 
 const readHeaders = {
@@ -69,6 +86,44 @@ const person = {
 } as const
 
 describe("canonical Company API", () => {
+  test("法人プロフィールを設定するまでは404へ閉じ、設定後は同じorganizationから読める", async () => {
+    const database = createCompanyD1TestDatabase(companySql)
+    await seedOrganization(database)
+    const client = createClient(database)
+
+    const missing = await client.company["organization-profile"].$get()
+    expect(Number(missing.status)).toBe(404)
+    expect(await missing.json()).toMatchObject({ code: "organization_profile_not_configured" })
+
+    const updated = await client.company["organization-profile"].$put({
+      json: { name: "Example Corporation", representativeName: "Alex Example" },
+    })
+    expect(updated.status).toBe(200)
+    expect(await updated.json()).toEqual({
+      name: "Example Corporation",
+      representativeName: "Alex Example",
+    })
+
+    const read = await client.company["organization-profile"].$get()
+    expect(read.status).toBe(200)
+    expect(await read.json()).toEqual({
+      name: "Example Corporation",
+      representativeName: "Alex Example",
+    })
+  })
+
+  test("Company write capabilityなしでは法人プロフィールを更新できない", async () => {
+    const database = createCompanyD1TestDatabase(companySql)
+    await seedOrganization(database)
+    const client = createClient(database, { ...actor, capabilities: ["company:read"] })
+    const response = await client.company["organization-profile"].$put({
+      json: { name: "Example Corporation", representativeName: "Alex Example" },
+    })
+
+    expect(Number(response.status)).toBe(403)
+    expect(await response.json()).toMatchObject({ code: "company_write_forbidden" })
+  })
+
   test("write・replay・readを同じportable D1 contractで実行する", async () => {
     const client = createClient(createCompanyD1TestDatabase(companySql))
     const request = {
@@ -261,6 +316,15 @@ describe("canonical Company API", () => {
         ],
       },
     })
+    void ((input: Parameters<(typeof client.company)["organization-profile"]["$put"]>[0]) => input)(
+      {
+        json: {
+          // @ts-expect-error name must be a string
+          name: 1,
+          representativeName: "Alex Example",
+        },
+      },
+    )
     expect(client.company.v1.people.$url()).toBeInstanceOf(URL)
   })
 })

@@ -162,8 +162,8 @@ export const appBase = factory
   .use("/oauth/authorizations", systemAuthorizationMiddleware)
   .use("/oauth/mcp-grants", verifyBearer)
   .use("/oauth/mcp-grants", systemAuthorizationMiddleware)
-  .use("/company/v1/*", verifyBearer)
-  .use("/company/v1/*", companyActorMiddleware)
+  .use("/company/*", verifyBearer)
+  .use("/company/*", companyActorMiddleware)
   .onError(handleApiError)
 
 /** 生成routeを型計算可能な単位へ分割して合成するための空のHono appを作る。 */

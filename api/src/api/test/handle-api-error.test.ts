@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { handleApiError } from "@/api/http/handle-api-error"
 import { companyValidationErrorMiddleware } from "@/api/http/company-validation-error-middleware"
 import { CompanyHttpError } from "@/contexts/company/interface/http/company-http-error"
+import { OidcHttpError } from "@system/interface/http/oidc-http-error"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { ValidationError } from "@/lib/errors"
 import type { HonoEnv } from "@/env"
@@ -26,6 +27,13 @@ const app = new Hono<HonoEnv>()
       code: "company_read_unavailable",
       detail: "Company data could not be read",
       cause: new Error("secret database detail"),
+    })
+  })
+  .get("/oidc-invalid-token", () => {
+    throw new OidcHttpError({
+      code: "invalid_token",
+      status: 401,
+      authenticate: 'Bearer error="invalid_token"',
     })
   })
   .get("/application-error", () => {
@@ -61,6 +69,16 @@ test("Company の 503 は原因を Problem Details へ漏らさない", async ()
     code: "company_read_unavailable",
     detail: "Company data could not be read",
   })
+})
+
+test("OIDC エラーJSONと認証headerは onError だけが生成する", async () => {
+  const response = await app.request("/oidc-invalid-token")
+
+  expect(response.status).toBe(401)
+  expect(response.headers.get("cache-control")).toBe("no-store")
+  expect(response.headers.get("pragma")).toBe("no-cache")
+  expect(response.headers.get("www-authenticate")).toBe('Bearer error="invalid_token"')
+  expect(await response.json()).toEqual({ error: "invalid_token" })
 })
 
 test("application error の JSON も onError だけが生成する", async () => {

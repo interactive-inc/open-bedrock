@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/cli-authorizations */
 import { isSecureSystemIdentityIssuer } from "@system/domain/identity/is-secure-system-identity-issuer"
 import { systemCliIdentityRedirectUri } from "@system/domain/identity/system-cli-identity-redirect-uri"
@@ -25,11 +26,19 @@ export const GET = systemFactory.createHandlers(
       apiOrigin === undefined ||
       apiOrigin.length === 0
     ) {
-      return context.json({ error: "CLI login is unavailable", code: "cli_login_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "cli_login_unavailable",
+        detail: "CLI login is unavailable",
+      })
     }
 
     if (!URL.canParse(identityLoginUrl)) {
-      return context.json({ error: "CLI login is unavailable", code: "cli_login_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "cli_login_unavailable",
+        detail: "CLI login is unavailable",
+      })
     }
     const brokerUrl = new URL(identityLoginUrl)
     const redirectUri = systemCliIdentityRedirectUri(apiOrigin)
@@ -40,12 +49,20 @@ export const GET = systemFactory.createHandlers(
       brokerUrl.hash !== "" ||
       redirectUri instanceof Error
     ) {
-      return context.json({ error: "CLI login is unavailable", code: "cli_login_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "cli_login_unavailable",
+        detail: "CLI login is unavailable",
+      })
     }
 
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      return context.json({ error: "CLI login is unavailable", code: "cli_login_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "cli_login_unavailable",
+        detail: "CLI login is unavailable",
+      })
     }
     const pkce = await createSystemPkce()
     const brokerState = crypto.randomUUID()
@@ -59,7 +76,11 @@ export const GET = systemFactory.createHandlers(
       expiresAt: new Date(now.getTime() + 600_000),
     })
     if (created instanceof Error) {
-      return context.json({ error: "CLI login is unavailable", code: "cli_login_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "cli_login_unavailable",
+        detail: "CLI login is unavailable",
+      })
     }
 
     brokerUrl.searchParams.set("callback", redirectUri)

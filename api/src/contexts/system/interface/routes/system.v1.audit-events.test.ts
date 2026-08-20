@@ -135,7 +135,7 @@ describe("System Audit HTTP", () => {
     })
 
     const forbidden = await denied.system.v1["audit-events"].$get({ query: {} })
-    expect(forbidden.status).toBe(403)
+    expect(Number(forbidden.status)).toBe(403)
     expect(
       fixture.sqlite
         .query(

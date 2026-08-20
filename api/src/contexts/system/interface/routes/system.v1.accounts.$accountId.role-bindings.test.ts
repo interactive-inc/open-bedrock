@@ -119,14 +119,14 @@ describe("System Role Binding HTTP", () => {
       param: { accountId: rootAccountId },
       json: { role_id: "reader-role", resource: null },
     })
-    expect(selfAssignment.status).toBe(403)
+    expect(Number(selfAssignment.status)).toBe(403)
 
     const lastRoot = await client.system.v1.accounts[":accountId"]["role-bindings"][
       ":bindingId"
     ].$delete({
       param: { accountId: rootAccountId, bindingId: "root-binding" },
     })
-    expect(lastRoot.status).toBe(409)
+    expect(Number(lastRoot.status)).toBe(409)
 
     const revoked = await client.system.v1.accounts[":accountId"]["role-bindings"][
       ":bindingId"

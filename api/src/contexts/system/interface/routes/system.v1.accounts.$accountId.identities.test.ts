@@ -171,7 +171,7 @@ describe("System Identity HTTP", () => {
     ].$delete({
       param: { accountId: targetAccountId, identityId: passwordBody.id },
     })
-    expect(lastActive.status).toBe(409)
+    expect(Number(lastActive.status)).toBe(409)
     expect(
       fixture.sqlite
         .query("SELECT token_version FROM system_accounts WHERE id = ?1")
