@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { submitExpenseAction } from "@/app/(app)/my/expenses/actions"
 import type { ExpenseSubmitFormState } from "@/app/(app)/my/expenses/actions"
 import { Button } from "@/components/ui/button"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
@@ -84,6 +84,20 @@ export function ExpenseCreateForm() {
           <FieldLabel htmlFor="expense-spent-at">利用日</FieldLabel>
 
           <Input id="expense-spent-at" name="spent_at" type="date" required />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="expense-files">領収書（任意）</FieldLabel>
+
+          <Input
+            id="expense-files"
+            name="files"
+            type="file"
+            multiple
+            accept="application/pdf,image/jpeg,image/png,image/heic"
+          />
+
+          <FieldDescription>PDF・JPEG・PNG・HEIC を 1 件 25MB まで添付できます</FieldDescription>
         </Field>
 
         <Field>
