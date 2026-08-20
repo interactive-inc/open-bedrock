@@ -24,6 +24,11 @@ export type Bindings = {
   INVITE_EMAIL_SEND_ENABLED?: string
   OIDC_CLIENT_REGISTRY?: OidcClientRegistry
   OIDC_ISSUER_CONFIGURATION?: OidcIssuerConfiguration
+  // 添付本体（暗号文）を保管する R2 バケット。未設定なら添付機能は 503 を返す。
+  ATTACHMENTS?: R2Bucket
+  // 添付の DEK を包む KEK。`{"1": "<base64 32 bytes>"}` 形式で、最大 version が現行鍵。
+  // ローテーション中は旧 version も残す。`wrangler secret put ATTACHMENT_KEKS` で登録する。
+  ATTACHMENT_KEKS?: string
   // 監査イベントの識別子 HMAC 用。`wrangler secret put AUDIT_HMAC_SECRET` で登録する。
   AUDIT_HMAC_SECRET: string
   // 人事上の会社営業日を求める IANA タイムゾーン。未設定・不正値は認証と人事変更を拒否する。

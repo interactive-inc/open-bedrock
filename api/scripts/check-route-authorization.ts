@@ -215,8 +215,9 @@ export async function checkRouteAuthorization(): Promise<{
   const summary = new Map<AuthorizationKind, number>()
   let checked = 0
   const appBase = readFileSync(resolve(SOURCE_ROOT, "api/app-base.ts"), "utf8")
-  const companyHasGlobalBearer =
-    /\.use\(\s*["']\/company\/\*["']\s*,\s*verifyBearer\s*\)/.test(appBase)
+  const companyHasGlobalBearer = /\.use\(\s*["']\/company\/\*["']\s*,\s*verifyBearer\s*\)/.test(
+    appBase,
+  )
 
   for (const routeFile of await collectRouteFiles()) {
     const source = readFileSync(routeFile.absolutePath, "utf8")

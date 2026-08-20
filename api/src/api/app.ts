@@ -305,6 +305,8 @@ import * as trainingEnrollmentsMeRoute from "@/contexts/training/interface/route
 import * as workAccidentsRoute from "@/contexts/work-accident/interface/routes/work-accidents"
 import * as workAccidentsIdCloseRoute from "@/contexts/work-accident/interface/routes/work-accidents.$id.close"
 import * as employeeWorkStylesRoute from "@/contexts/work-style/interface/routes/employee-work-styles"
+import * as attachmentsRoute from "@system/interface/routes/attachments"
+import * as attachmentsAttachmentIdRoute from "@system/interface/routes/attachments.$attachmentId"
 import * as authPasswordResetRoute from "@system/interface/routes/auth.password.reset"
 import * as healthRoute from "@system/interface/routes/health"
 import * as oauthAuthorizationsRoute from "@system/interface/routes/oauth.authorizations"
@@ -460,6 +462,8 @@ const routePart24 = createRouteApp()
   .post("/assets/:code/dispose", ...assetsCodeDisposeRoute.POST)
   .post("/assets/:code/lend", ...assetsCodeLendRoute.POST)
   .post("/assets/:code/return", ...assetsCodeReturnRoute.POST)
+  .post("/attachments", ...attachmentsRoute.POST)
+  .get("/attachments/:attachmentId", ...attachmentsAttachmentIdRoute.GET)
   .get("/attendance-records", ...attendanceRecordsRoute.GET)
   .post("/attendance-records/clock-in", ...attendanceRecordsClockInRoute.POST)
   .post("/attendance-records/clock-out", ...attendanceRecordsClockOutRoute.POST)
@@ -502,10 +506,10 @@ const routePart24 = createRouteApp()
   .delete("/career-postings/:postingId", ...careerPostingsPostingIdRoute.DELETE)
   .post("/career-postings/:postingId/apply", ...careerPostingsPostingIdApplyRoute.POST)
   .get("/career-sheets/me", ...careerSheetsMeRoute.GET)
-  .put("/career-sheets/me", ...careerSheetsMeRoute.PUT)
-  .delete("/career-sheets/me", ...careerSheetsMeRoute.DELETE)
 
 const routePart25 = createRouteApp()
+  .put("/career-sheets/me", ...careerSheetsMeRoute.PUT)
+  .delete("/career-sheets/me", ...careerSheetsMeRoute.DELETE)
   .post("/certificate-requests", ...certificateRequestsRoute.POST)
   .get("/certificate-requests/admin", ...certificateRequestsAdminRoute.GET)
   .get("/certificate-requests/me", ...certificateRequestsMeRoute.GET)
@@ -552,10 +556,10 @@ const routePart25 = createRouteApp()
   .post("/decision-records/:id/supersede", ...decisionRecordsIdSupersedeRoute.POST)
   .get("/department-budgets", ...departmentBudgetsRoute.GET)
   .post("/department-budgets", ...departmentBudgetsRoute.POST)
-  .get("/department-budgets/summary", ...departmentBudgetsSummaryRoute.GET)
-  .get("/department-budgets/:id", ...departmentBudgetsIdRoute.GET)
 
 const routePart26 = createRouteApp()
+  .get("/department-budgets/summary", ...departmentBudgetsSummaryRoute.GET)
+  .get("/department-budgets/:id", ...departmentBudgetsIdRoute.GET)
   .patch("/department-budgets/:id", ...departmentBudgetsIdRoute.PATCH)
   .delete("/department-budgets/:id", ...departmentBudgetsIdRoute.DELETE)
   .get("/department-definitions", ...departmentDefinitionsRoute.GET)
@@ -602,10 +606,10 @@ const routePart26 = createRouteApp()
   .put("/evaluation-sheets/:sheetId/evaluators", ...evaluationSheetsSheetIdEvaluatorsRoute.PUT)
   .post("/evaluation-sheets/:sheetId/transition", ...evaluationSheetsSheetIdTransitionRoute.POST)
   .get("/evaluation-templates", ...evaluationTemplatesRoute.GET)
-  .post("/evaluation-templates", ...evaluationTemplatesRoute.POST)
-  .get("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.GET)
 
 const routePart27 = createRouteApp()
+  .post("/evaluation-templates", ...evaluationTemplatesRoute.POST)
+  .get("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.GET)
   .put("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PUT)
   .patch("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PATCH)
   .post("/expenses", ...expensesRoute.POST)
@@ -661,10 +665,10 @@ const routePart27 = createRouteApp()
   .get("/inbox/counts", ...inboxCountsRoute.GET)
   .get("/it-incidents", ...itIncidentsRoute.GET)
   .post("/it-incidents", ...itIncidentsRoute.POST)
-  .post("/it-incidents/:id/resolve", ...itIncidentsIdResolveRoute.POST)
-  .get("/job-openings", ...jobOpeningsRoute.GET)
 
 const routePart28 = createRouteApp()
+  .post("/it-incidents/:id/resolve", ...itIncidentsIdResolveRoute.POST)
+  .get("/job-openings", ...jobOpeningsRoute.GET)
   .post("/job-openings", ...jobOpeningsRoute.POST)
   .get("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.GET)
   .put("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.PUT)
@@ -711,10 +715,10 @@ const routePart28 = createRouteApp()
   .post("/notifications", ...notificationsRoute.POST)
   .post("/oauth/authorizations", ...oauthAuthorizationsRoute.POST)
   .post("/oauth/mcp-grants", ...oauthMcpGrantsRoute.POST)
-  .post("/oauth/token", ...oauthTokenRoute.POST)
-  .get("/oauth/userinfo", ...oauthUserinfoRoute.GET)
 
 const routePart29 = createRouteApp()
+  .post("/oauth/token", ...oauthTokenRoute.POST)
+  .get("/oauth/userinfo", ...oauthUserinfoRoute.GET)
   .post("/onboarding-assignments", ...onboardingAssignmentsRoute.POST)
   .get(
     "/onboarding-assignments/employees/:employeeCode",
