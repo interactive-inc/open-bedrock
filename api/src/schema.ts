@@ -1,4 +1,5 @@
 import {
+  systemAttachmentSchema,
   systemCoreSchema,
   systemProcedureDelegationSchema,
   systemProcedureSchema,
@@ -112,6 +113,7 @@ export * from "@/contexts/work-accident/infrastructure/schema/work-accident"
 export * from "@/contexts/work-style/infrastructure/schema/work-style"
 
 export const schema = {
+  ...systemAttachmentSchema,
   ...systemCoreSchema,
   ...systemProcedureDelegationSchema,
   ...systemProcedureSchema,

@@ -25,6 +25,7 @@ generate_secret() {
 cat >"$TARGET" <<EOF
 JWT_SECRET="$(generate_secret)"
 AUDIT_HMAC_SECRET="$(generate_secret)"
+ATTACHMENT_KEKS='{"1": "$(generate_secret)"}'
 COMPANY_TIME_ZONE="Asia/Tokyo"
 PROVISIONING_API_KEY=
 IDENTITY_JWKS=
@@ -37,4 +38,4 @@ EOF
 
 chmod 600 "$TARGET"
 
-echo "$TARGET を生成した。JWT_SECRET と AUDIT_HMAC_SECRET はランダム値。"
+echo "$TARGET を生成した。JWT_SECRET・AUDIT_HMAC_SECRET・ATTACHMENT_KEKS はランダム値。"

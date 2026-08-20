@@ -110,3 +110,10 @@ export type SystemEmailContext = Readonly<{
     INVITE_EMAIL_SEND_ENABLED?: string
   }>
 }>
+
+export type SystemAttachmentStorageContext = Readonly<{
+  env: Readonly<{
+    ATTACHMENTS?: R2Bucket
+    ATTACHMENT_KEKS?: string
+  }>
+}>

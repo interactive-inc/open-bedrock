@@ -1,0 +1,136 @@
+import type { AttachmentBytes } from "@system/domain/attachments/attachment-bytes"
+import { UnavailableError, ValidationError } from "@/lib/errors"
+
+/** KEK は 256bit。base64 で env に置く。 */
+const KEK_BYTE_LENGTH = 32
+
+export type AttachmentKek = Readonly<{
+  version: number
+  key: AttachmentBytes
+}>
+
+function decodeBase64(value: string): AttachmentBytes | Error {
+  try {
+    const binary = atob(value)
+
+    const bytes = new Uint8Array(binary.length)
+
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index)
+    }
+
+    return bytes
+  } catch {
+    return new ValidationError("KEK が base64 ではありません", "attachment_kek_invalid")
+  }
+}
+
+/**
+ * env の KEK 一覧を読む。`{"1": "<base64 32 bytes>", "2": "..."}` 形式で、
+ * 最大の version が現行鍵になる。ローテーション中は旧 version も残しておく。
+ *
+ * 未設定・不正な形は起動時ではなく利用時に拒否する（添付機能を使わない配備を止めないため）。
+ */
+export class AttachmentKekRegistry {
+  private readonly keys: ReadonlyMap<number, AttachmentBytes>
+
+  private constructor(keys: ReadonlyMap<number, AttachmentBytes>) {
+    this.keys = keys
+
+    Object.freeze(this)
+  }
+
+  static fromEnv(raw: string | undefined): AttachmentKekRegistry | Error {
+    if (raw === undefined || raw.trim() === "") {
+      return new UnavailableError(
+        "添付機能が設定されていません（ATTACHMENT_KEKS 未設定）",
+        "attachment_storage_unconfigured",
+      )
+    }
+
+    let parsed: unknown
+
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      return new ValidationError("ATTACHMENT_KEKS が JSON ではありません", "attachment_kek_invalid")
+    }
+
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      return new ValidationError(
+        "ATTACHMENT_KEKS は version をキーにした object で指定してください",
+        "attachment_kek_invalid",
+      )
+    }
+
+    const keys = new Map<number, AttachmentBytes>()
+
+    for (const entry of Object.entries(parsed)) {
+      const version = Number(entry[0])
+
+      if (!Number.isSafeInteger(version) || version <= 0) {
+        return new ValidationError(
+          "ATTACHMENT_KEKS のキーは 1 以上の整数にしてください",
+          "attachment_kek_invalid",
+        )
+      }
+
+      if (typeof entry[1] !== "string") {
+        return new ValidationError(
+          "ATTACHMENT_KEKS の値は base64 文字列にしてください",
+          "attachment_kek_invalid",
+        )
+      }
+
+      const decoded = decodeBase64(entry[1])
+
+      if (decoded instanceof Error) return decoded
+
+      if (decoded.length !== KEK_BYTE_LENGTH) {
+        return new ValidationError(
+          `ATTACHMENT_KEKS の鍵は ${KEK_BYTE_LENGTH} バイトにしてください`,
+          "attachment_kek_invalid",
+        )
+      }
+
+      keys.set(version, decoded)
+    }
+
+    if (keys.size === 0) {
+      return new ValidationError("ATTACHMENT_KEKS が空です", "attachment_kek_invalid")
+    }
+
+    return new AttachmentKekRegistry(keys)
+  }
+
+  /** 新規暗号化に使う現行鍵。 */
+  current(): AttachmentKek {
+    const version = Math.max(...this.keys.keys())
+
+    const key = this.keys.get(version)
+
+    if (key === undefined) {
+      throw new Error("現行 KEK の解決に失敗しました")
+    }
+
+    return { version, key }
+  }
+
+  /** 復号に使う鍵。無い version は復号を拒否する（fail-closed）。 */
+  resolve(version: number): AttachmentKek | Error {
+    const key = this.keys.get(version)
+
+    if (key === undefined) {
+      return new UnavailableError(
+        `この添付の KEK version が設定にありません: ${version}`,
+        "attachment_kek_version_missing",
+      )
+    }
+
+    return { version, key }
+  }
+
+  versions(): ReadonlyArray<number> {
+    return [...this.keys.keys()].toSorted((a, b) => a - b)
+  }
+}

@@ -1,4 +1,5 @@
 export const SYSTEM_CAPABILITY_NAMES = [
+  "attachments",
   "audit",
   "auth",
   "batch",

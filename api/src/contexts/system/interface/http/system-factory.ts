@@ -1,4 +1,5 @@
 import type {
+  SystemAttachmentStorageContext,
   SystemAuthorizationContext,
   SystemBootstrapContext,
   SystemClockContext,
@@ -16,6 +17,7 @@ import type {
 import { createFactory } from "hono/factory"
 
 type SystemInterfaceContext = SystemDatabaseContext &
+  SystemAttachmentStorageContext &
   SystemD1Context &
   SystemClockContext &
   SystemAuthorizationContext &
