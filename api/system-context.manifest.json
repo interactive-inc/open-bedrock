@@ -1,6 +1,7 @@
 {
   "version": 2,
   "implementedCapabilities": [
+    "attachments",
     "audit",
     "auth",
     "batch",
@@ -14,6 +15,7 @@
   "forbiddenProductMarkers": ["bedrock", "cclcc", "cocolococo", "hiract", "inta"],
   "schemaTables": [
     "systemAccounts",
+    "systemAttachments",
     "systemAuditEvents",
     "systemAuthenticationAttempts",
     "systemBatchJobs",
@@ -52,6 +54,7 @@
     "systemSessions"
   ],
   "targetCapabilities": [
+    "attachments",
     "audit",
     "auth",
     "batch",
