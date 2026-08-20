@@ -1,4 +1,4 @@
-import { SystemHttpError } from "@system/interface/http/system-http-error"
+import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 /** /system/v1/notifications/:id */
 import { MarkSystemNotificationRead } from "@system/application/notifications/mark-system-notification-read"
 import { zAccountId } from "@system/domain/auth/account-id"

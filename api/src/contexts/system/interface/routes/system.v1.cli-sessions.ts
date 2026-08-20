@@ -1,4 +1,4 @@
-import { SystemHttpError } from "@system/interface/http/system-http-error"
+import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 /** /system/v1/cli-sessions */
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { validateSystemAccessTokenSecret } from "@system/domain/auth/validate-system-access-token-secret"

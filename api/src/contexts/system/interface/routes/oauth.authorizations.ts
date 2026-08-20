@@ -5,8 +5,7 @@ import {
   OidcTemporarilyUnavailableApplicationError,
 } from "@/contexts/system/application/auth/errors"
 import { OidcValue } from "@/contexts/system/domain/identity/oidc.value"
-import { OidcResponse } from "@/contexts/system/interface/http/oidc-response"
-import { OidcHttpError } from "@/contexts/system/interface/http/oidc-http-error"
+import { OidcHttpError } from "@/contexts/system/interface/http/errors/oidc-http-error"
 import { requireSystemAuthentication } from "@system/interface/http/require-system-authentication"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
@@ -82,6 +81,9 @@ export const POST = systemFactory.createHandlers(
       })
     }
 
-    return OidcResponse.json(zAppOidcAuthorizationResponse.parse(result))
+    return c.json(zAppOidcAuthorizationResponse.parse(result), 200, {
+      "Cache-Control": "no-store",
+      Pragma: "no-cache",
+    })
   },
 )
