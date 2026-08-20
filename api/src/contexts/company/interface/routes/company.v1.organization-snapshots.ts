@@ -2,7 +2,7 @@
 import { readCompanyResources } from "@/contexts/company/application/core/read-company-resources"
 import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { readCompanyResourcesFromD1 } from "@/contexts/company/infrastructure/core/read-company-resources-from-d1"
-import { CompanyHttpError } from "@/contexts/company/interface/http/company-http-error"
+import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/http/company-http-environment"
 import { zValidator } from "@hono/zod-validator"
 import { createFactory } from "hono/factory"

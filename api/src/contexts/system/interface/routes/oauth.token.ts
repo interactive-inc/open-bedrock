@@ -4,8 +4,7 @@ import {
 } from "@/contexts/system/application/auth/errors"
 import { ExchangeOidcAuthorizationCode } from "@/contexts/system/application/auth/exchange-oidc-authorization-code"
 import { OidcValue } from "@/contexts/system/domain/identity/oidc.value"
-import { OidcResponse } from "@/contexts/system/interface/http/oidc-response"
-import { OidcHttpError } from "@/contexts/system/interface/http/oidc-http-error"
+import { OidcHttpError } from "@/contexts/system/interface/http/errors/oidc-http-error"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -68,6 +67,9 @@ export const POST = systemFactory.createHandlers(
       })
     }
 
-    return OidcResponse.json(result)
+    return c.json(result, 200, {
+      "Cache-Control": "no-store",
+      Pragma: "no-cache",
+    })
   },
 )

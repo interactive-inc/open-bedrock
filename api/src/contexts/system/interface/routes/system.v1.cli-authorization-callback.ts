@@ -1,4 +1,4 @@
-import { SystemHttpError } from "@system/interface/http/system-http-error"
+import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 /** /system/v1/cli-authorization-callback */
 import { systemCliIdentityRedirectUri } from "@system/domain/identity/system-cli-identity-redirect-uri"
 import { SystemCliLoginAuditRecorder } from "@system/infrastructure/audit/system-cli-login-audit-recorder"

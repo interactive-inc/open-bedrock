@@ -1,3 +1,5 @@
+import { HTTPException } from "hono/http-exception"
+
 export type OidcHttpErrorCode =
   | "invalid_grant"
   | "invalid_request"
@@ -25,4 +27,3 @@ export class OidcHttpError extends HTTPException {
     Object.freeze(this)
   }
 }
-import { HTTPException } from "hono/http-exception"

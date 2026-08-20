@@ -2,7 +2,7 @@ import { hasCompanyCapability } from "@/contexts/company/application/core/has-co
 import { updateOrganizationProfile } from "@/contexts/company/application/organization/update-organization-profile"
 import { readOrganizationProfileFromD1 } from "@/contexts/company/infrastructure/organization/read-organization-profile-from-d1"
 import { writeOrganizationProfileToD1 } from "@/contexts/company/infrastructure/organization/write-organization-profile-to-d1"
-import { CompanyHttpError } from "@/contexts/company/interface/http/company-http-error"
+import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/http/company-http-environment"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

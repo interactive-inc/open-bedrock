@@ -55,6 +55,8 @@ describe("POST /oauth/authorizations", () => {
     })
 
     expect(response.status).toBe(200)
+    expect(response.headers.get("cache-control")).toBe("no-store")
+    expect(response.headers.get("pragma")).toBe("no-cache")
     const body = await response.json()
     if (
       typeof body !== "object" ||

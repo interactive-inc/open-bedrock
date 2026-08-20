@@ -1,3 +1,5 @@
+import { HTTPException } from "hono/http-exception"
+
 export type CompanyHttpErrorStatus =
   | 400
   | 401
@@ -59,4 +61,3 @@ export class CompanyHttpError extends HTTPException {
     return this.props.metadata ?? {}
   }
 }
-import { HTTPException } from "hono/http-exception"

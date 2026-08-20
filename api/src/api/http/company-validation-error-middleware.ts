@@ -1,5 +1,5 @@
 import type { HonoEnv } from "@/env"
-import { CompanyHttpError } from "@/contexts/company/interface/http/company-http-error"
+import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
 import { createMiddleware } from "hono/factory"
 import type { MiddlewareHandler } from "hono"
 

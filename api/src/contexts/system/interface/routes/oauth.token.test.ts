@@ -122,6 +122,8 @@ describe("POST /oauth/token", () => {
     })
 
     expect(response.status).toBe(200)
+    expect(response.headers.get("cache-control")).toBe("no-store")
+    expect(response.headers.get("pragma")).toBe("no-cache")
     expect(await response.json()).toMatchObject({
       token_type: "Bearer",
       expires_in: 300,
