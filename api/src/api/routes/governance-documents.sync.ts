@@ -4,7 +4,7 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { trainingCourses } from "@/contexts/training/infrastructure/schema/training"
+import { readTrainingCourseCodeSet } from "@/api/http/governance-documents/read-training-course-code-set"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -26,10 +26,9 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()
   const body = c.req.valid("json")
-  const training = await c.var.database.select({ code: trainingCourses.code }).from(trainingCourses)
   const result = await new SyncGovernanceMarkdown(c).run({
     session,
-    referenceCatalog: { training: new Set(training.map((item) => item.code)) },
+    referenceCatalog: { training: await readTrainingCourseCodeSet(c) },
     documents: body.documents.map((document) => ({
       sourcePath: document.source_path,
       markdown: document.markdown,

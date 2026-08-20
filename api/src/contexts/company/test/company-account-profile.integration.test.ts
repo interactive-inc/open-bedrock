@@ -1,24 +1,37 @@
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { UpdateCompanyAccountProfile } from "@/contexts/company/application/account-profile/update-company-account-profile"
 import { CompanyAccountProfileRepositoryD1 } from "@/contexts/company/infrastructure/account-profile/company-account-profile.repository"
+import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { describe, expect, test } from "bun:test"
-import { readFileSync, readdirSync } from "node:fs"
-import { join } from "node:path"
 
-const migrationsDirectory = join(import.meta.dir, "../../../../migrations")
-
-function allMigrations(): string {
-  return readdirSync(migrationsDirectory)
-    .filter((file) => file.endsWith(".sql"))
-    .sort()
-    .map((file) => readFileSync(join(migrationsDirectory, file), "utf8"))
-    .join("\n")
-}
+const schemaSql = `
+  CREATE TABLE system_accounts (
+    id TEXT PRIMARY KEY NOT NULL,
+    status TEXT NOT NULL,
+    token_version INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE TABLE company_organizations (
+    id TEXT PRIMARY KEY NOT NULL,
+    revision INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE TABLE company_account_profiles (
+    organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE CASCADE,
+    account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE CASCADE,
+    display_name TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (organization_id, account_id)
+  );
+  INSERT INTO company_organizations (id, revision, created_at, updated_at)
+    VALUES ('organization:default', 0, 0, 0);
+`
 
 describe("Company Account Profile", () => {
   test("reads and updates the Company-owned display name without changing System Account", async () => {
-    const database = createD1TestDatabase(allMigrations())
-    await database.exec(`
+    const database = createCompanyD1TestDatabase(`${schemaSql}
       INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
         VALUES ('account-1', 'active', 7, 100, 100);
       INSERT INTO company_account_profiles
@@ -51,7 +64,7 @@ describe("Company Account Profile", () => {
   })
 
   test("does not create a missing profile during update", async () => {
-    const database = createD1TestDatabase(allMigrations())
+    const database = createCompanyD1TestDatabase(schemaSql)
     const repository = new CompanyAccountProfileRepositoryD1(database)
 
     expect(

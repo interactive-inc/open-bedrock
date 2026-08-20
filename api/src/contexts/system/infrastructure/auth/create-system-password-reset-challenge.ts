@@ -4,6 +4,7 @@ import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context"
 
 type Props = Readonly<{
+  actorAccountId: string | null
   id: string
   tokenHash: PasswordResetTokenHash
   accountId: string
@@ -13,13 +14,13 @@ type Props = Readonly<{
   metadataJson: string | null
 }>
 
-/** 既存challengeを失効し、新challengeと監査を同じD1 batchで確定する。 */
+/** 新challengeと監査を同じD1 batchで確定する。既存challengeは設定完了まで維持する。 */
 export async function createSystemPasswordResetChallenge(
   context: SystemD1Context,
   props: Props,
 ): Promise<void | Error> {
   const audit = createSystemAuditEvent({
-    actorAccountId: null,
+    actorAccountId: props.actorAccountId,
     action: "auth.password_reset.requested",
     targetType: "account",
     targetId: props.accountId,
@@ -40,13 +41,6 @@ export async function createSystemPasswordResetChallenge(
     const statements = [
       database
         .prepare(
-          `UPDATE system_password_reset_challenges
-           SET used_at = max(created_at, ?1)
-           WHERE account_id = ?2 AND identity_id = ?3 AND used_at IS NULL`,
-        )
-        .bind(createdAt, props.accountId, props.identityId),
-      database
-        .prepare(
           `INSERT INTO system_password_reset_challenges
              (id, token_hash, account_id, identity_id, created_at, expires_at, used_at)
            VALUES (?1, ?2, ?3, ?4, ?5, ?6, NULL)`,
@@ -55,10 +49,7 @@ export async function createSystemPasswordResetChallenge(
       ...new SystemAuditEventRepository(context).prepareAppend(audit),
       database
         .prepare(
-          `SELECT CASE WHEN
-             (SELECT count(*) FROM system_password_reset_challenges
-              WHERE account_id = ?1 AND identity_id = ?2 AND used_at IS NULL) = 1
-             AND EXISTS (
+          `SELECT CASE WHEN EXISTS (
                SELECT 1 FROM system_password_reset_challenges
                WHERE id = ?3 AND token_hash = ?4 AND account_id = ?1 AND identity_id = ?2
                  AND created_at = ?5 AND expires_at = ?6 AND used_at IS NULL

@@ -64,6 +64,7 @@ export class RequestPasswordReset {
     if (metadataJson instanceof Error) return new PasswordResetRequestApplicationError(metadataJson)
 
     const writeResult = await createSystemPasswordResetChallenge(this.c, {
+      actorAccountId: null,
       id: crypto.randomUUID(),
       tokenHash,
       accountId: props.recipient.accountId,

@@ -161,11 +161,10 @@ WHEN NOT EXISTS (
   WHERE id = NEW.identity_id
     AND account_id = NEW.account_id
     AND provider = 'password'
-    AND activated_at IS NOT NULL
     AND revoked_at IS NULL
 )
 BEGIN
-  SELECT RAISE(ABORT, 'password reset challenge requires an active password identity');
+  SELECT RAISE(ABORT, 'password reset challenge requires a password identity');
 END;
 
 CREATE TRIGGER system_password_reset_challenges_monotonic_use

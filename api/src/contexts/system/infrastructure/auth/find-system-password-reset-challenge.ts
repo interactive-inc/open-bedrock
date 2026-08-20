@@ -30,7 +30,6 @@ export async function findSystemPasswordResetChallenge(
          AND challenge.expires_at >= ?2
          AND account.status = 'active'
          AND binding.provider = 'password'
-         AND binding.activated_at IS NOT NULL
          AND binding.revoked_at IS NULL
        LIMIT 1`,
     )

@@ -3,7 +3,7 @@ import type { HTTPException } from "hono/http-exception"
 export type HttpExceptionProblem = Readonly<{
   code: string
   detail: string
-  legacyBody: object
+  sourceBody: object
   headers: Headers
 }>
 
@@ -22,6 +22,6 @@ export async function readHttpExceptionProblem(
   const detail = Reflect.get(body, "error")
 
   return typeof code === "string" && typeof detail === "string"
-    ? { code, detail, legacyBody: body, headers: response.headers }
+    ? { code, detail, sourceBody: body, headers: response.headers }
     : null
 }

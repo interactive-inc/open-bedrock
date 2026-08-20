@@ -1,7 +1,4 @@
-import {
-  zApplicationWorkflow,
-  type ApplicationWorkflow,
-} from "@/contexts/company/domain/organization/company-procedure-workflow"
+import { zApplicationWorkflow } from "@/contexts/company/domain/organization/company-procedure-workflow"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
 import {
   loadSystemProcedure,
@@ -22,29 +19,8 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import type { Context } from "@/env"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { ConflictError as ApplicationConflictError } from "@/lib/errors"
-
-async function validateReferences(c: Context, workflow: ApplicationWorkflow): Promise<void> {
-  const employeeRows = await c.var.database.select({ code: employees.code }).from(employees)
-  const employeeCodes = new Set(employeeRows.map((row) => row.code))
-
-  for (const step of workflow.steps) {
-    for (const selector of [...step.approvers, ...step.escalation_approvers]) {
-      if (selector.type === "role") {
-        throw new UnprocessableEntityError(
-          "Account role selectors are not Company authority; use a responsibility selector",
-        )
-      }
-      if (selector.type === "employee" && !employeeCodes.has(selector.employee_code)) {
-        throw new UnprocessableEntityError(
-          `unknown employee in workflow: ${selector.employee_code}`,
-        )
-      }
-    }
-  }
-}
+import { validateApplicationWorkflowReferences } from "@/api/http/application-templates/lib/validate-application-workflow-references"
 
 // @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -109,7 +85,7 @@ export const PUT = factory.createHandlers(
         "personnel action workflows must reject immutable requests instead of returning them",
       )
     }
-    await validateReferences(c, workflow)
+    await validateApplicationWorkflowReferences(c, workflow)
     const policy = createCompanyProcedureDecisionPolicy({
       approverRoles: currentPolicy.approverRoles,
       workflow,

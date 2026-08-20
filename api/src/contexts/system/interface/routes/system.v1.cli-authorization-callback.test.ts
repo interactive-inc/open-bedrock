@@ -1,14 +1,14 @@
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import type { SystemHonoEnv } from "@system/interface/http/system-factory"
 import { GET } from "@system/interface/routes/system.v1.cli-authorization-callback"
-import { createIdentityTestKey } from "@/lib/auth/test/create-identity-test-key"
-import { createIdentityToken } from "@/lib/auth/test/create-identity-token"
+import { createSystemIdentityTestKey } from "@system/infrastructure/identity/create-system-identity-test-key.test-support"
+import { createSystemIdentityToken } from "@system/infrastructure/identity/create-system-identity-token.test-support"
 import { afterEach, describe, expect, test } from "bun:test"
 import { Hono } from "hono"
 import { hc } from "hono/client"
 
-const identityKey = await createIdentityTestKey()
-const wrongIdentityKey = await createIdentityTestKey("wrong-key")
+const identityKey = await createSystemIdentityTestKey()
+const wrongIdentityKey = await createSystemIdentityTestKey("wrong-key")
 const identityIssuer = "https://identity-provider.example/"
 const apiOrigin = "https://api.example.com"
 const now = new Date("2026-01-01T00:00:00.000Z")
@@ -85,7 +85,7 @@ describe("GET /system/v1/cli-authorization-callback", () => {
   test("resolves a System Identity and redirects to loopback with an opaque one-time code", async () => {
     const { client, fixture } = createFixture()
     seedAuthorizationState(fixture, "broker-state-success")
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "cli-subject",
       jti: "cli-callback-success",
       issuer: identityIssuer,
@@ -121,7 +121,7 @@ describe("GET /system/v1/cli-authorization-callback", () => {
   test("does not auto-provision an unknown Identity or mutate Company state", async () => {
     const { client, fixture } = createFixture()
     seedAuthorizationState(fixture, "broker-state-unknown")
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "unknown-subject",
       jti: "cli-callback-unknown",
       issuer: identityIssuer,
@@ -149,7 +149,7 @@ describe("GET /system/v1/cli-authorization-callback", () => {
   test("rejects an invalid Identity token and records only the System denial", async () => {
     const { client, fixture } = createFixture()
     seedAuthorizationState(fixture, "broker-state-invalid-token")
-    const token = await createIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
       sub: "cli-subject",
       jti: "cli-callback-invalid-token",
       issuer: identityIssuer,
@@ -174,7 +174,7 @@ describe("GET /system/v1/cli-authorization-callback", () => {
   test("consumes broker state once and rejects missing, unknown, or reused state", async () => {
     const { client, fixture } = createFixture()
     seedAuthorizationState(fixture, "broker-state-single-use")
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "cli-subject",
       jti: "cli-callback-single-use",
       issuer: identityIssuer,
@@ -211,7 +211,7 @@ describe("GET /system/v1/cli-authorization-callback", () => {
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;
     `)
-    const token = await createIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
       sub: "cli-subject",
       jti: "cli-callback-audit-failure",
       issuer: identityIssuer,

@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
-const migrationsDirectory = join(import.meta.dir, "../../../../../migrations")
+const migrationsDirectory = join(import.meta.dir, "../../../migrations")
 
 describe("0145 canonical System authentication runtime", () => {
   test("password reset challengeと共有authentication attemptだけを追加する", async () => {

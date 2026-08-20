@@ -68,6 +68,10 @@ export class ResetPassword {
     if (completed instanceof Error) return new SystemAuthPersistenceApplicationError(completed)
     if (completed === false) return new PasswordResetTokenInvalidApplicationError()
 
-    return { ok: true as const }
+    return {
+      ok: true as const,
+      accountId: challenge.accountId,
+      accountTokenVersion: challenge.accountTokenVersion + 1,
+    }
   }
 }

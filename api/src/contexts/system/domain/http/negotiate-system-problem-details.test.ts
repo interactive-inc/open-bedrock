@@ -9,7 +9,7 @@ describe("negotiateSystemProblemDetails", () => {
         status: 422,
         code: "invalid_request",
         detail: "invalid request",
-        legacyBody: {
+        sourceBody: {
           error: "spoofed",
           status: 200,
           cause: "internal",
@@ -26,12 +26,12 @@ describe("negotiateSystemProblemDetails", () => {
     })
   })
 
-  test("leaves legacy and unsupported status responses untouched", () => {
+  test("leaves source and unsupported status responses untouched", () => {
     const props = {
       status: 404,
       code: "not_found",
       detail: "not found",
-      legacyBody: {},
+      sourceBody: {},
     }
 
     expect(negotiateSystemProblemDetails({ ...props, accept: null })).toBeNull()

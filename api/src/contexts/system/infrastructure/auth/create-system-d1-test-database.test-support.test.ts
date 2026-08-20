@@ -9,7 +9,7 @@ const schema = `
 `
 
 describe("createSystemD1TestDatabase", () => {
-  test("prepareのrun・first・all・rawをD1互換結果へ適応する", async () => {
+  test("prepareのrun・first・all・rawをD1形式の結果へ適応する", async () => {
     const database = createSystemD1TestDatabase(schema)
     const inserted = await database
       .prepare("INSERT INTO records (id, payload) VALUES (?1, ?2)")

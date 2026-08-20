@@ -77,7 +77,7 @@ describe("NotificationDelivery", () => {
     ["nullable recipient", { ...validProps, recipientAccountId: null }],
     ["invalid delivery clock", { ...validProps, deliveredAt: new Date(Number.NaN) }],
     ["read before delivery", { ...validProps, readAt: new Date("2026-08-10T23:59:59.999Z") }],
-    ["legacy user recipient", { ...validProps, userId: "user-1" }],
+    ["retired user recipient", { ...validProps, userId: "user-1" }],
   ])("fails closed for %s", (_name, input) => {
     const result = NotificationDelivery.create(input)
 

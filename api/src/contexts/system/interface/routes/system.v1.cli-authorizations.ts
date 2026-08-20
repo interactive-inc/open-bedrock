@@ -28,12 +28,10 @@ export const GET = systemFactory.createHandlers(
       return context.json({ error: "CLI login is unavailable", code: "cli_login_unavailable" }, 503)
     }
 
-    let brokerUrl: URL
-    try {
-      brokerUrl = new URL(identityLoginUrl)
-    } catch {
+    if (!URL.canParse(identityLoginUrl)) {
       return context.json({ error: "CLI login is unavailable", code: "cli_login_unavailable" }, 503)
     }
+    const brokerUrl = new URL(identityLoginUrl)
     const redirectUri = systemCliIdentityRedirectUri(apiOrigin)
     if (
       !isSecureSystemIdentityIssuer(brokerUrl) ||
