@@ -45,7 +45,7 @@ export const systemProcedureDefinitions = sqliteTable(
 
 export type SystemProcedureDefinitionRow = InferSelectModel<typeof systemProcedureDefinitions>
 
-/** 手続keyへ一対一で対応する外部互換用の単調なSystem番号。 */
+/** 手続keyへ一対一で対応し、外部APIで安定参照する単調なSystem番号。 */
 export const systemProcedureNumbers = sqliteTable(
   "system_procedure_numbers",
   {
@@ -202,7 +202,7 @@ export const systemProposals = sqliteTable(
 
 export type SystemProposalRow = InferSelectModel<typeof systemProposals>
 
-/** 外部互換APIへ公開でき、修正再提出でも変わらない単調なSystem提案系列番号。 */
+/** 外部APIへ公開でき、修正再提出でも変わらない単調なSystem提案系列番号。 */
 export const systemProposalNumbers = sqliteTable(
   "system_proposal_numbers",
   {

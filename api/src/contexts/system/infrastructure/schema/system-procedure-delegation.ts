@@ -25,7 +25,7 @@ export const systemDelegationProcedureScopes = sqliteTable(
   ],
 )
 
-/** 外部互換API向けの変更不能な単調Delegation番号。 */
+/** 外部APIで安定参照する変更不能な単調Delegation番号。 */
 export const systemDelegationNumbers = sqliteTable(
   "system_delegation_numbers",
   {

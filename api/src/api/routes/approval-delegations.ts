@@ -10,16 +10,14 @@ import { resolveLiveEmployeeAccess } from "@/contexts/company/application/auth/r
 import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
 import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
 import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/application/iam/resolve-system-account-ids-for-employees"
+import { createSystemProcedureDelegationRepository } from "@/api/http/approval-delegations/create-system-procedure-delegation-repository"
+import { findEmployeeIdByCode } from "@/api/http/approval-delegations/find-employee-id-by-code"
 import { loadSystemProcedure } from "@/api/http/application-templates/lib/system-procedure-route"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { zValidator } from "@hono/zod-validator"
-import { eq } from "drizzle-orm"
 import { z } from "zod"
-import { SystemD1ProcedureDelegationRepository } from "@system/infrastructure/workflow/system-d1-procedure-delegation-repository"
-import type { Context } from "@/env"
 
 const delegationSchema = z.object({
   delegate_employee_code: z.string().min(1).max(64),
@@ -28,17 +26,13 @@ const delegationSchema = z.object({
   ends_at: z.string().datetime({ offset: true }),
 })
 
-function repository(c: Context): SystemD1ProcedureDelegationRepository {
-  return new SystemD1ProcedureDelegationRepository({ env: { DB: c.env.DB } })
-}
-
 // @authorization owner - 本人が委任元または委任先の記録だけを読む
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()
   const accountId = await resolveActiveSystemAccountId(c, session.accountId)
   if (accountId instanceof Error) throw new InternalError("failed to resolve canonical actor")
-  const rows = await repository(c).list(accountId)
+  const rows = await createSystemProcedureDelegationRepository(c).list(accountId)
   if (rows instanceof Error) throw new InternalError("failed to list delegations")
   const participants = await resolveCompanyAccountParticipants(
     c,
@@ -100,20 +94,15 @@ export const POST = factory.createHandlers(
     if (startsAt.getTime() < createdAt.getTime()) {
       throw new BadRequestError("starts_at must not be earlier than created_at")
     }
-    const delegate = await c.var.database
-      .select({ id: employees.id })
-      .from(employees)
-      .where(eq(employees.code, body.delegate_employee_code))
-      .limit(1)
-      .then((rows) => rows.at(0))
-    if (delegate === undefined) throw new NotFoundError("active delegate employee not found")
-    const delegateAccess = await resolveLiveEmployeeAccess(c, delegate.id)
+    const delegateId = await findEmployeeIdByCode(c, body.delegate_employee_code)
+    if (delegateId === null) throw new NotFoundError("active delegate employee not found")
+    const delegateAccess = await resolveLiveEmployeeAccess(c, delegateId)
     if (delegateAccess instanceof ApplicationError) throw toHttpException(delegateAccess)
     if (delegateAccess === null) throw new NotFoundError("active delegate employee not found")
-    if (delegate.id === session.employeeId) {
+    if (delegateId === session.employeeId) {
       throw new BadRequestError("cannot delegate approval to yourself")
     }
-    const delegateAccountIds = await resolveSystemAccountIdsForEmployees(c, [delegate.id])
+    const delegateAccountIds = await resolveSystemAccountIdsForEmployees(c, [delegateId])
     if (delegateAccountIds instanceof Error || delegateAccountIds.length !== 1) {
       throw new NotFoundError("active delegate employee not found")
     }
@@ -132,7 +121,7 @@ export const POST = factory.createHandlers(
       if (procedure === null) throw new NotFoundError("application template not found")
       procedureKey = procedure.key
     }
-    const created = await repository(c).create({
+    const created = await createSystemProcedureDelegationRepository(c).create({
       delegatorAccountId,
       delegateAccountId,
       procedureKey,

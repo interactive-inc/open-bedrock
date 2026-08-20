@@ -39,9 +39,9 @@ describe("verifyPassword", () => {
   })
 
   test("旧 bcrypt 形式 ($2b$...) は常に false", async () => {
-    const legacy = "$2b$10$2wMXD.dXFMSnRxs7TF7fgeatiZHR7o9jZtmo4eqn19D7LSxn1AV82"
+    const unsupportedHash = "$2b$10$2wMXD.dXFMSnRxs7TF7fgeatiZHR7o9jZtmo4eqn19D7LSxn1AV82"
 
-    expect(await PasswordHashService.verify("password", legacy, TEST_PEPPER)).toBe(false)
+    expect(await PasswordHashService.verify("password", unsupportedHash, TEST_PEPPER)).toBe(false)
   })
 
   test("空文字 / 形式不正は false (timing 揃え用の DUMMY 検証など)", async () => {
@@ -106,9 +106,9 @@ describe("needsRehash", () => {
   })
 
   test("旧 bcrypt 形式は true", () => {
-    const legacy = "$2b$10$2wMXD.dXFMSnRxs7TF7fgeatiZHR7o9jZtmo4eqn19D7LSxn1AV82"
+    const unsupportedHash = "$2b$10$2wMXD.dXFMSnRxs7TF7fgeatiZHR7o9jZtmo4eqn19D7LSxn1AV82"
 
-    expect(PasswordHashService.needsRehash(legacy)).toBe(true)
+    expect(PasswordHashService.needsRehash(unsupportedHash)).toBe(true)
   })
 
   test("iter が現行ポリシー未満なら true", () => {

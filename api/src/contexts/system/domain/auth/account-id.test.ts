@@ -2,7 +2,7 @@ import { zAccountId } from "@system/domain/auth/account-id"
 import { describe, expect, test } from "bun:test"
 
 describe("zAccountId", () => {
-  test("数字だけの互換IDを文字列のまま保持する", () => {
+  test("数字だけのopaque IDを文字列のまま保持する", () => {
     expect(String(zAccountId.parse("001"))).toBe("001")
   })
 

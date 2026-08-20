@@ -27,6 +27,7 @@ import { zAppApplication, zAppApplicationUpdated } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
 
 // @authorization service - System証拠とCompany主体を合成して所有者・候補者・監査者を判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -92,7 +93,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const participantNames = new Map(
     decisionParticipants.map((value) => [value.accountId, value.employeeName]),
   )
-  const policyValue = parseJson(proposal.decisionPolicyJson)
+  const policyValue = parseJsonValue(proposal.decisionPolicyJson)
   const policy =
     policyValue instanceof Error
       ? policyValue
@@ -211,11 +212,3 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   return c.body(null, 204)
 })
-
-function parseJson(value: string): Readonly<{ value: unknown }> | Error {
-  try {
-    return { value: JSON.parse(value) }
-  } catch (cause) {
-    return new Error("invalid JSON", { cause })
-  }
-}

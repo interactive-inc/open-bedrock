@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test"
 
-import { createIdentityTestKey } from "@/lib/auth/test/create-identity-test-key"
-import { createIdentityToken } from "@/lib/auth/test/create-identity-token"
+import { createSystemIdentityTestKey } from "@system/infrastructure/identity/create-system-identity-test-key.test-support"
+import { createSystemIdentityToken } from "@system/infrastructure/identity/create-system-identity-token.test-support"
 import { SystemIdentityTokenVerifier } from "@system/infrastructure/auth/system-identity-token-verifier"
 
-const identityKey = await createIdentityTestKey()
-const wrongIdentityKey = await createIdentityTestKey("wrong-key")
+const identityKey = await createSystemIdentityTestKey()
+const wrongIdentityKey = await createSystemIdentityTestKey("wrong-key")
 const issuer = "https://identity-provider.example/"
 const audience = "urn:system:identity-login"
 const nowEpoch = 1_767_225_600
@@ -13,7 +13,7 @@ const now = new Date(nowEpoch * 1_000)
 
 describe("SystemIdentityTokenVerifier", () => {
   test("accepts a valid EdDSA token and returns its claims", async () => {
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "ext-1",
       jti: "jti-1",
       audience,
@@ -36,7 +36,7 @@ describe("SystemIdentityTokenVerifier", () => {
   })
 
   test("rejects a token signed with a key outside the JWKS", async () => {
-    const token = await createIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
       keyId: wrongIdentityKey.keyId,
       audience,
     })
@@ -53,7 +53,7 @@ describe("SystemIdentityTokenVerifier", () => {
   })
 
   test("rejects a token with an unexpected issuer", async () => {
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       issuer: "https://attacker.example/",
       audience,
     })
@@ -70,7 +70,7 @@ describe("SystemIdentityTokenVerifier", () => {
   })
 
   test("rejects a token with an unexpected audience", async () => {
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       audience: "some-other-app",
     })
 
@@ -86,7 +86,7 @@ describe("SystemIdentityTokenVerifier", () => {
   })
 
   test("rejects an expired token", async () => {
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch - 120, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch - 120, {
       exp: nowEpoch - 60,
       iat: nowEpoch - 120,
       audience,
@@ -104,7 +104,7 @@ describe("SystemIdentityTokenVerifier", () => {
   })
 
   test("rejects a token missing required claims", async () => {
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       jti: "",
       audience,
     })
