@@ -175,7 +175,7 @@
     "src/contexts/company/infrastructure/workforce/to-organization-change-fingerprint.ts",
     "src/contexts/company/interface/http/company-capabilities.ts",
     "src/contexts/company/interface/http/company-http-environment.ts",
-    "src/contexts/company/interface/http/company-http-error.ts",
+    "src/contexts/company/interface/http/errors/company-http-error.ts",
     "src/contexts/company/interface/route-manifest.ts",
     "src/contexts/company/interface/routes/company.organization-profile.ts",
     "src/contexts/company/interface/routes/company.v1.account-employee-links.ts",

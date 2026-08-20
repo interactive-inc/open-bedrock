@@ -1,4 +1,4 @@
-import { SystemHttpError } from "@system/interface/http/system-http-error"
+import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 /** /system/v1/identity-sessions */
 import { systemFactory } from "@system/interface/http/system-factory"
 import { SystemIdentitySessionIssuer } from "@system/interface/runtime/system-identity-session-issuer"

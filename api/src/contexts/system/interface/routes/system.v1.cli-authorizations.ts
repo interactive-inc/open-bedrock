@@ -1,4 +1,4 @@
-import { SystemHttpError } from "@system/interface/http/system-http-error"
+import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 /** /system/v1/cli-authorizations */
 import { isSecureSystemIdentityIssuer } from "@system/domain/identity/is-secure-system-identity-issuer"
 import { systemCliIdentityRedirectUri } from "@system/domain/identity/system-cli-identity-redirect-uri"

@@ -1,5 +1,5 @@
 import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { CompanyHttpError } from "@/contexts/company/interface/http/company-http-error"
+import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

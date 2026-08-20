@@ -1,4 +1,4 @@
-import { SystemHttpError } from "@system/interface/http/system-http-error"
+import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 /** /system/v1/sessions */
 import { AuthenticateSystemPassword } from "@system/application/auth/authenticate-system-password"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"

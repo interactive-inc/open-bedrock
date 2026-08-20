@@ -1,4 +1,4 @@
-import { SystemHttpError } from "@system/interface/http/system-http-error"
+import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 /** /system/v1/accounts/:accountId */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"

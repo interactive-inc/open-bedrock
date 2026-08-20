@@ -1,4 +1,4 @@
-import { SystemHttpError } from "@system/interface/http/system-http-error"
+import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 /** /system/v1/audit-events */
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
