@@ -195,10 +195,10 @@ describe("GET /system/v1/cli-authorization-callback", () => {
       query: { code: "broker-code", state: "broker-state-single-use" },
     })
 
-    expect(missing.status).toBe(401)
-    expect(unknown.status).toBe(401)
+    expect(Number(missing.status)).toBe(401)
+    expect(Number(unknown.status)).toBe(401)
     expect(first.status).toBe(302)
-    expect(reused.status).toBe(401)
+    expect(Number(reused.status)).toBe(401)
   })
 
   test("fails closed when System audit cannot record a denial", async () => {

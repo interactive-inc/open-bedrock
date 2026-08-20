@@ -1,5 +1,4 @@
 import { HTTPException } from "hono/http-exception"
-import { createSystemProblemDetails } from "@/contexts/system/domain/http/create-system-problem-details"
 import {
   ConflictError,
   ForbiddenError,
@@ -12,57 +11,21 @@ import {
 import type { ApplicationError } from "@/lib/errors"
 
 /**
- * application 層が返した ApplicationError を Hono の HTTPException（HTTP セマンティクス）へ翻訳する。
- * クラスで HTTP ステータスを決め、応答ボディは onError が message を、ここで付与する code を返す。
- * UnexpectedError など未知のクラスは 500 に倒し、内部の cause は応答に出さない
+ * application 層の失敗を HTTP セマンティクスへ翻訳する。JSON は API の onError だけが生成する。
  */
 export function toHttpException(error: ApplicationError): HTTPException {
-  const status = toStatus(error)
-  const problem = createSystemProblemDetails({
-    status: status,
-    code: error.code,
-    detail: error.message,
+  let status: 400 | 403 | 404 | 409 | 413 | 422 | 500 | 503 = 500
+
+  if (error instanceof NotFoundError) status = 404
+  else if (error instanceof ForbiddenError) status = 403
+  else if (error instanceof ConflictError) status = 409
+  else if (error instanceof ValidationError) status = 400
+  else if (error instanceof UnprocessableError) status = 422
+  else if (error instanceof PayloadTooLargeError) status = 413
+  else if (error instanceof UnavailableError) status = 503
+
+  return new HTTPException(status, {
+    message: error.message,
+    cause: error,
   })
-
-  return new HTTPException(problem.status, {
-    res: new Response(JSON.stringify({ error: problem.detail, code: problem.code }), {
-      status: problem.status,
-      headers: { "content-type": "application/json" },
-    }),
-  })
-}
-
-/**
- * ApplicationError のクラスから HTTP ステータスを決める
- */
-function toStatus(error: ApplicationError): 400 | 403 | 404 | 409 | 413 | 422 | 500 | 503 {
-  if (error instanceof NotFoundError) {
-    return 404
-  }
-
-  if (error instanceof ForbiddenError) {
-    return 403
-  }
-
-  if (error instanceof ConflictError) {
-    return 409
-  }
-
-  if (error instanceof ValidationError) {
-    return 400
-  }
-
-  if (error instanceof UnprocessableError) {
-    return 422
-  }
-
-  if (error instanceof PayloadTooLargeError) {
-    return 413
-  }
-
-  if (error instanceof UnavailableError) {
-    return 503
-  }
-
-  return 500
 }

@@ -57,7 +57,8 @@ type Props = {
 
 ## エラー
 
-- バックエンドは throw 禁止、`T | Error` を返し instanceof で判別
+- domain / application / infrastructure は throw 禁止、`T | Error` を返し instanceof で判別
+- HTTP interface は失敗結果を中央の `onError` へ渡す型付き例外だけを throw してよい。エラー JSON は route や middleware で組み立てず、`onError` だけが生成する
 
 ## 空行
 

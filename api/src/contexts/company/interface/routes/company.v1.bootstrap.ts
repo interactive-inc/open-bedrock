@@ -1,6 +1,7 @@
 /** /company/v1/bootstrap */
 import { ProvisionCompanyBootstrapEmployee } from "@/contexts/company/application/employee/provision-company-bootstrap-employee"
 import { CompanyBootstrapEmployeeRepositoryD1 } from "@/contexts/company/infrastructure/employee/company-bootstrap-employee-repository"
+import { CompanyHttpError } from "@/contexts/company/interface/http/company-http-error"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
@@ -23,18 +24,34 @@ export const POST = systemFactory.createHandlers(
         code: z.string().trim().min(1).max(64).optional(),
       })
       .strict(),
+    (validation) => {
+      if (!validation.success) {
+        throw new CompanyHttpError({
+          status: 400,
+          code: "invalid_company_bootstrap_input",
+          detail: "Company bootstrap request body is invalid",
+          cause: validation.error,
+        })
+      }
+    },
   ),
   async (context) => {
     if (!context.var.permissions.has("system:admin")) {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new CompanyHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "System administrator permission is required",
+      })
     }
 
     const accountId = zAccountId.safeParse(context.var.userId)
     if (!accountId.success) {
-      return context.json(
-        { error: "Company bootstrap service unavailable", code: "company_bootstrap_unavailable" },
-        503,
-      )
+      throw new CompanyHttpError({
+        status: 503,
+        code: "company_bootstrap_unavailable",
+        detail: "Company bootstrap service is unavailable",
+        cause: accountId.error,
+      })
     }
     const body = context.req.valid("json")
 
@@ -47,28 +64,33 @@ export const POST = systemFactory.createHandlers(
       now: context.var.now(),
     })
     if (result instanceof Error) {
-      return context.json(
-        { error: "Company bootstrap service unavailable", code: "company_bootstrap_unavailable" },
-        503,
-      )
+      throw new CompanyHttpError({
+        status: 503,
+        code: "company_bootstrap_unavailable",
+        detail: "Company bootstrap service is unavailable",
+        cause: result,
+      })
     }
     if (result.kind === "invalid_input") {
-      return context.json(
-        { error: "invalid Company bootstrap input", code: "invalid_company_bootstrap_input" },
-        400,
-      )
+      throw new CompanyHttpError({
+        status: 400,
+        code: "invalid_company_bootstrap_input",
+        detail: "Company bootstrap request body is invalid",
+      })
     }
     if (result.state === "company_exists_without_account_link") {
-      return context.json(
-        { error: "Company is already initialized", code: "company_bootstrap_conflict" },
-        409,
-      )
+      throw new CompanyHttpError({
+        status: 409,
+        code: "company_bootstrap_conflict",
+        detail: "Company is already initialized without this account link",
+      })
     }
     if (result.kind === "already_initialized") {
-      return context.json(
-        { error: "Company is already initialized", code: "already_initialized" },
-        409,
-      )
+      throw new CompanyHttpError({
+        status: 409,
+        code: "already_initialized",
+        detail: "Company is already initialized",
+      })
     }
 
     return context.json(

@@ -1,5 +1,6 @@
 import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 import {
   DELETE,
   GET,
@@ -19,6 +20,21 @@ const subject = "person@example.com"
 const password = "correct-password"
 const pepper = "system-session-test-pepper"
 const jwtSecret = "system-session-route-test-secret"
+
+function createApp() {
+  const app = new Hono<SystemSessionHttpEnvironment>()
+    .get("/system/v1/sessions", ...GET)
+    .post("/system/v1/sessions", ...POST)
+    .patch("/system/v1/sessions", ...PATCH)
+    .delete("/system/v1/sessions", ...DELETE)
+
+  app.onError((error, context) => {
+    if (!(error instanceof SystemHttpError)) throw error
+    return context.json({ error: error.detail, code: error.code, ...error.metadata }, error.status)
+  })
+
+  return app
+}
 
 describe("System Session HTTP", () => {
   test("password認証・検証・rotation・reuse検知・冪等失効をcanonical Systemで実行する", async () => {
@@ -46,11 +62,7 @@ describe("System Session HTTP", () => {
       )
       .run(passwordHash, issuedAt.getTime())
 
-    const app = new Hono<SystemSessionHttpEnvironment>()
-      .get("/system/v1/sessions", ...GET)
-      .post("/system/v1/sessions", ...POST)
-      .patch("/system/v1/sessions", ...PATCH)
-      .delete("/system/v1/sessions", ...DELETE)
+    const app = createApp()
     const requestAtIssue = (
       input: Parameters<typeof app.request>[0],
       init?: Parameters<typeof app.request>[1],
@@ -118,12 +130,12 @@ describe("System Session HTTP", () => {
     const reused = await revocationClient.system.v1.sessions.$patch({
       json: { refresh_token: issuedBody.refresh_token },
     })
-    expect(reused.status).toBe(401)
+    expect(Number(reused.status)).toBe(401)
 
     const familyRevoked = await revocationClient.system.v1.sessions.$get({
       header: { authorization: `Bearer ${rotatedBody.refresh_token}` },
     })
-    expect(familyRevoked.status).toBe(401)
+    expect(Number(familyRevoked.status)).toBe(401)
 
     const logout = await revocationClient.system.v1.sessions.$delete({
       json: { refresh_token: rotatedBody.refresh_token },
@@ -133,10 +145,7 @@ describe("System Session HTTP", () => {
 
   test("未知subject・誤password・runtime不備を同じ安全な境界へ閉じる", async () => {
     const fixture = new SystemSessionTestContext()
-    const app = new Hono<SystemSessionHttpEnvironment>()
-      .get("/system/v1/sessions", ...GET)
-      .post("/system/v1/sessions", ...POST)
-      .patch("/system/v1/sessions", ...PATCH)
+    const app = createApp()
     const request = (
       input: Parameters<typeof app.request>[0],
       init?: Parameters<typeof app.request>[1],
@@ -151,8 +160,8 @@ describe("System Session HTTP", () => {
     const unknown = await client.system.v1.sessions.$post({
       json: { subject: "unknown@example.com", password: "wrong-password" },
     })
-    expect(unknown.status).toBe(401)
-    expect(await unknown.json()).toEqual({
+    expect(Number(unknown.status)).toBe(401)
+    expect((await unknown.json()) as unknown).toEqual({
       error: "invalid credentials",
       code: "invalid_credentials",
     })

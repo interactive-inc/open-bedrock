@@ -86,7 +86,7 @@ describe("POST /system/v1/cli-sessions", () => {
     })
 
     expect(first.status).toBe(201)
-    expect(second.status).toBe(401)
+    expect(Number(second.status)).toBe(401)
   })
 
   test("rejects an unknown, expired, or empty code", async () => {
@@ -105,8 +105,8 @@ describe("POST /system/v1/cli-sessions", () => {
       json: { code: "" },
     })
 
-    expect(unknownResponse.status).toBe(401)
-    expect(expiredResponse.status).toBe(401)
+    expect(Number(unknownResponse.status)).toBe(401)
+    expect(Number(expiredResponse.status)).toBe(401)
     expect(Number(emptyResponse.status)).toBe(400)
   })
 
@@ -123,7 +123,7 @@ describe("POST /system/v1/cli-sessions", () => {
       json: { code: "suspended-account-code" },
     })
 
-    expect(response.status).toBe(401)
+    expect(Number(response.status)).toBe(401)
     expect(fixture.sqlite.query("SELECT id FROM system_sessions").all()).toEqual([])
     expect(fixture.sqlite.query("SELECT action FROM system_audit_events").all()).toEqual([])
   })

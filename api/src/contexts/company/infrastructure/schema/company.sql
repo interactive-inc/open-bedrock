@@ -1,6 +1,16 @@
 CREATE TABLE company_organizations (
   id TEXT PRIMARY KEY NOT NULL,
   revision INTEGER NOT NULL DEFAULT 0 CHECK (revision >= 0),
+  name TEXT NOT NULL DEFAULT '' CHECK (
+    length(name) <= 200
+    AND trim(name) = name
+    AND instr(name, char(0)) = 0
+  ),
+  representative_name TEXT NOT NULL DEFAULT '' CHECK (
+    length(representative_name) <= 200
+    AND trim(representative_name) = representative_name
+    AND instr(representative_name, char(0)) = 0
+  ),
   created_at INTEGER NOT NULL CHECK (created_at >= 0),
   updated_at INTEGER NOT NULL CHECK (updated_at >= created_at)
 );

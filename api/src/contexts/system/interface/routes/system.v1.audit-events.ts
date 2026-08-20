@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/audit-events */
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
@@ -28,14 +29,22 @@ export const GET = systemFactory.createHandlers(
   async (context) => {
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      return context.json({ error: "audit service unavailable", code: "audit_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "audit_unavailable",
+        detail: "audit service unavailable",
+      })
     }
     const auditRepository = new SystemAuditEventRepository({ env: { DB: context.env.DB } })
     const authorizationJson = toStableSystemAuditJson({
       required_permission_keys: ["audit:read"],
     })
     if (authorizationJson instanceof Error) {
-      return context.json({ error: "audit service unavailable", code: "audit_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "audit_unavailable",
+        detail: "audit service unavailable",
+      })
     }
     if (
       !context.var.permissions.has("system:admin") &&
@@ -58,9 +67,17 @@ export const GET = systemFactory.createHandlers(
         deniedAudit instanceof Error ||
         (await auditRepository.append(deniedAudit)) instanceof Error
       ) {
-        return context.json({ error: "audit service unavailable", code: "audit_unavailable" }, 503)
+        throw new SystemHttpError({
+          status: 503,
+          code: "audit_unavailable",
+          detail: "audit service unavailable",
+        })
       }
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
 
     const query = context.req.valid("query")
@@ -76,7 +93,11 @@ export const GET = systemFactory.createHandlers(
       offset: query.offset,
     })
     if (page instanceof Error) {
-      return context.json({ error: "audit service unavailable", code: "audit_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "audit_unavailable",
+        detail: "audit service unavailable",
+      })
     }
     const metadataJson = toStableSystemAuditJson({
       action: query.action ?? null,
@@ -88,7 +109,11 @@ export const GET = systemFactory.createHandlers(
       target_type: query.target_type ?? null,
     })
     if (metadataJson instanceof Error) {
-      return context.json({ error: "audit service unavailable", code: "audit_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "audit_unavailable",
+        detail: "audit service unavailable",
+      })
     }
     const succeededAudit = createSystemAuditEvent({
       actorAccountId: context.var.userId,
@@ -107,7 +132,11 @@ export const GET = systemFactory.createHandlers(
       succeededAudit instanceof Error ||
       (await auditRepository.append(succeededAudit)) instanceof Error
     ) {
-      return context.json({ error: "audit service unavailable", code: "audit_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "audit_unavailable",
+        detail: "audit service unavailable",
+      })
     }
 
     return context.json(

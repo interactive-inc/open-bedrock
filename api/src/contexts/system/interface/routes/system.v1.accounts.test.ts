@@ -123,7 +123,7 @@ describe("System Account HTTP", () => {
       param: { accountId: rootAccountId },
       json: { status: "suspended" },
     })
-    expect(selfSuspension.status).toBe(403)
+    expect(Number(selfSuspension.status)).toBe(403)
     expect(
       fixture.sqlite
         .query(
@@ -193,7 +193,7 @@ describe("System Account HTTP", () => {
       param: { accountId: scopedPrivilegedAccountId },
       json: { status: "suspended" },
     })
-    expect(scopedPrivilegeDenial.status).toBe(403)
+    expect(Number(scopedPrivilegeDenial.status)).toBe(403)
     expect(
       fixture.sqlite
         .query("SELECT status, token_version FROM system_accounts WHERE id = ?1")

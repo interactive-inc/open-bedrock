@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/accounts/:accountId/identities/:identityId */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
@@ -11,24 +12,37 @@ import { systemFactory } from "@system/interface/http/system-factory"
 // @authorization permission iam:read - 一つのIdentity bindingと公開profileだけを読む
 export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
-    return context.json({ error: "forbidden", code: "forbidden" }, 403)
+    throw new SystemHttpError({
+      status: 403,
+      code: "forbidden",
+      detail: "forbidden",
+    })
   }
   const accountId = zAccountId.safeParse(context.req.param("accountId"))
   const identityId = zIdentityId.safeParse(context.req.param("identityId"))
   if (!accountId.success || !identityId.success) {
-    return context.json({ error: "identity not found", code: "identity_not_found" }, 404)
+    throw new SystemHttpError({
+      status: 404,
+      code: "identity_not_found",
+      detail: "identity not found",
+    })
   }
   const identity = await new SystemIdentityAdministrationRepository({
     env: { DB: context.env.DB },
   }).findById(identityId.data)
   if (identity instanceof Error) {
-    return context.json(
-      { error: "identity service unavailable", code: "identity_unavailable" },
-      503,
-    )
+    throw new SystemHttpError({
+      status: 503,
+      code: "identity_unavailable",
+      detail: "identity service unavailable",
+    })
   }
   if (identity === null || identity.binding.accountId !== accountId.data) {
-    return context.json({ error: "identity not found", code: "identity_not_found" }, 404)
+    throw new SystemHttpError({
+      status: 404,
+      code: "identity_not_found",
+      detail: "identity not found",
+    })
   }
 
   return context.json(
@@ -54,38 +68,56 @@ export const DELETE = systemFactory.createHandlers(
   authenticateSystemAccessToken,
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     const actorAccountId = zAccountId.safeParse(context.var.userId)
     const targetAccountId = zAccountId.safeParse(context.req.param("accountId"))
     const identityId = zIdentityId.safeParse(context.req.param("identityId"))
     if (!actorAccountId.success) {
-      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_session",
+        detail: "invalid session",
+      })
     }
     if (!targetAccountId.success || !identityId.success) {
-      return context.json({ error: "identity not found", code: "identity_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "identity_not_found",
+        detail: "identity not found",
+      })
     }
     const repository = new SystemIdentityAdministrationRepository({ env: { DB: context.env.DB } })
     const identity = await repository.findById(identityId.data)
     if (identity instanceof Error) {
-      return context.json(
-        { error: "identity service unavailable", code: "identity_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_unavailable",
+        detail: "identity service unavailable",
+      })
     }
     if (
       identity === null ||
       identity.binding.accountId !== targetAccountId.data ||
       identity.binding.state !== "active"
     ) {
-      return context.json({ error: "identity not found", code: "identity_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "identity_not_found",
+        detail: "identity not found",
+      })
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      return context.json(
-        { error: "identity service unavailable", code: "identity_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_unavailable",
+        detail: "identity service unavailable",
+      })
     }
     const beforeJson = toStableSystemAuditJson({
       account_id: identity.binding.accountId,
@@ -95,10 +127,11 @@ export const DELETE = systemFactory.createHandlers(
       subject: identity.binding.subject,
     })
     if (beforeJson instanceof Error) {
-      return context.json(
-        { error: "identity service unavailable", code: "identity_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_unavailable",
+        detail: "identity service unavailable",
+      })
     }
     const auditEvent = createSystemAuditEvent({
       actorAccountId: actorAccountId.data,
@@ -114,10 +147,11 @@ export const DELETE = systemFactory.createHandlers(
       occurredAt: now,
     })
     if (auditEvent instanceof Error) {
-      return context.json(
-        { error: "identity service unavailable", code: "identity_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_unavailable",
+        detail: "identity service unavailable",
+      })
     }
     const auditStatements = new SystemAuditEventRepository({
       env: { DB: context.env.DB },
@@ -129,22 +163,39 @@ export const DELETE = systemFactory.createHandlers(
       auditStatements,
     })
     if (revocation instanceof Error) {
-      return context.json(
-        { error: "identity service unavailable", code: "identity_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_unavailable",
+        detail: "identity service unavailable",
+      })
     }
     if (revocation === "forbidden") {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     if (revocation === "not_found") {
-      return context.json({ error: "identity not found", code: "identity_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "identity_not_found",
+        detail: "identity not found",
+      })
     }
     if (revocation === "last_active_identity") {
-      return context.json({ error: "last active identity", code: "last_active_identity" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "last_active_identity",
+        detail: "last active identity",
+      })
     }
     if (revocation === "last_root") {
-      return context.json({ error: "last root identity", code: "last_root" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "last_root",
+        detail: "last root identity",
+      })
     }
 
     return context.body(null, 204)

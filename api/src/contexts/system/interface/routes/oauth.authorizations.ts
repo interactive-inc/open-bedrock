@@ -6,6 +6,7 @@ import {
 } from "@/contexts/system/application/auth/errors"
 import { OidcValue } from "@/contexts/system/domain/identity/oidc.value"
 import { OidcResponse } from "@/contexts/system/interface/http/oidc-response"
+import { OidcHttpError } from "@/contexts/system/interface/http/oidc-http-error"
 import { requireSystemAuthentication } from "@system/interface/http/require-system-authentication"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
@@ -36,7 +37,10 @@ export const POST = systemFactory.createHandlers(
     }),
     (result) => {
       if (!result.success) {
-        return OidcResponse.error("invalid_request")
+        throw new OidcHttpError({
+          code: "invalid_request",
+          cause: result.error,
+        })
       }
     },
   ),
@@ -51,7 +55,7 @@ export const POST = systemFactory.createHandlers(
     )
 
     if (issuer instanceof Error) {
-      return OidcResponse.error("invalid_request")
+      throw new OidcHttpError({ code: "invalid_request", cause: issuer })
     }
 
     const service = new CreateOidcAuthorization(c)
@@ -63,15 +67,19 @@ export const POST = systemFactory.createHandlers(
     })
 
     if (result instanceof OidcInvalidRequestApplicationError) {
-      return OidcResponse.error("invalid_request")
+      throw new OidcHttpError({ code: "invalid_request", cause: result })
     }
 
     if (result instanceof OidcInvalidScopeApplicationError) {
-      return OidcResponse.error("invalid_scope")
+      throw new OidcHttpError({ code: "invalid_scope", cause: result })
     }
 
     if (result instanceof OidcTemporarilyUnavailableApplicationError) {
-      return OidcResponse.error("temporarily_unavailable", 503)
+      throw new OidcHttpError({
+        code: "temporarily_unavailable",
+        status: 503,
+        cause: result,
+      })
     }
 
     return OidcResponse.json(zAppOidcAuthorizationResponse.parse(result))

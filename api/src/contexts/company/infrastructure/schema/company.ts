@@ -14,6 +14,8 @@ import { systemAccounts } from "@system/infrastructure/schema/system-core"
 export const companyOrganizations = sqliteTable("company_organizations", {
   id: text("id").primaryKey(),
   revision: integer("revision").notNull().default(0),
+  name: text("name").notNull(),
+  representativeName: text("representative_name").notNull(),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at").notNull(),
 })
@@ -24,7 +26,10 @@ export const companyAccountProfiles = sqliteTable(
   {
     organizationId: text("organization_id")
       .notNull()
-      .references(() => companyOrganizations.id, { onDelete: "cascade", onUpdate: "cascade" }),
+      .references(() => companyOrganizations.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
     accountId: text("account_id")
       .notNull()
       .references(() => systemAccounts.id, { onDelete: "cascade" }),
@@ -54,7 +59,10 @@ export const companyResourceHeads = sqliteTable(
   {
     organizationId: text("organization_id")
       .notNull()
-      .references(() => companyOrganizations.id, { onDelete: "restrict", onUpdate: "cascade" }),
+      .references(() => companyOrganizations.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
     resourceType: text("resource_type").notNull(),
     resourceId: text("resource_id").notNull(),
     revision: integer("revision").notNull(),
@@ -66,7 +74,9 @@ export const companyResourceHeads = sqliteTable(
     updatedAt: integer("updated_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.organizationId, table.resourceType, table.resourceId] }),
+    primaryKey({
+      columns: [table.organizationId, table.resourceType, table.resourceId],
+    }),
     index("company_resource_heads_type_effective_idx").on(
       table.organizationId,
       table.resourceType,
@@ -94,7 +104,10 @@ export const companyResourceRevisions = sqliteTable(
   {
     organizationId: text("organization_id")
       .notNull()
-      .references(() => companyOrganizations.id, { onDelete: "restrict", onUpdate: "cascade" }),
+      .references(() => companyOrganizations.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
     resourceType: text("resource_type").notNull(),
     resourceId: text("resource_id").notNull(),
     revision: integer("revision").notNull(),
@@ -134,7 +147,10 @@ export const companyCommandReceipts = sqliteTable(
   {
     organizationId: text("organization_id")
       .notNull()
-      .references(() => companyOrganizations.id, { onDelete: "restrict", onUpdate: "cascade" }),
+      .references(() => companyOrganizations.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
     commandId: text("command_id").notNull(),
     fingerprint: text("fingerprint").notNull(),
     expectedRevision: integer("expected_revision").notNull(),

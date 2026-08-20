@@ -1,5 +1,6 @@
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import type { SystemHonoEnv } from "@system/interface/http/system-factory"
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 import { POST } from "@system/interface/routes/system.v1.identity-sessions"
 import { createSystemIdentityTestKey } from "@system/infrastructure/identity/create-system-identity-test-key.test-support"
 import { createSystemIdentityToken } from "@system/infrastructure/identity/create-system-identity-token.test-support"
@@ -50,6 +51,10 @@ function createFixture(
       await next()
     })
     .post("/system/v1/identity-sessions", ...POST)
+  app.onError((error, context) => {
+    if (!(error instanceof SystemHttpError)) throw error
+    return context.json({ error: error.detail, code: error.code, ...error.metadata }, error.status)
+  })
   const client = hc<typeof app>("http://system.test", {
     fetch: (input: Parameters<typeof app.request>[0], init?: Parameters<typeof app.request>[1]) =>
       app.request(input, init, {
@@ -104,8 +109,8 @@ describe("POST /system/v1/identity-sessions", () => {
 
     const response = await client.system.v1["identity-sessions"].$post({ json: { token } })
 
-    expect(response.status).toBe(401)
-    expect(await response.json()).toEqual({
+    expect(Number(response.status)).toBe(401)
+    expect((await response.json()) as unknown).toEqual({
       error: "identity login denied",
       code: "identity_login_denied",
     })
@@ -127,7 +132,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
     const response = await client.system.v1["identity-sessions"].$post({ json: { token } })
 
-    expect(response.status).toBe(401)
+    expect(Number(response.status)).toBe(401)
     expect(
       fixture.sqlite.query("SELECT reason_code FROM system_audit_events ORDER BY rowid").all(),
     ).toEqual([{ reason_code: "invalid_token" }])
@@ -143,7 +148,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
     const response = await client.system.v1["identity-sessions"].$post({ json: { token } })
 
-    expect(response.status).toBe(401)
+    expect(Number(response.status)).toBe(401)
     expect(
       fixture.sqlite.query("SELECT reason_code FROM system_audit_events ORDER BY rowid").all(),
     ).toEqual([{ reason_code: "invalid_token" }])
@@ -161,7 +166,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
     const response = await client.system.v1["identity-sessions"].$post({ json: { token } })
 
-    expect(response.status).toBe(401)
+    expect(Number(response.status)).toBe(401)
     expect(
       fixture.sqlite.query("SELECT reason_code FROM system_audit_events ORDER BY rowid").all(),
     ).toEqual([{ reason_code: "invalid_token" }])
@@ -178,7 +183,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
     const response = await client.system.v1["identity-sessions"].$post({ json: { token } })
 
-    expect(response.status).toBe(401)
+    expect(Number(response.status)).toBe(401)
     expect(
       fixture.sqlite.query("SELECT reason_code FROM system_audit_events ORDER BY rowid").all(),
     ).toEqual([{ reason_code: "email_unverified" }])
@@ -194,8 +199,8 @@ describe("POST /system/v1/identity-sessions", () => {
 
     const response = await client.system.v1["identity-sessions"].$post({ json: { token } })
 
-    expect(response.status).toBe(401)
-    expect(await response.json()).toEqual({
+    expect(Number(response.status)).toBe(401)
+    expect((await response.json()) as unknown).toEqual({
       error: "identity login denied",
       code: "identity_login_denied",
     })
@@ -221,7 +226,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
     const response = await client.system.v1["identity-sessions"].$post({ json: { token } })
 
-    expect(response.status).toBe(401)
+    expect(Number(response.status)).toBe(401)
     expect(
       fixture.sqlite.query("SELECT reason_code FROM system_audit_events ORDER BY rowid").all(),
     ).toEqual([{ reason_code: "account_inactive" }])
@@ -239,7 +244,7 @@ describe("POST /system/v1/identity-sessions", () => {
     const second = await client.system.v1["identity-sessions"].$post({ json: { token } })
 
     expect(first.status).toBe(201)
-    expect(second.status).toBe(401)
+    expect(Number(second.status)).toBe(401)
     expect(
       fixture.sqlite
         .query("SELECT action, reason_code FROM system_audit_events ORDER BY rowid")
@@ -260,8 +265,8 @@ describe("POST /system/v1/identity-sessions", () => {
 
     const response = await client.system.v1["identity-sessions"].$post({ json: { token } })
 
-    expect(response.status).toBe(503)
-    expect(await response.json()).toEqual({
+    expect(Number(response.status)).toBe(503)
+    expect((await response.json()) as unknown).toEqual({
       error: "identity login is unavailable",
       code: "identity_login_unavailable",
     })

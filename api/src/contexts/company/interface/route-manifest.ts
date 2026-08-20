@@ -2,6 +2,26 @@
 export const companyRouteManifest = [
   {
     method: "GET",
+    path: "/company/organization-profile",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.organization-profile",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "PUT",
+    path: "/company/organization-profile",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.organization-profile",
+      exportName: "PUT",
+    },
+  },
+  {
+    method: "GET",
     path: "/company/v1/capabilities",
     phase: "authenticated",
     handler: {

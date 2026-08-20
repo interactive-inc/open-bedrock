@@ -119,7 +119,7 @@ describe("System Notification HTTP", () => {
         source: null,
       },
     })
-    expect(unknownRecipient.status).toBe(404)
+    expect(Number(unknownRecipient.status)).toBe(404)
 
     const listed = await client.system.v1.notifications.$get({ query: {} })
     expect(listed.status).toBe(200)
@@ -154,6 +154,6 @@ describe("System Notification HTTP", () => {
     const missing = await client.system.v1.notifications[":id"].$get({
       param: { id: deliveryId },
     })
-    expect(missing.status).toBe(404)
+    expect(Number(missing.status)).toBe(404)
   })
 })

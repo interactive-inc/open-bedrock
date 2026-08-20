@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/bootstrap */
 import { BootstrapSystemRoot } from "@system/application/iam/bootstrap-system-root"
 import { isSystemBootstrapTokenUsable } from "@system/domain/configuration/is-system-bootstrap-token-usable"
@@ -12,7 +13,11 @@ import { z } from "zod"
 export const POST = systemFactory.createHandlers(
   systemFactory.createMiddleware(async (context, next) => {
     if (!isSystemBootstrapTokenUsable(context.env.BOOTSTRAP_TOKEN)) {
-      return context.json({ error: "not found", code: "not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "not_found",
+        detail: "not found",
+      })
     }
 
     await next()
@@ -37,28 +42,35 @@ export const POST = systemFactory.createHandlers(
   async (context) => {
     const expectedToken = context.env.BOOTSTRAP_TOKEN
     if (!isSystemBootstrapTokenUsable(expectedToken) || expectedToken === undefined) {
-      return context.json({ error: "not found", code: "not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "not_found",
+        detail: "not found",
+      })
     }
     const body = context.req.valid("json")
     if (!(await timingSafeStringEqual(body.token, expectedToken))) {
-      return context.json(
-        { error: "invalid bootstrap credential", code: "invalid_credential" },
-        401,
-      )
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_credential",
+        detail: "invalid bootstrap credential",
+      })
     }
     const pepper = context.env.PEPPER_SECRET
     if (pepper === undefined || pepper.length === 0) {
-      return context.json(
-        { error: "bootstrap service unavailable", code: "bootstrap_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "bootstrap_unavailable",
+        detail: "bootstrap service unavailable",
+      })
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      return context.json(
-        { error: "bootstrap service unavailable", code: "bootstrap_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "bootstrap_unavailable",
+        detail: "bootstrap service unavailable",
+      })
     }
     const bootstrap = await new BootstrapSystemRoot({
       passwordHasher: {
@@ -70,16 +82,25 @@ export const POST = systemFactory.createHandlers(
       repository: new SystemRootBootstrapRepositoryD1({ env: { DB: context.env.DB } }),
     }).execute({ email: body.email, password: body.password, now })
     if (bootstrap instanceof Error) {
-      return context.json(
-        { error: "bootstrap service unavailable", code: "bootstrap_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "bootstrap_unavailable",
+        detail: "bootstrap service unavailable",
+      })
     }
     if (bootstrap.kind === "invalid_input") {
-      return context.json({ error: "invalid bootstrap input", code: bootstrap.reason }, 400)
+      throw new SystemHttpError({
+        status: 400,
+        code: bootstrap.reason,
+        detail: "invalid bootstrap input",
+      })
     }
     if (bootstrap.kind === "already_initialized") {
-      return context.json({ error: "already initialized", code: "already_initialized" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "already_initialized",
+        detail: "already initialized",
+      })
     }
 
     return context.json(

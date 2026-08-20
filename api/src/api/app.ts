@@ -88,6 +88,7 @@ import * as batchEmployeeLifecyclePreflightRoute from "@/contexts/company/interf
 import * as batchEmployeeLifecycleProcessOutboxRoute from "@/contexts/company/interface/routes/batch.employee-lifecycle.process-outbox"
 import * as batchEmployeeLifecycleRebuildProjectionsRoute from "@/contexts/company/interface/routes/batch.employee-lifecycle.rebuild-projections"
 import * as batchEmployeeLifecycleVerifyRoute from "@/contexts/company/interface/routes/batch.employee-lifecycle.verify"
+import * as companyOrganizationProfileRoute from "@/contexts/company/interface/routes/company.organization-profile"
 import * as companyV1AccountEmployeeLinksRoute from "@/contexts/company/interface/routes/company.v1.account-employee-links"
 import * as companyV1BootstrapRoute from "@/contexts/company/interface/routes/company.v1.bootstrap"
 import * as companyV1CapabilitiesRoute from "@/contexts/company/interface/routes/company.v1.capabilities"
@@ -519,6 +520,8 @@ const routePart25 = createRouteApp()
   .get("/commendations", ...commendationsRoute.GET)
   .post("/commendations", ...commendationsRoute.POST)
   .delete("/commendations/:id", ...commendationsIdRoute.DELETE)
+  .get("/company/organization-profile", ...companyOrganizationProfileRoute.GET)
+  .put("/company/organization-profile", ...companyOrganizationProfileRoute.PUT)
   .get("/company/v1/account-employee-links", ...companyV1AccountEmployeeLinksRoute.GET)
   .post("/company/v1/account-employee-links", ...companyV1AccountEmployeeLinksRoute.POST)
   .post("/company/v1/bootstrap", ...companyV1BootstrapRoute.POST)
@@ -551,10 +554,10 @@ const routePart25 = createRouteApp()
   .post("/department-budgets", ...departmentBudgetsRoute.POST)
   .get("/department-budgets/summary", ...departmentBudgetsSummaryRoute.GET)
   .get("/department-budgets/:id", ...departmentBudgetsIdRoute.GET)
-  .patch("/department-budgets/:id", ...departmentBudgetsIdRoute.PATCH)
-  .delete("/department-budgets/:id", ...departmentBudgetsIdRoute.DELETE)
 
 const routePart26 = createRouteApp()
+  .patch("/department-budgets/:id", ...departmentBudgetsIdRoute.PATCH)
+  .delete("/department-budgets/:id", ...departmentBudgetsIdRoute.DELETE)
   .get("/department-definitions", ...departmentDefinitionsRoute.GET)
   .post("/department-definitions", ...departmentDefinitionsRoute.POST)
   .get("/departments", ...departmentsRoute.GET)
@@ -601,10 +604,10 @@ const routePart26 = createRouteApp()
   .get("/evaluation-templates", ...evaluationTemplatesRoute.GET)
   .post("/evaluation-templates", ...evaluationTemplatesRoute.POST)
   .get("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.GET)
-  .put("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PUT)
-  .patch("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PATCH)
 
 const routePart27 = createRouteApp()
+  .put("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PUT)
+  .patch("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PATCH)
   .post("/expenses", ...expensesRoute.POST)
   .get("/expenses/admin", ...expensesAdminRoute.GET)
   .get("/expenses/inbox", ...expensesInboxRoute.GET)
@@ -660,10 +663,10 @@ const routePart27 = createRouteApp()
   .post("/it-incidents", ...itIncidentsRoute.POST)
   .post("/it-incidents/:id/resolve", ...itIncidentsIdResolveRoute.POST)
   .get("/job-openings", ...jobOpeningsRoute.GET)
-  .post("/job-openings", ...jobOpeningsRoute.POST)
-  .get("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.GET)
 
 const routePart28 = createRouteApp()
+  .post("/job-openings", ...jobOpeningsRoute.POST)
+  .get("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.GET)
   .put("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.PUT)
   .get("/job-openings/:jobOpeningId/candidates", ...jobOpeningsJobOpeningIdCandidatesRoute.GET)
   .post("/job-openings/:jobOpeningId/candidates", ...jobOpeningsJobOpeningIdCandidatesRoute.POST)
@@ -710,13 +713,13 @@ const routePart28 = createRouteApp()
   .post("/oauth/mcp-grants", ...oauthMcpGrantsRoute.POST)
   .post("/oauth/token", ...oauthTokenRoute.POST)
   .get("/oauth/userinfo", ...oauthUserinfoRoute.GET)
+
+const routePart29 = createRouteApp()
   .post("/onboarding-assignments", ...onboardingAssignmentsRoute.POST)
   .get(
     "/onboarding-assignments/employees/:employeeCode",
     ...onboardingAssignmentsEmployeesEmployeeCodeRoute.GET,
   )
-
-const routePart29 = createRouteApp()
   .get("/onboarding-assignments/me", ...onboardingAssignmentsMeRoute.GET)
   .get("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.GET)
   .put("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.PUT)

@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/notifications/:id */
 import { MarkSystemNotificationRead } from "@system/application/notifications/mark-system-notification-read"
 import { zAccountId } from "@system/domain/auth/account-id"
@@ -17,19 +18,28 @@ export const GET = systemFactory.createHandlers(
   async (context) => {
     const accountId = zAccountId.safeParse(context.var.userId)
     if (!accountId.success) {
-      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_session",
+        detail: "invalid session",
+      })
     }
     const notification = await new SystemNotificationRepository({
       context: { env: { DB: context.env.DB } },
     }).findByDeliveryIdForAccount(context.req.valid("param").id, accountId.data)
     if (notification instanceof Error) {
-      return context.json(
-        { error: "notification service unavailable", code: "notification_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "notification_unavailable",
+        detail: "notification service unavailable",
+      })
     }
     if (notification === null) {
-      return context.json({ error: "notification not found", code: "notification_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "notification_not_found",
+        detail: "notification not found",
+      })
     }
 
     return context.json(
@@ -65,14 +75,19 @@ export const PATCH = systemFactory.createHandlers(
   async (context) => {
     const accountId = zAccountId.safeParse(context.var.userId)
     if (!accountId.success) {
-      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_session",
+        detail: "invalid session",
+      })
     }
     const readAt = context.var.now()
     if (!Number.isSafeInteger(readAt.getTime())) {
-      return context.json(
-        { error: "notification service unavailable", code: "notification_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "notification_unavailable",
+        detail: "notification service unavailable",
+      })
     }
     const transition = await new MarkSystemNotificationRead({
       notificationRepository: new SystemNotificationRepository({
@@ -84,19 +99,25 @@ export const PATCH = systemFactory.createHandlers(
       readAt,
     })
     if (transition instanceof Error) {
-      return context.json(
-        { error: "notification service unavailable", code: "notification_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "notification_unavailable",
+        detail: "notification service unavailable",
+      })
     }
     if (transition.kind === "not_found") {
-      return context.json({ error: "notification not found", code: "notification_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "notification_not_found",
+        detail: "notification not found",
+      })
     }
     if (transition.kind === "rejected") {
-      return context.json(
-        { error: "invalid notification transition", code: "invalid_notification_transition" },
-        409,
-      )
+      throw new SystemHttpError({
+        status: 409,
+        code: "invalid_notification_transition",
+        detail: "invalid notification transition",
+      })
     }
 
     return context.json(
@@ -119,19 +140,28 @@ export const DELETE = systemFactory.createHandlers(
   async (context) => {
     const accountId = zAccountId.safeParse(context.var.userId)
     if (!accountId.success) {
-      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_session",
+        detail: "invalid session",
+      })
     }
     const dismissed = await new SystemNotificationRepository({
       context: { env: { DB: context.env.DB } },
     }).dismissDelivery(context.req.valid("param").id, accountId.data)
     if (dismissed instanceof Error) {
-      return context.json(
-        { error: "notification service unavailable", code: "notification_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "notification_unavailable",
+        detail: "notification service unavailable",
+      })
     }
     if (!dismissed) {
-      return context.json({ error: "notification not found", code: "notification_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "notification_not_found",
+        detail: "notification not found",
+      })
     }
 
     return context.body(null, 204)

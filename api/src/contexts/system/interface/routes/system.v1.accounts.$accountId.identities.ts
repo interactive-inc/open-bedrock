@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/accounts/:accountId/identities */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { validateSystemPassword } from "@system/domain/auth/system-password-policy"
@@ -16,32 +17,46 @@ import { z } from "zod"
 // @authorization permission iam:read - AccountのIdentity bindingと公開profileだけを読む
 export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
-    return context.json({ error: "forbidden", code: "forbidden" }, 403)
+    throw new SystemHttpError({
+      status: 403,
+      code: "forbidden",
+      detail: "forbidden",
+    })
   }
   const accountId = zAccountId.safeParse(context.req.param("accountId"))
   if (!accountId.success) {
-    return context.json({ error: "account not found", code: "account_not_found" }, 404)
+    throw new SystemHttpError({
+      status: 404,
+      code: "account_not_found",
+      detail: "account not found",
+    })
   }
   const account = await new SystemAccountAdministrationRepository({
     env: { DB: context.env.DB },
   }).findById(accountId.data)
   if (account instanceof Error) {
-    return context.json(
-      { error: "identity service unavailable", code: "identity_unavailable" },
-      503,
-    )
+    throw new SystemHttpError({
+      status: 503,
+      code: "identity_unavailable",
+      detail: "identity service unavailable",
+    })
   }
   if (account === null) {
-    return context.json({ error: "account not found", code: "account_not_found" }, 404)
+    throw new SystemHttpError({
+      status: 404,
+      code: "account_not_found",
+      detail: "account not found",
+    })
   }
   const identities = await new SystemIdentityAdministrationRepository({
     env: { DB: context.env.DB },
   }).listForAccount(accountId.data)
   if (identities instanceof Error) {
-    return context.json(
-      { error: "identity service unavailable", code: "identity_unavailable" },
-      503,
-    )
+    throw new SystemHttpError({
+      status: 503,
+      code: "identity_unavailable",
+      detail: "identity service unavailable",
+    })
   }
 
   return context.json(
@@ -101,26 +116,43 @@ export const POST = systemFactory.createHandlers(
   ),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     const actorAccountId = zAccountId.safeParse(context.var.userId)
     const targetAccountId = zAccountId.safeParse(context.req.param("accountId"))
     if (!actorAccountId.success) {
-      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_session",
+        detail: "invalid session",
+      })
     }
     if (!targetAccountId.success) {
-      return context.json({ error: "account not found", code: "account_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "account_not_found",
+        detail: "account not found",
+      })
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      return context.json(
-        { error: "identity service unavailable", code: "identity_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_unavailable",
+        detail: "identity service unavailable",
+      })
     }
     const body = context.req.valid("json")
     if (body.provider === "password" && validateSystemPassword(body.password) !== null) {
-      return context.json({ error: "invalid password", code: "invalid_password" }, 400)
+      throw new SystemHttpError({
+        status: 400,
+        code: "invalid_password",
+        detail: "invalid password",
+      })
     }
     const subject = body.provider === "password" ? body.email : body.subject
     const email = body.email
@@ -135,14 +167,19 @@ export const POST = systemFactory.createHandlers(
       revokedAt: null,
     })
     if (binding instanceof Error) {
-      return context.json({ error: "invalid identity", code: "invalid_identity" }, 400)
+      throw new SystemHttpError({
+        status: 400,
+        code: "invalid_identity",
+        detail: "invalid identity",
+      })
     }
     const pepper = context.env.PEPPER_SECRET
     if (body.provider === "password" && (pepper === undefined || pepper.length === 0)) {
-      return context.json(
-        { error: "identity service unavailable", code: "identity_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_unavailable",
+        detail: "identity service unavailable",
+      })
     }
     const passwordHash =
       body.provider === "password" && pepper !== undefined
@@ -154,10 +191,11 @@ export const POST = systemFactory.createHandlers(
       console.error(
         JSON.stringify({ event: "system_identity_password_hash_failed", error: passwordHash.name }),
       )
-      return context.json(
-        { error: "identity service unavailable", code: "identity_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_unavailable",
+        detail: "identity service unavailable",
+      })
     }
     const afterJson = toStableSystemAuditJson({
       account_id: binding.accountId,
@@ -167,10 +205,11 @@ export const POST = systemFactory.createHandlers(
       subject: binding.subject,
     })
     if (afterJson instanceof Error) {
-      return context.json(
-        { error: "identity service unavailable", code: "identity_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_unavailable",
+        detail: "identity service unavailable",
+      })
     }
     const auditEvent = createSystemAuditEvent({
       actorAccountId: actorAccountId.data,
@@ -186,10 +225,11 @@ export const POST = systemFactory.createHandlers(
       occurredAt: now,
     })
     if (auditEvent instanceof Error) {
-      return context.json(
-        { error: "identity service unavailable", code: "identity_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_unavailable",
+        detail: "identity service unavailable",
+      })
     }
     const auditStatements = new SystemAuditEventRepository({
       env: { DB: context.env.DB },
@@ -205,16 +245,25 @@ export const POST = systemFactory.createHandlers(
       auditStatements,
     })
     if (creation instanceof Error) {
-      return context.json(
-        { error: "identity service unavailable", code: "identity_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_unavailable",
+        detail: "identity service unavailable",
+      })
     }
     if (creation === "forbidden") {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     if (creation === "conflict") {
-      return context.json({ error: "identity conflict", code: "identity_conflict" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "identity_conflict",
+        detail: "identity conflict",
+      })
     }
 
     return context.json(

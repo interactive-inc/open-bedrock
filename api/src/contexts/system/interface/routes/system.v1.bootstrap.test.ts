@@ -35,7 +35,7 @@ describe("System Bootstrap HTTP", () => {
         password: "correct horse battery staple",
       },
     })
-    expect(invalidCredential.status).toBe(401)
+    expect(Number(invalidCredential.status)).toBe(401)
 
     const created = await client.system.v1.bootstrap.$post({
       json: {
@@ -80,7 +80,7 @@ describe("System Bootstrap HTTP", () => {
         password: "another correct horse battery staple",
       },
     })
-    expect(repeated.status).toBe(409)
+    expect(Number(repeated.status)).toBe(409)
     expect(fixture.sqlite.query("SELECT count(*) AS total FROM system_accounts").get()).toEqual({
       total: 1,
     })

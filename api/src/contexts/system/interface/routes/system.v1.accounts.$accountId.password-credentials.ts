@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/accounts/:accountId/password-credentials */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { validateSystemPassword } from "@system/domain/auth/system-password-policy"
@@ -17,45 +18,61 @@ export const PATCH = systemFactory.createHandlers(
   zValidator("json", z.object({ password: z.string().min(12).max(200) }).strict()),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     const actorAccountId = zAccountId.safeParse(context.var.userId)
     const targetAccountId = zAccountId.safeParse(context.req.param("accountId"))
     if (!actorAccountId.success) {
-      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_session",
+        detail: "invalid session",
+      })
     }
     if (!targetAccountId.success) {
-      return context.json(
-        { error: "password credential not found", code: "password_credential_not_found" },
-        404,
-      )
+      throw new SystemHttpError({
+        status: 404,
+        code: "password_credential_not_found",
+        detail: "password credential not found",
+      })
     }
     const body = context.req.valid("json")
     if (validateSystemPassword(body.password) !== null) {
-      return context.json({ error: "invalid password", code: "invalid_password" }, 400)
+      throw new SystemHttpError({
+        status: 400,
+        code: "invalid_password",
+        detail: "invalid password",
+      })
     }
     const pepper = context.env.PEPPER_SECRET
     if (pepper === undefined || pepper.length === 0) {
-      return context.json(
-        { error: "password service unavailable", code: "password_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "password_unavailable",
+        detail: "password service unavailable",
+      })
     }
     const repository = new SystemPasswordAdministrationRepository({
       env: { DB: context.env.DB },
     })
     const identityId = await repository.findIdentityId(targetAccountId.data)
     if (identityId instanceof Error) {
-      return context.json(
-        { error: "password service unavailable", code: "password_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "password_unavailable",
+        detail: "password service unavailable",
+      })
     }
     if (identityId === null) {
-      return context.json(
-        { error: "password credential not found", code: "password_credential_not_found" },
-        404,
-      )
+      throw new SystemHttpError({
+        status: 404,
+        code: "password_credential_not_found",
+        detail: "password credential not found",
+      })
     }
     const passwordHash = await PasswordHashService.hash(body.password, pepper).catch(
       (caught: unknown) =>
@@ -65,24 +82,27 @@ export const PATCH = systemFactory.createHandlers(
       console.error(
         JSON.stringify({ event: "system_password_reset_hash_failed", error: passwordHash.name }),
       )
-      return context.json(
-        { error: "password service unavailable", code: "password_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "password_unavailable",
+        detail: "password service unavailable",
+      })
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      return context.json(
-        { error: "password service unavailable", code: "password_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "password_unavailable",
+        detail: "password service unavailable",
+      })
     }
     const afterJson = toStableSystemAuditJson({ changed_at: now.toISOString() })
     if (afterJson instanceof Error) {
-      return context.json(
-        { error: "password service unavailable", code: "password_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "password_unavailable",
+        detail: "password service unavailable",
+      })
     }
     const auditEvent = createSystemAuditEvent({
       actorAccountId: actorAccountId.data,
@@ -98,10 +118,11 @@ export const PATCH = systemFactory.createHandlers(
       occurredAt: now,
     })
     if (auditEvent instanceof Error) {
-      return context.json(
-        { error: "password service unavailable", code: "password_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "password_unavailable",
+        detail: "password service unavailable",
+      })
     }
     const auditStatements = new SystemAuditEventRepository({
       env: { DB: context.env.DB },
@@ -115,19 +136,25 @@ export const PATCH = systemFactory.createHandlers(
       auditStatements,
     })
     if (reset instanceof Error) {
-      return context.json(
-        { error: "password service unavailable", code: "password_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "password_unavailable",
+        detail: "password service unavailable",
+      })
     }
     if (reset === "forbidden") {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     if (reset === "not_found") {
-      return context.json(
-        { error: "password credential not found", code: "password_credential_not_found" },
-        404,
-      )
+      throw new SystemHttpError({
+        status: 404,
+        code: "password_credential_not_found",
+        detail: "password credential not found",
+      })
     }
 
     return context.body(null, 204)

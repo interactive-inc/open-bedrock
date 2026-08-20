@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/roles/:roleId */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
@@ -13,20 +14,36 @@ import { z } from "zod"
 // @authorization permission iam:read - 一つのSystem Roleをpermission集合付きで読む
 export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
-    return context.json({ error: "forbidden", code: "forbidden" }, 403)
+    throw new SystemHttpError({
+      status: 403,
+      code: "forbidden",
+      detail: "forbidden",
+    })
   }
   const roleId = iamRoleIdSchema.safeParse(context.req.param("roleId"))
   if (!roleId.success) {
-    return context.json({ error: "role not found", code: "role_not_found" }, 404)
+    throw new SystemHttpError({
+      status: 404,
+      code: "role_not_found",
+      detail: "role not found",
+    })
   }
   const role = await new SystemRoleAdministrationRepository({
     env: { DB: context.env.DB },
   }).findById(roleId.data)
   if (role instanceof Error) {
-    return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+    throw new SystemHttpError({
+      status: 503,
+      code: "iam_unavailable",
+      detail: "IAM service unavailable",
+    })
   }
   if (role === null) {
-    return context.json({ error: "role not found", code: "role_not_found" }, 404)
+    throw new SystemHttpError({
+      status: 404,
+      code: "role_not_found",
+      detail: "role not found",
+    })
   }
 
   return context.json(
@@ -67,30 +84,58 @@ export const PATCH = systemFactory.createHandlers(
   ),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     const actorAccountId = zAccountId.safeParse(context.var.userId)
     const roleId = iamRoleIdSchema.safeParse(context.req.param("roleId"))
     if (!actorAccountId.success) {
-      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_session",
+        detail: "invalid session",
+      })
     }
     if (!roleId.success) {
-      return context.json({ error: "role not found", code: "role_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "role_not_found",
+        detail: "role not found",
+      })
     }
     const repository = new SystemRoleAdministrationRepository({ env: { DB: context.env.DB } })
     const current = await repository.findById(roleId.data)
     if (current instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     if (current === null) {
-      return context.json({ error: "role not found", code: "role_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "role_not_found",
+        detail: "role not found",
+      })
     }
     if (current.kind === "managed") {
-      return context.json({ error: "managed role is immutable", code: "managed_role" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "managed_role",
+        detail: "managed role is immutable",
+      })
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const body = context.req.valid("json")
     const revised = current.revise({
@@ -100,7 +145,11 @@ export const PATCH = systemFactory.createHandlers(
       at: now,
     })
     if (revised instanceof Error) {
-      return context.json({ error: "invalid role", code: "invalid_role" }, 400)
+      throw new SystemHttpError({
+        status: 400,
+        code: "invalid_role",
+        detail: "invalid role",
+      })
     }
     if (revised === current) {
       return context.json(
@@ -128,7 +177,11 @@ export const PATCH = systemFactory.createHandlers(
       permission_keys: revised.permissionKeys,
     })
     if (beforeJson instanceof Error || afterJson instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const auditEvent = createSystemAuditEvent({
       actorAccountId: actorAccountId.data,
@@ -144,23 +197,43 @@ export const PATCH = systemFactory.createHandlers(
       occurredAt: now,
     })
     if (auditEvent instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const auditStatements = new SystemAuditEventRepository({
       env: { DB: context.env.DB },
     }).prepareAppend(auditEvent)
     const update = await repository.update(actorAccountId.data, current, revised, auditStatements)
     if (update instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     if (update === "forbidden") {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     if (update === "managed_role") {
-      return context.json({ error: "managed role is immutable", code: "managed_role" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "managed_role",
+        detail: "managed role is immutable",
+      })
     }
     if (update === "conflict") {
-      return context.json({ error: "role conflict", code: "role_conflict" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "role_conflict",
+        detail: "role conflict",
+      })
     }
 
     return context.json(
@@ -184,30 +257,58 @@ export const DELETE = systemFactory.createHandlers(
   authenticateSystemAccessToken,
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     const actorAccountId = zAccountId.safeParse(context.var.userId)
     const roleId = iamRoleIdSchema.safeParse(context.req.param("roleId"))
     if (!actorAccountId.success) {
-      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_session",
+        detail: "invalid session",
+      })
     }
     if (!roleId.success) {
-      return context.json({ error: "role not found", code: "role_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "role_not_found",
+        detail: "role not found",
+      })
     }
     const repository = new SystemRoleAdministrationRepository({ env: { DB: context.env.DB } })
     const role = await repository.findById(roleId.data)
     if (role instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     if (role === null) {
-      return context.json({ error: "role not found", code: "role_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "role_not_found",
+        detail: "role not found",
+      })
     }
     if (role.kind === "managed") {
-      return context.json({ error: "managed role is immutable", code: "managed_role" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "managed_role",
+        detail: "managed role is immutable",
+      })
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const beforeJson = toStableSystemAuditJson({
       description: role.description,
@@ -217,7 +318,11 @@ export const DELETE = systemFactory.createHandlers(
       permission_keys: role.permissionKeys,
     })
     if (beforeJson instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const auditEvent = createSystemAuditEvent({
       actorAccountId: actorAccountId.data,
@@ -233,23 +338,43 @@ export const DELETE = systemFactory.createHandlers(
       occurredAt: now,
     })
     if (auditEvent instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const auditStatements = new SystemAuditEventRepository({
       env: { DB: context.env.DB },
     }).prepareAppend(auditEvent)
     const deletion = await repository.delete(actorAccountId.data, role, auditStatements)
     if (deletion instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     if (deletion === "forbidden") {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     if (deletion === "managed_role") {
-      return context.json({ error: "managed role is immutable", code: "managed_role" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "managed_role",
+        detail: "managed role is immutable",
+      })
     }
     if (deletion === "role_in_use") {
-      return context.json({ error: "role is in use", code: "role_in_use" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "role_in_use",
+        detail: "role is in use",
+      })
     }
 
     return context.body(null, 204)

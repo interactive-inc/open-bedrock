@@ -73,18 +73,14 @@ describe("toHttpException", () => {
   ]
 
   for (const entry of cases) {
-    test(`maps ${entry.name} to ${entry.status} with a safe JSON body`, async () => {
+    test(`maps ${entry.name} to ${entry.status} without assembling JSON`, () => {
       const exception = toHttpException(entry.error)
-      const response = exception.getResponse()
-      const body = (await response.json()) as Record<string, unknown>
 
       expect(exception.status).toBe(entry.status)
-      expect(response.status).toBe(entry.status)
-      expect(response.headers.get("content-type")).toBe("application/json")
-      expect(body).toEqual({ error: entry.error.message, code: entry.code })
-      expect(Object.keys(body).sort()).toEqual(["code", "error"])
-      expect(JSON.stringify(body)).not.toContain(cause.message)
-      expect(JSON.stringify(body)).not.toContain("cause")
+      expect(exception.message).toBe(entry.error.message)
+      expect(exception.cause).toBe(entry.error)
+      expect(entry.error.code).toBe(entry.code)
+      expect(exception.res).toBeUndefined()
     })
   }
 })
