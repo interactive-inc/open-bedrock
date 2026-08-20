@@ -92,8 +92,8 @@ describe("GET /system/v1/cli-authorizations", () => {
       query: { port: "51820", state: "cli-opaque-state-4" },
     })
 
-    expect(missingResponse.status).toBe(503)
-    expect(insecureResponse.status).toBe(503)
+    expect(Number(missingResponse.status)).toBe(503)
+    expect(Number(insecureResponse.status)).toBe(503)
     expect(missing.fixture.sqlite.query("SELECT state FROM system_cli_login_states").all()).toEqual(
       [],
     )

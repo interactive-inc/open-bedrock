@@ -163,6 +163,7 @@ describe("rate limiting", () => {
     const response = await app.request("/employees", { method: "GET" }, bindings)
 
     expect(response.status).toBe(429)
+    expect(await response.json()).toEqual({ error: "too many requests" })
   })
 
   test("上限内(success:true)なら通常処理に進む（未認証で 401）", async () => {
@@ -189,6 +190,7 @@ describe("rate limiting fail-closed (#1035)", () => {
     const response = await app.request("/employees", { method: "GET" }, bindings)
 
     expect(response.status).toBe(503)
+    expect(await response.json()).toEqual({ error: "rate limiter is not configured" })
   })
 
   test("本番相当でも /health は binding 未設定のまま通す（監視用）", async () => {

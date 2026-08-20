@@ -5,6 +5,7 @@ import {
 import { GetOidcUserinfo } from "@/contexts/system/application/auth/get-oidc-userinfo"
 import { OidcValue } from "@/contexts/system/domain/identity/oidc.value"
 import { OidcResponse } from "@/contexts/system/interface/http/oidc-response"
+import { OidcHttpError } from "@/contexts/system/interface/http/oidc-http-error"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 
 // @authorization public - OIDC access token自体をcredentialとして検証する
@@ -21,24 +22,32 @@ export const GET = systemFactory.createHandlers(async (c) => {
   )
 
   if (accessToken === null || issuer instanceof Error) {
-    const response = OidcResponse.error("invalid_token", 401)
-    response.headers.set("WWW-Authenticate", 'Bearer error="invalid_token"')
-    return response
+    throw new OidcHttpError({
+      code: "invalid_token",
+      status: 401,
+      authenticate: 'Bearer error="invalid_token"',
+      cause: issuer instanceof Error ? issuer : undefined,
+    })
   }
 
   const service = new GetOidcUserinfo(c)
   const result = await service.execute({ issuer, accessToken })
 
   if (result instanceof OidcInvalidTokenApplicationError) {
-    const response = OidcResponse.error("invalid_token", 401)
-
-    response.headers.set("WWW-Authenticate", 'Bearer error="invalid_token"')
-
-    return response
+    throw new OidcHttpError({
+      code: "invalid_token",
+      status: 401,
+      authenticate: 'Bearer error="invalid_token"',
+      cause: result,
+    })
   }
 
   if (result instanceof OidcTemporarilyUnavailableApplicationError) {
-    return OidcResponse.error("temporarily_unavailable", 503)
+    throw new OidcHttpError({
+      code: "temporarily_unavailable",
+      status: 503,
+      cause: result,
+    })
   }
 
   return OidcResponse.json(result)

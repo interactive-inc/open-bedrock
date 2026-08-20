@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/roles */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
@@ -13,11 +14,21 @@ import { z } from "zod"
 // @authorization permission iam:read - namespaced permissionを持つSystem Roleだけを読む
 export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
-    return context.json({ error: "forbidden", code: "forbidden" }, 403)
+    throw new SystemHttpError({
+      status: 403,
+      code: "forbidden",
+      detail: "forbidden",
+    })
   }
-  const roles = await new SystemRoleAdministrationRepository({ env: { DB: context.env.DB } }).list()
+  const roles = await new SystemRoleAdministrationRepository({
+    env: { DB: context.env.DB },
+  }).list()
   if (roles instanceof Error) {
-    return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+    throw new SystemHttpError({
+      status: 503,
+      code: "iam_unavailable",
+      detail: "IAM service unavailable",
+    })
   }
 
   return context.json(
@@ -66,15 +77,27 @@ export const POST = systemFactory.createHandlers(
   ),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     const actorAccountId = zAccountId.safeParse(context.var.userId)
     const now = context.var.now()
     if (!actorAccountId.success) {
-      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_session",
+        detail: "invalid session",
+      })
     }
     if (!Number.isSafeInteger(now.getTime())) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const body = context.req.valid("json")
     const role = IamRole.create({
@@ -88,7 +111,11 @@ export const POST = systemFactory.createHandlers(
       updatedAt: now,
     })
     if (role instanceof Error) {
-      return context.json({ error: "invalid role", code: "invalid_role" }, 400)
+      throw new SystemHttpError({
+        status: 400,
+        code: "invalid_role",
+        detail: "invalid role",
+      })
     }
     const afterJson = toStableSystemAuditJson({
       description: role.description,
@@ -98,7 +125,11 @@ export const POST = systemFactory.createHandlers(
       permission_keys: role.permissionKeys,
     })
     if (afterJson instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const auditEvent = createSystemAuditEvent({
       actorAccountId: actorAccountId.data,
@@ -114,7 +145,11 @@ export const POST = systemFactory.createHandlers(
       occurredAt: now,
     })
     if (auditEvent instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const auditStatements = new SystemAuditEventRepository({
       env: { DB: context.env.DB },
@@ -123,13 +158,25 @@ export const POST = systemFactory.createHandlers(
       env: { DB: context.env.DB },
     }).create(actorAccountId.data, role, auditStatements)
     if (creation instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     if (creation === "forbidden") {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     if (creation === "conflict") {
-      return context.json({ error: "role conflict", code: "role_conflict" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "role_conflict",
+        detail: "role conflict",
+      })
     }
 
     return context.json(

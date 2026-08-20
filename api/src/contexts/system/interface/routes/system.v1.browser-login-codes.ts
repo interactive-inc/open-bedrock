@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/browser-login-codes */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { createSystemBrowserLoginCode } from "@system/infrastructure/auth/create-system-browser-login-code"
@@ -12,19 +13,21 @@ export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, 
   const now = context.var.now()
   const accountId = zAccountId.safeParse(context.var.userId)
   if (!Number.isSafeInteger(now.getTime()) || !accountId.success) {
-    return context.json(
-      { error: "browser login is unavailable", code: "browser_login_code_unavailable" },
-      503,
-    )
+    throw new SystemHttpError({
+      status: 503,
+      code: "browser_login_code_unavailable",
+      detail: "browser login is unavailable",
+    })
   }
 
   const rawCode = crypto.randomUUID()
   const codeHash = await systemLoginCodeHash(rawCode)
   if (codeHash instanceof Error) {
-    return context.json(
-      { error: "browser login is unavailable", code: "browser_login_code_unavailable" },
-      503,
-    )
+    throw new SystemHttpError({
+      status: 503,
+      code: "browser_login_code_unavailable",
+      detail: "browser login is unavailable",
+    })
   }
   const creation = await createSystemBrowserLoginCode(
     { env: { DB: context.env.DB } },
@@ -36,10 +39,11 @@ export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, 
     },
   )
   if (creation instanceof Error) {
-    return context.json(
-      { error: "browser login is unavailable", code: "browser_login_code_unavailable" },
-      503,
-    )
+    throw new SystemHttpError({
+      status: 503,
+      code: "browser_login_code_unavailable",
+      detail: "browser login is unavailable",
+    })
   }
 
   return context.json({ code: rawCode, expires_in: CODE_TTL_MILLISECONDS / 1_000 }, 201)

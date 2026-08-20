@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/identity-sessions */
 import { systemFactory } from "@system/interface/http/system-factory"
 import { SystemIdentitySessionIssuer } from "@system/interface/runtime/system-identity-session-issuer"
@@ -16,10 +17,11 @@ export const POST = systemFactory.createHandlers(
       audience === undefined ||
       audience.length === 0
     ) {
-      return context.json(
-        { error: "identity login is unavailable", code: "identity_login_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_login_unavailable",
+        detail: "identity login is unavailable",
+      })
     }
 
     const result = await new SystemIdentitySessionIssuer({
@@ -31,13 +33,18 @@ export const POST = systemFactory.createHandlers(
       sessionTtlMilliseconds: Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000,
     }).issue(context.req.valid("json").token, context.var.now())
     if (result.kind === "unavailable") {
-      return context.json(
-        { error: "identity login is unavailable", code: "identity_login_unavailable" },
-        503,
-      )
+      throw new SystemHttpError({
+        status: 503,
+        code: "identity_login_unavailable",
+        detail: "identity login is unavailable",
+      })
     }
     if (result.kind === "rejected") {
-      return context.json({ error: "identity login denied", code: "identity_login_denied" }, 401)
+      throw new SystemHttpError({
+        status: 401,
+        code: "identity_login_denied",
+        detail: "identity login denied",
+      })
     }
 
     return context.json(

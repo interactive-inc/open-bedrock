@@ -1,3 +1,4 @@
+import { SystemHttpError } from "@system/interface/http/system-http-error"
 /** /system/v1/accounts/:accountId/role-bindings/:bindingId */
 import { zAccountId } from "@system/domain/auth/account-id"
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
@@ -14,43 +15,75 @@ export const DELETE = systemFactory.createHandlers(
   authenticateSystemAccessToken,
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     const actorAccountId = zAccountId.safeParse(context.var.userId)
     const targetAccountId = zAccountId.safeParse(context.req.param("accountId"))
     const bindingId = roleBindingIdSchema.safeParse(context.req.param("bindingId"))
     if (!actorAccountId.success) {
-      return context.json({ error: "invalid session", code: "invalid_session" }, 401)
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_session",
+        detail: "invalid session",
+      })
     }
     if (!targetAccountId.success || !bindingId.success) {
-      return context.json({ error: "role binding not found", code: "role_binding_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "role_binding_not_found",
+        detail: "role binding not found",
+      })
     }
     const repository = new SystemRoleBindingAdministrationRepository({
       env: { DB: context.env.DB },
     })
     const binding = await repository.findById(bindingId.data)
     if (binding instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     if (
       binding === null ||
       binding.accountId !== targetAccountId.data ||
       binding.revokedAt !== null
     ) {
-      return context.json({ error: "role binding not found", code: "role_binding_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "role_binding_not_found",
+        detail: "role binding not found",
+      })
     }
     const role = await new SystemRoleAdministrationRepository({
       env: { DB: context.env.DB },
     }).findById(binding.roleId)
     if (role instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     if (role === null) {
-      return context.json({ error: "role binding not found", code: "role_binding_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "role_binding_not_found",
+        detail: "role binding not found",
+      })
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const beforeJson = toStableSystemAuditJson({
       account_id: binding.accountId,
@@ -59,7 +92,11 @@ export const DELETE = systemFactory.createHandlers(
       role_id: binding.roleId,
     })
     if (beforeJson instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const auditEvent = createSystemAuditEvent({
       actorAccountId: actorAccountId.data,
@@ -75,7 +112,11 @@ export const DELETE = systemFactory.createHandlers(
       occurredAt: now,
     })
     if (auditEvent instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     const auditStatements = new SystemAuditEventRepository({
       env: { DB: context.env.DB },
@@ -88,16 +129,32 @@ export const DELETE = systemFactory.createHandlers(
       auditStatements,
     )
     if (revocation instanceof Error) {
-      return context.json({ error: "IAM service unavailable", code: "iam_unavailable" }, 503)
+      throw new SystemHttpError({
+        status: 503,
+        code: "iam_unavailable",
+        detail: "IAM service unavailable",
+      })
     }
     if (revocation === "forbidden") {
-      return context.json({ error: "forbidden", code: "forbidden" }, 403)
+      throw new SystemHttpError({
+        status: 403,
+        code: "forbidden",
+        detail: "forbidden",
+      })
     }
     if (revocation === "not_found") {
-      return context.json({ error: "role binding not found", code: "role_binding_not_found" }, 404)
+      throw new SystemHttpError({
+        status: 404,
+        code: "role_binding_not_found",
+        detail: "role binding not found",
+      })
     }
     if (revocation === "last_root") {
-      return context.json({ error: "last root binding", code: "last_root" }, 409)
+      throw new SystemHttpError({
+        status: 409,
+        code: "last_root",
+        detail: "last root binding",
+      })
     }
 
     return context.body(null, 204)

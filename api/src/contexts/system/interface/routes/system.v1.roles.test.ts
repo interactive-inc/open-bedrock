@@ -134,7 +134,7 @@ describe("System Role HTTP", () => {
     const managedDeletion = await client.system.v1.roles[":roleId"].$delete({
       param: { roleId: "root-role" },
     })
-    expect(managedDeletion.status).toBe(409)
+    expect(Number(managedDeletion.status)).toBe(409)
 
     const deleted = await client.system.v1.roles[":roleId"].$delete({
       param: { roleId: createdBody.id },

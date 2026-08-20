@@ -215,8 +215,8 @@ export async function checkRouteAuthorization(): Promise<{
   const summary = new Map<AuthorizationKind, number>()
   let checked = 0
   const appBase = readFileSync(resolve(SOURCE_ROOT, "api/app-base.ts"), "utf8")
-  const companyV1HasGlobalBearer =
-    /\.use\(\s*["']\/company\/v1\/\*["']\s*,\s*verifyBearer\s*\)/.test(appBase)
+  const companyHasGlobalBearer =
+    /\.use\(\s*["']\/company\/\*["']\s*,\s*verifyBearer\s*\)/.test(appBase)
 
   for (const routeFile of await collectRouteFiles()) {
     const source = readFileSync(routeFile.absolutePath, "utf8")
@@ -224,8 +224,7 @@ export async function checkRouteAuthorization(): Promise<{
     if (declarations.length === 0) continue
 
     const globallyAuthenticated =
-      companyV1HasGlobalBearer &&
-      routeFile.file.startsWith("contexts/company/interface/routes/company.v1.")
+      companyHasGlobalBearer && routeFile.file.startsWith("contexts/company/interface/routes/")
     violations.push(...inspectRouteFile(routeFile.file, source, globallyAuthenticated))
 
     // 集計は handler 単位。ファイル単位だと GET と POST で方針が違う場合に数が合わない。

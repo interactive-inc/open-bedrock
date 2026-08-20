@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { Glob } from "bun"
 import { readFileSync } from "node:fs"
+import ts from "typescript"
 
 const contextDirectory = new URL("..", import.meta.url)
 const productionFiles = [...new Glob("**/*.ts").scanSync({ cwd: contextDirectory.pathname })]
@@ -115,5 +116,79 @@ describe("Company file responsibility contract", () => {
     expect(
       routeFiles.filter((file) => /\/(?:route|create-route)(?:\.test)?\.ts$/.test(file)),
     ).toEqual([])
+  })
+
+  test("routeの失敗はHTTPException派生errorをthrowしResponseを直接生成しない", () => {
+    const allowedThrownErrors = new Set([
+      "CompanyHttpError",
+      "UnauthorizedError",
+      "ForbiddenError",
+      "NotFoundError",
+      "ConflictError",
+      "BadRequestError",
+      "UnprocessableEntityError",
+      "InternalError",
+    ])
+    const violations: string[] = []
+
+    for (const file of productionFiles.filter((path) => path.startsWith("interface/routes/"))) {
+      const sourceFile = ts.createSourceFile(
+        file,
+        readFileSync(new URL(file, contextDirectory), "utf8"),
+        ts.ScriptTarget.Latest,
+        true,
+      )
+      const lineOf = (node: ts.Node) =>
+        sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1
+      const visit = (node: ts.Node): void => {
+        if (ts.isThrowStatement(node)) {
+          const expression = node.expression
+          const constructorName =
+            expression !== undefined &&
+            ts.isNewExpression(expression) &&
+            ts.isIdentifier(expression.expression)
+              ? expression.expression.text
+              : null
+          const translatorName =
+            expression !== undefined &&
+            ts.isCallExpression(expression) &&
+            ts.isIdentifier(expression.expression)
+              ? expression.expression.text
+              : null
+
+          if (
+            !allowedThrownErrors.has(constructorName ?? "") &&
+            translatorName !== "toHttpException"
+          ) {
+            violations.push(`${file}:${lineOf(node)}: non-HTTP error throw`)
+          }
+        }
+
+        if (
+          ts.isCallExpression(node) &&
+          ts.isPropertyAccessExpression(node.expression) &&
+          (node.expression.name.text === "json" || node.expression.name.text === "body")
+        ) {
+          const status = node.arguments[1]
+          if (status !== undefined) {
+            const numbers: number[] = []
+            const collectNumbers = (child: ts.Node): void => {
+              if (ts.isNumericLiteral(child)) numbers.push(Number(child.text))
+              ts.forEachChild(child, collectNumbers)
+            }
+            collectNumbers(status)
+
+            if (numbers.length === 0 || numbers.some((value) => value >= 400)) {
+              violations.push(`${file}:${lineOf(node)}: direct error response`)
+            }
+          }
+        }
+
+        ts.forEachChild(node, visit)
+      }
+      visit(sourceFile)
+    }
+
+    expect(violations).toEqual([])
   })
 })
