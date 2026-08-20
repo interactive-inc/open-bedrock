@@ -10,7 +10,8 @@ import { toHttpException } from "@/contexts/company/interface/lib/to-http-except
 import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
+import { DescribeAttachments } from "@system/application/attachments/describe-attachments"
+import { expenseAttachments, expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { eq } from "drizzle-orm"
 import {
   ForbiddenError,
@@ -86,6 +87,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     }
   }
 
+  const links = await c.var.database
+    .select({ attachmentId: expenseAttachments.attachmentId })
+    .from(expenseAttachments)
+    .where(eq(expenseAttachments.expenseId, expenseId))
+
+  const attachments = await new DescribeAttachments(c).run(links.map((link) => link.attachmentId))
+
+  if (attachments instanceof Error) {
+    throw new InternalError("failed to read attachments")
+  }
+
   const responseBody = zAppExpenseDetail.parse({
     id: row.expense.id,
     employee_id: row.expense.employeeId,
@@ -96,6 +108,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     note: row.expense.note,
     status: row.expense.status,
     created_at: row.expense.createdAt,
+    attachments: attachments.map((attachment) => ({
+      id: attachment.id,
+      file_name: attachment.fileName,
+      content_type: attachment.contentType,
+      byte_size: attachment.byteSize,
+    })),
   })
 
   return c.json(responseBody, 200)

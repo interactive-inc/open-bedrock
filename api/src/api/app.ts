@@ -136,6 +136,7 @@ import * as departmentBudgetsSummaryRoute from "@/contexts/expense/interface/rou
 import * as expensesRoute from "@/contexts/expense/interface/routes/expenses"
 import * as expensesIdRoute from "@/contexts/expense/interface/routes/expenses.$id"
 import * as expensesIdApproveRoute from "@/contexts/expense/interface/routes/expenses.$id.approve"
+import * as expensesIdAttachmentsAttachmentIdRoute from "@/contexts/expense/interface/routes/expenses.$id.attachments.$attachmentId"
 import * as expensesIdRejectRoute from "@/contexts/expense/interface/routes/expenses.$id.reject"
 import * as expensesAdminRoute from "@/contexts/expense/interface/routes/expenses.admin"
 import * as expensesInboxRoute from "@/contexts/expense/interface/routes/expenses.inbox"
@@ -620,6 +621,7 @@ const routePart27 = createRouteApp()
   .put("/expenses/:id", ...expensesIdRoute.PUT)
   .delete("/expenses/:id", ...expensesIdRoute.DELETE)
   .post("/expenses/:id/approve", ...expensesIdApproveRoute.POST)
+  .get("/expenses/:id/attachments/:attachmentId", ...expensesIdAttachmentsAttachmentIdRoute.GET)
   .post("/expenses/:id/reject", ...expensesIdRejectRoute.POST)
   .post("/family-care-leaves", ...familyCareLeavesRoute.POST)
   .get("/family-care-leaves/admin", ...familyCareLeavesAdminRoute.GET)
@@ -664,9 +666,9 @@ const routePart27 = createRouteApp()
   .post("/health-checkups/:id/complete", ...healthCheckupsIdCompleteRoute.POST)
   .get("/inbox/counts", ...inboxCountsRoute.GET)
   .get("/it-incidents", ...itIncidentsRoute.GET)
-  .post("/it-incidents", ...itIncidentsRoute.POST)
 
 const routePart28 = createRouteApp()
+  .post("/it-incidents", ...itIncidentsRoute.POST)
   .post("/it-incidents/:id/resolve", ...itIncidentsIdResolveRoute.POST)
   .get("/job-openings", ...jobOpeningsRoute.GET)
   .post("/job-openings", ...jobOpeningsRoute.POST)
@@ -714,9 +716,9 @@ const routePart28 = createRouteApp()
   .post("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.POST)
   .post("/notifications", ...notificationsRoute.POST)
   .post("/oauth/authorizations", ...oauthAuthorizationsRoute.POST)
-  .post("/oauth/mcp-grants", ...oauthMcpGrantsRoute.POST)
 
 const routePart29 = createRouteApp()
+  .post("/oauth/mcp-grants", ...oauthMcpGrantsRoute.POST)
   .post("/oauth/token", ...oauthTokenRoute.POST)
   .get("/oauth/userinfo", ...oauthUserinfoRoute.GET)
   .post("/onboarding-assignments", ...onboardingAssignmentsRoute.POST)

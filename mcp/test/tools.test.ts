@@ -31,6 +31,9 @@ const EXPECTED_TOOLS = [
   "application_requests_show",
   "application_requests_approve",
   "application_requests_reject",
+  "attachments_upload",
+  "expenses_submit",
+  "expenses_mine",
 ] as const
 
 describe("MCP tool registration", () => {

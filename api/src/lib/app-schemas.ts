@@ -706,6 +706,14 @@ export const zAppExpenseDetail = z.object({
   note: z.string().nullable(),
   status: expenseStatus,
   created_at: z.string(),
+  attachments: z.array(
+    z.object({
+      id: z.string(),
+      file_name: z.string(),
+      content_type: z.string(),
+      byte_size: z.number(),
+    }),
+  ),
 })
 
 export type AppExpenseDetail = z.infer<typeof zAppExpenseDetail>
