@@ -6,6 +6,7 @@ import { deleteExpense } from "@/lib/api/delete-expense"
 import { getMe } from "@/lib/api/get-me"
 import { rejectExpense } from "@/lib/api/reject-expense"
 import { submitExpense } from "@/lib/api/submit-expense"
+import { uploadAttachment } from "@/lib/api/upload-attachment"
 import type { ExpenseCategory } from "@/lib/api/types/expense-types"
 import { updateExpense } from "@/lib/api/update-expense"
 import { requireAuth } from "@/lib/auth/require-auth"
@@ -91,11 +92,30 @@ export async function submitExpenseAction(
 
   const note = typeof noteValue === "string" && noteValue !== "" ? noteValue : undefined
 
+  const files: File[] = []
+
+  for (const entry of formData.getAll("files")) {
+    if (entry instanceof File && entry.size > 0) files.push(entry)
+  }
+
+  const attachmentIds: string[] = []
+
+  for (const file of files) {
+    const uploaded = await uploadAttachment(file)
+
+    if (uploaded instanceof Error) {
+      return { ok: false, error: uploaded.message }
+    }
+
+    attachmentIds.push(uploaded.id)
+  }
+
   const created = await submitExpense({
     category: category,
     amount: amount,
     spent_at: spentAt,
     note: note,
+    attachment_ids: attachmentIds.length === 0 ? undefined : attachmentIds,
   })
 
   if (created instanceof Error) {

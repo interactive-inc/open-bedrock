@@ -97,6 +97,25 @@ async function ExpenseDetailView(props: ViewProps) {
             <DetailField label="メモ" span="full">
               <span className="whitespace-pre-wrap">{expense.note ?? "-"}</span>
             </DetailField>
+
+            <DetailField label="領収書" span="full">
+              {expense.attachments.length === 0 ? (
+                <span>-</span>
+              ) : (
+                <ul className="flex flex-col gap-1">
+                  {expense.attachments.map((attachment) => (
+                    <li key={attachment.id}>
+                      <a
+                        className="underline underline-offset-4"
+                        href={`/organization/expenses/${expense.id}/attachments/${attachment.id}`}
+                      >
+                        {attachment.file_name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </DetailField>
           </dl>
         </CardContent>
       </Card>

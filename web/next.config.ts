@@ -18,8 +18,12 @@ const nextConfig: NextConfig = {
   // Codex のローカル in-app browser は sandboxed frame から Server Action を送るため
   // Origin が `null` になる。production では許可せず、通常の same-origin 検査を維持する。
   experimental: {
-    serverActions:
-      process.env.NODE_ENV === "development" ? { allowedOrigins: ["null"] } : undefined,
+    serverActions: {
+      // 添付は Server Action がファイル本体を受け取って API へ中継するため、
+      // API 側の上限（25MB）を通せる大きさにする。
+      bodySizeLimit: "26mb",
+      ...(process.env.NODE_ENV === "development" ? { allowedOrigins: ["null"] } : {}),
+    },
   },
 
   /**

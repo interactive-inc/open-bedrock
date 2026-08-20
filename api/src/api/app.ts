@@ -321,6 +321,7 @@ import * as systemV1AccountsAccountIdIdentitiesIdentityIdRoute from "@system/int
 import * as systemV1AccountsAccountIdPasswordCredentialsRoute from "@system/interface/routes/system.v1.accounts.$accountId.password-credentials"
 import * as systemV1AccountsAccountIdRoleBindingsRoute from "@system/interface/routes/system.v1.accounts.$accountId.role-bindings"
 import * as systemV1AccountsAccountIdRoleBindingsBindingIdRoute from "@system/interface/routes/system.v1.accounts.$accountId.role-bindings.$bindingId"
+import * as systemV1AttachmentsPurgeUnlinkedRoute from "@system/interface/routes/system.v1.attachments.purge-unlinked"
 import * as systemV1AuditEventsRoute from "@system/interface/routes/system.v1.audit-events"
 import * as systemV1AuditEventsEventIdRoute from "@system/interface/routes/system.v1.audit-events.$eventId"
 import * as systemV1BootstrapRoute from "@system/interface/routes/system.v1.bootstrap"
@@ -934,6 +935,7 @@ const routePart36 = createRouteApp()
     "/system/v1/accounts/:accountId/role-bindings/:bindingId",
     ...systemV1AccountsAccountIdRoleBindingsBindingIdRoute.DELETE,
   )
+  .post("/system/v1/attachments/purge-unlinked", ...systemV1AttachmentsPurgeUnlinkedRoute.POST)
   .get("/system/v1/audit-events", ...systemV1AuditEventsRoute.GET)
   .get("/system/v1/audit-events/:eventId", ...systemV1AuditEventsEventIdRoute.GET)
   .post("/system/v1/bootstrap", ...systemV1BootstrapRoute.POST)
@@ -962,9 +964,9 @@ const routePart36 = createRouteApp()
   .delete("/system/v1/sessions", ...systemV1SessionsRoute.DELETE)
   .get("/thanks-messages", ...thanksMessagesRoute.GET)
   .post("/thanks-messages", ...thanksMessagesRoute.POST)
-  .get("/thanks-messages/me", ...thanksMessagesMeRoute.GET)
 
 const routePart37 = createRouteApp()
+  .get("/thanks-messages/me", ...thanksMessagesMeRoute.GET)
   .get("/thanks-point-balances/me", ...thanksPointBalancesMeRoute.GET)
   .get("/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
   .post("/thanks-redemptions", ...thanksRedemptionsRoute.POST)
