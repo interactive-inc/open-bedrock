@@ -11,7 +11,7 @@ type Props = Readonly<{
   status: number
   code: string
   detail: string
-  legacyBody: object
+  sourceBody: object
   instance?: string
 }>
 
@@ -30,7 +30,7 @@ export function negotiateSystemProblemDetails(props: Props): NegotiatedSystemPro
     detail: props.detail,
     ...(props.instance === undefined ? {} : { instance: props.instance }),
   })
-  const extensions = getSystemProblemExtensions(props.legacyBody)
+  const extensions = getSystemProblemExtensions(props.sourceBody)
 
   return { ...problem, ...extensions }
 }

@@ -6,10 +6,7 @@ import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-be
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppOvertimeSummary } from "@/lib/app-schemas"
 import { yearMonth } from "@/lib/schemas"
-import { attendanceRecords } from "@/contexts/attendance/infrastructure/schema/attendance"
-import { companyCalendarDays } from "@/contexts/company-calendar/infrastructure/schema/company-calendar"
-import type { SQL } from "drizzle-orm"
-import { and, gte, inArray, lte } from "drizzle-orm"
+import { readOvertimeSummaryInput } from "@/api/http/attendance-records/overtime-summary/read-overtime-summary-input"
 import {
   BadRequestError,
   ForbiddenError,
@@ -49,15 +46,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const scope = c.req.query("scope") ?? null
 
-  const conditions: Array<SQL> = [
-    gte(attendanceRecords.workDate, range.from),
-    lte(attendanceRecords.workDate, range.to),
-  ]
+  let employeeIds: ReadonlyArray<number> | null
 
   if (scope === "all") {
     if (session.hasPermission("attendance:read:all") === false) {
       throw new ForbiddenError()
     }
+    employeeIds = null
   } else if (scope === "reports") {
     if (session.hasPermission("attendance:read:reports") === false) {
       throw new ForbiddenError()
@@ -84,33 +79,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       return c.json(emptyBody, 200)
     }
 
-    conditions.push(inArray(attendanceRecords.employeeId, reportEmployeeIds))
+    employeeIds = reportEmployeeIds
   } else {
     // scope 未指定は本人のみ集計する。
-    conditions.push(inArray(attendanceRecords.employeeId, [session.employeeId]))
+    employeeIds = [session.employeeId]
   }
 
-  const [rows, overrideRows] = await Promise.all([
-    c.var.database
-      .select({
-        employeeId: attendanceRecords.employeeId,
-        workMinutes: attendanceRecords.workMinutes,
-      })
-      .from(attendanceRecords)
-      .where(and(...conditions)),
-    c.var.database
-      .select({
-        calendarDate: companyCalendarDays.calendarDate,
-        kind: companyCalendarDays.kind,
-      })
-      .from(companyCalendarDays)
-      .where(
-        and(
-          gte(companyCalendarDays.calendarDate, range.from),
-          lte(companyCalendarDays.calendarDate, range.to),
-        ),
-      ),
-  ])
+  const { rows, overrideRows } = await readOvertimeSummaryInput(c, {
+    from: range.from,
+    to: range.to,
+    employeeIds,
+  })
 
   const businessDays = countBusinessDays({
     month: range.month,

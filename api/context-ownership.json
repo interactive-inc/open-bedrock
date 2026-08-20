@@ -176,35 +176,5 @@
     "training-courses": "training",
     "training-enrollments": "training",
     "work-accidents": "work-accident"
-  },
-  "apiCompositionRoutePrefixes": [
-    "application-requests",
-    "application-templates",
-    "approval-delegations",
-    "attendance-records",
-    "audit-event-exports",
-    "audit-events",
-    "dashboard",
-    "features",
-    "governance-documents",
-    "inbox",
-    "notifications",
-    "permission-definitions",
-    "provisioning"
-  ],
-  "apiCompositionParticipants": {
-    "application-requests": ["company", "system"],
-    "application-templates": ["company", "system"],
-    "approval-delegations": ["company", "system"],
-    "attendance-records": ["attendance", "company", "company-calendar"],
-    "audit-event-exports": ["company", "system"],
-    "audit-events": ["company", "system"],
-    "dashboard": ["company", "performance-review", "survey", "system"],
-    "features": ["company", "system"],
-    "governance-documents": ["company", "governance", "training"],
-    "inbox": ["company", "expense", "leave", "shift", "thanks"],
-    "notifications": ["company", "system"],
-    "permission-definitions": ["company", "system"],
-    "provisioning": ["company", "system"]
   }
 }

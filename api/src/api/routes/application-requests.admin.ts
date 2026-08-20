@@ -23,6 +23,7 @@ import {
   toApplicationStatus,
   toSystemStatuses,
 } from "@/api/http/application-requests/lib/system-application-view"
+import { parseOptionalDate } from "@/api/http/application-requests/lib/parse-optional-date"
 
 // @authorization permission - application:read:all保持者だけに限定する
 export const GET = factory.createHandlers(
@@ -68,8 +69,8 @@ export const GET = factory.createHandlers(
         creatorAccountIds = resolved
       }
     }
-    const createdFrom = parseDate(query.from)
-    const createdTo = parseDate(query.to)
+    const createdFrom = parseOptionalDate(query.from)
+    const createdTo = parseOptionalDate(query.to)
     const result = await systemProposalQuery(c).list({
       creatorAccountIds,
       actorAccountId: null,
@@ -132,9 +133,3 @@ export const GET = factory.createHandlers(
     )
   },
 )
-
-function parseDate(value: string | undefined): Date | null {
-  if (value === undefined || value === "") return null
-  const date = new Date(value)
-  return Number.isFinite(date.getTime()) ? date : null
-}

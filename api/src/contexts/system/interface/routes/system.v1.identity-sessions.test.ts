@@ -1,15 +1,15 @@
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import type { SystemHonoEnv } from "@system/interface/http/system-factory"
 import { POST } from "@system/interface/routes/system.v1.identity-sessions"
-import { createIdentityTestKey } from "@/lib/auth/test/create-identity-test-key"
-import { createIdentityToken } from "@/lib/auth/test/create-identity-token"
+import { createSystemIdentityTestKey } from "@system/infrastructure/identity/create-system-identity-test-key.test-support"
+import { createSystemIdentityToken } from "@system/infrastructure/identity/create-system-identity-token.test-support"
 import { describe, expect, test } from "bun:test"
 import { Hono } from "hono"
 import { hc } from "hono/client"
 
 const jwtSecret = "identity-session-route-jwt-secret"
-const identityKey = await createIdentityTestKey()
-const wrongIdentityKey = await createIdentityTestKey("wrong-key")
+const identityKey = await createSystemIdentityTestKey()
+const wrongIdentityKey = await createSystemIdentityTestKey("wrong-key")
 const identityIssuer = "https://identity-provider.example/"
 const identityAudience = "urn:system:identity-login"
 const now = new Date("2026-01-01T00:00:00.000Z")
@@ -67,7 +67,7 @@ function createFixture(
 describe("POST /system/v1/identity-sessions", () => {
   test("issues a canonical System Session without any Company records", async () => {
     const { client, fixture } = createFixture()
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: subject,
       jti: "identity-session-success",
       audience: identityAudience,
@@ -95,7 +95,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
   test("rejects a token with an invalid signature and records the denial in System audit", async () => {
     const { client, fixture } = createFixture()
-    const token = await createIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
       sub: subject,
       jti: "identity-session-invalid-signature",
       keyId: wrongIdentityKey.keyId,
@@ -118,7 +118,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
   test("rejects a token whose issuer does not match", async () => {
     const { client, fixture } = createFixture()
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: subject,
       jti: "identity-session-invalid-issuer",
       issuer: "https://attacker.example/",
@@ -135,7 +135,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
   test("rejects a token whose audience does not match", async () => {
     const { client, fixture } = createFixture()
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: subject,
       jti: "identity-session-invalid-audience",
       audience: "urn:another-system",
@@ -151,7 +151,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
   test("rejects an expired token", async () => {
     const { client, fixture } = createFixture()
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch - 120, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch - 120, {
       sub: subject,
       jti: "identity-session-expired",
       iat: nowEpoch - 120,
@@ -169,7 +169,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
   test("rejects an unverified email", async () => {
     const { client, fixture } = createFixture()
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: subject,
       jti: "identity-session-unverified-email",
       emailVerified: false,
@@ -186,7 +186,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
   test("does not disclose whether an Identity or Account exists", async () => {
     const { client, fixture } = createFixture()
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "unknown-subject",
       jti: "identity-session-unknown-account",
       audience: identityAudience,
@@ -213,7 +213,7 @@ describe("POST /system/v1/identity-sessions", () => {
          WHERE id = ?1`,
       )
       .run(accountId)
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: subject,
       jti: "identity-session-suspended-account",
       audience: identityAudience,
@@ -229,7 +229,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
   test("rejects replay of the same external token", async () => {
     const { client, fixture } = createFixture()
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: subject,
       jti: "identity-session-replay",
       audience: identityAudience,
@@ -252,7 +252,7 @@ describe("POST /system/v1/identity-sessions", () => {
 
   test("returns unavailable when external Identity configuration is missing", async () => {
     const { client, fixture } = createFixture(Object.freeze({}))
-    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+    const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: subject,
       jti: "identity-session-not-configured",
       audience: identityAudience,

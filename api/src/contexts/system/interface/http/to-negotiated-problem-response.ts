@@ -5,7 +5,7 @@ type Props = Readonly<{
   status: number
   code: string
   detail: string
-  legacyBody: object
+  sourceBody: object
   headers?: Headers
 }>
 

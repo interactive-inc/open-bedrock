@@ -191,16 +191,18 @@ export class SystemIdentityAdministrationRepository {
   }
 
   async revoke(props: RevokeProps): Promise<SystemIdentityMutation | Error> {
-    if (props.identity.binding.state !== "active") return "not_found"
+    if (props.identity.binding.state === "revoked") return "not_found"
 
     try {
       const statements = [
         this.prepareActorAccountGuard(props.actorAccountId, props.identity.binding.accountId),
-        this.prepareAdditionalActiveIdentityGuard(props.identity.binding),
+        ...(props.identity.binding.state === "active"
+          ? [this.prepareAdditionalActiveIdentityGuard(props.identity.binding)]
+          : []),
         this.context.env.DB.prepare(
           `UPDATE system_identity_bindings
            SET revoked_at = ?2
-           WHERE id = ?1 AND activated_at IS NOT NULL AND revoked_at IS NULL`,
+           WHERE id = ?1 AND revoked_at IS NULL`,
         ).bind(props.identity.binding.id, props.now.getTime()),
         this.context.env.DB.prepare(
           "SELECT CASE WHEN changes() = 1 THEN 1 ELSE json_extract('', '$') END AS ok",
@@ -217,7 +219,7 @@ export class SystemIdentityAdministrationRepository {
         this.context.env.DB.prepare(
           "SELECT CASE WHEN changes() = 1 THEN 1 ELSE json_extract('', '$') END AS ok",
         ),
-        this.prepareLastRootGuard(),
+        this.prepareLastRootGuard(props.identity.binding.accountId),
         ...props.auditStatements,
       ]
       const executions = await this.context.env.DB.batch(statements)
@@ -264,7 +266,8 @@ export class SystemIdentityAdministrationRepository {
          WHERE binding.account_id = ?2 AND binding.revoked_at IS NULL
        )
        SELECT CASE WHEN
-         EXISTS (SELECT 1 FROM actor_permissions WHERE key = 'system:admin')
+         ?1 = ?2
+         OR EXISTS (SELECT 1 FROM actor_permissions WHERE key = 'system:admin')
          OR (
            EXISTS (SELECT 1 FROM actor_permissions WHERE key = 'iam:write')
            AND NOT EXISTS (
@@ -290,22 +293,33 @@ export class SystemIdentityAdministrationRepository {
     ).bind(binding.accountId, binding.id)
   }
 
-  private prepareLastRootGuard(): D1PreparedStatement {
+  private prepareLastRootGuard(targetAccountId: AccountId): D1PreparedStatement {
     return this.context.env.DB.prepare(
-      `SELECT CASE WHEN EXISTS (
-         SELECT 1
-         FROM system_accounts account
-         INNER JOIN system_identity_bindings identity ON identity.account_id = account.id
-         INNER JOIN system_role_bindings binding ON binding.account_id = account.id
-         INNER JOIN system_iam_role_permissions permission ON permission.role_id = binding.role_id
-         WHERE account.status = 'active'
-           AND identity.activated_at IS NOT NULL
-           AND identity.revoked_at IS NULL
-           AND binding.resource_type IS NULL
-           AND binding.revoked_at IS NULL
-           AND permission.permission_key = 'system:admin'
-       ) THEN 1 ELSE json_extract('', '$') END AS ok`,
-    )
+      `SELECT CASE WHEN
+         NOT EXISTS (
+           SELECT 1
+           FROM system_role_bindings binding
+           INNER JOIN system_iam_role_permissions permission ON permission.role_id = binding.role_id
+           WHERE binding.account_id = ?1
+             AND binding.resource_type IS NULL
+             AND binding.revoked_at IS NULL
+             AND permission.permission_key = 'system:admin'
+         )
+         OR EXISTS (
+           SELECT 1
+           FROM system_accounts account
+           INNER JOIN system_identity_bindings identity ON identity.account_id = account.id
+           INNER JOIN system_role_bindings binding ON binding.account_id = account.id
+           INNER JOIN system_iam_role_permissions permission ON permission.role_id = binding.role_id
+           WHERE account.status = 'active'
+             AND identity.activated_at IS NOT NULL
+             AND identity.revoked_at IS NULL
+             AND binding.resource_type IS NULL
+             AND binding.revoked_at IS NULL
+             AND permission.permission_key = 'system:admin'
+         )
+       THEN 1 ELSE json_extract('', '$') END AS ok`,
+    ).bind(targetAccountId)
   }
 
   private toView(row: IdentityRow): SystemIdentityAdministrationView | Error {

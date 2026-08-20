@@ -3,11 +3,7 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
-import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
-import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
-import { shiftSwapRequests } from "@/contexts/shift/infrastructure/schema/shift"
-import { thanksRedemptions } from "@/contexts/thanks/infrastructure/schema/thanks"
-import { and, count, eq, ne } from "drizzle-orm"
+import { readInboxBusinessCounts } from "@/api/http/inbox/read-inbox-business-counts"
 
 // @authorization permission - 権限キーで判定する
 /**
@@ -44,60 +40,21 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to resolve application inbox scope")
   }
 
-  const expenseCountQuery = session.hasPermission("expense:approve")
-    ? c.var.database.select({ total: count() }).from(expenses).where(eq(expenses.status, "pending"))
-    : null
-
-  const leaveCountQuery = session.hasPermission("leave:approve")
-    ? c.var.database
-        .select({ total: count() })
-        .from(leaveRequests)
-        .where(eq(leaveRequests.status, "pending"))
-    : null
-
-  const shiftCountQuery = session.hasPermission("shift_swap:approve")
-    ? c.var.database
-        .select({ total: count() })
-        .from(shiftSwapRequests)
-        .where(
-          and(
-            eq(shiftSwapRequests.status, "pending"),
-            ne(shiftSwapRequests.requesterEmployeeId, session.employeeId),
-            ne(shiftSwapRequests.targetEmployeeId, session.employeeId),
-          ),
-        )
-    : null
-
-  const thanksCountQuery = session.hasPermission("thanks_redemption:approve")
-    ? c.var.database
-        .select({ total: count() })
-        .from(thanksRedemptions)
-        .where(
-          and(
-            eq(thanksRedemptions.status, "pending"),
-            ne(thanksRedemptions.employeeId, session.employeeId),
-          ),
-        )
-    : null
-
-  // Drizzle の query builder は table ごとに異なる PromiseLike 型になる。
-  const extract = async (query: unknown): Promise<number> =>
-    query === null ? 0 : ((await (query as Promise<Array<{ total: number }>>)).at(0)?.total ?? 0)
-
-  const [expenseCount, leaveCount, shiftCount, thanksCount] = await Promise.all([
-    extract(expenseCountQuery),
-    extract(leaveCountQuery),
-    extract(shiftCountQuery),
-    extract(thanksCountQuery),
-  ])
+  const counts = await readInboxBusinessCounts(c, {
+    employeeId: session.employeeId,
+    canApproveExpenses: session.hasPermission("expense:approve"),
+    canApproveLeaves: session.hasPermission("leave:approve"),
+    canApproveShiftSwaps: session.hasPermission("shift_swap:approve"),
+    canApproveThanksRedemptions: session.hasPermission("thanks_redemption:approve"),
+  })
 
   return c.json(
     {
       applications: applicationInbox.total,
-      expenses: expenseCount,
-      leaves: leaveCount,
-      shifts: shiftCount,
-      thanks: thanksCount,
+      expenses: counts.expenses,
+      leaves: counts.leaves,
+      shifts: counts.shifts,
+      thanks: counts.thanks,
     },
     200,
   )

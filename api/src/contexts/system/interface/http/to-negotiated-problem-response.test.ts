@@ -7,7 +7,7 @@ describe("toNegotiatedProblemResponse", () => {
     status: 404,
     code: "account_not_found",
     detail: "account not found",
-    legacyBody: { error: "account not found", code: "account_not_found" },
+    sourceBody: { error: "account not found", code: "account_not_found" },
   } as const
 
   test("returns Problem Details only for an explicit opt-in", async () => {
@@ -26,7 +26,7 @@ describe("toNegotiatedProblemResponse", () => {
     })
   })
 
-  test("leaves legacy, rejected, and unsupported requests untouched", () => {
+  test("leaves source, rejected, and unsupported requests untouched", () => {
     expect(toNegotiatedProblemResponse({ ...props, accept: null })).toBeNull()
     expect(
       toNegotiatedProblemResponse({ ...props, accept: "application/problem+json; q=0" }),
@@ -41,7 +41,7 @@ describe("toNegotiatedProblemResponse", () => {
       status: 422,
       code: "invalid_request",
       detail: "invalid request",
-      legacyBody: {
+      sourceBody: {
         error: "invalid request",
         code: "invalid_request",
         type: "https://attacker.example/problem",

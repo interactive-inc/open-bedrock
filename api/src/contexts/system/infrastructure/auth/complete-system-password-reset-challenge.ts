@@ -63,6 +63,23 @@ export async function completeSystemPasswordResetChallenge(
       abortWhenPreviousStatementChangedNoRows(database),
       database
         .prepare(
+          `UPDATE system_identity_bindings
+           SET activated_at = coalesce(activated_at, ?5)
+           WHERE id = ?4 AND account_id = ?3 AND provider = 'password' AND revoked_at IS NULL
+             AND ${challengeIsAvailable}`,
+        )
+        .bind(props.challengeId, props.tokenHash, props.accountId, props.identityId, completedAt),
+      abortWhenPreviousStatementChangedNoRows(database),
+      database
+        .prepare(
+          `UPDATE system_identity_profiles
+           SET email_verified = 1, updated_at = max(updated_at, ?5)
+           WHERE identity_id = ?4 AND ${challengeIsAvailable}`,
+        )
+        .bind(props.challengeId, props.tokenHash, props.accountId, props.identityId, completedAt),
+      abortWhenPreviousStatementChangedNoRows(database),
+      database
+        .prepare(
           `UPDATE system_accounts
            SET token_version = token_version + 1, updated_at = max(updated_at, ?5)
            WHERE id = ?3 AND status = 'active' AND token_version = ?6
@@ -105,6 +122,14 @@ export async function completeSystemPasswordResetChallenge(
              AND EXISTS (
                SELECT 1 FROM system_accounts
                WHERE id = ?3 AND token_version = ?6 + 1
+             )
+             AND EXISTS (
+               SELECT 1 FROM system_identity_bindings
+               WHERE id = ?4 AND account_id = ?3 AND activated_at IS NOT NULL AND revoked_at IS NULL
+             )
+             AND EXISTS (
+               SELECT 1 FROM system_identity_profiles
+               WHERE identity_id = ?4 AND email_verified = 1
              )
              AND NOT EXISTS (
                SELECT 1 FROM system_sessions WHERE account_id = ?3 AND revoked_at IS NULL

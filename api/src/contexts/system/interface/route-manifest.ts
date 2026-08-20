@@ -58,8 +58,249 @@ export const systemRouteManifest = [
   },
   {
     method: "GET",
+    path: "/system/v1/accounts",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/accounts",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/accounts/:accountId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts.$accountId",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "PATCH",
+    path: "/system/v1/accounts/:accountId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts.$accountId",
+      exportName: "PATCH",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/accounts/:accountId/identities",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts.$accountId.identities",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/accounts/:accountId/identities",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts.$accountId.identities",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/accounts/:accountId/identities/:identityId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts.$accountId.identities.$identityId",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/system/v1/accounts/:accountId/identities/:identityId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts.$accountId.identities.$identityId",
+      exportName: "DELETE",
+    },
+  },
+  {
+    method: "PATCH",
+    path: "/system/v1/accounts/:accountId/password-credentials",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts.$accountId.password-credentials",
+      exportName: "PATCH",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/accounts/:accountId/role-bindings",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts.$accountId.role-bindings",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/accounts/:accountId/role-bindings",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts.$accountId.role-bindings",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/system/v1/accounts/:accountId/role-bindings/:bindingId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.accounts.$accountId.role-bindings.$bindingId",
+      exportName: "DELETE",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/bootstrap",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.bootstrap",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/browser-login-codes",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.browser-login-codes",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/browser-sessions",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.browser-sessions",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/cli-authorization-callback",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.cli-authorization-callback",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/cli-authorizations",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.cli-authorizations",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/cli-sessions",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.cli-sessions",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/identity-sessions",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.identity-sessions",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/roles",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.roles",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/roles",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.roles",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/v1/roles/:roleId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.roles.$roleId",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "PATCH",
+    path: "/system/v1/roles/:roleId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.roles.$roleId",
+      exportName: "PATCH",
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/system/v1/roles/:roleId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.roles.$roleId",
+      exportName: "DELETE",
+    },
+  },
+
+  {
+    method: "GET",
     path: "/system/v1/notifications",
-    phase: "authenticated",
+    phase: "public",
     handler: {
       kind: "module",
       module: "@system/interface/routes/system.v1.notifications",
@@ -69,7 +310,7 @@ export const systemRouteManifest = [
   {
     method: "POST",
     path: "/system/v1/notifications",
-    phase: "authenticated",
+    phase: "public",
     handler: {
       kind: "module",
       module: "@system/interface/routes/system.v1.notifications",
@@ -79,7 +320,7 @@ export const systemRouteManifest = [
   {
     method: "PATCH",
     path: "/system/v1/notifications",
-    phase: "authenticated",
+    phase: "public",
     handler: {
       kind: "module",
       module: "@system/interface/routes/system.v1.notifications",
@@ -89,7 +330,7 @@ export const systemRouteManifest = [
   {
     method: "GET",
     path: "/system/v1/notifications/unread-count",
-    phase: "authenticated",
+    phase: "public",
     handler: {
       kind: "module",
       module: "@system/interface/routes/system.v1.notifications.unread-count",
@@ -99,7 +340,7 @@ export const systemRouteManifest = [
   {
     method: "GET",
     path: "/system/v1/notifications/:id",
-    phase: "authenticated",
+    phase: "public",
     handler: {
       kind: "module",
       module: "@system/interface/routes/system.v1.notifications.$id",
@@ -109,7 +350,7 @@ export const systemRouteManifest = [
   {
     method: "PATCH",
     path: "/system/v1/notifications/:id",
-    phase: "authenticated",
+    phase: "public",
     handler: {
       kind: "module",
       module: "@system/interface/routes/system.v1.notifications.$id",
@@ -119,7 +360,7 @@ export const systemRouteManifest = [
   {
     method: "DELETE",
     path: "/system/v1/notifications/:id",
-    phase: "authenticated",
+    phase: "public",
     handler: {
       kind: "module",
       module: "@system/interface/routes/system.v1.notifications.$id",
@@ -129,7 +370,7 @@ export const systemRouteManifest = [
   {
     method: "GET",
     path: "/system/v1/audit-events",
-    phase: "authenticated",
+    phase: "public",
     handler: {
       kind: "module",
       module: "@system/interface/routes/system.v1.audit-events",
@@ -139,7 +380,7 @@ export const systemRouteManifest = [
   {
     method: "GET",
     path: "/system/v1/audit-events/:eventId",
-    phase: "authenticated",
+    phase: "public",
     handler: {
       kind: "module",
       module: "@system/interface/routes/system.v1.audit-events.$eventId",

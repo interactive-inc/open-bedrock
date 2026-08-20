@@ -45,16 +45,16 @@ describe("canonical System core schema", () => {
     const database = new Database(":memory:")
     database.exec("PRAGMA foreign_keys = ON")
     database.exec(`
-      CREATE TABLE legacy_sentinel (
+      CREATE TABLE existing_sentinel (
         id TEXT PRIMARY KEY NOT NULL,
         value TEXT NOT NULL
       );
-      INSERT INTO legacy_sentinel (id, value) VALUES ('existing', 'preserved');
+      INSERT INTO existing_sentinel (id, value) VALUES ('existing', 'preserved');
     `)
 
     database.exec(schemaSql)
 
-    expect(database.query("SELECT id, value FROM legacy_sentinel").all()).toEqual([
+    expect(database.query("SELECT id, value FROM existing_sentinel").all()).toEqual([
       { id: "existing", value: "preserved" },
     ])
 

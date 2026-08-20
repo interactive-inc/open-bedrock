@@ -42,6 +42,10 @@ class SqliteD1Statement {
     } as D1Result<T>
   }
 
+  async run(): Promise<D1Result> {
+    return this.execute()
+  }
+
   execute(): D1Result {
     if (/^(?:SELECT|WITH|PRAGMA|EXPLAIN)\b/i.test(this.sql.trimStart())) {
       return {

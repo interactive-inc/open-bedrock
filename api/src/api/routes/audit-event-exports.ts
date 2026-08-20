@@ -1,4 +1,7 @@
-import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
+import {
+  createCompanyAuditEventRepository,
+  type CompanyAuditExportRows,
+} from "@/api/http/audit-events/create-company-audit-event-repository"
 import { AuditTrail } from "@/contexts/company/interface/utils/audit-trail"
 import { throwAuditRouteError } from "@/contexts/company/interface/utils/throw-audit-route-error"
 import { auditExportPermission } from "@/contexts/company/interface/middlewares/audit-export-permission"
@@ -15,10 +18,10 @@ export const POST = factory.createHandlers(
   auditExportValidation,
   async (c) => {
     const range = c.req.valid("json")
-    let rows: Awaited<ReturnType<AuditEventRepository["export"]>>
+    let rows: CompanyAuditExportRows
     let csv: string
     try {
-      rows = await new AuditEventRepository(c).export({ filters: range.filters })
+      rows = await createCompanyAuditEventRepository(c).export({ filters: range.filters })
       csv = toAuditCsv(rows)
     } catch (error) {
       if (error instanceof PayloadTooLargeError) {

@@ -6,6 +6,7 @@ import { decoySystemPasswordHash } from "@system/infrastructure/auth/decoy-syste
 import { LoginRateLimitService } from "@system/infrastructure/auth/login-rate-limit.service"
 import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
 import { SystemPasswordCredentialRepository } from "@system/infrastructure/auth/system-password-credential-repository"
+import { verifySystemPassword } from "@system/infrastructure/auth/verify-system-password"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { zValidator } from "@hono/zod-validator"
 import { drizzle } from "drizzle-orm/d1"
@@ -142,13 +143,7 @@ export const POST = factory.createHandlers(
       passwordMaterialService: {
         dummyHash: decoySystemPasswordHash,
         needsRehash: (passwordHash) => PasswordHashService.needsRehash(passwordHash),
-        verify: async (password, passwordHash) => {
-          try {
-            return await PasswordHashService.verify(password, passwordHash, pepper)
-          } catch (caught) {
-            return caught instanceof Error ? caught : new Error("failed to verify password")
-          }
-        },
+        verify: (password, passwordHash) => verifySystemPassword(password, passwordHash, pepper),
       },
     }).execute({ subject: body.subject, password: body.password, now })
     if (authentication instanceof Error) {
