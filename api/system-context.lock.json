@@ -1,7 +1,9 @@
 {
   "version": 1,
   "files": {
+    "src/contexts/system/application/attachments/describe-attachments.ts": "e7e9e88c45af32ba9d2b7b43ee6283d5184b3d325cc3fe7216af00f1255265e6",
     "src/contexts/system/application/attachments/link-attachments.ts": "6d95f740e9d51f2931171c0890534df036ec6bb1a052caf1311ff2eac00b537e",
+    "src/contexts/system/application/attachments/purge-unlinked-attachments.ts": "5439a8732de0162465360c0b0a365b84552b9a97c0acfb33bde4f7670840dbad",
     "src/contexts/system/application/attachments/read-attachment.ts": "7a45ba1934234895a3d08af44e8b285d59dafadd893cc33610db69a578f32748",
     "src/contexts/system/application/attachments/store-attachment.ts": "f30eee8a576be65b11cb6d46f9d007a8dbf6864912119195bf151e77a7b3381b",
     "src/contexts/system/application/audit/system-audit-event-appender.ts": "5e3c582d585dbfdd1d8cd701d297bf082fa430912ff71b71ef47355fc9be33c8",
@@ -396,6 +398,7 @@
     "src/contexts/system/interface/runtime/create-system-session-applications.ts": "704bfbdb049b0b881d8871c1a28d0ca21702055dc7c24cdc3cef469fe0bbc027",
     "src/contexts/system/interface/runtime/system-access-token-authenticator.ts": "703abbfa46066f320a252eee27155a89dfc12b239dc4ce2a86345d3fa60ec9b2",
     "src/contexts/system/interface/runtime/system-identity-session-issuer.ts": "ce3d4ee20d347eab950ac56dc147379a61916c719898666be2d15b2342402a3c",
+    "src/contexts/system/test/attachments.purge.integration.test.ts": "e2859d91196763928a2e07418fbb9c47d8b4619f782349ab4b10ec52722f425c",
     "src/contexts/system/test/attachments.route.integration.test.ts": "d4bef2803c8ff3f5ee4234cfae8e3d7e5792564575f51ceee429effb4d949e6c",
     "src/contexts/system/test/attachments.storage.integration.test.ts": "09becae7c15b912d33c393ca5293c5b31fc315626bfb7ff230dcd9e5bc6cdf79",
     "src/contexts/system/test/system-account-profile-boundary.contract.test.ts": "2e6e3dac3520039362ef5d279485509f344b7655ecc6fb96ebd16f07241463a2",

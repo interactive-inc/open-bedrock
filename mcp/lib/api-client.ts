@@ -154,7 +154,7 @@ type RequestOptions = {
 let cachedBaseUrl: string | null = null
 let cachedToken: string | null = null
 
-async function ensureAuth(): Promise<{ baseUrl: string; token: string | null }> {
+export async function ensureAuth(): Promise<{ baseUrl: string; token: string | null }> {
   if (cachedBaseUrl !== null) {
     return { baseUrl: cachedBaseUrl, token: cachedToken }
   }

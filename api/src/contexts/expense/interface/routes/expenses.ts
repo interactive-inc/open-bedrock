@@ -1,3 +1,4 @@
+import { AttachExpenseAttachments } from "@/contexts/expense/application/attach-expense-attachments"
 import { SubmitExpense } from "@/contexts/expense/application/submit-expense"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -20,6 +21,7 @@ export const POST = factory.createHandlers(
       amount: z.number().positive().int().safe(),
       spent_at: isoDate,
       note: z.string().max(3_000).optional(),
+      attachment_ids: z.array(z.string().min(1).max(64)).max(10).optional(),
     }),
   ),
   async (c) => {
@@ -42,6 +44,17 @@ export const POST = factory.createHandlers(
 
     if (created instanceof ApplicationError) {
       throw toHttpException(created)
+    }
+
+    const attached = await new AttachExpenseAttachments(c).run({
+      expenseId: created.id ?? 0,
+      attachmentIds: body.attachment_ids ?? [],
+      ownerAccountId: String(session.accountId),
+      now: c.var.now(),
+    })
+
+    if (attached instanceof ApplicationError) {
+      throw toHttpException(attached)
     }
 
     const responseBody = zAppExpense.parse({
