@@ -48,6 +48,21 @@ describe("Company Bootstrap HTTP", () => {
     })
     expect(Number(anonymous.status)).toBe(401)
 
+    const invalid = await client.company.v1.bootstrap.$post(
+      { json: { name: "" } },
+      { headers: { authorization: `Bearer ${sessionBody.access_token}` } },
+    )
+    expect(Number(invalid.status)).toBe(400)
+    expect(invalid.headers.get("content-type")).toBe("application/problem+json")
+    const invalidBody: unknown = await invalid.json()
+    expect(invalidBody).toEqual({
+      type: "/problems/invalid_company_bootstrap_input",
+      title: "Bad Request",
+      status: 400,
+      code: "invalid_company_bootstrap_input",
+      detail: "Company bootstrap request body is invalid",
+    })
+
     await database.exec(`
       CREATE TRIGGER reject_company_bootstrap_link
       BEFORE INSERT ON account_employee_links
@@ -83,10 +98,14 @@ describe("Company Bootstrap HTTP", () => {
       { json: { name: "Other Admin" } },
       { headers: { authorization: `Bearer ${sessionBody.access_token}` } },
     )
-    expect(repeated.status).toBe(409)
-    expect(await repeated.json()).toEqual({
-      error: "Company is already initialized",
+    expect(Number(repeated.status)).toBe(409)
+    const repeatedBody: unknown = await repeated.json()
+    expect(repeatedBody).toEqual({
+      type: "/problems/already_initialized",
+      title: "Conflict",
+      status: 409,
       code: "already_initialized",
+      detail: "Company is already initialized",
     })
     expect(
       await database.prepare("SELECT COUNT(*) AS total FROM employees").first<number>("total"),

@@ -1,4 +1,6 @@
 import { HTTPException } from "hono/http-exception"
+import { handleApiError } from "@/api/http/handle-api-error"
+import { companyValidationErrorMiddleware } from "@/api/http/company-validation-error-middleware"
 import { bodyLimit } from "hono/body-limit"
 import { cors } from "hono/cors"
 import { secureHeaders } from "hono/secure-headers"
@@ -11,7 +13,6 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 import { auditNoStore } from "@/contexts/company/interface/middlewares/audit-no-store"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import type { CompanyCapability } from "@/contexts/company/application/core/company-actor"
-import { toNegotiatedHttpExceptionResponse } from "@/api/to-negotiated-http-exception-response"
 import type { OidcClientRegistry } from "@system/domain/identity/oidc-client.policy"
 import type { OidcIssuerConfiguration } from "@system/domain/identity/oidc.value"
 
@@ -137,6 +138,7 @@ const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
 export const appBase = factory
   .createApp()
   .use("*", requestContextMiddleware)
+  .use("*", companyValidationErrorMiddleware())
   .use("*", auditNoStore)
   .use(
     "*",
@@ -162,28 +164,7 @@ export const appBase = factory
   .use("/oauth/mcp-grants", systemAuthorizationMiddleware)
   .use("/company/v1/*", verifyBearer)
   .use("/company/v1/*", companyActorMiddleware)
-  .onError(async (error, c) => {
-    if (error instanceof HTTPException) {
-      // toHttpException 経由の例外は res に {error, code} の JSON を積んでいる。
-      // それを尊重して返し、CLI/AI が理由（message）と code を受け取れるようにする。
-      // res 未設定の素の HTTPException（401/413/429 等）は従来どおり {error: message} を返す。
-      if (error.res) {
-        const negotiated = await toNegotiatedHttpExceptionResponse({
-          error,
-          accept: c.req.header("accept") ?? null,
-        })
-        if (negotiated !== null) return negotiated
-
-        return error.getResponse()
-      }
-
-      return c.json({ error: error.message }, error.status)
-    }
-
-    console.error("[unhandled error]", error)
-
-    return c.json({ error: "internal server error" }, 500)
-  })
+  .onError(handleApiError)
 
 /** 生成routeを型計算可能な単位へ分割して合成するための空のHono appを作る。 */
 export function createRouteApp() {

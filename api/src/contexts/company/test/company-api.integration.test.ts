@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import type { CompanyActor } from "@/contexts/company/application/core/company-actor"
 import { POST as POST_ORGANIZATION_CHANGE } from "@/contexts/company/interface/routes/company.v1.organization-changes"
 import { GET, POST } from "@/contexts/company/interface/routes/company.v1.people"
+import { CompanyHttpError } from "@/contexts/company/interface/http/company-http-error"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { Hono } from "hono"
 import { hc } from "hono/client"
@@ -29,6 +30,11 @@ function createClient(database: D1Database) {
     .use("*", async (context, next) => {
       context.set("companyActor", actor)
       await next()
+    })
+    .onError((error, context) => {
+      if (!(error instanceof CompanyHttpError)) throw error
+
+      return context.json({ code: error.code, detail: error.detail }, error.status)
     })
     .get("/company/v1/people", ...GET)
     .post("/company/v1/people", ...POST)
@@ -101,7 +107,7 @@ describe("canonical Company API", () => {
       },
     })
 
-    expect(conflict.status).toBe(409)
+    expect(Number(conflict.status)).toBe(409)
     expect(await conflict.json()).toMatchObject({ code: "company_command_conflict" })
   })
 
@@ -121,8 +127,8 @@ describe("canonical Company API", () => {
       },
     })
 
-    expect(response.status).toBe(400)
-    expect(await response.json()).toMatchObject({ success: false })
+    expect(Number(response.status)).toBe(400)
+    expect(await response.json()).toMatchObject({ code: "invalid_company_body" })
   })
 
   test("同じorganization revisionに固定して訂正・将来取消をas_ofで解決する", async () => {
@@ -231,7 +237,7 @@ describe("canonical Company API", () => {
       },
     })
 
-    expect(response.status).toBe(422)
+    expect(Number(response.status)).toBe(422)
     expect(await response.json()).toMatchObject({ code: "invalid_organization" })
   })
 

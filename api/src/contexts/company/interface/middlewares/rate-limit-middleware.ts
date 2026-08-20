@@ -1,6 +1,7 @@
 import type { HonoEnv } from "@/env"
 import { isProductionEnvironment } from "@/lib/config/is-production-environment"
 import { createMiddleware } from "hono/factory"
+import { HTTPException } from "hono/http-exception"
 
 let rateLimitWarningLogged = false
 
@@ -24,7 +25,7 @@ export const rateLimitMiddleware = createMiddleware<HonoEnv>(async (c, next) => 
     if (isProductionEnvironment(c.env)) {
       console.error("[SECURITY] API_RATE_LIMITER binding is missing in production — failing closed")
 
-      return c.json({ error: "rate limiter is not configured" }, 503)
+      throw new HTTPException(503, { message: "rate limiter is not configured" })
     }
 
     if (!rateLimitWarningLogged) {
@@ -44,7 +45,7 @@ export const rateLimitMiddleware = createMiddleware<HonoEnv>(async (c, next) => 
   const outcome = await limiter.limit({ key: ip })
 
   if (outcome.success === false) {
-    return c.json({ error: "too many requests" }, 429)
+    throw new HTTPException(429, { message: "too many requests" })
   }
 
   await next()
