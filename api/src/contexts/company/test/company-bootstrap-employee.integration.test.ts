@@ -1,5 +1,5 @@
 import { ProvisionCompanyBootstrapEmployee } from "@/contexts/company/application/employee/provision-company-bootstrap-employee"
-import { CompanyBootstrapEmployeeRepositoryD1 } from "@/contexts/company/infrastructure/employee/company-bootstrap-employee-repository"
+import { CompanyBootstrapEmployeeRepositoryD1 } from "@/contexts/company/infrastructure/employee/company-bootstrap-employee.repository"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { wrapSystemD1TestDatabase } from "@system/infrastructure/auth/wrap-system-d1-test-database.test-support"
 import { Database } from "bun:sqlite"

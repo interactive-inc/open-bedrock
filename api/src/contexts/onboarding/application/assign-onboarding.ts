@@ -6,9 +6,9 @@ import { OnboardingAssignment } from "@/contexts/onboarding/domain/onboarding-as
 import type { OnboardingTask } from "@/contexts/onboarding/domain/onboarding-task.entity"
 import type { OnboardingTemplate } from "@/contexts/onboarding/domain/onboarding-template.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment-repository"
-import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {

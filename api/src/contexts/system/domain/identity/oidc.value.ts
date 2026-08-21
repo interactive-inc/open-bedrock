@@ -1,7 +1,3 @@
-import { parseBearerAuthorization } from "@system/domain/auth/parse-bearer-authorization"
-
-const canonicalAccessTokenPattern = /^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/u
-
 export type OidcIssuerConfiguration = Readonly<{
   issuersByHostname: Readonly<Record<string, string>>
   localProxyHostnames: ReadonlyArray<string>
@@ -14,16 +10,6 @@ export class OidcValue {
   static readonly TOKEN_MAX_AGE_SECONDS = 5 * 60
   static readonly TOKEN_MAX_AGE_MS = OidcValue.TOKEN_MAX_AGE_SECONDS * 1000
   static readonly SUPPORTED_SCOPES = Object.freeze(["openid", "profile", "email"] as const)
-
-  static accessTokenFromAuthorizationHeader(authorizationHeader: string | null): string | null {
-    if (authorizationHeader !== null && typeof authorizationHeader !== "string") return null
-
-    const authorization = parseBearerAuthorization(authorizationHeader ?? undefined)
-
-    return authorization.kind === "token" && canonicalAccessTokenPattern.test(authorization.token)
-      ? authorization.token
-      : null
-  }
 
   static issuer(
     props: Readonly<{ requestUrl: string; forwardedHost: string | null }>,

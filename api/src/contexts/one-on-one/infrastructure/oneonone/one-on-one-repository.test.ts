@@ -1,5 +1,5 @@
 import { OneOnOne } from "@/contexts/one-on-one/domain/oneonone/one-on-one.entity"
-import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/oneonone/one-on-one-repository"
+import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/oneonone/one-on-one.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"

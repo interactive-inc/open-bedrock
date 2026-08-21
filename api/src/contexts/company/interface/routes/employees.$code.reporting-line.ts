@@ -8,7 +8,7 @@ import {
 import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 import { zAppOrgReportingLineList } from "@/lib/app-schemas"
 import type { AppOrgReportingLineNode } from "@/lib/app-schemas"
-import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
+import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /employees/:code/reporting-line — 本人から上位へのレポートライン */

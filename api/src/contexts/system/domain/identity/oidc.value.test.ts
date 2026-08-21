@@ -19,16 +19,6 @@ describe("OidcValue", () => {
     expect(Object.isFrozen(OidcValue.SUPPORTED_SCOPES)).toBe(true)
   })
 
-  test("case-insensitiveなBearer schemeからcanonical 256-bit base64url tokenだけを読む", () => {
-    const token = "A".repeat(43)
-    expect(OidcValue.accessTokenFromAuthorizationHeader(`Bearer ${token}`)).toBe(token)
-    expect(OidcValue.accessTokenFromAuthorizationHeader(`bearer ${token}`)).toBe(token)
-    expect(OidcValue.accessTokenFromAuthorizationHeader(`Basic ${token}`)).toBeNull()
-    expect(OidcValue.accessTokenFromAuthorizationHeader("Bearer short")).toBeNull()
-    expect(OidcValue.accessTokenFromAuthorizationHeader(`${token}`)).toBeNull()
-    expect(OidcValue.accessTokenFromAuthorizationHeader(`Bearer ${"A".repeat(42)}B`)).toBeNull()
-  })
-
   test("configurationに登録したcanonical HTTPS hostnameだけをissuerにする", () => {
     expect(
       OidcValue.issuer(

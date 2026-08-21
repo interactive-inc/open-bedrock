@@ -2,7 +2,7 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 import { toPrimaryRole } from "@/contexts/company/interface/utils/to-primary-role"
 import { zAppAuthMe } from "@/lib/app-schemas"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { IdentityRepository } from "@/contexts/company/application/auth/identity-repository"
+import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity.repository"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { eq } from "drizzle-orm"
@@ -11,7 +11,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/contexts/company/interface/lib/errors"
-import { ReadOrganizationWorkforceState } from "@/contexts/company/application/workforce/read-organization-workforce-state"
+import { ReadOrganizationWorkforceState } from "@/contexts/company/infrastructure/workforce/read-organization-workforce-state.repository"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"

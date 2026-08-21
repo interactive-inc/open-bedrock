@@ -1,5 +1,5 @@
 import { CreateHealthCheckup } from "@/contexts/health-checkup/application/create-health-checkup"
-import { HealthCheckupRepository } from "@/contexts/health-checkup/infrastructure/health-checkup-repository"
+import { HealthCheckupRepository } from "@/contexts/health-checkup/infrastructure/health-checkup.repository"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppHealthCheckup, zAppHealthCheckupList } from "@/lib/app-schemas"

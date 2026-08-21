@@ -8,8 +8,8 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RoomReservationRepository } from "@/contexts/room/infrastructure/room-reservation-repository"
-import { RoomRepository } from "@/contexts/room/infrastructure/room-repository"
+import { RoomReservationRepository } from "@/contexts/room/infrastructure/room-reservation.repository"
+import { RoomRepository } from "@/contexts/room/infrastructure/room.repository"
 
 export type Command = {
   roomId: number

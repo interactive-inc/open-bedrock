@@ -1,5 +1,6 @@
-import { CancelResignation } from "@/contexts/resignation/application/cancel-resignation"
-import { GetResignation } from "@/contexts/resignation/application/get-resignation"
+import { ConflictError } from "@/lib/errors"
+import { ResignationRepository } from "@/contexts/resignation/infrastructure/resignation.repository"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { UpdateResignation } from "@/contexts/resignation/application/update-resignation"
 import type { Resignation } from "@/contexts/resignation/domain/resignation.entity"
 import { factory } from "@/contexts/company/interface/utils/factory"
@@ -35,10 +36,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const resignation = await new GetResignation(c).run({
-    resignationId: validateUuidParam(c.req.param("id"), "resignation"),
-    employeeId: viewer.employeeId,
-  })
+  const resignation = await (async () => {
+    const command = {
+      resignationId: validateUuidParam(c.req.param("id"), "resignation"),
+      employeeId: viewer.employeeId,
+    }
+
+    const resignationRepository = new ResignationRepository(c)
+
+    const resignation = await resignationRepository.findById(command.resignationId)
+
+    if (resignation instanceof Error) {
+      return new UnexpectedError("failed to find resignation", { cause: resignation })
+    }
+
+    if (resignation === null) {
+      return new NotFoundError("resignation not found", "resignation_not_found")
+    }
+
+    if (resignation.employeeId !== command.employeeId) {
+      return new ForbiddenError("not the applicant", "not_applicant")
+    }
+
+    return resignation
+  })()
 
   if (resignation instanceof ApplicationError) {
     throw toHttpException(resignation)
@@ -109,10 +130,44 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new CancelResignation(c).run({
-    resignationId: validateUuidParam(c.req.param("id"), "resignation"),
-    employeeId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      resignationId: validateUuidParam(c.req.param("id"), "resignation"),
+      employeeId: viewer.employeeId,
+    }
+
+    const resignationRepository = new ResignationRepository(c)
+
+    const current = await resignationRepository.findById(command.resignationId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find resignation", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("resignation not found", "resignation_not_found")
+    }
+
+    if (current.employeeId !== command.employeeId) {
+      return new ForbiddenError("not the applicant", "not_applicant")
+    }
+
+    if (!current.isModifiable) {
+      return new ConflictError("resignation is not modifiable", "not_modifiable")
+    }
+
+    const deleted = await resignationRepository.delete(command.resignationId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete resignation", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new ConflictError("resignation is not modifiable", "not_modifiable")
+    }
+
+    return { reason: "cancelled" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

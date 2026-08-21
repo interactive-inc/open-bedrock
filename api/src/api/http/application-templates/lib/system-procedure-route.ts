@@ -1,4 +1,4 @@
-import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
+import { resolveActiveSystemAccountId } from "@/contexts/company/infrastructure/iam/resolve-active-system-account-id.repository"
 import {
   createCompanyProcedureDecisionPolicy,
   type CompanyProcedureDecisionPolicy,
@@ -9,7 +9,7 @@ import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-v
 import { PublishSystemProcedure } from "@system/application/workflow/publish-system-procedure"
 import type { ProcedureDefinition } from "@system/domain/workflow/procedure-definition.entity"
 import { procedureKeySchema } from "@system/domain/workflow/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure-repository"
+import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
 
 export function systemProcedureRepository(c: Context): SystemD1ProcedureRepository {
   return new SystemD1ProcedureRepository({ env: { DB: c.env.DB } })

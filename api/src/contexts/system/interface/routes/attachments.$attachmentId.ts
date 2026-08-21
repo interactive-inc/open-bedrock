@@ -1,8 +1,12 @@
+import { decryptAttachment } from "@system/infrastructure/attachments/decrypt-attachment.repository"
+import { toSha256Hex } from "@system/infrastructure/attachments/to-sha256-hex.repository"
+import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attachment-kek-registry.repository"
+import { AttachmentObjectStore } from "@system/infrastructure/attachments/attachment-object-store.repository"
+import { NotFoundError, UnprocessableError } from "@/lib/errors"
 /** /attachments/:attachmentId */
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
-import { ReadAttachment } from "@system/application/attachments/read-attachment"
-import { AttachmentRepository } from "@system/infrastructure/attachments/attachment-repository"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
+import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 import { systemFactory } from "@system/interface/http/system-factory"
@@ -50,7 +54,61 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
     })
   }
 
-  const content = await new ReadAttachment(context).run(attachmentId)
+  const content = await (async () => {
+    const row = await new AttachmentRepository(context).findById(attachmentId)
+
+    if (row instanceof Error) return row
+
+    if (row === null) {
+      return new NotFoundError("添付が見つかりません", "attachment_not_found")
+    }
+
+    if (row.status === "erased" || row.wrappedDek === null || row.wrappedDekIv === null) {
+      return new NotFoundError("この添付は消去済みです", "attachment_erased")
+    }
+
+    const registry = AttachmentKekRegistry.fromEnv(context.env.ATTACHMENT_KEKS)
+
+    if (registry instanceof Error) return registry
+
+    const kek = registry.resolve(row.kekVersion)
+
+    if (kek instanceof Error) return kek
+
+    const ciphertext = await new AttachmentObjectStore(context).get(row.objectKey)
+
+    if (ciphertext instanceof Error) return ciphertext
+
+    const plaintext = await decryptAttachment(
+      ciphertext,
+      {
+        wrappedDek: row.wrappedDek,
+        wrappedDekIv: row.wrappedDekIv,
+        contentIv: row.contentIv,
+        kekVersion: row.kekVersion,
+      },
+      kek,
+    )
+
+    if (plaintext instanceof Error) return plaintext
+
+    const digest = await toSha256Hex(plaintext)
+
+    if (digest !== row.plaintextSha256) {
+      return new UnprocessableError(
+        "添付の内容がメタデータと一致しません",
+        "attachment_integrity_mismatch",
+      )
+    }
+
+    return {
+      id: row.id,
+      fileName: row.fileName,
+      contentType: row.contentType,
+      byteSize: row.byteSize,
+      content: plaintext,
+    }
+  })()
 
   if (content instanceof ApplicationError) {
     throw new SystemHttpError({

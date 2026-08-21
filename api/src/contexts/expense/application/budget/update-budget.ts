@@ -1,6 +1,6 @@
 import type { Budget } from "@/contexts/expense/domain/budget/budget.entity"
 import type { Context } from "@/env"
-import { BudgetRepository } from "@/contexts/expense/infrastructure/budget/budget-repository"
+import { BudgetRepository } from "@/contexts/expense/infrastructure/budget/budget.repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

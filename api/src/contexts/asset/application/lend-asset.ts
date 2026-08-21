@@ -3,8 +3,8 @@ import type { Asset } from "@/contexts/asset/domain/asset.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { AssetRepository } from "@/contexts/asset/infrastructure/asset-repository"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { AssetRepository } from "@/contexts/asset/infrastructure/asset.repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 
 export type Command = {
   session: Session

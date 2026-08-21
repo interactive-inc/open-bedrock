@@ -1,5 +1,5 @@
-import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
-import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
+import { resolveActiveSystemAccountId } from "@/contexts/company/interface/http/accounts/resolve-active-system-account-id"
+import { resolveCompanyAccountParticipants } from "@/contexts/company/interface/http/accounts/resolve-company-account-participants"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,

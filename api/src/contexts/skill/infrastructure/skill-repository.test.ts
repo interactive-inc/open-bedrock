@@ -1,5 +1,5 @@
 import { Skill } from "@/contexts/skill/domain/skill.entity"
-import { SkillRepository } from "@/contexts/skill/infrastructure/skill-repository"
+import { SkillRepository } from "@/contexts/skill/infrastructure/skill.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { describe, expect, test } from "bun:test"

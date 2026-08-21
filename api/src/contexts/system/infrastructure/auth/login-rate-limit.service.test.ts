@@ -5,8 +5,8 @@ import type { DrizzleD1Database } from "drizzle-orm/d1"
 import type {
   SystemClockContext,
   SystemDatabaseContext,
-} from "@system/infrastructure/configuration/system-context"
-import { LoginRateLimitService } from "@/contexts/system/infrastructure/auth/login-rate-limit.service"
+} from "@system/infrastructure/configuration/system-context.repository"
+import { LoginRateLimitService } from "@/contexts/system/infrastructure/auth/login-rate-limit.service.repository"
 import * as schema from "@system/infrastructure/schema/system-core"
 
 /**

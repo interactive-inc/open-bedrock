@@ -1,9 +1,9 @@
 /** /company/v1/organization-changes */
-import { writeOrganizationChange } from "@/contexts/company/application/organization/write-organization-change"
+import { WriteOrganizationChange } from "@/contexts/company/application/organization/write-organization-change"
 import type { CompanyJsonObject } from "@/contexts/company/domain/core/company-resource"
 import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
-import { readCompanyResourcesFromD1 } from "@/contexts/company/infrastructure/core/read-company-resources-from-d1"
-import { writeCompanyResourcesToD1 } from "@/contexts/company/infrastructure/core/write-company-resources-to-d1"
+import { readCompanyResourcesFromD1 } from "@/contexts/company/infrastructure/core/read-company-resources-from-d1.repository"
+import { writeCompanyResourcesToD1 } from "@/contexts/company/infrastructure/core/write-company-resources-to-d1.repository"
 import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/http/company-http-environment"
 import { zValidator } from "@hono/zod-validator"
@@ -171,12 +171,11 @@ export const POST = factory.createHandlers(
         attributes: resource.attributes as CompanyJsonObject,
       })),
     }
-    const result = await writeOrganizationChange(
+    const result = await new WriteOrganizationChange(
       actor,
-      change,
       (resourceQuery) => readCompanyResourcesFromD1(database, resourceQuery),
       (resourceChange) => writeCompanyResourcesToD1(database, resourceChange),
-    )
+    ).execute(change)
 
     if (result.kind === "forbidden") {
       throw new CompanyHttpError({

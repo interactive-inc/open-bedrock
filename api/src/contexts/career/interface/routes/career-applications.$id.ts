@@ -1,6 +1,8 @@
-import { GetCareerApplication } from "@/contexts/career/application/get-career-application"
+import { ConflictError } from "@/lib/errors"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application.repository"
+
 import { UpdateMyCareerApplication } from "@/contexts/career/application/update-my-career-application"
-import { WithdrawCareerApplication } from "@/contexts/career/application/withdraw-career-application"
 import type { CareerApplication } from "@/contexts/career/domain/career-application.entity"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
@@ -39,10 +41,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new BadRequestError("invalid application id")
   }
 
-  const application = await new GetCareerApplication(c).run({
-    applicationId: applicationId.data,
-    applicantId: viewer.employeeId,
-  })
+  const application = await (async () => {
+    const command = {
+      applicationId: applicationId.data,
+      applicantId: viewer.employeeId,
+    }
+
+    const applicationRepository = new CareerApplicationRepository(c)
+
+    const application = await applicationRepository.findById(command.applicationId)
+
+    if (application instanceof Error) {
+      return new UnexpectedError("failed to find career application", { cause: application })
+    }
+
+    if (application === null) {
+      return new NotFoundError("career application not found", "application_not_found")
+    }
+
+    if (application.applicantId !== command.applicantId) {
+      return new ForbiddenError("not the applicant", "not_applicant")
+    }
+
+    return application
+  })()
 
   if (application instanceof ApplicationError) {
     throw toHttpException(application)
@@ -105,10 +127,45 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new BadRequestError("invalid application id")
   }
 
-  const result = await new WithdrawCareerApplication(c).run({
-    applicationId: applicationId.data,
-    applicantId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      applicationId: applicationId.data,
+      applicantId: viewer.employeeId,
+    }
+
+    const applicationRepository = new CareerApplicationRepository(c)
+
+    const current = await applicationRepository.findById(command.applicationId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find career application", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("career application not found", "application_not_found")
+    }
+
+    if (current.applicantId !== command.applicantId) {
+      return new ForbiddenError("not the applicant", "not_applicant")
+    }
+
+    if (current.status !== "applied") {
+      return new ConflictError("career application is already decided", "application_decided")
+    }
+
+    const deleted = await applicationRepository.delete(command.applicationId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete career application", { cause: deleted })
+    }
+
+    // リポジトリ層の status guard で並行変更を検出した場合
+    if (deleted !== null && "reason" in deleted) {
+      return new ConflictError("career application is already decided", "application_decided")
+    }
+
+    return { reason: "withdrawn" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

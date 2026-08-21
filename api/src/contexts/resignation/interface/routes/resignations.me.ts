@@ -1,4 +1,6 @@
-import { ListMyResignations } from "@/contexts/resignation/application/list-my-resignations"
+import { ResignationRepository } from "@/contexts/resignation/infrastructure/resignation.repository"
+import { UnexpectedError } from "@/lib/errors"
+
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -37,11 +39,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const resignationRows = await new ListMyResignations(c).run({
-    employeeId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const resignationRows = await (async () => {
+    const command = {
+      employeeId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const resignationRepository = new ResignationRepository(c)
+
+    const resignations = await resignationRepository.findByEmployeeId({
+      employeeId: command.employeeId,
+      limit: command.limit,
+      offset: command.offset,
+    })
+
+    if (resignations instanceof Error) {
+      return new UnexpectedError("failed to find resignations", { cause: resignations })
+    }
+
+    return resignations
+  })()
 
   if (resignationRows instanceof ApplicationError) {
     throw toHttpException(resignationRows)

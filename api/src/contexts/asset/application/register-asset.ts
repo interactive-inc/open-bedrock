@@ -3,7 +3,7 @@ import { Asset } from "@/contexts/asset/domain/asset.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { AssetRepository } from "@/contexts/asset/infrastructure/asset-repository"
+import { AssetRepository } from "@/contexts/asset/infrastructure/asset.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {

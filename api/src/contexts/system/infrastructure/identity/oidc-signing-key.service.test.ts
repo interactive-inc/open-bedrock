@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { OidcSigningKeyService } from "@/contexts/system/infrastructure/identity/oidc-signing-key.service"
+import { OidcSigningKeyService } from "@/contexts/system/infrastructure/identity/oidc-signing-key.service.repository"
 
 const coordinate = "A".repeat(43)
 

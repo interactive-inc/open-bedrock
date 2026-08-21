@@ -3,14 +3,14 @@ import {
   GoalEvaluation,
   type GoalEvaluationKind,
 } from "@/contexts/performance-review/domain/goal/goal-evaluation.entity"
-import { resolveEvaluationPermission } from "@/contexts/performance-review/application/goal/resolve-evaluation-permission"
-import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
+import { resolveEvaluationPermission } from "@/contexts/performance-review/domain/goal/resolve-evaluation-permission"
+import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
 import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/goal/goal-evaluation-repository"
-import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal-repository"
+import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/goal/goal-evaluation.repository"
+import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
 
 export type Command = {
   goalId: number

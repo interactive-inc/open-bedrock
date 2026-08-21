@@ -1,7 +1,7 @@
 import { RingiRequest } from "@/contexts/ringi/domain/ringi-request.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
-import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/ringi-request-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/ringi-request.repository"
 import { UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

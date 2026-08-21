@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftAssignment } from "@/contexts/shift/domain/shift-assignment.entity"
 import type { Context } from "@/env"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment-repository"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
 
 export type Input = {
   session: Session

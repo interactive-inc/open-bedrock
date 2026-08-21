@@ -3,7 +3,7 @@ import { ResetPassword } from "@/contexts/system/application/auth/reset-password
 import { PasswordResetRequestApplicationError } from "@system/application/auth/errors"
 import { EmailValue } from "@/contexts/system/domain/auth/email.value"
 import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
-import { findSystemPasswordResetRecipient } from "@system/infrastructure/auth/find-system-password-reset-recipient"
+import { findSystemPasswordResetRecipient } from "@system/infrastructure/auth/find-system-password-reset-recipient.repository"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 import { zAppAuthAcknowledgement } from "@/contexts/system/interface/models/auth"

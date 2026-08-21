@@ -3,7 +3,7 @@ import { HeadcountPlan } from "@/contexts/headcount-plan/domain/headcount-plan.e
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/headcount-plan-repository"
+import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/headcount-plan.repository"
 
 export type Command = {
   session: Session

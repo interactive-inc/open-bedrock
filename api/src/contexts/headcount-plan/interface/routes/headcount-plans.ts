@@ -1,5 +1,5 @@
 import { CreateHeadcountPlan } from "@/contexts/headcount-plan/application/create-headcount-plan"
-import { readActiveHeadcount } from "@/contexts/company/application/organization/read-active-headcount"
+import { readActiveHeadcount } from "@/contexts/company/infrastructure/organization/read-active-headcount.repository"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -16,7 +16,7 @@ import {
 } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppHeadcountPlan, zAppHeadcountPlanList } from "@/lib/app-schemas"
-import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/headcount-plan-repository"
+import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/headcount-plan.repository"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

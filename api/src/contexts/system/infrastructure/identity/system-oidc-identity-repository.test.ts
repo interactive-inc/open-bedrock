@@ -1,6 +1,6 @@
 import { zAccountId } from "@system/domain/auth/account-id"
-import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context"
-import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity-repository"
+import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context.repository"
+import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity.repository"
 import * as schema from "@system/infrastructure/schema/system-core"
 import { Database } from "bun:sqlite"
 import { describe, expect, test } from "bun:test"

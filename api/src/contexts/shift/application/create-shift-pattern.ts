@@ -4,7 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { ShiftPattern } from "@/contexts/shift/domain/shift-pattern.entity"
 import type { Context } from "@/env"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
-import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern-repository"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
 
 export type Input = {
   session: Session

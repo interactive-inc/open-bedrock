@@ -1,4 +1,4 @@
-import { ResolveOrganizationAuthority } from "@/contexts/company/application/workforce/resolve-organization-authority"
+import { ResolveOrganizationAuthority } from "@/contexts/company/infrastructure/workforce/resolve-organization-authority.repository"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"

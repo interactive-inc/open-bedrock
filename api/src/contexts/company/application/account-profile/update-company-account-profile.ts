@@ -1,11 +1,15 @@
-import type { CompanyAccountProfileRepository } from "@/contexts/company/application/account-profile/company-account-profile-repository"
+import type { CompanyAccountProfileRepository } from "@/contexts/company/infrastructure/account-profile/company-account-profile-port.repository"
+import type { CompanyAccountProfileEntity } from "@/contexts/company/domain/account-profile/company-account-profile.entity"
 
 /** 既存プロフィールだけを更新し、存在しないAccountの暗黙作成を許さない。 */
 export class UpdateCompanyAccountProfile {
   constructor(private readonly repository: CompanyAccountProfileRepository) {}
 
   async execute(organizationId: string, accountId: string, displayName: string, now: Date) {
-    const current = await this.repository.find(organizationId, accountId)
+    const current: CompanyAccountProfileEntity | null | Error = await this.repository.find(
+      organizationId,
+      accountId,
+    )
     if (current instanceof Error || current === null) return current
 
     const updated = current.rename(displayName, now)

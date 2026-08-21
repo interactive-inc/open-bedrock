@@ -1,5 +1,5 @@
 import { BackfillLifecycleMigration } from "@/contexts/company/application/employee-lifecycle/backfill-lifecycle-migration"
-import { PreflightLifecycleMigration } from "@/contexts/company/application/employee-lifecycle/preflight-lifecycle-migration"
+import { PreflightLifecycleMigration } from "@/contexts/company/infrastructure/employee-lifecycle/preflight-lifecycle-migration.repository"
 import { VerifyLifecycleMigration } from "@/contexts/company/application/employee-lifecycle/verify-lifecycle-migration"
 import type { Context } from "@/env"
 import { ApplicationError } from "@/lib/errors"

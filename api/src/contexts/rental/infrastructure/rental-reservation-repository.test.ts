@@ -1,5 +1,5 @@
 import { RentalReservation } from "@/contexts/rental/domain/rental-reservation.entity"
-import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation-repository"
+import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { describe, expect, test } from "bun:test"

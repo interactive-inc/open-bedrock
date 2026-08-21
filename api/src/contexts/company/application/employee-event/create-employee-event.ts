@@ -3,7 +3,7 @@ import { EmployeeEvent } from "@/contexts/company/domain/employee-event/employee
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { EmployeeEventRepository } from "@/contexts/company/infrastructure/employee-event/employee-event-repository"
+import { EmployeeEventRepository } from "@/contexts/company/infrastructure/employee-event/employee-event.repository"
 
 export type Command = {
   session: Session

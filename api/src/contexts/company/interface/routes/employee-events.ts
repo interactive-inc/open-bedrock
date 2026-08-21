@@ -1,12 +1,12 @@
 import { CreateEmployeeEvent } from "@/contexts/company/application/employee-event/create-employee-event"
 import { canReadEmployeeEventsOf } from "@/contexts/company/interface/http/employee-events/can-read-employee-events-of"
-import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
+import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
 import { resolveTargetEmployeeId } from "@/contexts/company/interface/utils/resolve-target-employee-id"
 import { resolveEmployeeIdFromBody } from "@/contexts/company/interface/utils/resolve-employee-id-from-body"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEmployeeEvent, zAppEmployeeEventList } from "@/lib/app-schemas"
-import { EmployeeEventRepository } from "@/contexts/company/infrastructure/employee-event/employee-event-repository"
+import { EmployeeEventRepository } from "@/contexts/company/infrastructure/employee-event/employee-event.repository"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

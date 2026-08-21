@@ -1,5 +1,6 @@
-import { CancelRentalReservation } from "@/contexts/rental/application/cancel-rental-reservation"
-import { GetRentalReservation } from "@/contexts/rental/application/get-rental-reservation"
+import { ConflictError } from "@/lib/errors"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation.repository"
 import { UpdateRentalReservation } from "@/contexts/rental/application/update-rental-reservation"
 import type { RentalReservation } from "@/contexts/rental/domain/rental-reservation.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -36,10 +37,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const reservation = await new GetRentalReservation(c).run({
-    reservationId: validateUuidParam(c.req.param("id"), "reservation"),
-    requesterId: viewer.employeeId,
-  })
+  const reservation = await (async () => {
+    const command = {
+      reservationId: validateUuidParam(c.req.param("id"), "reservation"),
+      requesterId: viewer.employeeId,
+    }
+
+    const reservationRepository = new RentalReservationRepository(c)
+
+    const reservation = await reservationRepository.findById(command.reservationId)
+
+    if (reservation instanceof Error) {
+      return new UnexpectedError("failed to find reservation", { cause: reservation })
+    }
+
+    if (reservation === null) {
+      return new NotFoundError("reservation not found", "reservation_not_found")
+    }
+
+    if (reservation.requesterId !== command.requesterId) {
+      return new ForbiddenError("not the requester", "not_requester")
+    }
+
+    return reservation
+  })()
 
   if (reservation instanceof ApplicationError) {
     throw toHttpException(reservation)
@@ -101,10 +122,44 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new CancelRentalReservation(c).run({
-    reservationId: validateUuidParam(c.req.param("id"), "reservation"),
-    requesterId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      reservationId: validateUuidParam(c.req.param("id"), "reservation"),
+      requesterId: viewer.employeeId,
+    }
+
+    const reservationRepository = new RentalReservationRepository(c)
+
+    const current = await reservationRepository.findById(command.reservationId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find reservation", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("reservation not found", "reservation_not_found")
+    }
+
+    if (current.requesterId !== command.requesterId) {
+      return new ForbiddenError("not the requester", "not_requester")
+    }
+
+    if (current.status !== "requested") {
+      return new ConflictError("reservation is not modifiable", "not_modifiable")
+    }
+
+    const deleted = await reservationRepository.delete(command.reservationId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete reservation", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new ConflictError("reservation is not modifiable", "not_modifiable")
+    }
+
+    return { reason: "cancelled" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

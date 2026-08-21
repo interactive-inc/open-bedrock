@@ -2,11 +2,11 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
 import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import type { Context } from "@/env"
-import { IdentityRepository } from "@/contexts/company/application/auth/identity-repository"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
-import { PrepareEmployeeAccountProvisioning } from "@/contexts/company/infrastructure/iam/prepare-employee-account-provisioning"
+import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity.repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { PrepareEmployeeAccountProvisioning } from "@/contexts/company/infrastructure/iam/prepare-employee-account-provisioning.repository"
 import { validateSystemPassword } from "@system/domain/auth/system-password-policy"
-import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
+import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
   ApplicationError,
@@ -16,7 +16,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
-import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration-repository"
+import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration.repository"
 
 export type Command = {
   session: Session

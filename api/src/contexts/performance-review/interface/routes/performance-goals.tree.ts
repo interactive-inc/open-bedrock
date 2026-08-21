@@ -1,6 +1,10 @@
-import { GetGoalTree } from "@/contexts/performance-review/application/goal/get-goal-tree"
+import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
+import { buildGoalTree } from "@/contexts/performance-review/domain/goal/build-goal-tree"
+import { canReadGoalOf } from "@/contexts/performance-review/domain/goal/can-read-goal-of"
+import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
+import type { Goal } from "@/contexts/performance-review/domain/goal/goal.entity"
 import { factory } from "@/contexts/company/interface/utils/factory"
-import { ApplicationError } from "@/lib/errors"
+import { UnexpectedError } from "@/lib/errors"
 import { zAppGoalTree } from "@/lib/app-schemas"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
@@ -20,11 +24,36 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const period = c.req.query("period") ?? null
 
-  const roots = await new GetGoalTree(c).run({ period, session })
+  const goals = await new GoalRepository(c).findAllByPeriod(period)
 
-  if (roots instanceof ApplicationError) {
-    throw toHttpException(roots)
+  if (goals instanceof Error) {
+    throw toHttpException(new UnexpectedError("failed to load goals", { cause: goals }))
   }
+
+  const visible: Array<Goal> = []
+
+  for (const goal of goals) {
+    if (goal.ownerType !== "individual") {
+      visible.push(goal)
+      continue
+    }
+
+    const relation = await resolveEmployeeRelation({
+      c,
+      viewerEmployeeId: session.employeeId,
+      targetEmployeeId: goal.employeeId,
+    })
+
+    if (relation instanceof Error) {
+      throw toHttpException(
+        new UnexpectedError("failed to resolve goal visibility", { cause: relation }),
+      )
+    }
+
+    if (canReadGoalOf(session, relation)) visible.push(goal)
+  }
+
+  const roots = buildGoalTree({ goals: visible })
 
   const body = zAppGoalTree.parse({ period, roots })
 

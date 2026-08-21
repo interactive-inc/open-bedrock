@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { AuditEventDetail } from "@/contexts/company/application/audit/company-audit-event"
-import { toAuditCsv } from "@/contexts/company/application/audit/to-audit-csv"
-import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/application/audit/to-audit-csv-row"
+import type { AuditEventDetail } from "@/contexts/company/domain/audit/company-audit-event"
+import { toAuditCsv } from "@/contexts/company/interface/http/audit/to-audit-csv"
+import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/interface/http/audit/to-audit-csv-row"
 import { PayloadTooLargeError } from "@/lib/errors"
 import { testAccountId } from "@/api/test/support/test-account-id"
 

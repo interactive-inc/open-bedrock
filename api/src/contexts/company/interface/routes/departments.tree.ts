@@ -7,7 +7,7 @@ import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { MAX_ORG_NODES } from "@/contexts/company/interface/utils/to-bounded-int"
 import { zAppOrgTreeList } from "@/lib/app-schemas"
 import type { AppOrgTreeNode } from "@/lib/app-schemas"
-import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
+import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
 import { InternalError } from "@/contexts/company/interface/lib/errors"
 
 function toOrgTreeNode(node: DepartmentTreeNode): AppOrgTreeNode {

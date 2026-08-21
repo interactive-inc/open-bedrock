@@ -1,7 +1,7 @@
 import { LeaveRequest } from "@/contexts/leave/domain/leave-request.entity"
 import { DecideLeaveRequest } from "@/contexts/leave/application/decide-leave-request"
 import { ForbiddenError, ValidationError } from "@/lib/errors"
-import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request-repository"
+import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

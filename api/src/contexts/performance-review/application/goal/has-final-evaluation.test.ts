@@ -1,5 +1,5 @@
 import { GoalEvaluation } from "@/contexts/performance-review/domain/goal/goal-evaluation.entity"
-import { hasFinalEvaluation } from "@/contexts/performance-review/application/goal/has-final-evaluation"
+import { hasFinalEvaluation } from "@/contexts/performance-review/domain/goal/has-final-evaluation"
 import { describe, expect, test } from "bun:test"
 
 describe("hasFinalEvaluation", () => {

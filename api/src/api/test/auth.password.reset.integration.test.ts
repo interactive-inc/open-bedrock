@@ -3,13 +3,13 @@ import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
 import {
   seedPasswordHash,
   seedPepperSecret,
-} from "@/contexts/company/infrastructure/seed/seed-password-hash"
-import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
-import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token"
+} from "@/contexts/company/infrastructure/seed/seed-password-hash.repository"
+import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
+import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
 import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
 

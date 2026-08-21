@@ -1,4 +1,6 @@
-import { ListMyAntisocialChecks } from "@/contexts/antisocial-check/application/list-my-antisocial-checks"
+import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/antisocial-check.repository"
+import { UnexpectedError } from "@/lib/errors"
+
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -37,11 +39,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const antisocialCheckRows = await new ListMyAntisocialChecks(c).run({
-    requesterId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const antisocialCheckRows = await (async () => {
+    const command = {
+      requesterId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const antisocialCheckRepository = new AntisocialCheckRepository(c)
+
+    const antisocialChecks = await antisocialCheckRepository.findByRequesterId({
+      requesterId: command.requesterId,
+      limit: command.limit,
+      offset: command.offset,
+    })
+
+    if (antisocialChecks instanceof Error) {
+      return new UnexpectedError("failed to find antisocial checks", { cause: antisocialChecks })
+    }
+
+    return antisocialChecks
+  })()
 
   if (antisocialCheckRows instanceof ApplicationError) {
     throw toHttpException(antisocialCheckRows)

@@ -1,11 +1,11 @@
 import { CreateEmployeeGrade } from "@/contexts/company/application/grade/create-employee-grade"
 import { canReadGradeOf } from "@/contexts/company/interface/http/employee-grades/can-read-grade-of"
-import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
+import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
 import { resolveTargetEmployeeId } from "@/contexts/company/interface/utils/resolve-target-employee-id"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEmployeeGrade, zAppEmployeeGradeList } from "@/lib/app-schemas"
-import { EmployeeGradeRepository } from "@/contexts/company/infrastructure/grade/employee-grade-repository"
+import { EmployeeGradeRepository } from "@/contexts/company/infrastructure/grade/employee-grade.repository"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

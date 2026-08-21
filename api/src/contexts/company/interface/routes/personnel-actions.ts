@@ -1,5 +1,6 @@
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { NotFoundError as ApplicationNotFoundError, UnexpectedError } from "@/lib/errors"
 import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
-import { GetEmployee } from "@/contexts/company/application/employee/get-employee"
 import { LifecycleAccess } from "@/contexts/company/interface/utils/lifecycle-access"
 import { lifecycleNoStore } from "@/contexts/company/interface/middlewares/lifecycle-no-store"
 import {
@@ -12,7 +13,7 @@ import { toHttpException } from "@/contexts/company/interface/lib/to-http-except
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { resolvePersonnelActionPosition } from "@/contexts/company/interface/utils/resolve-personnel-action-position"
 import { nonCorrectionWirePersonnelActionInputSchema } from "@/contexts/company/interface/utils/wire-personnel-action-input"
-import type { PersonnelActionRecord } from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action-repository"
+import type { PersonnelActionRecord } from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action.repository"
 import { ApplicationError, ValidationError } from "@/lib/errors"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
@@ -46,7 +47,23 @@ export const POST = factory.createHandlers(
     const session = c.var.session
     if (session === null) throw new UnauthorizedError()
     const body = c.req.valid("json")
-    const employee = await new GetEmployee(c).run({ code: body.action.employeeCode })
+    const employee = await (async () => {
+      const command = { code: body.action.employeeCode }
+
+      const employeeRepository = new EmployeeRepository(c)
+
+      const employee = await employeeRepository.findByCode(command.code)
+
+      if (employee instanceof Error) {
+        return new UnexpectedError("failed to find employee", { cause: employee })
+      }
+
+      if (employee === null) {
+        return new ApplicationNotFoundError("employee not found", "employee_not_found")
+      }
+
+      return employee
+    })()
     if (employee instanceof ApplicationError) throw new NotFoundError("employee not found")
     if (!session.hasPermission("employee:lifecycle:apply")) {
       await new LifecycleAccess({ c, session }).appendDeniedAudit({

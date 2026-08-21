@@ -2,9 +2,9 @@ import { SystemHttpError } from "@system/interface/http/errors/system-http-error
 /** /system/v1/cli-sessions */
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { validateSystemAccessTokenSecret } from "@system/domain/auth/validate-system-access-token-secret"
-import { consumeSystemCliLoginCode } from "@system/infrastructure/auth/consume-system-cli-login-code"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
-import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash"
+import { consumeSystemCliLoginCode } from "@system/infrastructure/auth/consume-system-cli-login-code.repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
+import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash.repository"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { zValidator } from "@hono/zod-validator"

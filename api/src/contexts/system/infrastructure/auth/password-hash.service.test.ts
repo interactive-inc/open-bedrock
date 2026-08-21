@@ -1,4 +1,4 @@
-import { PasswordHashService } from "@/contexts/system/infrastructure/auth/password-hash.service"
+import { PasswordHashService } from "@/contexts/system/infrastructure/auth/password-hash.service.repository"
 import { describe, expect, test } from "bun:test"
 
 const TEST_PEPPER = "test-pepper-fixed-value"

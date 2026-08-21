@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { canCompleteTask } from "@/contexts/onboarding/application/can-complete-task"
+import { canCompleteTask } from "@/contexts/onboarding/domain/can-complete-task"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTask } from "@/contexts/onboarding/domain/onboarding-task.entity"
 import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment-repository"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
 
 export type Command = {
   taskId: number

@@ -1,4 +1,6 @@
-import { ListMyOneOnOnes } from "@/contexts/one-on-one/application/oneonone/list-my-one-on-ones"
+import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/oneonone/one-on-one.repository"
+import { UnexpectedError } from "@/lib/errors"
+
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppOneOnOneList } from "@/lib/app-schemas"
@@ -42,11 +44,26 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const oneOnOnesList = await new ListMyOneOnOnes(c).run({
-    employeeId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const oneOnOnesList = await (async () => {
+    const command = {
+      employeeId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const oneOnOneRepository = new OneOnOneRepository(c)
+
+    const oneOnOnes = await oneOnOneRepository.findByParticipantId(command.employeeId, {
+      limit: command.limit,
+      offset: command.offset,
+    })
+
+    if (oneOnOnes instanceof Error) {
+      return new UnexpectedError("failed to find one-on-ones", { cause: oneOnOnes })
+    }
+
+    return oneOnOnes
+  })()
 
   if (oneOnOnesList instanceof ApplicationError) {
     throw toHttpException(oneOnOnesList)

@@ -1,9 +1,9 @@
 import { PasswordResetRequestApplicationError } from "@/contexts/system/application/auth/errors"
-import { LoginRateLimitService } from "@/contexts/system/infrastructure/auth/login-rate-limit.service"
-import { PasswordResetEmailGateway } from "@/contexts/system/infrastructure/auth/password-reset-email.gateway"
-import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token"
-import { generateOpaqueToken } from "@system/infrastructure/auth/generate-opaque-token"
-import { createSystemPasswordResetChallenge } from "@system/infrastructure/auth/create-system-password-reset-challenge"
+import { LoginRateLimitService } from "@/contexts/system/infrastructure/auth/login-rate-limit.service.repository"
+import { PasswordResetEmailGateway } from "@/contexts/system/infrastructure/auth/password-reset-email.gateway.repository"
+import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
+import { generateOpaqueToken } from "@system/infrastructure/auth/generate-opaque-token.repository"
+import { createSystemPasswordResetChallenge } from "@system/infrastructure/auth/create-system-password-reset-challenge.repository"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import type {
   SystemClockContext,
@@ -11,7 +11,7 @@ import type {
   SystemDatabaseContext,
   SystemEmailContext,
   SystemRequestAuditContext,
-} from "@system/infrastructure/configuration/system-context"
+} from "@system/infrastructure/configuration/system-context.repository"
 type Props = Readonly<{
   email: string
   origin: string

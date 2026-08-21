@@ -2,9 +2,9 @@ import { SystemHttpError } from "@system/interface/http/errors/system-http-error
 /** /system/v1/bootstrap */
 import { BootstrapSystemRoot } from "@system/application/iam/bootstrap-system-root"
 import { isSystemBootstrapTokenUsable } from "@system/domain/configuration/is-system-bootstrap-token-usable"
-import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
-import { timingSafeStringEqual } from "@system/infrastructure/auth/timing-safe-string-equal"
-import { SystemRootBootstrapRepositoryD1 } from "@system/infrastructure/iam/system-root-bootstrap-repository"
+import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
+import { timingSafeStringEqual } from "@system/infrastructure/auth/timing-safe-string-equal.repository"
+import { SystemRootBootstrapRepositoryD1 } from "@system/infrastructure/iam/system-root-bootstrap.repository"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

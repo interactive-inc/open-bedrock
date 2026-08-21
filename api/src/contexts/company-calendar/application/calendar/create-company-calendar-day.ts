@@ -4,7 +4,7 @@ import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { CalendarDayKind } from "@/lib/schemas"
 import type { Context } from "@/env"
-import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/calendar/company-calendar-day-repository"
+import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/calendar/company-calendar-day.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {

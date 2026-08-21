@@ -1,4 +1,4 @@
-import type { CompanyActor } from "@/contexts/company/application/core/company-actor"
+import type { CompanyActor } from "@/contexts/company/domain/core/company-actor"
 import type { Context } from "hono"
 
 export type CompanyHttpEnvironment = {

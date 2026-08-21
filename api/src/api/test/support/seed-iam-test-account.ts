@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { zAccountId, type AccountId } from "@/contexts/system/domain/auth/account-id"
 

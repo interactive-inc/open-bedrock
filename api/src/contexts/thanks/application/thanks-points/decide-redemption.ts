@@ -3,8 +3,8 @@ import type { ThanksRedemption } from "@/contexts/thanks/domain/thanks-points/th
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption-repository"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward-repository"
+import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption.repository"
+import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward.repository"
 
 export type Command = {
   session: Session

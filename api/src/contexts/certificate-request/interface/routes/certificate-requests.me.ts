@@ -1,4 +1,6 @@
-import { ListMyCertificateRequests } from "@/contexts/certificate-request/application/list-my-certificate-requests"
+import { UnexpectedError } from "@/lib/errors"
+import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/certificate-request.repository"
+
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppCertificateRequestList } from "@/lib/app-schemas"
@@ -37,11 +39,29 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const certificateRequestRows = await new ListMyCertificateRequests(c).run({
-    requesterId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const certificateRequestRows = await (async () => {
+    const command = {
+      requesterId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const certificateRequestRepository = new CertificateRequestRepository(c)
+
+    const certificateRequests = await certificateRequestRepository.findByRequesterId({
+      requesterId: command.requesterId,
+      limit: command.limit,
+      offset: command.offset,
+    })
+
+    if (certificateRequests instanceof Error) {
+      return new UnexpectedError("failed to find certificate requests", {
+        cause: certificateRequests,
+      })
+    }
+
+    return certificateRequests
+  })()
 
   if (certificateRequestRows instanceof ApplicationError) {
     throw toHttpException(certificateRequestRows)

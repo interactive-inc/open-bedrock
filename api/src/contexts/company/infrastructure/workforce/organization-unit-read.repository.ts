@@ -2,10 +2,10 @@ import type {
   OrganizationRevisionReadResult,
   OrganizationUnitReadPort,
   OrganizationUnitSnapshotReadResult,
-} from "@/contexts/company/application/workforce/read-organization-state"
+} from "@/contexts/company/infrastructure/workforce/read-organization-state.repository"
 import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
-import { WorkforceSnapshotChangedError } from "@/contexts/company/application/workforce/workforce-snapshot-changed-error"
-import { projectOrganizationUnitSnapshot } from "@/contexts/company/infrastructure/workforce/organization-unit-row.adapter"
+import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/workforce/workforce-snapshot-changed-error"
+import { projectOrganizationUnitSnapshot } from "@/contexts/company/infrastructure/workforce/organization-unit-row.adapter.repository"
 import {
   organizationChangeOperations,
   organizationLifecycleStates,

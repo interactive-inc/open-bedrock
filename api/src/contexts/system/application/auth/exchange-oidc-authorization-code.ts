@@ -2,25 +2,25 @@ import {
   OidcInvalidGrantApplicationError,
   OidcTemporarilyUnavailableApplicationError,
 } from "@system/application/auth/errors"
-import { createSystemOidcAudit } from "@system/application/auth/create-system-oidc-audit"
+import { createSystemOidcAudit } from "@system/domain/audit/create-system-oidc-audit"
 import {
   OidcClientPolicy,
   type OidcClientRegistry,
 } from "@system/domain/identity/oidc-client.policy"
 import { OidcScopeValue } from "@system/domain/identity/oidc-scope.value"
 import { OidcValue } from "@system/domain/identity/oidc.value"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type {
   SystemClockContext,
   SystemD1Context,
   SystemDatabaseContext,
   SystemOidcSigningContext,
-} from "@system/infrastructure/configuration/system-context"
-import { createOidcAccessToken } from "@system/infrastructure/identity/create-oidc-access-token"
-import { consumeOidcAuthorizationCode } from "@system/infrastructure/identity/consume-oidc-authorization-code"
-import { OidcIdTokenService } from "@system/infrastructure/identity/oidc-id-token.service"
-import { OidcSigningKeyService } from "@system/infrastructure/identity/oidc-signing-key.service"
-import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity-repository"
+} from "@system/infrastructure/configuration/system-context.repository"
+import { createOidcAccessToken } from "@system/infrastructure/identity/create-oidc-access-token.repository"
+import { consumeOidcAuthorizationCode } from "@system/infrastructure/identity/consume-oidc-authorization-code.repository"
+import { OidcIdTokenService } from "@system/infrastructure/identity/oidc-id-token.service.repository"
+import { OidcSigningKeyService } from "@system/infrastructure/identity/oidc-signing-key.service.repository"
+import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity.repository"
 
 type Props = Readonly<{
   issuer: string

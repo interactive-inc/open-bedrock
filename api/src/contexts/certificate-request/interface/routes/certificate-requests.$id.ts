@@ -1,5 +1,6 @@
-import { CancelCertificateRequest } from "@/contexts/certificate-request/application/cancel-certificate-request"
-import { GetCertificateRequest } from "@/contexts/certificate-request/application/get-certificate-request"
+import { ConflictError } from "@/lib/errors"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/certificate-request.repository"
 import { UpdateCertificateRequest } from "@/contexts/certificate-request/application/update-certificate-request"
 import type { CertificateRequest } from "@/contexts/certificate-request/domain/certificate-request.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -37,10 +38,34 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const certificateRequest = await new GetCertificateRequest(c).run({
-    certificateRequestId: validateUuidParam(c.req.param("id"), "certificate request"),
-    requesterId: viewer.employeeId,
-  })
+  const certificateRequest = await (async () => {
+    const command = {
+      certificateRequestId: validateUuidParam(c.req.param("id"), "certificate request"),
+      requesterId: viewer.employeeId,
+    }
+
+    const certificateRequestRepository = new CertificateRequestRepository(c)
+
+    const certificateRequest = await certificateRequestRepository.findById(
+      command.certificateRequestId,
+    )
+
+    if (certificateRequest instanceof Error) {
+      return new UnexpectedError("failed to find certificate request", {
+        cause: certificateRequest,
+      })
+    }
+
+    if (certificateRequest === null) {
+      return new NotFoundError("certificate request not found", "certificate_request_not_found")
+    }
+
+    if (certificateRequest.requesterId !== command.requesterId) {
+      return new ForbiddenError("not the requester", "not_requester")
+    }
+
+    return certificateRequest
+  })()
 
   if (certificateRequest instanceof ApplicationError) {
     throw toHttpException(certificateRequest)
@@ -97,10 +122,44 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new CancelCertificateRequest(c).run({
-    certificateRequestId: validateUuidParam(c.req.param("id"), "certificate request"),
-    requesterId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      certificateRequestId: validateUuidParam(c.req.param("id"), "certificate request"),
+      requesterId: viewer.employeeId,
+    }
+
+    const certificateRequestRepository = new CertificateRequestRepository(c)
+
+    const current = await certificateRequestRepository.findById(command.certificateRequestId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find certificate request", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("certificate request not found", "certificate_request_not_found")
+    }
+
+    if (current.requesterId !== command.requesterId) {
+      return new ForbiddenError("not the requester", "not_requester")
+    }
+
+    if (current.status !== "requested") {
+      return new ConflictError("certificate request is not modifiable", "not_modifiable")
+    }
+
+    const deleted = await certificateRequestRepository.delete(command.certificateRequestId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete certificate request", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new ConflictError("certificate request is not modifiable", "not_modifiable")
+    }
+
+    return { reason: "cancelled" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

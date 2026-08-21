@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { companyNotificationKindSchema } from "@/contexts/company/domain/notifications/notification-kind"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees"
+import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
 import { seedSystemNotifications } from "@/api/test/support/seed-notifications"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"

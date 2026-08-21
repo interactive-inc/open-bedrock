@@ -1,5 +1,6 @@
-import { GetMySkill } from "@/contexts/skill/application/get-my-skill"
-import { RemoveMySkill } from "@/contexts/skill/application/remove-my-skill"
+import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/employee-skill.repository"
+import { SkillRepository } from "@/contexts/skill/infrastructure/skill.repository"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
@@ -17,10 +18,35 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new GetMySkill(c).run({
-    employeeId: session.employeeId,
-    skillCode: validateCodeParam(c.req.param("skillCode"), "skill"),
-  })
+  const result = await (async () => {
+    const command = {
+      employeeId: session.employeeId,
+      skillCode: validateCodeParam(c.req.param("skillCode"), "skill"),
+    }
+
+    const employeeSkillRepository = new EmployeeSkillRepository(c)
+
+    const employeeSkill = await employeeSkillRepository.findByEmployeeAndCode({
+      employeeId: command.employeeId,
+      skillCode: command.skillCode,
+    })
+
+    if (employeeSkill instanceof Error) {
+      return new UnexpectedError("failed to find skill", { cause: employeeSkill })
+    }
+
+    if (employeeSkill === null) {
+      return new NotFoundError("skill not registered", "skill_not_registered")
+    }
+
+    const skill = await new SkillRepository(c).findByCode(command.skillCode)
+
+    if (skill instanceof Error) {
+      return new UnexpectedError("failed to find skill", { cause: skill })
+    }
+
+    return { employeeSkill, skill }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)
@@ -47,10 +73,42 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new RemoveMySkill(c).run({
-    employeeId: session.employeeId,
-    skillCode: validateCodeParam(c.req.param("skillCode"), "skill"),
-  })
+  const result = await (async () => {
+    const command = {
+      employeeId: session.employeeId,
+      skillCode: validateCodeParam(c.req.param("skillCode"), "skill"),
+    }
+
+    const employeeSkillRepository = new EmployeeSkillRepository(c)
+
+    const current = await employeeSkillRepository.findByEmployeeAndCode({
+      employeeId: command.employeeId,
+      skillCode: command.skillCode,
+    })
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find skill", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("skill not registered", "skill_not_registered")
+    }
+
+    const deleted = await employeeSkillRepository.delete({
+      employeeId: command.employeeId,
+      skillCode: command.skillCode,
+    })
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete skill", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new NotFoundError("skill not registered", "skill_not_registered")
+    }
+
+    return { reason: "removed" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

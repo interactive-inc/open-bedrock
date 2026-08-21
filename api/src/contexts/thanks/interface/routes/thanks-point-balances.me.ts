@@ -1,5 +1,5 @@
-import { ViewMyBalance } from "@/contexts/thanks/application/thanks-points/view-my-balance"
-import { ApplicationError } from "@/lib/errors"
+import { ThanksPointBalanceRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-balance.repository"
+import { UnexpectedError } from "@/lib/errors"
 import { zAppThanksBalance } from "@/lib/app-schemas"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
@@ -18,10 +18,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const balance = await new ViewMyBalance(c).run({ employeeId: session.employeeId })
+  const balance = await new ThanksPointBalanceRepository(c).getBalance(session.employeeId)
 
-  if (balance instanceof ApplicationError) {
-    throw toHttpException(balance)
+  if (balance instanceof Error) {
+    throw toHttpException(new UnexpectedError("failed to find balance", { cause: balance }))
   }
 
   const responseBody = zAppThanksBalance.parse({ balance_points: balance })

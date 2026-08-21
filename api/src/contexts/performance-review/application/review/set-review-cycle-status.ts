@@ -3,9 +3,9 @@ import type { ReviewCycle } from "@/contexts/performance-review/domain/review/re
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-repository"
-import { ReviewCyclePolicyRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-policy-repository"
-import { generateReviewForms } from "@/contexts/performance-review/application/review/generate-review-forms"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
+import { ReviewCyclePolicyRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-policy.repository"
+import { ReviewFormGenerationRepository } from "@/contexts/performance-review/infrastructure/review/review-form-generation.repository"
 
 export type Input = {
   session: Session
@@ -57,8 +57,7 @@ export class SetReviewCycleStatus {
         return new UnexpectedError("failed to load review cycle policy", { cause: policy })
       }
 
-      const generated = await generateReviewForms({
-        c: this.c,
+      const generated = await new ReviewFormGenerationRepository(this.c).generate({
         cycleId: reviewCycle.id,
         policy,
       })

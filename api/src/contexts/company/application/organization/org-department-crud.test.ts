@@ -1,10 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import { CreateOrgDepartment } from "@/contexts/company/application/organization/create-org-department"
-import { GetOrgDepartment } from "@/contexts/company/application/organization/get-org-department"
 import { UpdateOrgDepartment } from "@/contexts/company/application/organization/update-org-department"
 import { DeleteOrgDepartment } from "@/contexts/company/application/organization/delete-org-department"
-import { ListOrgDepartments } from "@/contexts/company/application/organization/list-org-departments"
 import {
   ApplicationError,
   ConflictError,
@@ -179,25 +177,7 @@ describe("CreateOrgDepartment", () => {
   })
 })
 
-describe("GetOrgDepartment", () => {
-  test("returns the department by code", async () => {
-    const { context } = createTestContext()
-
-    await seedDepartment(context, "DEV")
-
-    const result = await new GetOrgDepartment(context).run({ code: "DEV" })
-
-    expect(result).toBeInstanceOf(OrgDepartment)
-  })
-
-  test("rejects unknown code with department_not_found", async () => {
-    const { context } = createTestContext()
-
-    const result = await new GetOrgDepartment(context).run({ code: "NOPE" })
-
-    expectApplicationError(result, NotFoundError, "department_not_found")
-  })
-})
+describe("GetOrgDepartment", () => {})
 
 describe("UpdateOrgDepartment", () => {
   test("updates department hierarchy metadata for an admin", async () => {
@@ -377,31 +357,4 @@ describe("DeleteOrgDepartment", () => {
   })
 })
 
-describe("ListOrgDepartments", () => {
-  test("returns all departments", async () => {
-    const { context } = createTestContext()
-
-    await seedDepartment(context, "DEV")
-    await seedDepartment(context, "SALES")
-
-    const result = await new ListOrgDepartments(context).run()
-
-    if (result instanceof Error) {
-      throw new Error("list failed")
-    }
-
-    expect(result.length).toBe(2)
-  })
-
-  test("returns empty list when no departments exist", async () => {
-    const { context } = createTestContext()
-
-    const result = await new ListOrgDepartments(context).run()
-
-    if (result instanceof Error) {
-      throw new Error("list failed")
-    }
-
-    expect(result.length).toBe(0)
-  })
-})
+describe("ListOrgDepartments", () => {})

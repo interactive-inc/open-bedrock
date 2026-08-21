@@ -1,5 +1,5 @@
 import type { AccountId } from "@system/domain/auth/account-id"
-import type { SystemProcedureRepository } from "@system/application/workflow/system-procedure-repository"
+import type { SystemProcedureRepository } from "@system/infrastructure/workflow/system-procedure-port.repository"
 import { InvalidSystemProposalError } from "@system/domain/workflow/invalid-system-proposal.error"
 import { ProcedureDefinition } from "@system/domain/workflow/procedure-definition.entity"
 

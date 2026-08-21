@@ -1,4 +1,4 @@
-import { toSystemNotificationMessage } from "@system/infrastructure/notifications/to-system-notification-message"
+import { toSystemNotificationMessage } from "@system/infrastructure/notifications/to-system-notification-message.repository"
 import { describe, expect, test } from "bun:test"
 
 describe("toSystemNotificationMessage", () => {

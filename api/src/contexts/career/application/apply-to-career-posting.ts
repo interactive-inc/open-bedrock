@@ -2,8 +2,8 @@ import { CareerApplication } from "@/contexts/career/domain/career-application.e
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application-repository"
-import { CareerPostingRepository } from "@/contexts/career/infrastructure/career-posting-repository"
+import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application.repository"
+import { CareerPostingRepository } from "@/contexts/career/infrastructure/career-posting.repository"
 
 export type Command = {
   postingId: number

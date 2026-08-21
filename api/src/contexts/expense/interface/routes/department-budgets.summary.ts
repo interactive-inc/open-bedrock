@@ -1,6 +1,7 @@
-import { BuildBudgetSummaryView } from "@/contexts/expense/application/budget/budget-summary-view"
+import { BudgetRepository } from "@/contexts/expense/infrastructure/budget/budget.repository"
+import { departments } from "@/contexts/company/infrastructure/schema/organization"
 import { factory } from "@/contexts/company/interface/utils/factory"
-import { ApplicationError } from "@/lib/errors"
+import { UnexpectedError } from "@/lib/errors"
 import { zAppBudgetSummary } from "@/lib/app-schemas"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
@@ -34,17 +35,65 @@ export const GET = factory.createHandlers(
 
     const query = c.req.valid("query")
 
-    const view = await new BuildBudgetSummaryView(c).run({
+    const repository = new BudgetRepository(c)
+    const budgets = await repository.list({
+      departmentId: null,
       fiscalPeriod: query.fiscal_period,
     })
 
-    if (view instanceof ApplicationError) {
-      throw toHttpException(view)
+    if (budgets instanceof Error) {
+      throw toHttpException(new UnexpectedError("failed to list budgets", { cause: budgets }))
     }
 
+    const departmentRows = await c.var.database
+      .select({ id: departments.id, name: departments.name })
+      .from(departments)
+    const departmentNames = new Map(departmentRows.map((row) => [row.id, row.name]))
+    const budgetAmountByDepartment = new Map<number, number>()
+    const consumedByDepartment = new Map<number, number>()
+
+    for (const budget of budgets) {
+      const consumed = await repository.sumApprovedExpenses({
+        departmentId: budget.departmentId,
+        periodStart: budget.periodStart,
+        periodEnd: budget.periodEnd,
+      })
+
+      if (consumed instanceof Error) {
+        throw toHttpException(
+          new UnexpectedError("failed to sum approved expenses", { cause: consumed }),
+        )
+      }
+
+      budgetAmountByDepartment.set(
+        budget.departmentId,
+        (budgetAmountByDepartment.get(budget.departmentId) ?? 0) + budget.amount,
+      )
+      consumedByDepartment.set(
+        budget.departmentId,
+        (consumedByDepartment.get(budget.departmentId) ?? 0) + consumed,
+      )
+    }
+
+    const rows = [...budgetAmountByDepartment.keys()]
+      .toSorted((left, right) => left - right)
+      .map((departmentId) => {
+        const budgetAmount = budgetAmountByDepartment.get(departmentId) ?? 0
+        const consumedAmount = consumedByDepartment.get(departmentId) ?? 0
+
+        return {
+          departmentId,
+          departmentName: departmentNames.get(departmentId) ?? null,
+          fiscalPeriod: query.fiscal_period,
+          budgetAmount,
+          consumedAmount,
+          remainingAmount: budgetAmount - consumedAmount,
+        }
+      })
+
     const responseBody = zAppBudgetSummary.parse({
-      fiscal_period: view.fiscalPeriod,
-      data: view.rows.map((row) => ({
+      fiscal_period: query.fiscal_period,
+      data: rows.map((row) => ({
         department_id: row.departmentId,
         department_name: row.departmentName,
         fiscal_period: row.fiscalPeriod,

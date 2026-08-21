@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Decision } from "@/contexts/meeting/domain/decision/decision.entity"
 import type { Context } from "@/env"
-import { DecisionRepository } from "@/contexts/meeting/infrastructure/decision/decision-repository"
+import { DecisionRepository } from "@/contexts/meeting/infrastructure/decision/decision.repository"
 
 export type Command = {
   session: Session

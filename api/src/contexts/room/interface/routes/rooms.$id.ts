@@ -1,5 +1,6 @@
+import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import { RoomRepository } from "@/contexts/room/infrastructure/room.repository"
 import { DeleteRoom } from "@/contexts/room/application/delete-room"
-import { GetRoom } from "@/contexts/room/application/get-room"
 import { UpdateRoom } from "@/contexts/room/application/update-room"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
@@ -32,7 +33,23 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new BadRequestError("invalid room id")
   }
 
-  const result = await new GetRoom(c).run({ roomId })
+  const result = await (async () => {
+    const command = { roomId }
+
+    const roomRepository = new RoomRepository(c)
+
+    const room = await roomRepository.findById(command.roomId)
+
+    if (room instanceof Error) {
+      return new UnexpectedError("failed to find room", { cause: room })
+    }
+
+    if (room === null) {
+      return new NotFoundError("room not found", "room_not_found")
+    }
+
+    return room
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

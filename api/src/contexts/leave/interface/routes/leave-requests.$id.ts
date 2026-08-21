@@ -1,5 +1,11 @@
-import { CancelLeaveRequest } from "@/contexts/leave/application/cancel-leave-request"
-import { GetLeaveRequest } from "@/contexts/leave/application/get-leave-request"
+import { ConflictError } from "@/lib/errors"
+import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
+import {
+  ForbiddenError,
+  NotFoundError as ApplicationNotFoundError,
+  UnexpectedError,
+} from "@/lib/errors"
+import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request.repository"
 import { UpdateLeaveRequest } from "@/contexts/leave/application/update-leave-request"
 import { LeaveRequest } from "@/contexts/leave/domain/leave-request.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -55,11 +61,68 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("leave request not found")
   }
 
-  const result = await new GetLeaveRequest(c).run({
-    leaveRequestId,
-    employeeId: viewer.employeeId,
-    session: viewer,
-  })
+  const result = await (async () => {
+    const command = {
+      leaveRequestId,
+      employeeId: viewer.employeeId,
+      session: viewer,
+    }
+
+    const repository = new LeaveRequestRepository(c)
+
+    const leaveRequest = await repository.findById(command.leaveRequestId)
+
+    if (leaveRequest instanceof Error) {
+      return new UnexpectedError("failed to find leave request", { cause: leaveRequest })
+    }
+
+    if (leaveRequest === null) {
+      return new ApplicationNotFoundError("leave request not found", "leave_request_not_found")
+    }
+
+    const isApplicant = leaveRequest.employeeId === command.employeeId
+    if (isApplicant === false) {
+      const canViewAll =
+        command.session !== undefined && command.session.hasPermission("leave:read:all")
+
+      if (canViewAll) {
+        return leaveRequest
+      }
+
+      const canDecide =
+        command.session !== undefined && command.session.hasPermission("leave:approve")
+
+      if (canDecide === false || command.session === undefined) {
+        return new ForbiddenError("not the applicant", "not_applicant")
+      }
+
+      if (command.session.hasPermission("org:manage") === false) {
+        const organizationAuthority = await resolveOrganizationAuthority(
+          c,
+          command.employeeId,
+          leaveRequest.employeeId,
+        )
+
+        if (organizationAuthority instanceof Error) {
+          return new UnexpectedError("failed to resolve organization authority", {
+            cause: organizationAuthority,
+          })
+        }
+
+        if (
+          organizationAuthority.managementChain === false &&
+          organizationAuthority.departmentManager === false
+        ) {
+          return new ForbiddenError(
+            "cannot view leave request outside organization scope",
+            "forbidden",
+          )
+        }
+      }
+    }
+
+    return leaveRequest
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)
@@ -137,10 +200,44 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("leave request not found")
   }
 
-  const result = await new CancelLeaveRequest(c).run({
-    leaveRequestId,
-    employeeId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      leaveRequestId,
+      employeeId: viewer.employeeId,
+    }
+
+    const repository = new LeaveRequestRepository(c)
+
+    const current = await repository.findById(command.leaveRequestId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find leave request", { cause: current })
+    }
+
+    if (current === null) {
+      return new ApplicationNotFoundError("leave request not found", "leave_request_not_found")
+    }
+
+    if (current.employeeId !== command.employeeId) {
+      return new ForbiddenError("not the applicant", "not_applicant")
+    }
+
+    if (current.isModifiable === false) {
+      return new ConflictError("the leave request is already decided", "not_modifiable")
+    }
+
+    const deleted = await repository.delete(command.leaveRequestId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete leave request", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new ConflictError("the leave request is already decided", "not_modifiable")
+    }
+
+    return { reason: "cancelled" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

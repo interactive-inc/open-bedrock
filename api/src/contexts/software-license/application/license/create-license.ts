@@ -3,7 +3,7 @@ import { License } from "@/contexts/software-license/domain/license/license.enti
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { LicenseRepository } from "@/contexts/software-license/infrastructure/license/license-repository"
+import { LicenseRepository } from "@/contexts/software-license/infrastructure/license/license.repository"
 
 export type Command = {
   session: Session

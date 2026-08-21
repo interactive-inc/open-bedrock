@@ -1,6 +1,6 @@
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
-import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret"
-import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret"
+import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret.repository"
+import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret.repository"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { OidcHttpError } from "@system/interface/http/errors/oidc-http-error"

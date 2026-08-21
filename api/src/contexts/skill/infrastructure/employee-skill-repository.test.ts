@@ -1,5 +1,5 @@
 import { EmployeeSkill } from "@/contexts/skill/domain/employee-skill.entity"
-import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/employee-skill-repository"
+import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/employee-skill.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 

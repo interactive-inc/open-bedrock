@@ -2,7 +2,7 @@ import { ArchiveEmployee } from "@/contexts/company/application/employee-lifecyc
 import { DeleteEmployee } from "@/contexts/company/application/employee/delete-employee"
 import { UpdateEmployee } from "@/contexts/company/application/employee/update-employee"
 import { Employee } from "@/contexts/company/domain/employee/employee.entity"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { ConflictError } from "@/lib/errors"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

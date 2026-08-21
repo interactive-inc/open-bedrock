@@ -1,6 +1,6 @@
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { StocktakeRepository } from "@/contexts/asset/infrastructure/stocktake/stocktake-repository"
+import { StocktakeRepository } from "@/contexts/asset/infrastructure/stocktake/stocktake.repository"
 import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppStocktake } from "@/lib/app-schemas"
 import { validateUuidParam } from "@/contexts/company/interface/utils/validate-uuid-param"

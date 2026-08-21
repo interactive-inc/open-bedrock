@@ -1,5 +1,7 @@
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
 import { CancelOnboardingAssignment } from "@/contexts/onboarding/application/cancel-onboarding-assignment"
-import { GetOnboardingAssignment } from "@/contexts/onboarding/application/get-onboarding-assignment"
 import { UpdateOnboardingAssignment } from "@/contexts/onboarding/application/update-onboarding-assignment"
 import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import type { OnboardingAssignment } from "@/contexts/onboarding/domain/onboarding-assignment.entity"
@@ -45,11 +47,45 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const assignmentId = validateIntParam(c.req.param("id"), "assignment")
 
-  const result = await new GetOnboardingAssignment(c).run({
-    assignmentId,
-    viewerEmployeeId: session.employeeId,
-    session: session,
-  })
+  const result = await (async () => {
+    const command = {
+      assignmentId,
+      viewerEmployeeId: session.employeeId,
+      session: session,
+    }
+
+    const assignmentRepository = new OnboardingAssignmentRepository(c)
+
+    const assignment = await assignmentRepository.findById(command.assignmentId)
+
+    if (assignment instanceof Error) {
+      return new UnexpectedError("failed to find assignment", { cause: assignment })
+    }
+
+    if (assignment === null) {
+      return new NotFoundError("assignment not found", "assignment_not_found")
+    }
+
+    const isOwner = assignment.employeeId === command.viewerEmployeeId
+
+    if (isOwner === false && command.session.hasPermission("onboarding:view:all") === false) {
+      return new ForbiddenError("cannot view assignment", "forbidden")
+    }
+
+    const employeeRepository = new EmployeeRepository(c)
+
+    const employee = await employeeRepository.findById(assignment.employeeId)
+
+    if (employee instanceof Error) {
+      return new UnexpectedError("failed to find employee", { cause: employee })
+    }
+
+    if (employee === null) {
+      return new NotFoundError("assignment not found", "assignment_not_found")
+    }
+
+    return { assignment, employee }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

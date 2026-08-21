@@ -1,4 +1,4 @@
-import { checkLeaveBalanceSufficiency } from "@/contexts/leave/application/check-leave-balance-sufficiency"
+import { LeaveBalanceSufficiencyRepository } from "@/contexts/leave/infrastructure/leave-balance-sufficiency.repository"
 import { computeConsumedDays } from "@/contexts/leave/domain/compute-consumed-days"
 import { LeaveRequest } from "@/contexts/leave/domain/leave-request.entity"
 import { validateLeaveUnit } from "@/contexts/leave/domain/validate-leave-unit"
@@ -11,7 +11,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request-repository"
+import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request.repository"
 import type { LeaveType, LeaveUnit } from "@/lib/schemas"
 
 export type Command = {
@@ -71,7 +71,7 @@ export class UpdateLeaveRequest {
 
     const consumedDays = computeConsumedDays({ unit: command.unit, hours: command.hours, days })
 
-    const balanceError = await checkLeaveBalanceSufficiency(this.c, {
+    const balanceError = await new LeaveBalanceSufficiencyRepository(this.c).check({
       employeeId: command.employeeId,
       leaveType: command.leaveType,
       startDate: command.startDate,

@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
-import { listManagedEmployeeIds } from "@/contexts/company/application/organization/list-managed-employee-ids"
-import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
+import { listManagedEmployeeIds } from "@/contexts/company/infrastructure/organization/list-managed-employee-ids.repository"
+import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
 
 async function setup() {
   const { context, db } = createTestContext()

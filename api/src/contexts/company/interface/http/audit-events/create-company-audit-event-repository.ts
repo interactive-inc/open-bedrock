@@ -1,4 +1,4 @@
-import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event.repository"
 import type { Context } from "@/env"
 
 export type CompanyAuditExportRows = Awaited<ReturnType<AuditEventRepository["export"]>>

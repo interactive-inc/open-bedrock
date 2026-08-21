@@ -1,10 +1,13 @@
 /** /company/v1/personnel-actions */
-import { readCompanyResources } from "@/contexts/company/application/core/read-company-resources"
-import { writeCompanyResources } from "@/contexts/company/application/core/write-company-resources"
+import { canAccessCompanyOrganization } from "@/contexts/company/domain/core/can-access-company-organization"
+import { hasCompanyCapability } from "@/contexts/company/domain/core/has-company-capability"
+import { isValidCompanyResourceQuery } from "@/contexts/company/domain/core/is-valid-company-resource-query"
+import { CompanyResourceValidationError } from "@/contexts/company/domain/core/company-resource-validation-error"
+import { WriteCompanyResources } from "@/contexts/company/application/core/write-company-resources"
 import type { CompanyJsonObject } from "@/contexts/company/domain/core/company-resource"
 import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
-import { readCompanyResourcesFromD1 } from "@/contexts/company/infrastructure/core/read-company-resources-from-d1"
-import { writeCompanyResourcesToD1 } from "@/contexts/company/infrastructure/core/write-company-resources-to-d1"
+import { readCompanyResourcesFromD1 } from "@/contexts/company/infrastructure/core/read-company-resources-from-d1.repository"
+import { writeCompanyResourcesToD1 } from "@/contexts/company/infrastructure/core/write-company-resources-to-d1.repository"
 import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/http/company-http-environment"
 import { zValidator } from "@hono/zod-validator"
@@ -97,9 +100,34 @@ export const GET = factory.createHandlers(
       ...(ids.length === 0 ? {} : { ids }),
       ...(effectiveOn === undefined ? {} : { effectiveOn: restoreCalendarDate(effectiveOn) }),
     }
-    const result = await readCompanyResources(actor, query, (resourceQuery) =>
-      readCompanyResourcesFromD1(database, resourceQuery),
-    )
+    const result = await (async () => {
+      if (!isValidCompanyResourceQuery(query)) {
+        return {
+          kind: "invalid" as const,
+          error: new CompanyResourceValidationError("invalid_query"),
+        }
+      }
+      if (
+        !canAccessCompanyOrganization(actor, query.organizationId) ||
+        !hasCompanyCapability(actor, "company:read")
+      ) {
+        return { kind: "forbidden" as const }
+      }
+
+      try {
+        const persisted = await readCompanyResourcesFromD1(database, query)
+
+        return persisted.ok
+          ? {
+              kind: "found" as const,
+              organizationRevision: persisted.organizationRevision,
+              resources: persisted.resources,
+            }
+          : { kind: "unavailable" as const, cause: persisted.cause }
+      } catch (cause) {
+        return { kind: "unavailable" as const, cause }
+      }
+    })()
 
     if (result.kind === "invalid") {
       throw new CompanyHttpError({
@@ -236,9 +264,9 @@ export const POST = factory.createHandlers(
         attributes: resource.attributes as CompanyJsonObject,
       })),
     }
-    const result = await writeCompanyResources(actor, change, (resourceChange) =>
+    const result = await new WriteCompanyResources(actor, (resourceChange) =>
       writeCompanyResourcesToD1(database, resourceChange),
-    )
+    ).execute(change)
 
     if (result.kind === "forbidden") {
       throw new CompanyHttpError({

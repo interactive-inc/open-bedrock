@@ -1,4 +1,10 @@
-import { DeleteKnowledgeArticle } from "@/contexts/knowledge/application/delete-knowledge-article"
+import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/knowledge-article.repository"
+import {
+  ForbiddenError,
+  NotFoundError as ApplicationNotFoundError,
+  UnexpectedError,
+} from "@/lib/errors"
+
 import { UpdateKnowledgeArticle } from "@/contexts/knowledge/application/update-knowledge-article"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { knowledgeArticles } from "@/contexts/knowledge/infrastructure/schema/knowledge"
@@ -105,10 +111,36 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const articleId = validateIntParam(c.req.param("id"), "knowledge")
 
-  const result = await new DeleteKnowledgeArticle(c).run({
-    articleId,
-    authorId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      articleId,
+      authorId: viewer.employeeId,
+    }
+
+    const articleRepository = new KnowledgeArticleRepository(c)
+
+    const current = await articleRepository.findById(command.articleId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find knowledge article", { cause: current })
+    }
+
+    if (current === null) {
+      return new ApplicationNotFoundError("knowledge article not found", "article_not_found")
+    }
+
+    if (current.authorId !== command.authorId) {
+      return new ForbiddenError("not the author", "not_author")
+    }
+
+    const deleted = await articleRepository.delete(command.articleId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete knowledge article", { cause: deleted })
+    }
+
+    return { reason: "deleted" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

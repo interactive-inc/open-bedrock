@@ -1,5 +1,5 @@
-import { CancelRoomReservation } from "@/contexts/room/application/cancel-room-reservation"
-import { GetRoomReservation } from "@/contexts/room/application/get-room-reservation"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { RoomReservationRepository } from "@/contexts/room/infrastructure/room-reservation.repository"
 import { UpdateRoomReservation } from "@/contexts/room/application/update-room-reservation"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
@@ -20,10 +20,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const reservation = await new GetRoomReservation(c).run({
-    reservationId: validateUuidParam(c.req.param("id"), "reservation"),
-    reserverId: viewer.employeeId,
-  })
+  const reservation = await (async () => {
+    const command = {
+      reservationId: validateUuidParam(c.req.param("id"), "reservation"),
+      reserverId: viewer.employeeId,
+    }
+
+    const reservationRepository = new RoomReservationRepository(c)
+
+    const reservation = await reservationRepository.findById(command.reservationId)
+
+    if (reservation instanceof Error) {
+      return new UnexpectedError("failed to find reservation", { cause: reservation })
+    }
+
+    if (reservation === null) {
+      return new NotFoundError("reservation not found", "reservation_not_found")
+    }
+
+    if (reservation.reserverId !== command.reserverId) {
+      return new ForbiddenError("not the reserver", "not_reserver")
+    }
+
+    return reservation
+  })()
 
   if (reservation instanceof ApplicationError) {
     throw toHttpException(reservation)
@@ -101,10 +121,29 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new CancelRoomReservation(c).run({
-    reservationId: validateUuidParam(c.req.param("id"), "reservation"),
-    reserverId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      reservationId: validateUuidParam(c.req.param("id"), "reservation"),
+      reserverId: viewer.employeeId,
+    }
+
+    const reservationRepository = new RoomReservationRepository(c)
+
+    const deleted = await reservationRepository.deleteByIdAndReserverId(
+      command.reservationId,
+      command.reserverId,
+    )
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete reservation", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new NotFoundError("reservation not found", "reservation_not_found")
+    }
+
+    return { reason: "cancelled" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

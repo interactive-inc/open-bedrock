@@ -1,10 +1,10 @@
-import { canAccessCompanyOrganization } from "@/contexts/company/application/core/can-access-company-organization"
-import type { CompanyActor } from "@/contexts/company/application/core/company-actor"
+import { canAccessCompanyOrganization } from "@/contexts/company/domain/core/can-access-company-organization"
+import type { CompanyActor } from "@/contexts/company/domain/core/company-actor"
 import type {
   CompanyResourceWriteResult,
   WriteCompanyResourcePersistence,
-} from "@/contexts/company/application/core/company-resource-persistence"
-import { hasCompanyCapability } from "@/contexts/company/application/core/has-company-capability"
+} from "@/contexts/company/infrastructure/core/company-resource-port.repository"
+import { hasCompanyCapability } from "@/contexts/company/domain/core/has-company-capability"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/core/company-resource-validation-error"
 import { validateCompanyResourceChange } from "@/contexts/company/domain/core/validate-company-resource-change"
 import type { CompanyResourceChange } from "@/contexts/company/domain/core/company-resource"
@@ -14,31 +14,41 @@ export type WriteCompanyResourcesResult =
   | Readonly<{ kind: "forbidden" }>
   | Readonly<{ kind: "invalid"; error: CompanyResourceValidationError }>
 
-export async function writeCompanyResources(
-  actor: CompanyActor,
-  change: Omit<CompanyResourceChange, "actorAccountId">,
-  write: WriteCompanyResourcePersistence,
-): Promise<WriteCompanyResourcesResult> {
-  const organizationId = change.resources[0]?.organizationId ?? ""
-  if (
-    !canAccessCompanyOrganization(actor, organizationId) ||
-    !hasCompanyCapability(actor, "company:write")
+export class WriteCompanyResources {
+  constructor(
+    private readonly actor: CompanyActor,
+    private readonly write: WriteCompanyResourcePersistence,
   ) {
-    return { kind: "forbidden" }
+    Object.freeze(this)
   }
 
-  const command: CompanyResourceChange = { ...change, actorAccountId: actor.accountId }
-  const error = validateCompanyResourceChange(command)
-  if (error !== null) {
-    return {
-      kind: "invalid",
-      error,
+  async execute(
+    change: Omit<CompanyResourceChange, "actorAccountId">,
+  ): Promise<WriteCompanyResourcesResult> {
+    const organizationId = change.resources[0]?.organizationId ?? ""
+    if (
+      !canAccessCompanyOrganization(this.actor, organizationId) ||
+      !hasCompanyCapability(this.actor, "company:write")
+    ) {
+      return { kind: "forbidden" }
     }
-  }
 
-  try {
-    return await write(command)
-  } catch (cause) {
-    return { kind: "unavailable", cause }
+    const command: CompanyResourceChange = {
+      ...change,
+      actorAccountId: this.actor.accountId,
+    }
+    const error = validateCompanyResourceChange(command)
+    if (error !== null) {
+      return {
+        kind: "invalid",
+        error,
+      }
+    }
+
+    try {
+      return await this.write(command)
+    } catch (cause) {
+      return { kind: "unavailable", cause }
+    }
   }
 }

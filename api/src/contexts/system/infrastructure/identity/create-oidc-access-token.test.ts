@@ -1,6 +1,6 @@
 import { zAccountId } from "@system/domain/auth/account-id"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
-import { createOidcAccessToken } from "@system/infrastructure/identity/create-oidc-access-token"
+import { createOidcAccessToken } from "@system/infrastructure/identity/create-oidc-access-token.repository"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"

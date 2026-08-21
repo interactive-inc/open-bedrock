@@ -8,8 +8,8 @@ import {
   toApplicationStatus,
   toSystemStatuses,
 } from "@/api/http/application-requests/lib/system-application-view"
-import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
-import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/application/iam/resolve-system-account-ids-for-employees"
+import { resolveCompanyAccountParticipants } from "@/contexts/company/interface/http/accounts/resolve-company-account-participants"
+import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/interface/http/accounts/resolve-system-account-ids-for-employees"
 import {
   ForbiddenError,
   InternalError,

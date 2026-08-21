@@ -1,5 +1,8 @@
+import { canReadGoalOf } from "@/contexts/performance-review/domain/goal/can-read-goal-of"
+import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
 import { DeleteGoal } from "@/contexts/performance-review/application/goal/delete-goal"
-import { GetGoal } from "@/contexts/performance-review/application/goal/get-goal"
 import { UpdateGoal } from "@/contexts/performance-review/application/goal/update-goal"
 import type { Goal } from "@/contexts/performance-review/domain/goal/goal.entity"
 import { factory } from "@/contexts/company/interface/utils/factory"
@@ -43,11 +46,45 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const goal = await new GetGoal(c).run({
-    goalId: toGoalId(c.req.param("goalId") ?? ""),
-    viewerEmployeeId: viewer.employeeId,
-    session: viewer,
-  })
+  const goal = await (async () => {
+    const command = {
+      goalId: toGoalId(c.req.param("goalId") ?? ""),
+      viewerEmployeeId: viewer.employeeId,
+      session: viewer,
+    }
+
+    const repository = new GoalRepository(c)
+
+    const goal = await repository.findById(command.goalId)
+
+    if (goal instanceof Error) {
+      return new UnexpectedError("failed to find goal", { cause: goal })
+    }
+
+    if (goal === null) {
+      return new NotFoundError("goal not found", "goal_not_found")
+    }
+
+    const isOwner = goal.employeeId === command.viewerEmployeeId
+
+    if (isOwner === false) {
+      const relation = await resolveEmployeeRelation({
+        c: c,
+        viewerEmployeeId: command.viewerEmployeeId,
+        targetEmployeeId: goal.employeeId,
+      })
+
+      if (relation instanceof Error) {
+        return new UnexpectedError("failed to resolve employee relation", { cause: relation })
+      }
+
+      if (canReadGoalOf(command.session, relation) === false) {
+        return new ForbiddenError("cannot view this goal", "not_viewable")
+      }
+    }
+
+    return goal
+  })()
 
   if (goal instanceof ApplicationError) {
     throw toHttpException(goal)

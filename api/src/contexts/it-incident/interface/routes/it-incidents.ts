@@ -7,7 +7,7 @@ import {
   toBoundedInt,
 } from "@/contexts/company/interface/utils/to-bounded-int"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/it-incident-repository"
+import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/it-incident.repository"
 import { ApplicationError } from "@/lib/errors"
 import {
   ForbiddenError,

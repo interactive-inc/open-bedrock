@@ -1,6 +1,6 @@
 /** /company/v1/bootstrap */
 import { ProvisionCompanyBootstrapEmployee } from "@/contexts/company/application/employee/provision-company-bootstrap-employee"
-import { CompanyBootstrapEmployeeRepositoryD1 } from "@/contexts/company/infrastructure/employee/company-bootstrap-employee-repository"
+import { CompanyBootstrapEmployeeRepositoryD1 } from "@/contexts/company/infrastructure/employee/company-bootstrap-employee.repository"
 import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"

@@ -1,5 +1,6 @@
-import { CancelLifeEvent } from "@/contexts/life-event/application/cancel-life-event"
-import { GetLifeEvent } from "@/contexts/life-event/application/get-life-event"
+import { ConflictError } from "@/lib/errors"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { LifeEventRepository } from "@/contexts/life-event/infrastructure/life-event.repository"
 import { UpdateLifeEvent } from "@/contexts/life-event/application/update-life-event"
 import type { LifeEvent } from "@/contexts/life-event/domain/life-event.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -35,10 +36,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const lifeEvent = await new GetLifeEvent(c).run({
-    lifeEventId: validateUuidParam(c.req.param("id"), "life event"),
-    employeeId: viewer.employeeId,
-  })
+  const lifeEvent = await (async () => {
+    const command = {
+      lifeEventId: validateUuidParam(c.req.param("id"), "life event"),
+      employeeId: viewer.employeeId,
+    }
+
+    const lifeEventRepository = new LifeEventRepository(c)
+
+    const lifeEvent = await lifeEventRepository.findById(command.lifeEventId)
+
+    if (lifeEvent instanceof Error) {
+      return new UnexpectedError("failed to find life event", { cause: lifeEvent })
+    }
+
+    if (lifeEvent === null) {
+      return new NotFoundError("life event not found", "life_event_not_found")
+    }
+
+    if (lifeEvent.employeeId !== command.employeeId) {
+      return new ForbiddenError("not the applicant", "not_applicant")
+    }
+
+    return lifeEvent
+  })()
 
   if (lifeEvent instanceof ApplicationError) {
     throw toHttpException(lifeEvent)
@@ -97,10 +118,44 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new CancelLifeEvent(c).run({
-    lifeEventId: validateUuidParam(c.req.param("id"), "life event"),
-    employeeId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      lifeEventId: validateUuidParam(c.req.param("id"), "life event"),
+      employeeId: viewer.employeeId,
+    }
+
+    const lifeEventRepository = new LifeEventRepository(c)
+
+    const current = await lifeEventRepository.findById(command.lifeEventId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find life event", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("life event not found", "life_event_not_found")
+    }
+
+    if (current.employeeId !== command.employeeId) {
+      return new ForbiddenError("not the applicant", "not_applicant")
+    }
+
+    if (!current.isModifiable) {
+      return new ConflictError("life event is not modifiable", "not_modifiable")
+    }
+
+    const deleted = await lifeEventRepository.delete(command.lifeEventId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete life event", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new ConflictError("life event is not modifiable", "not_modifiable")
+    }
+
+    return { reason: "cancelled" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

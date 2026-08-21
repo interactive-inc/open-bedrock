@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
+import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
 
 export async function loadCurrentEmployeeDepartmentNames(
   c: Context,

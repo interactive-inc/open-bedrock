@@ -1,4 +1,4 @@
-import { ThanksPointBalanceRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-balance-repository"
+import { ThanksPointBalanceRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-balance.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import {
   thanks,

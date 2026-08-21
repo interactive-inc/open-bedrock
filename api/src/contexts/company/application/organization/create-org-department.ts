@@ -3,8 +3,8 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import type { Context } from "@/env"
-import { OrgDepartmentRepository } from "@/contexts/company/infrastructure/organization/org-department-repository"
-import { DepartmentRepository } from "@/contexts/company/infrastructure/organization/department-repository"
+import { OrgDepartmentRepository } from "@/contexts/company/infrastructure/organization/org-department.repository"
+import { DepartmentRepository } from "@/contexts/company/infrastructure/organization/department.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {

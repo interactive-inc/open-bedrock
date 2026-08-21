@@ -1,7 +1,7 @@
-import { createSystemSessionAudit } from "@system/application/auth/create-system-session-audit"
-import type { SessionRepository } from "@system/application/auth/session-repository"
-import type { SystemSessionAuditContext } from "@system/application/auth/system-session-audit-context"
-import type { SystemSessionMaterialService } from "@system/application/auth/system-session-material-service"
+import { createSystemSessionAudit } from "@system/domain/audit/create-system-session-audit"
+import type { SessionRepository } from "@system/infrastructure/auth/session-port.repository"
+import type { SystemSessionAuditContext } from "@system/domain/auth/system-session-audit-context"
+import type { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material-port.repository"
 
 type Props = Readonly<{
   sessionRepository: SessionRepository

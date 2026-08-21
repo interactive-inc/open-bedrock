@@ -1,4 +1,4 @@
-import { WorkAccidentRepository } from "@/contexts/work-accident/infrastructure/work-accident-repository"
+import { WorkAccidentRepository } from "@/contexts/work-accident/infrastructure/work-accident.repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { WorkAccident } from "@/contexts/work-accident/domain/work-accident.entity"

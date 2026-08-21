@@ -5,7 +5,7 @@ import {
 import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EvaluationTemplateRepository } from "@/contexts/performance-review/infrastructure/evaluation-template/evaluation-template-repository"
+import { EvaluationTemplateRepository } from "@/contexts/performance-review/infrastructure/evaluation-template/evaluation-template.repository"
 
 export type Command = {
   title: string

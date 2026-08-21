@@ -1,8 +1,8 @@
-import type { SystemPasswordHasher } from "@system/application/auth/system-password-hasher"
+import type { SystemPasswordHasher } from "@system/infrastructure/auth/system-password-hasher.repository"
 import type {
   SystemRootBootstrapRepository,
   SystemRootBootstrapRepositoryResult,
-} from "@system/application/iam/system-root-bootstrap-repository"
+} from "@system/infrastructure/iam/system-root-bootstrap-port.repository"
 import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
 import { EmailValue } from "@system/domain/auth/email.value"
 import {

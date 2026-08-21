@@ -1,5 +1,11 @@
+import { canReadGoalOf } from "@/contexts/performance-review/domain/goal/can-read-goal-of"
+import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
+import { ForbiddenError, NotFoundError } from "@/lib/errors"
+import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
+
+import { UnexpectedError } from "@/lib/errors"
+import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/goal/goal-evaluation.repository"
 import { CreateGoalEvaluation } from "@/contexts/performance-review/application/goal/create-goal-evaluation"
-import { ListGoalEvaluations } from "@/contexts/performance-review/application/goal/list-goal-evaluations"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { goalEvaluationKindSchema } from "@/contexts/performance-review/domain/goal/goal-evaluation.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -22,11 +28,63 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const goalId = validateIntParam(c.req.param("goalId"), "goal")
 
-  const evaluations = await new ListGoalEvaluations(c).run({
-    goalId,
-    viewerEmployeeId: session.employeeId,
-    session: session,
-  })
+  const evaluations = await (async () => {
+    const command = {
+      goalId,
+      viewerEmployeeId: session.employeeId,
+      session: session,
+    }
+
+    const goal = await (async () => {
+      const goalCommand = command
+
+      const repository = new GoalRepository(c)
+
+      const goal = await repository.findById(goalCommand.goalId)
+
+      if (goal instanceof Error) {
+        return new UnexpectedError("failed to find goal", { cause: goal })
+      }
+
+      if (goal === null) {
+        return new NotFoundError("goal not found", "goal_not_found")
+      }
+
+      const isOwner = goal.employeeId === goalCommand.viewerEmployeeId
+
+      if (isOwner === false) {
+        const relation = await resolveEmployeeRelation({
+          c: c,
+          viewerEmployeeId: goalCommand.viewerEmployeeId,
+          targetEmployeeId: goal.employeeId,
+        })
+
+        if (relation instanceof Error) {
+          return new UnexpectedError("failed to resolve employee relation", { cause: relation })
+        }
+
+        if (canReadGoalOf(goalCommand.session, relation) === false) {
+          return new ForbiddenError("cannot view this goal", "not_viewable")
+        }
+      }
+
+      return goal
+    })()
+
+    if (goal instanceof ApplicationError) {
+      return goal
+    }
+
+    const repository = new GoalEvaluationRepository(c)
+
+    const evaluations = await repository.findByGoalId(command.goalId)
+
+    if (evaluations instanceof Error) {
+      return new UnexpectedError("failed to load goal evaluations", { cause: evaluations })
+    }
+
+    return evaluations
+  })()
 
   if (evaluations instanceof ApplicationError) {
     throw toHttpException(evaluations)

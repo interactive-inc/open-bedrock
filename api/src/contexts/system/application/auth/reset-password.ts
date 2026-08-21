@@ -1,20 +1,20 @@
-import { PasswordHashService } from "@/contexts/system/infrastructure/auth/password-hash.service"
+import { PasswordHashService } from "@/contexts/system/infrastructure/auth/password-hash.service.repository"
 import { validateSystemPassword } from "@system/domain/auth/system-password-policy"
 import {
   PasswordResetTokenInvalidApplicationError,
   PepperSecretMissingApplicationError,
   SystemAuthPersistenceApplicationError,
 } from "@/contexts/system/application/auth/errors"
-import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token"
-import { findSystemPasswordResetChallenge } from "@system/infrastructure/auth/find-system-password-reset-challenge"
-import { completeSystemPasswordResetChallenge } from "@system/infrastructure/auth/complete-system-password-reset-challenge"
+import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
+import { findSystemPasswordResetChallenge } from "@system/infrastructure/auth/find-system-password-reset-challenge.repository"
+import { completeSystemPasswordResetChallenge } from "@system/infrastructure/auth/complete-system-password-reset-challenge.repository"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import type {
   SystemClockContext,
   SystemD1Context,
   SystemPasswordHashContext,
   SystemRequestAuditContext,
-} from "@system/infrastructure/configuration/system-context"
+} from "@system/infrastructure/configuration/system-context.repository"
 
 type Props = Readonly<{
   rawToken: string

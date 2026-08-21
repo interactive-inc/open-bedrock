@@ -1,5 +1,7 @@
+import { canModifyEnrollment } from "@/contexts/training/domain/can-modify-enrollment"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/training-enrollment.repository"
 import { CancelTrainingEnrollment } from "@/contexts/training/application/cancel-training-enrollment"
-import { GetTrainingEnrollment } from "@/contexts/training/application/get-training-enrollment"
 import { RescheduleTrainingEnrollment } from "@/contexts/training/application/reschedule-training-enrollment"
 import type { TrainingEnrollment } from "@/contexts/training/domain/training-enrollment.entity"
 import { factory } from "@/contexts/company/interface/utils/factory"
@@ -37,11 +39,37 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const enrollmentId = validateIntParam(c.req.param("id"), "enrollment")
 
-  const enrollment = await new GetTrainingEnrollment(c).run({
-    enrollmentId: enrollmentId,
-    viewerEmployeeId: session.employeeId,
-    session: session,
-  })
+  const enrollment = await (async () => {
+    const command = {
+      enrollmentId: enrollmentId,
+      viewerEmployeeId: session.employeeId,
+      session: session,
+    }
+
+    const enrollmentRepository = new TrainingEnrollmentRepository(c)
+
+    const enrollment = await enrollmentRepository.findById(command.enrollmentId)
+
+    if (enrollment instanceof Error) {
+      return new UnexpectedError("failed to find training enrollment", { cause: enrollment })
+    }
+
+    if (enrollment === null) {
+      return new NotFoundError("enrollment not found", "enrollment_not_found")
+    }
+
+    const canModify = canModifyEnrollment({
+      enrollmentEmployeeId: enrollment.employeeId,
+      viewerEmployeeId: command.viewerEmployeeId,
+      session: command.session,
+    })
+
+    if (canModify === false) {
+      return new ForbiddenError("cannot access enrollment", "forbidden")
+    }
+
+    return enrollment
+  })()
 
   if (enrollment instanceof ApplicationError) {
     throw toHttpException(enrollment)

@@ -1,11 +1,11 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { NotifyApprovalResult } from "@/contexts/company/application/notification/notify-approval-result"
+import { NotifyApprovalResult } from "@/contexts/company/infrastructure/notifications/notify-approval-result.repository"
 import { ExpenseApproval } from "@/contexts/expense/domain/expense-approval.entity"
 import type { Context } from "@/env"
-import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense-repository"
+import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
+import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
 
 export type Command = {
   session: Session

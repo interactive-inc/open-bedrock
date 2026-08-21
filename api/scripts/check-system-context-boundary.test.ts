@@ -190,7 +190,7 @@ describe("System storage ownership", () => {
       inspectSystemStorageAccess(
         "src/contexts/company/application/accounts.ts",
         [
-          'import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"',
+          'import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"',
           'const path = "/system_accounts"',
           'const read = "SELECT id FROM employees"',
         ].join("\n"),

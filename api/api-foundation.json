@@ -6,6 +6,6 @@
     "src/api/read-http-exception-problem.ts": "24ba40247ebc7609231b14a40ee98629161087a6d5af2276ba46da4193d32e84",
     "src/api/test/api-route-module.test.ts": "faaf5f610958e5ab26a13d955b45f5ebfd01ff10d23c770a659abee5ee038ed7",
     "src/api/test/to-negotiated-http-exception-response.test.ts": "a96a46d40b5d70175455986a2be88ec6a8ff467b575e67b7a6c8baccd6a6d49b",
-    "src/api/to-negotiated-http-exception-response.ts": "7839885e5aad1a072222c31888182eec8ed085a7eda52ad1dc5c322af51a2f42"
+    "src/api/to-negotiated-http-exception-response.ts": "38f3515a8fc68ebbfe09ee172e657b8fcedb4af0351cd076f27fc2de1f2cfbf4"
   }
 }

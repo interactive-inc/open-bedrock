@@ -2,7 +2,7 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppMyDepartmentList } from "@/lib/app-schemas"
-import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
+import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
 
 // @authorization owner - 本人のリソースに限定する
 /**

@@ -1,4 +1,6 @@
-import { ListMyCareerApplications } from "@/contexts/career/application/list-my-career-applications"
+import { UnexpectedError } from "@/lib/errors"
+import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application.repository"
+
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -37,11 +39,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const applications = await new ListMyCareerApplications(c).run({
-    applicantId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const applications = await (async () => {
+    const command = {
+      applicantId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const applicationRepository = new CareerApplicationRepository(c)
+
+    const applications = await applicationRepository.findByApplicantId({
+      applicantId: command.applicantId,
+      limit: command.limit,
+      offset: command.offset,
+    })
+
+    if (applications instanceof Error) {
+      return new UnexpectedError("failed to find career applications", { cause: applications })
+    }
+
+    return applications
+  })()
 
   if (applications instanceof ApplicationError) {
     throw toHttpException(applications)

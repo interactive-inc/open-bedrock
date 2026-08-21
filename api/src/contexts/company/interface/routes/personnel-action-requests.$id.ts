@@ -1,4 +1,4 @@
-import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request"
+import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request.repository"
 import { WithdrawPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/withdraw-personnel-action-request"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"

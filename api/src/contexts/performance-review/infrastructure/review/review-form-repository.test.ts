@@ -1,5 +1,5 @@
 import { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
-import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form-repository"
+import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { describe, expect, test } from "bun:test"

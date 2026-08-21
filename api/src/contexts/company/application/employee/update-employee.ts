@@ -1,8 +1,8 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
-import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
+import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 

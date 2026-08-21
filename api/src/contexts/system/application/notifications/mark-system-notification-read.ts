@@ -1,4 +1,4 @@
-import type { NotificationRepository } from "@system/application/notifications/notification-repository"
+import type { NotificationRepository } from "@system/infrastructure/notifications/notification-port.repository"
 import type { AccountId } from "@system/domain/auth/account-id"
 import {
   InvalidNotificationDeliveryError,

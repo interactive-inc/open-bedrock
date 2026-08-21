@@ -1,8 +1,8 @@
-import { BuildBudgetDetailView } from "@/contexts/expense/application/budget/budget-detail-view"
-import { DeleteBudget } from "@/contexts/expense/application/budget/delete-budget"
+import { BudgetRepository } from "@/contexts/expense/infrastructure/budget/budget.repository"
+import { departments } from "@/contexts/company/infrastructure/schema/organization"
 import { UpdateBudget } from "@/contexts/expense/application/budget/update-budget"
 import { factory } from "@/contexts/company/interface/utils/factory"
-import { ApplicationError } from "@/lib/errors"
+import { ApplicationError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { zAppBudget, zAppBudgetDetail } from "@/lib/app-schemas"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
@@ -10,6 +10,7 @@ import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-be
 import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { eq } from "drizzle-orm"
 
 // @authorization permission - 権限キーで判定する
 /** GET /department-budgets/:id — 予算の詳細（承認済み経費の消化額・残額を集計して返す）。budget:manage を持つロールのみ。 */
@@ -26,25 +27,48 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const budgetId = validateIntParam(c.req.param("id"), "budget")
 
-  const view = await new BuildBudgetDetailView(c).run({ budgetId })
+  const repository = new BudgetRepository(c)
+  const budget = await repository.findById(budgetId)
 
-  if (view instanceof ApplicationError) {
-    throw toHttpException(view)
+  if (budget instanceof Error) {
+    throw toHttpException(new UnexpectedError("failed to find budget", { cause: budget }))
   }
 
+  if (budget === null || budget.id === null) {
+    throw toHttpException(new NotFoundError("budget not found", "budget_not_found"))
+  }
+
+  const consumed = await repository.sumApprovedExpenses({
+    departmentId: budget.departmentId,
+    periodStart: budget.periodStart,
+    periodEnd: budget.periodEnd,
+  })
+
+  if (consumed instanceof Error) {
+    throw toHttpException(
+      new UnexpectedError("failed to sum approved expenses", { cause: consumed }),
+    )
+  }
+
+  const departmentRows = await c.var.database
+    .select({ name: departments.name })
+    .from(departments)
+    .where(eq(departments.id, budget.departmentId))
+    .limit(1)
+
   const responseBody = zAppBudgetDetail.parse({
-    id: view.id,
-    department_id: view.departmentId,
-    department_name: view.departmentName,
-    fiscal_period: view.fiscalPeriod,
-    period_start: view.periodStart,
-    period_end: view.periodEnd,
-    amount: view.amount,
-    name: view.name,
-    note: view.note,
-    consumed_amount: view.consumedAmount,
-    remaining_amount: view.remainingAmount,
-    created_at: view.createdAt,
+    id: budget.id,
+    department_id: budget.departmentId,
+    department_name: departmentRows.at(0)?.name ?? null,
+    fiscal_period: budget.fiscalPeriod,
+    period_start: budget.periodStart,
+    period_end: budget.periodEnd,
+    amount: budget.amount,
+    name: budget.name,
+    note: budget.note,
+    consumed_amount: consumed,
+    remaining_amount: budget.amount - consumed,
+    created_at: budget.createdAt,
   })
 
   return c.json(responseBody, 200)
@@ -119,7 +143,23 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const budgetId = validateIntParam(c.req.param("id"), "budget")
 
-  const result = await new DeleteBudget(c).run({ budgetId })
+  const result = await (async () => {
+    const command = { budgetId }
+
+    const repository = new BudgetRepository(c)
+
+    const result = await repository.delete(command.budgetId)
+
+    if (result instanceof Error) {
+      return new UnexpectedError("failed to delete budget", { cause: result })
+    }
+
+    if (result === null) {
+      return new NotFoundError("budget not found", "budget_not_found")
+    }
+
+    return { reason: "deleted" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

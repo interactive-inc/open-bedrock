@@ -1,7 +1,7 @@
 import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
 import { resolvePersonnelActionPosition } from "@/contexts/company/interface/utils/resolve-personnel-action-position"
 import { nonCorrectionWirePersonnelActionInputSchema } from "@/contexts/company/interface/utils/wire-personnel-action-input"
-import { PersonnelActionRepository } from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action-repository"
+import { PersonnelActionRepository } from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action.repository"
 import { LifecycleAccess } from "@/contexts/company/interface/utils/lifecycle-access"
 import { lifecycleNoStore } from "@/contexts/company/interface/middlewares/lifecycle-no-store"
 import { personnelActionResponse } from "@/contexts/company/interface/routes/personnel-actions"

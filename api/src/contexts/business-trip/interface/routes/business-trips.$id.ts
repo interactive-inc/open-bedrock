@@ -1,5 +1,6 @@
-import { CancelBusinessTrip } from "@/contexts/business-trip/application/cancel-business-trip"
-import { GetBusinessTrip } from "@/contexts/business-trip/application/get-business-trip"
+import { ConflictError } from "@/lib/errors"
+import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/business-trip.repository"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { UpdateBusinessTrip } from "@/contexts/business-trip/application/update-business-trip"
 import type { BusinessTrip } from "@/contexts/business-trip/domain/business-trip.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -38,10 +39,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const businessTrip = await new GetBusinessTrip(c).run({
-    businessTripId: validateUuidParam(c.req.param("id"), "business trip"),
-    travelerId: viewer.employeeId,
-  })
+  const businessTrip = await (async () => {
+    const command = {
+      businessTripId: validateUuidParam(c.req.param("id"), "business trip"),
+      travelerId: viewer.employeeId,
+    }
+
+    const businessTripRepository = new BusinessTripRepository(c)
+
+    const businessTrip = await businessTripRepository.findById(command.businessTripId)
+
+    if (businessTrip instanceof Error) {
+      return new UnexpectedError("failed to find business trip", { cause: businessTrip })
+    }
+
+    if (businessTrip === null) {
+      return new NotFoundError("business trip not found", "business_trip_not_found")
+    }
+
+    if (businessTrip.travelerId !== command.travelerId) {
+      return new ForbiddenError("not the traveler", "not_traveler")
+    }
+
+    return businessTrip
+  })()
 
   if (businessTrip instanceof ApplicationError) {
     throw toHttpException(businessTrip)
@@ -105,10 +126,44 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new CancelBusinessTrip(c).run({
-    businessTripId: validateUuidParam(c.req.param("id"), "business trip"),
-    travelerId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      businessTripId: validateUuidParam(c.req.param("id"), "business trip"),
+      travelerId: viewer.employeeId,
+    }
+
+    const businessTripRepository = new BusinessTripRepository(c)
+
+    const current = await businessTripRepository.findById(command.businessTripId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find business trip", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("business trip not found", "business_trip_not_found")
+    }
+
+    if (current.travelerId !== command.travelerId) {
+      return new ForbiddenError("not the traveler", "not_traveler")
+    }
+
+    if (!current.isModifiable) {
+      return new ConflictError("business trip is not modifiable", "not_modifiable")
+    }
+
+    const deleted = await businessTripRepository.delete(command.businessTripId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete business trip", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new ConflictError("business trip is not modifiable", "not_modifiable")
+    }
+
+    return { reason: "cancelled" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

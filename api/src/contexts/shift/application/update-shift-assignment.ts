@@ -3,8 +3,8 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import { ApplicationError } from "@/lib/errors"
 import type { ShiftAssignment } from "@/contexts/shift/domain/shift-assignment.entity"
 import type { Context } from "@/env"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment-repository"
-import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern-repository"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
 
 export type Input = {
   session: Session

@@ -3,7 +3,7 @@ import { BusinessTrip } from "@/contexts/business-trip/domain/business-trip.enti
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/business-trip-repository"
+import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/business-trip.repository"
 
 export type Action = "approve" | "reject"
 

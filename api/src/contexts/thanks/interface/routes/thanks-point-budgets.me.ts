@@ -1,4 +1,7 @@
-import { ViewMyBudget } from "@/contexts/thanks/application/thanks-points/view-my-budget"
+import { periodOf } from "@/contexts/thanks/domain/thanks-points/period-of"
+import { UnexpectedError } from "@/lib/errors"
+import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-budget.repository"
+
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksBudget } from "@/lib/app-schemas"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
@@ -15,10 +18,33 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const budget = await new ViewMyBudget(c).run({
-    employeeId: session.employeeId,
-    now: c.env.NOW ?? new Date().toISOString(),
-  })
+  const budget = await (async () => {
+    const props = {
+      employeeId: session.employeeId,
+      now: c.env.NOW ?? new Date().toISOString(),
+    }
+
+    const budgetRepository = new ThanksPointBudgetRepository(c)
+
+    const period = periodOf(props.now)
+
+    const budget = await budgetRepository.findOrCreate({
+      employeeId: props.employeeId,
+      period,
+      createdAt: props.now,
+    })
+
+    if (budget instanceof Error) {
+      return new UnexpectedError("failed to find budget", { cause: budget })
+    }
+
+    return {
+      period,
+      grantedPoints: budget.grantedPoints,
+      consumedPoints: budget.consumedPoints,
+      remainingPoints: budget.remainingPoints,
+    }
+  })()
 
   if (budget instanceof ApplicationError) {
     throw toHttpException(budget)

@@ -8,7 +8,7 @@ import {
 } from "@/contexts/company/interface/utils/to-bounded-int"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { readSystemBatchJobs } from "@system/infrastructure/batch/read-system-batch-jobs"
+import { readSystemBatchJobs } from "@system/infrastructure/batch/read-system-batch-jobs.repository"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

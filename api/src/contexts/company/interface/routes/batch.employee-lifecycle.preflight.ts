@@ -1,4 +1,4 @@
-import { PreflightLifecycleMigration } from "@/contexts/company/application/employee-lifecycle/preflight-lifecycle-migration"
+import { PreflightLifecycleMigration } from "@/contexts/company/infrastructure/employee-lifecycle/preflight-lifecycle-migration.repository"
 import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"

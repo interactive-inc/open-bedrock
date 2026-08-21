@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { CompanyActor } from "@/contexts/company/application/core/company-actor"
+import type { CompanyActor } from "@/contexts/company/domain/core/company-actor"
 import { POST as POST_ORGANIZATION_CHANGE } from "@/contexts/company/interface/routes/company.v1.organization-changes"
 import { GET, POST } from "@/contexts/company/interface/routes/company.v1.people"
 import {

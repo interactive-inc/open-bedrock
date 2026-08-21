@@ -1,4 +1,4 @@
-import { canEvaluateGoalOf } from "@/contexts/performance-review/application/goal/can-evaluate-goal-of"
+import { canEvaluateGoalOf } from "@/contexts/performance-review/domain/goal/can-evaluate-goal-of"
 import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { describe, expect, test } from "bun:test"

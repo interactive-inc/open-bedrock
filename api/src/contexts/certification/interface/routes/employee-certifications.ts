@@ -1,5 +1,5 @@
 import { CreateEmployeeCertification } from "@/contexts/certification/application/create-employee-certification"
-import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/employee-certification-repository"
+import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/employee-certification.repository"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppEmployeeCertification, zAppEmployeeCertificationList } from "@/lib/app-schemas"

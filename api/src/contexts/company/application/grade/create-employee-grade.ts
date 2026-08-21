@@ -3,8 +3,8 @@ import { EmployeeGrade } from "@/contexts/company/domain/grade/employee-grade.en
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { EmployeeGradeRepository } from "@/contexts/company/infrastructure/grade/employee-grade-repository"
-import { GradeRepository } from "@/contexts/company/infrastructure/grade/grade-repository"
+import { EmployeeGradeRepository } from "@/contexts/company/infrastructure/grade/employee-grade.repository"
+import { GradeRepository } from "@/contexts/company/infrastructure/grade/grade.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {

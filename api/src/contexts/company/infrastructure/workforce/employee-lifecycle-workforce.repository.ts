@@ -1,22 +1,22 @@
 import type {
   WorkforceLifecycleReadPort,
   WorkforceLifecycleReadPortResult,
-} from "@/contexts/company/application/workforce/read-workforce-state"
+} from "@/contexts/company/infrastructure/workforce/read-workforce-state.repository"
 import {
   toWorkforceEmployeeId,
   toWorkforceLifecycleSchedules,
 } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/workforce/workforce-schedule"
 import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"
 import {
   attachOrganizationPeriods,
   type OrgAssignmentProjectionRow,
   type OrgResponsibilityProjectionRow,
-} from "@/contexts/company/infrastructure/workforce/organization-period-row.adapter"
+} from "@/contexts/company/infrastructure/workforce/organization-period-row.adapter.repository"
 import type { Context } from "@/env"
 import { ApplicationError } from "@/lib/errors"
-import { readWorkforceBaselineStates } from "@/contexts/company/infrastructure/workforce/read-workforce-baseline-states"
+import { readWorkforceBaselineStates } from "@/contexts/company/infrastructure/workforce/read-workforce-baseline-states.repository"
 
 type AssignmentRow = Omit<OrgAssignmentProjectionRow, "isVoid"> & Readonly<{ isVoid: number }>
 type ResponsibilityRow = Omit<OrgResponsibilityProjectionRow, "isVoid"> &

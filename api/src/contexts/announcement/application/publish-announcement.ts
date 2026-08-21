@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Announcement } from "@/contexts/announcement/domain/announcement.entity"
 import type { Context } from "@/env"
-import { AnnouncementRepository } from "@/contexts/announcement/infrastructure/announcement-repository"
+import { AnnouncementRepository } from "@/contexts/announcement/infrastructure/announcement.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
@@ -10,7 +10,7 @@ import { PublishSystemNotification } from "@system/application/notifications/pub
 import { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
 import { NotificationDelivery } from "@system/domain/notifications/notification-delivery.entity"
 import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
-import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
+import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 
 export type Command = {
   session: Session

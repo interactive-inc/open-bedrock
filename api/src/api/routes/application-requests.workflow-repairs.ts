@@ -1,4 +1,4 @@
-import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
+import { resolveCompanyAccountParticipants } from "@/contexts/company/interface/http/accounts/resolve-company-account-participants"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   ForbiddenError,

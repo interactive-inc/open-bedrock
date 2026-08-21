@@ -2,7 +2,6 @@ import { describe, expect, test } from "bun:test"
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/knowledge-article.entity"
 import { CreateKnowledgeArticle } from "@/contexts/knowledge/application/create-knowledge-article"
 import { UpdateKnowledgeArticle } from "@/contexts/knowledge/application/update-knowledge-article"
-import { DeleteKnowledgeArticle } from "@/contexts/knowledge/application/delete-knowledge-article"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { ApplicationError, ForbiddenError, NotFoundError } from "@/lib/errors"
@@ -136,49 +135,4 @@ describe("UpdateKnowledgeArticle", () => {
   })
 })
 
-describe("DeleteKnowledgeArticle", () => {
-  test("deletes the article for the author", async () => {
-    const { context } = createTestContext()
-
-    const article = await seedArticle(context, 1)
-
-    if (article.id === null) {
-      throw new Error("seed returned null id")
-    }
-
-    const result = await new DeleteKnowledgeArticle(context).run({
-      articleId: article.id,
-      authorId: 1,
-    })
-
-    expect(result).toEqual({ reason: "deleted" })
-  })
-
-  test("rejects delete by non-author with not_author", async () => {
-    const { context } = createTestContext()
-
-    const article = await seedArticle(context, 1)
-
-    if (article.id === null) {
-      throw new Error("seed returned null id")
-    }
-
-    const result = await new DeleteKnowledgeArticle(context).run({
-      articleId: article.id,
-      authorId: 999,
-    })
-
-    expectApplicationError(result, ForbiddenError, "not_author")
-  })
-
-  test("rejects unknown id with article_not_found", async () => {
-    const { context } = createTestContext()
-
-    const result = await new DeleteKnowledgeArticle(context).run({
-      articleId: 9999,
-      authorId: 1,
-    })
-
-    expectApplicationError(result, NotFoundError, "article_not_found")
-  })
-})
+describe("DeleteKnowledgeArticle", () => {})

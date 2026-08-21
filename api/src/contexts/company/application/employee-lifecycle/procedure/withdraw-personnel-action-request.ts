@@ -1,11 +1,11 @@
-import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
-import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request"
+import { createAuditEvent } from "@/contexts/company/domain/audit/company-audit-event"
+import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request.repository"
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event.repository"
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import { prepareSystemProcedureCancellation } from "@system/infrastructure/workflow/prepare-system-procedure-cancellation"
+import { prepareSystemProcedureCancellation } from "@system/infrastructure/workflow/prepare-system-procedure-cancellation.repository"
 import {
   ApplicationError,
   ConflictError,

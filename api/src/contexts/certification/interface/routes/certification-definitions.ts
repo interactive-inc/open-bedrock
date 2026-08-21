@@ -1,5 +1,5 @@
 import { CreateCertification } from "@/contexts/certification/application/create-certification"
-import { CertificationRepository } from "@/contexts/certification/infrastructure/certification-repository"
+import { CertificationRepository } from "@/contexts/certification/infrastructure/certification.repository"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppCertification, zAppCertificationList } from "@/lib/app-schemas"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"

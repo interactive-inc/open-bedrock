@@ -2,7 +2,7 @@ import { LifeEvent } from "@/contexts/life-event/domain/life-event.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { LifeEventRepository } from "@/contexts/life-event/infrastructure/life-event-repository"
+import { LifeEventRepository } from "@/contexts/life-event/infrastructure/life-event.repository"
 import type { LifeEventType } from "@/lib/schemas"
 
 export type Command = {

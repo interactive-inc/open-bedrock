@@ -1,7 +1,7 @@
 import { ThanksRedemption } from "@/contexts/thanks/domain/thanks-points/thanks-redemption.entity"
 import { DecideRedemption } from "@/contexts/thanks/application/thanks-points/decide-redemption"
 import { ForbiddenError } from "@/lib/errors"
-import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption-repository"
+import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

@@ -1,7 +1,7 @@
 import {
   AccessTokenService,
   type AccessTokenProfile,
-} from "@system/infrastructure/auth/access-token-service"
+} from "@system/infrastructure/auth/access-token-service.repository"
 import { describe, expect, test } from "bun:test"
 
 const secret = "shared-test-secret"

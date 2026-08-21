@@ -1,4 +1,6 @@
-import { ListMyFamilyCareLeaves } from "@/contexts/family-care-leave/application/list-my-family-care-leaves"
+import { UnexpectedError } from "@/lib/errors"
+import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/family-care-leave.repository"
+
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -37,11 +39,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const familyCareLeaveRows = await new ListMyFamilyCareLeaves(c).run({
-    employeeId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const familyCareLeaveRows = await (async () => {
+    const command = {
+      employeeId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const familyCareLeaveRepository = new FamilyCareLeaveRepository(c)
+
+    const familyCareLeaves = await familyCareLeaveRepository.findByEmployeeId({
+      employeeId: command.employeeId,
+      limit: command.limit,
+      offset: command.offset,
+    })
+
+    if (familyCareLeaves instanceof Error) {
+      return new UnexpectedError("failed to find family care leaves", { cause: familyCareLeaves })
+    }
+
+    return familyCareLeaves
+  })()
 
   if (familyCareLeaveRows instanceof ApplicationError) {
     throw toHttpException(familyCareLeaveRows)

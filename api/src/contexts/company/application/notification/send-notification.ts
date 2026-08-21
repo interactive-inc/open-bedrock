@@ -1,9 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { CompanyNotificationKind } from "@/contexts/company/domain/notifications/notification-kind"
-import type { PublishedEmployeeNotification } from "@/contexts/company/infrastructure/notifications/employee-notification.gateway"
+import type { PublishedEmployeeNotification } from "@/contexts/company/infrastructure/notifications/employee-notification.gateway.repository"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
-import { EmployeeNotificationGateway } from "@/contexts/company/infrastructure/notifications/employee-notification.gateway"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { EmployeeNotificationGateway } from "@/contexts/company/infrastructure/notifications/employee-notification.gateway.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

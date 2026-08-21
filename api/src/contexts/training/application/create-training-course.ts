@@ -4,7 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { TrainingCourse } from "@/contexts/training/domain/training-course.entity"
 import type { Context } from "@/env"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
-import { TrainingCourseRepository } from "@/contexts/training/infrastructure/training-course-repository"
+import { TrainingCourseRepository } from "@/contexts/training/infrastructure/training-course.repository"
 
 export type Command = {
   session: Session

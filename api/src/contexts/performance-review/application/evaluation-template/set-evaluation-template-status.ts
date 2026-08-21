@@ -5,7 +5,7 @@ import type {
 import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EvaluationTemplateRepository } from "@/contexts/performance-review/infrastructure/evaluation-template/evaluation-template-repository"
+import { EvaluationTemplateRepository } from "@/contexts/performance-review/infrastructure/evaluation-template/evaluation-template.repository"
 
 export type Command = {
   templateId: number

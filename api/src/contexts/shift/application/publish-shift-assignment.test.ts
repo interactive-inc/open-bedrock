@@ -5,7 +5,7 @@ import { ConflictError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { ShiftAssignment } from "@/contexts/shift/domain/shift-assignment.entity"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment-repository"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 
 async function createAssignment(repository: ShiftAssignmentRepository): Promise<ShiftAssignment> {

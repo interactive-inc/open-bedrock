@@ -6,10 +6,10 @@ import {
 } from "@/contexts/governance/domain/governance-document"
 import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import type { Context } from "@/env"
-import type { GovernanceDocumentRecord } from "@/contexts/governance/infrastructure/governance-repository"
-import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance-repository"
+import type { GovernanceDocumentRecord } from "@/contexts/governance/infrastructure/governance.repository"
+import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
 import { PERMISSION_KEYS } from "@/contexts/company/domain/iam/permission-key.catalog"
-import { prepareGovernanceAudit } from "@/contexts/governance/application/governance-audit"
+import { prepareGovernanceAudit } from "@/contexts/governance/infrastructure/governance-audit.repository"
 import {
   ConflictError,
   ForbiddenError,

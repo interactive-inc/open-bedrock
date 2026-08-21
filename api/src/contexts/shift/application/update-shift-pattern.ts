@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import { ApplicationError } from "@/lib/errors"
 import type { ShiftPattern } from "@/contexts/shift/domain/shift-pattern.entity"
 import type { Context } from "@/env"
-import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern-repository"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
 
 export type Input = {
   session: Session

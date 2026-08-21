@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { Announcement } from "@/contexts/announcement/domain/announcement.entity"
 import type { Context } from "@/env"
-import { AnnouncementRepository } from "@/contexts/announcement/infrastructure/announcement-repository"
+import { AnnouncementRepository } from "@/contexts/announcement/infrastructure/announcement.repository"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

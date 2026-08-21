@@ -1,6 +1,6 @@
-import { GovernanceAccess } from "@/contexts/governance/application/governance-access"
-import { resolveGovernanceOrgRole } from "@/contexts/governance/application/resolve-governance-org-role"
-import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance-repository"
+import { GovernanceAccessRepository } from "@/contexts/governance/infrastructure/governance-access.repository"
+import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/resolve-governance-org-role.repository"
+import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   ForbiddenError,
@@ -19,7 +19,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const code = parseGovernanceCode(c.req.param("code"))
   if (code === null) throw new NotFoundError("governance document not found")
   const repository = new GovernanceRepository(c)
-  const governanceAccess = new GovernanceAccess({ c, session })
+  const governanceAccess = new GovernanceAccessRepository({ c, session })
   const elevated =
     governanceAccess.canManage() || governanceAccess.canReview() || governanceAccess.canPublish()
   let record = await repository.findVisibleRecord({ code, includeDraft: elevated })

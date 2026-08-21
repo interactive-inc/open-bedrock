@@ -1,5 +1,5 @@
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
-import { findUnknownApproverRoles } from "@/contexts/company/application/organization/validate-procedure-policy-references"
+import { findUnknownApproverRoles } from "@/contexts/company/domain/organization/validate-procedure-policy-references"
 import {
   loadSystemProcedure,
   parseSystemProcedureInputSchema,

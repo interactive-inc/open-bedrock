@@ -1,5 +1,6 @@
+import { UnexpectedError } from "@/lib/errors"
+import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward.repository"
 import { CreateReward } from "@/contexts/thanks/application/thanks-points/create-reward"
-import { ListRewards } from "@/contexts/thanks/application/thanks-points/list-rewards"
 import { rewardPointCostSchema } from "@/contexts/thanks/domain/thanks-points/thanks-reward.entity"
 import type { ThanksReward } from "@/contexts/thanks/domain/thanks-points/thanks-reward.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -44,11 +45,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const isActiveOnly = session.hasPermission("thanks_reward:manage") === false
 
-  const rewards = await new ListRewards(c).run({
-    activeOnly: isActiveOnly,
-    limit,
-    offset,
-  })
+  const rewards = await (async () => {
+    const props = {
+      activeOnly: isActiveOnly,
+      limit,
+      offset,
+    }
+
+    const rewardRepository = new ThanksRewardRepository(c)
+
+    const rewards = await rewardRepository.findMany({
+      activeOnly: props.activeOnly,
+      limit: props.limit,
+      offset: props.offset,
+    })
+
+    if (rewards instanceof Error) {
+      return new UnexpectedError("failed to find rewards", { cause: rewards })
+    }
+
+    return rewards
+  })()
 
   if (rewards instanceof ApplicationError) {
     throw toHttpException(rewards)

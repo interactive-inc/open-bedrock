@@ -3,7 +3,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from 
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTemplate } from "@/contexts/onboarding/domain/onboarding-template.entity"
 import type { Context } from "@/env"
-import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template-repository"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
 import { lifecycleEffectTemplateBindings } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
 import { eq } from "drizzle-orm"
 

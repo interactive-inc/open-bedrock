@@ -1,9 +1,9 @@
 import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 /** /system/v1/browser-sessions */
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import { consumeSystemBrowserLoginCode } from "@system/infrastructure/auth/consume-system-browser-login-code"
-import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
+import { consumeSystemBrowserLoginCode } from "@system/infrastructure/auth/consume-system-browser-login-code.repository"
+import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash.repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { zValidator } from "@hono/zod-validator"

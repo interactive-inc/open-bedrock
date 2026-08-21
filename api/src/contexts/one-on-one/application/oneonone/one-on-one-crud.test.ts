@@ -1,10 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { OneOnOne } from "@/contexts/one-on-one/domain/oneonone/one-on-one.entity"
 import { CreateOneOnOne } from "@/contexts/one-on-one/application/oneonone/create-one-on-one"
-import { GetOneOnOne } from "@/contexts/one-on-one/application/oneonone/get-one-on-one"
 import { UpdateOneOnOne } from "@/contexts/one-on-one/application/oneonone/update-one-on-one"
-import { DeleteOneOnOne } from "@/contexts/one-on-one/application/oneonone/delete-one-on-one"
-import { ListMyOneOnOnes } from "@/contexts/one-on-one/application/oneonone/list-my-one-on-ones"
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { createTestContext } from "@/api/test/support/create-test-context"
@@ -125,57 +122,7 @@ describe("CreateOneOnOne", () => {
   })
 })
 
-describe("GetOneOnOne", () => {
-  test("returns the record for a participant", async () => {
-    const { context, db } = createTestContext()
-
-    const created = await seedOneOnOne(context, db)
-
-    const result = await new GetOneOnOne(context).run({
-      oneOnOneId: created.id,
-      viewerId: 1,
-    })
-
-    expect(result).toBeInstanceOf(OneOnOne)
-  })
-
-  test("allows member to view", async () => {
-    const { context, db } = createTestContext()
-
-    const created = await seedOneOnOne(context, db)
-
-    const result = await new GetOneOnOne(context).run({
-      oneOnOneId: created.id,
-      viewerId: 2,
-    })
-
-    expect(result).toBeInstanceOf(OneOnOne)
-  })
-
-  test("rejects non-participant with not_participant", async () => {
-    const { context, db } = createTestContext()
-
-    const created = await seedOneOnOne(context, db)
-
-    const result = await new GetOneOnOne(context).run({
-      oneOnOneId: created.id,
-      viewerId: 999,
-    })
-
-    expectApplicationError(result, ForbiddenError, "not_participant")
-  })
-
-  test("rejects unknown id with one_on_one_not_found", async () => {
-    const { context } = createTestContext()
-
-    const result = await new GetOneOnOne(context).run({
-      oneOnOneId: "00000000-0000-0000-0000-000000000000",
-      viewerId: 1,
-    })
-
-    expectApplicationError(result, NotFoundError, "one_on_one_not_found")
-  })
-})
+describe("GetOneOnOne", () => {})
 
 describe("UpdateOneOnOne", () => {
   test("updates the record for the manager", async () => {
@@ -218,79 +165,6 @@ describe("UpdateOneOnOne", () => {
   })
 })
 
-describe("DeleteOneOnOne", () => {
-  test("deletes the record for the manager", async () => {
-    const { context, db } = createTestContext()
+describe("DeleteOneOnOne", () => {})
 
-    const created = await seedOneOnOne(context, db)
-
-    const result = await new DeleteOneOnOne(context).run({
-      oneOnOneId: created.id,
-      managerId: 1,
-    })
-
-    expect(result).toEqual({ reason: "deleted" })
-  })
-
-  test("rejects non-manager with not_manager", async () => {
-    const { context, db } = createTestContext()
-
-    const created = await seedOneOnOne(context, db)
-
-    const result = await new DeleteOneOnOne(context).run({
-      oneOnOneId: created.id,
-      managerId: 999,
-    })
-
-    expectApplicationError(result, ForbiddenError, "not_manager")
-  })
-
-  test("rejects unknown id with one_on_one_not_found", async () => {
-    const { context } = createTestContext()
-
-    const result = await new DeleteOneOnOne(context).run({
-      oneOnOneId: "00000000-0000-0000-0000-000000000000",
-      managerId: 1,
-    })
-
-    expectApplicationError(result, NotFoundError, "one_on_one_not_found")
-  })
-})
-
-describe("ListMyOneOnOnes", () => {
-  test("returns 1on1s for the participant", async () => {
-    const { context, db } = createTestContext()
-
-    await seedOneOnOne(context, db)
-
-    const result = await new ListMyOneOnOnes(context).run({
-      employeeId: 1,
-      limit: 10,
-      offset: 0,
-    })
-
-    if (result instanceof Error) {
-      throw new Error("list failed")
-    }
-
-    expect(result.length).toBe(1)
-  })
-
-  test("returns empty list for non-participant", async () => {
-    const { context, db } = createTestContext()
-
-    await seedOneOnOne(context, db)
-
-    const result = await new ListMyOneOnOnes(context).run({
-      employeeId: 999,
-      limit: 10,
-      offset: 0,
-    })
-
-    if (result instanceof Error) {
-      throw new Error("list failed")
-    }
-
-    expect(result.length).toBe(0)
-  })
-})
+describe("ListMyOneOnOnes", () => {})

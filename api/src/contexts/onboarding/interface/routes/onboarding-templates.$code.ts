@@ -1,5 +1,6 @@
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
 import { DeleteOnboardingTemplate } from "@/contexts/onboarding/application/delete-onboarding-template"
-import { GetOnboardingTemplate } from "@/contexts/onboarding/application/get-onboarding-template"
 import { UpdateOnboardingTemplate } from "@/contexts/onboarding/application/update-onboarding-template"
 import type { OnboardingTemplate } from "@/contexts/onboarding/domain/onboarding-template.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -32,10 +33,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const template = await new GetOnboardingTemplate(c).run({
-    session: session,
-    code: validateCodeParam(c.req.param("code"), "onboarding template"),
-  })
+  const template = await (async () => {
+    const command = {
+      session: session,
+      code: validateCodeParam(c.req.param("code"), "onboarding template"),
+    }
+
+    const templateRepository = new OnboardingTemplateRepository(c)
+
+    if (command.session.hasPermission("onboarding:manage") === false) {
+      return new ForbiddenError("cannot manage onboarding", "forbidden")
+    }
+
+    const template = await templateRepository.findByCode(command.code)
+
+    if (template instanceof Error) {
+      return new UnexpectedError("failed to find template", { cause: template })
+    }
+
+    if (template === null) {
+      return new NotFoundError("template not found", "template_not_found")
+    }
+
+    return template
+  })()
 
   if (template instanceof ApplicationError) {
     throw toHttpException(template)

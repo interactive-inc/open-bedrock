@@ -3,7 +3,7 @@ import type {
   SystemTaskPersistence,
   SystemWorkflowDecisionResult,
   SystemWorkflowWriter,
-} from "@system/application/workflow/system-workflow-writer"
+} from "@system/infrastructure/workflow/system-workflow-writer.repository"
 import { HumanAttestation } from "@system/domain/workflow/human-attestation.entity"
 import { InvalidSystemWorkflowError } from "@system/domain/workflow/invalid-system-workflow.error"
 import type { ProposalDigest } from "@system/domain/workflow/system-case-reference"

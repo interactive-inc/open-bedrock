@@ -1,4 +1,4 @@
-import { timingSafeStringEqual } from "@system/infrastructure/auth/timing-safe-string-equal"
+import { timingSafeStringEqual } from "@system/infrastructure/auth/timing-safe-string-equal.repository"
 import { describe, expect, test } from "bun:test"
 
 describe("timingSafeStringEqual", () => {

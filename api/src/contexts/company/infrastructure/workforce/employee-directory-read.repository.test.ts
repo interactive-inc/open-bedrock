@@ -1,12 +1,12 @@
 import { createTestContext } from "@/api/test/support/create-test-context"
-import { ReadEmployeeDirectory } from "@/contexts/company/application/workforce/read-employee-directory"
+import { ReadEmployeeDirectory } from "@/contexts/company/infrastructure/workforce/read-employee-directory.repository"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { EmployeeDirectoryReadRepository } from "@/contexts/company/infrastructure/workforce/employee-directory-read.repository"
 import { describe, expect, test } from "bun:test"
 
 describe("EmployeeDirectoryReadRepository", () => {
-  test("maps requested profiles and lets the common use case restore requested order", async () => {
+  test("maps requested profiles and lets the write service restore requested order", async () => {
     const testContext = createTestContext()
     await testContext.db.exec(`
       INSERT INTO employees (id, code, name, status, phone) VALUES

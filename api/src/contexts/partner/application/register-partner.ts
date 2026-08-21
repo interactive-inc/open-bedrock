@@ -3,7 +3,7 @@ import { Partner } from "@/contexts/partner/domain/partner.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { PartnerRepository } from "@/contexts/partner/infrastructure/partner-repository"
+import { PartnerRepository } from "@/contexts/partner/infrastructure/partner.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {

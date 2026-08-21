@@ -3,7 +3,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/contexts/company/interface/lib/errors"
-import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
+import { resolveActiveSystemAccountId } from "@/contexts/company/interface/http/accounts/resolve-active-system-account-id"
 import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { factory } from "@/contexts/company/interface/utils/factory"

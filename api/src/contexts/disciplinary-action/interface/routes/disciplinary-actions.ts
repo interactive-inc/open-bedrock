@@ -15,7 +15,7 @@ import {
 } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppDisciplinaryAction, zAppDisciplinaryActionList } from "@/lib/app-schemas"
-import { DisciplinaryActionRepository } from "@/contexts/disciplinary-action/infrastructure/disciplinary-action-repository"
+import { DisciplinaryActionRepository } from "@/contexts/disciplinary-action/infrastructure/disciplinary-action.repository"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

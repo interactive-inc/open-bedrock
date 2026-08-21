@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { AntisocialCheck } from "@/contexts/antisocial-check/domain/antisocial-check.entity"
 import type { Context } from "@/env"
-import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/antisocial-check-repository"
+import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/antisocial-check.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

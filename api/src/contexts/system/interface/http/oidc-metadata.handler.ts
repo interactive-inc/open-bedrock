@@ -2,7 +2,7 @@ import {
   OidcValue,
   type OidcIssuerConfiguration,
 } from "@/contexts/system/domain/identity/oidc.value"
-import { OidcSigningKeyService } from "@/contexts/system/infrastructure/identity/oidc-signing-key.service"
+import { OidcSigningKeyService } from "@/contexts/system/infrastructure/identity/oidc-signing-key.service.repository"
 
 const DISCOVERY_PATH = "/.well-known/openid-configuration"
 const JWKS_PATH = "/.well-known/jwks.json"

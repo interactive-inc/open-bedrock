@@ -1,4 +1,6 @@
-import { ListMyRentalReservations } from "@/contexts/rental/application/list-my-rental-reservations"
+import { UnexpectedError } from "@/lib/errors"
+import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation.repository"
+
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppRentalReservationList } from "@/lib/app-schemas"
@@ -37,11 +39,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const reservations = await new ListMyRentalReservations(c).run({
-    requesterId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const reservations = await (async () => {
+    const command = {
+      requesterId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const reservationRepository = new RentalReservationRepository(c)
+
+    const reservations = await reservationRepository.findByRequesterId({
+      requesterId: command.requesterId,
+      limit: command.limit,
+      offset: command.offset,
+    })
+
+    if (reservations instanceof Error) {
+      return new UnexpectedError("failed to find reservations", { cause: reservations })
+    }
+
+    return reservations
+  })()
 
   if (reservations instanceof ApplicationError) {
     throw toHttpException(reservations)

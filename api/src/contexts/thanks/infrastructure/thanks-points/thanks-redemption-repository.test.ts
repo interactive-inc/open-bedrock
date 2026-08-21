@@ -1,5 +1,5 @@
 import { ThanksRedemption } from "@/contexts/thanks/domain/thanks-points/thanks-redemption.entity"
-import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption-repository"
+import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { thanks, thanksRewards } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { describe, expect, test } from "bun:test"
@@ -65,7 +65,7 @@ describe("ThanksRedemptionRepository.createIfSufficientBalance", () => {
     expect(created).toBeInstanceOf(ThanksRedemption)
   })
 
-  // 在庫チェックは use case の事前 SELECT だけでなく INSERT の WHERE にも畳み込まれている（TOCTOU 対策）。
+  // 在庫チェックは service の事前 SELECT だけでなく INSERT の WHERE にも畳み込まれている（TOCTOU 対策）。
   // 事前チェックを通過した後に在庫が 0 になった競合状況を、リポジトリ直叩きで再現する。
   test("rejects with out_of_stock when the reward stock is zero at INSERT time", async () => {
     const { context } = createTestContext()

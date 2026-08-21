@@ -2,12 +2,12 @@ import type {
   AccountEmployeeLinkQuery,
   AccountEmployeeLinkReadPort,
   AccountEmployeeLinkReadPortResult,
-} from "@/contexts/company/application/workforce/resolve-account-employee-link"
+} from "@/contexts/company/infrastructure/workforce/resolve-account-employee-link.repository"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import type { Context } from "@/env"
 import { zAccountId } from "@system/domain/auth/account-id"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 
 type LinkRow = Readonly<{
   account_id: string

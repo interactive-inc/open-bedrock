@@ -1,13 +1,18 @@
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { DeleteEmployee } from "@/contexts/company/application/employee/delete-employee"
-import { GetEmployee } from "@/contexts/company/application/employee/get-employee"
 import { UpdateEmployee } from "@/contexts/company/application/employee/update-employee"
 import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import type { Context } from "@/env"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { IdentityRepository } from "@/contexts/company/application/auth/identity-repository"
+import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity.repository"
 import { toPrimaryRole } from "@/contexts/company/interface/utils/to-primary-role"
-import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
+import {
+  ApplicationError,
+  NotFoundError as ApplicationNotFoundError,
+  UnavailableError,
+  UnexpectedError,
+} from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
@@ -16,7 +21,7 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { isoDate } from "@/lib/schemas"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { ReadOrganizationWorkforceState } from "@/contexts/company/application/workforce/read-organization-workforce-state"
+import { ReadOrganizationWorkforceState } from "@/contexts/company/infrastructure/workforce/read-organization-workforce-state.repository"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
@@ -25,7 +30,7 @@ import { CanonicalCompanyAccess } from "@/contexts/company/interface/utils/canon
 import { requireCanonicalCompany } from "@/contexts/company/interface/utils/require-canonical-company"
 import { accountEmployeeLinks } from "@/contexts/company/infrastructure/schema/employee"
 import { zAccountId } from "@system/domain/auth/account-id"
-import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization-repository"
+import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization.repository"
 import { eq } from "drizzle-orm"
 
 /** 従業員をレスポンス用の snake_case に整形する。email/role は IAM(identities/account_roles)から解決する。 */
@@ -90,9 +95,25 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const employee = await new GetEmployee(c).run({
-      code: validateCodeParam(c.req.param("code"), "employee"),
-    })
+    const employee = await (async () => {
+      const command = {
+        code: validateCodeParam(c.req.param("code"), "employee"),
+      }
+
+      const employeeRepository = new EmployeeRepository(c)
+
+      const employee = await employeeRepository.findByCode(command.code)
+
+      if (employee instanceof Error) {
+        return new UnexpectedError("failed to find employee", { cause: employee })
+      }
+
+      if (employee === null) {
+        return new ApplicationNotFoundError("employee not found", "employee_not_found")
+      }
+
+      return employee
+    })()
 
     if (employee instanceof ApplicationError) {
       throw toHttpException(employee)

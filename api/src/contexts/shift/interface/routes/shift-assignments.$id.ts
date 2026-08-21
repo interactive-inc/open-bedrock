@@ -1,5 +1,6 @@
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
 import { DeleteShiftAssignment } from "@/contexts/shift/application/delete-shift-assignment"
-import { GetShiftAssignment } from "@/contexts/shift/application/get-shift-assignment"
 import { UpdateShiftAssignment } from "@/contexts/shift/application/update-shift-assignment"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
@@ -37,10 +38,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const assignment = await new GetShiftAssignment(c).run({
-    session: session,
-    assignmentId,
-  })
+  const assignment = await (async () => {
+    const input = {
+      session: session,
+      assignmentId,
+    }
+
+    if (input.session.hasPermission("shift:manage") === false) {
+      return new ForbiddenError("cannot manage shift", "forbidden")
+    }
+
+    const assignmentRepository = new ShiftAssignmentRepository(c)
+
+    const assignment = await assignmentRepository.findById(input.assignmentId)
+
+    if (assignment instanceof Error) {
+      return new UnexpectedError("failed to find shift assignment", { cause: assignment })
+    }
+
+    if (assignment === null) {
+      return new NotFoundError("shift assignment not found", "assignment_not_found")
+    }
+
+    return assignment
+  })()
 
   if (assignment instanceof ApplicationError) {
     throw toHttpException(assignment)

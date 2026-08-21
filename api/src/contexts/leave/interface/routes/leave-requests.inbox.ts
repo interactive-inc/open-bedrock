@@ -15,7 +15,7 @@ import { zAppLeaveRequestInboxList } from "@/lib/app-schemas"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm"
-import { listManagedEmployeeIds } from "@/contexts/company/application/organization/list-managed-employee-ids"
+import { listManagedEmployeeIds } from "@/contexts/company/infrastructure/organization/list-managed-employee-ids.repository"
 
 /** 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。 */
 const SORT_OPTIONS = {

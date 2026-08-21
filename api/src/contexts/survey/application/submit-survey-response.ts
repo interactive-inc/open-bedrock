@@ -1,7 +1,7 @@
-import type { SurveySubmissionView } from "@/contexts/survey/application/survey-submission-view"
+import type { SurveySubmissionView } from "@/contexts/survey/domain/survey-submission-view"
 import { SurveyResponse } from "@/contexts/survey/domain/survey-response.entity"
 import type { Context } from "@/env"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/survey-repository"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

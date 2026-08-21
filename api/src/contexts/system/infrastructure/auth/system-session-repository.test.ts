@@ -1,9 +1,9 @@
-import type { SessionRotationAuditEvents } from "@system/application/auth/session-repository"
+import type { SessionRotationAuditEvents } from "@system/infrastructure/auth/session-port.repository"
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import type { SystemAuditEvent } from "@system/domain/audit/system-audit-event"
 import { SessionRotation } from "@system/domain/auth/session-rotation"
 import { Session } from "@system/domain/auth/session.entity"
-import { SystemSessionRepository } from "@system/infrastructure/auth/system-session-repository"
+import { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import { describe, expect, test } from "bun:test"
 

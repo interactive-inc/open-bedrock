@@ -1,5 +1,5 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { NotifyApprovalResult } from "@/contexts/company/application/notification/notify-approval-result"
+import { NotifyApprovalResult } from "@/contexts/company/infrastructure/notifications/notify-approval-result.repository"
 import type { LeaveRequest } from "@/contexts/leave/domain/leave-request.entity"
 import { hasLeaveBalanceTracking } from "@/contexts/leave/domain/has-balance-tracking"
 import { toFiscalYear } from "@/contexts/leave/domain/to-fiscal-year"
@@ -12,8 +12,8 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request-repository"
-import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
+import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request.repository"
+import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
 
 export type Command = {
   session: Session

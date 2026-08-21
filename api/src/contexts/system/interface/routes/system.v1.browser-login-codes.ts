@@ -1,8 +1,8 @@
 import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 /** /system/v1/browser-login-codes */
 import { zAccountId } from "@system/domain/auth/account-id"
-import { createSystemBrowserLoginCode } from "@system/infrastructure/auth/create-system-browser-login-code"
-import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash"
+import { createSystemBrowserLoginCode } from "@system/infrastructure/auth/create-system-browser-login-code.repository"
+import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash.repository"
 import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 

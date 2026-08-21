@@ -3,10 +3,10 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import { ShiftAssignment } from "@/contexts/shift/domain/shift-assignment.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment-repository"
-import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern-repository"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
 
 export type Input = {
   session: Session

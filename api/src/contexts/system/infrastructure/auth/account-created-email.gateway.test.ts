@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { AccountCreatedEmailGateway } from "@/contexts/system/infrastructure/auth/account-created-email.gateway"
+import { AccountCreatedEmailGateway } from "@/contexts/system/infrastructure/auth/account-created-email.gateway.repository"
 
 test("buildAccountCreatedEmail: email の HTML 特殊文字をエスケープする (#1223)", () => {
   const content = AccountCreatedEmailGateway.build({
