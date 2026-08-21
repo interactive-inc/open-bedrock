@@ -27,6 +27,15 @@ const propsSchema = z
   .strict()
 
 type ParsedProps = z.output<typeof propsSchema>
+type CreateInput = Readonly<{
+  id: SystemCaseId
+  subject: SystemCaseReference
+  proposalDigest: ProposalDigest
+  createdByAccountId: AccountId
+  status: SystemCaseStatus
+  createdAt: Date
+  updatedAt: Date
+}>
 
 /** 業務payloadを持たず、変更不能な対象版と提案digestだけを追跡するSystem案件。 */
 export class SystemCaseEntity {
@@ -54,7 +63,7 @@ export class SystemCaseEntity {
     Object.freeze(this)
   }
 
-  static create(input: unknown): SystemCaseEntity | InvalidSystemWorkflowError {
+  static create(input: CreateInput): SystemCaseEntity | InvalidSystemWorkflowError {
     const parsed = propsSchema.safeParse(input)
 
     if (!parsed.success) return new InvalidSystemWorkflowError("invalid_shape", parsed.error)

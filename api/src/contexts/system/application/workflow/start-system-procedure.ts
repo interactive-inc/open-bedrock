@@ -6,9 +6,16 @@ import {
 import { InvalidSystemProposalError } from "@system/domain/errors"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
+import { createProposalId, type ProposalId } from "@system/domain/values/proposal-id.schema"
 import type { SystemCaseReference } from "@system/domain/values/system-case-reference.schema"
 import { SystemCaseEntity } from "@system/domain/entities/system-case.entity"
+import { createSystemCaseId, type SystemCaseId } from "@system/domain/values/system-case.schema"
 import type { SystemWorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
+
+type Deps = Readonly<{
+  createProposalId?: () => ProposalId
+  createSystemCaseId?: () => SystemCaseId
+}>
 
 export type StartSystemProcedureCommand = Readonly<{
   seriesId: string
@@ -31,15 +38,20 @@ export type StartedSystemProcedure = Readonly<{
 
 /** 提案、Case、最初の判断Taskを検証後に一つのSystem transactionで開始する。 */
 export class StartSystemProcedure {
-  constructor(private readonly writer: SystemWorkflowWriter) {}
+  constructor(
+    private readonly writer: SystemWorkflowWriter,
+    private readonly deps: Deps = {},
+  ) {
+    Object.freeze(this)
+  }
 
   async run(
     command: StartSystemProcedureCommand,
   ): Promise<
     StartedSystemProcedure | InvalidSystemProposalError | InvalidSystemWorkflowError | Error
   > {
-    const proposalId = crypto.randomUUID()
-    const workflowCaseId = crypto.randomUUID()
+    const proposalId = (this.deps.createProposalId ?? createProposalId)()
+    const workflowCaseId = (this.deps.createSystemCaseId ?? createSystemCaseId)()
     const proposal = await ProposalEntity.create({
       id: proposalId,
       seriesId: command.seriesId,

@@ -60,7 +60,7 @@ export class ProposalEntity {
   }
 
   static async create(input: {
-    id: string
+    id: ProposalId
     seriesId: string
     version: number
     procedureKey: string

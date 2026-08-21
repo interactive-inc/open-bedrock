@@ -3,6 +3,11 @@ import { z } from "zod"
 export const systemCaseIdSchema = z.string().min(1).max(255).brand<"SystemCaseId">()
 export type SystemCaseId = z.infer<typeof systemCaseIdSchema>
 
+/** 新しいSystem案件を識別するopaque IDを生成する。 */
+export function createSystemCaseId(): SystemCaseId {
+  return systemCaseIdSchema.parse(crypto.randomUUID())
+}
+
 export const systemCaseStatusSchema = z.enum([
   "pending",
   "approved",

@@ -1,4 +1,6 @@
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import { systemCaseIdSchema } from "@system/domain/values/system-case.schema"
 import { proposalDigestSchema } from "@system/domain/values/system-case-reference.schema"
 import { SystemCaseEntity } from "@system/domain/entities/system-case.entity"
 import { describe, expect, test } from "bun:test"
@@ -6,13 +8,14 @@ import { describe, expect, test } from "bun:test"
 const CREATED_AT = new Date("2026-08-16T00:00:00.000Z")
 const DIGEST = proposalDigestSchema.parse("a".repeat(64))
 const OTHER_DIGEST = proposalDigestSchema.parse("b".repeat(64))
+type SystemCaseInput = Parameters<typeof SystemCaseEntity.create>[0]
 
-function caseInput(overrides: Readonly<Record<string, unknown>> = {}) {
+function caseInput(overrides: Partial<SystemCaseInput> = {}): SystemCaseInput {
   return {
-    id: "case-1",
+    id: systemCaseIdSchema.parse("case-1"),
     subject: { context: "expense", kind: "expense", id: "expense-1", version: "4" },
     proposalDigest: DIGEST,
-    createdByAccountId: "account-1",
+    createdByAccountId: zAccountId.parse("account-1"),
     status: "pending",
     createdAt: CREATED_AT,
     updatedAt: CREATED_AT,
@@ -20,7 +23,7 @@ function caseInput(overrides: Readonly<Record<string, unknown>> = {}) {
   }
 }
 
-function requireCase(input: unknown): SystemCaseEntity {
+function requireCase(input: SystemCaseInput): SystemCaseEntity {
   const systemCase = SystemCaseEntity.create(input)
   expect(systemCase).toBeInstanceOf(SystemCaseEntity)
   if (systemCase instanceof Error) throw systemCase

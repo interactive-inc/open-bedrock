@@ -2,13 +2,14 @@ import { describe, expect, test } from "bun:test"
 import { zAccountId } from "@system/domain/values/account-id.schema"
 import { InvalidSystemProposalError } from "@system/domain/errors"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
+import { proposalIdSchema } from "@system/domain/values/proposal-id.schema"
 
 const accountId = zAccountId.parse("account-1")
 
 describe("ProposalEntity", () => {
   test("同じJSON意味を同じcanonical bodyとSHA-256 digestへ固定する", async () => {
     const left = await ProposalEntity.create({
-      id: "proposal-1",
+      id: proposalIdSchema.parse("proposal-1"),
       seriesId: "series-1",
       version: 1,
       procedureKey: "change",
@@ -19,7 +20,7 @@ describe("ProposalEntity", () => {
       createdAt: new Date(100),
     })
     const right = await ProposalEntity.create({
-      id: "proposal-2",
+      id: proposalIdSchema.parse("proposal-2"),
       seriesId: "series-2",
       version: 1,
       procedureKey: "change",
@@ -58,7 +59,7 @@ describe("ProposalEntity", () => {
 
   test("版とsupersedesのshapeを検査する", async () => {
     const result = await ProposalEntity.create({
-      id: "proposal-1",
+      id: proposalIdSchema.parse("proposal-1"),
       seriesId: "series-1",
       version: 0,
       procedureKey: "change",

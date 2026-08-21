@@ -7,6 +7,8 @@ import { zAccountId } from "@system/domain/values/account-id.schema"
 import { DecisionTaskCandidateEntity } from "@system/domain/entities/decision-task-candidate.entity"
 import { DecisionTaskEntity } from "@system/domain/entities/decision-task.entity"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
+import { proposalIdSchema } from "@system/domain/values/proposal-id.schema"
+import { systemCaseIdSchema } from "@system/domain/values/system-case.schema"
 import { proposalDigestSchema } from "@system/domain/values/system-case-reference.schema"
 import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
 import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
@@ -114,7 +116,12 @@ describe("System workflow application", () => {
   test("提案、Case、Taskを同時作成し、quorumと次TaskをSystemだけで進める", async () => {
     const fixture = await createFixture()
     const at = new Date(200)
-    const started = await new StartSystemProcedure(fixture.writer).run({
+    const proposalId = proposalIdSchema.parse("proposal-1")
+    const systemCaseId = systemCaseIdSchema.parse("case-1")
+    const started = await new StartSystemProcedure(fixture.writer, {
+      createProposalId: () => proposalId,
+      createSystemCaseId: () => systemCaseId,
+    }).run({
       seriesId: "series-1",
       version: 1,
       procedureKey: "change",
@@ -136,6 +143,8 @@ describe("System workflow application", () => {
     expect(started).not.toBeInstanceOf(Error)
     if (started instanceof Error) return
     expect(started.number).toBe(1)
+    expect(started.proposal.id).toBe(proposalId)
+    expect(started.workflowCase.id).toBe(systemCaseId)
     const next = nextTask(started.workflowCase.id, started.proposal.digest, new Date(220))
     const first = await new DecideSystemTask(fixture.writer).run({
       caseId: started.workflowCase.id,
