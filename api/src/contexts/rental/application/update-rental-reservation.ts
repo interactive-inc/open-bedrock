@@ -1,4 +1,4 @@
-import type { RentalReservation } from "@/contexts/rental/domain/rental-reservation.entity"
+import type { RentalReservation } from "@/contexts/rental/domain/entities/rental-reservation.entity"
 import {
   ConflictError,
   ForbiddenError,

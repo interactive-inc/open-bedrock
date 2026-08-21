@@ -1,5 +1,5 @@
-import { EmployeeSkill } from "@/contexts/skill/domain/employee-skill.entity"
-import type { Skill } from "@/contexts/skill/domain/skill.entity"
+import { EmployeeSkill } from "@/contexts/skill/domain/entities/employee-skill.entity"
+import type { Skill } from "@/contexts/skill/domain/entities/skill.entity"
 import type { Context } from "@/env"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

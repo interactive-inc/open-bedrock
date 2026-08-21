@@ -1,4 +1,4 @@
-import { ReviewCycle } from "@/contexts/performance-review/domain/review/review-cycle.entity"
+import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"

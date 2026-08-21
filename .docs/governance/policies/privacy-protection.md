@@ -61,7 +61,7 @@ controls:
 
 - purpose を特定し、必要な field だけを取得する。
 - 取得 source、通知、同意または他の根拠を記録する。
-- 新しい purpose への再利用は compatibility または新しい根拠を review する。
+- 新しい purpose への再利用は当初目的との整合性または新しい根拠を review する。
 - AI の学習、prompt、tool 呼出しへ送る情報も第三者提供または委託に相当し得る外部 handoff として評価する。
 - 本人が提出した情報と、外部 source や AI が推測した Assessment を区別する。
 

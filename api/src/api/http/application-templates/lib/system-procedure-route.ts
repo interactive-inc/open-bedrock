@@ -1,9 +1,6 @@
-import { resolveActiveSystemAccountId } from "@/contexts/company/infrastructure/iam/resolve-active-system-account-id.repository"
-import {
-  createCompanyProcedureDecisionPolicy,
-  type CompanyProcedureDecisionPolicy,
-} from "@/contexts/company/domain/organization/company-procedure-decision-policy"
-import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/parse-company-procedure-decision-policy"
+import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id.repository"
+import type { CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
+import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import type { Context } from "@/env"
 import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
 import { PublishSystemProcedure } from "@system/application/workflow/publish-system-procedure"
@@ -76,10 +73,4 @@ export async function publishSystemProcedure(
     createdByAccountId: accountId,
     createdAt: new Date(c.env.NOW ?? Date.now()),
   })
-}
-
-export function createLegacyCompanyPolicy(
-  approverRoles: ReadonlyArray<string>,
-): CompanyProcedureDecisionPolicy | Error {
-  return createCompanyProcedureDecisionPolicy({ approverRoles, workflow: null })
 }

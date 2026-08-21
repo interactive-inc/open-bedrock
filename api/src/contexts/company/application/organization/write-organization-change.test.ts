@@ -1,27 +1,27 @@
 import { expect, test } from "bun:test"
-import type { CompanyActor } from "@/contexts/company/domain/core/company-actor"
 import { WriteOrganizationChange } from "@/contexts/company/application/organization/write-organization-change"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
+import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
+import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
 
-const actor: CompanyActor = {
+const actor = CompanyActorValue.restore({
   accountId: "account:1",
   employeeId: "employee:1",
   organizationIds: ["organization:default"],
   capabilities: ["company:write"],
-}
+})
 
-test("WriteOrganizationChangeはsnapshot readの例外をunavailableへ閉じて書き込まない", async () => {
+test("writeOrganizationChangeはsnapshot readの例外をunavailableへ閉じて書き込まない", async () => {
   let writeCount = 0
-  const result = await new WriteOrganizationChange(
-    actor,
-    async () => {
+  const writeOrganizationChange = new WriteOrganizationChange(actor, {
+    read: async () => {
       throw new Error("read unavailable")
     },
-    async () => {
+    write: async () => {
       writeCount += 1
       return { kind: "applied", organizationRevision: 1, replayed: false }
     },
-  ).execute({
+  })
+  const result = await writeOrganizationChange.execute({
     commandId: "command:1",
     expectedRevision: 0,
     reason: "create root organization",

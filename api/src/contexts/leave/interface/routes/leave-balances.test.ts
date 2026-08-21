@@ -5,8 +5,9 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
+import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "leave-balance-route-test-secret"
 
@@ -69,7 +70,7 @@ async function createTestDb(): Promise<D1Database> {
     },
   ])
 
-  await verifyCompanyMigrationFixture({
+  await initializeCompanyTestFixture({
     db,
     departments: [
       { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
@@ -80,11 +81,9 @@ async function createTestDb(): Promise<D1Database> {
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -100,10 +99,7 @@ async function getRequest(path: string, token: string | null): Promise<Response>
 
 describe("GET /leave-balances", () => {
   test("manager reads a report's balance via employee_id", async () => {
-    const response = await getRequest(
-      "/leave-balances?employee_id=20",
-      await tokenFor(2, "manager"),
-    )
+    const response = await getRequest("/leave-balances?employee_id=20", await tokenFor(2))
 
     expect(response.status).toBe(200)
 
@@ -118,10 +114,7 @@ describe("GET /leave-balances", () => {
   })
 
   test("member requesting another employee's balance is forbidden", async () => {
-    const response = await getRequest(
-      "/leave-balances?employee_id=23",
-      await tokenFor(20, "member"),
-    )
+    const response = await getRequest("/leave-balances?employee_id=23", await tokenFor(20))
 
     expect(response.status).toBe(403)
   })

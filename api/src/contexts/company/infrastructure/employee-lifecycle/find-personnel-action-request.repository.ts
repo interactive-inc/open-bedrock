@@ -1,16 +1,16 @@
-import type { PersonnelActionRequestRecord } from "@/contexts/company/domain/employee-lifecycle/personnel-action-request-record"
-import { personnelActionInputSchema } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
-import type { Session } from "@/contexts/company/domain/iam/session"
-import type { Context } from "@/env"
-import { UnexpectedError } from "@/lib/errors"
+import type { PersonnelActionRequestRecord } from "@/contexts/company/domain/values/personnel-action-request-record.definition"
+import { personnelActionInputSchema } from "@/contexts/company/domain/values/lifecycle-types.definition"
+import type { CompanyPersonnelSession } from "@/contexts/company/domain/values/company-personnel-session.definition"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import { CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import { readSystemWorkflowReferences } from "@system/infrastructure/workflow/read-system-workflow-references.repository"
 
 /** Company申請1件とSystem判断状態を、認可済みの表示recordへ合成する。 */
 export async function findPersonnelActionRequest(
-  context: Context,
-  session: Session,
+  context: CompanyContext,
+  session: CompanyPersonnelSession,
   selector: Readonly<{ id: string } | { applicationId: number }>,
-): Promise<PersonnelActionRequestRecord | null | UnexpectedError> {
+): Promise<PersonnelActionRequestRecord | null | CompanyUnexpectedError> {
   try {
     const byId = "id" in selector
     const row = await context.env.DB.prepare(
@@ -64,7 +64,7 @@ export async function findPersonnelActionRequest(
       },
     )
     if (workflows instanceof Error) {
-      return new UnexpectedError("人事変更申請を取得できません", { cause: workflows })
+      return new CompanyUnexpectedError("人事変更申請を取得できません", { cause: workflows })
     }
     const workflow = workflows.at(0)
     if (workflow === undefined) return null
@@ -79,7 +79,7 @@ export async function findPersonnelActionRequest(
       row.target_employee_name === null ||
       row.base_employee_revision === null
     ) {
-      return new UnexpectedError("人事変更申請の保存データが不正です")
+      return new CompanyUnexpectedError("人事変更申請の保存データが不正です")
     }
 
     return {
@@ -114,6 +114,6 @@ export async function findPersonnelActionRequest(
       withdrawnAt: row.withdrawn_at,
     }
   } catch (cause) {
-    return new UnexpectedError("人事変更申請を取得できません", { cause })
+    return new CompanyUnexpectedError("人事変更申請を取得できません", { cause })
   }
 }

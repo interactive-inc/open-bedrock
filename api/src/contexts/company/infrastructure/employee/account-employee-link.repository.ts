@@ -1,5 +1,5 @@
 import type { AccountId } from "@system/domain/values/account-id.schema"
-import type { Context } from "@/env"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import { accountEmployeeLinks } from "@/contexts/company/infrastructure/schema/employee"
 import { eq } from "drizzle-orm"
 
@@ -10,7 +10,7 @@ export type LinkedEmployeeAccount = Readonly<{
 
 /** Account と Company の Employee の対応を Company 側で解決する。System 認証はこの対応を知らない。 */
 export class AccountEmployeeLinkRepository {
-  constructor(private readonly c: Context) {
+  constructor(private readonly c: CompanyContext) {
     Object.freeze(this)
   }
 

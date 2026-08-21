@@ -1,11 +1,11 @@
 import { AdvanceFamilyCareLeave } from "@/contexts/family-care-leave/application/advance-family-care-leave"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { UnauthorizedError } from "@/lib/http/errors"
 import { zAppFamilyCareLeave } from "@/lib/app-schemas"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { validateUuidParam } from "@/contexts/company/interface/utils/validate-uuid-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
+import { verifyBearer } from "@/api/http/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /family-care-leaves/:id/cancel — 人事が産休・育休・介護休業の申出を取消にする */

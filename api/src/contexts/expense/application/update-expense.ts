@@ -1,4 +1,4 @@
-import type { Expense } from "@/contexts/expense/domain/expense.entity"
+import type { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

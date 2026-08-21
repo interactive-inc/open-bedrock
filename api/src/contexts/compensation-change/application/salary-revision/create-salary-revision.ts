@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { SalaryRevision } from "@/contexts/compensation-change/domain/salary-revision/salary-revision.entity"
+import type { Session } from "@/lib/auth/session"
+import { SalaryRevision } from "@/contexts/compensation-change/domain/entities/salary-revision.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

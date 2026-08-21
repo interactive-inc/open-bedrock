@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedOnboardingTemplates } from "@/contexts/onboarding/infrastructure/seed/seed-onboarding-templates.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const onboardingTemplateResponseSchema = z.object({
   id: z.number().nullable(),
@@ -65,6 +66,7 @@ async function createTestDb(): Promise<D1Database> {
   }
 
   await seedD1(db, "onboarding_template_tasks", templateTaskRows)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -72,8 +74,6 @@ async function createTestDb(): Promise<D1Database> {
 function token(employeeId: number, role: string): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 

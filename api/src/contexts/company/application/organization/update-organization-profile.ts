@@ -1,25 +1,25 @@
-import type { CompanyActor } from "@/contexts/company/domain/core/company-actor"
-import { hasCompanyCapability } from "@/contexts/company/domain/core/has-company-capability"
-import { OrganizationProfileEntity } from "@/contexts/company/domain/organization/organization-profile.entity"
-import { ApplicationForbiddenError } from "@/lib/errors/application-error"
+import { OrganizationProfileValue } from "@/contexts/company/domain/values/organization-profile.value"
+import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
+import type { OrganizationProfileRepository } from "@/contexts/company/infrastructure/organization/organization-profile.repository"
+import { CompanyForbiddenError } from "@/contexts/company/domain/errors"
 
+/** Domain entityを生成できる組織プロフィールだけを永続化する。 */
 export class UpdateOrganizationProfile {
   constructor(
-    private readonly actor: CompanyActor,
-    private readonly write: (profile: OrganizationProfileEntity) => Promise<void | Error>,
-  ) {
-    Object.freeze(this)
-  }
+    private readonly actor: CompanyActorValue,
+    private readonly organizationId: string,
+    private readonly repository: OrganizationProfileRepository,
+  ) {}
 
   async execute(
     value: Readonly<{ name: string; representativeName: string }>,
-  ): Promise<OrganizationProfileEntity | Error> {
-    if (!hasCompanyCapability(this.actor, "company:write")) {
-      return new ApplicationForbiddenError()
+  ): Promise<OrganizationProfileValue | Error> {
+    if (!this.actor.hasCapability("company:write")) {
+      return new CompanyForbiddenError()
     }
-    const profile = OrganizationProfileEntity.create(value)
+    const profile = OrganizationProfileValue.create(value)
     if (profile instanceof Error) return profile
-    const written = await this.write(profile)
+    const written = await this.repository.save(this.organizationId, profile)
     return written instanceof Error ? written : profile
   }
 }

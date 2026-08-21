@@ -4,18 +4,18 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { resolveLiveEmployeeAccess } from "@/contexts/company/interface/http/employees/resolve-live-employee-access"
-import { resolveActiveSystemAccountId } from "@/contexts/company/interface/http/accounts/resolve-active-system-account-id"
-import { resolveCompanyAccountParticipants } from "@/contexts/company/interface/http/accounts/resolve-company-account-participants"
-import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/interface/http/accounts/resolve-system-account-ids-for-employees"
+} from "@/lib/http/errors"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { resolveLiveEmployeeAccess } from "@/api/http/employees/resolve-live-employee-access"
+import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id"
+import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants"
+import { resolveSystemAccountIdsForEmployees } from "@/api/http/accounts/resolve-system-account-ids-for-employees"
 import { createSystemProcedureDelegationRepository } from "@/api/http/approval-delegations/create-system-procedure-delegation-repository"
-import { findEmployeeIdByCode } from "@/contexts/company/interface/http/employees/find-employee-id-by-code"
+import { findEmployeeIdByCode } from "@/api/http/employees/find-employee-id-by-code"
 import { loadSystemProcedure } from "@/api/http/application-templates/lib/system-procedure-route"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

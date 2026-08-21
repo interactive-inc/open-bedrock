@@ -1,4 +1,4 @@
-import { LeaveRequest } from "@/contexts/leave/domain/leave-request.entity"
+import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { DecideLeaveRequest } from "@/contexts/leave/application/decide-leave-request"
 import { ForbiddenError, ValidationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request.repository"
@@ -6,7 +6,7 @@ import { createTestContext } from "@/api/test/support/create-test-context"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { seedD1 } from "@/api/test/support/seed-d1"
-import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
+import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
 import { describe, expect, test } from "bun:test"
 
 async function seedPendingRequest(
@@ -49,7 +49,7 @@ async function seedManagerRelationship(db: D1Database): Promise<void> {
     },
   ])
 
-  await verifyCompanyMigrationFixture({
+  await initializeCompanyTestFixture({
     db,
     departments: [{ id: 3, code: "D003", name: "Team", managerEmployeeCode: "E002" }],
   })

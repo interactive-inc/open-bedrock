@@ -234,7 +234,7 @@ describe("SidebarNav feature registry", () => {
     const link = screen.getByRole("link", { name: "勤怠" })
     expect(link.querySelector("svg")?.classList.contains("text-feature-development")).toBe(true)
     expect(screen.getByText("琥珀色のアイコン")).toBeTruthy()
-    expect(link.getAttribute("aria-description")).toBe("company-standard・開発中")
+    expect(link.getAttribute("aria-description")).toBe("app-default・開発中")
   })
 
   test("does not add development treatment to available features", () => {

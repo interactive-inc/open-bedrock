@@ -1,6 +1,9 @@
-import type { AccountEmployeeLink } from "@/contexts/company/domain/workforce/workforce-schedule"
-import type { EmployeeId, SystemAccountId } from "@/contexts/company/domain/workforce/workforce-id"
-import { AccountEmployeeLinkResolutionError } from "@/contexts/company/domain/workforce/account-employee-link-resolution-error"
+import type { AccountEmployeeLink } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type {
+  EmployeeId,
+  SystemAccountId,
+} from "@/contexts/company/domain/values/workforce-id.definition"
+import { AccountEmployeeLinkResolutionError } from "@/contexts/company/domain/errors"
 
 export type AccountEmployeeLinkQuery =
   | Readonly<{ kind: "by_account"; accountId: SystemAccountId }>

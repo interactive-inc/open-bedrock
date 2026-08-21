@@ -1,11 +1,11 @@
 import type {
   GovernanceMetadata,
   GovernanceReference,
-} from "@/contexts/governance/domain/governance-document"
+} from "@/contexts/governance/domain/values/governance-document.definition"
 import {
   zGovernanceMetadata,
   zProcedureDefinition,
-} from "@/contexts/governance/domain/governance-document"
+} from "@/contexts/governance/domain/values/governance-document.definition"
 import type { Context } from "@/env"
 import type { AccountId } from "@system/domain/values/account-id.schema"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"

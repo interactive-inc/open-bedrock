@@ -1,5 +1,5 @@
-import { ThanksRedemption } from "@/contexts/thanks/domain/thanks-points/thanks-redemption.entity"
-import { ThanksReward } from "@/contexts/thanks/domain/thanks-points/thanks-reward.entity"
+import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
+import { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
 import { CreateReward } from "@/contexts/thanks/application/thanks-points/create-reward"
 import { DecideRedemption } from "@/contexts/thanks/application/thanks-points/decide-redemption"
 import { RequestRedemption } from "@/contexts/thanks/application/thanks-points/request-redemption"

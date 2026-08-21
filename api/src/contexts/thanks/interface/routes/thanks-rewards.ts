@@ -1,20 +1,20 @@
 import { UnexpectedError } from "@/lib/errors"
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward.repository"
 import { CreateReward } from "@/contexts/thanks/application/thanks-points/create-reward"
-import { rewardPointCostSchema } from "@/contexts/thanks/domain/thanks-points/thanks-reward.entity"
-import type { ThanksReward } from "@/contexts/thanks/domain/thanks-points/thanks-reward.entity"
+import { rewardPointCostSchema } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
+import type { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksReward, zAppThanksRewardList } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+} from "@/lib/http/to-bounded-int"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
 import { thanksRewards } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { count, eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"

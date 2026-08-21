@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { EmployeeSkill } from "@/contexts/skill/domain/employee-skill.entity"
+import { EmployeeSkill } from "@/contexts/skill/domain/entities/employee-skill.entity"
 import { SetMySkill } from "@/contexts/skill/application/set-my-skill"
 import { ApplicationError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

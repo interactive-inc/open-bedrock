@@ -3,8 +3,11 @@ import type {
   OrganizationUnitReadPort,
   OrganizationUnitSnapshotReadResult,
 } from "@/contexts/company/infrastructure/workforce/read-organization-state.repository"
-import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
-import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/workforce/workforce-snapshot-changed-error"
+import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import {
+  InvalidOrganizationLifecycleStateError,
+  WorkforceSnapshotChangedError,
+} from "@/contexts/company/domain/errors"
 import { projectOrganizationUnitSnapshot } from "@/contexts/company/infrastructure/workforce/organization-unit-row.adapter.repository"
 import {
   organizationChangeOperations,
@@ -22,15 +25,6 @@ type OrganizationDatabase = Pick<
   }>,
   "select"
 >
-
-export class InvalidOrganizationLifecycleStateError extends Error {
-  readonly code = "invalid_organization_lifecycle_state"
-
-  constructor() {
-    super("organization lifecycle state is missing or invalid")
-    this.name = "InvalidOrganizationLifecycleStateError"
-  }
-}
 
 /** Company組織のappend-only tablesをrevision付き共通snapshot portへ接続する。 */
 export class OrganizationUnitReadRepository implements OrganizationUnitReadPort {

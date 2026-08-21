@@ -1,4 +1,4 @@
-import { TrainingCourse } from "@/contexts/training/domain/training-course.entity"
+import { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/training-course.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"

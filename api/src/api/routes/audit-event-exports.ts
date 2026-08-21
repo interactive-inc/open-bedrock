@@ -1,15 +1,15 @@
 import {
   createCompanyAuditEventRepository,
   type CompanyAuditExportRows,
-} from "@/contexts/company/interface/http/audit-events/create-company-audit-event-repository"
-import { AuditTrail } from "@/contexts/company/interface/utils/audit-trail"
-import { throwAuditRouteError } from "@/contexts/company/interface/utils/throw-audit-route-error"
-import { auditExportPermission } from "@/contexts/company/interface/middlewares/audit-export-permission"
-import { auditExportValidation } from "@/contexts/company/interface/middlewares/audit-export-validation"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { toAuditCsv } from "@/contexts/company/interface/http/audit/to-audit-csv"
+} from "@/api/http/audit-events/create-company-audit-event-repository"
+import { AuditTrail } from "@/api/http/utils/audit-trail"
+import { throwAuditRouteError } from "@/api/http/utils/throw-audit-route-error"
+import { auditExportPermission } from "@/api/http/middlewares/audit-export-permission"
+import { auditExportValidation } from "@/api/http/middlewares/audit-export-validation"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { toAuditCsv } from "@/api/http/audit/to-audit-csv"
 import { PayloadTooLargeError } from "@/lib/errors"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 
 // @authorization permission - 権限キーで判定する
 export const POST = factory.createHandlers(

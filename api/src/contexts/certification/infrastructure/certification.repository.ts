@@ -1,4 +1,4 @@
-import { Certification } from "@/contexts/certification/domain/certification.entity"
+import { Certification } from "@/contexts/certification/domain/entities/certification.entity"
 import type { Context } from "@/env"
 import { certifications } from "@/contexts/certification/infrastructure/schema/certification"
 import { asc, eq } from "drizzle-orm"

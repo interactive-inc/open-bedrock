@@ -1,17 +1,17 @@
 import { UnexpectedError } from "@/lib/errors"
 import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/family-care-leave.repository"
 
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/lib/http/to-bounded-int"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppFamilyCareLeaveList } from "@/lib/app-schemas"
 import { familyCareLeaves } from "@/contexts/family-care-leave/infrastructure/schema/family-care-leave"
 import { count, eq } from "drizzle-orm"

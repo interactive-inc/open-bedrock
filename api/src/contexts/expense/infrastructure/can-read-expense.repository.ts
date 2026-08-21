@@ -1,5 +1,5 @@
 import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/lib/auth/session"
 import type { Context } from "@/env"
 
 export type CanReadExpenseInput = Readonly<{

@@ -137,7 +137,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - System の Case に対する会社上の判断資格の解決
 - 判断時点の Employment、Membership、ResponsibilityAssignment の snapshot
 
-現行実装には Account と Employee の一対一対応と、それを在籍・組織資格、active な canonical System Account と同時に検査する Company resolver がある。System workflow の候補解決はこの resolver を利用し、Company snapshot を証拠へ保存する。Company内部の整数Account IDは既存wireの互換境界に閉じ、System TaskとCompany APIへはopaqueな文字列IDを渡す。migration未検証時のlegacy組織資格fallbackはなく、評価不能時は停止する。
+現行実装には Account と Employee の一対一対応と、それを在籍・組織資格、active な canonical System Account と同時に検査する Company resolver がある。System workflow の候補解決はこの resolver を利用し、Company snapshot を証拠へ保存する。System TaskとCompany APIにはopaqueな文字列IDだけを渡し、canonicalな組織状態を評価できない場合は推測せず停止する。
 
 ### 雇用事実と人事発令
 
@@ -145,7 +145,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - 発令日、発効日、記録日、理由、根拠
 - 訂正、取消、競合検出、projection rebuild
 
-現行実装には personnel action と lifecycle revision がある。所属と責務を変える発令は共通 `OrganizationChangeSet` validator を通り、発令、organization operation、period version、互換 projection、監査を一つの batch で確定する。訂正は同じ period の連続 revision として検証し、expected Employee revision と expected organization revision のどちらが stale でも全体を拒否する。onboarding task、退職申請、証明書依頼などの手続きは Company の事実ではなく App と System workflow へ分離する。
+現行実装には personnel action と lifecycle revision がある。所属と責務を変える発令は共通 `OrganizationChangeSet` validator を通り、発令、organization operation、period version、current projection、監査を一つの batch で確定する。訂正は同じ period の連続 revision として検証し、expected Employee revision と expected organization revision のどちらが stale でも全体を拒否する。onboarding task、退職申請、証明書依頼などの手続きは Company の事実ではなく App と System workflow へ分離する。
 
 ## Apps
 

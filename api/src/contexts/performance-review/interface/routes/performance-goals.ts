@@ -4,20 +4,20 @@ import {
   InternalError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
-import { listReportEmployeeIds } from "@/contexts/company/interface/utils/list-report-employee-ids"
+} from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
+import { listReportEmployeeIds } from "@/api/http/utils/list-report-employee-ids"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { CreateGoal } from "@/contexts/performance-review/application/goal/create-goal"
-import { canReadGoalOf } from "@/contexts/performance-review/domain/goal/can-read-goal-of"
+import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { canWriteDepartmentGoal } from "@/contexts/performance-review/interface/http/performance-goals/can-write-department-goal"
 import { resolveEmployeeDepartmentCode } from "@/contexts/performance-review/interface/http/performance-goals/resolve-employee-department-code"

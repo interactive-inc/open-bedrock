@@ -22,8 +22,8 @@ describe("exportAuditEvents", () => {
     mocks.createClient.mockResolvedValue({ "audit-event-exports": { $post: post } })
     const request = {
       actor_account_id: "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y",
-      action: "legacy.action",
-      target_type: "legacy_target",
+      action: "custom.action",
+      target_type: "custom_target",
       target_id: "target-1",
       outcome: "succeeded" as const,
       from: "2026-01-01T00:00:00Z",

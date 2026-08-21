@@ -1,19 +1,17 @@
-import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
-import type { OrganizationInvariantViolation } from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
-import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
-import type { OrganizationUnitSnapshot } from "@/contexts/company/domain/workforce/organization-unit"
+import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import type {
+  OrganizationRevisionReadResult,
+  OrganizationUnitReadPort,
+  OrganizationUnitSnapshotReadResult,
+} from "@/contexts/company/domain/values/organization-change.definition"
+import type { OrganizationInvariantViolation } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
+import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
+import type { OrganizationUnitSnapshot } from "@/contexts/company/domain/values/organization-unit.definition"
 
-export type OrganizationUnitSnapshotReadResult =
-  | Readonly<{ ok: true; snapshot: OrganizationUnitSnapshot }>
-  | Readonly<{ ok: false; cause: unknown }>
-
-export type OrganizationRevisionReadResult =
-  | Readonly<{ ok: true; revision: number }>
-  | Readonly<{ ok: false; cause: unknown }>
-
-export type OrganizationUnitReadPort = {
-  readSnapshot(asOf: CalendarDate): Promise<OrganizationUnitSnapshotReadResult>
-  readRevision(): Promise<OrganizationRevisionReadResult>
+export type {
+  OrganizationRevisionReadResult,
+  OrganizationUnitReadPort,
+  OrganizationUnitSnapshotReadResult,
 }
 
 export type ReadOrganizationStateResult =

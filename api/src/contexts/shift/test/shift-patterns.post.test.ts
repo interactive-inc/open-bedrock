@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedShiftPatterns } from "@/contexts/shift/infrastructure/seed/seed-shift-patterns.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "shift-patterns-create-route-test-secret"
 
@@ -51,15 +52,14 @@ async function createTestDb(): Promise<D1Database> {
       break_minutes: pattern.breakMinutes,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -85,7 +85,7 @@ describe("POST /shift-patterns", () => {
   test("privileged role creates a pattern and returns 201", async () => {
     const response = await request({
       path: "/shift-patterns",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: {
         code: "SPLIT",
@@ -111,7 +111,7 @@ describe("POST /shift-patterns", () => {
   test("member is forbidden", async () => {
     const response = await request({
       path: "/shift-patterns",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { code: "SPLIT", name: "Split", start_time: "06:00", end_time: "20:00" },
     })
@@ -122,7 +122,7 @@ describe("POST /shift-patterns", () => {
   test("duplicate code returns 409", async () => {
     const response = await request({
       path: "/shift-patterns",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { code: "EARLY", name: "Duplicate", start_time: "07:00", end_time: "16:00" },
     })
@@ -133,7 +133,7 @@ describe("POST /shift-patterns", () => {
   test("returns 400 when code is missing", async () => {
     const response = await request({
       path: "/shift-patterns",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { name: "Split", start_time: "06:00", end_time: "20:00" },
     })

@@ -7,10 +7,7 @@ const manifestPath = resolve(projectRoot, "api-foundation.json")
 const foundationFiles = [
   "scripts/check-api-foundation.ts",
   "src/api/api-route-module.ts",
-  "src/api/read-http-exception-problem.ts",
   "src/api/test/api-route-module.test.ts",
-  "src/api/test/to-negotiated-http-exception-response.test.ts",
-  "src/api/to-negotiated-http-exception-response.ts",
 ] as const
 
 type Manifest = Readonly<{

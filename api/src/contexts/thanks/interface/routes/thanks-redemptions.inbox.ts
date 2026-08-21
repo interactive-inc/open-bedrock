@@ -1,18 +1,18 @@
 import { zAppThanksRedemptionAdminList } from "@/lib/app-schemas"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+} from "@/lib/http/to-bounded-int"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { thanksRedemptions, thanksRewards } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { and, count, desc, eq, ne } from "drizzle-orm"
-import { loadCurrentEmployeeDepartmentNames } from "@/contexts/company/interface/utils/current-employee-departments"
-import { InternalError } from "@/contexts/company/interface/lib/errors"
+import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
+import { InternalError } from "@/lib/http/errors"
 
 // @authorization permission - 権限キーで判定する
 /** GET /thanks-redemptions/inbox — 承認待ちの交換申請一覧（承認権限が必要・ページング） */

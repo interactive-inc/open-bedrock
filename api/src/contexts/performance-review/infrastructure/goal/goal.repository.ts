@@ -1,4 +1,4 @@
-import { Goal } from "@/contexts/performance-review/domain/goal/goal.entity"
+import { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import type { Context } from "@/env"
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { and, asc, eq, ne } from "drizzle-orm"

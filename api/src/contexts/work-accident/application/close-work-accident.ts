@@ -1,7 +1,7 @@
 import { WorkAccidentRepository } from "@/contexts/work-accident/infrastructure/work-accident.repository"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { WorkAccident } from "@/contexts/work-accident/domain/work-accident.entity"
+import type { WorkAccident } from "@/contexts/work-accident/domain/entities/work-accident.entity"
 import type { Context } from "@/env"
 
 /**

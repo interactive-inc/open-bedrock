@@ -1,0 +1,83 @@
+import { activeWorkforcePeriods } from "@/contexts/company/domain/policies/active-workforce-periods.policy"
+import { WorkforceInvariantViolationValue } from "@/contexts/company/domain/values/workforce-invariant-violation.value"
+import { isOrgResponsibilityType } from "@/contexts/company/domain/values/is-org-responsibility-type.definition"
+import type { OrganizationUnitPeriod } from "@/contexts/company/domain/values/organization-unit.definition"
+import { workforcePeriodContainsPeriod } from "@/contexts/company/domain/policies/workforce-period-contains-period.policy"
+import { workforcePeriodsOverlap } from "@/contexts/company/domain/policies/workforce-periods-overlap.policy"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
+import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
+
+export function validateWorkforceResponsibilities(
+  schedules: ReadonlyArray<WorkforceLifecycleSchedule>,
+  organizationUnitPeriods: ReadonlyArray<OrganizationUnitPeriod>,
+): WorkforceInvariantViolation | null {
+  const responsibilities = schedules.flatMap((schedule) =>
+    activeWorkforcePeriods(schedule.responsibilities),
+  )
+  for (const responsibility of responsibilities) {
+    if (!isOrgResponsibilityType(responsibility.responsibilityType)) {
+      return new WorkforceInvariantViolationValue(
+        "invalid_responsibility",
+        "responsibility type is not canonical",
+      )
+    }
+    if (
+      !organizationUnitPeriods.some(
+        (unit) =>
+          !unit.isVoid &&
+          unit.organizationUnitId === responsibility.organizationUnitId &&
+          workforcePeriodContainsPeriod(unit, responsibility),
+      )
+    ) {
+      return new WorkforceInvariantViolationValue(
+        "inactive_organization_unit",
+        "responsibility uses an inactive organization unit",
+      )
+    }
+    const holder = schedules.find((schedule) => schedule.employeeId === responsibility.employeeId)
+    const employment = holder?.employments.find(
+      (period) =>
+        !period.isVoid &&
+        period.employmentId === responsibility.employmentId &&
+        workforcePeriodContainsPeriod(period, responsibility),
+    )
+    if (employment === undefined) {
+      return new WorkforceInvariantViolationValue(
+        "responsibility_outside_employment",
+        "responsibility holder is not employed for the full period",
+      )
+    }
+    const assignment = holder?.assignments.find(
+      (period) =>
+        !period.isVoid &&
+        period.employmentId === responsibility.employmentId &&
+        period.organizationUnitId === responsibility.organizationUnitId &&
+        workforcePeriodContainsPeriod(period, responsibility),
+    )
+    if (assignment === undefined) {
+      return new WorkforceInvariantViolationValue(
+        "responsibility_without_assignment",
+        "responsibility holder is not assigned to the organization unit",
+      )
+    }
+  }
+
+  for (const responsibility of responsibilities) {
+    if (
+      responsibilities.some(
+        (candidate) =>
+          candidate.periodId !== responsibility.periodId &&
+          candidate.employeeId === responsibility.employeeId &&
+          candidate.organizationUnitId === responsibility.organizationUnitId &&
+          candidate.responsibilityType === responsibility.responsibilityType &&
+          workforcePeriodsOverlap(candidate, responsibility),
+      )
+    ) {
+      return new WorkforceInvariantViolationValue(
+        "responsibility_overlap",
+        "equivalent responsibilities overlap",
+      )
+    }
+  }
+  return null
+}

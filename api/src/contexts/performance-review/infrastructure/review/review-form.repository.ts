@@ -1,4 +1,4 @@
-import { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
+import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import type { Context } from "@/env"
 import {
   reviewCycles,

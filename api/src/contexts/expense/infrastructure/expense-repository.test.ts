@@ -1,5 +1,5 @@
-import { Expense } from "@/contexts/expense/domain/expense.entity"
-import { ExpenseApproval } from "@/contexts/expense/domain/expense-approval.entity"
+import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
+import { ExpenseApproval } from "@/contexts/expense/domain/entities/expense-approval.entity"
 import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"

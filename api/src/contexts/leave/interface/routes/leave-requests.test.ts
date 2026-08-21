@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedLeaveBalances } from "@/contexts/leave/infrastructure/seed/seed-leave-balances.repository"
 import { seedLeaveRequests } from "@/contexts/leave/infrastructure/seed/seed-leave-requests.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -8,8 +8,8 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
-import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
 import { z } from "zod"
 
 const leaveRequestCreateResponseSchema = z.object({
@@ -83,16 +83,14 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -116,7 +114,7 @@ describe("POST /leave-requests", () => {
   test("creates a pending leave request and returns 201", async () => {
     const response = await request({
       path: "/leave-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: {
         leave_type: "annual",
@@ -152,7 +150,7 @@ describe("POST /leave-requests", () => {
 
     const response = await request({
       path: "/leave-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: {
         leave_type: "annual",
@@ -167,7 +165,7 @@ describe("POST /leave-requests", () => {
   test("treats a shared boundary date as an overlap", async () => {
     const response = await request({
       path: "/leave-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: {
         leave_type: "annual",
@@ -182,7 +180,7 @@ describe("POST /leave-requests", () => {
   test("allows a request that starts immediately after an existing one", async () => {
     const response = await request({
       path: "/leave-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: {
         leave_type: "annual",
@@ -197,7 +195,7 @@ describe("POST /leave-requests", () => {
   test("returns 400 when the end date precedes the start date", async () => {
     const response = await request({
       path: "/leave-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: {
         leave_type: "annual",
@@ -212,7 +210,7 @@ describe("POST /leave-requests", () => {
   test("returns 400 when leave_type is invalid", async () => {
     const response = await request({
       path: "/leave-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: {
         leave_type: "bogus",
@@ -243,7 +241,7 @@ describe("POST /leave-requests", () => {
     // employee 5 の annual remaining は 15（seed-leave-balances.ts）。20 日分は超過するため申請自体を拒否する。
     const response = await request({
       path: "/leave-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: {
         leave_type: "annual",
@@ -259,7 +257,7 @@ describe("POST /leave-requests", () => {
     // employee 9 には leave_balances が一切ない（seed-leave-balances.ts は employee 5/10 のみ）。
     const response = await request({
       path: "/leave-requests",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       method: "POST",
       body: {
         leave_type: "annual",
@@ -278,7 +276,7 @@ describe("POST /leave-requests", () => {
       db,
       jwtSecret,
       path: "/leave-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: {
         leave_type: "annual",
@@ -296,7 +294,7 @@ describe("POST /leave-requests", () => {
       db,
       jwtSecret,
       path: `/leave-requests/${createdBody.id}/approve`,
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
       method: "POST",
       body: { comment: null },
     })
@@ -408,7 +406,7 @@ async function createScopeTestDb(): Promise<D1Database> {
     },
   ])
 
-  await verifyCompanyMigrationFixture({
+  await initializeCompanyTestFixture({
     db,
     departments: [
       { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
@@ -425,7 +423,7 @@ describe("GET /leave-requests", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/leave-requests?employee_id=20",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
     })
 
     expect(response.status).toBe(200)
@@ -444,7 +442,7 @@ describe("GET /leave-requests", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/leave-requests?employee_id=21",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
     })
 
     expect(response.status).toBe(403)
@@ -455,7 +453,7 @@ describe("GET /leave-requests", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/leave-requests?scope=reports",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
     })
 
     expect(response.status).toBe(200)
@@ -478,7 +476,7 @@ describe("GET /leave-requests", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/leave-requests?scope=reports",
-      token: await tokenFor(22, "manager"),
+      token: await tokenFor(22),
     })
 
     expect(response.status).toBe(200)
@@ -497,7 +495,7 @@ describe("GET /leave-requests", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/leave-requests?scope=reports",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
     })
 
     expect(response.status).toBe(403)

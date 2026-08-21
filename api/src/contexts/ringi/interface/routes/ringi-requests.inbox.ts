@@ -1,16 +1,16 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { zAppRingiInboxList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/lib/http/to-bounded-int"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { ringiRequests } from "@/contexts/ringi/infrastructure/schema/ringi"
 import { and, count, desc, eq } from "drizzle-orm"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { UnauthorizedError } from "@/lib/http/errors"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /ringi-requests/inbox — 自分が承認者の承認待ち稟議一覧（指名された承認者本人のみ見える） */

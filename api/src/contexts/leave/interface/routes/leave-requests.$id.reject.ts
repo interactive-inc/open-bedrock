@@ -1,11 +1,12 @@
 import { DecideLeaveRequest } from "@/contexts/leave/application/decide-leave-request"
+import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result.repository"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppLeaveRequest } from "@/lib/app-schemas"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { validateIntParam } from "@/lib/http/validate-int-param"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -34,7 +35,9 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const updated = await new DecideLeaveRequest(c).run({
+    const updated = await new DecideLeaveRequest(c, (command) =>
+      new NotifyApprovalResult(c).run(command),
+    ).run({
       session: session,
       leaveRequestId,
       approverId: session.employeeId,

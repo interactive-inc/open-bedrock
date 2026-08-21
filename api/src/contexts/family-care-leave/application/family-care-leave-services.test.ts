@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { CreateFamilyCareLeave } from "@/contexts/family-care-leave/application/create-family-care-leave"
 import { UpdateFamilyCareLeave } from "@/contexts/family-care-leave/application/update-family-care-leave"
-import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/family-care-leave.entity"
+import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, ForbiddenError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

@@ -14,7 +14,7 @@ Claude などの AI から CLI で呼ばれることを前提に設計。
 
 ## 会社の解体図
 
-会社に必要なシステム全体を System、Company、Apps、外部連携に分ける。`company-core` という名前は使わず、会社の正本は `company` と呼ぶ。標準と任意は所有境界ではなく App の既定有効状態として表す。詳細と実装状態は `.docs/feature-tiers.md` と `.docs/capability-map.md` に記録する。
+会社に必要なシステム全体を System、Company、Apps、外部連携に分ける。会社の正本は `company` と呼び、App の既定有効状態を所有境界と混同しない。詳細と実装状態は `.docs/feature-tiers.md` と `.docs/capability-map.md` に記録する。
 
 依存方向は `業務コンテキスト -> company -> system` の一方向とする。すべてを `api/src/contexts/<context>/` 直下へ対等に置き、`apps/` という親ディレクトリは作らない。System は Company と業務語彙を知らず、業務コンテキスト同士も直接依存しない。
 
@@ -46,7 +46,7 @@ Company は次を所有する。
 
 Systemの正本は`api/src/contexts/system`であり、共通基盤を採用する別製品と全ファイルを同一にする。`system-context.manifest.json`と`system-context.lock.json`はディレクトリ全体のpathとhashを固定する。製品固有のhostname、cookie、複数contextを束ねるログイン応答などはSystemへ混ぜず、API compositionがSystemのapplicationを呼び出す。
 
-Companyの両製品共通部分は`company-context.manifest.json`の`sharedSourcePaths`に明示する。`company-context.lock.json`はその全pathとhashを固定し、同じlockを両製品で使用する。Open Bedrockだけが持つ完成済みCompany capabilityと、各製品のDB・HTTP接続adapterは`contexts/company`に置けるが、共通実装とは数えない。manifestの`coverage`は必ず`shared-company-core`とし、ディレクトリ全体が一致するという未検証の主張へ戻さない。
+Companyの正本は`api/src/contexts/company`であり、共通基盤を採用する別製品と全ファイルを同一にする。`company-context.manifest.json`は`coverage: complete-company-context`と全source pathを宣言し、`company-context.lock.json`はその全pathとhashを固定する。製品固有のUI、複数contextを束ねるHTTP応答、seed、migrationの合成はCompanyへ混ぜず、各製品のcomposition rootに置く。片方だけのCompany capability、adapter、互換実装を許さず、両製品で同じmanifestとlockを使用する。
 
 Account role と technical permission は API 操作能力だけに使う。会社上の判断資格は期間付き Assignment と Responsibility から解決し、workflow 未定義、旧 role selector、候補ゼロを最上位 role や管理者で補完しない。
 
@@ -138,7 +138,7 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 - まず `bun install` を必ず実行する（飛ばすと web が `Module not found: 'zod'` 等の依存解決エラーになる）
 - 初回は `cd api && bun run db:migrate:local` でローカル D1 を作成し、`bun run db:seed:local` で seed を投入する
 - `cd api && bun run setup:dev-vars` で `.dev.vars` を生成する（`JWT_SECRET` と `AUDIT_HMAC_SECRET` をランダムに作る。既存ファイルは上書きしない。`.dev.vars` は gitignore 済み）。api は未設定・16 文字未満・`-change-me` で終わる秘密値を実行時に拒否するので、`.dev.vars.example` をそのままコピーしても動かない
-- `.dev.vars` には `ENABLED_OPTIONAL_FEATURES="all"` も必要（互換用の変数名であり、無いと opt-in App が既定で無効になり API が 404 を返す。正本は `.docs/feature-tiers.md`）
+- `.dev.vars` には `ENABLED_OPT_IN_APPS="all"` も必要（無いと opt-in App が既定で無効になり API が 404 を返す。正本は `.docs/feature-tiers.md`）
 - リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://bedrock.localhost`、api は `https://api.bedrock.localhost`（実体は `localhost:18787`）。ホスト名の正本は `portless.json`。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
 - ログインは seed の `you+e001@example.com` / `password`（`E001` が admin）。ダッシュボード・従業員一覧まで表示されれば web→api→D1 の通し動作 OK
 

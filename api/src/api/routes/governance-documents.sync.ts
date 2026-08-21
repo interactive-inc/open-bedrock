@@ -1,9 +1,11 @@
 import { SyncGovernanceMarkdown } from "@/contexts/governance/application/sync-governance-markdown"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { prepareGovernanceAudit } from "@/api/http/audit/prepare-governance-audit"
+import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
+import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { readTrainingCourseCodeSet } from "@/contexts/training/interface/http/training-courses/read-training-course-code-set"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -26,7 +28,9 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()
   const body = c.req.valid("json")
-  const result = await new SyncGovernanceMarkdown(c).run({
+  const result = await new SyncGovernanceMarkdown(c, PERMISSION_KEYS, (audit) =>
+    prepareGovernanceAudit({ c, ...audit }),
+  ).run({
     session,
     referenceCatalog: { training: await readTrainingCourseCodeSet(c) },
     documents: body.documents.map((document) => ({

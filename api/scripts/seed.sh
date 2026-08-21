@@ -24,7 +24,7 @@ ORDER=(
   personnel-action
   position
   grade
-  company-core
+  company
 )
 
 apply() {

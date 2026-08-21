@@ -1,17 +1,17 @@
 import { applyOrganizationWorkforceChanges } from "@/contexts/company/infrastructure/workforce/apply-organization-workforce-changes.repository"
-import { countOrganizationChangePeriods } from "@/contexts/company/domain/workforce/count-organization-change-periods"
-import { hasValidOrganizationChangeAuditMetadata } from "@/contexts/company/domain/workforce/has-valid-organization-change-audit-metadata"
-import { OrganizationChangeValidationError } from "@/contexts/company/domain/workforce/organization-change-validation-error"
-import { organizationChangeHasCanonicalOperation } from "@/contexts/company/domain/workforce/organization-change-has-canonical-operation"
+import { countOrganizationChangePeriods } from "@/contexts/company/domain/values/count-organization-change-periods.definition"
+import { hasValidOrganizationChangeAuditMetadata } from "@/contexts/company/domain/policies/has-valid-organization-change-audit-metadata.policy"
+import { OrganizationChangeValidationError } from "@/contexts/company/domain/errors"
+import { organizationChangeHasCanonicalOperation } from "@/contexts/company/domain/policies/organization-change-has-canonical-operation.policy"
 import type {
   OrganizationChangeReadPorts,
   OrganizationChangeSet,
   ValidateOrganizationChangeResult,
-} from "@/contexts/company/domain/workforce/organization-change"
-import { replaceOrganizationChangePeriods } from "@/contexts/company/domain/workforce/replace-organization-change-periods"
-import { validateOrganizationChangeIdentities } from "@/contexts/company/domain/workforce/validate-organization-change-identities"
-import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
-import { validateWorkforceSchedules } from "@/contexts/company/domain/workforce/validate-workforce-schedules"
+} from "@/contexts/company/domain/values/organization-change.definition"
+import { replaceOrganizationChangePeriods } from "@/contexts/company/domain/policies/replace-organization-change-periods.policy"
+import { validateOrganizationChangeIdentities } from "@/contexts/company/domain/policies/validate-organization-change-identities.policy"
+import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
+import { validateWorkforceSchedules } from "@/contexts/company/domain/policies/validate-workforce-schedules.policy"
 
 export class ValidateOrganizationChange {
   constructor(private readonly ports: OrganizationChangeReadPorts) {

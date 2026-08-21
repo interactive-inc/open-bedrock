@@ -1,8 +1,8 @@
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 import { check, index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { organizationUnitKinds } from "@/contexts/company/domain/workforce/organization-unit"
-import { orgAssignmentTypes } from "@/contexts/company/domain/workforce/org-assignment-type"
+import { organizationUnitKinds } from "@/contexts/company/domain/values/organization-unit.definition"
+import { orgAssignmentTypes } from "@/contexts/company/domain/values/org-assignment-type.definition"
 import { organizationLifecycleState } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
 import type { AccountId } from "@system/domain/values/account-id.schema"
 
@@ -53,8 +53,8 @@ export const organizationChangeOperations = sqliteTable(
       .notNull()
       .default("PENDING"),
     recordedAt: integer("recorded_at", { mode: "timestamp_ms" }).notNull(),
-    actorAccountId: text("actor_account_id").notNull().default("system:legacy"),
-    reason: text("reason").notNull().default("legacy organization change"),
+    actorAccountId: text("actor_account_id").notNull().default("system:initialization"),
+    reason: text("reason").notNull().default("initial organization change"),
     evidenceReferencesJson: text("evidence_references_json").notNull().default("[]"),
     requestFingerprint: text("request_fingerprint")
       .notNull()

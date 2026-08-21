@@ -1,9 +1,9 @@
 import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
+import { SystemAttachmentError } from "@system/domain/errors"
 import { fromBase64 } from "@system/infrastructure/attachments/from-base64.repository"
 import { importAesKey } from "@system/infrastructure/attachments/import-aes-key.repository"
 import type { AttachmentKek } from "@system/infrastructure/attachments/attachment-kek-registry.repository"
 import type { WrappedKeyMaterial } from "@system/infrastructure/attachments/attachment-key-material.repository"
-import { UnprocessableError } from "@/lib/errors"
 
 /** 包まれた DEK を取り出す。鍵が違えば復号できず、破棄済みならここで失敗する。 */
 export async function unwrapDek(
@@ -21,6 +21,10 @@ export async function unwrapDek(
 
     return new Uint8Array(dek)
   } catch {
-    return new UnprocessableError("添付の鍵を復号できません", "attachment_key_unwrap_failed")
+    return new SystemAttachmentError(
+      "unprocessable",
+      "attachment_key_unwrap_failed",
+      "添付の鍵を復号できません",
+    )
   }
 }

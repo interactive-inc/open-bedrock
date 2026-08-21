@@ -11,6 +11,7 @@ function makeBindings(corsOrigin?: string): Bindings {
     DB: createD1TestDatabase(loadSchema()),
     JWT_SECRET: jwtSecret,
     AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+    COMPANY_TIME_ZONE: "Asia/Tokyo",
     CORS_ORIGIN: corsOrigin,
     NOW: "2026-01-01T00:00:00.000Z",
   }
@@ -160,7 +161,7 @@ describe("rate limiting", () => {
   test("上限超過(success:false)なら 429 を返す（認証前に弾く）", async () => {
     const bindings = { ...makeBindings(), API_RATE_LIMITER: makeLimiter(false) }
 
-    const response = await app.request("/employees", { method: "GET" }, bindings)
+    const response = await app.request("/company/v1/employees", { method: "GET" }, bindings)
 
     expect(response.status).toBe(429)
     expect(await response.json()).toEqual({ error: "too many requests" })
@@ -169,7 +170,7 @@ describe("rate limiting", () => {
   test("上限内(success:true)なら通常処理に進む（未認証で 401）", async () => {
     const bindings = { ...makeBindings(), API_RATE_LIMITER: makeLimiter(true) }
 
-    const response = await app.request("/employees", { method: "GET" }, bindings)
+    const response = await app.request("/company/v1/employees", { method: "GET" }, bindings)
 
     expect(response.status).toBe(401)
   })
@@ -187,7 +188,7 @@ describe("rate limiting fail-closed (#1035)", () => {
   test("本番相当（CORS_ORIGIN 設定済み）で binding 未設定なら 503 で拒否する", async () => {
     const bindings = makeBindings("https://app.example.com")
 
-    const response = await app.request("/employees", { method: "GET" }, bindings)
+    const response = await app.request("/company/v1/employees", { method: "GET" }, bindings)
 
     expect(response.status).toBe(503)
     expect(await response.json()).toEqual({ error: "rate limiter is not configured" })
@@ -221,7 +222,7 @@ describe("rate limiting fail-closed (#1035)", () => {
   })
 
   test("ローカル相当（CORS_ORIGIN 未設定）は binding 未設定でもスキップして通す", async () => {
-    const response = await app.request("/employees", { method: "GET" }, makeBindings())
+    const response = await app.request("/company/v1/employees", { method: "GET" }, makeBindings())
 
     expect(response.status).toBe(401)
   })

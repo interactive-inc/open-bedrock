@@ -2,10 +2,11 @@ import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
 import { StoreAttachment } from "@system/application/attachments/store-attachment"
 import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { R2TestBucket, testKekEnv } from "@/api/test/support/r2-test-bucket"
-import { schema } from "@/schema"
+import { systemAttachmentSchema } from "@system/infrastructure/schema/system-attachment"
+import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
+import { createSystemAttachmentTestDatabase } from "@system/test/create-system-attachment-test-database.test-support"
+import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
+import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
 
 const ownerAccountId = "acc_owner"
 
@@ -15,18 +16,21 @@ function receiptBytes(): Uint8Array<ArrayBuffer> {
   return new TextEncoder().encode("%PDF-1.7 領収書 12,800円 タクシー")
 }
 
-function createContext(bucket: R2TestBucket, kekEnv: string = testKekEnv(1)) {
-  const db = createD1TestDatabase(loadSchema())
+function createContext(
+  bucket: SystemAttachmentTestBucket,
+  kekEnv: string = createSystemAttachmentTestKekEnvironment(1),
+) {
+  const db = createSystemAttachmentTestDatabase()
 
   return {
-    var: { database: drizzle(db, { schema }) },
+    var: { database: drizzle(db, { schema: { ...systemCoreSchema, ...systemAttachmentSchema } }) },
     env: { ATTACHMENTS: bucket as unknown as R2Bucket, ATTACHMENT_KEKS: kekEnv },
   }
 }
 
 describe("添付の保管と取り出し", () => {
   test("保管すると pending になり、object storage には暗号文だけが置かれる", async () => {
-    const bucket = new R2TestBucket()
+    const bucket = new SystemAttachmentTestBucket()
 
     const context = createContext(bucket)
 
@@ -65,7 +69,7 @@ describe("添付の保管と取り出し", () => {
   })
 
   test("許可していない形式と上限超過を拒否する", async () => {
-    const bucket = new R2TestBucket()
+    const bucket = new SystemAttachmentTestBucket()
 
     const context = createContext(bucket)
 
@@ -94,7 +98,7 @@ describe("添付の保管と取り出し", () => {
   })
 
   test("KEK 未設定では保管も取り出しもできない", async () => {
-    const bucket = new R2TestBucket()
+    const bucket = new SystemAttachmentTestBucket()
 
     const context = {
       ...createContext(bucket),

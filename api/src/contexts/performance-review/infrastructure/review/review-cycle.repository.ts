@@ -1,4 +1,4 @@
-import { ReviewCycle } from "@/contexts/performance-review/domain/review/review-cycle.entity"
+import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 import type { Context } from "@/env"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { and, asc, eq, ne } from "drizzle-orm"

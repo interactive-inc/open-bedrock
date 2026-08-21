@@ -1,16 +1,16 @@
 import { CreateEmployeeCertification } from "@/contexts/certification/application/create-employee-certification"
 import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/employee-certification.repository"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppEmployeeCertification, zAppEmployeeCertificationList } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import {
   BadRequestError,
   ForbiddenError,
   InternalError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+} from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

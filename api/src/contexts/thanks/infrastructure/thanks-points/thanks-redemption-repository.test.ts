@@ -1,4 +1,4 @@
-import { ThanksRedemption } from "@/contexts/thanks/domain/thanks-points/thanks-redemption.entity"
+import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { thanks, thanksRewards } from "@/contexts/thanks/infrastructure/schema/thanks"

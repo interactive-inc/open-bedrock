@@ -1,4 +1,4 @@
-import { Contract } from "@/contexts/partner/domain/contract/contract.entity"
+import { Contract } from "@/contexts/partner/domain/entities/contract.entity"
 import type { Context } from "@/env"
 import { contracts } from "@/contexts/partner/infrastructure/schema/partner"
 import { eq } from "drizzle-orm"

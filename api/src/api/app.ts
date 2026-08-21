@@ -32,6 +32,33 @@ import * as inboxCountsRoute from "@/api/routes/inbox.counts"
 import * as notificationsRoute from "@/api/routes/notifications"
 import * as permissionDefinitionsRoute from "@/api/routes/permission-definitions"
 import * as provisioningIdentitiesRoute from "@/api/routes/provisioning.identities"
+import * as batchRoute from "@/contexts/administration/interface/routes/batch"
+import * as departmentDefinitionsRoute from "@/contexts/administration/interface/routes/department-definitions"
+import * as departmentsRoute from "@/contexts/administration/interface/routes/departments"
+import * as departmentsCodeRoute from "@/contexts/administration/interface/routes/departments.$code"
+import * as departmentsCodeMembersRoute from "@/contexts/administration/interface/routes/departments.$code.members"
+import * as departmentsTreeRoute from "@/contexts/administration/interface/routes/departments.tree"
+import * as directoryEmployeesRoute from "@/contexts/administration/interface/routes/directory.employees"
+import * as employeeEventsRoute from "@/contexts/administration/interface/routes/employee-events"
+import * as employeeGradesRoute from "@/contexts/administration/interface/routes/employee-grades"
+import * as employeesRoute from "@/contexts/administration/interface/routes/employees"
+import * as employeesCodeRoute from "@/contexts/administration/interface/routes/employees.$code"
+import * as employeesCodeArchiveRoute from "@/contexts/administration/interface/routes/employees.$code.archive"
+import * as employeesCodeLifecycleEventsRoute from "@/contexts/administration/interface/routes/employees.$code.lifecycle-events"
+import * as employeesCodeLifecycleStateRoute from "@/contexts/administration/interface/routes/employees.$code.lifecycle-state"
+import * as employeesCodeReportingLineRoute from "@/contexts/administration/interface/routes/employees.$code.reporting-line"
+import * as gradeDefinitionsRoute from "@/contexts/administration/interface/routes/grade-definitions"
+import * as gradeDefinitionsIdRoute from "@/contexts/administration/interface/routes/grade-definitions.$id"
+import * as meRoute from "@/contexts/administration/interface/routes/me"
+import * as meDepartmentsRoute from "@/contexts/administration/interface/routes/me.departments"
+import * as mePhoneRoute from "@/contexts/administration/interface/routes/me.phone"
+import * as meReportsRoute from "@/contexts/administration/interface/routes/me.reports"
+import * as personnelActionRequestsRoute from "@/contexts/administration/interface/routes/personnel-action-requests"
+import * as personnelActionRequestsIdRoute from "@/contexts/administration/interface/routes/personnel-action-requests.$id"
+import * as personnelActionsRoute from "@/contexts/administration/interface/routes/personnel-actions"
+import * as personnelActionsIdCorrectRoute from "@/contexts/administration/interface/routes/personnel-actions.$id.correct"
+import * as positionDefinitionsRoute from "@/contexts/administration/interface/routes/position-definitions"
+import * as positionDefinitionsIdRoute from "@/contexts/administration/interface/routes/position-definitions.$id"
 import * as announcementsRoute from "@/contexts/announcement/interface/routes/announcements"
 import * as announcementsIdRoute from "@/contexts/announcement/interface/routes/announcements.$id"
 import * as announcementsIdArchiveRoute from "@/contexts/announcement/interface/routes/announcements.$id.archive"
@@ -82,12 +109,6 @@ import * as commendationsRoute from "@/contexts/commendation/interface/routes/co
 import * as commendationsIdRoute from "@/contexts/commendation/interface/routes/commendations.$id"
 import * as companyCalendarDaysRoute from "@/contexts/company-calendar/interface/routes/company-calendar-days"
 import * as companyCalendarDaysIdRoute from "@/contexts/company-calendar/interface/routes/company-calendar-days.$id"
-import * as batchRoute from "@/contexts/company/interface/routes/batch"
-import * as batchEmployeeLifecycleBackfillRoute from "@/contexts/company/interface/routes/batch.employee-lifecycle.backfill"
-import * as batchEmployeeLifecyclePreflightRoute from "@/contexts/company/interface/routes/batch.employee-lifecycle.preflight"
-import * as batchEmployeeLifecycleProcessOutboxRoute from "@/contexts/company/interface/routes/batch.employee-lifecycle.process-outbox"
-import * as batchEmployeeLifecycleRebuildProjectionsRoute from "@/contexts/company/interface/routes/batch.employee-lifecycle.rebuild-projections"
-import * as batchEmployeeLifecycleVerifyRoute from "@/contexts/company/interface/routes/batch.employee-lifecycle.verify"
 import * as companyOrganizationProfileRoute from "@/contexts/company/interface/routes/company.organization-profile"
 import * as companyV1AccountEmployeeLinksRoute from "@/contexts/company/interface/routes/company.v1.account-employee-links"
 import * as companyV1BootstrapRoute from "@/contexts/company/interface/routes/company.v1.bootstrap"
@@ -100,32 +121,6 @@ import * as companyV1OrganizationSnapshotsRoute from "@/contexts/company/interfa
 import * as companyV1PeopleRoute from "@/contexts/company/interface/routes/company.v1.people"
 import * as companyV1PersonnelActionsRoute from "@/contexts/company/interface/routes/company.v1.personnel-actions"
 import * as companyV1ProfileRoute from "@/contexts/company/interface/routes/company.v1.profile"
-import * as departmentDefinitionsRoute from "@/contexts/company/interface/routes/department-definitions"
-import * as departmentsRoute from "@/contexts/company/interface/routes/departments"
-import * as departmentsCodeRoute from "@/contexts/company/interface/routes/departments.$code"
-import * as departmentsCodeMembersRoute from "@/contexts/company/interface/routes/departments.$code.members"
-import * as departmentsTreeRoute from "@/contexts/company/interface/routes/departments.tree"
-import * as directoryEmployeesRoute from "@/contexts/company/interface/routes/directory.employees"
-import * as employeeEventsRoute from "@/contexts/company/interface/routes/employee-events"
-import * as employeeGradesRoute from "@/contexts/company/interface/routes/employee-grades"
-import * as employeesRoute from "@/contexts/company/interface/routes/employees"
-import * as employeesCodeRoute from "@/contexts/company/interface/routes/employees.$code"
-import * as employeesCodeArchiveRoute from "@/contexts/company/interface/routes/employees.$code.archive"
-import * as employeesCodeLifecycleEventsRoute from "@/contexts/company/interface/routes/employees.$code.lifecycle-events"
-import * as employeesCodeLifecycleStateRoute from "@/contexts/company/interface/routes/employees.$code.lifecycle-state"
-import * as employeesCodeReportingLineRoute from "@/contexts/company/interface/routes/employees.$code.reporting-line"
-import * as gradeDefinitionsRoute from "@/contexts/company/interface/routes/grade-definitions"
-import * as gradeDefinitionsIdRoute from "@/contexts/company/interface/routes/grade-definitions.$id"
-import * as meRoute from "@/contexts/company/interface/routes/me"
-import * as meDepartmentsRoute from "@/contexts/company/interface/routes/me.departments"
-import * as mePhoneRoute from "@/contexts/company/interface/routes/me.phone"
-import * as meReportsRoute from "@/contexts/company/interface/routes/me.reports"
-import * as personnelActionRequestsRoute from "@/contexts/company/interface/routes/personnel-action-requests"
-import * as personnelActionRequestsIdRoute from "@/contexts/company/interface/routes/personnel-action-requests.$id"
-import * as personnelActionsRoute from "@/contexts/company/interface/routes/personnel-actions"
-import * as personnelActionsIdCorrectRoute from "@/contexts/company/interface/routes/personnel-actions.$id.correct"
-import * as positionDefinitionsRoute from "@/contexts/company/interface/routes/position-definitions"
-import * as positionDefinitionsIdRoute from "@/contexts/company/interface/routes/position-definitions.$id"
 import * as salaryRevisionsRoute from "@/contexts/compensation-change/interface/routes/salary-revisions"
 import * as disciplinaryActionsRoute from "@/contexts/disciplinary-action/interface/routes/disciplinary-actions"
 import * as documentLedgerEntriesRoute from "@/contexts/document/interface/routes/document-ledger-entries"
@@ -478,17 +473,6 @@ const routePart24 = createRouteApp()
   .post("/auth/password/reset", ...authPasswordResetRoute.POST)
   .patch("/auth/password/reset", ...authPasswordResetRoute.PATCH)
   .get("/batch", ...batchRoute.GET)
-  .post("/batch/employee-lifecycle/backfill", ...batchEmployeeLifecycleBackfillRoute.POST)
-  .post("/batch/employee-lifecycle/preflight", ...batchEmployeeLifecyclePreflightRoute.POST)
-  .post(
-    "/batch/employee-lifecycle/process-outbox",
-    ...batchEmployeeLifecycleProcessOutboxRoute.POST,
-  )
-  .post(
-    "/batch/employee-lifecycle/rebuild-projections",
-    ...batchEmployeeLifecycleRebuildProjectionsRoute.POST,
-  )
-  .post("/batch/employee-lifecycle/verify", ...batchEmployeeLifecycleVerifyRoute.POST)
   .post("/business-trips", ...businessTripsRoute.POST)
   .get("/business-trips/admin", ...businessTripsAdminRoute.GET)
   .get("/business-trips/me", ...businessTripsMeRoute.GET)
@@ -508,13 +492,13 @@ const routePart24 = createRouteApp()
   .delete("/career-postings/:postingId", ...careerPostingsPostingIdRoute.DELETE)
   .post("/career-postings/:postingId/apply", ...careerPostingsPostingIdApplyRoute.POST)
   .get("/career-sheets/me", ...careerSheetsMeRoute.GET)
-
-const routePart25 = createRouteApp()
   .put("/career-sheets/me", ...careerSheetsMeRoute.PUT)
   .delete("/career-sheets/me", ...careerSheetsMeRoute.DELETE)
   .post("/certificate-requests", ...certificateRequestsRoute.POST)
   .get("/certificate-requests/admin", ...certificateRequestsAdminRoute.GET)
   .get("/certificate-requests/me", ...certificateRequestsMeRoute.GET)
+
+const routePart25 = createRouteApp()
   .get("/certificate-requests/:id", ...certificateRequestsIdRoute.GET)
   .put("/certificate-requests/:id", ...certificateRequestsIdRoute.PUT)
   .delete("/certificate-requests/:id", ...certificateRequestsIdRoute.DELETE)
@@ -558,13 +542,13 @@ const routePart25 = createRouteApp()
   .post("/decision-records/:id/supersede", ...decisionRecordsIdSupersedeRoute.POST)
   .get("/department-budgets", ...departmentBudgetsRoute.GET)
   .post("/department-budgets", ...departmentBudgetsRoute.POST)
-
-const routePart26 = createRouteApp()
   .get("/department-budgets/summary", ...departmentBudgetsSummaryRoute.GET)
   .get("/department-budgets/:id", ...departmentBudgetsIdRoute.GET)
   .patch("/department-budgets/:id", ...departmentBudgetsIdRoute.PATCH)
   .delete("/department-budgets/:id", ...departmentBudgetsIdRoute.DELETE)
   .get("/department-definitions", ...departmentDefinitionsRoute.GET)
+
+const routePart26 = createRouteApp()
   .post("/department-definitions", ...departmentDefinitionsRoute.POST)
   .get("/departments", ...departmentsRoute.GET)
   .post("/departments", ...departmentsRoute.POST)
@@ -608,13 +592,13 @@ const routePart26 = createRouteApp()
   .put("/evaluation-sheets/:sheetId/evaluators", ...evaluationSheetsSheetIdEvaluatorsRoute.PUT)
   .post("/evaluation-sheets/:sheetId/transition", ...evaluationSheetsSheetIdTransitionRoute.POST)
   .get("/evaluation-templates", ...evaluationTemplatesRoute.GET)
-
-const routePart27 = createRouteApp()
   .post("/evaluation-templates", ...evaluationTemplatesRoute.POST)
   .get("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.GET)
   .put("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PUT)
   .patch("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PATCH)
   .post("/expenses", ...expensesRoute.POST)
+
+const routePart27 = createRouteApp()
   .get("/expenses/admin", ...expensesAdminRoute.GET)
   .get("/expenses/inbox", ...expensesInboxRoute.GET)
   .get("/expenses/me", ...expensesMeRoute.GET)
@@ -667,13 +651,13 @@ const routePart27 = createRouteApp()
   .post("/health-checkups/:id/complete", ...healthCheckupsIdCompleteRoute.POST)
   .get("/inbox/counts", ...inboxCountsRoute.GET)
   .get("/it-incidents", ...itIncidentsRoute.GET)
-
-const routePart28 = createRouteApp()
   .post("/it-incidents", ...itIncidentsRoute.POST)
   .post("/it-incidents/:id/resolve", ...itIncidentsIdResolveRoute.POST)
   .get("/job-openings", ...jobOpeningsRoute.GET)
   .post("/job-openings", ...jobOpeningsRoute.POST)
   .get("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.GET)
+
+const routePart28 = createRouteApp()
   .put("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.PUT)
   .get("/job-openings/:jobOpeningId/candidates", ...jobOpeningsJobOpeningIdCandidatesRoute.GET)
   .post("/job-openings/:jobOpeningId/candidates", ...jobOpeningsJobOpeningIdCandidatesRoute.POST)
@@ -717,8 +701,6 @@ const routePart28 = createRouteApp()
   .post("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.POST)
   .post("/notifications", ...notificationsRoute.POST)
   .post("/oauth/authorizations", ...oauthAuthorizationsRoute.POST)
-
-const routePart29 = createRouteApp()
   .post("/oauth/mcp-grants", ...oauthMcpGrantsRoute.POST)
   .post("/oauth/token", ...oauthTokenRoute.POST)
   .get("/oauth/userinfo", ...oauthUserinfoRoute.GET)
@@ -727,6 +709,8 @@ const routePart29 = createRouteApp()
     "/onboarding-assignments/employees/:employeeCode",
     ...onboardingAssignmentsEmployeesEmployeeCodeRoute.GET,
   )
+
+const routePart29 = createRouteApp()
   .get("/onboarding-assignments/me", ...onboardingAssignmentsMeRoute.GET)
   .get("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.GET)
   .put("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.PUT)

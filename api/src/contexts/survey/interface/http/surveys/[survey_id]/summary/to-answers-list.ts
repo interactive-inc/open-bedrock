@@ -1,4 +1,4 @@
-import type { SurveyResponse } from "@/contexts/survey/domain/survey-response.entity"
+import type { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
 import { z } from "zod"
 
 const answersMapSchema = z.record(z.string(), z.unknown())

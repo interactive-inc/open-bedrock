@@ -1,4 +1,5 @@
 import { encryptAttachment } from "@system/infrastructure/attachments/encrypt-attachment.repository"
+import { SystemAttachmentError } from "@system/domain/errors"
 import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
 import { validateAttachmentContent } from "@system/domain/policies/attachment-content.policy"
 import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attachment-kek-registry.repository"
@@ -8,7 +9,6 @@ import type {
   SystemAttachmentStorageContext,
   SystemDatabaseContext,
 } from "@system/infrastructure/configuration/system-context.repository"
-import { PayloadTooLargeError, ValidationError } from "@/lib/errors"
 
 export type StoreAttachmentCommand = Readonly<{
   ownerAccountId: string
@@ -31,13 +31,18 @@ type Context = SystemDatabaseContext & SystemAttachmentStorageContext
 
 function toViolationError(violation: string): Error {
   if (violation === "byte_size_exceeded") {
-    return new PayloadTooLargeError(
-      "添付が上限サイズを超えています",
+    return new SystemAttachmentError(
+      "payload_too_large",
       "attachment_byte_size_exceeded",
+      "添付が上限サイズを超えています",
     )
   }
 
-  return new ValidationError("添付を受け付けられません", `attachment_${violation}`)
+  return new SystemAttachmentError(
+    "validation",
+    `attachment_${violation}`,
+    "添付を受け付けられません",
+  )
 }
 
 /**

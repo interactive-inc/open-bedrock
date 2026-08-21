@@ -9,6 +9,36 @@ const productionFiles = [...new Glob("**/*.ts").scanSync({ cwd: contextDirectory
   .sort()
 
 describe("Company file responsibility contract", () => {
+  test("Infrastructureのproduction実装はrepositoryだけにする", () => {
+    const violations = productionFiles.filter(
+      (file) =>
+        file.startsWith("infrastructure/") &&
+        !file.startsWith("infrastructure/schema/") &&
+        !file.endsWith(".repository.ts"),
+    )
+
+    expect(violations).toEqual([])
+  })
+
+  test("ApplicationはDomain modelを経由するwrite classだけにする", () => {
+    const violations = productionFiles
+      .filter((file) => file.startsWith("application/"))
+      .flatMap((file) => {
+        const source = readFileSync(new URL(file, contextDirectory), "utf8")
+        return [
+          ...(!/(?:^|\/)(?:create|update|delete|write|apply|assign|publish|issue|reorder|submit|confirm|complete|reopen|toggle|mark|provision|register|import|upsert)-/.test(
+            file,
+          )
+            ? [`${file}: read/query application operation`]
+            : []),
+          ...(!source.includes("export class ") ? [`${file}: write operation is not a class`] : []),
+          ...(!source.includes("/domain/") ? [`${file}: Domain model is not used`] : []),
+        ]
+      })
+
+    expect(violations).toEqual([])
+  })
+
   test("route以外のproduction fileは公開実行操作を一つだけ持つ", () => {
     const violations = productionFiles.flatMap((file) => {
       if (file.startsWith("interface/routes/")) return []
@@ -79,11 +109,21 @@ describe("Company file responsibility contract", () => {
     expect(violations).toEqual([])
   })
 
-  test("公開portはtypeで表しgeneric HTTP factoryを再導入しない", () => {
+  test("Applicationへ永続化contractとgeneric HTTP factoryを再導入しない", () => {
     const violations = productionFiles.flatMap((file) => {
       const source = readFileSync(new URL(file, contextDirectory), "utf8")
       return [
         ...(source.includes("export interface ") ? [`${file}: export interface`] : []),
+        ...(file.startsWith("application/") &&
+        /(?:^|\/)[^/]*(?:repository|persistence|gateway|port)(?:[.-]|$)/i.test(file)
+          ? [`${file}: persistence contract file in Application`]
+          : []),
+        ...(file.startsWith("application/") &&
+        /export (?:type|interface|class) \w*(?:Repository|Persistence|Gateway|Port|Reader|Writer)\b/.test(
+          source,
+        )
+          ? [`${file}: persistence contract in Application`]
+          : []),
         ...(source.includes("createCompanyReadHandlers") ||
         source.includes("createCompanyWriteHandlers") ||
         file.endsWith("company-resource-http.ts")
@@ -120,7 +160,7 @@ describe("Company file responsibility contract", () => {
 
   test("routeの失敗はHTTPException派生errorをthrowしResponseを直接生成しない", () => {
     const allowedThrownErrors = new Set([
-      "CompanyHttpError",
+      "CompanyHTTPException",
       "UnauthorizedError",
       "ForbiddenError",
       "NotFoundError",
@@ -140,6 +180,20 @@ describe("Company file responsibility contract", () => {
       )
       const lineOf = (node: ts.Node) =>
         sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1
+      for (const statement of sourceFile.statements) {
+        if (
+          !ts.isImportDeclaration(statement) ||
+          !ts.isStringLiteralLike(statement.moduleSpecifier) ||
+          statement.moduleSpecifier.text !== "@/contexts/company/interface/errors" ||
+          statement.importClause?.namedBindings === undefined ||
+          !ts.isNamedImports(statement.importClause.namedBindings)
+        ) {
+          continue
+        }
+        for (const element of statement.importClause.namedBindings.elements) {
+          allowedThrownErrors.add(element.name.text)
+        }
+      }
       const visit = (node: ts.Node): void => {
         if (ts.isThrowStatement(node)) {
           const expression = node.expression

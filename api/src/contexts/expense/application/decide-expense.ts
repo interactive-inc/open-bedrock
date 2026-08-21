@@ -1,6 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { NotifyApprovalResult } from "@/contexts/company/infrastructure/notifications/notify-approval-result.repository"
-import { ExpenseApproval } from "@/contexts/expense/domain/expense-approval.entity"
+import type { Session } from "@/lib/auth/session"
+import { ExpenseApproval } from "@/contexts/expense/domain/entities/expense-approval.entity"
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -27,7 +26,17 @@ export type ExpenseDecision = {
  * 並行リクエストは条件付き UPDATE でどちらか 1 件しか確定できず、承認記録も重複しない。
  */
 export class DecideExpense {
-  constructor(private readonly c: Context) {}
+  constructor(
+    private readonly c: Context,
+    private readonly notifyApprovalResult: (command: {
+      recipientEmployeeId: number
+      action: "approve" | "reject"
+      subjectLabel: string
+      sourceDomain: string
+      sourceId: number | null
+      createdAt: string
+    }) => Promise<unknown> = async () => null,
+  ) {}
 
   async run(command: Command): Promise<ExpenseDecision | ApplicationError> {
     if (command.session.hasPermission("expense:approve") === false) {
@@ -111,7 +120,7 @@ export class DecideExpense {
     }
 
     // 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。
-    await new NotifyApprovalResult(this.c).run({
+    await this.notifyApprovalResult({
       recipientEmployeeId: existing.employeeId,
       action: command.action,
       subjectLabel: "経費申請",

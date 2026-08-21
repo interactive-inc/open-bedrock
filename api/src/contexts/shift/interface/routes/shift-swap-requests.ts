@@ -1,17 +1,17 @@
 import { CreateShiftSwapRequest } from "@/contexts/shift/application/create-shift-swap-request"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppShiftSwapRequest, zAppShiftSwapRequestPendingList } from "@/lib/app-schemas"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { isoDate } from "@/lib/schemas"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+} from "@/lib/http/to-bounded-int"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { shiftSwapRequests } from "@/contexts/shift/infrastructure/schema/shift"
 import { zValidator } from "@hono/zod-validator"

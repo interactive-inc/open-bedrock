@@ -5,10 +5,14 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "audit-detail-route-test-secret"
 const now = "2026-01-03T00:00:00.000Z"
 const uuid = "12345678-1234-4abc-8def-1234567890ab"
+const secondUuid = "22345678-1234-4abc-8def-1234567890ab"
+const thirdUuid = "32345678-1234-4abc-8def-1234567890ab"
+const missingUuid = "42345678-1234-4abc-8def-1234567890ab"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
@@ -27,8 +31,10 @@ async function createTestDb(): Promise<D1Database> {
   await grantPermission(db, 2, "detail-reader", "audit:read")
   await grantPermission(db, 3, "detail-exporter", "audit:export")
   await seedDetail(db, uuid, 1_767_225_600)
-  await seedDetail(db, "legacy-41", 1_767_225_601)
-  await seedDetail(db, "legacy--41", 1_767_225_602)
+  await seedDetail(db, secondUuid, 1_767_225_601)
+  await seedDetail(db, thirdUuid, 1_767_225_602)
+  await initializeStandardCompanyTestState(db)
+
   return db
 }
 
@@ -70,9 +76,9 @@ async function seedDetail(db: D1Database, eventId: string, createdAt: number): P
        (event_id, request_id, actor_account_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
-       VALUES (?1, 'legacy request', -41, 'legacy.action', 'legacy_target', NULL,
-               'succeeded', 'legacy_reason', '7', '"legacy before"', '[1,2]',
-               '{"legacy_text":"private"}', '192.0.2.41', 'cli', ?2)`,
+       VALUES (?1, 'request with spaces', -41, 'custom.action', 'custom_target', NULL,
+               'succeeded', 'custom_reason', '7', '"stored before"', '[1,2]',
+               '{"custom_text":"private"}', '192.0.2.41', 'cli', ?2)`,
     )
     .bind(eventId, createdAt)
     .run()
@@ -116,8 +122,8 @@ describe("GET /audit-events/:eventId", () => {
     expect((await request(db, uuid, null)).status).toBe(401)
   })
 
-  test.each([uuid, "legacy-41", "legacy--41"])(
-    "returns a legacy-tolerant detail without rewriting stored JSON: %s",
+  test.each([uuid, secondUuid, thirdUuid])(
+    "returns a UUID-addressed detail without rewriting stored JSON: %s",
     async (eventId) => {
       const db = await createTestDb()
       const response = await request(db, eventId, await token(2))
@@ -126,18 +132,18 @@ describe("GET /audit-events/:eventId", () => {
       expect(response.status).toBe(200)
       expect(body).toMatchObject({
         event_id: eventId,
-        request_id: "legacy request",
+        request_id: "request with spaces",
         actor_account_id: "-41",
         actor_employee_id: null,
-        action: "legacy.action",
-        target_type: "legacy_target",
+        action: "custom.action",
+        target_type: "custom_target",
         target_id: null,
         outcome: "succeeded",
-        reason_code: "legacy_reason",
+        reason_code: "custom_reason",
         authorization_json: "7",
-        before_json: '"legacy before"',
+        before_json: '"stored before"',
         after_json: "[1,2]",
-        metadata_json: '{"legacy_text":"private"}',
+        metadata_json: '{"custom_text":"private"}',
         client_ip: "192.0.2.41",
         client_name: "cli",
         created_at: expect.stringMatching(/^2026-01-01T00:00:0[0-2]\.000Z$/u),
@@ -151,8 +157,8 @@ describe("GET /audit-events/:eventId", () => {
 
   test("makes malformed and missing IDs indistinguishable after authorization", async () => {
     const db = await createTestDb()
-    const malformed = await request(db, "LEGACY-PRIVATE", await token(2))
-    const missing = await request(db, "legacy-999", await token(2))
+    const malformed = await request(db, "NOT-A-UUID", await token(2))
+    const missing = await request(db, missingUuid, await token(2))
 
     expect(malformed.status).toBe(404)
     expect(missing.status).toBe(404)
@@ -201,27 +207,27 @@ describe("GET /audit-events/:eventId", () => {
 
   test("audits an existing and a missing detail before returning", async () => {
     const existingDb = await createTestDb()
-    const existing = await request(existingDb, "legacy-41", await token(2))
+    const existing = await request(existingDb, secondUuid, await token(2))
     const existingAudit = await latestAudit(existingDb)
     expect(existing.status).toBe(200)
     expect(existingAudit).toMatchObject({
       request_id: existing.headers.get("X-Request-ID"),
       action: "audit.event.read",
       target_type: "audit_event",
-      target_id: "legacy-41",
+      target_id: secondUuid,
       outcome: "succeeded",
       metadata_json: '{"format":"json","result_count":1}',
     })
     expect(String(existingAudit.metadata_json)).not.toContain("private")
 
     const missingDb = await createTestDb()
-    const missing = await request(missingDb, "legacy-999", await token(2))
+    const missing = await request(missingDb, missingUuid, await token(2))
     const missingAudit = await latestAudit(missingDb)
     expect(missing.status).toBe(404)
     expect(missingAudit).toMatchObject({
       action: "audit.event.read",
       target_type: "audit_event",
-      target_id: "legacy-999",
+      target_id: missingUuid,
       outcome: "succeeded",
       metadata_json: '{"format":"json","result_count":0}',
     })
@@ -251,7 +257,7 @@ describe("GET /audit-events/:eventId", () => {
   test("prioritizes unavailable over existing, not-found and denied responses", async () => {
     for (const [eventId, employeeId] of [
       [uuid, 2],
-      ["legacy-999", 2],
+      [missingUuid, 2],
       ["PRIVATE-MALFORMED", 4],
     ] as const) {
       const db = await createTestDb()

@@ -1,4 +1,4 @@
-import { Resignation } from "@/contexts/resignation/domain/resignation.entity"
+import { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { resignations } from "@/contexts/resignation/infrastructure/schema/resignation"

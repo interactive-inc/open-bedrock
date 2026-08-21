@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedAttendanceRecords } from "@/contexts/attendance/infrastructure/seed/seed-attendance-records.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "attendance-me-route-test-secret"
 
@@ -53,15 +54,14 @@ async function createTestDb(): Promise<D1Database> {
       status: record.status,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -76,10 +76,7 @@ const attendanceListResponseSchema = z.object({
 
 describe("GET /attendance-records/me", () => {
   test("returns own records and ignores employee_id", async () => {
-    const response = await getRequest(
-      "/attendance-records/me?employee_id=9",
-      await tokenFor(5, "member"),
-    )
+    const response = await getRequest("/attendance-records/me?employee_id=9", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -97,7 +94,7 @@ describe("GET /attendance-records/me", () => {
   test("filters own records by from/to", async () => {
     const response = await getRequest(
       "/attendance-records/me?from=2026-05-26&to=2026-05-26",
-      await tokenFor(5, "member"),
+      await tokenFor(5),
     )
 
     expect(response.status).toBe(200)
@@ -114,19 +111,13 @@ describe("GET /attendance-records/me", () => {
   })
 
   test("returns 400 when from is not a valid date format", async () => {
-    const response = await getRequest(
-      "/attendance-records/me?from=aaa",
-      await tokenFor(5, "member"),
-    )
+    const response = await getRequest("/attendance-records/me?from=aaa", await tokenFor(5))
 
     expect(response.status).toBe(400)
   })
 
   test("returns 400 when to is not a valid date format", async () => {
-    const response = await getRequest(
-      "/attendance-records/me?to=2026/06/01",
-      await tokenFor(5, "member"),
-    )
+    const response = await getRequest("/attendance-records/me?to=2026/06/01", await tokenFor(5))
 
     expect(response.status).toBe(400)
   })

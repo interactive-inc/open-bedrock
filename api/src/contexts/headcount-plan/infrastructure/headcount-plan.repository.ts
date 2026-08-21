@@ -1,4 +1,4 @@
-import { HeadcountPlan } from "@/contexts/headcount-plan/domain/headcount-plan.entity"
+import { HeadcountPlan } from "@/contexts/headcount-plan/domain/entities/headcount-plan.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"

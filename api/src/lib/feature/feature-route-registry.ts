@@ -1,9 +1,9 @@
 /**
  * 機能キーと API ルート接頭辞の対応表。機能キーは web の feature-registry の slug と揃える。
- * 区分の正本は .docs/feature-tiers.md。company-optional は既定で無効、company-standard は既定で有効。
- * ここに無いルート（システム層・company-core）はゲート対象外で常に有効。
+ * 区分の正本は .docs/feature-tiers.md。app-opt-in は既定で無効、app-default は既定で有効。
+ * ここに無いルート（システム層・company）はゲート対象外で常に有効。
  */
-export const optionalFeatureRoutePrefixes: Readonly<Record<string, ReadonlyArray<string>>> = {
+export const optInAppRoutePrefixes: Readonly<Record<string, ReadonlyArray<string>>> = {
   "one-on-ones": ["/one-on-ones"],
   thanks: [
     "/thanks-messages",
@@ -22,7 +22,7 @@ export const optionalFeatureRoutePrefixes: Readonly<Record<string, ReadonlyArray
   "management-dashboard": ["/dashboard/management"],
 }
 
-export const standardFeatureRoutePrefixes: Readonly<Record<string, ReadonlyArray<string>>> = {
+export const defaultAppRoutePrefixes: Readonly<Record<string, ReadonlyArray<string>>> = {
   attendance: ["/attendance-records"],
   leave: ["/leave-requests", "/leave-balances"],
   "family-care-leave": ["/family-care-leaves"],

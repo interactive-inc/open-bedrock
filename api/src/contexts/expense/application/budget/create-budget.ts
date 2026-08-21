@@ -1,4 +1,4 @@
-import { Budget } from "@/contexts/expense/domain/budget/budget.entity"
+import { Budget } from "@/contexts/expense/domain/entities/budget.entity"
 import type { Context } from "@/env"
 import { BudgetRepository } from "@/contexts/expense/infrastructure/budget/budget.repository"
 import { NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"

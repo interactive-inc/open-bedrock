@@ -1,6 +1,6 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { UnauthorizedError } from "@/lib/http/errors"
 import { zAppFeatureAvailability } from "@/lib/app-schemas"
 import { resolveDisabledFeatureKeys } from "@/lib/feature/resolve-disabled-feature-keys"
 
@@ -18,8 +18,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const responseBody = zAppFeatureAvailability.parse({
     disabled_features: resolveDisabledFeatureKeys({
-      enabledOptionalFeatures: c.env.ENABLED_OPTIONAL_FEATURES,
-      disabledStandardFeatures: c.env.DISABLED_STANDARD_FEATURES,
+      enabledOptInApps: c.env.ENABLED_OPT_IN_APPS,
+      disabledDefaultApps: c.env.DISABLED_DEFAULT_APPS,
     }),
   })
 

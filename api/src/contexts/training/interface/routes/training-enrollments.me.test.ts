@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedTrainingCourses } from "@/contexts/training/infrastructure/seed/seed-training-courses.repository"
 import { seedTrainingEnrollments } from "@/contexts/training/infrastructure/seed/seed-training-enrollments.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const trainingEnrollmentResponseSchema = z.object({
   id: z.number(),
@@ -69,15 +70,14 @@ async function createTestDb(): Promise<D1Database> {
       due_date: enrollment.dueDate,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -98,7 +98,7 @@ async function request(
 
 describe("GET /training-enrollments/me", () => {
   test("returns the caller's enrollments", async () => {
-    const response = await request("/training-enrollments/me", await tokenFor(5, "member"))
+    const response = await request("/training-enrollments/me", await tokenFor(5))
 
     expect(response.status).toBe(200)
 

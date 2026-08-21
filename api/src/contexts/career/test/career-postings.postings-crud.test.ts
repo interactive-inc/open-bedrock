@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { seedCareerApplications } from "@/contexts/career/infrastructure/seed/seed-career-applications.repository"
 import { seedCareerPostings } from "@/contexts/career/infrastructure/seed/seed-career-postings.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const careerPostingResponseSchema = z.object({
   id: z.number(),
@@ -52,6 +53,7 @@ async function createTestDb(): Promise<D1Database> {
       status: posting.status,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -75,11 +77,9 @@ async function createTestDbWithApplications(): Promise<D1Database> {
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -103,7 +103,7 @@ describe("POST /career-postings", () => {
   test("admin creates a posting and returns 201", async () => {
     const response = await request({
       path: "/career-postings",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { title: "Backend Engineer", dept_id: 3, dept_name: "Engineering" },
     })
@@ -123,7 +123,7 @@ describe("POST /career-postings", () => {
   test("member is forbidden", async () => {
     const response = await request({
       path: "/career-postings",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { title: "X" },
     })
@@ -134,7 +134,7 @@ describe("POST /career-postings", () => {
   test("returns 400 when title is missing", async () => {
     const response = await request({
       path: "/career-postings",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { dept_name: "Engineering" },
     })
@@ -145,7 +145,7 @@ describe("POST /career-postings", () => {
   test("returns 400 when dept_id is zero", async () => {
     const response = await request({
       path: "/career-postings",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { title: "Invalid Dept", dept_id: 0 },
     })
@@ -156,7 +156,7 @@ describe("POST /career-postings", () => {
   test("returns 400 when dept_id is negative", async () => {
     const response = await request({
       path: "/career-postings",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { title: "Invalid Dept", dept_id: -1 },
     })
@@ -180,7 +180,7 @@ describe("GET /career-postings/:postingId", () => {
   test("admin reads a posting and returns 200", async () => {
     const response = await request({
       path: "/career-postings/1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -198,7 +198,7 @@ describe("GET /career-postings/:postingId", () => {
   test("reads a closed posting too (admin scope, not the public list)", async () => {
     const response = await request({
       path: "/career-postings/3",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -207,7 +207,7 @@ describe("GET /career-postings/:postingId", () => {
   test("member can read a posting to apply", async () => {
     const response = await request({
       path: "/career-postings/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(200)
@@ -216,7 +216,7 @@ describe("GET /career-postings/:postingId", () => {
   test("returns 404 when the posting does not exist", async () => {
     const response = await request({
       path: "/career-postings/9999",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(404)
@@ -236,7 +236,7 @@ describe("PUT /career-postings/:postingId", () => {
   test("admin updates a posting and returns 200", async () => {
     const response = await request({
       path: "/career-postings/1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PUT",
       body: {
         title: "Updated Lead",
@@ -262,7 +262,7 @@ describe("PUT /career-postings/:postingId", () => {
   test("member is forbidden", async () => {
     const response = await request({
       path: "/career-postings/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: { title: "X" },
     })
@@ -273,7 +273,7 @@ describe("PUT /career-postings/:postingId", () => {
   test("returns 404 when the posting does not exist", async () => {
     const response = await request({
       path: "/career-postings/9999",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PUT",
       body: { title: "X" },
     })
@@ -284,7 +284,7 @@ describe("PUT /career-postings/:postingId", () => {
   test("returns 400 when dept_id is zero", async () => {
     const response = await request({
       path: "/career-postings/1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PUT",
       body: { title: "Updated Lead", dept_id: 0 },
     })
@@ -295,7 +295,7 @@ describe("PUT /career-postings/:postingId", () => {
   test("returns 400 when dept_id is negative", async () => {
     const response = await request({
       path: "/career-postings/1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PUT",
       body: { title: "Updated Lead", dept_id: -5 },
     })
@@ -308,7 +308,7 @@ describe("DELETE /career-postings/:postingId", () => {
   test("admin deletes a posting and returns 204", async () => {
     const response = await request({
       path: "/career-postings/2",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "DELETE",
     })
 
@@ -318,7 +318,7 @@ describe("DELETE /career-postings/:postingId", () => {
   test("member is forbidden", async () => {
     const response = await request({
       path: "/career-postings/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "DELETE",
     })
 
@@ -328,7 +328,7 @@ describe("DELETE /career-postings/:postingId", () => {
   test("returns 404 when the posting does not exist", async () => {
     const response = await request({
       path: "/career-postings/9999",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "DELETE",
     })
 
@@ -341,7 +341,7 @@ describe("DELETE /career-postings/:postingId", () => {
       db: await createTestDbWithApplications(),
       jwtSecret,
       path: "/career-postings/1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "DELETE",
     })
 

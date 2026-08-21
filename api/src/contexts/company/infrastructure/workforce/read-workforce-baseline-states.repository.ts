@@ -1,7 +1,7 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
-import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import type { WorkforceBaselineState } from "@/contexts/company/domain/workforce/workforce-schedule"
-import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
+import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import type { WorkforceBaselineState } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
 
 type BaselineRow = Readonly<{
   employee_id: number
@@ -9,7 +9,7 @@ type BaselineRow = Readonly<{
   status: string
 }>
 
-/** 明示済みlegacy baselineを、推測した雇用期間ではなく初期状態として復元する。 */
+/** 明示済みinitial stateを、推測した雇用期間ではなく初期状態として復元する。 */
 export async function readWorkforceBaselineStates(
   database: D1Database,
 ): Promise<ReadonlyMap<EmployeeId, WorkforceBaselineState>> {
@@ -17,7 +17,7 @@ export async function readWorkforceBaselineStates(
     .prepare(
       `SELECT employee_id, event_on, json_extract(summary_json, '$.status') AS status
          FROM personnel_actions
-         WHERE kind = 'legacy_baseline'
+         WHERE kind = 'initial_state'
          ORDER BY employee_id, recorded_at, id`,
     )
     .all<BaselineRow>()

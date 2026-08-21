@@ -1,22 +1,22 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { shiftSwapRequests } from "@/contexts/shift/infrastructure/schema/shift"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq, gte, lte } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { alias } from "drizzle-orm/sqlite-core"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppShiftSwapRequestAdminList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { z } from "zod"
-import { loadCurrentEmployeeDepartmentNames } from "@/contexts/company/interface/utils/current-employee-departments"
-import { InternalError } from "@/contexts/company/interface/lib/errors"
+import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
+import { InternalError } from "@/lib/http/errors"
 
 const SORT_OPTIONS = {
   date_desc: desc(shiftSwapRequests.date),

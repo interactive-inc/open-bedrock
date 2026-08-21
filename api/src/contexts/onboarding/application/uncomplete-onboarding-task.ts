@@ -1,8 +1,8 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { canCompleteTask } from "@/contexts/onboarding/domain/can-complete-task"
+import type { Session } from "@/lib/auth/session"
+import { canCompleteTask } from "@/contexts/onboarding/domain/policies/task-completion.policy"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { OnboardingTask } from "@/contexts/onboarding/domain/onboarding-task.entity"
+import type { OnboardingTask } from "@/contexts/onboarding/domain/entities/onboarding-task.entity"
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
 

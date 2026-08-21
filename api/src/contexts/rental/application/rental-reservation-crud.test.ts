@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { RentalReservation } from "@/contexts/rental/domain/rental-reservation.entity"
+import { RentalReservation } from "@/contexts/rental/domain/entities/rental-reservation.entity"
 import { CreateRentalReservation } from "@/contexts/rental/application/create-rental-reservation"
 import { UpdateRentalReservation } from "@/contexts/rental/application/update-rental-reservation"
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"

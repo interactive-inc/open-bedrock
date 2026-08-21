@@ -1,20 +1,16 @@
 import { CreateHeadcountPlan } from "@/contexts/headcount-plan/application/create-headcount-plan"
 import { readActiveHeadcount } from "@/contexts/company/infrastructure/organization/read-active-headcount.repository"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/lib/http/to-bounded-int"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import {
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppHeadcountPlan, zAppHeadcountPlanList } from "@/lib/app-schemas"
 import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/headcount-plan.repository"
 import { zValidator } from "@hono/zod-validator"

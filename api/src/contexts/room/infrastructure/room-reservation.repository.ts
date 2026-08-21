@@ -1,4 +1,4 @@
-import { RoomReservation } from "@/contexts/room/domain/room-reservation.entity"
+import { RoomReservation } from "@/contexts/room/domain/entities/room-reservation.entity"
 import type { Context } from "@/env"
 import { roomReservations } from "@/contexts/room/infrastructure/schema/room"
 import { and, asc, eq, gt, lt, ne, sql } from "drizzle-orm"

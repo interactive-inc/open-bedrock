@@ -1,11 +1,8 @@
 {
   "version": 1,
   "files": {
-    "scripts/check-api-foundation.ts": "2a23f2cd66b9725b99510dba1bb1dfe6321a741bbae72d05271e031d8d3d3513",
+    "scripts/check-api-foundation.ts": "c522ab800201ff7857e118a40a234369ff8c2e6e45aeeac356300a43bb81e2e6",
     "src/api/api-route-module.ts": "0b70a34f4f63ec8a94d5c412cf91618027e887aef5d8493e3d2a2fe10cdda06c",
-    "src/api/read-http-exception-problem.ts": "24ba40247ebc7609231b14a40ee98629161087a6d5af2276ba46da4193d32e84",
-    "src/api/test/api-route-module.test.ts": "faaf5f610958e5ab26a13d955b45f5ebfd01ff10d23c770a659abee5ee038ed7",
-    "src/api/test/to-negotiated-http-exception-response.test.ts": "a96a46d40b5d70175455986a2be88ec6a8ff467b575e67b7a6c8baccd6a6d49b",
-    "src/api/to-negotiated-http-exception-response.ts": "3c9476345d55db298fbc4f32134938624708a10a97d78939d458e11e5eb0d845"
+    "src/api/test/api-route-module.test.ts": "faaf5f610958e5ab26a13d955b45f5ebfd01ff10d23c770a659abee5ee038ed7"
   }
 }

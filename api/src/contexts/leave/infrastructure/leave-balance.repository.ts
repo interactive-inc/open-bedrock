@@ -1,4 +1,4 @@
-import { LeaveBalance } from "@/contexts/leave/domain/leave-balance.entity"
+import { LeaveBalance } from "@/contexts/leave/domain/entities/leave-balance.entity"
 import type { Context } from "@/env"
 import type { LeaveType } from "@/lib/schemas"
 import { leaveBalances } from "@/contexts/leave/infrastructure/schema/leave"

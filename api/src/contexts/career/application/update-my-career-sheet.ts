@@ -1,4 +1,4 @@
-import { CareerSheet } from "@/contexts/career/domain/career-sheet.entity"
+import { CareerSheet } from "@/contexts/career/domain/entities/career-sheet.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

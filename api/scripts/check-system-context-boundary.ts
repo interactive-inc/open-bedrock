@@ -10,47 +10,25 @@ const API_SOURCE_ROOT = existsSync(resolve(SOURCE_ROOT, "api"))
   ? resolve(SOURCE_ROOT, "api")
   : SOURCE_ROOT
 const SYSTEM_CONTEXT_ROOT = resolve(SOURCE_ROOT, "contexts/system")
-const LEGACY_CONTEXT_LAYERS = [
-  "domain",
-  "application",
-  "infrastructure",
-  "interface/converters",
-] as const
 const CONTEXT_FIRST_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
 const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"] as const
 const SYSTEM_CAPABILITY_LAYERS = ["application", "infrastructure"] as const
 const SYSTEM_PATH_MAPPING_LAYERS = [...SYSTEM_SELF_REFERENCE_LAYERS, "interface"] as const
 const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain", "interface"] as const
-const SYSTEM_SCHEMA_PATHS = [
+const SYSTEM_SCHEMA_PATHS = discoverSystemSchemaPaths(
   resolve(SYSTEM_CONTEXT_ROOT, "infrastructure/schema"),
-  resolve(SOURCE_ROOT, "schema"),
-].flatMap(discoverSystemSchemaPaths)
-const SYSTEM_IMPLEMENTATION_ROOTS = [SYSTEM_CONTEXT_ROOT, API_SOURCE_ROOT].filter((root) =>
-  SYSTEM_SELF_REFERENCE_LAYERS.some((layer) =>
-    existsSync(
-      isContextFirstSystemRoot(root) ? resolve(root, layer) : resolve(root, layer, "system"),
-    ),
-  ),
 )
-const SYSTEM_SELF_REFERENCE_ROOT = SYSTEM_IMPLEMENTATION_ROOTS.includes(SYSTEM_CONTEXT_ROOT)
-  ? SYSTEM_CONTEXT_ROOT
-  : API_SOURCE_ROOT
+const SYSTEM_SELF_REFERENCE_ROOT = SYSTEM_CONTEXT_ROOT
 const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
-const SYSTEM_CAPABILITY_CATALOG_PATH = existsSync(
-  resolve(SYSTEM_CONTEXT_ROOT, "domain/values/system-capability.catalog.ts"),
+const SYSTEM_CAPABILITY_CATALOG_PATH = resolve(
+  SYSTEM_CONTEXT_ROOT,
+  "domain/values/system-capability.catalog.ts",
 )
-  ? resolve(SYSTEM_CONTEXT_ROOT, "domain/values/system-capability.catalog.ts")
-  : resolve(API_SOURCE_ROOT, "domain/system/configuration/system-capability.catalog.ts")
-const SYSTEM_SOURCE_PATHS = [
-  ...CONTEXT_FIRST_LAYERS.map((layer) => resolve(SYSTEM_CONTEXT_ROOT, layer)),
-  ...LEGACY_CONTEXT_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
-  ...SYSTEM_SCHEMA_PATHS,
-].filter(existsSync)
+const SYSTEM_SOURCE_PATHS = CONTEXT_FIRST_LAYERS.map((layer) =>
+  resolve(SYSTEM_CONTEXT_ROOT, layer),
+).filter(existsSync)
 const PRODUCT_NEUTRAL_SYSTEM_SOURCE_PATHS = new Set(
-  PRODUCT_NEUTRAL_SYSTEM_LAYERS.flatMap((layer) => [
-    resolve(SYSTEM_CONTEXT_ROOT, layer),
-    resolve(API_SOURCE_ROOT, layer, "system"),
-  ]),
+  PRODUCT_NEUTRAL_SYSTEM_LAYERS.map((layer) => resolve(SYSTEM_CONTEXT_ROOT, layer)),
 )
 const TYPESCRIPT_CONFIG_PATHS = [
   "tsconfig.json",
@@ -74,7 +52,7 @@ const FORBIDDEN_VOCABULARY =
 const LAYER_MODULE =
   /^@\/(?:api\/)?(domain|application|infrastructure|interface\/converters)(?:\/(.*))?$/
 const GLOBAL_SCHEMA_MODULE = /^@\/api\/database\/schema(?:\/|$)/
-const LEGACY_SCHEMA_MODULE = /^@\/schema(?:\/(.*))?$/
+const PRODUCT_SCHEMA_MODULE = /^@\/schema(?:\/|$)/
 const API_ROOT_MODULE =
   /^@\/api\/(?:configuration|context(?:-module\.registry)?|help-assets|iam|index|navigation|orchestration)(?:\/|$)/
 const COMPOSITION_MODULE = /^@\/(?:api\/)?composition(?:\/|$)/
@@ -82,8 +60,8 @@ const CONTEXT_MODULE =
   /^@\/contexts\/([^/]+)\/(?:domain|application|infrastructure|interface)(?:\/|$)/
 const SYSTEM_SELF_REFERENCE_MODULE = /^@system\/(application|domain|infrastructure|interface)\/.+$/
 const SYSTEM_SCHEMA_REFERENCE_MODULE = /^@system\/infrastructure\/schema(?:\/|$)/
-const LEGACY_SYSTEM_SCHEMA_MODULE = /(?:^|\/)system-runtime$/
-const LEGACY_SYSTEM_SCHEMA_SYMBOLS = new Set([
+const RETIRED_SYSTEM_SCHEMA_MODULE = /(?:^|\/)system-runtime$/
+const RETIRED_SYSTEM_SCHEMA_SYMBOLS = new Set([
   "auditLogs",
   "bootstrapState",
   "deletedRecords",
@@ -93,7 +71,7 @@ const LEGACY_SYSTEM_SCHEMA_SYMBOLS = new Set([
   "userIdentities",
   "users",
 ])
-const LEGACY_SYSTEM_SQL_TABLES = [
+const RETIRED_SYSTEM_SQL_TABLES = [
   "audit_logs",
   "bootstrap_state",
   "deleted_records",
@@ -149,10 +127,6 @@ function isUnknownRecord(value: unknown): value is Readonly<Record<string, unkno
 
 function hasExportModifier(node: ts.Node & { modifiers?: ts.NodeArray<ts.ModifierLike> }): boolean {
   return node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ?? false
-}
-
-function isContextFirstSystemRoot(sourceRoot: string): boolean {
-  return sourceRoot.replaceAll("\\", "/").endsWith("/contexts/system")
 }
 
 /** System schema が所有する exported sqliteTable のシンボル名を構文木から集める。 */
@@ -302,8 +276,8 @@ export function inspectSystemStorageAccess(
   return violations
 }
 
-/** System内へ旧schema exportや旧物理tableの実行経路が戻ることを拒否する。 */
-export function inspectLegacySystemRuntime(
+/** System内へ廃止済みschema exportや物理tableの実行経路が戻ることを拒否する。 */
+export function inspectRetiredSystemStorage(
   file: string,
   source: string,
 ): SystemBoundaryViolation[] {
@@ -312,19 +286,21 @@ export function inspectLegacySystemRuntime(
 
   function visit(node: ts.Node): void {
     const moduleSpecifier = getModuleSpecifier(node)
-    if (typeof moduleSpecifier === "string" && LEGACY_SYSTEM_SCHEMA_MODULE.test(moduleSpecifier)) {
-      violations.add(`旧System schema moduleをimportしています: ${moduleSpecifier}`)
+    if (typeof moduleSpecifier === "string" && RETIRED_SYSTEM_SCHEMA_MODULE.test(moduleSpecifier)) {
+      violations.add(`廃止済みSystem schema moduleをimportしています: ${moduleSpecifier}`)
     }
-    if (ts.isIdentifier(node) && LEGACY_SYSTEM_SCHEMA_SYMBOLS.has(node.text)) {
-      violations.add(`旧System schema exportを参照しています: ${node.text}`)
+    if (ts.isIdentifier(node) && RETIRED_SYSTEM_SCHEMA_SYMBOLS.has(node.text)) {
+      violations.add(`廃止済みSystem schema exportを参照しています: ${node.text}`)
     }
     if (ts.isStringLiteralLike(node) || ts.isTemplateLiteralToken(node)) {
-      for (const table of LEGACY_SYSTEM_SQL_TABLES) {
+      for (const table of RETIRED_SYSTEM_SQL_TABLES) {
         const directSql = new RegExp(
           `\\b(?:from|join|into|update|table|references)\\s+(?:"|'|\\[|\`)?${table}\\b`,
           "iu",
         )
-        if (directSql.test(node.text)) violations.add(`旧System tableを参照しています: ${table}`)
+        if (directSql.test(node.text)) {
+          violations.add(`廃止済みSystem tableを参照しています: ${table}`)
+        }
       }
     }
 
@@ -338,28 +314,23 @@ export function inspectLegacySystemRuntime(
 
 /** application/infrastructure の System 直下にある capability namespace を集める。 */
 export function discoverSystemCapabilityNames(
-  apiSourceRoots: string | ReadonlyArray<string> = SYSTEM_IMPLEMENTATION_ROOTS,
+  systemRoot: string = SYSTEM_CONTEXT_ROOT,
 ): ReadonlySet<string> {
   const capabilities = new Set<string>()
-  const roots = typeof apiSourceRoots === "string" ? [apiSourceRoots] : apiSourceRoots
 
-  for (const sourceRoot of roots) {
-    for (const layer of SYSTEM_CAPABILITY_LAYERS) {
-      const systemRoot = isContextFirstSystemRoot(sourceRoot)
-        ? resolve(sourceRoot, layer)
-        : resolve(sourceRoot, layer, "system")
+  for (const layer of SYSTEM_CAPABILITY_LAYERS) {
+    const layerRoot = resolve(systemRoot, layer)
 
-      if (!existsSync(systemRoot)) continue
+    if (!existsSync(layerRoot)) continue
 
-      for (const entry of readdirSync(systemRoot, { withFileTypes: true })) {
-        if (layer === "infrastructure" && entry.name === "schema") continue
-        if (entry.isDirectory()) capabilities.add(entry.name)
-      }
+    for (const entry of readdirSync(layerRoot, { withFileTypes: true })) {
+      if (layer === "infrastructure" && entry.name === "schema") continue
+      if (entry.isDirectory()) capabilities.add(entry.name)
     }
+  }
 
-    if (isContextFirstSystemRoot(sourceRoot) && existsSync(resolve(sourceRoot, "interface"))) {
-      capabilities.add("http")
-    }
+  if (existsSync(resolve(systemRoot, "interface"))) {
+    capabilities.add("http")
   }
 
   return capabilities
@@ -383,29 +354,24 @@ export function inspectSystemCapabilityRootEntries(
 }
 
 function inspectSystemCapabilityLayout(
-  apiSourceRoots: string | ReadonlyArray<string> = SYSTEM_IMPLEMENTATION_ROOTS,
+  systemRoot: string = SYSTEM_CONTEXT_ROOT,
 ): SystemBoundaryViolation[] {
   const violations: SystemBoundaryViolation[] = []
-  const roots = typeof apiSourceRoots === "string" ? [apiSourceRoots] : apiSourceRoots
 
-  for (const sourceRoot of roots) {
-    for (const layer of SYSTEM_CAPABILITY_LAYERS) {
-      const systemRoot = isContextFirstSystemRoot(sourceRoot)
-        ? resolve(sourceRoot, layer)
-        : resolve(sourceRoot, layer, "system")
+  for (const layer of SYSTEM_CAPABILITY_LAYERS) {
+    const layerRoot = resolve(systemRoot, layer)
 
-      if (!existsSync(systemRoot)) continue
+    if (!existsSync(layerRoot)) continue
 
-      violations.push(
-        ...inspectSystemCapabilityRootEntries(
-          relative(PROJECT_ROOT, systemRoot),
-          readdirSync(systemRoot, { withFileTypes: true }).map((entry) => ({
-            name: entry.name,
-            isDirectory: entry.isDirectory(),
-          })),
-        ),
-      )
-    }
+    violations.push(
+      ...inspectSystemCapabilityRootEntries(
+        relative(PROJECT_ROOT, layerRoot),
+        readdirSync(layerRoot, { withFileTypes: true }).map((entry) => ({
+          name: entry.name,
+          isDirectory: entry.isDirectory(),
+        })),
+      ),
+    )
   }
 
   return violations
@@ -743,20 +709,6 @@ export function discoverDownstreamContexts(apiSourceRoot = API_SOURCE_ROOT): Rea
     }
   }
 
-  for (const layer of LEGACY_CONTEXT_LAYERS) {
-    const layerRoot = resolve(apiSourceRoot, layer)
-
-    if (!existsSync(layerRoot)) {
-      continue
-    }
-
-    for (const entry of readdirSync(layerRoot, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        directoryNames.push(entry.name)
-      }
-    }
-  }
-
   return selectDownstreamContextNames(directoryNames)
 }
 
@@ -806,7 +758,6 @@ function getModuleSpecifier(node: ts.Node): string | null | Error {
 function inspectModuleSpecifier(
   file: string,
   moduleSpecifier: string,
-  downstreamContexts: ReadonlySet<string>,
 ): SystemBoundaryViolation[] {
   if (moduleSpecifier.startsWith("./") || moduleSpecifier.startsWith("../")) {
     return [{ file, reason: "System の依存境界を迂回する相対 import があります" }]
@@ -844,18 +795,8 @@ function inspectModuleSpecifier(
       : [{ file, reason: `System から下位コンテキストへ依存しています: ${moduleSpecifier}` }]
   }
 
-  const schemaModule = moduleSpecifier.match(LEGACY_SCHEMA_MODULE)
-
-  if (schemaModule !== null) {
-    const importedPath = schemaModule[1] ?? ""
-    const isSystemSchema =
-      importedPath === "system" ||
-      importedPath.startsWith("system/") ||
-      importedPath === "system-core"
-
-    return isSystemSchema
-      ? []
-      : [{ file, reason: `System から専用 schema 以外へ依存しています: ${moduleSpecifier}` }]
+  if (PRODUCT_SCHEMA_MODULE.test(moduleSpecifier)) {
+    return [{ file, reason: `System から製品DB schemaへ依存しています: ${moduleSpecifier}` }]
   }
 
   const layerModule = moduleSpecifier.match(LAYER_MODULE)
@@ -864,19 +805,14 @@ function inspectModuleSpecifier(
     return []
   }
 
-  const importedPath = layerModule[2] ?? ""
-  const contextName = importedPath.split("/")[0] ?? ""
-
-  return downstreamContexts.has(contextName)
-    ? [{ file, reason: `System から下位コンテキストへ依存しています: ${moduleSpecifier}` }]
-    : []
+  return [{ file, reason: `System からcontext外layerへ依存しています: ${moduleSpecifier}` }]
 }
 
 /** System 実装1ファイルに、下位コンテキストの語彙または依存が混入していないか調べる。 */
 export function inspectSystemSource(
   file: string,
   source: string,
-  downstreamContexts: ReadonlySet<string> = discoverDownstreamContexts(),
+  _downstreamContexts: ReadonlySet<string> = discoverDownstreamContexts(),
   forbiddenProductMarkers: ReadonlySet<string> = new Set(),
 ): SystemBoundaryViolation[] {
   const violations: SystemBoundaryViolation[] = []
@@ -917,7 +853,7 @@ export function inspectSystemSource(
     if (moduleSpecifier instanceof Error) {
       violations.push({ file, reason: moduleSpecifier.message })
     } else if (moduleSpecifier !== null) {
-      violations.push(...inspectModuleSpecifier(file, moduleSpecifier, downstreamContexts))
+      violations.push(...inspectModuleSpecifier(file, moduleSpecifier))
     }
 
     ts.forEachChild(node, visit)
@@ -939,7 +875,7 @@ export function inspectSystemSource(
     })
   }
 
-  violations.push(...inspectLegacySystemRuntime(file, source))
+  violations.push(...inspectRetiredSystemStorage(file, source))
 
   return violations
 }

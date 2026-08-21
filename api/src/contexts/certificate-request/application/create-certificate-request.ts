@@ -1,4 +1,4 @@
-import { CertificateRequest } from "@/contexts/certificate-request/domain/certificate-request.entity"
+import { CertificateRequest } from "@/contexts/certificate-request/domain/entities/certificate-request.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

@@ -1,6 +1,6 @@
 import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/resolve-governance-org-role.repository"
 import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
-import { PERMISSION_KEYS } from "@/contexts/company/domain/iam/permission-key.catalog"
+import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
 import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
@@ -11,9 +11,9 @@ import {
   governanceImpactIssue as issue,
   type GovernanceImpactIssue,
   type GovernanceImpactReport,
-} from "@/contexts/governance/domain/governance-impact"
+} from "@/contexts/governance/domain/policies/governance-impact.policy"
 import type { GovernanceReferenceCatalog } from "@/contexts/governance/application/sync-governance-markdown"
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/lib/auth/session"
 import type { Context } from "@/env"
 
 /** Governanceのimpact read modelをHTTP composition境界へ公開する。 */

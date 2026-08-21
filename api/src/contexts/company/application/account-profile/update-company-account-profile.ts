@@ -1,5 +1,5 @@
-import type { CompanyAccountProfileRepository } from "@/contexts/company/infrastructure/account-profile/company-account-profile-port.repository"
-import type { CompanyAccountProfileEntity } from "@/contexts/company/domain/account-profile/company-account-profile.entity"
+import type { CompanyAccountProfileEntity } from "@/contexts/company/domain/entities/company-account-profile.entity"
+import type { CompanyAccountProfileRepository } from "@/contexts/company/infrastructure/account-profile/company-account-profile.repository"
 
 /** 既存プロフィールだけを更新し、存在しないAccountの暗黙作成を許さない。 */
 export class UpdateCompanyAccountProfile {

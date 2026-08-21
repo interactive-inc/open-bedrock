@@ -14,7 +14,8 @@
       "@system/application/*": ["./src/contexts/system/application/*"],
       "@system/domain/*": ["./src/contexts/system/domain/*"],
       "@system/infrastructure/*": ["./src/contexts/system/infrastructure/*"],
-      "@system/interface/*": ["./src/contexts/system/interface/*"]
+      "@system/interface/*": ["./src/contexts/system/interface/*"],
+      "@system/test/*": ["./src/contexts/system/test/*"]
     }
   }
 }

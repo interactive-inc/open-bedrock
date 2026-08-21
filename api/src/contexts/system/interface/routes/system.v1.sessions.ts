@@ -6,10 +6,17 @@ import {
 } from "@system/interface/errors"
 /** /system/v1/sessions */
 import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
-import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
+import { IssueSystemSession } from "@system/application/auth/issue-system-session"
+import { RevokeSystemSession } from "@system/application/auth/revoke-system-session"
+import { RotateSystemSession } from "@system/application/auth/rotate-system-session"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
+import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer.repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
+import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service.repository"
+import { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
 import { decoySystemPasswordHash } from "@system/infrastructure/auth/decoy-system-password-hash.repository"
 import { LoginRateLimitService } from "@system/infrastructure/auth/login-rate-limit.service.repository"
-import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
+import { passwordHashNeedsRehash } from "@system/infrastructure/auth/password-hash-needs-rehash.repository"
 import { SystemPasswordCredentialRepository } from "@system/infrastructure/auth/system-password-credential.repository"
 import { verifySystemPassword } from "@system/infrastructure/auth/verify-system-password.repository"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
@@ -51,16 +58,12 @@ export const GET = factory.createHandlers(
       throw new SystemSessionUnavailableError()
     }
 
-    const applications = createSystemSessionApplications({
-      context: { env: { DB: database } },
-      jwtSecret: context.env.JWT_SECRET ?? "",
-      sessionTtlMilliseconds,
-    })
-    if (applications instanceof Error) {
-      throw new SystemSessionUnavailableError()
-    }
-
-    const authentication = await applications.authenticate.execute({ rawToken: token, now })
+    const systemContext = { env: { DB: database } }
+    const sessionRepository = new SystemSessionRepository({ context: systemContext })
+    const authentication = await sessionRepository.authenticate(
+      { rawToken: token, now },
+      new SystemSessionMaterialService(),
+    )
     if (authentication instanceof Error) {
       throw new SystemSessionUnavailableError()
     }
@@ -129,7 +132,7 @@ export const POST = factory.createHandlers(
       { subject: body.subject, password: body.password, now },
       {
         dummyHash: decoySystemPasswordHash,
-        needsRehash: (passwordHash) => PasswordHashService.needsRehash(passwordHash),
+        needsRehash: (passwordHash) => passwordHashNeedsRehash(passwordHash),
         verify: (password, passwordHash) => verifySystemPassword(password, passwordHash, pepper),
       },
     )
@@ -148,15 +151,14 @@ export const POST = factory.createHandlers(
     if (metadataJson instanceof Error) {
       throw new SystemSessionUnavailableError()
     }
-    const applications = createSystemSessionApplications({
-      context: { env: { DB: database } },
-      jwtSecret: context.env.JWT_SECRET ?? "",
+    const systemContext = { env: { DB: database } }
+    const issuance = await new IssueSystemSession({
+      accountRepository: new SystemAccountRepository({ database }),
+      sessionRepository: new SystemSessionRepository({ context: systemContext }),
+      materialService: new SystemSessionMaterialService(),
+      accessTokenIssuer: new SystemAccessTokenIssuer(context.env.JWT_SECRET ?? ""),
       sessionTtlMilliseconds,
-    })
-    if (applications instanceof Error) {
-      throw new SystemSessionUnavailableError()
-    }
-    const issuance = await applications.issue.execute({
+    }).execute({
       accountId: authentication.accountId,
       tokenVersion: authentication.tokenVersion,
       now,
@@ -205,16 +207,15 @@ export const PATCH = factory.createHandlers(
       throw new SystemSessionUnavailableError()
     }
 
-    const applications = createSystemSessionApplications({
-      context: { env: { DB: database } },
-      jwtSecret: context.env.JWT_SECRET ?? "",
+    const systemContext = { env: { DB: database } }
+    const rotation = await new RotateSystemSession({
+      accountRepository: new SystemAccountRepository({ database }),
+      sessionRepository: new SystemSessionRepository({ context: systemContext }),
+      auditAppender: new SystemAuditEventRepository(systemContext),
+      materialService: new SystemSessionMaterialService(),
+      accessTokenIssuer: new SystemAccessTokenIssuer(context.env.JWT_SECRET ?? ""),
       sessionTtlMilliseconds,
-    })
-    if (applications instanceof Error) {
-      throw new SystemSessionUnavailableError()
-    }
-
-    const rotation = await applications.rotate.execute({
+    }).execute({
       rawToken: context.req.valid("json").refresh_token,
       now,
       auditContext: { authorizationJson: null, metadataJson: null },
@@ -262,16 +263,11 @@ export const DELETE = factory.createHandlers(
       throw new SystemSessionUnavailableError()
     }
 
-    const applications = createSystemSessionApplications({
-      context: { env: { DB: database } },
-      jwtSecret: context.env.JWT_SECRET ?? "",
-      sessionTtlMilliseconds,
-    })
-    if (applications instanceof Error) {
-      throw new SystemSessionUnavailableError()
-    }
-
-    const revocation = await applications.revoke.execute({
+    const systemContext = { env: { DB: database } }
+    const revocation = await new RevokeSystemSession({
+      sessionRepository: new SystemSessionRepository({ context: systemContext }),
+      materialService: new SystemSessionMaterialService(),
+    }).execute({
       rawToken: context.req.valid("json").refresh_token,
       now,
       auditContext: { authorizationJson: null, metadataJson: null },

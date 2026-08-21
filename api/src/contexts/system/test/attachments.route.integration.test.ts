@@ -1,14 +1,15 @@
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
 import { zAccountId } from "@system/domain/values/account-id.schema"
-import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
+import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { GET } from "@system/interface/routes/attachments.$attachmentId"
 import { POST } from "@system/interface/routes/attachments"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { R2TestBucket, testKekEnv } from "@/api/test/support/r2-test-bucket"
-import { schema } from "@/schema"
+import { systemAttachmentSchema } from "@system/infrastructure/schema/system-attachment"
+import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
+import { createSystemAttachmentTestDatabase } from "@system/test/create-system-attachment-test-database.test-support"
+import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
+import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
 
 const now = new Date("2026-08-20T09:00:00.000Z")
 
@@ -16,13 +17,13 @@ const jwtSecret = "attachments-route-test-secret"
 
 type Fixture = Readonly<{
   request: (path: string, init?: RequestInit) => Promise<Response>
-  bucket: R2TestBucket
+  bucket: SystemAttachmentTestBucket
   tokenOf: (accountId: string) => Promise<string>
   auditActions: (targetId: string) => Promise<ReadonlyArray<string>>
 }>
 
 async function createFixture(): Promise<Fixture> {
-  const db = createD1TestDatabase(loadSchema())
+  const db = createSystemAttachmentTestDatabase()
 
   for (const accountId of ["account-owner", "account-other"]) {
     await db
@@ -34,13 +35,16 @@ async function createFixture(): Promise<Fixture> {
       .run()
   }
 
-  const bucket = new R2TestBucket()
+  const bucket = new SystemAttachmentTestBucket()
 
   const app = systemFactory
     .createApp()
     .use("*", async (context, next) => {
       context.set("now", () => now)
-      context.set("database", drizzle(db, { schema }))
+      context.set(
+        "database",
+        drizzle(db, { schema: { ...systemCoreSchema, ...systemAttachmentSchema } }),
+      )
       await next()
     })
     .post("/attachments", ...POST)
@@ -71,7 +75,7 @@ async function createFixture(): Promise<Fixture> {
         DB: db,
         JWT_SECRET: jwtSecret,
         ATTACHMENTS: bucket as unknown as R2Bucket,
-        ATTACHMENT_KEKS: testKekEnv(1),
+        ATTACHMENT_KEKS: createSystemAttachmentTestKekEnvironment(1),
       }),
     tokenOf: async (accountId) => {
       // access token の検証は実時計で行われるため、発行も実時刻にそろえる

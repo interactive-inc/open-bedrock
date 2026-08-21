@@ -1,8 +1,7 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { NotifyApprovalResult } from "@/contexts/company/infrastructure/notifications/notify-approval-result.repository"
-import type { LeaveRequest } from "@/contexts/leave/domain/leave-request.entity"
-import { hasLeaveBalanceTracking } from "@/contexts/leave/domain/has-balance-tracking"
-import { toFiscalYear } from "@/contexts/leave/domain/to-fiscal-year"
+import type { Session } from "@/lib/auth/session"
+import type { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
+import { hasLeaveBalanceTracking } from "@/contexts/leave/domain/policies/has-balance-tracking.policy"
+import { toFiscalYear } from "@/contexts/leave/domain/values/fiscal-year.definition"
 import type { Context } from "@/env"
 import {
   ConflictError,
@@ -29,7 +28,17 @@ export type Command = {
  * 会計年度は申請の startDate から導出する（サーバ時刻に依存しない）。
  */
 export class DecideLeaveRequest {
-  constructor(private readonly c: Context) {}
+  constructor(
+    private readonly c: Context,
+    private readonly notifyApprovalResult: (command: {
+      recipientEmployeeId: number
+      action: "approve" | "reject"
+      subjectLabel: string
+      sourceDomain: string
+      sourceId: number | null
+      createdAt: string
+    }) => Promise<unknown> = async () => null,
+  ) {}
 
   async run(command: Command): Promise<LeaveRequest | ApplicationError> {
     if (command.session.hasPermission("leave:approve") === false) {
@@ -168,7 +177,7 @@ export class DecideLeaveRequest {
 
   /** 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。 */
   private async notify(command: Command, existing: LeaveRequest): Promise<void> {
-    await new NotifyApprovalResult(this.c).run({
+    await this.notifyApprovalResult({
       recipientEmployeeId: existing.employeeId,
       action: command.action,
       subjectLabel: "休暇申請",

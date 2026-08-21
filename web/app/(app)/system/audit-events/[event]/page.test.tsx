@@ -94,13 +94,6 @@ describe("AuditEventDetailPage", () => {
     expect(back.getAttribute("data-prefetch")).toBe("false")
   })
 
-  test("warns when a legacy event may predate the current redactor", async () => {
-    mocks.requirePermission.mockResolvedValue({ permissions: ["audit:read"] })
-    mocks.getAuditEvent.mockResolvedValue({ ...detail, event_id: "legacy-001" })
-    render(await AuditEventDetailPage({ params: Promise.resolve({ event: "legacy-001" }) }))
-    expect(screen.getByText("移行前の監査イベントです")).toBeDefined()
-  })
-
   test.each([403, 404])("hides event existence for API status %s", async (status) => {
     mocks.requirePermission.mockResolvedValue({ permissions: ["audit:read"] })
     mocks.getAuditEvent.mockResolvedValue(new ApiResponseError(status, "safe"))

@@ -3,18 +3,19 @@ import { contextStorage } from "hono/context-storage"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 import { seedCertificateRequests } from "@/contexts/certificate-request/infrastructure/seed/seed-certificate-requests.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { databaseMiddleware } from "@/api/database-middleware"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import * as createRoute from "@/contexts/certificate-request/interface/routes/certificate-requests"
 import * as detailRoute from "@/contexts/certificate-request/interface/routes/certificate-requests.$id"
 import * as meRoute from "@/contexts/certificate-request/interface/routes/certificate-requests.me"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 /**
  * app.ts は統合者が後で配線するため、ここでは同じミドルウェア連鎖の使い捨て app に
@@ -88,6 +89,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: certificateRequest.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -95,8 +97,6 @@ async function createTestDb(): Promise<D1Database> {
 function requesterToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 4,
-    email: "you+e004@example.com",
-    role: "manager",
   })
 }
 
@@ -127,6 +127,7 @@ async function request(props: {
       DB: await createTestDb(),
       JWT_SECRET: jwtSecret,
       AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      COMPANY_TIME_ZONE: "Asia/Tokyo",
       NOW: "2026-01-01T00:00:00.000Z",
     },
   )

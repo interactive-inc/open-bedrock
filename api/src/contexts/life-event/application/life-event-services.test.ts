@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { CreateLifeEvent } from "@/contexts/life-event/application/create-life-event"
 import { UpdateLifeEvent } from "@/contexts/life-event/application/update-life-event"
-import { LifeEvent } from "@/contexts/life-event/domain/life-event.entity"
+import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import { ForbiddenError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

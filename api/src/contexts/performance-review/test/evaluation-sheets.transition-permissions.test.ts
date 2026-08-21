@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createLifecycleRouteDb } from "@/api/test/support/lifecycle-route-fixture"
@@ -7,7 +7,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "transition-permissions-test-secret"
 
@@ -45,7 +45,7 @@ async function createTestDb(): Promise<D1Database> {
     },
   ])
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -53,7 +53,6 @@ async function createTestDb(): Promise<D1Database> {
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `e${employeeId}@example.com`,
   })
 }
 
@@ -63,7 +62,6 @@ async function createSheetWithEvaluators(
 ): Promise<{ id: number; revision: number }> {
   const token = await createTestToken(jwtSecret, {
     employeeId: 1,
-    email: "admin@example.com",
   })
 
   const secondaryId = opts?.secondaryEvaluatorId !== undefined ? opts.secondaryEvaluatorId : 6
@@ -1344,7 +1342,7 @@ describe("atomic operations with sheet status guard", () => {
 // ---------------------------------------------------------------------------
 describe("lifecycle evaluator validation", () => {
   /**
-   * lifecycle migration "verified" な DB を作成し、テストケースに合わせてデータを修正する。
+   * canonical Company organization を持つ DB を作成し、テストケースに合わせてデータを修正する。
    *
    * ベースデータ（createLifecycleRouteDb）:
    * - employee 5 → D003 (manager=4), starts_on='2025-01-01', ends_on=NULL
@@ -1356,74 +1354,7 @@ describe("lifecycle evaluator validation", () => {
     subjectAssignmentEndsOn?: string | null
     managerEndsOn?: string
   }): Promise<D1Database> {
-    const db = await createLifecycleRouteDb()
-
-    // lifecycle テーブルは append-only（UPDATE 禁止トリガー付き）。
-    // 日付を変更するには新しい revision を INSERT する。
-    if (
-      opts?.subjectAssignmentStartsOn !== undefined ||
-      opts?.subjectAssignmentEndsOn !== undefined
-    ) {
-      await db
-        .prepare(
-          `INSERT INTO employee_org_assignment_period_versions
-             (period_id, revision, employment_period_id, employee_id, department_code,
-              assignment_type, position_title, manager_employee_id, starts_on, ends_on,
-              is_void, recorded_by_action_id, recorded_at)
-           VALUES ('assignment-5', 2, 'employment-5', 5, 'D003', 'primary', 'Engineer', 4,
-                   ?1, ?2, 0, 'test-fixture', 1)`,
-        )
-        .bind(
-          opts?.subjectAssignmentStartsOn ?? "2025-01-01",
-          opts?.subjectAssignmentEndsOn ?? null,
-        )
-        .run()
-    }
-
-    if (opts?.managerEndsOn !== undefined) {
-      await db
-        .prepare(
-          `INSERT INTO employee_org_responsibility_period_versions
-             (period_id, revision, department_code, responsibility_type, employee_id,
-              starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-           VALUES ('responsibility-4', 2, 'D003', 'department_manager', 4,
-                   '2025-01-01', ?1, 0, 'test-fixture', 2)`,
-        )
-        .bind(opts.managerEndsOn)
-        .run()
-      await db
-        .prepare(
-          `INSERT INTO employee_org_assignment_period_versions
-             (period_id, revision, employment_period_id, employee_id, department_code,
-              assignment_type, position_title, manager_employee_id, starts_on, ends_on,
-              is_void, recorded_by_action_id, recorded_at)
-           VALUES ('assignment-4', 2, 'employment-4', 4, 'D003', 'primary', 'Manager', 1,
-                   '2025-01-01', ?1, 0, 'test-fixture', 2)`,
-        )
-        .bind(opts.managerEndsOn)
-        .run()
-      await db
-        .prepare(
-          `INSERT INTO employee_status_period_versions
-             (period_id, revision, employment_period_id, employee_id, status, starts_on,
-              ends_on, is_void, recorded_by_action_id, recorded_at)
-           VALUES ('status-4', 2, 'employment-4', 4, 'active', '2025-01-01',
-                   ?1, 0, 'test-fixture', 2)`,
-        )
-        .bind(opts.managerEndsOn)
-        .run()
-      await db
-        .prepare(
-          `INSERT INTO employment_period_versions
-             (period_id, revision, employee_id, starts_on, ends_on, is_void,
-              recorded_by_action_id, recorded_at)
-           VALUES ('employment-4', 2, 4, '2025-01-01', ?1, 0, 'test-fixture', 2)`,
-        )
-        .bind(opts.managerEndsOn)
-        .run()
-    }
-
-    return db
+    return createLifecycleRouteDb(opts)
   }
 
   test("JST boundary: UTC 14:59 → business date Jan-1 (assignment active)", async () => {
@@ -1519,13 +1450,5 @@ describe("lifecycle evaluator validation", () => {
     expect(res.status).toBe(400)
     const body = (await res.json()) as { code: string }
     expect(body.code).toBe("evaluator_not_active")
-  })
-
-  test("active assignments prevent archiving their department", async () => {
-    const db = await createLifecycleMboDb()
-
-    expect(
-      db.prepare("UPDATE org_departments SET archived_at = 1 WHERE code = 'D003'").run(),
-    ).rejects.toThrow("organization change leaves an orphan assignment")
   })
 })

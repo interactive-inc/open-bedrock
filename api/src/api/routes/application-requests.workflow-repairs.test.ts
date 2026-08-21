@@ -1,4 +1,4 @@
-import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
+import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import {
   createLifecycleRouteDb,
@@ -46,7 +46,6 @@ type TestState = Readonly<{
 function token(employeeId: number): Promise<string> {
   return createTestToken(lifecycleRouteJwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
   })
 }
 

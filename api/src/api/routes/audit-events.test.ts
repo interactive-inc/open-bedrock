@@ -7,6 +7,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "audit-list-route-test-secret"
 const now = "2026-01-03T00:00:00.000Z"
@@ -33,17 +34,17 @@ async function createTestDb(): Promise<TestDb> {
   await grantPermission(db, 3, "audit-exporter", "audit:export")
   await seedAuditEvent(db, {
     eventId: "12345678-1234-4abc-8def-1234567890ab",
-    requestId: "legacy-request-1",
+    requestId: "custom-request-1",
     actorAccountId: -41,
-    action: "legacy.action",
-    targetType: "legacy_target",
+    action: "custom.action",
+    targetType: "custom_target",
     targetId: "private-target",
     outcome: "succeeded",
     createdAt: 1_767_225_600,
   })
   await seedAuditEvent(db, {
     eventId: "12345678-1234-4abc-8def-1234567890ac",
-    requestId: "legacy-request-2",
+    requestId: "custom-request-2",
     actorAccountId: 1,
     action: "iam.role.created",
     targetType: "role",
@@ -51,6 +52,7 @@ async function createTestDb(): Promise<TestDb> {
     outcome: "failed",
     createdAt: 1_767_312_000,
   })
+  await initializeStandardCompanyTestState(db)
 
   return {
     db,
@@ -109,8 +111,8 @@ async function seedAuditEvent(
        (event_id, request_id, actor_account_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'legacy_reason',
-               '{"legacy":true}', '{"before":1}', '{"after":2}',
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'custom_reason',
+               '{"custom":true}', '{"before":1}', '{"after":2}',
                '{"private":"value"}', '192.0.2.10', 'api', ?8)`,
     )
     .bind(
@@ -127,7 +129,7 @@ async function seedAuditEvent(
 }
 
 function token(employeeId: number, role = "member"): Promise<string> {
-  return createTestToken(jwtSecret, { employeeId, role })
+  return createTestToken(jwtSecret, { employeeId })
 }
 
 function request(db: D1Database, path: string, bearer: string | null): Promise<Response> {
@@ -174,12 +176,12 @@ describe("GET /audit-events", () => {
     expect((await request(db, "/audit-events", bearer)).status).toBe(403)
   })
 
-  test("filters legacy vocabulary in a half-open range and paginates only with opaque cursors", async () => {
+  test("filters custom vocabulary in a half-open range and paginates only with opaque cursors", async () => {
     const { db } = await createTestDb()
     const bearer = await token(1)
     const filtered = await request(
       db,
-      "/audit-events?actor_account_id=-41&action=legacy.action&target_type=legacy_target&target_id=private-target&outcome=succeeded&from=2026-01-01T00:00:00Z&to=2026-01-02T00:00:00Z",
+      "/audit-events?actor_account_id=-41&action=custom.action&target_type=custom_target&target_id=private-target&outcome=succeeded&from=2026-01-01T00:00:00Z&to=2026-01-02T00:00:00Z",
       bearer,
     )
     const filteredBody = (await filtered.json()) as { data: Array<{ event_id: string }> }
@@ -221,7 +223,7 @@ describe("GET /audit-events", () => {
 
     const filterRebound = await request(
       db,
-      `/audit-events?limit=1&action=legacy.changed&cursor=${encodeURIComponent(firstBody.next_cursor ?? "")}`,
+      `/audit-events?limit=1&action=custom.changed&cursor=${encodeURIComponent(firstBody.next_cursor ?? "")}`,
       bearer,
     )
     expect(filterRebound.status).toBe(400)
@@ -241,7 +243,7 @@ describe("GET /audit-events", () => {
 
     expect(response.status).toBe(400)
     expect(await response.json()).toMatchObject({ code: "audit_invalid_query" })
-    expect(state.queries()).toBe(6)
+    expect(state.queries()).toBe(5)
     const after = await state.db
       .prepare("SELECT count(*) AS count FROM audit_events")
       .first("count")
@@ -262,13 +264,13 @@ describe("GET /audit-events", () => {
 
       expect(response.status).toBe(400)
       expect(await response.json()).toMatchObject({ code: "invalid_audit_cursor" })
-      expect(state.queries()).toBe(6)
+      expect(state.queries()).toBe(5)
     },
   )
 
   test("does not expose internal, JSON, IP or mutable identity fields", async () => {
     const { db } = await createTestDb()
-    const response = await request(db, "/audit-events?action=legacy.action", await token(1))
+    const response = await request(db, "/audit-events?action=custom.action", await token(1))
     const body = (await response.json()) as { data: Array<Record<string, unknown>> }
     const item = body.data[0] ?? {}
 
@@ -405,6 +407,7 @@ describe("GET /audit-events", () => {
       },
       JWT_SECRET: jwtSecret,
       AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      COMPANY_TIME_ZONE: "Asia/Tokyo",
       NOW: now,
     }
 
@@ -430,6 +433,7 @@ describe("GET /audit-events", () => {
       DB: db,
       JWT_SECRET: jwtSecret,
       AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      COMPANY_TIME_ZONE: "Asia/Tokyo",
       NOW: now,
       API_RATE_LIMITER: {
         limit: () => Promise.resolve({ success: false }),

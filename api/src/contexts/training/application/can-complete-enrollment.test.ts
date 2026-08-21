@@ -1,4 +1,4 @@
-import { canCompleteEnrollment } from "@/contexts/training/domain/can-complete-enrollment"
+import { canCompleteEnrollment } from "@/contexts/training/domain/policies/enrollment-completion.policy"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { describe, expect, test } from "bun:test"
 

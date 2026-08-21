@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test"
 import { seedAttendanceRecords } from "@/contexts/attendance/infrastructure/seed/seed-attendance-records.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
-import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedOrgMemberships } from "@/api/test/support/company/seed-org-memberships.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
-import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
 import { z } from "zod"
 
 const jwtSecret = "attendance-list-route-test-secret"
@@ -67,16 +67,14 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -91,10 +89,7 @@ const attendanceListResponseSchema = z.object({
 
 describe("GET /attendance-records", () => {
   test("privileged role can read another employee via employee_id", async () => {
-    const response = await getRequest(
-      "/attendance-records?employee_id=5",
-      await tokenFor(1, "root"),
-    )
+    const response = await getRequest("/attendance-records?employee_id=5", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -110,19 +105,13 @@ describe("GET /attendance-records", () => {
   })
 
   test("member requesting another employee_id is forbidden", async () => {
-    const response = await getRequest(
-      "/attendance-records?employee_id=9",
-      await tokenFor(5, "member"),
-    )
+    const response = await getRequest("/attendance-records?employee_id=9", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
 
   test("manager can read a report's attendance (E004 over E005)", async () => {
-    const response = await getRequest(
-      "/attendance-records?employee_id=5",
-      await tokenFor(4, "manager"),
-    )
+    const response = await getRequest("/attendance-records?employee_id=5", await tokenFor(4))
 
     expect(response.status).toBe(200)
 
@@ -136,25 +125,19 @@ describe("GET /attendance-records", () => {
   })
 
   test("manager cannot read a non-report's attendance (E004 not over E009)", async () => {
-    const response = await getRequest(
-      "/attendance-records?employee_id=9",
-      await tokenFor(4, "manager"),
-    )
+    const response = await getRequest("/attendance-records?employee_id=9", await tokenFor(4))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 400 when from is not a valid date format", async () => {
-    const response = await getRequest("/attendance-records?from=aaa", await tokenFor(1, "root"))
+    const response = await getRequest("/attendance-records?from=aaa", await tokenFor(1))
 
     expect(response.status).toBe(400)
   })
 
   test("returns 400 when to is not a valid date format", async () => {
-    const response = await getRequest(
-      "/attendance-records?to=2026/06/01",
-      await tokenFor(1, "root"),
-    )
+    const response = await getRequest("/attendance-records?to=2026/06/01", await tokenFor(1))
 
     expect(response.status).toBe(400)
   })
@@ -229,7 +212,7 @@ async function createScopeTestDb(): Promise<D1Database> {
     },
   ])
 
-  await verifyCompanyMigrationFixture({
+  await initializeCompanyTestFixture({
     db,
     departments: [
       { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
@@ -246,7 +229,7 @@ describe("GET /attendance-records?scope=reports", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/attendance-records?scope=reports",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
     })
 
     expect(response.status).toBe(200)
@@ -269,7 +252,7 @@ describe("GET /attendance-records?scope=reports", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/attendance-records?scope=reports",
-      token: await tokenFor(22, "manager"),
+      token: await tokenFor(22),
     })
 
     expect(response.status).toBe(200)
@@ -289,7 +272,7 @@ describe("GET /attendance-records?scope=reports", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/attendance-records?scope=reports",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
     })
 
     expect(response.status).toBe(403)

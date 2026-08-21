@@ -4,17 +4,18 @@ import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 import { seedRoomReservations } from "@/contexts/room/infrastructure/seed/seed-room-reservations.repository"
 import { seedRooms } from "@/contexts/room/infrastructure/seed/seed-rooms.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { databaseMiddleware } from "@/api/database-middleware"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import * as roomsRoute from "@/contexts/room/interface/routes/rooms"
 import * as roomDetailRoute from "@/contexts/room/interface/routes/rooms.$id"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 /**
  * app.ts は統合者が後で配線するため、ここでは同じミドルウェア連鎖の使い捨て app に
@@ -89,6 +90,7 @@ async function createTestDb(): Promise<D1Database> {
       purpose: reservation.purpose,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -96,16 +98,12 @@ async function createTestDb(): Promise<D1Database> {
 function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
-    email: "you+e001@example.com",
-    role: "root",
   })
 }
 
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 5,
-    email: "you+e005@example.com",
-    role: "member",
   })
 }
 
@@ -136,6 +134,7 @@ async function request(props: {
       DB: await createTestDb(),
       JWT_SECRET: jwtSecret,
       AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      COMPANY_TIME_ZONE: "Asia/Tokyo",
       NOW: "2026-01-01T00:00:00.000Z",
     },
   )
@@ -375,6 +374,7 @@ describe("DELETE /rooms/:id", () => {
         DB: db,
         JWT_SECRET: jwtSecret,
         AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+        COMPANY_TIME_ZONE: "Asia/Tokyo",
         NOW: "2026-01-01T00:00:00.000Z",
       },
     )

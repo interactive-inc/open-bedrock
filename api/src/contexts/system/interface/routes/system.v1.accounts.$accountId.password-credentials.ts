@@ -11,7 +11,7 @@ import { SystemPasswordValue } from "@system/domain/values/system-password.value
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
-import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
+import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
 import { SystemPasswordAdministrationRepository } from "@system/infrastructure/auth/system-password-administration.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
@@ -52,9 +52,8 @@ export const PATCH = systemFactory.createHandlers(
     if (identityId === null) {
       throw new SystemPasswordCredentialNotFoundError()
     }
-    const passwordHash = await PasswordHashService.hash(body.password, pepper).catch(
-      (caught: unknown) =>
-        caught instanceof Error ? caught : new Error("failed to hash System password"),
+    const passwordHash = await hashPassword(body.password, pepper).catch((caught: unknown) =>
+      caught instanceof Error ? caught : new Error("failed to hash System password"),
     )
     if (passwordHash instanceof Error) {
       console.error(

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedShiftSwapRequests } from "@/contexts/shift/infrastructure/seed/seed-shift-swap-requests.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "shift-swap-request-crud-test-secret"
 
@@ -53,15 +54,14 @@ async function createTestDb(): Promise<D1Database> {
       approved_at: swapRequest.approvedAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -85,7 +85,7 @@ describe("GET /shift-swap-requests/me", () => {
   test("returns only the requester's own requests", async () => {
     const response = await request({
       path: "/shift-swap-requests/me",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(200)
@@ -113,7 +113,7 @@ describe("GET /shift-swap-requests/:id", () => {
   test("the requester can read their own request", async () => {
     const response = await request({
       path: "/shift-swap-requests/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(200)
@@ -130,7 +130,7 @@ describe("GET /shift-swap-requests/:id", () => {
   test("an approver can read another person's request", async () => {
     const response = await request({
       path: "/shift-swap-requests/1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -139,7 +139,7 @@ describe("GET /shift-swap-requests/:id", () => {
   test("returns 403 for a non-requester non-approver", async () => {
     const response = await request({
       path: "/shift-swap-requests/1",
-      token: await tokenFor(10, "member"),
+      token: await tokenFor(10),
     })
 
     expect(response.status).toBe(403)
@@ -148,7 +148,7 @@ describe("GET /shift-swap-requests/:id", () => {
   test("returns 404 for an unknown request", async () => {
     const response = await request({
       path: "/shift-swap-requests/9999",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(404)
@@ -159,7 +159,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
   test("the requester cancels their pending request and returns 204", async () => {
     const response = await request({
       path: "/shift-swap-requests/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "DELETE",
     })
 
@@ -169,7 +169,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
   test("returns 403 when cancelling another person's request", async () => {
     const response = await request({
       path: "/shift-swap-requests/1",
-      token: await tokenFor(4, "member"),
+      token: await tokenFor(4),
       method: "DELETE",
     })
 
@@ -179,7 +179,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
   test("returns 409 when cancelling an approved request", async () => {
     const response = await request({
       path: "/shift-swap-requests/2",
-      token: await tokenFor(4, "member"),
+      token: await tokenFor(4),
       method: "DELETE",
     })
 
@@ -189,7 +189,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
   test("returns 404 for an unknown request", async () => {
     const response = await request({
       path: "/shift-swap-requests/9999",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "DELETE",
     })
 

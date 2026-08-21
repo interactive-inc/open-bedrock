@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import type { GovernanceMetadata } from "@/contexts/governance/domain/governance-document"
+import type { Session } from "@/lib/auth/session"
+import type { GovernanceMetadata } from "@/contexts/governance/domain/values/governance-document.definition"
 import type { Context } from "@/env"
 import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
 import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/resolve-governance-org-role.repository"

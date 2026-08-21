@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedLeaveBalances } from "@/contexts/leave/infrastructure/seed/seed-leave-balances.repository"
 import { seedLeaveRequests } from "@/contexts/leave/infrastructure/seed/seed-leave-requests.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -8,7 +8,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const leaveBalanceResponseSchema = z.object({
@@ -93,16 +93,14 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -127,7 +125,7 @@ describe("POST /leave-requests/:id/reject", () => {
   test("rejects a pending request without touching the balance", async () => {
     const db = await createTestDb()
 
-    const managerToken = await tokenFor(4, "manager")
+    const managerToken = await tokenFor(4)
 
     const rejectResponse = await requestWithContext({
       db,
@@ -153,7 +151,7 @@ describe("POST /leave-requests/:id/reject", () => {
       expect(rejectParsed.data.leave_type).toBe("annual")
     }
 
-    const ownerToken = await tokenFor(5, "member")
+    const ownerToken = await tokenFor(5)
 
     const balanceResponse = await requestWithContext({
       db,
@@ -173,7 +171,7 @@ describe("POST /leave-requests/:id/reject", () => {
   test("returns 400 when comment is empty", async () => {
     const response = await request({
       path: "/leave-requests/1/reject",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
       method: "POST",
       body: { comment: "" },
     })
@@ -184,7 +182,7 @@ describe("POST /leave-requests/:id/reject", () => {
   test("returns 400 when comment is null", async () => {
     const response = await request({
       path: "/leave-requests/1/reject",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
       method: "POST",
       body: { comment: null },
     })
@@ -195,7 +193,7 @@ describe("POST /leave-requests/:id/reject", () => {
   test("returns 400 when comment is omitted", async () => {
     const response = await request({
       path: "/leave-requests/1/reject",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
       method: "POST",
       body: {},
     })
@@ -206,7 +204,7 @@ describe("POST /leave-requests/:id/reject", () => {
   test("returns 403 for a member", async () => {
     const response = await request({
       path: "/leave-requests/1/reject",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { comment: "rejected" },
     })

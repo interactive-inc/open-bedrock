@@ -1,5 +1,4 @@
 import { SystemAuditJsonError } from "@system/domain/errors"
-import type { SystemAuditJsonValue } from "@system/domain/values/system-audit-json-value.definition"
 
 const maximumAuditJsonBytes = 65_536
 const maximumAuditJsonDepth = 100
@@ -349,9 +348,7 @@ export class StableSystemAuditJsonValue {
     Object.freeze(this)
   }
 
-  static create(
-    value: SystemAuditJsonValue,
-  ): StableSystemAuditJsonValue | null | SystemAuditJsonError {
+  static create(value: unknown): StableSystemAuditJsonValue | null | SystemAuditJsonError {
     if (value === null) return null
 
     try {

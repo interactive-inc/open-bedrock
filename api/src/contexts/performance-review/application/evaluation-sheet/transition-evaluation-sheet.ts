@@ -2,7 +2,7 @@ import { eq, sum } from "drizzle-orm"
 import type {
   EvaluationSheet,
   EvaluationSheetStatus,
-} from "@/contexts/performance-review/domain/evaluation-sheet/evaluation-sheet.entity"
+} from "@/contexts/performance-review/domain/entities/evaluation-sheet.entity"
 import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

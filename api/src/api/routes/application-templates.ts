@@ -1,25 +1,21 @@
 import {
-  createLegacyCompanyPolicy,
   parseSystemProcedureInputSchema,
   publishSystemProcedure,
   systemProcedureRepository,
 } from "@/api/http/application-templates/lib/system-procedure-route"
-import { findUnknownApproverRoles } from "@/contexts/company/domain/organization/validate-procedure-policy-references"
-import {
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
+import { findUnknownCompanyApproverRoles } from "@/api/http/application-templates/find-unknown-company-approver-roles"
+import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { jsonPayloadSchema } from "@/lib/http/json-payload-schema"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { zAppApplicationTemplateDetail, zAppApplicationTemplateList } from "@/lib/app-schemas"
 import { ConflictError as ApplicationConflictError, UnprocessableError } from "@/lib/errors"
 import { codeSchema } from "@/lib/schemas"
@@ -53,7 +49,7 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
     const approverRoles = body.approver_roles ?? []
-    const unknownRoles = await findUnknownApproverRoles(c, approverRoles)
+    const unknownRoles = await findUnknownCompanyApproverRoles(c.env.DB, approverRoles)
     if (unknownRoles instanceof Error) {
       throw new InternalError("failed to validate approver roles")
     }
@@ -62,7 +58,7 @@ export const POST = factory.createHandlers(
         new UnprocessableError("unknown approver role", "unknown_approver_role"),
       )
     }
-    const policy = createLegacyCompanyPolicy(approverRoles)
+    const policy = createCompanyProcedureDecisionPolicy({ approverRoles, workflow: null })
     if (policy instanceof Error) throw new InternalError("failed to create procedure policy")
     const created = await publishSystemProcedure(c, {
       code: body.code,

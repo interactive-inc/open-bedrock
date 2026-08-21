@@ -1,12 +1,8 @@
 import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/resolve-governance-org-role.repository"
 import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import {
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
+import { verifyBearer } from "@/api/http/verify-bearer"
 
 // @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

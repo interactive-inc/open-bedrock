@@ -374,6 +374,73 @@ export class SystemInternalServerError extends SystemHTTPException {
   }
 }
 
+export class SystemAttachmentFileRequiredError extends SystemHTTPException {
+  constructor() {
+    super({ status: 400, code: "attachment_file_required", detail: "file field is required" })
+  }
+}
+
+export class SystemAttachmentValidationError extends SystemHTTPException {
+  constructor(props: { code: string; detail: string; payloadTooLarge?: boolean; cause?: unknown }) {
+    super({
+      status: props.payloadTooLarge === true ? 413 : 400,
+      code: props.code,
+      detail: props.detail,
+      cause: props.cause,
+    })
+  }
+}
+
+export class SystemAttachmentUnavailableError extends SystemHTTPException {
+  constructor(props: { code?: string; detail?: string; cause?: unknown } = {}) {
+    super({
+      status: 503,
+      code: props.code ?? "attachment_unavailable",
+      detail: props.detail ?? "attachment service unavailable",
+      cause: props.cause,
+    })
+  }
+}
+
+export class SystemAttachmentInternalError extends SystemHTTPException {
+  constructor(props: { code: string; detail: string; cause?: unknown }) {
+    super({ status: 500, ...props })
+  }
+}
+
+export class SystemAttachmentNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "attachment_not_found", detail: "attachment not found" })
+  }
+}
+
+export class SystemAttachmentNotPendingError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 404,
+      code: "attachment_not_pending",
+      detail: "attachment is linked to a record",
+    })
+  }
+}
+
+export class SystemAttachmentReadError extends SystemHTTPException {
+  constructor(props: { code: string; detail: string; unavailable?: boolean; cause?: unknown }) {
+    super({ status: props.unavailable === true ? 503 : 404, ...props })
+  }
+}
+
+export class SystemAttachmentPurgeUnavailableError extends SystemHTTPException {
+  constructor(cause?: unknown) {
+    super({
+      status: 503,
+      code: "attachment_purge_unavailable",
+      detail: "attachment purge unavailable",
+      cause,
+    })
+  }
+}
+
 type SystemApplicationFailure = Readonly<{
   status: SystemHTTPExceptionStatus
   body: Readonly<{ error: string; message: string } & Record<string, unknown>>

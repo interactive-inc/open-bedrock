@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/lib/auth/session"
 import {
   ApplicationError,
   ConflictError,
@@ -6,7 +6,7 @@ import {
   NotFoundError,
   UnexpectedError,
 } from "@/lib/errors"
-import { TrainingEnrollment } from "@/contexts/training/domain/training-enrollment.entity"
+import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/training-course.repository"

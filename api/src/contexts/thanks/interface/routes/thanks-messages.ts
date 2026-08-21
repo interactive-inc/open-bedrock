@@ -1,18 +1,19 @@
 import { SendThanks } from "@/contexts/thanks/application/send-thanks"
-import { Thanks } from "@/contexts/thanks/domain/thanks.entity"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { EmployeeNotificationGateway } from "@/api/http/notifications/employee-notification.gateway.repository"
+import { Thanks } from "@/contexts/thanks/domain/entities/thanks.entity"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { toEmployeeNameMap } from "@/contexts/company/interface/utils/to-employee-name-map"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/lib/http/to-bounded-int"
+import { toEmployeeNameMap } from "@/api/http/utils/to-employee-name-map"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { zAppThanks, zAppThanksList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { thanks as thanksTable } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { zValidator } from "@hono/zod-validator"
 import { count, desc } from "drizzle-orm"
@@ -98,7 +99,9 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const result = await new SendThanks(c).run({
+    const result = await new SendThanks(c, (notification) =>
+      new EmployeeNotificationGateway(c).create(notification),
+    ).run({
       senderEmployeeId: session.employeeId,
       recipientEmployeeCode: json.recipient_employee_code,
       message: json.message,

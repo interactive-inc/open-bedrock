@@ -1,4 +1,4 @@
-import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/family-care-leave.entity"
+import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import type { Context } from "@/env"
 import { familyCareLeaves } from "@/contexts/family-care-leave/infrastructure/schema/family-care-leave"
 import { and, asc, eq, gte, lte, ne, sql } from "drizzle-orm"

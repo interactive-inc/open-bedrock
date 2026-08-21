@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedTrainingCourses } from "@/contexts/training/infrastructure/seed/seed-training-courses.repository"
 import { seedTrainingEnrollments } from "@/contexts/training/infrastructure/seed/seed-training-enrollments.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const trainingEnrollmentResponseSchema = z.object({
   id: z.number(),
@@ -69,15 +70,14 @@ async function createTestDb(): Promise<D1Database> {
       due_date: enrollment.dueDate,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -98,10 +98,7 @@ async function request(
 
 describe("GET /training-enrollments", () => {
   test("a privileged role views another's status by employee_code", async () => {
-    const response = await request(
-      "/training-enrollments?employee_code=E005",
-      await tokenFor(1, "root"),
-    )
+    const response = await request("/training-enrollments?employee_code=E005", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -114,34 +111,25 @@ describe("GET /training-enrollments", () => {
   })
 
   test("a member targeting another employee is forbidden", async () => {
-    const response = await request(
-      "/training-enrollments?employee_code=E004",
-      await tokenFor(5, "member"),
-    )
+    const response = await request("/training-enrollments?employee_code=E004", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for an unknown employee_code", async () => {
-    const response = await request(
-      "/training-enrollments?employee_code=E999",
-      await tokenFor(1, "root"),
-    )
+    const response = await request("/training-enrollments?employee_code=E999", await tokenFor(1))
 
     expect(response.status).toBe(404)
   })
 
   test("returns 404 for an unknown employee_id", async () => {
-    const response = await request(
-      "/training-enrollments?employee_id=9999",
-      await tokenFor(1, "root"),
-    )
+    const response = await request("/training-enrollments?employee_id=9999", await tokenFor(1))
 
     expect(response.status).toBe(404)
   })
 
   test("a privileged role views another's status by employee_id", async () => {
-    const response = await request("/training-enrollments?employee_id=5", await tokenFor(1, "root"))
+    const response = await request("/training-enrollments?employee_id=5", await tokenFor(1))
 
     expect(response.status).toBe(200)
 

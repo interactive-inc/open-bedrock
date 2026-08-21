@@ -8,25 +8,25 @@ import {
   toApplicationStatus,
   toSystemStatuses,
 } from "@/api/http/application-requests/lib/system-application-view"
-import { resolveCompanyAccountParticipants } from "@/contexts/company/interface/http/accounts/resolve-company-account-participants"
-import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/interface/http/accounts/resolve-system-account-ids-for-employees"
+import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants"
+import { resolveSystemAccountIdsForEmployees } from "@/api/http/accounts/resolve-system-account-ids-for-employees"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
-import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
+} from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { jsonPayloadSchema } from "@/lib/http/json-payload-schema"
+import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { zAppApplication, zAppApplicationAdminList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { codeSchema } from "@/lib/schemas"

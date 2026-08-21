@@ -4,13 +4,13 @@ import type {
   LifecycleSchedule,
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
-} from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
-import type { Context } from "@/env"
+} from "@/contexts/company/domain/values/lifecycle-schedule.definition"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import type {
   LifecycleDepartmentReference,
   LifecycleEmployeeReference,
-} from "@/contexts/company/domain/employee-lifecycle/project-personnel-action"
-import { ApplicationError, UnexpectedError } from "@/lib/errors"
+} from "@/contexts/company/domain/policies/project-personnel-action.policy"
+import { CompanyOperationError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 
 type EmploymentRow = {
   period_id: string
@@ -89,8 +89,8 @@ function toResponsibility(row: ResponsibilityRow): OrgResponsibilityPeriod {
   }
 }
 
-function repositoryError(cause: unknown): ApplicationError {
-  return new UnexpectedError("人事ライフサイクルの読み取りに失敗しました", { cause })
+function repositoryError(cause: unknown): CompanyOperationError {
+  return new CompanyUnexpectedError("人事ライフサイクルの読み取りに失敗しました", { cause })
 }
 
 const employmentSelect = `
@@ -135,11 +135,11 @@ const responsibilitySelect = `
   ) AND current.is_void = 0`
 
 export class EmployeeLifecycleRepository {
-  constructor(private readonly c: Context) {
+  constructor(private readonly c: CompanyContext) {
     Object.freeze(this)
   }
 
-  async loadSchedule(employeeId: number): Promise<LifecycleSchedule | ApplicationError> {
+  async loadSchedule(employeeId: number): Promise<LifecycleSchedule | CompanyOperationError> {
     try {
       const db = this.c.env.DB
       const [employments, statuses, assignments, responsibilities] = await Promise.all([
@@ -174,7 +174,9 @@ export class EmployeeLifecycleRepository {
     }
   }
 
-  async loadOrganizationSchedules(): Promise<ReadonlyArray<LifecycleSchedule> | ApplicationError> {
+  async loadOrganizationSchedules(): Promise<
+    ReadonlyArray<LifecycleSchedule> | CompanyOperationError
+  > {
     try {
       const db = this.c.env.DB
       const [employments, statuses, assignments, responsibilities] = await Promise.all([
@@ -217,7 +219,7 @@ export class EmployeeLifecycleRepository {
 
   async loadRevisions(
     employeeId: number,
-  ): Promise<{ employeeRevision: number; organizationRevision: number } | ApplicationError> {
+  ): Promise<{ employeeRevision: number; organizationRevision: number } | CompanyOperationError> {
     try {
       const [employeeRevision, organizationRevision] = await Promise.all([
         this.c.env.DB.prepare(
@@ -244,7 +246,7 @@ export class EmployeeLifecycleRepository {
         departments: ReadonlyArray<LifecycleDepartmentReference>
         employees: ReadonlyArray<LifecycleEmployeeReference>
       }
-    | ApplicationError
+    | CompanyOperationError
   > {
     try {
       const [departments, employees] = await Promise.all([
@@ -268,25 +270,6 @@ export class EmployeeLifecycleRepository {
         })),
         employees: employees.results,
       }
-    } catch (cause) {
-      return repositoryError(cause)
-    }
-  }
-
-  /**
-   * 人事ライフサイクル移行の進捗を返す。`pending` → `backfilled` → `verified` と進む。
-   *
-   * Companyの読み取りと組織上の判断は`verified`を必須とし、未移行ならfail closedにする。
-   * 未移行時のlegacy在籍状態は、移行操作へ到達するための認証bootstrapにだけ限定する。
-   * `employees`と`org_memberships`の非正規化値は互換projectionであり、判断の正本ではない。
-   */
-  async migrationStatus(): Promise<"pending" | "backfilled" | "verified" | ApplicationError> {
-    try {
-      return (
-        (await this.c.env.DB.prepare(
-          "SELECT status FROM lifecycle_migration_states WHERE id = 1",
-        ).first<"pending" | "backfilled" | "verified">("status")) ?? "pending"
-      )
     } catch (cause) {
       return repositoryError(cause)
     }

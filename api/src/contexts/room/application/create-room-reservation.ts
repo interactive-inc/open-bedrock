@@ -1,4 +1,4 @@
-import { RoomReservation } from "@/contexts/room/domain/room-reservation.entity"
+import { RoomReservation } from "@/contexts/room/domain/entities/room-reservation.entity"
 import {
   ConflictError,
   NotFoundError,

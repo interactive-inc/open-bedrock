@@ -1,17 +1,17 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { resignations } from "@/contexts/resignation/infrastructure/schema/resignation"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppResignationList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { z } from "zod"
 
 /** 並び順のホワイトリスト。未知の値は created_at desc にフォールバックする。 */

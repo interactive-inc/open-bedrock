@@ -1,4 +1,4 @@
-import { AttendanceRecord } from "@/contexts/attendance/domain/attendance-record.entity"
+import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/attendance-record.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"

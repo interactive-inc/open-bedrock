@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test"
 import { seedGoalEvaluations } from "@/contexts/performance-review/infrastructure/seed/seed-goal-evaluations.repository"
 import { seedGoals } from "@/contexts/performance-review/infrastructure/seed/seed-goals.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
-import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedOrgMemberships } from "@/api/test/support/company/seed-org-memberships.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const goalResponseSchema = z.object({
@@ -93,16 +93,14 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -112,7 +110,7 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/4/evaluations",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
     })
 
     expect(response.status).toBe(200)
@@ -134,7 +132,7 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/4/evaluations",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -145,7 +143,7 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/3/evaluations",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
     })
 
     expect(response.status).toBe(200)
@@ -164,7 +162,7 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/4/evaluations",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)
@@ -175,7 +173,7 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/9999/evaluations",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(404)
@@ -199,7 +197,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/3/evaluations",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 80, comment: "On track" },
     })
@@ -227,7 +225,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db,
       jwtSecret,
       path: "/performance-goals/1/evaluations",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
       method: "POST",
       body: { kind: "final", score: 90 },
     })
@@ -238,7 +236,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db,
       jwtSecret,
       path: "/performance-goals?employee_id=5&period=2026-H1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     const parsed = z
@@ -259,7 +257,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/3/evaluations",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
       method: "POST",
       body: { kind: "final", score: 90 },
     })
@@ -272,7 +270,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/4/evaluations",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { kind: "self", score: 50 },
     })
@@ -285,7 +283,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/4/evaluations",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       method: "POST",
       body: { kind: "manager", score: 70 },
     })
@@ -298,7 +296,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/9999/evaluations",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { kind: "final", score: 90 },
     })
@@ -311,7 +309,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/4/evaluations",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: -1, comment: "negative" },
     })
@@ -324,7 +322,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/4/evaluations",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 101, comment: "too high" },
     })
@@ -337,7 +335,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/4/evaluations",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 50.5, comment: "decimal" },
     })
@@ -350,7 +348,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/3/evaluations",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 0, comment: "minimum" },
     })
@@ -363,7 +361,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/3/evaluations",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 100, comment: "maximum" },
     })
@@ -376,7 +374,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/4/evaluations",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { kind: "bogus" },
     })
@@ -402,7 +400,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals/4/evaluations",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 75, comment: "duplicate attempt" },
     })

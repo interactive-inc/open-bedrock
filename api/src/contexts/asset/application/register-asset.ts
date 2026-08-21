@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { Asset } from "@/contexts/asset/domain/asset.entity"
+import type { Session } from "@/lib/auth/session"
+import { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

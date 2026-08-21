@@ -1,14 +1,14 @@
-import { toAnswers } from "@/contexts/performance-review/domain/review/to-answers"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { toAnswers } from "@/contexts/performance-review/domain/values/review-answers.definition"
+import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { zAppReviewFormList } from "@/lib/app-schemas"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { UnauthorizedError } from "@/lib/http/errors"
 import { reviewForms } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { asc, count, eq } from "drizzle-orm"
 

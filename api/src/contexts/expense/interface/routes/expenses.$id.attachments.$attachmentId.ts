@@ -8,18 +8,13 @@ import { canReadExpense } from "@/contexts/expense/infrastructure/can-read-expen
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { expenseAttachments, expenses } from "@/contexts/expense/infrastructure/schema/expense"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { validateIntParam } from "@/lib/http/validate-int-param"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { and, eq } from "drizzle-orm"
-import {
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 
 // @authorization service - 親の経費の閲覧可否をそのまま添付へ継承する
 /** GET /expenses/:id/attachments/:attachmentId — 経費に紐づいた添付を取り出す */

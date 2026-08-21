@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedLeaveBalances } from "@/contexts/leave/infrastructure/seed/seed-leave-balances.repository"
 import { seedLeaveRequests } from "@/contexts/leave/infrastructure/seed/seed-leave-requests.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -8,7 +8,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const leaveInboxResponseSchema = z.object({
@@ -80,16 +80,14 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -113,7 +111,7 @@ describe("GET /leave-requests/inbox", () => {
   test("returns pending requests with applicant name for a manager", async () => {
     const response = await request({
       path: "/leave-requests/inbox",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
     })
 
     expect(response.status).toBe(200)
@@ -134,7 +132,7 @@ describe("GET /leave-requests/inbox", () => {
   test("returns 403 for a member", async () => {
     const response = await request({
       path: "/leave-requests/inbox",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)

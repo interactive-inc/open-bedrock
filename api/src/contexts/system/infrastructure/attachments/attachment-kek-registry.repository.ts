@@ -1,5 +1,5 @@
 import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
-import { UnavailableError, ValidationError } from "@/lib/errors"
+import { SystemAttachmentError } from "@system/domain/errors"
 
 /** KEK は 256bit。base64 で env に置く。 */
 const KEK_BYTE_LENGTH = 32
@@ -21,7 +21,11 @@ function decodeBase64(value: string): AttachmentBytes | Error {
 
     return bytes
   } catch {
-    return new ValidationError("KEK が base64 ではありません", "attachment_kek_invalid")
+    return new SystemAttachmentError(
+      "validation",
+      "attachment_kek_invalid",
+      "KEK が base64 ではありません",
+    )
   }
 }
 
@@ -42,9 +46,10 @@ export class AttachmentKekRegistry {
 
   static fromEnv(raw: string | undefined): AttachmentKekRegistry | Error {
     if (raw === undefined || raw.trim() === "") {
-      return new UnavailableError(
-        "添付機能が設定されていません（ATTACHMENT_KEKS 未設定）",
+      return new SystemAttachmentError(
+        "unavailable",
         "attachment_storage_unconfigured",
+        "添付機能が設定されていません（ATTACHMENT_KEKS 未設定）",
       )
     }
 
@@ -53,13 +58,18 @@ export class AttachmentKekRegistry {
     try {
       parsed = JSON.parse(raw)
     } catch {
-      return new ValidationError("ATTACHMENT_KEKS が JSON ではありません", "attachment_kek_invalid")
+      return new SystemAttachmentError(
+        "validation",
+        "attachment_kek_invalid",
+        "ATTACHMENT_KEKS が JSON ではありません",
+      )
     }
 
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return new ValidationError(
-        "ATTACHMENT_KEKS は version をキーにした object で指定してください",
+      return new SystemAttachmentError(
+        "validation",
         "attachment_kek_invalid",
+        "ATTACHMENT_KEKS は version をキーにした object で指定してください",
       )
     }
 
@@ -69,16 +79,18 @@ export class AttachmentKekRegistry {
       const version = Number(entry[0])
 
       if (!Number.isSafeInteger(version) || version <= 0) {
-        return new ValidationError(
-          "ATTACHMENT_KEKS のキーは 1 以上の整数にしてください",
+        return new SystemAttachmentError(
+          "validation",
           "attachment_kek_invalid",
+          "ATTACHMENT_KEKS のキーは 1 以上の整数にしてください",
         )
       }
 
       if (typeof entry[1] !== "string") {
-        return new ValidationError(
-          "ATTACHMENT_KEKS の値は base64 文字列にしてください",
+        return new SystemAttachmentError(
+          "validation",
           "attachment_kek_invalid",
+          "ATTACHMENT_KEKS の値は base64 文字列にしてください",
         )
       }
 
@@ -87,9 +99,10 @@ export class AttachmentKekRegistry {
       if (decoded instanceof Error) return decoded
 
       if (decoded.length !== KEK_BYTE_LENGTH) {
-        return new ValidationError(
-          `ATTACHMENT_KEKS の鍵は ${KEK_BYTE_LENGTH} バイトにしてください`,
+        return new SystemAttachmentError(
+          "validation",
           "attachment_kek_invalid",
+          `ATTACHMENT_KEKS の鍵は ${KEK_BYTE_LENGTH} バイトにしてください`,
         )
       }
 
@@ -97,7 +110,11 @@ export class AttachmentKekRegistry {
     }
 
     if (keys.size === 0) {
-      return new ValidationError("ATTACHMENT_KEKS が空です", "attachment_kek_invalid")
+      return new SystemAttachmentError(
+        "validation",
+        "attachment_kek_invalid",
+        "ATTACHMENT_KEKS が空です",
+      )
     }
 
     return new AttachmentKekRegistry(keys)
@@ -121,9 +138,10 @@ export class AttachmentKekRegistry {
     const key = this.keys.get(version)
 
     if (key === undefined) {
-      return new UnavailableError(
-        `この添付の KEK version が設定にありません: ${version}`,
+      return new SystemAttachmentError(
+        "unavailable",
         "attachment_kek_version_missing",
+        `この添付の KEK version が設定にありません: ${version}`,
       )
     }
 

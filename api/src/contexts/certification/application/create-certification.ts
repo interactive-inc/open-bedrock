@@ -1,7 +1,7 @@
 import { CertificationRepository } from "@/contexts/certification/infrastructure/certification.repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Certification } from "@/contexts/certification/domain/certification.entity"
+import type { Certification } from "@/contexts/certification/domain/entities/certification.entity"
 import type { Context } from "@/env"
 
 /**

@@ -1,4 +1,4 @@
-import { BusinessTrip } from "@/contexts/business-trip/domain/business-trip.entity"
+import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
 import type { Context } from "@/env"
 import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/business-trip.repository"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"

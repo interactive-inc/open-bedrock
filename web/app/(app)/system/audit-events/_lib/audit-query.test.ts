@@ -23,8 +23,8 @@ describe("parseAuditListSearchParams", () => {
   test("accepts opaque Account IDs without interpreting the ID or cursor", () => {
     const query = {
       actor_account_id: "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y",
-      action: "legacy.action",
-      target_type: "legacy_target",
+      action: "custom.action",
+      target_type: "custom_target",
       target_id: "target/value",
       outcome: "denied",
       from: "2026-01-01T09:00:00+09:00",
@@ -62,7 +62,7 @@ describe("buildAuditEventsHref", () => {
   test("preserves normalized filters and limit while replacing the cursor once", () => {
     const href = buildAuditEventsHref(
       {
-        action: "legacy action",
+        action: "custom action",
         target_id: "target/value?x=1",
         outcome: "failed",
         limit: "25",
@@ -74,7 +74,7 @@ describe("buildAuditEventsHref", () => {
 
     expect(url.pathname).toBe("/system/audit-events")
     expect(Object.fromEntries(url.searchParams)).toEqual({
-      action: "legacy action",
+      action: "custom action",
       target_id: "target/value?x=1",
       outcome: "failed",
       limit: "25",
@@ -88,8 +88,8 @@ describe("buildAuditEventsHref", () => {
 
   test("removes only the cursor when returning to the first page", () => {
     expect(
-      buildAuditEventsHref({ action: "legacy.action", limit: "50", cursor: "old" }, null),
-    ).toBe("/system/audit-events?action=legacy.action&limit=50")
+      buildAuditEventsHref({ action: "custom.action", limit: "50", cursor: "old" }, null),
+    ).toBe("/system/audit-events?action=custom.action&limit=50")
   })
 })
 
@@ -98,8 +98,8 @@ describe("parseAuditExportSearchParams", () => {
     expect(
       parseAuditExportSearchParams({
         actor_account_id: "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y",
-        action: "legacy.action",
-        target_type: "legacy_target",
+        action: "custom.action",
+        target_type: "custom_target",
         target_id: "target-1",
         outcome: "succeeded",
         from: "2026-01-01T00:00:00Z",
@@ -109,8 +109,8 @@ describe("parseAuditExportSearchParams", () => {
       ok: true,
       request: {
         actor_account_id: "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y",
-        action: "legacy.action",
-        target_type: "legacy_target",
+        action: "custom.action",
+        target_type: "custom_target",
         target_id: "target-1",
         outcome: "succeeded",
         from: "2026-01-01T00:00:00Z",

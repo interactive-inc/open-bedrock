@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { CreateAntisocialCheck } from "@/contexts/antisocial-check/application/create-antisocial-check"
 import { UpdateAntisocialCheck } from "@/contexts/antisocial-check/application/update-antisocial-check"
-import { AntisocialCheck } from "@/contexts/antisocial-check/domain/antisocial-check.entity"
+import { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
 import type { Context } from "@/env"
 import { ApplicationError, ForbiddenError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

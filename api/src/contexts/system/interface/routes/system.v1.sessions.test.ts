@@ -1,4 +1,4 @@
-import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
+import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import { SystemHTTPException } from "@system/interface/errors"
 import {
@@ -39,7 +39,7 @@ function createApp() {
 describe("System Session HTTP", () => {
   test("password認証・検証・rotation・reuse検知・冪等失効をcanonical Systemで実行する", async () => {
     const fixture = new SystemSessionTestContext()
-    const passwordHash = await PasswordHashService.hash(password, pepper)
+    const passwordHash = await hashPassword(password, pepper)
     fixture.sqlite
       .query(
         `INSERT INTO system_accounts

@@ -4,15 +4,15 @@ import { DeleteReviewCycle } from "@/contexts/performance-review/application/rev
 import { SetReviewCycleStatus } from "@/contexts/performance-review/application/review/set-review-cycle-status"
 import { SubmitReviewForm } from "@/contexts/performance-review/application/review/submit-review-form"
 import { UpdateReviewCycle } from "@/contexts/performance-review/application/review/update-review-cycle"
-import { ReviewCycle } from "@/contexts/performance-review/domain/review/review-cycle.entity"
-import { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
+import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
+import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { makeTestSession } from "@/api/test/support/make-test-session"
-import { verifyCompanyMigration } from "@/api/test/support/verify-company-migration"
+import { initializeCompanyTestState } from "@/api/test/support/initialize-company-test-state"
 
 async function seedCycle(context: Context, status: "draft" | "open" | "closed"): Promise<number> {
   const created = await new ReviewCycleRepository(context).create(
@@ -212,7 +212,7 @@ describe("DeleteReviewCycle", () => {
 describe("SetReviewCycleStatus", () => {
   test("transitions draft to open", async () => {
     const { context, db } = createTestContext()
-    await verifyCompanyMigration(db)
+    await initializeCompanyTestState(db)
 
     const cycleId = await seedCycle(context, "draft")
 

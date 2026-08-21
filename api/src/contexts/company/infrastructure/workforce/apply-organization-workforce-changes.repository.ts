@@ -1,7 +1,7 @@
-import type { OrganizationChangeSet } from "@/contexts/company/domain/workforce/organization-change"
-import { OrganizationChangeValidationError } from "@/contexts/company/domain/workforce/organization-change-validation-error"
-import { replaceOrganizationChangePeriods } from "@/contexts/company/domain/workforce/replace-organization-change-periods"
-import type { WorkforceSchedule } from "@/contexts/company/domain/workforce/workforce-schedule"
+import type { OrganizationChangeSet } from "@/contexts/company/domain/values/organization-change.definition"
+import { OrganizationChangeValidationError } from "@/contexts/company/domain/errors"
+import { replaceOrganizationChangePeriods } from "@/contexts/company/domain/policies/replace-organization-change-periods.policy"
+import type { WorkforceSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
 
 export function applyOrganizationWorkforceChanges(
   schedules: ReadonlyArray<WorkforceSchedule>,

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedOneOnOnes } from "@/contexts/one-on-one/infrastructure/seed/seed-one-on-ones.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -7,8 +7,9 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
+import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const oneOnOneResponseSchema = z.object({
   id: z.string(),
@@ -54,6 +55,7 @@ async function createTestDb(): Promise<D1Database> {
       next_action: oneOnOne.nextAction,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -61,8 +63,6 @@ async function createTestDb(): Promise<D1Database> {
 function managerToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 4,
-    email: "you+e004@example.com",
-    role: "manager",
   })
 }
 
@@ -108,8 +108,6 @@ describe("GET /one-on-ones", () => {
   test("returns an empty array for an employee with no sessions", async () => {
     const token = await createTestToken(jwtSecret, {
       employeeId: 1,
-      email: "you+e001@example.com",
-      role: "root",
     })
 
     const response = await getRequest(token)
@@ -138,7 +136,7 @@ describe("POST /one-on-ones", () => {
 
   test("returns 201 and resolves member/manager into snake_case shape", async () => {
     const response = await postOneOnOne(await managerToken(), {
-      member_email: "you+e005@example.com",
+      member_employee_code: "E005",
       topics: "Next challenge",
     })
 
@@ -161,13 +159,13 @@ describe("POST /one-on-ones", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await postOneOnOne(null, {
-      member_email: "you+e005@example.com",
+      member_employee_code: "E005",
     })
 
     expect(response.status).toBe(401)
   })
 
-  test("returns 400 when member_email is missing", async () => {
+  test("returns 400 when member_employee_code is missing", async () => {
     const response = await postOneOnOne(await managerToken(), { topics: "body only" })
 
     expect(response.status).toBe(400)
@@ -175,26 +173,24 @@ describe("POST /one-on-ones", () => {
 
   test("returns 400 when member and manager are the same person", async () => {
     const response = await postOneOnOne(await managerToken(), {
-      member_email: "you+e004@example.com",
+      member_employee_code: "E004",
     })
 
     expect(response.status).toBe(400)
   })
 
-  test("returns 404 when the member email is unknown", async () => {
+  test("returns 404 when the member code is unknown", async () => {
     const response = await postOneOnOne(await managerToken(), {
-      member_email: "you+ghost@example.com",
+      member_employee_code: "UNKNOWN",
     })
 
     expect(response.status).toBe(404)
   })
 })
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -297,7 +293,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
     },
   ])
 
-  await verifyCompanyMigrationFixture({
+  await initializeCompanyTestFixture({
     db,
     departments: [
       { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
@@ -344,7 +340,7 @@ describe("GET /one-on-ones?scope=department", () => {
       db,
       jwtSecret,
       path: "/one-on-ones?scope=department&department_code=D001",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
     })
 
     expect(response.status).toBe(200)
@@ -372,7 +368,7 @@ describe("GET /one-on-ones?scope=department", () => {
       db,
       jwtSecret,
       path: "/one-on-ones?scope=department&department_code=D002",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
     })
 
     expect(response.status).toBe(403)
@@ -383,7 +379,7 @@ describe("GET /one-on-ones?scope=department", () => {
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
       path: "/one-on-ones?scope=department&department_code=D001",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
     })
 
     expect(response.status).toBe(403)
@@ -398,7 +394,7 @@ describe("GET /one-on-ones?scope=department", () => {
       db,
       jwtSecret,
       path: "/one-on-ones?scope=department",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
     })
 
     expect(response.status).toBe(422)

@@ -1,4 +1,4 @@
-import { Announcement } from "@/contexts/announcement/domain/announcement.entity"
+import { Announcement } from "@/contexts/announcement/domain/entities/announcement.entity"
 import type { Context } from "@/env"
 import { announcements } from "@/contexts/announcement/infrastructure/schema/announcement"
 import { eq } from "drizzle-orm"

@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { RecruitmentCandidate } from "@/contexts/recruitment/domain/recruitment-candidate.entity"
+import type { Session } from "@/lib/auth/session"
+import { RecruitmentCandidate } from "@/contexts/recruitment/domain/entities/recruitment-candidate.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

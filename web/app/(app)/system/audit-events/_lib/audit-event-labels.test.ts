@@ -16,11 +16,11 @@ describe("audit event labels", () => {
     expect(auditReasonLabel("permission_denied")).toBe("権限不足")
   })
 
-  test("preserves unknown legacy vocabulary and renders null explicitly", () => {
-    expect(auditActionLabel("legacy.action")).toBe("legacy.action")
-    expect(auditTargetTypeLabel("legacy_target")).toBe("legacy_target")
-    expect(auditClientLabel("legacy-client")).toBe("legacy-client")
-    expect(auditReasonLabel("legacy_reason")).toBe("legacy_reason")
+  test("preserves unknown custom vocabulary and renders null explicitly", () => {
+    expect(auditActionLabel("custom.action")).toBe("custom.action")
+    expect(auditTargetTypeLabel("custom_target")).toBe("custom_target")
+    expect(auditClientLabel("custom-client")).toBe("custom-client")
+    expect(auditReasonLabel("custom_reason")).toBe("custom_reason")
     expect(auditTargetTypeLabel(null)).toBe("—")
     expect(auditReasonLabel(null)).toBe("—")
   })

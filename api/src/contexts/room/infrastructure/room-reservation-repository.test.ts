@@ -1,4 +1,4 @@
-import { RoomReservation } from "@/contexts/room/domain/room-reservation.entity"
+import { RoomReservation } from "@/contexts/room/domain/entities/room-reservation.entity"
 import { RoomReservationRepository } from "@/contexts/room/infrastructure/room-reservation.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"

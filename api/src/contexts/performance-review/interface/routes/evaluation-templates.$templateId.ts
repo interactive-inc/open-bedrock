@@ -1,20 +1,16 @@
 import { UpdateEvaluationTemplate } from "@/contexts/performance-review/application/evaluation-template/update-evaluation-template"
 import { SetEvaluationTemplateStatus } from "@/contexts/performance-review/application/evaluation-template/set-evaluation-template-status"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEvaluationTemplate } from "@/lib/app-schemas"
-import { evaluationTemplateStatusSchema } from "@/contexts/performance-review/domain/evaluation-template/evaluation-template.entity"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { evaluationTemplateStatusSchema } from "@/contexts/performance-review/domain/entities/evaluation-template.entity"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { evaluationTemplates } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
-import {
-  ForbiddenError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
+import { validateIntParam } from "@/lib/http/validate-int-param"
 import { z } from "zod"
 
 function toResponseItem(row: { title: string; defaultWeight: number; kpiExample?: string | null }) {

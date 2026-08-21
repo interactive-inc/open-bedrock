@@ -1,4 +1,4 @@
-import { TrainingEnrollment } from "@/contexts/training/domain/training-enrollment.entity"
+import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { trainingEnrollments } from "@/contexts/training/infrastructure/schema/training"

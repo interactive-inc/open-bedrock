@@ -1,8 +1,8 @@
-import type { Goal } from "@/contexts/performance-review/domain/goal/goal.entity"
+import type { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import {
   GoalEvaluation,
   goalEvaluationKindSchema,
-} from "@/contexts/performance-review/domain/goal/goal-evaluation.entity"
+} from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"

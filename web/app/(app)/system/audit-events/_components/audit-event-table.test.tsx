@@ -63,17 +63,17 @@ describe("AuditEventTable", () => {
         events={[
           {
             ...baseEvent,
-            action: "legacy.action.<script>",
-            target_type: "legacy_target",
-            reason_code: "legacy_reason",
+            action: "custom.action.<script>",
+            target_type: "custom_target",
+            reason_code: "custom_reason",
           },
         ]}
       />,
     )
 
-    expect(screen.getByText("legacy.action.<script>")).toBeDefined()
-    expect(screen.getByText("legacy_target")).toBeDefined()
-    expect(screen.getByText("legacy_reason")).toBeDefined()
+    expect(screen.getByText("custom.action.<script>")).toBeDefined()
+    expect(screen.getByText("custom_target")).toBeDefined()
+    expect(screen.getByText("custom_reason")).toBeDefined()
     expect(screen.getByText(/10:02:03/u)).toBeDefined()
 
     const link = screen.getByRole("button", { name: "監査イベント evt-001 の詳細" })

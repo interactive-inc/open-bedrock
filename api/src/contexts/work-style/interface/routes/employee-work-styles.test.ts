@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -7,6 +7,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "work-style-route-test-secret"
 
@@ -50,15 +51,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-04-01T00:00:00.000Z",
     },
   ])
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -68,7 +68,7 @@ describe("GET /employee-work-styles", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/employee-work-styles?employee_id=5",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(200)
@@ -90,7 +90,7 @@ describe("GET /employee-work-styles", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/employee-work-styles?employee_id=9",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)
@@ -101,7 +101,7 @@ describe("GET /employee-work-styles", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/employee-work-styles?employee_id=5",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -125,7 +125,7 @@ describe("POST /employee-work-styles", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/employee-work-styles",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: {
         employee_id: 5,
@@ -152,7 +152,7 @@ describe("POST /employee-work-styles", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/employee-work-styles",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { employee_id: 5, style: "flextime", starts_on: "2026-07-01" },
     })
@@ -165,7 +165,7 @@ describe("POST /employee-work-styles", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/employee-work-styles",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { employee_id: 5, style: "remote", starts_on: "2026-07-01" },
     })

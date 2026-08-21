@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { CreateCertificateRequest } from "@/contexts/certificate-request/application/create-certificate-request"
 import { UpdateCertificateRequest } from "@/contexts/certificate-request/application/update-certificate-request"
-import { CertificateRequest } from "@/contexts/certificate-request/domain/certificate-request.entity"
+import { CertificateRequest } from "@/contexts/certificate-request/domain/entities/certificate-request.entity"
 import type { Context } from "@/env"
 import { ApplicationError, ForbiddenError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

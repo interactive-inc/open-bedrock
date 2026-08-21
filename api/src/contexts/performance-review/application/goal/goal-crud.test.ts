@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { Goal } from "@/contexts/performance-review/domain/goal/goal.entity"
-import { GoalEvaluation } from "@/contexts/performance-review/domain/goal/goal-evaluation.entity"
+import { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
+import { GoalEvaluation } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
 import { CreateGoal } from "@/contexts/performance-review/application/goal/create-goal"
 import { UpdateGoal } from "@/contexts/performance-review/application/goal/update-goal"
 import { DeleteGoal } from "@/contexts/performance-review/application/goal/delete-goal"
@@ -11,7 +11,7 @@ import { expectApplicationError } from "@/api/test/support/expect-application-er
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
-import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
+import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
 import type { Context } from "@/env"
 
 /** 目標の所有者(id=owner)を、上長(id=manager)のレポートライン配下にする最小の org を仕込む。 */
@@ -39,7 +39,7 @@ async function seedReportsTo(
     },
   ])
 
-  await verifyCompanyMigrationFixture({
+  await initializeCompanyTestFixture({
     db,
     departments: [{ id: 1, code: "D001", name: "Team", managerEmployeeCode: props.managerCode }],
   })
@@ -50,7 +50,7 @@ async function seedIndependentEmployees(db: D1Database): Promise<void> {
     { id: 1, code: "E001", name: "Owner", dept_id: 1, status: "active" },
     { id: 2, code: "E002", name: "Viewer", dept_id: 1, status: "active" },
   ])
-  await verifyCompanyMigrationFixture({
+  await initializeCompanyTestFixture({
     db,
     departments: [{ id: 1, code: "D001", name: "Team" }],
   })

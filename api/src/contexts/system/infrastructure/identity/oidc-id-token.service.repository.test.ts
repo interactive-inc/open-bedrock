@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { exportJWK, generateKeyPair, importJWK, jwtVerify } from "jose"
 import { OidcIdTokenService } from "@/contexts/system/infrastructure/identity/oidc-id-token.service.repository"
-import { OidcSigningKeyService } from "@/contexts/system/infrastructure/identity/oidc-signing-key.service.repository"
+import { getOidcPublicKeys } from "@system/infrastructure/identity/get-oidc-public-keys.repository"
+import { parseOidcSigningKeys } from "@system/infrastructure/identity/parse-oidc-signing-keys.repository"
 import type { SystemClockContext } from "@system/infrastructure/configuration/system-context.repository"
 
 describe("OidcIdTokenService", () => {
@@ -26,7 +27,7 @@ describe("OidcIdTokenService", () => {
       var: { now: () => new Date("2026-07-29T00:00:00.000Z") },
     }
     const service = new OidcIdTokenService(context)
-    const keys = OidcSigningKeyService.parse(JSON.stringify({ active, previous: [] }))
+    const keys = parseOidcSigningKeys(JSON.stringify({ active, previous: [] }))
     if (keys instanceof Error) {
       throw keys
     }
@@ -46,7 +47,7 @@ describe("OidcIdTokenService", () => {
       throw token
     }
 
-    const publicJwk = OidcSigningKeyService.publicKeys(keys)[0]
+    const publicJwk = getOidcPublicKeys(keys)[0]
     if (!publicJwk) {
       throw new Error("missing_public_key")
     }

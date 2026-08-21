@@ -1,11 +1,10 @@
 import { ReadWorkforceState } from "@/contexts/company/infrastructure/workforce/read-workforce-state.repository"
-import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
 import { EmployeeLifecycleWorkforceRepository } from "@/contexts/company/infrastructure/workforce/employee-lifecycle-workforce.repository"
 import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
-import type { Context } from "@/env"
-import { UnavailableError } from "@/lib/errors"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import { CompanyUnavailableError } from "@/contexts/company/domain/errors"
 
 export type EmployeeActiveResult =
   | { valid: true }
@@ -17,19 +16,10 @@ export type EmployeeActiveResult =
 
 /** canonical Workforce snapshotだけから指定時点の在籍有効性を検証する。 */
 export async function validateEmployeeActive(
-  c: Context,
+  c: CompanyContext,
   employeeId: number,
   businessDate: string,
 ): Promise<EmployeeActiveResult | Error> {
-  const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
-  if (migrationStatus instanceof Error) return migrationStatus
-  if (migrationStatus !== "verified") {
-    return new UnavailableError(
-      "Company migrationが完了していません",
-      "company_migration_incomplete",
-    )
-  }
-
   const state = await new ReadWorkforceState({
     workforce: new EmployeeLifecycleWorkforceRepository(c),
     organization: new OrganizationUnitReadRepository(c.var.database),
@@ -41,7 +31,7 @@ export async function validateEmployeeActive(
     return { valid: false, code: "not_found", message: "employee not found" }
   }
   if (state.kind !== "found") {
-    return new UnavailableError(
+    return new CompanyUnavailableError(
       "Company workforceを検証できません",
       "company_workforce_unavailable",
       state.kind === "unavailable" ? { cause: state.cause } : { cause: state.error },

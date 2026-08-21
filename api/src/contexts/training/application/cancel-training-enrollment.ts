@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { canModifyEnrollment } from "@/contexts/training/domain/can-modify-enrollment"
+import type { Session } from "@/lib/auth/session"
+import { canModifyEnrollment } from "@/contexts/training/domain/policies/enrollment-modification.policy"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

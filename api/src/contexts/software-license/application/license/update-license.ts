@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import type { License } from "@/contexts/software-license/domain/license/license.entity"
+import type { Session } from "@/lib/auth/session"
+import type { License } from "@/contexts/software-license/domain/entities/license.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

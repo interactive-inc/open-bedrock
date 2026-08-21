@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import type { CareerPosting } from "@/contexts/career/domain/career-posting.entity"
+import type { Session } from "@/lib/auth/session"
+import type { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

@@ -1,4 +1,4 @@
-import { LifeEvent } from "@/contexts/life-event/domain/life-event.entity"
+import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import type { Context } from "@/env"
 import { lifeEvents } from "@/contexts/life-event/infrastructure/schema/life-event"
 import { and, asc, eq } from "drizzle-orm"

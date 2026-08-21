@@ -1,6 +1,6 @@
 import { eq, sum } from "drizzle-orm"
-import type { GoalOwnerType } from "@/contexts/performance-review/domain/goal/goal.entity"
-import { Goal } from "@/contexts/performance-review/domain/goal/goal.entity"
+import type { GoalOwnerType } from "@/contexts/performance-review/domain/entities/goal.entity"
+import { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import type { Context } from "@/env"
 import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"

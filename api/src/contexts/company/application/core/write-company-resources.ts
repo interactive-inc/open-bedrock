@@ -1,52 +1,47 @@
-import { canAccessCompanyOrganization } from "@/contexts/company/domain/core/can-access-company-organization"
-import type { CompanyActor } from "@/contexts/company/domain/core/company-actor"
+import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
+import {
+  CompanyResourceChangeEntity,
+  type CompanyResourceChangeProps,
+} from "@/contexts/company/domain/entities/company-resource-change.entity"
+import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type {
+  CompanyResourceRepository,
   CompanyResourceWriteResult,
-  WriteCompanyResourcePersistence,
-} from "@/contexts/company/infrastructure/core/company-resource-port.repository"
-import { hasCompanyCapability } from "@/contexts/company/domain/core/has-company-capability"
-import { CompanyResourceValidationError } from "@/contexts/company/domain/core/company-resource-validation-error"
-import { validateCompanyResourceChange } from "@/contexts/company/domain/core/validate-company-resource-change"
-import type { CompanyResourceChange } from "@/contexts/company/domain/core/company-resource"
+} from "@/contexts/company/infrastructure/core/company-resource.repository"
 
 export type WriteCompanyResourcesResult =
   | CompanyResourceWriteResult
   | Readonly<{ kind: "forbidden" }>
   | Readonly<{ kind: "invalid"; error: CompanyResourceValidationError }>
 
+/** Domain policyを通過したCompany resource変更だけを永続化する。 */
 export class WriteCompanyResources {
   constructor(
-    private readonly actor: CompanyActor,
-    private readonly write: WriteCompanyResourcePersistence,
-  ) {
-    Object.freeze(this)
-  }
+    private readonly actor: CompanyActorValue,
+    private readonly repository: CompanyResourceRepository,
+  ) {}
 
   async execute(
-    change: Omit<CompanyResourceChange, "actorAccountId">,
+    change: Omit<CompanyResourceChangeProps, "actorAccountId">,
   ): Promise<WriteCompanyResourcesResult> {
     const organizationId = change.resources[0]?.organizationId ?? ""
     if (
-      !canAccessCompanyOrganization(this.actor, organizationId) ||
-      !hasCompanyCapability(this.actor, "company:write")
+      !this.actor.canAccessOrganization(organizationId) ||
+      !this.actor.hasCapability("company:write")
     ) {
       return { kind: "forbidden" }
     }
 
-    const command: CompanyResourceChange = {
+    const command = CompanyResourceChangeEntity.create({
       ...change,
       actorAccountId: this.actor.accountId,
-    }
-    const error = validateCompanyResourceChange(command)
-    if (error !== null) {
-      return {
-        kind: "invalid",
-        error,
-      }
+    })
+    if (command instanceof CompanyResourceValidationError) {
+      return { kind: "invalid", error: command }
     }
 
     try {
-      return await this.write(command)
+      return await this.repository.write(command)
     } catch (cause) {
       return { kind: "unavailable", cause }
     }

@@ -4,12 +4,12 @@ import {
   toApplicationCurrentStep,
   toApplicationStatus,
 } from "@/api/http/application-requests/lib/system-application-view"
-import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { InternalError, UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { jsonPayloadSchema } from "@/lib/http/json-payload-schema"
+import { validateIntParam } from "@/lib/http/validate-int-param"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/lib/auth/session"
 import type { Context } from "@/env"
 import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
 import {
@@ -35,36 +35,23 @@ export class UpdateLifecycleTemplateBinding {
       )
     }
     const now = Math.floor(Date.parse(this.c.env.NOW ?? new Date().toISOString()) / 1_000)
-    try {
-      const saved = await this.c.env.DB.prepare(
-        `INSERT INTO lifecycle_effect_template_bindings
-           (effect_type, template_code, updated_at, updated_by_account_id)
-         SELECT ?1, ?2, ?3, ?4
-         FROM onboarding_templates
-         WHERE code = ?2 AND kind = ?5
-         ON CONFLICT(effect_type) DO UPDATE SET
-           template_code = excluded.template_code,
-           updated_at = excluded.updated_at,
-           updated_by_account_id = excluded.updated_by_account_id
-         RETURNING effect_type`,
-      )
-        .bind(
-          command.effectType,
-          command.templateCode,
-          now,
-          command.session.accountId,
-          expectedKind,
-        )
-        .first<string>("effect_type")
-      if (saved === null) {
-        return new ValidationError(
-          "the onboarding template changed before the lifecycle binding was saved",
-          "invalid_template_kind",
-        )
-      }
-      return { effectType: command.effectType, templateCode: command.templateCode }
-    } catch (cause) {
-      return new UnexpectedError("failed to update lifecycle template binding", { cause })
+    const saved = await new OnboardingTemplateRepository(this.c).saveLifecycleBinding({
+      effectType: command.effectType,
+      templateCode: command.templateCode,
+      expectedKind,
+      updatedAt: now,
+      updatedByAccountId: command.session.accountId,
+    })
+    if (saved instanceof Error) {
+      return new UnexpectedError("failed to update lifecycle template binding", { cause: saved })
     }
+    if (saved === false) {
+      return new ValidationError(
+        "the onboarding template changed before the lifecycle binding was saved",
+        "invalid_template_kind",
+      )
+    }
+
+    return { effectType: command.effectType, templateCode: command.templateCode }
   }
 }

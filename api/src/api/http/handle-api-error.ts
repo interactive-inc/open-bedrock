@@ -1,15 +1,15 @@
-import { toNegotiatedHttpExceptionResponse } from "@/api/to-negotiated-http-exception-response"
 import {
-  CompanyHttpError,
-  type CompanyHttpErrorStatus,
-} from "@/contexts/company/interface/http/errors/company-http-error"
+  CompanyHTTPException,
+  type CompanyHTTPExceptionStatus,
+} from "@/contexts/company/interface/errors"
+import { AdministrationHTTPException } from "@/contexts/administration/interface/errors"
 import { OIDCHTTPException, SystemHTTPException } from "@system/interface/errors"
 import { ApplicationError } from "@/lib/errors"
 import type { HonoEnv } from "@/env"
 import type { Context } from "hono"
 import { HTTPException } from "hono/http-exception"
 
-const companyProblemTitleByStatus: Readonly<Record<CompanyHttpErrorStatus, string>> = {
+const companyProblemTitleByStatus: Readonly<Record<CompanyHTTPExceptionStatus, string>> = {
   400: "Bad Request",
   401: "Unauthorized",
   403: "Forbidden",
@@ -28,7 +28,7 @@ const companyProblemTitleByStatus: Readonly<Record<CompanyHttpErrorStatus, strin
 /**
  * API 全体の例外を外部向け JSON に変換し、内部情報を応答へ漏らさない。
  */
-export async function handleApiError(error: Error, context: Context<HonoEnv>): Promise<Response> {
+export function handleApiError(error: Error, context: Context<HonoEnv>): Response {
   if (error instanceof OIDCHTTPException) {
     if (error.status >= 500) console.error("[expected server error]", error.cause ?? error)
     if (error.authenticate !== null) {
@@ -47,7 +47,7 @@ export async function handleApiError(error: Error, context: Context<HonoEnv>): P
     return context.json({ error: error.detail, code: error.code, ...error.metadata }, error.status)
   }
 
-  if (error instanceof CompanyHttpError) {
+  if (error instanceof CompanyHTTPException) {
     if (error.status >= 500) console.error("[expected server error]", error.cause ?? error)
     if (error.etag !== null) context.header("etag", error.etag)
 
@@ -66,6 +66,12 @@ export async function handleApiError(error: Error, context: Context<HonoEnv>): P
     )
   }
 
+  if (error instanceof AdministrationHTTPException) {
+    if (error.status >= 500) console.error("[expected server error]", error.cause ?? error)
+
+    return context.json({ error: error.message, code: error.code }, error.status)
+  }
+
   if (error instanceof HTTPException) {
     if (error.cause instanceof ApplicationError) {
       if (error.status >= 500) {
@@ -76,12 +82,6 @@ export async function handleApiError(error: Error, context: Context<HonoEnv>): P
     }
 
     if (error.res) {
-      const negotiated = await toNegotiatedHttpExceptionResponse({
-        error,
-        accept: context.req.header("accept") ?? null,
-      })
-      if (negotiated !== null) return negotiated
-
       return error.getResponse()
     }
 

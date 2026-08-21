@@ -4,14 +4,14 @@ import type {
   LifecycleVersionMutation,
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
-} from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
+} from "@/contexts/company/domain/values/lifecycle-schedule.definition"
 import {
   personnelActionSummarySchema,
   type PersonnelActionSummary,
-} from "@/contexts/company/domain/employee-lifecycle/project-personnel-action"
-import type { PersonnelActionKind } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
-import type { Context } from "@/env"
-import { ApplicationError, UnexpectedError } from "@/lib/errors"
+} from "@/contexts/company/domain/values/personnel-action-summary.definition"
+import type { PersonnelActionKind } from "@/contexts/company/domain/values/lifecycle-types.definition"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import { CompanyOperationError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import { zAccountId } from "@system/domain/values/account-id.schema"
 import type { AccountId } from "@system/domain/values/account-id.schema"
 
@@ -23,7 +23,7 @@ export type PersonnelActionRecord = {
   recordedAt: number
   recordedByAccountId: AccountId | null
   requestedByEmployeeId: number | null
-  sourceType: "application" | "direct" | "migration" | "system"
+  sourceType: "application" | "direct" | "system"
   sourceApplicationId: number | null
   correctsActionId: string | null
   operationId: string
@@ -85,11 +85,11 @@ type ResponsibilityVersionRow = BaseVersionRow & {
   employee_id: number
 }
 
-function repositoryError(cause: unknown): ApplicationError {
-  return new UnexpectedError("人事発令の読み取りに失敗しました", { cause })
+function repositoryError(cause: unknown): CompanyOperationError {
+  return new CompanyUnexpectedError("人事発令の読み取りに失敗しました", { cause })
 }
 
-function toAction(row: PersonnelActionRow): PersonnelActionRecord | ApplicationError {
+function toAction(row: PersonnelActionRow): PersonnelActionRecord | CompanyOperationError {
   try {
     return {
       id: row.id,
@@ -182,17 +182,17 @@ const actionColumns = `
   operation_id, payload_fingerprint, summary_json`
 
 export class PersonnelActionRepository {
-  constructor(private readonly c: Context) {
+  constructor(private readonly c: CompanyContext) {
     Object.freeze(this)
   }
 
   async findByOperationId(
     operationId: string,
-  ): Promise<PersonnelActionRecord | null | ApplicationError> {
+  ): Promise<PersonnelActionRecord | null | CompanyOperationError> {
     return this.findWhere("operation_id", operationId)
   }
 
-  async findById(id: string): Promise<PersonnelActionRecord | null | ApplicationError> {
+  async findById(id: string): Promise<PersonnelActionRecord | null | CompanyOperationError> {
     return this.findWhere("id", id)
   }
 
@@ -200,7 +200,7 @@ export class PersonnelActionRepository {
     employeeId: number
     from: string | null
     to: string | null
-  }): Promise<number | ApplicationError> {
+  }): Promise<number | CompanyOperationError> {
     try {
       return (
         (await this.c.env.DB.prepare(
@@ -225,7 +225,7 @@ export class PersonnelActionRepository {
     anchorRowId: number
     position: { eventOn: string; recordedAt: number; id: string } | null
     limit: number
-  }): Promise<ReadonlyArray<PersonnelActionListRecord> | ApplicationError> {
+  }): Promise<ReadonlyArray<PersonnelActionListRecord> | CompanyOperationError> {
     try {
       const rows = await this.c.env.DB.prepare(
         `SELECT action.rowid AS action_row_id, ${actionColumns
@@ -265,7 +265,7 @@ export class PersonnelActionRepository {
       const result: Array<PersonnelActionListRecord> = []
       for (const row of rows.results) {
         const action = toAction(row)
-        if (action instanceof ApplicationError) return action
+        if (action instanceof CompanyOperationError) return action
         result.push({ ...action, rowId: row.action_row_id, corrected: row.is_corrected === 1 })
       }
       return result
@@ -277,7 +277,7 @@ export class PersonnelActionRepository {
   private async findWhere(
     column: "id" | "operation_id",
     value: string,
-  ): Promise<PersonnelActionRecord | null | ApplicationError> {
+  ): Promise<PersonnelActionRecord | null | CompanyOperationError> {
     try {
       const row = await this.c.env.DB.prepare(
         `SELECT ${actionColumns} FROM personnel_actions WHERE ${column} = ?1`,
@@ -291,7 +291,7 @@ export class PersonnelActionRepository {
     }
   }
 
-  async hasCorrection(actionId: string): Promise<boolean | ApplicationError> {
+  async hasCorrection(actionId: string): Promise<boolean | CompanyOperationError> {
     try {
       return (
         ((await this.c.env.DB.prepare(
@@ -307,7 +307,7 @@ export class PersonnelActionRepository {
 
   async loadMutationsForAction(
     actionId: string,
-  ): Promise<ReadonlyArray<LifecycleVersionMutation> | ApplicationError> {
+  ): Promise<ReadonlyArray<LifecycleVersionMutation> | CompanyOperationError> {
     try {
       const db = this.c.env.DB
       const [employmentRows, statusRows, assignmentRows, responsibilityRows] = await Promise.all([

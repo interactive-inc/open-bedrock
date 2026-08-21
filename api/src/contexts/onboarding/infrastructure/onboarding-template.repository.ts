@@ -1,5 +1,5 @@
-import { OnboardingTemplate } from "@/contexts/onboarding/domain/onboarding-template.entity"
-import { OnboardingTemplateTask } from "@/contexts/onboarding/domain/onboarding-template-task.entity"
+import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
+import { OnboardingTemplateTask } from "@/contexts/onboarding/domain/entities/onboarding-template-task.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
@@ -123,6 +123,59 @@ export class OnboardingTemplateRepository {
         return null
       }
       return error instanceof Error ? error : new Error("failed to delete onboarding_template")
+    }
+  }
+
+  async saveLifecycleBinding(props: {
+    effectType: "hire" | "retired"
+    templateCode: string
+    expectedKind: "join" | "leave"
+    updatedAt: number
+    updatedByAccountId: string
+  }): Promise<boolean | Error> {
+    try {
+      const saved = await this.c.env.DB.prepare(
+        `INSERT INTO lifecycle_effect_template_bindings
+           (effect_type, template_code, updated_at, updated_by_account_id)
+         SELECT ?1, ?2, ?3, ?4
+         FROM onboarding_templates
+         WHERE code = ?2 AND kind = ?5
+         ON CONFLICT(effect_type) DO UPDATE SET
+           template_code = excluded.template_code,
+           updated_at = excluded.updated_at,
+           updated_by_account_id = excluded.updated_by_account_id
+         RETURNING effect_type`,
+      )
+        .bind(
+          props.effectType,
+          props.templateCode,
+          props.updatedAt,
+          props.updatedByAccountId,
+          props.expectedKind,
+        )
+        .first<string>("effect_type")
+
+      return saved !== null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to save lifecycle template binding")
+    }
+  }
+
+  async removeLifecycleBinding(templateCode: string): Promise<boolean | Error> {
+    try {
+      const removed = await this.c.env.DB.prepare(
+        `DELETE FROM lifecycle_effect_template_bindings
+         WHERE template_code = ?1
+         RETURNING effect_type`,
+      )
+        .bind(templateCode)
+        .first<string>("effect_type")
+
+      return removed !== null
+    } catch (error) {
+      return error instanceof Error
+        ? error
+        : new Error("failed to remove lifecycle template binding")
     }
   }
 

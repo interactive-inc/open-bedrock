@@ -1,7 +1,7 @@
-import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { resolveActiveSystemAccountId } from "@/contexts/company/interface/http/accounts/resolve-active-system-account-id"
+import { InternalError, UnauthorizedError } from "@/lib/http/errors"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
 import { readInboxBusinessCounts } from "@/api/http/inbox/read-inbox-business-counts"
 

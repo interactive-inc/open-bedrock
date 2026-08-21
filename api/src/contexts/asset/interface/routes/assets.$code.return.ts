@@ -1,11 +1,11 @@
 import { ReturnAsset } from "@/contexts/asset/application/return-asset"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppAsset } from "@/lib/app-schemas"
-import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { validateCodeParam } from "@/lib/http/validate-code-param"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /assets/:code/return — 貸出中の資産を在庫へ戻す（権限が必要） */

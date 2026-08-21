@@ -1,13 +1,13 @@
-import { periodOf } from "@/contexts/thanks/domain/thanks-points/period-of"
+import { periodOf } from "@/contexts/thanks/domain/values/thanks-period.definition"
 import { UnexpectedError } from "@/lib/errors"
 import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-budget.repository"
 
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksBudget } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /thanks-point-budgets/me — 自分の当月の贈与原資（付与・消費・残量）を取得する */

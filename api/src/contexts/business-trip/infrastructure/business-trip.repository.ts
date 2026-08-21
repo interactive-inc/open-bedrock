@@ -1,4 +1,4 @@
-import { BusinessTrip } from "@/contexts/business-trip/domain/business-trip.entity"
+import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
 import type { Context } from "@/env"
 import { businessTrips } from "@/contexts/business-trip/infrastructure/schema/business-trip"
 import { and, asc, eq, inArray, lte, gte, ne, sql } from "drizzle-orm"

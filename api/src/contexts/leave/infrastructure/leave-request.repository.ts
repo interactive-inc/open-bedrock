@@ -1,4 +1,7 @@
-import { LeaveRequest, leaveRequestRowSchema } from "@/contexts/leave/domain/leave-request.entity"
+import {
+  LeaveRequest,
+  leaveRequestRowSchema,
+} from "@/contexts/leave/domain/entities/leave-request.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/lib/d1/parse-d1-row"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"

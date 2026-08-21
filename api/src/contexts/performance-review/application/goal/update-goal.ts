@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm"
-import { hasFinalEvaluation } from "@/contexts/performance-review/domain/goal/has-final-evaluation"
-import type { Goal } from "@/contexts/performance-review/domain/goal/goal.entity"
+import { hasFinalEvaluation } from "@/contexts/performance-review/domain/policies/final-goal-evaluation.policy"
+import type { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import type { Context } from "@/env"
 import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/goal/goal-evaluation.repository"
 import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"

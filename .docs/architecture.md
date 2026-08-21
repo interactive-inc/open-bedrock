@@ -60,7 +60,7 @@ API、Web、CLI、AI に法人 selector を設けない。全社共通の table 
 
 System の実装は `api/src/contexts/system`、Company は `api/src/contexts/company`、削除可能な業務は `api/src/contexts/<app>` に置く。汎用手続きは System が所有し、独立した `request` コンテキストは作らない。これらから上位コンテキストへの import、相対 import による境界の迂回、上位コンテキストの語彙の混入、および `contexts/request` の再導入は `bun run --filter api lint:system-boundary` と `bun run --filter api lint:context-boundaries` で検査する。HTTP の既存契約で Employee 識別子を返す必要がある場合は Company または最上位の API composition で変換し、System の entity と schema には持ち込まない。
 
-System・Company runtime移行は完了している。認証、Session、Password、OIDC、Account、technical IAM、監査、通知配送の汎用primitiveは`api/src/contexts/system`、Employee、Employment、組織、拠点、会社IAMと会社イベントに基づく通知判断は`api/src/contexts/company`が所有する。両contextを横断する製品固有のHono handlerだけを`api/src/api/routes`へ置き、DomainやApplicationの所有をAPI rootへ戻さない。廃止したcompatibility contextは再作成せず、context boundary lintが再導入を拒否する。
+System・Company runtime移行は完了している。認証、Session、Password、OIDC、Account、technical IAM、監査、通知配送の汎用primitiveは`api/src/contexts/system`、Employee、Employment、組織、拠点、会社IAMと会社イベントに基づく通知判断は`api/src/contexts/company`が所有する。両contextを横断する製品固有のHono handlerだけを`api/src/api/routes`へ置き、DomainやApplicationの所有をAPI rootへ戻さない。廃止済みcontextの再導入はcontext boundary lintが拒否する。
 
 System の監査イベントは `audit_events` に Account 主体の汎用エンベロープとして保存する。Employee 文脈は Company の `audit_event_employee_contexts` が所有し、Company の監査 adapter が `company_audit_events` view で読み取り、`company_audit_event_appends` の一時行を同一 transaction 内で System イベントと Employee 文脈へ分配する。System の監査 repository は Company の view、table、語彙を参照しない。
 

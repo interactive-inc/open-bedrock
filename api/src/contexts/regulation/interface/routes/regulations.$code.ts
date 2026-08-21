@@ -1,14 +1,10 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { RegulationRepository } from "@/contexts/regulation/infrastructure/regulation.repository"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import {
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppRegulationDetail } from "@/lib/app-schemas"
-import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
-import type { RegulationVersion } from "@/contexts/regulation/domain/regulation-version.entity"
+import { validateCodeParam } from "@/lib/http/validate-code-param"
+import type { RegulationVersion } from "@/contexts/regulation/domain/entities/regulation-version.entity"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /regulations/:code — 規程1件（最新版＋版一覧、全認証者）。 */

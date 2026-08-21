@@ -1,5 +1,5 @@
-import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
-import { findUnknownApproverRoles } from "@/contexts/company/domain/organization/validate-procedure-policy-references"
+import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
+import { findUnknownCompanyApproverRoles } from "@/api/http/application-templates/find-unknown-company-approver-roles"
 import {
   loadSystemProcedure,
   parseSystemProcedureInputSchema,
@@ -7,19 +7,14 @@ import {
   publishSystemProcedure,
   systemProcedureRepository,
 } from "@/api/http/application-templates/lib/system-procedure-route"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import {
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { factory } from "@/api/http/factory"
+import { jsonPayloadSchema } from "@/lib/http/json-payload-schema"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { ConflictError as ApplicationConflictError, UnprocessableError } from "@/lib/errors"
 import { zAppApplicationTemplate, zAppApplicationTemplateDetail } from "@/lib/app-schemas"
-import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { validateCodeParam } from "@/lib/http/validate-code-param"
 import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -78,7 +73,7 @@ export const PUT = factory.createHandlers(
     }
     const body = c.req.valid("json")
     const approverRoles = body.approver_roles ?? []
-    const unknownRoles = await findUnknownApproverRoles(c, approverRoles)
+    const unknownRoles = await findUnknownCompanyApproverRoles(c.env.DB, approverRoles)
     if (unknownRoles instanceof Error) {
       throw new InternalError("failed to validate approver roles")
     }

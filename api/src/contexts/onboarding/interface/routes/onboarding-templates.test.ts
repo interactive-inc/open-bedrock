@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedOnboardingAssignments } from "@/contexts/onboarding/infrastructure/seed/seed-onboarding-assignments.repository"
 import { seedOnboardingTasks } from "@/contexts/onboarding/infrastructure/seed/seed-onboarding-tasks.repository"
 import { seedOnboardingTemplates } from "@/contexts/onboarding/infrastructure/seed/seed-onboarding-templates.repository"
@@ -10,6 +10,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const onboardingTemplateResponseSchema = z.object({
   code: z.string(),
@@ -104,6 +105,7 @@ async function createTestDb(): Promise<D1Database> {
       updated_by_account_id: 1,
     },
   ])
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -111,8 +113,6 @@ async function createTestDb(): Promise<D1Database> {
 function token(employeeId: number, role: string): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -240,7 +240,7 @@ describe("GET /onboarding-templates", () => {
 })
 
 describe("/onboarding-templates/:code/lifecycle-binding", () => {
-  test("sets and removes a compatible lifecycle binding", async () => {
+  test("sets and removes a supported lifecycle binding", async () => {
     const updated = await request({
       path: "/onboarding-templates/common_leave/lifecycle-binding",
       token: await token(1, "root"),
@@ -261,14 +261,14 @@ describe("/onboarding-templates/:code/lifecycle-binding", () => {
     expect(removed.status).toBe(204)
   })
 
-  test("rejects incompatible kinds and callers without management permission", async () => {
-    const incompatible = await request({
+  test("rejects unsupported kinds and callers without management permission", async () => {
+    const unsupported = await request({
       path: "/onboarding-templates/common_leave/lifecycle-binding",
       token: await token(1, "root"),
       method: "PUT",
       body: { effect_type: "hire" },
     })
-    expect(incompatible.status).toBe(400)
+    expect(unsupported.status).toBe(400)
 
     const forbidden = await request({
       path: "/onboarding-templates/engineer_join/lifecycle-binding",

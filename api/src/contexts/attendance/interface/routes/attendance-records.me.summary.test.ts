@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedAttendanceRecords } from "@/contexts/attendance/infrastructure/seed/seed-attendance-records.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "attendance-me-summary-route-test-secret"
 
@@ -50,15 +51,14 @@ async function createTestDb(): Promise<D1Database> {
       status: record.status,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -70,7 +70,7 @@ describe("GET /attendance-records/me/summary", () => {
   test("aggregates closed records for the requested month", async () => {
     const response = await getRequest(
       "/attendance-records/me/summary?month=2026-05",
-      await tokenFor(5, "member"),
+      await tokenFor(5),
     )
 
     expect(response.status).toBe(200)
@@ -96,7 +96,7 @@ describe("GET /attendance-records/me/summary", () => {
   test("returns 400 for an invalid month format", async () => {
     const response = await getRequest(
       "/attendance-records/me/summary?month=invalid",
-      await tokenFor(5, "member"),
+      await tokenFor(5),
     )
 
     expect(response.status).toBe(400)
@@ -105,7 +105,7 @@ describe("GET /attendance-records/me/summary", () => {
   test("returns 400 for a single-digit month", async () => {
     const response = await getRequest(
       "/attendance-records/me/summary?month=2026-1",
-      await tokenFor(5, "member"),
+      await tokenFor(5),
     )
 
     expect(response.status).toBe(400)
@@ -114,7 +114,7 @@ describe("GET /attendance-records/me/summary", () => {
   test("returns 200 for a valid YYYY-MM month", async () => {
     const response = await getRequest(
       "/attendance-records/me/summary?month=2024-01",
-      await tokenFor(5, "member"),
+      await tokenFor(5),
     )
 
     expect(response.status).toBe(200)

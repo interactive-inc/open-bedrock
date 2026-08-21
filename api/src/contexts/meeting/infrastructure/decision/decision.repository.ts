@@ -1,4 +1,4 @@
-import { Decision } from "@/contexts/meeting/domain/decision/decision.entity"
+import { Decision } from "@/contexts/meeting/domain/entities/decision.entity"
 import type { Context } from "@/env"
 import { decisions } from "@/contexts/meeting/infrastructure/schema/meeting"
 import { and, count, desc, eq } from "drizzle-orm"

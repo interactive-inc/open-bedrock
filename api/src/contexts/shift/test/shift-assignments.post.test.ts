@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
-import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments.repository"
-import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedDepartments } from "@/api/test/support/company/seed-departments.repository"
+import { seedOrgDepartments } from "@/api/test/support/company/seed-org-departments.repository"
 import { seedShiftAssignments } from "@/contexts/shift/infrastructure/seed/seed-shift-assignments.repository"
 import { seedShiftPatterns } from "@/contexts/shift/infrastructure/seed/seed-shift-patterns.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -11,6 +11,7 @@ import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "shift-assignments-create-route-test-secret"
 
@@ -85,15 +86,14 @@ async function createTestDb(): Promise<D1Database> {
       published_at: assignment.publishedAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -119,7 +119,7 @@ describe("POST /shift-assignments", () => {
   test("privileged role assigns a shift and returns 201", async () => {
     const response = await request({
       path: "/shift-assignments",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E005", pattern_code: "EARLY", date: "2026-06-10" },
     })
@@ -140,7 +140,7 @@ describe("POST /shift-assignments", () => {
   test("member is forbidden", async () => {
     const response = await request({
       path: "/shift-assignments",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { employee_code: "E005", pattern_code: "EARLY", date: "2026-06-10" },
     })
@@ -151,7 +151,7 @@ describe("POST /shift-assignments", () => {
   test("returns 404 for an unknown employee_code", async () => {
     const response = await request({
       path: "/shift-assignments",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E999", pattern_code: "EARLY", date: "2026-06-10" },
     })
@@ -162,7 +162,7 @@ describe("POST /shift-assignments", () => {
   test("returns 404 for an unknown pattern_code", async () => {
     const response = await request({
       path: "/shift-assignments",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E005", pattern_code: "NOPE", date: "2026-06-10" },
     })
@@ -173,7 +173,7 @@ describe("POST /shift-assignments", () => {
   test("returns 400 when date is missing", async () => {
     const response = await request({
       path: "/shift-assignments",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E005", pattern_code: "EARLY" },
     })
@@ -184,7 +184,7 @@ describe("POST /shift-assignments", () => {
   test("returns 409 for duplicate employee + date assignment", async () => {
     const response = await request({
       path: "/shift-assignments",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E005", pattern_code: "EARLY", date: "2026-06-01" },
     })

@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { DisciplinaryAction } from "@/contexts/disciplinary-action/domain/disciplinary-action.entity"
+import type { Session } from "@/lib/auth/session"
+import { DisciplinaryAction } from "@/contexts/disciplinary-action/domain/entities/disciplinary-action.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react"
 
-export type FeatureTier = "system" | "company-core" | "company-standard" | "company-optional"
+export type FeatureTier = "system" | "company" | "app-default" | "app-opt-in"
 
 export type FeatureStatus = "available" | "development" | "retirement-candidate"
 

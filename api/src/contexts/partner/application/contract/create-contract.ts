@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { Contract } from "@/contexts/partner/domain/contract/contract.entity"
+import type { Session } from "@/lib/auth/session"
+import { Contract } from "@/contexts/partner/domain/entities/contract.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

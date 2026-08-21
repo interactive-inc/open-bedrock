@@ -1,4 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/lib/auth/session"
+import type { SystemJsonValue } from "@system/domain/values/system-json-value.definition"
 import type { Context } from "@/env"
 import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
 import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
@@ -10,10 +11,18 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import { isoDate } from "@/lib/schemas"
-import { prepareGovernanceAudit } from "@/contexts/governance/infrastructure/governance-audit.repository"
 
 export class ManageGovernanceOrgRole {
-  constructor(private readonly c: Context) {}
+  constructor(
+    private readonly c: Context,
+    private readonly prepareAudit: (props: {
+      session: Session
+      action: "governance.org_role.assigned" | "governance.org_role.revoked"
+      targetType: "governance_org_role"
+      targetId: string
+      metadata?: SystemJsonValue
+    }) => readonly [D1PreparedStatement, D1PreparedStatement],
+  ) {}
 
   async assign(props: {
     session: Session
@@ -98,8 +107,7 @@ export class ManageGovernanceOrgRole {
       cardinality: role.cardinality,
       accountId: props.session.accountId,
       now: this.c.env.NOW ?? new Date().toISOString(),
-      auditStatements: prepareGovernanceAudit({
-        c: this.c,
+      auditStatements: this.prepareAudit({
         session: props.session,
         action: "governance.org_role.assigned",
         targetType: "governance_org_role",
@@ -128,8 +136,7 @@ export class ManageGovernanceOrgRole {
       id: props.assignmentId,
       accountId: props.session.accountId,
       revokedAt: this.c.env.NOW ?? new Date().toISOString(),
-      auditStatements: prepareGovernanceAudit({
-        c: this.c,
+      auditStatements: this.prepareAudit({
         session: props.session,
         action: "governance.org_role.revoked",
         targetType: "governance_org_role",

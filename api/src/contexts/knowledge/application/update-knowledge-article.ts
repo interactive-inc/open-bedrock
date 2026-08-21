@@ -1,4 +1,4 @@
-import type { KnowledgeArticle } from "@/contexts/knowledge/domain/knowledge-article.entity"
+import type { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import type { Context } from "@/env"
 import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/knowledge-article.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

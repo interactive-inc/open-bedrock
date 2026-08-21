@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedShiftPatterns } from "@/contexts/shift/infrastructure/seed/seed-shift-patterns.repository"
 import { seedShiftSwapRequests } from "@/contexts/shift/infrastructure/seed/seed-shift-swap-requests.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "shift-swap-requests-create-route-test-secret"
 
@@ -96,15 +97,14 @@ async function createTestDb(): Promise<D1Database> {
       approved_at: swapRequest.approvedAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -140,7 +140,7 @@ describe("GET /shift-swap-requests", () => {
   test("an approver gets only pending requests with employee codes", async () => {
     const response = await request({
       path: "/shift-swap-requests",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -164,7 +164,7 @@ describe("GET /shift-swap-requests", () => {
   test("returns 403 for a non-approver role", async () => {
     const response = await request({
       path: "/shift-swap-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)
@@ -185,7 +185,7 @@ describe("POST /shift-swap-requests", () => {
     // 2026-06-10 はシードに pending が存在しないため新規作成できる
     const response = await request({
       path: "/shift-swap-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E004", date: "2026-06-10", note: "Medical appointment" },
     })
@@ -207,7 +207,7 @@ describe("POST /shift-swap-requests", () => {
     // シード id=1 が requester=5, target=4, date=2026-06-01, status=pending で存在する
     const response = await request({
       path: "/shift-swap-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E004", date: "2026-06-01" },
     })
@@ -220,7 +220,7 @@ describe("POST /shift-swap-requests", () => {
     // 承認時に必ず 409 になるため、作成時点で拒否する。
     const response = await request({
       path: "/shift-swap-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E004", date: "2026-06-11" },
     })
@@ -232,7 +232,7 @@ describe("POST /shift-swap-requests", () => {
     // 2026-06-20 はどちらも割当を持たない。申請者側の未割当で拒否される。
     const response = await request({
       path: "/shift-swap-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E004", date: "2026-06-20" },
     })
@@ -243,7 +243,7 @@ describe("POST /shift-swap-requests", () => {
   test("returns 404 for an unknown target_employee_code", async () => {
     const response = await request({
       path: "/shift-swap-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E999", date: "2026-06-01" },
     })
@@ -254,7 +254,7 @@ describe("POST /shift-swap-requests", () => {
   test("returns 400 when date is missing", async () => {
     const response = await request({
       path: "/shift-swap-requests",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E004" },
     })

@@ -1,7 +1,7 @@
-import { resolveActiveCompanyAccountParticipant } from "@/contexts/company/interface/http/accounts/resolve-active-company-account-participant"
-import { resolveCompanyAccountParticipants } from "@/contexts/company/interface/http/accounts/resolve-company-account-participants"
-import { resolveActiveSystemAccountId } from "@/contexts/company/interface/http/accounts/resolve-active-system-account-id"
-import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/parse-company-procedure-decision-policy"
+import { resolveActiveCompanyAccountParticipant } from "@/api/http/accounts/resolve-active-company-account-participant"
+import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants"
+import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id"
+import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import {
   reviseSystemApplication,
   systemProposalQuery,
@@ -12,17 +12,12 @@ import {
   toApplicationCurrentStep,
   toApplicationStatus,
 } from "@/api/http/application-requests/lib/system-application-view"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import {
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { factory } from "@/api/http/factory"
+import { jsonPayloadSchema } from "@/lib/http/json-payload-schema"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { validateIntParam } from "@/lib/http/validate-int-param"
 import { zAppApplication, zAppApplicationUpdated } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"

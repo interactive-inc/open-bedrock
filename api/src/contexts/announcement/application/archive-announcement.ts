@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import type { Announcement } from "@/contexts/announcement/domain/announcement.entity"
+import type { Session } from "@/lib/auth/session"
+import type { Announcement } from "@/contexts/announcement/domain/entities/announcement.entity"
 import type { Context } from "@/env"
 import { AnnouncementRepository } from "@/contexts/announcement/infrastructure/announcement.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

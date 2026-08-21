@@ -17,15 +17,15 @@ afterEach(() => vi.clearAllMocks())
 describe("getAuditEvent", () => {
   test("passes the event id with no-store and returns forensic strings unchanged", async () => {
     const detail = {
-      event_id: "legacy-1",
+      event_id: "12345678-1234-4abc-8def-1234567890ab",
       request_id: "request-1",
       actor_account_id: null,
       actor_employee_id: null,
-      action: "legacy.action",
-      target_type: "legacy_target",
+      action: "custom.action",
+      target_type: "custom_target",
       target_id: "target-1",
       outcome: "failed" as const,
-      reason_code: "legacy_reason",
+      reason_code: "custom_reason",
       client_name: "cli" as const,
       created_at: "2026-01-01T00:00:00.000Z",
       authorization_json: '{"permission":true}',
@@ -40,9 +40,9 @@ describe("getAuditEvent", () => {
       "audit-events": { ":eventId": { $get: get } },
     })
 
-    await expect(getAuditEvent("legacy-1")).resolves.toEqual(detail)
+    await expect(getAuditEvent("12345678-1234-4abc-8def-1234567890ab")).resolves.toEqual(detail)
     expect(get).toHaveBeenCalledWith(
-      { param: { eventId: "legacy-1" } },
+      { param: { eventId: "12345678-1234-4abc-8def-1234567890ab" } },
       { init: { cache: "no-store" } },
     )
   })
@@ -56,7 +56,7 @@ describe("getAuditEvent", () => {
     })
     mocks.toApiResponseError.mockResolvedValue(expected)
 
-    await expect(getAuditEvent("legacy-404")).resolves.toBe(expected)
+    await expect(getAuditEvent("42345678-1234-4abc-8def-1234567890ab")).resolves.toBe(expected)
     expect(mocks.toApiResponseError).toHaveBeenCalledWith(
       response,
       "監査イベントを取得できませんでした",

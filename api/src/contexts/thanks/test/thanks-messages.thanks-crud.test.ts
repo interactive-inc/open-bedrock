@@ -1,4 +1,4 @@
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -7,6 +7,7 @@ import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { describe, expect, test } from "bun:test"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const thanksResponseSchema = z.object({
   id: z.number(),
@@ -48,6 +49,7 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -55,16 +57,12 @@ async function createTestDb(): Promise<D1Database> {
 function senderToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 4,
-    email: "you+e004@example.com",
-    role: "member",
   })
 }
 
 function recipientToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 5,
-    email: "you+e005@example.com",
-    role: "member",
   })
 }
 

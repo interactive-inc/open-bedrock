@@ -4,7 +4,7 @@ import {
 } from "@system/interface/errors"
 /** /system/v1/identity-sessions */
 import { systemFactory } from "@system/interface/http/system-factory"
-import { SystemIdentitySessionIssuer } from "@system/interface/runtime/system-identity-session-issuer"
+import { IssueSystemIdentitySession } from "@system/application/auth/issue-system-identity-session"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -23,7 +23,7 @@ export const POST = systemFactory.createHandlers(
       throw new SystemIdentityLoginUnavailableError()
     }
 
-    const result = await new SystemIdentitySessionIssuer({
+    const result = await new IssueSystemIdentitySession({
       database: context.env.DB,
       jwtSecret: context.env.JWT_SECRET ?? "",
       identityJwks: context.env.IDENTITY_JWKS,

@@ -1,4 +1,4 @@
-import { OneOnOne } from "@/contexts/one-on-one/domain/oneonone/one-on-one.entity"
+import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/oneonone/one-on-one.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { createTestContext } from "@/api/test/support/create-test-context"

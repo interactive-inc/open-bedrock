@@ -1,4 +1,4 @@
-import { ThanksRedemption } from "@/contexts/thanks/domain/thanks-points/thanks-redemption.entity"
+import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { DecideRedemption } from "@/contexts/thanks/application/thanks-points/decide-redemption"
 import { ForbiddenError } from "@/lib/errors"
 import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption.repository"

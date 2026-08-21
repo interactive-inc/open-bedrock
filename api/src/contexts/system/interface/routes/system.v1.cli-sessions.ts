@@ -2,11 +2,14 @@ import { SystemCLICodeInvalidError, SystemCLILoginUnavailableError } from "@syst
 /** /system/v1/cli-sessions */
 import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
 import { SystemAccessTokenSecretValue } from "@system/domain/values/system-access-token-secret.value"
+import { IssueSystemSession } from "@system/application/auth/issue-system-session"
 import { consumeSystemCliLoginCode } from "@system/infrastructure/auth/consume-system-cli-login-code.repository"
+import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer.repository"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash.repository"
+import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service.repository"
+import { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
 import { systemFactory } from "@system/interface/http/system-factory"
-import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -15,15 +18,12 @@ export const POST = systemFactory.createHandlers(
   zValidator("json", z.object({ code: z.string().min(1).max(200) })),
   async (context) => {
     const now = context.var.now()
-    const applications = createSystemSessionApplications({
-      context,
-      jwtSecret: context.env.JWT_SECRET ?? "",
-      sessionTtlMilliseconds: Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000,
-    })
+    const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
     const metadataJson = StableSystemAuditJsonValue.create({ transport: "system.v1.cli-sessions" })
     if (
-      applications instanceof Error ||
       metadataJson instanceof Error ||
+      !Number.isSafeInteger(sessionTtlMilliseconds) ||
+      sessionTtlMilliseconds <= 0 ||
       !(
         SystemAccessTokenSecretValue.create(context.env.JWT_SECRET ?? "") instanceof
         SystemAccessTokenSecretValue
@@ -54,7 +54,13 @@ export const POST = systemFactory.createHandlers(
     if (account === null || account.status !== "active") {
       throw new SystemCLICodeInvalidError()
     }
-    const issued = await applications.issue.execute({
+    const issued = await new IssueSystemSession({
+      accountRepository: new SystemAccountRepository({ database: context.env.DB }),
+      sessionRepository: new SystemSessionRepository({ context }),
+      materialService: new SystemSessionMaterialService(),
+      accessTokenIssuer: new SystemAccessTokenIssuer(context.env.JWT_SECRET ?? ""),
+      sessionTtlMilliseconds,
+    }).execute({
       accountId: account.id,
       tokenVersion: account.tokenVersion,
       now,

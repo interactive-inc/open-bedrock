@@ -1,4 +1,4 @@
-import { Commendation } from "@/contexts/commendation/domain/commendation.entity"
+import { Commendation } from "@/contexts/commendation/domain/entities/commendation.entity"
 import type { Context } from "@/env"
 import { commendations } from "@/contexts/commendation/infrastructure/schema/commendation"
 import { and, count, desc, eq } from "drizzle-orm"

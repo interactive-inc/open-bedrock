@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedReviewCycles } from "@/contexts/performance-review/infrastructure/seed/seed-review-cycles.repository"
 import { seedReviewForms } from "@/contexts/performance-review/infrastructure/seed/seed-review-forms.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "review-cycles-results-route-test-secret"
 
@@ -117,6 +118,7 @@ async function createTestDb(): Promise<D1Database> {
     { department_code: "D003", employee_code: "E005", manager_employee_code: "E006" },
     { department_code: "D003", employee_code: "E006", manager_employee_code: "E001" },
   ])
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -124,16 +126,12 @@ async function createTestDb(): Promise<D1Database> {
 function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
-    email: "you+e001@example.com",
-    role: "root",
   })
 }
 
 function memberToken(employeeId = 5): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: "member",
   })
 }
 

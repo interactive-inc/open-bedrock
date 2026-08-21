@@ -1,4 +1,4 @@
-import type { CertificateRequest } from "@/contexts/certificate-request/domain/certificate-request.entity"
+import type { CertificateRequest } from "@/contexts/certificate-request/domain/entities/certificate-request.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

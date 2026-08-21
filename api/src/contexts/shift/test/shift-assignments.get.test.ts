@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
-import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments.repository"
-import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedDepartments } from "@/api/test/support/company/seed-departments.repository"
+import { seedOrgDepartments } from "@/api/test/support/company/seed-org-departments.repository"
 import { seedShiftAssignments } from "@/contexts/shift/infrastructure/seed/seed-shift-assignments.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -10,6 +10,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "shift-assignments-list-route-test-secret"
 
@@ -71,15 +72,14 @@ async function createTestDb(): Promise<D1Database> {
       published_at: assignment.publishedAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -105,7 +105,7 @@ describe("GET /shift-assignments", () => {
   test("privileged role lists department shifts by dept_code", async () => {
     const response = await request({
       path: "/shift-assignments?dept_code=D003",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -124,7 +124,7 @@ describe("GET /shift-assignments", () => {
   test("member is forbidden", async () => {
     const response = await request({
       path: "/shift-assignments",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)

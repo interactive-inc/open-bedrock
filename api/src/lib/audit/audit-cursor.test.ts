@@ -94,7 +94,7 @@ describe("audit cursor", () => {
   test.each([
     [
       '[1,"n","b4",100,"AAAAAAAAAAAAAAAAAAAAAA","2s","b4","2s","1",2,null,null,null,null,null]',
-      "legacy version",
+      "unsupported version",
     ],
     [
       '[2,"x","b4",100,"AAAAAAAAAAAAAAAAAAAAAA","2s","b4","2s","1",2,null,null,null,null,null]',

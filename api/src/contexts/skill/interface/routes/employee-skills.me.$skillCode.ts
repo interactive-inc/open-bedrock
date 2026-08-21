@@ -1,13 +1,13 @@
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/employee-skill.repository"
 import { SkillRepository } from "@/contexts/skill/infrastructure/skill.repository"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppEmployeeSkill } from "@/lib/app-schemas"
-import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { validateCodeParam } from "@/lib/http/validate-code-param"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /employee-skills/me/:skillCode — 本人の登録スキルを1件取得（スキルマスタ結合済み） */

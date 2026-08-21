@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { ReviewCycle } from "@/contexts/performance-review/domain/review/review-cycle.entity"
+import type { Session } from "@/lib/auth/session"
+import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -7,7 +7,7 @@ import { ReviewCycleRepository } from "@/contexts/performance-review/infrastruct
 import {
   defaultReviewCyclePolicy,
   type ReviewCyclePolicy,
-} from "@/contexts/performance-review/domain/review/review-cycle-policy"
+} from "@/contexts/performance-review/domain/values/review-cycle-policy.value"
 import { ReviewCyclePolicyRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-policy.repository"
 
 export type Input = {

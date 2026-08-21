@@ -1,17 +1,17 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
-import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedOrgMemberships } from "@/api/test/support/company/seed-org-memberships.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "headcount-plan-route-test-secret"
 
-async function createTestDb(verifyCompany = true): Promise<D1Database> {
+async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
   await seedD1(
@@ -40,16 +40,14 @@ async function createTestDb(verifyCompany = true): Promise<D1Database> {
     })),
   )
 
-  if (verifyCompany) await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -61,7 +59,7 @@ async function createPlan(
     db,
     jwtSecret,
     path: "/headcount-plans",
-    token: await tokenFor(1, "root"),
+    token: await tokenFor(1),
     method: "POST",
     body,
   })
@@ -84,7 +82,7 @@ describe("headcount plans", () => {
       db,
       jwtSecret,
       path: "/headcount-plans",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(list.status).toBe(200)
@@ -101,20 +99,6 @@ describe("headcount plans", () => {
     expect(body.data[0]?.actual_count).toBe(3)
   })
 
-  test("fails closed before the Company migration is verified", async () => {
-    const db = await createTestDb(false)
-    await createPlan(db, { fiscal_year: 2026, department_code: "D003", planned_count: 4 })
-
-    const response = await requestWithContext({
-      db,
-      jwtSecret,
-      path: "/headcount-plans",
-      token: await tokenFor(1, "root"),
-    })
-
-    expect(response.status).toBe(503)
-  })
-
   test("company-wide plan (null department) uses total active headcount", async () => {
     const db = await createTestDb()
 
@@ -124,7 +108,7 @@ describe("headcount plans", () => {
       db,
       jwtSecret,
       path: "/headcount-plans",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     const body = (await list.json()) as { data: Array<{ actual_count: number }> }
@@ -170,7 +154,7 @@ describe("headcount plans", () => {
       db,
       jwtSecret,
       path: `/headcount-plans/${plan.id}`,
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PUT",
       body: { planned_count: 6 },
     })
@@ -187,7 +171,7 @@ describe("headcount plans", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/headcount-plans",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)
@@ -198,7 +182,7 @@ describe("headcount plans", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/headcount-plans",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { fiscal_year: 2026, department_code: "D003", planned_count: 4 },
     })

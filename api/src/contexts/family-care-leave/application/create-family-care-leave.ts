@@ -1,4 +1,4 @@
-import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/family-care-leave.entity"
+import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

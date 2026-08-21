@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedAttendanceRecords } from "@/contexts/attendance/infrastructure/seed/seed-attendance-records.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "attendance-clock-in-route-test-secret"
 
@@ -53,15 +54,14 @@ async function createTestDb(): Promise<D1Database> {
       status: record.status,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -93,7 +93,7 @@ describe("POST /attendance-records/clock-in", () => {
       db: await createTestDb(),
       method: "POST",
       path: "/attendance-records/clock-in",
-      token: await tokenFor(10, "member"),
+      token: await tokenFor(10),
       now: "2026-05-29T09:00:00Z",
       body: { note: "morning" },
     })
@@ -118,7 +118,7 @@ describe("POST /attendance-records/clock-in", () => {
       db: await createTestDb(),
       method: "POST",
       path: "/attendance-records/clock-in",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       now: "2026-05-29T09:00:00Z",
       body: {},
     })

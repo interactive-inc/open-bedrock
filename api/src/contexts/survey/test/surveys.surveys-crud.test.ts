@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedSurveyResponses } from "@/contexts/survey/infrastructure/seed/seed-survey-responses.repository"
 import { seedSurveys } from "@/contexts/survey/infrastructure/seed/seed-surveys.repository"
 import { databaseMiddleware } from "@/api/database-middleware"
@@ -15,8 +15,9 @@ import * as surveyDetailRoute from "@/contexts/survey/interface/routes/surveys.$
 import * as surveyResponseCreateRoute from "@/contexts/survey/interface/routes/surveys.$surveyId.responses"
 import * as surveySummaryRoute from "@/contexts/survey/interface/routes/surveys.$surveyId.summary"
 import type { Bindings } from "@/env"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const surveyResponseSchema = z.object({
   id: z.number().nullable(),
@@ -89,6 +90,7 @@ async function createTestDb(): Promise<D1Database> {
       submitted_at: response.submittedAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -97,8 +99,6 @@ async function createTestDb(): Promise<D1Database> {
 function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
-    email: "you+e001@example.com",
-    role: "root",
   })
 }
 
@@ -106,8 +106,6 @@ function adminToken(): Promise<string> {
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 13,
-    email: "you+e013@example.com",
-    role: "member",
   })
 }
 
@@ -131,6 +129,7 @@ async function request(props: {
     DB: await createTestDb(),
     JWT_SECRET: jwtSecret,
     AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+    COMPANY_TIME_ZONE: "Asia/Tokyo",
     NOW: "2026-01-01T00:00:00.000Z",
   }
 
@@ -370,6 +369,7 @@ describe("DELETE /surveys/:surveyId", () => {
       DB: db,
       JWT_SECRET: jwtSecret,
       AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      COMPANY_TIME_ZONE: "Asia/Tokyo",
       NOW: "2026-01-01T00:00:00.000Z",
     }
 

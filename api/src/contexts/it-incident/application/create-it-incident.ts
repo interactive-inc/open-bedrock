@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { ItIncident } from "@/contexts/it-incident/domain/it-incident.entity"
+import type { Session } from "@/lib/auth/session"
+import { ItIncident } from "@/contexts/it-incident/domain/entities/it-incident.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

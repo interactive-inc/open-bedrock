@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test"
 import { seedGoalEvaluations } from "@/contexts/performance-review/infrastructure/seed/seed-goal-evaluations.repository"
 import { seedGoals } from "@/contexts/performance-review/infrastructure/seed/seed-goals.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
-import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedOrgMemberships } from "@/api/test/support/company/seed-org-memberships.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const goalResponseSchema = z.object({
@@ -90,16 +90,14 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -123,7 +121,7 @@ describe("GET /performance-goals/me", () => {
   test("returns only the viewer's own goals", async () => {
     const response = await request({
       path: "/performance-goals/me",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(200)
@@ -151,7 +149,7 @@ describe("GET /performance-goals/:goalId", () => {
   test("returns the goal for its owner", async () => {
     const response = await request({
       path: `/performance-goals/${ownGoalId}`,
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(200)
@@ -169,7 +167,7 @@ describe("GET /performance-goals/:goalId", () => {
   test("privileged role can view another employee's goal", async () => {
     const response = await request({
       path: `/performance-goals/${othersGoalId}`,
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -178,7 +176,7 @@ describe("GET /performance-goals/:goalId", () => {
   test("returns 403 for another person's goal as a member", async () => {
     const response = await request({
       path: `/performance-goals/${othersGoalId}`,
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)
@@ -187,7 +185,7 @@ describe("GET /performance-goals/:goalId", () => {
   test("manager can view a report's goal (E004 over E005's goal 1)", async () => {
     const response = await request({
       path: `/performance-goals/${ownGoalId}`,
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
     })
 
     expect(response.status).toBe(200)
@@ -196,7 +194,7 @@ describe("GET /performance-goals/:goalId", () => {
   test("manager cannot view a non-report's goal (E004 not over E009's goal 3)", async () => {
     const response = await request({
       path: `/performance-goals/${othersGoalId}`,
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
     })
 
     expect(response.status).toBe(403)
@@ -205,7 +203,7 @@ describe("GET /performance-goals/:goalId", () => {
   test("returns 404 for an unknown goal", async () => {
     const response = await request({
       path: "/performance-goals/9999",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(404)
@@ -216,7 +214,7 @@ describe("PUT /performance-goals/:goalId", () => {
   test("updates the definition of the viewer's goal", async () => {
     const response = await request({
       path: `/performance-goals/${ownGoalId}`,
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: { period: "2026-H2", title: "Updated goal", weight: 35, kpi: "New KPI" },
     })
@@ -238,7 +236,7 @@ describe("PUT /performance-goals/:goalId", () => {
   test("returns 403 when updating another person's goal", async () => {
     const response = await request({
       path: `/performance-goals/${othersGoalId}`,
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: { period: "2026-H2", title: "x", weight: 10 },
     })
@@ -249,7 +247,7 @@ describe("PUT /performance-goals/:goalId", () => {
   test("returns 404 for an unknown goal", async () => {
     const response = await request({
       path: "/performance-goals/9999",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: { period: "2026-H2", title: "x", weight: 10 },
     })
@@ -260,7 +258,7 @@ describe("PUT /performance-goals/:goalId", () => {
   test("returns 409 when the goal is already finalized", async () => {
     const response = await request({
       path: `/performance-goals/${finalizedGoalId}`,
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       method: "PUT",
       body: { period: "2026-H2", title: "x", weight: 10 },
     })
@@ -271,7 +269,7 @@ describe("PUT /performance-goals/:goalId", () => {
   test("returns 400 when title is empty", async () => {
     const response = await request({
       path: `/performance-goals/${ownGoalId}`,
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: { period: "2026-H2", title: "", weight: 10 },
     })
@@ -284,7 +282,7 @@ describe("DELETE /performance-goals/:goalId", () => {
   test("deletes the viewer's goal and returns 204", async () => {
     const response = await request({
       path: `/performance-goals/${ownGoalId}`,
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "DELETE",
     })
 
@@ -294,7 +292,7 @@ describe("DELETE /performance-goals/:goalId", () => {
   test("returns 403 when deleting another person's goal", async () => {
     const response = await request({
       path: `/performance-goals/${othersGoalId}`,
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "DELETE",
     })
 
@@ -304,7 +302,7 @@ describe("DELETE /performance-goals/:goalId", () => {
   test("returns 404 for an unknown goal", async () => {
     const response = await request({
       path: "/performance-goals/9999",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "DELETE",
     })
 
@@ -314,7 +312,7 @@ describe("DELETE /performance-goals/:goalId", () => {
   test("returns 409 when the goal is already finalized", async () => {
     const response = await request({
       path: `/performance-goals/${finalizedGoalId}`,
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
       method: "DELETE",
     })
 

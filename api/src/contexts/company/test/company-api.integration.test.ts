@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import type { CompanyActor } from "@/contexts/company/domain/core/company-actor"
+import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { POST as POST_ORGANIZATION_CHANGE } from "@/contexts/company/interface/routes/company.v1.organization-changes"
 import { GET, POST } from "@/contexts/company/interface/routes/company.v1.people"
 import {
   GET as GET_ORGANIZATION_PROFILE,
   PUT as PUT_ORGANIZATION_PROFILE,
 } from "@/contexts/company/interface/routes/company.organization-profile"
-import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
+import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { Hono } from "hono"
 import { hc } from "hono/client"
@@ -19,24 +19,24 @@ const companySql = readFileSync(
 
 type TestEnv = {
   Bindings: { DB: D1Database }
-  Variables: { companyActor: CompanyActor }
+  Variables: { companyActor: CompanyActorValue }
 }
 
-const actor: CompanyActor = {
+const actor = CompanyActorValue.restore({
   accountId: "account:1",
   employeeId: "employee:1",
   organizationIds: ["organization:default"],
   capabilities: ["company:read", "company:write"],
-}
+})
 
-function createClient(database: D1Database, currentActor: CompanyActor = actor) {
+function createClient(database: D1Database, currentActor: CompanyActorValue = actor) {
   const app = new Hono<TestEnv>()
     .use("*", async (context, next) => {
       context.set("companyActor", currentActor)
       await next()
     })
     .onError((error, context) => {
-      if (!(error instanceof CompanyHttpError)) throw error
+      if (!(error instanceof CompanyHTTPException)) throw error
 
       return context.json({ code: error.code, detail: error.detail }, error.status)
     })
@@ -115,7 +115,10 @@ describe("canonical Company API", () => {
   test("Company write capabilityなしでは法人プロフィールを更新できない", async () => {
     const database = createCompanyD1TestDatabase(companySql)
     await seedOrganization(database)
-    const client = createClient(database, { ...actor, capabilities: ["company:read"] })
+    const client = createClient(
+      database,
+      CompanyActorValue.restore({ ...actor, capabilities: ["company:read"] }),
+    )
     const response = await client.company["organization-profile"].$put({
       json: { name: "Example Corporation", representativeName: "Alex Example" },
     })

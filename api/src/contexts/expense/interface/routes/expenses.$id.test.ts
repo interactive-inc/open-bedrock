@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedExpenseApprovals } from "@/contexts/expense/infrastructure/seed/seed-expense-approvals.repository"
 import { seedExpenses } from "@/contexts/expense/infrastructure/seed/seed-expenses.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -8,7 +8,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const categoryEnum = z.enum(["transport", "supplies", "entertainment", "books", "other"])
@@ -80,16 +80,14 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -113,7 +111,7 @@ async function request(props: RequestProps): Promise<Response> {
 
 describe("GET /expenses/:id", () => {
   test("returns 200 with the detail for the owner", async () => {
-    const response = await request({ path: "/expenses/1", token: await tokenFor(5, "member") })
+    const response = await request({ path: "/expenses/1", token: await tokenFor(5) })
 
     expect(response.status).toBe(200)
 
@@ -128,31 +126,31 @@ describe("GET /expenses/:id", () => {
   })
 
   test("returns 403 for a non owner member", async () => {
-    const response = await request({ path: "/expenses/1", token: await tokenFor(9, "member") })
+    const response = await request({ path: "/expenses/1", token: await tokenFor(9) })
 
     expect(response.status).toBe(403)
   })
 
   test("returns 200 for a manager inside the applicant organization scope", async () => {
-    const response = await request({ path: "/expenses/1", token: await tokenFor(4, "manager") })
+    const response = await request({ path: "/expenses/1", token: await tokenFor(4) })
 
     expect(response.status).toBe(200)
   })
 
   test("returns 403 for a manager outside the applicant organization scope", async () => {
-    const response = await request({ path: "/expenses/1", token: await tokenFor(2, "manager") })
+    const response = await request({ path: "/expenses/1", token: await tokenFor(2) })
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for a non numeric id", async () => {
-    const response = await request({ path: "/expenses/abc", token: await tokenFor(5, "member") })
+    const response = await request({ path: "/expenses/abc", token: await tokenFor(5) })
 
     expect(response.status).toBe(404)
   })
 
   test("returns 404 for an unknown id", async () => {
-    const response = await request({ path: "/expenses/9999", token: await tokenFor(2, "manager") })
+    const response = await request({ path: "/expenses/9999", token: await tokenFor(2) })
 
     expect(response.status).toBe(404)
   })
@@ -175,7 +173,7 @@ describe("PUT /expenses/:id", () => {
   test("updates the amount for the owner", async () => {
     const response = await request({
       path: "/expenses/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: validBody,
     })
@@ -196,7 +194,7 @@ describe("PUT /expenses/:id", () => {
   test("returns 400 for a negative amount", async () => {
     const response = await request({
       path: "/expenses/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: { ...validBody, amount: -100 },
     })
@@ -207,7 +205,7 @@ describe("PUT /expenses/:id", () => {
   test("returns 400 for a zero amount", async () => {
     const response = await request({
       path: "/expenses/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: { ...validBody, amount: 0 },
     })
@@ -218,7 +216,7 @@ describe("PUT /expenses/:id", () => {
   test("returns 400 for a non integer amount", async () => {
     const response = await request({
       path: "/expenses/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: { ...validBody, amount: 1.005 },
     })

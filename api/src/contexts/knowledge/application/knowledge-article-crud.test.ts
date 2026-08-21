@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { KnowledgeArticle } from "@/contexts/knowledge/domain/knowledge-article.entity"
+import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import { CreateKnowledgeArticle } from "@/contexts/knowledge/application/create-knowledge-article"
 import { UpdateKnowledgeArticle } from "@/contexts/knowledge/application/update-knowledge-article"
 import { createTestContext } from "@/api/test/support/create-test-context"

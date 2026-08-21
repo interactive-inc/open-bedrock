@@ -1,4 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/lib/auth/session"
+import type { SystemJsonValue } from "@system/domain/values/system-json-value.definition"
 import type { Context } from "@/env"
 import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
 import { GovernanceAccessRepository } from "@/contexts/governance/infrastructure/governance-access.repository"
@@ -10,10 +11,22 @@ import {
   UnexpectedError,
   UnprocessableError,
 } from "@/lib/errors"
-import { prepareGovernanceAudit } from "@/contexts/governance/infrastructure/governance-audit.repository"
 
 export class GovernancePublicationService {
-  constructor(private readonly c: Context) {}
+  constructor(
+    private readonly c: Context,
+    private readonly prepareAudit: (props: {
+      session: Session
+      action:
+        | "governance.review.submitted"
+        | "governance.review.decided"
+        | "governance.document.published"
+        | "governance.document.acknowledged"
+      targetType: "governance_version"
+      targetId: string
+      metadata?: SystemJsonValue
+    }) => readonly [D1PreparedStatement, D1PreparedStatement],
+  ) {}
 
   async submitReview(props: {
     session: Session
@@ -54,8 +67,7 @@ export class GovernancePublicationService {
     const result = await new GovernanceRepository(this.c).submitForReview({
       versionId: loaded.version.row.id,
       approverOrgRoles: roles,
-      auditStatements: prepareGovernanceAudit({
-        c: this.c,
+      auditStatements: this.prepareAudit({
         session: props.session,
         action: "governance.review.submitted",
         targetType: "governance_version",
@@ -104,8 +116,7 @@ export class GovernancePublicationService {
       employeeId: props.session.employeeId,
       decidedAt: this.c.env.NOW ?? new Date().toISOString(),
       comment: props.comment,
-      auditStatements: prepareGovernanceAudit({
-        c: this.c,
+      auditStatements: this.prepareAudit({
         session: props.session,
         action: "governance.review.decided",
         targetType: "governance_version",
@@ -169,8 +180,7 @@ export class GovernancePublicationService {
       version: loaded.version,
       accountId: props.session.accountId,
       now: this.c.env.NOW ?? new Date().toISOString(),
-      auditStatements: prepareGovernanceAudit({
-        c: this.c,
+      auditStatements: this.prepareAudit({
         session: props.session,
         action: "governance.document.published",
         targetType: "governance_version",
@@ -214,8 +224,7 @@ export class GovernancePublicationService {
       employeeId: props.session.employeeId,
       contentHash: record.version.row.contentHash,
       acknowledgedAt,
-      auditStatements: prepareGovernanceAudit({
-        c: this.c,
+      auditStatements: this.prepareAudit({
         session: props.session,
         action: "governance.document.acknowledged",
         targetType: "governance_version",

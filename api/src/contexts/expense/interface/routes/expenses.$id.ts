@@ -11,23 +11,18 @@ import {
 
 import { UpdateExpense } from "@/contexts/expense/application/update-expense"
 import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
-import type { Expense } from "@/contexts/expense/domain/expense.entity"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import type { Expense } from "@/contexts/expense/domain/entities/expense.entity"
+import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppExpense, zAppExpenseDetail } from "@/lib/app-schemas"
 import { expenseCategorySchema, isoDate } from "@/lib/schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { validateIntParam } from "@/lib/http/validate-int-param"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { expenseAttachments, expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { eq } from "drizzle-orm"
-import {
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

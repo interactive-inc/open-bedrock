@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { OIDCTemporarilyUnavailableError } from "@/contexts/system/interface/errors"
-import { OidcMetadataHandler } from "@/contexts/system/interface/http/oidc-metadata.handler"
+import { handleOidcMetadataRequest } from "@/contexts/system/interface/http/oidc-metadata.handler"
 import { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
 
 const issuerConfiguration = new OidcIssuerConfigurationValue({
@@ -24,14 +24,14 @@ const signingKeysRaw = JSON.stringify({
   previous: [],
 })
 
-describe("OidcMetadataHandler", () => {
+describe("OIDC metadata handler", () => {
   test("discoveryと公開鍵だけのJWKSをcanonical issuerで返す", async () => {
-    const discovery = OidcMetadataHandler.handle({
+    const discovery = handleOidcMetadataRequest({
       request: new Request("https://identity.example.test/.well-known/openid-configuration"),
       signingKeysRaw,
       issuerConfiguration,
     })
-    const jwks = OidcMetadataHandler.handle({
+    const jwks = handleOidcMetadataRequest({
       request: new Request("https://identity.example.test/.well-known/jwks.json"),
       signingKeysRaw,
       issuerConfiguration,
@@ -48,14 +48,14 @@ describe("OidcMetadataHandler", () => {
 
   test("対象外pathを処理せず、鍵未設定は例外を送出する", () => {
     expect(
-      OidcMetadataHandler.handle({
+      handleOidcMetadataRequest({
         request: new Request("https://identity.example.test/"),
         signingKeysRaw,
         issuerConfiguration,
       }),
     ).toBeNull()
     expect(() =>
-      OidcMetadataHandler.handle({
+      handleOidcMetadataRequest({
         request: new Request("https://identity.example.test/.well-known/jwks.json"),
         signingKeysRaw: undefined,
         issuerConfiguration,

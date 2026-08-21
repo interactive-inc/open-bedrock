@@ -84,7 +84,7 @@ dashboard、inbox、directory、search は複数コンテキストの read model
 
 System と Company は常に有効とする。App は `default` または `opt-in` の有効化設定を持ち、無効な App の route は認証より前に 404 で拒否する。Web は API が返す有効化状態に従い、無効な App の導線を表示しない。
 
-現行実装は互換のため `ENABLED_OPTIONAL_FEATURES` と `DISABLED_STANDARD_FEATURES` という旧名を使用する。前者は opt-in App、後者は default App の有効状態を制御する。変数名は所有境界を表さない。
+`ENABLED_OPT_IN_APPS` は opt-in App、`DISABLED_DEFAULT_APPS` は default App の有効状態を制御する。どちらも配備時の有効状態だけを表し、所有境界は表さない。
 
 ## 完成条件
 

@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm"
-import { EvaluationSheet } from "@/contexts/performance-review/domain/evaluation-sheet/evaluation-sheet.entity"
+import { EvaluationSheet } from "@/contexts/performance-review/domain/entities/evaluation-sheet.entity"
 import type { Context } from "@/env"
 import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/evaluation-sheet/evaluation-sheet.repository"
 import type { ApplicationError } from "@/lib/errors"
@@ -28,7 +28,7 @@ export type Command = {
  * primary_evaluator_id が未指定の場合、resolveDirectManagerId で直属上長を解決する。
  * secondary_evaluator_id が未指定の場合、resolveDepartmentManagerId で部門長を解決する。
  *
- * company-optional tier: MBO 機能は会社単位のオプション。
+ * app-opt-in tier: MBO 機能は会社単位のオプション。
  */
 export class CreateEvaluationSheet {
   constructor(private readonly c: Context) {}

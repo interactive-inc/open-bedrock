@@ -44,7 +44,6 @@ export class SystemAccountAdministrationRepository {
       const accounts = await this.context.env.DB.prepare(
         `SELECT id, status, token_version, created_at, updated_at
          FROM system_accounts
-         WHERE id <> 'system:migration'
          ORDER BY id`,
       ).all<AccountRow>()
       const roleKeys = await this.context.env.DB.prepare(
@@ -77,7 +76,7 @@ export class SystemAccountAdministrationRepository {
       const row = await this.context.env.DB.prepare(
         `SELECT id, status, token_version, created_at, updated_at
          FROM system_accounts
-         WHERE id = ?1 AND id <> 'system:migration'
+         WHERE id = ?1
          LIMIT 1`,
       )
         .bind(accountId)

@@ -1,15 +1,15 @@
-import type { OrganizationAuthority } from "@/contexts/company/domain/organization/organization-authority"
-import { resolveEmployeeManagementAuthority } from "@/contexts/company/domain/workforce/resolve-employee-management-authority"
-import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
+import type { OrganizationAuthority } from "@/contexts/company/domain/values/organization-authority.definition"
+import { resolveEmployeeManagementAuthority } from "@/contexts/company/domain/policies/resolve-employee-management-authority.policy"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
 import { readCanonicalOrganizationState } from "@/contexts/company/infrastructure/organization/read-canonical-organization-state.repository"
-import type { Context } from "@/env"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 
 /**
  * 組織図上で actor が target に対して持つ管理関係を解決する。
  * IAM permission は「操作能力」、本関数は「対象範囲」だけを扱う。
  */
 export async function resolveOrganizationAuthority(
-  c: Context,
+  c: CompanyContext,
   actorEmployeeId: number,
   targetEmployeeId: number,
 ): Promise<OrganizationAuthority | Error> {

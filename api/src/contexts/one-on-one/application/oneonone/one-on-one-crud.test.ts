@@ -1,12 +1,11 @@
 import { describe, expect, test } from "bun:test"
-import { OneOnOne } from "@/contexts/one-on-one/domain/oneonone/one-on-one.entity"
+import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import { CreateOneOnOne } from "@/contexts/one-on-one/application/oneonone/create-one-on-one"
 import { UpdateOneOnOne } from "@/contexts/one-on-one/application/oneonone/update-one-on-one"
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import type { Context } from "@/env"
 
 async function seedEmployees(db: D1Database): Promise<void> {
@@ -30,20 +29,13 @@ async function seedEmployees(db: D1Database): Promise<void> {
       status: "active",
     },
   ])
-
-  // email から対象社員を解決するため、identities(認証情報)も用意する。
-  await seedIamForEmployees(db, [
-    { id: 1, email: "you+manager@example.com", passwordHash: "pbkdf2:dummy", role: "manager" },
-    { id: 2, email: "you+member@example.com", passwordHash: "pbkdf2:dummy", role: "member" },
-  ])
 }
 
 async function seedOneOnOne(context: Context, db: D1Database): Promise<OneOnOne> {
   await seedEmployees(db)
 
   const result = await new CreateOneOnOne(context).run({
-    memberCode: null,
-    memberEmail: "you+member@example.com",
+    memberCode: "E002",
     managerId: 1,
     heldAt: "2026-03-15T10:00:00.000Z",
     topics: "progress review",
@@ -65,8 +57,7 @@ describe("CreateOneOnOne", () => {
     await seedEmployees(db)
 
     const result = await new CreateOneOnOne(context).run({
-      memberCode: null,
-      memberEmail: "you+member@example.com",
+      memberCode: "E002",
       managerId: 1,
       heldAt: "2026-03-15T10:00:00.000Z",
       topics: "goals",
@@ -85,14 +76,13 @@ describe("CreateOneOnOne", () => {
     expect(result.topics).toBe("goals")
   })
 
-  test("rejects unknown member email with member_not_found", async () => {
+  test("rejects unknown member code with member_not_found", async () => {
     const { context, db } = createTestContext()
 
     await seedEmployees(db)
 
     const result = await new CreateOneOnOne(context).run({
-      memberCode: null,
-      memberEmail: "you+unknown@example.com",
+      memberCode: "UNKNOWN",
       managerId: 1,
       heldAt: "2026-03-15T10:00:00.000Z",
       topics: null,
@@ -109,8 +99,7 @@ describe("CreateOneOnOne", () => {
     await seedEmployees(db)
 
     const result = await new CreateOneOnOne(context).run({
-      memberCode: null,
-      memberEmail: "you+manager@example.com",
+      memberCode: "E001",
       managerId: 1,
       heldAt: "2026-03-15T10:00:00.000Z",
       topics: null,

@@ -1,10 +1,10 @@
 import { ArchiveAnnouncement } from "@/contexts/announcement/application/archive-announcement"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { validateIntParam } from "@/lib/http/validate-int-param"
 import { zAppAnnouncement } from "@/lib/app-schemas"
 
 // @authorization service - session を application service に渡して判定する

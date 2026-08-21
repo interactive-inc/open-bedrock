@@ -1,4 +1,4 @@
-import { PasswordHashService } from "@/contexts/system/infrastructure/auth/password-hash.service.repository"
+import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
 import { SystemPasswordValue } from "@system/domain/values/system-password.value"
 import {
   PasswordResetTokenInvalidApplicationError,
@@ -47,10 +47,7 @@ export class ResetPassword {
     const challenge = await findSystemPasswordResetChallenge(this.c, tokenHash, now)
     if (challenge instanceof Error) return new SystemAuthPersistenceApplicationError(challenge)
     if (challenge === null) return new PasswordResetTokenInvalidApplicationError()
-    const passwordHash = await PasswordHashService.hash(
-      password.toString(),
-      this.c.env.PEPPER_SECRET,
-    )
+    const passwordHash = await hashPassword(password.toString(), this.c.env.PEPPER_SECRET)
     const metadataJson = StableSystemAuditJsonValue.create({
       client_ip: this.c.var.auditContext.clientIp,
       client_name: this.c.var.auditContext.clientName,

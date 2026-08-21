@@ -56,7 +56,7 @@ const everyone: FeatureNavigationVisibility = { kind: "everyone" }
 export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   {
     slug: "dashboard",
-    tier: "company-core",
+    tier: "company",
     status: "available",
     group: "overview",
     icon: LayoutDashboard,
@@ -65,7 +65,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "inbox",
-    tier: "company-core",
+    tier: "company",
     status: "available",
     group: "overview",
     icon: Inbox,
@@ -83,7 +83,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "attendance",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "time",
     icon: TimerReset,
@@ -115,7 +115,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "leave",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "time",
     icon: CalendarOff,
@@ -141,7 +141,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "shifts",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "time",
     icon: CalendarDays,
@@ -170,7 +170,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "company-calendar",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "time",
     icon: CalendarDays,
@@ -186,7 +186,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "applications",
-    tier: "company-core",
+    tier: "company",
     status: "available",
     group: "requests",
     icon: FileText,
@@ -227,7 +227,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "expenses",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "requests",
     icon: Coins,
@@ -244,7 +244,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "business-trips",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "requests",
     icon: Plane,
@@ -261,7 +261,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "certificate-requests",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "requests",
     icon: ScrollText,
@@ -283,7 +283,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "life-events",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "requests",
     icon: PartyPopper,
@@ -300,7 +300,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "family-care-leave",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "requests",
     icon: HandHelping,
@@ -322,7 +322,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "resignations",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "requests",
     icon: UserMinus,
@@ -339,7 +339,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "ringi",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "requests",
     icon: FileText,
@@ -356,7 +356,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "antisocial-checks",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "requests",
     icon: ShieldCheck,
@@ -372,7 +372,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "approval-delegations",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "requests",
     icon: ClipboardCheck,
@@ -391,7 +391,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "employees",
-    tier: "company-core",
+    tier: "company",
     status: "available",
     group: "people",
     icon: Users,
@@ -407,7 +407,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "departments",
-    tier: "company-core",
+    tier: "company",
     status: "available",
     group: "people",
     icon: GitBranch,
@@ -423,7 +423,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "team-management",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "people",
     icon: Users,
@@ -448,7 +448,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "onboarding",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "people",
     icon: ClipboardList,
@@ -476,7 +476,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "recruitment",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "people",
     icon: Users,
@@ -492,7 +492,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "headcount-plans",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "people",
     icon: Users,
@@ -508,7 +508,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "health-checkups",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "people",
     icon: ClipboardCheck,
@@ -524,7 +524,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "work-accidents",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "people",
     icon: TriangleAlert,
@@ -540,7 +540,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "grades",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "people",
     icon: Award,
@@ -556,7 +556,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "positions",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "people",
     icon: Briefcase,
@@ -572,7 +572,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "certifications",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "people",
     icon: Award,
@@ -588,7 +588,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "performance-reviews",
-    tier: "company-optional",
+    tier: "app-opt-in",
     status: "development",
     group: "growth",
     icon: ClipboardCheck,
@@ -611,7 +611,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "goals",
-    tier: "company-optional",
+    tier: "app-opt-in",
     status: "development",
     group: "growth",
     icon: Target,
@@ -636,7 +636,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "skills",
-    tier: "company-optional",
+    tier: "app-opt-in",
     status: "development",
     group: "growth",
     icon: Sparkles,
@@ -653,7 +653,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "career",
-    tier: "company-optional",
+    tier: "app-opt-in",
     status: "development",
     group: "growth",
     icon: Briefcase,
@@ -670,7 +670,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "training",
-    tier: "company-optional",
+    tier: "app-opt-in",
     status: "development",
     group: "growth",
     icon: GraduationCap,
@@ -687,7 +687,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "one-on-ones",
-    tier: "company-optional",
+    tier: "app-opt-in",
     status: "development",
     group: "growth",
     icon: CalendarClock,
@@ -707,7 +707,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "thanks",
-    tier: "company-optional",
+    tier: "app-opt-in",
     status: "development",
     group: "growth",
     icon: HeartHandshake,
@@ -741,7 +741,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "surveys",
-    tier: "company-optional",
+    tier: "app-opt-in",
     status: "development",
     group: "growth",
     icon: MessagesSquare,
@@ -763,7 +763,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "commendations",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "growth",
     icon: Award,
@@ -779,7 +779,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "knowledge",
-    tier: "company-optional",
+    tier: "app-opt-in",
     status: "development",
     group: "communication",
     icon: BookOpen,
@@ -795,7 +795,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "announcements",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "communication",
     icon: Bell,
@@ -811,7 +811,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "regulations",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "governance",
     icon: BookOpenCheck,
@@ -827,7 +827,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "assets",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "workplace",
     icon: Boxes,
@@ -850,7 +850,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "rooms",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "workplace",
     icon: DoorOpen,
@@ -878,7 +878,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "rentals",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "workplace",
     icon: Package,
@@ -895,7 +895,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "meetings",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "governance",
     icon: CalendarDays,
@@ -911,7 +911,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "decisions",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "governance",
     icon: BookOpenCheck,
@@ -927,7 +927,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "partners",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "governance",
     icon: Building2,
@@ -943,7 +943,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "management-dashboard",
-    tier: "company-optional",
+    tier: "app-opt-in",
     status: "retirement-candidate",
     group: "governance",
     icon: LayoutDashboard,
@@ -959,7 +959,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "budgets",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "governance",
     icon: Wallet,
@@ -975,7 +975,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "document-ledger",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "governance",
     icon: FileText,
@@ -991,7 +991,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "governance",
-    tier: "company-core",
+    tier: "company",
     status: "development",
     group: "governance",
     icon: ShieldCheck,
@@ -1055,7 +1055,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "software-licenses",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "system",
     icon: Laptop,
@@ -1071,7 +1071,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
   },
   {
     slug: "it-incidents",
-    tier: "company-standard",
+    tier: "app-default",
     status: "development",
     group: "system",
     icon: TriangleAlert,
@@ -1140,9 +1140,9 @@ export const featureGroupLabels: Record<FeatureGroup, string> = {
 
 export const featureTierLabels: Record<FeatureTier, string> = {
   system: "システム層",
-  "company-core": "company-core",
-  "company-standard": "company-standard",
-  "company-optional": "company-optional",
+  company: "company",
+  "app-default": "app-default",
+  "app-opt-in": "app-opt-in",
 }
 
 export const featureStatusLabels: Record<FeatureStatus, string> = {

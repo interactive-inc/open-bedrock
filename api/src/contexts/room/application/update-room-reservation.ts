@@ -7,7 +7,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { RoomReservation } from "@/contexts/room/domain/room-reservation.entity"
+import type { RoomReservation } from "@/contexts/room/domain/entities/room-reservation.entity"
 import type { Context } from "@/env"
 import { RoomReservationRepository } from "@/contexts/room/infrastructure/room-reservation.repository"
 

@@ -4,7 +4,7 @@ import { UpdateShiftAssignment } from "@/contexts/shift/application/update-shift
 import { ConflictError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { makeTestSession } from "@/api/test/support/make-test-session"
-import { ShiftAssignment } from "@/contexts/shift/domain/shift-assignment.entity"
+import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 

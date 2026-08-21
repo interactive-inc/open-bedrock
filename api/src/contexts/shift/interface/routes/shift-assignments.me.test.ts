@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
-import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments.repository"
-import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedDepartments } from "@/api/test/support/company/seed-departments.repository"
+import { seedOrgDepartments } from "@/api/test/support/company/seed-org-departments.repository"
 import { seedShiftAssignments } from "@/contexts/shift/infrastructure/seed/seed-shift-assignments.repository"
 import { seedShiftPatterns } from "@/contexts/shift/infrastructure/seed/seed-shift-patterns.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -11,6 +11,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "shift-assignments-me-route-test-secret"
 
@@ -88,15 +89,14 @@ async function createTestDb(): Promise<D1Database> {
       published_at: assignment.publishedAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -122,7 +122,7 @@ describe("GET /shift-assignments/me", () => {
   test("returns the caller's own assignments", async () => {
     const response = await request({
       path: "/shift-assignments/me",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(200)
@@ -148,7 +148,7 @@ describe("GET /shift-assignments/me", () => {
   test("filters own assignments by date range", async () => {
     const response = await request({
       path: "/shift-assignments/me?from=2026-06-01&to=2026-06-01",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     const parsed = z
@@ -168,7 +168,7 @@ describe("GET /shift-assignments/me", () => {
     // 2026-06-02 にはシード id=2 があるが publishedAt=null なので返らない
     const response = await request({
       path: "/shift-assignments/me?from=2026-06-02&to=2026-06-02",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     const parsed = z

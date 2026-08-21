@@ -1,4 +1,4 @@
-import { AttendanceRecord } from "@/contexts/attendance/domain/attendance-record.entity"
+import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import type { Context } from "@/env"
 import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/attendance-record.repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"

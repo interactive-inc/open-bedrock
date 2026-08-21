@@ -1,5 +1,5 @@
 import type { HonoEnv } from "@/env"
-import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
+import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import { createMiddleware } from "hono/factory"
 import type { MiddlewareHandler } from "hono"
 
@@ -18,7 +18,7 @@ export function companyValidationErrorMiddleware(): MiddlewareHandler<HonoEnv> {
     if (typeof body !== "object" || body === null || !("success" in body)) return
     if (body.success !== false || !("error" in body)) return
 
-    throw new CompanyHttpError({
+    throw new CompanyHTTPException({
       status: 400,
       code: "invalid_company_request",
       detail: "Company request is invalid",

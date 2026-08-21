@@ -1,4 +1,4 @@
-import { zReviewCyclePolicy } from "@/contexts/performance-review/domain/review/review-cycle-policy"
+import { zReviewCyclePolicy } from "@/contexts/performance-review/domain/values/review-cycle-policy.value"
 import { ReviewCyclePolicyRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-policy.repository"
 import {
   ConflictError,
@@ -6,10 +6,10 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+} from "@/lib/http/errors"
+import { validateIntParam } from "@/lib/http/validate-int-param"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"

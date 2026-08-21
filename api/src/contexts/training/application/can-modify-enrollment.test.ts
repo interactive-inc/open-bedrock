@@ -1,4 +1,4 @@
-import { canModifyEnrollment } from "@/contexts/training/domain/can-modify-enrollment"
+import { canModifyEnrollment } from "@/contexts/training/domain/policies/enrollment-modification.policy"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { describe, expect, test } from "bun:test"
 

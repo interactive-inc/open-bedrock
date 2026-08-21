@@ -1,4 +1,4 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { schema } from "@/schema"
 import { drizzle } from "drizzle-orm/d1"
 

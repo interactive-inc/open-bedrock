@@ -1,20 +1,16 @@
 import {
   resolveCompanyAccountParticipants,
   type CompanyAccountParticipant,
-} from "@/contexts/company/interface/http/accounts/resolve-company-account-participants"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import {
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+} from "@/api/http/accounts/resolve-company-account-participants"
+import { factory } from "@/api/http/factory"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { canRepairWorkflow } from "@/api/http/application-requests/lib/can-repair-workflow"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
 import type { AccountId } from "@system/domain/values/account-id.schema"

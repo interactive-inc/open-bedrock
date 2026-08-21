@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedAttendanceRecords } from "@/contexts/attendance/infrastructure/seed/seed-attendance-records.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "attendance-clock-out-route-test-secret"
 
@@ -53,15 +54,14 @@ async function createTestDb(): Promise<D1Database> {
       status: record.status,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -91,7 +91,7 @@ describe("POST /attendance-records/clock-out", () => {
   test("clock-in then clock-out computes work minutes", async () => {
     const db = await createTestDb()
 
-    const token = await tokenFor(10, "member")
+    const token = await tokenFor(10)
 
     const inResponse = await send({
       db,
@@ -131,7 +131,7 @@ describe("POST /attendance-records/clock-out", () => {
       db: await createTestDb(),
       method: "POST",
       path: "/attendance-records/clock-out",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       now: "2026-05-29T18:30:00Z",
       body: {},
     })
@@ -154,7 +154,7 @@ describe("POST /attendance-records/clock-out", () => {
       db,
       method: "POST",
       path: "/attendance-records/clock-out",
-      token: await tokenFor(10, "member"),
+      token: await tokenFor(10),
       now: "2026-05-30T18:00:00Z",
       body: {},
     })
@@ -165,7 +165,7 @@ describe("POST /attendance-records/clock-out", () => {
   test("returns 409 when already clocked out (concurrent request)", async () => {
     const db = await createTestDb()
 
-    const token = await tokenFor(10, "member")
+    const token = await tokenFor(10)
 
     // Clock in
     await send({
@@ -205,7 +205,7 @@ describe("POST /attendance-records/clock-out", () => {
   test("persists note when provided", async () => {
     const db = await createTestDb()
 
-    const token = await tokenFor(10, "member")
+    const token = await tokenFor(10)
 
     await send({
       db,
@@ -237,7 +237,7 @@ describe("POST /attendance-records/clock-out", () => {
   test("preserves clock-in note when clock-out omits note", async () => {
     const db = await createTestDb()
 
-    const token = await tokenFor(10, "member")
+    const token = await tokenFor(10)
 
     await send({
       db,

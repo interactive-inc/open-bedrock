@@ -1,5 +1,6 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/lib/auth/session"
 import type { Context } from "@/env"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
 import { ApplicationError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 
 export class RemoveLifecycleTemplateBinding {
@@ -13,18 +14,15 @@ export class RemoveLifecycleTemplateBinding {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 
-    try {
-      const removed = await this.c.env.DB.prepare(
-        `DELETE FROM lifecycle_effect_template_bindings
-         WHERE template_code = ?1
-         RETURNING effect_type`,
-      )
-        .bind(command.templateCode)
-        .first<string>("effect_type")
-
-      return { removed: removed !== null }
-    } catch (cause) {
-      return new UnexpectedError("failed to remove lifecycle template binding", { cause })
+    const removed = await new OnboardingTemplateRepository(this.c).removeLifecycleBinding(
+      command.templateCode,
+    )
+    if (removed instanceof Error) {
+      return new UnexpectedError("failed to remove lifecycle template binding", {
+        cause: removed,
+      })
     }
+
+    return { removed }
   }
 }

@@ -1,7 +1,7 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { zAccountId } from "@system/domain/values/account-id.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
-import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
+import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { GET as GET_ONE } from "@system/interface/routes/system.v1.audit-events.$eventId"

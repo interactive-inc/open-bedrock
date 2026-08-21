@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -7,6 +7,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "calendar-route-test-secret"
 
@@ -60,15 +61,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-01-01T00:00:00.000Z",
     },
   ])
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -78,7 +78,7 @@ describe("GET /company-calendar-days", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/company-calendar-days?year=2026",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(200)
@@ -100,7 +100,7 @@ describe("GET /company-calendar-days", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/company-calendar-days?year=20xx",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(400)
@@ -124,7 +124,7 @@ describe("POST /company-calendar-days", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/company-calendar-days",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { calendar_date: "2026-05-05", kind: "holiday", name: "こどもの日" },
     })
@@ -146,7 +146,7 @@ describe("POST /company-calendar-days", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/company-calendar-days",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { calendar_date: "2026-05-05", kind: "holiday", name: null },
     })
@@ -159,7 +159,7 @@ describe("POST /company-calendar-days", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/company-calendar-days",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { calendar_date: "2026-01-01", kind: "holiday", name: "重複" },
     })
@@ -172,7 +172,7 @@ describe("POST /company-calendar-days", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/company-calendar-days",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { calendar_date: "2026-05-05", kind: "weekend", name: null },
     })
@@ -187,7 +187,7 @@ describe("DELETE /company-calendar-days/:id", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/company-calendar-days/1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "DELETE",
     })
 
@@ -199,7 +199,7 @@ describe("DELETE /company-calendar-days/:id", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/company-calendar-days/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "DELETE",
     })
 
@@ -211,7 +211,7 @@ describe("DELETE /company-calendar-days/:id", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/company-calendar-days/999",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "DELETE",
     })
 

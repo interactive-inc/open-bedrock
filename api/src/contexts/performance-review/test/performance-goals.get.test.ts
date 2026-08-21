@@ -1,16 +1,16 @@
 import { describe, expect, test } from "bun:test"
 import { seedGoalEvaluations } from "@/contexts/performance-review/infrastructure/seed/seed-goal-evaluations.repository"
 import { seedGoals } from "@/contexts/performance-review/infrastructure/seed/seed-goals.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
-import { seedOrgMemberships } from "@/contexts/company/infrastructure/seed/seed-org-memberships.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedOrgMemberships } from "@/api/test/support/company/seed-org-memberships.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const goalResponseSchema = z.object({
@@ -82,16 +82,14 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -101,7 +99,7 @@ describe("GET /performance-goals", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(200)
@@ -123,7 +121,7 @@ describe("GET /performance-goals", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals?period=2025-H2",
-      token: await tokenFor(9, "member"),
+      token: await tokenFor(9),
     })
 
     expect(response.status).toBe(200)
@@ -145,7 +143,7 @@ describe("GET /performance-goals", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals?employee_id=5",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -167,7 +165,7 @@ describe("GET /performance-goals", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals?employee_id=9",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)
@@ -178,7 +176,7 @@ describe("GET /performance-goals", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals?employee_id=5",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
     })
 
     expect(response.status).toBe(200)
@@ -199,7 +197,7 @@ describe("GET /performance-goals", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/performance-goals?employee_id=9",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
     })
 
     expect(response.status).toBe(403)
@@ -330,7 +328,7 @@ async function createScopeTestDb(): Promise<D1Database> {
     },
   ])
 
-  await verifyCompanyMigrationFixture({
+  await initializeCompanyTestFixture({
     db,
     departments: [
       { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
@@ -347,7 +345,7 @@ describe("GET /performance-goals?scope=reports", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/performance-goals?scope=reports",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
     })
 
     expect(response.status).toBe(200)
@@ -372,7 +370,7 @@ describe("GET /performance-goals?scope=reports", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/performance-goals?scope=reports",
-      token: await tokenFor(22, "manager"),
+      token: await tokenFor(22),
     })
 
     expect(response.status).toBe(200)
@@ -394,7 +392,7 @@ describe("GET /performance-goals?scope=reports", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/performance-goals?scope=reports",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
     })
 
     expect(response.status).toBe(403)
@@ -453,7 +451,7 @@ describe("GET /performance-goals?scope=department", () => {
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
       path: "/performance-goals?scope=department&department_code=D001",
-      token: await tokenFor(23, "root"),
+      token: await tokenFor(23),
     })
 
     expect(response.status).toBe(200)
@@ -482,7 +480,7 @@ describe("GET /performance-goals?scope=department", () => {
       db,
       jwtSecret,
       path: "/performance-goals?scope=department&department_code=D001",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
     })
 
     expect(response.status).toBe(200)
@@ -507,7 +505,7 @@ describe("GET /performance-goals?scope=department", () => {
       db,
       jwtSecret,
       path: "/performance-goals?scope=department&department_code=D002",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
     })
 
     expect(response.status).toBe(403)
@@ -518,7 +516,7 @@ describe("GET /performance-goals?scope=department", () => {
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
       path: "/performance-goals?scope=department&department_code=D001",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
     })
 
     expect(response.status).toBe(403)
@@ -529,7 +527,7 @@ describe("GET /performance-goals?scope=department", () => {
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
       path: "/performance-goals?scope=department",
-      token: await tokenFor(23, "root"),
+      token: await tokenFor(23),
     })
 
     expect(response.status).toBe(422)

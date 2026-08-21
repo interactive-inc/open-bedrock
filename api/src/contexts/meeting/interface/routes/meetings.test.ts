@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -7,6 +7,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "meetings-route-test-secret"
 
@@ -55,6 +56,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-01-05T00:00:00Z",
     },
   ])
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -63,16 +65,12 @@ async function createTestDb(): Promise<D1Database> {
 function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
-    email: "you+e001@example.com",
-    role: "root",
   })
 }
 
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 2,
-    email: "you+e002@example.com",
-    role: "member",
   })
 }
 

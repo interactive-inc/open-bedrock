@@ -2,13 +2,14 @@ import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
 import { zAccountId } from "@system/domain/values/account-id.schema"
 import { StoreAttachment } from "@system/application/attachments/store-attachment"
-import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
+import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { POST } from "@system/interface/routes/system.v1.attachments.purge-unlinked"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { R2TestBucket, testKekEnv } from "@/api/test/support/r2-test-bucket"
-import { schema } from "@/schema"
+import { systemAttachmentSchema } from "@system/infrastructure/schema/system-attachment"
+import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
+import { createSystemAttachmentTestDatabase } from "@system/test/create-system-attachment-test-database.test-support"
+import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
+import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
 
 const jwtSecret = "attachments-purge-route-test-secret"
 
@@ -19,13 +20,13 @@ const purgeAt = new Date("2026-08-21T09:00:00.000Z")
 
 type Fixture = Readonly<{
   request: (path: string, init?: RequestInit) => Promise<Response>
-  bucket: R2TestBucket
+  bucket: SystemAttachmentTestBucket
   tokenOf: (accountId: string) => Promise<string>
   storePending: () => Promise<void>
 }>
 
 async function createFixture(): Promise<Fixture> {
-  const db = createD1TestDatabase(loadSchema())
+  const db = createSystemAttachmentTestDatabase()
 
   for (const accountId of ["account-admin", "account-member"]) {
     await db
@@ -59,9 +60,9 @@ async function createFixture(): Promise<Fixture> {
     .bind(uploadedAt.getTime())
     .run()
 
-  const bucket = new R2TestBucket()
+  const bucket = new SystemAttachmentTestBucket()
 
-  const database = drizzle(db, { schema })
+  const database = drizzle(db, { schema: { ...systemCoreSchema, ...systemAttachmentSchema } })
 
   const app = systemFactory
     .createApp()
@@ -87,7 +88,7 @@ async function createFixture(): Promise<Fixture> {
         DB: db,
         JWT_SECRET: jwtSecret,
         ATTACHMENTS: bucket as unknown as R2Bucket,
-        ATTACHMENT_KEKS: testKekEnv(1),
+        ATTACHMENT_KEKS: createSystemAttachmentTestKekEnvironment(1),
       }),
     tokenOf: async (accountId) => {
       const issuance = await applications.issue.execute({
@@ -106,7 +107,10 @@ async function createFixture(): Promise<Fixture> {
     storePending: async () => {
       const stored = await new StoreAttachment({
         var: { database },
-        env: { ATTACHMENTS: bucket as unknown as R2Bucket, ATTACHMENT_KEKS: testKekEnv(1) },
+        env: {
+          ATTACHMENTS: bucket as unknown as R2Bucket,
+          ATTACHMENT_KEKS: createSystemAttachmentTestKekEnvironment(1),
+        },
       }).run({
         ownerAccountId: "account-member",
         fileName: "領収書.pdf",
