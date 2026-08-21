@@ -4,7 +4,7 @@ import {
   toApplicationCurrentStep,
   toApplicationStatus,
 } from "@/api/http/application-requests/lib/system-application-view"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
 import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
@@ -33,7 +33,7 @@ export const POST = factory.createHandlers(
     if (result instanceof ApplicationError) throw toHttpException(result)
 
     const payload = parseSystemApplicationBody(result.proposal)
-    if (payload instanceof Error) throw payload
+    if (payload instanceof Error) throw new InternalError("invalid application payload")
     return c.json(
       {
         id: result.proposal.number,

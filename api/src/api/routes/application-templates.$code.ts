@@ -131,6 +131,9 @@ export const PUT = factory.createHandlers(
       throw new InternalError("failed to load template number")
     }
 
+    const schema = parseSystemProcedureInputSchema(updated)
+    if (schema instanceof Error) throw new InternalError("invalid template data")
+
     return c.json(
       zAppApplicationTemplateDetail.parse({
         id: number,
@@ -138,7 +141,7 @@ export const PUT = factory.createHandlers(
         name: updated.title,
         category: updated.category,
         description: updated.description,
-        schema_json: JSON.parse(updated.inputSchemaJson),
+        schema_json: schema.value,
         approver_roles: policy.approverRoles,
       }),
       200,

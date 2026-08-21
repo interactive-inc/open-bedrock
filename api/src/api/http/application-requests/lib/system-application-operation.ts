@@ -9,6 +9,9 @@ import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/e
 import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
 import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request"
 import type { Context } from "@/env"
+import { canRepairWorkflow } from "@/api/http/application-requests/lib/can-repair-workflow"
+import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
+import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import {
   ApplicationError,
   ConflictError,
@@ -110,7 +113,7 @@ export async function reviseSystemApplication(
     return new ForbiddenError("not the applicant", "not_applicant")
   }
   const policy = parseJsonPolicy(current.decisionPolicyJson)
-  const schema = parseJson(current.inputSchemaJson)
+  const schema = parseJsonValue(current.inputSchemaJson)
   if (policy instanceof Error || schema instanceof Error) {
     return new UnexpectedError("invalid application procedure")
   }
@@ -249,7 +252,7 @@ export async function decideSystemApplication(
     })
   }
   const policy = parseJsonPolicy(proposal.decisionPolicyJson)
-  const payload = parseJson(proposal.bodyJson)
+  const payload = parseJsonValue(proposal.bodyJson)
   if (policy instanceof Error || payload instanceof Error) {
     return new UnexpectedError("invalid application procedure")
   }
@@ -381,7 +384,8 @@ export async function decideSystemApplication(
   })
   if (result instanceof Error) {
     if (
-      result.message.includes("UNIQUE constraint failed") ||
+      isUniqueConstraintError(result) ||
+      // System の SQL trigger メッセージ依存。System 側で判別子化するまでの暫定。
       result.message.includes("invalid human attestation")
     ) {
       return new ConflictError("application is already decided", "already_decided")
@@ -436,11 +440,7 @@ export async function reassignSystemApplicationTask(
   | ApplicationError
 > {
   const session = c.var.session
-  if (
-    session === null ||
-    !session.hasPermission("application:read:all") ||
-    !session.hasPermission("application_template:manage")
-  ) {
+  if (session === null || !canRepairWorkflow(session)) {
     return new ForbiddenError("cannot repair application workflows", "forbidden")
   }
   const query = systemProposalQuery(c)
@@ -682,15 +682,7 @@ async function startSystemApplication(
   }
 }
 
-function parseJson(value: string): Readonly<{ value: unknown }> | Error {
-  try {
-    return { value: JSON.parse(value) }
-  } catch (cause) {
-    return new Error("invalid JSON", { cause })
-  }
-}
-
 function parseJsonPolicy(value: string) {
-  const parsed = parseJson(value)
+  const parsed = parseJsonValue(value)
   return parsed instanceof Error ? parsed : parseCompanyProcedureDecisionPolicy(parsed.value)
 }

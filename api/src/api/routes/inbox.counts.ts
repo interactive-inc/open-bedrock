@@ -5,7 +5,7 @@ import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
 import { readInboxBusinessCounts } from "@/api/http/inbox/read-inbox-business-counts"
 
-// @authorization permission - 権限キーで判定する
+// @authorization authenticated - ログインしていれば誰でも読める。各inboxの件数は権限ごとに0へ潰す
 /**
  * GET /inbox/counts — 受信箱ごとの未処理件数を一括取得する。
  * ユーザーの権限に応じて各カウントを返す（権限がない inbox は 0）。

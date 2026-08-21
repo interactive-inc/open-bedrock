@@ -166,7 +166,7 @@ export const POST = factory.createHandlers(
     }
 
     const payload = parseSystemApplicationBody(created.proposal)
-    if (payload instanceof Error) throw payload
+    if (payload instanceof Error) throw new InternalError("invalid application payload")
     const responseBody = zAppApplication.parse({
       id: created.proposal.number,
       template_code: created.proposal.procedureKey,

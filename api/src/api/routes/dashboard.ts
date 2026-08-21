@@ -1,4 +1,8 @@
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { readDashboard } from "@/api/http/dashboard/read-dashboard"
@@ -17,7 +21,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const body = await readDashboard(c, c.env.NOW ?? new Date().toISOString())
-  if (body instanceof Error) throw body
+  if (body instanceof Error) throw new InternalError("failed to read dashboard")
 
   return c.json(body, 200)
 })
