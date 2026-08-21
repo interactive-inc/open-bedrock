@@ -1,4 +1,4 @@
-import { PasswordResetRequestApplicationError } from "@/contexts/system/application/auth/errors"
+import { PasswordResetRequestApplicationError } from "@/contexts/system/application/errors"
 import { LoginRateLimitService } from "@/contexts/system/infrastructure/auth/login-rate-limit.service.repository"
 import { PasswordResetEmailGateway } from "@/contexts/system/infrastructure/auth/password-reset-email.gateway.repository"
 import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"

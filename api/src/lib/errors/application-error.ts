@@ -118,3 +118,9 @@ export class ApplicationBadGatewayError extends ApplicationError {
     super(502, input, options)
   }
 }
+
+export class ApplicationServiceUnavailableError extends ApplicationError {
+  constructor(input: ApplicationErrorInput, options?: ApplicationErrorOptions) {
+    super(503, input, options)
+  }
+}

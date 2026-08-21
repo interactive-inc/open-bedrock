@@ -1,7 +1,7 @@
 import {
   OidcInvalidGrantApplicationError,
   OidcTemporarilyUnavailableApplicationError,
-} from "@/contexts/system/application/auth/errors"
+} from "@/contexts/system/application/errors"
 import { ExchangeOidcAuthorizationCode } from "@/contexts/system/application/auth/exchange-oidc-authorization-code"
 import {
   OIDCInvalidGrantError,

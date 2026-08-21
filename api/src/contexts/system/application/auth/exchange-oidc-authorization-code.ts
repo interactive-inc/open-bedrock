@@ -1,7 +1,7 @@
 import {
   OidcInvalidGrantApplicationError,
   OidcTemporarilyUnavailableApplicationError,
-} from "@system/application/auth/errors"
+} from "@system/application/errors"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import { OidcScopeValue } from "@system/domain/values/oauth/oidc-scope.value"

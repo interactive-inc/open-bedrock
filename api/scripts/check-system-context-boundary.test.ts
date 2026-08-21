@@ -124,6 +124,7 @@ describe("System ownership manifest", () => {
         { name: "auth", isDirectory: true },
         { name: "feature.ts", isDirectory: false },
         { name: "feature.test.ts", isDirectory: false },
+        { name: "errors.ts", isDirectory: false },
         { name: "README.md", isDirectory: false },
       ]),
     ).toEqual([
