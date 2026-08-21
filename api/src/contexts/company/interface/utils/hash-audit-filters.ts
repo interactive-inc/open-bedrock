@@ -1,5 +1,5 @@
 import type { AuditEventFilters } from "@/contexts/company/infrastructure/audit/audit-event.repository"
-import { toStableAuditJson } from "@system/interface/http/to-stable-audit-json"
+import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
 import { auditUnavailable } from "@/contexts/company/interface/utils/audit-unavailable"
 
 const FILTER_HASH_PREFIX = "open-karte:audit:filters:v1\0"
@@ -16,7 +16,9 @@ export async function hashAuditFilters(filters: AuditEventFilters): Promise<stri
       from_epoch: filters.fromEpoch ?? null,
       to_epoch: filters.toEpoch ?? null,
     }
-    const bytes = new TextEncoder().encode(`${FILTER_HASH_PREFIX}${toStableAuditJson(normalized)}`)
+    const canonical = CanonicalSystemJsonValue.create(normalized)
+    if (canonical instanceof Error) throw canonical
+    const bytes = new TextEncoder().encode(`${FILTER_HASH_PREFIX}${canonical.toString()}`)
     const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))
     return Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("")
   } catch (error) {

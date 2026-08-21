@@ -4,7 +4,7 @@ import { check, index, integer, primaryKey, sqliteTable, text } from "drizzle-or
 import { organizationUnitKinds } from "@/contexts/company/domain/workforce/organization-unit"
 import { orgAssignmentTypes } from "@/contexts/company/domain/workforce/org-assignment-type"
 import { organizationLifecycleState } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 
 /** Companyが所有する部署マスタ。 */
 export const departments = sqliteTable("departments", {

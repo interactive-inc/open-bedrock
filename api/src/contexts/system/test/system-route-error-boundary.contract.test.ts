@@ -29,6 +29,21 @@ describe("System route error boundary", () => {
 
     for (const file of routeFiles) {
       const sourceFile = readRoute(file)
+      const systemErrorNames = new Set<string>()
+      for (const statement of sourceFile.statements) {
+        if (
+          !ts.isImportDeclaration(statement) ||
+          !ts.isStringLiteralLike(statement.moduleSpecifier) ||
+          statement.moduleSpecifier.text !== "@system/interface/errors" ||
+          statement.importClause?.namedBindings === undefined ||
+          !ts.isNamedImports(statement.importClause.namedBindings)
+        ) {
+          continue
+        }
+        for (const element of statement.importClause.namedBindings.elements) {
+          systemErrorNames.add(element.name.text)
+        }
+      }
       const visit = (node: ts.Node): void => {
         if (ts.isThrowStatement(node)) {
           const expression = node.expression
@@ -39,7 +54,7 @@ describe("System route error boundary", () => {
               ? expression.expression.text
               : null
 
-          if (name !== "SystemHttpError" && name !== "OidcHttpError") {
+          if (name === null || !systemErrorNames.has(name)) {
             violations.push(`${file}:${lineOf(sourceFile, node)}`)
           }
         }

@@ -1,13 +1,12 @@
-import type {
-  RevokeSessionFamilyProps,
-  SessionRepository,
-  SessionRotationAuditEvents,
-} from "@system/infrastructure/auth/session-port.repository"
-import type { SystemAuditEvent } from "@system/domain/audit/system-audit-event"
-import type { RefreshTokenRotationDecision } from "@system/domain/auth/refresh-token-rotation-decision"
-import type { SessionRotation } from "@system/domain/auth/session-rotation"
-import type { SessionTokenHash } from "@system/domain/auth/session-token-hash"
-import type { Session } from "@system/domain/auth/session.entity"
+import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import type { RefreshTokenRotationDecision } from "@system/domain/values/refresh-token-rotation-decision.definition"
+import type { SessionFamilyId } from "@system/domain/values/session-family-id.schema"
+import type { SessionRotationValue } from "@system/domain/values/session-rotation.value"
+import type { SessionRotationAuditEvents } from "@system/domain/values/session-rotation-audit-events.definition"
+import type { SessionTokenHash } from "@system/domain/values/session-token-hash.schema"
+import type { SessionEntity } from "@system/domain/entities/session.entity"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { SessionId } from "@system/domain/values/session-id.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 import { parseSystemSessionRotationResult } from "@system/infrastructure/auth/parse-system-session-rotation-result.repository"
@@ -16,20 +15,40 @@ import { prepareSystemSessionRotationAudit } from "@system/infrastructure/auth/p
 import { prepareSystemSessionRotationInvariant } from "@system/infrastructure/auth/prepare-system-session-rotation-invariant.repository"
 import { toSystemSession } from "@system/infrastructure/auth/to-system-session.repository"
 import { validateSystemSessionRotationAudits } from "@system/infrastructure/auth/validate-system-session-rotation-audits.repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 
 type Props = Readonly<{
   context: SystemD1Context
 }>
 
-/** canonical System tableだけでSession lifecycleと監査を原子的に永続化する。 */
-export class SystemSessionRepository implements SessionRepository {
+export type RevokeSessionFamilyProps = Readonly<{
+  familyId: SessionFamilyId
+  revokedAt: Date
+  audit: SystemAuditEventEntity
+}>
+
+export type SystemSessionAuthentication =
+  | Readonly<{
+      kind: "authenticated"
+      accountId: AccountId
+      tokenVersion: number
+      sessionId: SessionId
+      expiresAt: Date
+    }>
+  | Readonly<{ kind: "rejected"; reason: "invalid" }>
+
+/** canonical System tableだけでSessionEntity lifecycleと監査を原子的に永続化する。 */
+export class SystemSessionRepository {
   constructor(private readonly props: Props) {
     Object.freeze(this)
   }
 
-  async createWithAudit(session: Session, audit: SystemAuditEvent): Promise<void | Error> {
+  async createWithAudit(
+    session: SessionEntity,
+    audit: SystemAuditEventEntity,
+  ): Promise<void | Error> {
     if (session.rotatedAt !== null || session.revokedAt !== null) {
-      return new Error("new System Session must be active")
+      return new Error("new System SessionEntity must be active")
     }
 
     try {
@@ -45,13 +64,13 @@ export class SystemSessionRepository implements SessionRepository {
 
       return results.length === 4 && results.every((result) => result.success)
         ? undefined
-        : new Error("audited System Session creation did not succeed")
+        : new Error("audited System SessionEntity creation did not succeed")
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to create System Session")
+      return caught instanceof Error ? caught : new Error("failed to create System SessionEntity")
     }
   }
 
-  async findByTokenHash(tokenHash: SessionTokenHash): Promise<Session | null | Error> {
+  async findByTokenHash(tokenHash: SessionTokenHash): Promise<SessionEntity | null | Error> {
     try {
       const storageRow = await this.props.context.env.DB.prepare(
         `SELECT id, account_id, family_id, token_hash, token_version,
@@ -65,12 +84,49 @@ export class SystemSessionRepository implements SessionRepository {
 
       return storageRow === null ? null : toSystemSession(storageRow)
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to find System Session")
+      return caught instanceof Error ? caught : new Error("failed to find System SessionEntity")
     }
   }
 
+  async authenticate(
+    command: Readonly<{ rawToken: string; now: Date }>,
+    materialService: Readonly<{
+      hashRawToken: (rawToken: string) => Promise<SessionTokenHash | Error>
+    }>,
+  ): Promise<SystemSessionAuthentication | Error> {
+    if (!Number.isSafeInteger(command.now.getTime())) {
+      return new Error("System Session authentication time is invalid")
+    }
+
+    const tokenHash = await materialService.hashRawToken(command.rawToken)
+    if (tokenHash instanceof Error) return tokenHash
+    const session = await this.findByTokenHash(tokenHash)
+    if (session instanceof Error) return session
+    if (session === null || session.getUseRejection(command.now) !== null) {
+      return Object.freeze({ kind: "rejected" as const, reason: "invalid" as const })
+    }
+
+    const accountSession = await SystemAccountRepository.resolveSession({
+      accountRepository: new SystemAccountRepository({ database: this.props.context.env.DB }),
+      accountId: session.accountId,
+      sessionTokenVersion: session.tokenVersion,
+    })
+    if (accountSession instanceof Error) return accountSession
+    if (accountSession.kind === "rejected") {
+      return Object.freeze({ kind: "rejected" as const, reason: "invalid" as const })
+    }
+
+    return Object.freeze({
+      kind: "authenticated" as const,
+      accountId: accountSession.account.id,
+      tokenVersion: accountSession.account.tokenVersion,
+      sessionId: session.id,
+      expiresAt: session.expiresAt,
+    })
+  }
+
   async rotateWithAudit(
-    rotation: SessionRotation,
+    rotation: SessionRotationValue,
     audits: SessionRotationAuditEvents,
   ): Promise<RefreshTokenRotationDecision | Error> {
     const validationError = validateSystemSessionRotationAudits(rotation, audits)
@@ -88,18 +144,18 @@ export class SystemSessionRepository implements SessionRepository {
       ])
 
       if (results.length !== 5 || results.some((result) => !result.success)) {
-        return new Error("audited System Session rotation did not succeed")
+        return new Error("audited System SessionEntity rotation did not succeed")
       }
 
       return parseSystemSessionRotationResult(results[0], audits)
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to rotate System Session")
+      return caught instanceof Error ? caught : new Error("failed to rotate System SessionEntity")
     }
   }
 
   async revokeFamilyWithAudit(props: RevokeSessionFamilyProps): Promise<void | Error> {
     if (!Number.isFinite(props.revokedAt.getTime())) {
-      return new Error("System Session family revocation time is invalid")
+      return new Error("System SessionEntity family revocation time is invalid")
     }
 
     try {
@@ -130,13 +186,15 @@ export class SystemSessionRepository implements SessionRepository {
 
       return results.length === 4 && results.every((result) => result.success)
         ? undefined
-        : new Error("audited System Session family revocation did not succeed")
+        : new Error("audited System SessionEntity family revocation did not succeed")
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to revoke System Session family")
+      return caught instanceof Error
+        ? caught
+        : new Error("failed to revoke System SessionEntity family")
     }
   }
 
-  private prepareCreate(session: Session): D1PreparedStatement {
+  private prepareCreate(session: SessionEntity): D1PreparedStatement {
     return this.props.context.env.DB.prepare(
       `INSERT INTO system_sessions
          (id, account_id, family_id, token_hash, token_version,
@@ -159,7 +217,7 @@ export class SystemSessionRepository implements SessionRepository {
   }
 
   private prepareConsumePrevious(
-    rotation: SessionRotation,
+    rotation: SessionRotationValue,
     audits: SessionRotationAuditEvents,
   ): D1PreparedStatement {
     const previous = rotation.previous
@@ -185,7 +243,7 @@ export class SystemSessionRepository implements SessionRepository {
   }
 
   private prepareCreateSuccessor(
-    rotation: SessionRotation,
+    rotation: SessionRotationValue,
     audits: SessionRotationAuditEvents,
   ): D1PreparedStatement {
     const previous = rotation.previous
@@ -216,7 +274,7 @@ export class SystemSessionRepository implements SessionRepository {
   }
 
   private prepareRevokeRejectedFamily(
-    rotation: SessionRotation,
+    rotation: SessionRotationValue,
     audits: SessionRotationAuditEvents,
   ): D1PreparedStatement {
     const previous = rotation.previous

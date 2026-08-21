@@ -7,7 +7,7 @@ import {
   zProcedureDefinition,
 } from "@/contexts/governance/domain/governance-document"
 import type { Context } from "@/env"
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {

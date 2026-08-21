@@ -1,9 +1,9 @@
-import type { SessionRotationAuditEvents } from "@system/infrastructure/auth/session-port.repository"
-import type { SessionRotation } from "@system/domain/auth/session-rotation"
+import type { SessionRotationAuditEvents } from "@system/domain/values/session-rotation-audit-events.definition"
+import type { SessionRotationValue } from "@system/domain/values/session-rotation.value"
 
 /** rotation各decisionの監査が同じ操作と主体を表すことを検証する。 */
 export function validateSystemSessionRotationAudits(
-  rotation: SessionRotation,
+  rotation: SessionRotationValue,
   audits: SessionRotationAuditEvents,
 ): Error | null {
   const previous = rotation.previous

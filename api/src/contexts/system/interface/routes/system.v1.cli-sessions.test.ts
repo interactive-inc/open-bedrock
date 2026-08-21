@@ -110,7 +110,7 @@ describe("POST /system/v1/cli-sessions", () => {
     expect(Number(emptyResponse.status)).toBe(400)
   })
 
-  test("rejects when the System Account is suspended after code issuance", async () => {
+  test("rejects when the System AccountEntity is suspended after code issuance", async () => {
     const { client, fixture } = createFixture()
     await seedCode(fixture, "suspended-account-code")
     fixture.sqlite.exec(`

@@ -1,4 +1,4 @@
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import { systemFactory } from "@system/interface/http/system-factory"
@@ -12,8 +12,8 @@ const rootAccountId = zAccountId.parse("system-root-account")
 const delegatedAdministratorAccountId = zAccountId.parse("delegated-administrator-account")
 const scopedPrivilegedAccountId = zAccountId.parse("scoped-privileged-account")
 
-describe("System Account HTTP", () => {
-  test("Account作成・一覧・詳細・失効と自己停止拒否をSystemだけで完結する", async () => {
+describe("System AccountEntity HTTP", () => {
+  test("AccountEntity作成・一覧・詳細・失効と自己停止拒否をSystemだけで完結する", async () => {
     const fixture = new SystemSessionTestContext()
     fixture.sqlite
       .query(

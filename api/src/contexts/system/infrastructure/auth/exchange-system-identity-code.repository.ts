@@ -1,6 +1,5 @@
 import { z } from "zod"
-
-import { isSecureSystemIdentityIssuer } from "@system/domain/identity/is-secure-system-identity-issuer"
+import { SystemIdentityIssuerValue } from "@system/domain/values/system-identity-issuer.value"
 
 type Props = {
   code: string
@@ -19,7 +18,7 @@ const responseSchema = z.object({
 export async function exchangeSystemIdentityCode(props: Props): Promise<string | Error> {
   try {
     const issuer = new URL(props.issuer)
-    if (!isSecureSystemIdentityIssuer(issuer)) {
+    if (!new SystemIdentityIssuerValue(issuer).isSecure) {
       return new Error("identity issuer must use HTTPS")
     }
 

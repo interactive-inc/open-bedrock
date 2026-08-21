@@ -1,19 +1,12 @@
-import type { NotificationRepository } from "@system/infrastructure/notifications/notification-port.repository"
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
-import { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
-import { NotificationDelivery } from "@system/domain/notifications/notification-delivery.entity"
-import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
+import { NotificationDeliveryBatchValue } from "@system/domain/values/notification-delivery-batch.value"
+import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
+import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
+import type { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 import { describe, expect, test } from "bun:test"
 
-const unreachableRepository: NotificationRepository = {
+const unreachableRepository: Pick<SystemNotificationRepository, "publish"> = {
   publish: () => Promise.reject(new Error("repository must not be called")),
-  findDeliveryByIdForAccount: () => Promise.reject(new Error("repository must not be called")),
-  findByDeliveryIdForAccount: () => Promise.reject(new Error("repository must not be called")),
-  listForAccount: () => Promise.reject(new Error("repository must not be called")),
-  countUnreadForAccount: () => Promise.reject(new Error("repository must not be called")),
-  markDeliveryRead: () => Promise.reject(new Error("repository must not be called")),
-  markAllDeliveriesRead: () => Promise.reject(new Error("repository must not be called")),
-  dismissDelivery: () => Promise.reject(new Error("repository must not be called")),
 }
 
 describe("PublishSystemNotification", () => {
@@ -54,8 +47,8 @@ describe("PublishSystemNotification", () => {
   })
 })
 
-function createMessage(id: string): NotificationMessage {
-  const message = NotificationMessage.create({
+function createMessage(id: string): NotificationMessageEntity {
+  const message = NotificationMessageEntity.create({
     id,
     kind: "system:test.created",
     title: "notification",
@@ -73,8 +66,8 @@ function createDelivery(
   messageId: string,
   deliveredAt: Date,
   readAt: Date | null,
-): NotificationDelivery {
-  const delivery = NotificationDelivery.create({
+): NotificationDeliveryEntity {
+  const delivery = NotificationDeliveryEntity.create({
     id,
     messageId,
     recipientAccountId: "account-1",
@@ -86,8 +79,10 @@ function createDelivery(
   return delivery
 }
 
-function createBatch(deliveries: Array<NotificationDelivery>): NotificationDeliveryBatch {
-  const batch = NotificationDeliveryBatch.create(deliveries)
+function createBatch(
+  deliveries: Array<NotificationDeliveryEntity>,
+): NotificationDeliveryBatchValue {
+  const batch = NotificationDeliveryBatchValue.create(deliveries)
   if (batch instanceof Error) throw batch
 
   return batch

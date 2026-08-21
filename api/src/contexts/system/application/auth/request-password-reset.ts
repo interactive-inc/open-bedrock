@@ -4,7 +4,7 @@ import { PasswordResetEmailGateway } from "@/contexts/system/infrastructure/auth
 import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
 import { generateOpaqueToken } from "@system/infrastructure/auth/generate-opaque-token.repository"
 import { createSystemPasswordResetChallenge } from "@system/infrastructure/auth/create-system-password-reset-challenge.repository"
-import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
+import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
 import type {
   SystemClockContext,
   SystemD1Context,
@@ -56,7 +56,7 @@ export class RequestPasswordReset {
     const rawToken = generateOpaqueToken()
     const tokenHash = await hashPasswordResetToken(rawToken)
     if (tokenHash instanceof Error) return new PasswordResetRequestApplicationError(tokenHash)
-    const metadataJson = toStableSystemAuditJson({
+    const metadataJson = StableSystemAuditJsonValue.create({
       client_ip: this.c.var.auditContext.clientIp,
       client_name: this.c.var.auditContext.clientName,
       request_id: this.c.var.auditContext.requestId,
@@ -71,7 +71,7 @@ export class RequestPasswordReset {
       identityId: props.recipient.identityId,
       createdAt: now,
       expiresAt: new Date(now.getTime() + this.tokenLifetimeMilliseconds),
-      metadataJson,
+      metadataJson: metadataJson?.toString() ?? null,
     })
     if (writeResult instanceof Error) return new PasswordResetRequestApplicationError(writeResult)
 

@@ -1,4 +1,4 @@
-import type { AttachmentBytes } from "@system/domain/attachments/attachment-bytes"
+import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
 import type { SystemAttachmentStorageContext } from "@system/infrastructure/configuration/system-context.repository"
 import { NotFoundError, UnavailableError, UnexpectedError } from "@/lib/errors"
 

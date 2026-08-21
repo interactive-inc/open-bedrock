@@ -1,4 +1,4 @@
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
@@ -9,7 +9,7 @@ export class SystemCliLoginAuditRecorder {
   }
 
   async recordDenied(reasonCode: string, occurredAt: Date): Promise<null | Error> {
-    const event = createSystemAuditEvent({
+    const event = SystemAuditEventEntity.create({
       actorAccountId: null,
       action: "auth.session.cli_login_denied",
       targetType: "session",

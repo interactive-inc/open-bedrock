@@ -1,19 +1,31 @@
-import type { AccountRepository } from "@system/infrastructure/auth/account-port.repository"
-import { createSystemSessionAudit } from "@system/domain/audit/create-system-session-audit"
-import { resolveAccountSession } from "@system/domain/auth/resolve-account-session"
-import type { SessionRepository } from "@system/infrastructure/auth/session-port.repository"
-import type { SystemSessionAuditContext } from "@system/domain/auth/system-session-audit-context"
-import type { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material-port.repository"
-import type { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer-port.repository"
-import type { AccountId } from "@system/domain/auth/account-id"
-import type { AccountSessionRejection } from "@system/domain/auth/get-account-session-rejection"
-import type { SessionId } from "@system/domain/auth/session-id"
-import { Session } from "@system/domain/auth/session.entity"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
+import type { SystemSessionAuditContext } from "@system/domain/values/system-session-audit-context.definition"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountSessionRejection } from "@system/domain/policies/account-session.policy"
+import type { SessionFamilyId } from "@system/domain/values/session-family-id.schema"
+import type { SessionId } from "@system/domain/values/session-id.schema"
+import type { SessionTokenHash } from "@system/domain/values/session-token-hash.schema"
+import { SessionEntity } from "@system/domain/entities/session.entity"
+import type { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
+
+export type SystemSessionMaterial = Readonly<{
+  generateSessionId: () => SessionId | Error
+  generateFamilyId: () => SessionFamilyId | Error
+  generateRawToken: () => string | Error
+  hashRawToken: (rawToken: string) => Promise<SessionTokenHash | Error>
+}>
+
+export type SystemAccessTokenIssuer = Readonly<{
+  issue: (
+    input: Readonly<{ accountId: AccountId; tokenVersion: number; now: Date }>,
+  ) => Promise<string | Error>
+}>
 
 type Props = Readonly<{
-  accountRepository: AccountRepository
-  sessionRepository: SessionRepository
-  materialService: SystemSessionMaterialService
+  accountRepository: Pick<SystemAccountRepository, "findById">
+  sessionRepository: Pick<SystemSessionRepository, "createWithAudit">
+  materialService: SystemSessionMaterial
   accessTokenIssuer: SystemAccessTokenIssuer
   sessionTtlMilliseconds: number
 }>
@@ -40,7 +52,7 @@ export type IssueSystemSessionResult =
       reason: AccountSessionRejection | "account_not_found"
     }>
 
-/** canonical Accountを正本に、opaque Sessionと監査を同じ永続化境界で発行する。 */
+/** canonical Accountを正本に、opaque SessionEntityと監査を同じ永続化境界で発行する。 */
 export class IssueSystemSession {
   constructor(private readonly props: Props) {
     Object.freeze(this)
@@ -56,10 +68,10 @@ export class IssueSystemSession {
       this.props.sessionTtlMilliseconds <= 0 ||
       !Number.isSafeInteger(expiresAtEpochMilliseconds)
     ) {
-      return new Error("System Session issuance time is invalid")
+      return new Error("System SessionEntity issuance time is invalid")
     }
 
-    const accountSession = await resolveAccountSession({
+    const accountSession = await SystemAccountRepository.resolveSession({
       accountRepository: this.props.accountRepository,
       accountId: command.accountId,
       sessionTokenVersion: command.tokenVersion,
@@ -80,7 +92,7 @@ export class IssueSystemSession {
     if (tokenHash instanceof Error) return tokenHash
 
     const expiresAt = new Date(expiresAtEpochMilliseconds)
-    const session = Session.create({
+    const session = SessionEntity.create({
       id: sessionId,
       accountId: accountSession.account.id,
       familyId,
@@ -93,7 +105,7 @@ export class IssueSystemSession {
     })
     if (session instanceof Error) return session
 
-    const audit = createSystemSessionAudit({
+    const audit = SystemAuditEventEntity.createSession({
       actorAccountId: session.accountId,
       action: "auth.session.create",
       targetId: session.id,

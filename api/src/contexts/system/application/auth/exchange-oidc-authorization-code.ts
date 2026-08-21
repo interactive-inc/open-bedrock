@@ -2,13 +2,10 @@ import {
   OidcInvalidGrantApplicationError,
   OidcTemporarilyUnavailableApplicationError,
 } from "@system/application/auth/errors"
-import { createSystemOidcAudit } from "@system/domain/audit/create-system-oidc-audit"
-import {
-  OidcClientPolicy,
-  type OidcClientRegistry,
-} from "@system/domain/identity/oidc-client.policy"
-import { OidcScopeValue } from "@system/domain/identity/oidc-scope.value"
-import { OidcValue } from "@system/domain/identity/oidc.value"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import type { OidcClientRegistryValue } from "@system/domain/values/oidc-client-registry.value"
+import { OidcScopeValue } from "@system/domain/values/oidc-scope.value"
+import { oidcAccessTokenLifetime } from "@system/domain/values/oidc-token-lifetime.value"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type {
   SystemClockContext,
@@ -28,7 +25,7 @@ type Props = Readonly<{
   clientId: string
   redirectUri: string
   codeVerifier: string
-  clientRegistry: OidcClientRegistry
+  clientRegistry: OidcClientRegistryValue
 }>
 
 /** OIDC codeの検証・消費からtoken発行・監査までを一つの操作として実行する。 */
@@ -43,7 +40,7 @@ export class ExchangeOidcAuthorizationCode {
   }
 
   async execute(props: Props) {
-    const client = OidcClientPolicy.resolve(props, props.clientRegistry)
+    const client = props.clientRegistry.resolve(props)
     if (client === null) return new OidcInvalidGrantApplicationError()
 
     const signingKeys = OidcSigningKeyService.parse(this.context.env.OIDC_SIGNING_KEYS)
@@ -63,7 +60,7 @@ export class ExchangeOidcAuthorizationCode {
     }
     if (authorizationCode === null) return new OidcInvalidGrantApplicationError()
 
-    const scope = OidcScopeValue.parse(authorizationCode.scope)
+    const scope = OidcScopeValue.create(authorizationCode.scope)
     if (scope instanceof Error) return new OidcInvalidGrantApplicationError(scope)
 
     const identity = await new SystemOidcIdentityRepository(this.context).findByAccountId(
@@ -80,7 +77,7 @@ export class ExchangeOidcAuthorizationCode {
       clientId: client.id,
       identity,
       nonce: authorizationCode.nonce,
-      scope,
+      scope: scope.items,
     })
     if (idToken instanceof Error) return new OidcTemporarilyUnavailableApplicationError(idToken)
 
@@ -88,19 +85,19 @@ export class ExchangeOidcAuthorizationCode {
       issuer: props.issuer,
       clientId: client.id,
       accountId: authorizationCode.accountId,
-      scope: scope.join(" "),
+      scope: scope.toString(),
     })
     if (accessToken instanceof Error) {
       return new OidcTemporarilyUnavailableApplicationError(accessToken)
     }
 
-    const audit = createSystemOidcAudit({
+    const audit = SystemAuditEventEntity.createOidc({
       accountId: authorizationCode.accountId,
       action: "auth.oidc.token_exchange",
       outcome: "succeeded",
       reasonCode: null,
       authorization: null,
-      metadata: { issuer: props.issuer, clientId: client.id, scope: scope.join(" ") },
+      metadata: { issuer: props.issuer, clientId: client.id, scope: scope.toString() },
       occurredAt: this.context.var.now(),
     })
     if (audit instanceof Error) return new OidcTemporarilyUnavailableApplicationError(audit)
@@ -113,9 +110,9 @@ export class ExchangeOidcAuthorizationCode {
     return {
       access_token: accessToken.accessToken,
       token_type: "Bearer" as const,
-      expires_in: OidcValue.TOKEN_MAX_AGE_SECONDS,
+      expires_in: oidcAccessTokenLifetime.seconds,
       id_token: idToken,
-      scope: scope.join(" "),
+      scope: scope.toString(),
     }
   }
 }

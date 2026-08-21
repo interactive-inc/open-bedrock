@@ -1,6 +1,6 @@
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import type { SystemHonoEnv } from "@system/interface/http/system-factory"
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { SystemHTTPException } from "@system/interface/errors"
 import { POST } from "@system/interface/routes/system.v1.identity-sessions"
 import { createSystemIdentityTestKey } from "@system/infrastructure/identity/create-system-identity-test-key.test-support"
 import { createSystemIdentityToken } from "@system/infrastructure/identity/create-system-identity-token.test-support"
@@ -52,7 +52,7 @@ function createFixture(
     })
     .post("/system/v1/identity-sessions", ...POST)
   app.onError((error, context) => {
-    if (!(error instanceof SystemHttpError)) throw error
+    if (!(error instanceof SystemHTTPException)) throw error
     return context.json({ error: error.detail, code: error.code, ...error.metadata }, error.status)
   })
   const client = hc<typeof app>("http://system.test", {
@@ -189,7 +189,7 @@ describe("POST /system/v1/identity-sessions", () => {
     ).toEqual([{ reason_code: "email_unverified" }])
   })
 
-  test("does not disclose whether an Identity or Account exists", async () => {
+  test("does not disclose whether an Identity or AccountEntity exists", async () => {
     const { client, fixture } = createFixture()
     const token = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "unknown-subject",
@@ -209,7 +209,7 @@ describe("POST /system/v1/identity-sessions", () => {
     ).toEqual([{ reason_code: "account_not_found" }])
   })
 
-  test("rejects a suspended System Account without consulting Company", async () => {
+  test("rejects a suspended System AccountEntity without consulting Company", async () => {
     const { client, fixture } = createFixture()
     fixture.sqlite
       .query(

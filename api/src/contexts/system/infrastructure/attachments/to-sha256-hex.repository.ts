@@ -1,4 +1,4 @@
-import type { AttachmentBytes } from "@system/domain/attachments/attachment-bytes"
+import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
 
 /** 平文の整合性検証に使うダイジェスト。 */
 export async function toSha256Hex(bytes: AttachmentBytes): Promise<string> {

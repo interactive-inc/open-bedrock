@@ -1,5 +1,4 @@
 import { createLocalJWKSet, exportJWK, generateKeyPair } from "jose"
-
 import type { JSONWebKeySet, JWTVerifyGetKey } from "jose"
 
 type GeneratedSigningKey = Awaited<ReturnType<typeof generateKeyPair>>["privateKey"]

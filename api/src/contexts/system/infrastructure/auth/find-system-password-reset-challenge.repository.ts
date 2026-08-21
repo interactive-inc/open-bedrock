@@ -1,4 +1,4 @@
-import type { PasswordResetTokenHash } from "@system/domain/auth/password-reset-token-hash"
+import type { PasswordResetTokenHash } from "@system/domain/values/password-reset-token-hash.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 export type SystemPasswordResetChallenge = Readonly<{

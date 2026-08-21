@@ -1,6 +1,6 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import { IdentityBinding } from "@system/domain/identity/identity-binding.entity"
-import type { IdentityId } from "@system/domain/identity/identity-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { IdentityBindingEntity } from "@system/domain/entities/identity-binding.entity"
+import type { IdentityId } from "@system/domain/values/identity-id.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type IdentityRow = Readonly<{
@@ -17,7 +17,7 @@ type IdentityRow = Readonly<{
 }>
 
 export type SystemIdentityAdministrationView = Readonly<{
-  binding: IdentityBinding
+  binding: IdentityBindingEntity
   email: string | null
   isEmailVerified: boolean
   lastUsedAt: Date | null
@@ -34,7 +34,7 @@ export type SystemIdentityMutation =
 
 type CreateProps = Readonly<{
   actorAccountId: AccountId
-  binding: IdentityBinding
+  binding: IdentityBindingEntity
   email: string | null
   isEmailVerified: boolean
   passwordHash: string | null
@@ -281,7 +281,9 @@ export class SystemIdentityAdministrationRepository {
     ).bind(actorAccountId, targetAccountId)
   }
 
-  private prepareAdditionalActiveIdentityGuard(binding: IdentityBinding): D1PreparedStatement {
+  private prepareAdditionalActiveIdentityGuard(
+    binding: IdentityBindingEntity,
+  ): D1PreparedStatement {
     return this.context.env.DB.prepare(
       `SELECT CASE WHEN EXISTS (
          SELECT 1 FROM system_identity_bindings
@@ -323,7 +325,7 @@ export class SystemIdentityAdministrationRepository {
   }
 
   private toView(row: IdentityRow): SystemIdentityAdministrationView | Error {
-    const binding = IdentityBinding.create({
+    const binding = IdentityBindingEntity.create({
       id: row.id,
       accountId: row.account_id,
       provider: row.provider,

@@ -4,7 +4,7 @@ import type { Context } from "@/env"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 
 const session = new Session({
   accountId: zAccountId.parse("1"),

@@ -13,17 +13,20 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 import { auditNoStore } from "@/contexts/company/interface/middlewares/audit-no-store"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import type { CompanyCapability } from "@/contexts/company/domain/core/company-actor"
-import type { OidcClientRegistry } from "@system/domain/identity/oidc-client.policy"
-import type { OidcIssuerConfiguration } from "@system/domain/identity/oidc.value"
+import { OidcClientRegistryValue } from "@system/domain/values/oidc-client-registry.value"
+import { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
+import { SystemIdentityUnavailableError } from "@system/interface/errors"
 
 /** CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。 */
 const defaultAllowedOrigins = ["http://localhost:3000", "http://localhost:5173"]
-const disabledOidcClientRegistry: OidcClientRegistry = Object.freeze({})
-const disabledOidcIssuerConfiguration: OidcIssuerConfiguration = Object.freeze({
+const disabledOidcClientRegistry = OidcClientRegistryValue.restore({})
+if (disabledOidcClientRegistry instanceof Error) throw disabledOidcClientRegistry
+const disabledOidcIssuerConfiguration = OidcIssuerConfigurationValue.create({
   issuersByHostname: Object.freeze({}),
   localProxyHostnames: Object.freeze([]),
   localIssuerHostname: null,
 })
+if (disabledOidcIssuerConfiguration instanceof Error) throw disabledOidcIssuerConfiguration
 
 let corsWarningLogged = false
 
@@ -62,12 +65,21 @@ const nowProductionGuardMiddleware = factory.createMiddleware(async (c, next) =>
 })
 
 const systemContextMiddleware = factory.createMiddleware(async (c, next) => {
+  const oidcClientRegistry =
+    c.env.OIDC_CLIENT_REGISTRY === undefined
+      ? disabledOidcClientRegistry
+      : OidcClientRegistryValue.restore(c.env.OIDC_CLIENT_REGISTRY)
+  const oidcIssuerConfiguration =
+    c.env.OIDC_ISSUER_CONFIGURATION === undefined
+      ? disabledOidcIssuerConfiguration
+      : OidcIssuerConfigurationValue.create(c.env.OIDC_ISSUER_CONFIGURATION)
+  if (oidcClientRegistry instanceof Error || oidcIssuerConfiguration instanceof Error) {
+    throw new SystemIdentityUnavailableError()
+  }
+
   c.set("now", () => new Date(c.env.NOW ?? Date.now()))
-  c.set("oidcClientRegistry", c.env.OIDC_CLIENT_REGISTRY ?? disabledOidcClientRegistry)
-  c.set(
-    "oidcIssuerConfiguration",
-    c.env.OIDC_ISSUER_CONFIGURATION ?? disabledOidcIssuerConfiguration,
-  )
+  c.set("oidcClientRegistry", oidcClientRegistry)
+  c.set("oidcIssuerConfiguration", oidcIssuerConfiguration)
   await next()
 })
 

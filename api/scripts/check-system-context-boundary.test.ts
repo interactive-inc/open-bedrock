@@ -272,7 +272,7 @@ describe("discoverSystemCapabilityNames", () => {
     const legacyRoot = resolve(temporaryRoot, "src/api")
 
     try {
-      mkdirSync(resolve(contextRoot, "domain/auth"), { recursive: true })
+      mkdirSync(resolve(contextRoot, "application/auth"), { recursive: true })
       mkdirSync(resolve(legacyRoot, "application/system/batch"), { recursive: true })
 
       expect(discoverSystemCapabilityNames(contextRoot)).toEqual(new Set(["auth"]))

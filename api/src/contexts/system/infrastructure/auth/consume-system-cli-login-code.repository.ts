@@ -1,5 +1,5 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import { zAccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 /** 未失効のCLI token交換用codeをDELETE RETURNINGで一度だけ消費する。 */
@@ -20,7 +20,7 @@ export async function consumeSystemCliLoginCode(
     const accountId = zAccountId.safeParse(row.account_id)
     return accountId.success
       ? { accountId: accountId.data }
-      : new Error("invalid System Account ID")
+      : new Error("invalid System AccountEntity ID")
   } catch (caught) {
     return caught instanceof Error ? caught : new Error("failed to consume System CLI login code")
   }

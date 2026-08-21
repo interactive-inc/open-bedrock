@@ -1,11 +1,17 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import {
+  SystemAccountNotFoundError,
+  SystemAccountUnavailableError,
+  SystemForbiddenError,
+  SystemInvalidSessionError,
+  SystemLastRootAccountError,
+} from "@system/interface/errors"
 /** /system/v1/accounts/:accountId */
-import { zAccountId } from "@system/domain/auth/account-id"
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
-import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { SystemAccountAdministrationRepository } from "@system/infrastructure/iam/system-account-administration.repository"
-import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
+import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -13,36 +19,20 @@ import { z } from "zod"
 // @authorization permission iam:read - 一つのSystem AccountをCompany情報なしで読む
 export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
-    throw new SystemHttpError({
-      status: 403,
-      code: "forbidden",
-      detail: "forbidden",
-    })
+    throw new SystemForbiddenError()
   }
   const accountId = zAccountId.safeParse(context.req.param("accountId"))
   if (!accountId.success) {
-    throw new SystemHttpError({
-      status: 404,
-      code: "account_not_found",
-      detail: "account not found",
-    })
+    throw new SystemAccountNotFoundError()
   }
   const account = await new SystemAccountAdministrationRepository({
     env: { DB: context.env.DB },
   }).findById(accountId.data)
   if (account instanceof Error) {
-    throw new SystemHttpError({
-      status: 503,
-      code: "account_unavailable",
-      detail: "account service unavailable",
-    })
+    throw new SystemAccountUnavailableError()
   }
   if (account === null) {
-    throw new SystemHttpError({
-      status: 404,
-      code: "account_not_found",
-      detail: "account not found",
-    })
+    throw new SystemAccountNotFoundError()
   }
 
   return context.json(
@@ -64,44 +54,24 @@ export const PATCH = systemFactory.createHandlers(
   zValidator("json", z.object({ status: z.enum(["active", "suspended", "locked"]) }).strict()),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-      throw new SystemHttpError({
-        status: 403,
-        code: "forbidden",
-        detail: "forbidden",
-      })
+      throw new SystemForbiddenError()
     }
     const actorAccountId = zAccountId.safeParse(context.var.userId)
     const targetAccountId = zAccountId.safeParse(context.req.param("accountId"))
     if (!actorAccountId.success) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      throw new SystemInvalidSessionError()
     }
     if (!targetAccountId.success) {
-      throw new SystemHttpError({
-        status: 404,
-        code: "account_not_found",
-        detail: "account not found",
-      })
+      throw new SystemAccountNotFoundError()
     }
 
     const repository = new SystemAccountAdministrationRepository({ env: { DB: context.env.DB } })
     const before = await repository.findById(targetAccountId.data)
     if (before instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "account_unavailable",
-        detail: "account service unavailable",
-      })
+      throw new SystemAccountUnavailableError()
     }
     if (before === null) {
-      throw new SystemHttpError({
-        status: 404,
-        code: "account_not_found",
-        detail: "account not found",
-      })
+      throw new SystemAccountNotFoundError()
     }
     const body = context.req.valid("json")
     if (before.status === body.status) {
@@ -119,28 +89,20 @@ export const PATCH = systemFactory.createHandlers(
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "account_unavailable",
-        detail: "account service unavailable",
-      })
+      throw new SystemAccountUnavailableError()
     }
-    const beforeJson = toStableSystemAuditJson({
+    const beforeJson = StableSystemAuditJsonValue.create({
       status: before.status,
       token_version: before.tokenVersion,
     })
-    const afterJson = toStableSystemAuditJson({
+    const afterJson = StableSystemAuditJsonValue.create({
       status: body.status,
       token_version: before.tokenVersion + 1,
     })
     if (beforeJson instanceof Error || afterJson instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "account_unavailable",
-        detail: "account service unavailable",
-      })
+      throw new SystemAccountUnavailableError()
     }
-    const auditEvent = createSystemAuditEvent({
+    const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
       action: "system.account.status_updated",
       targetType: "system:account",
@@ -148,17 +110,13 @@ export const PATCH = systemFactory.createHandlers(
       outcome: "succeeded",
       reasonCode: null,
       authorizationJson: null,
-      beforeJson,
-      afterJson,
+      beforeJson: beforeJson?.toString() ?? null,
+      afterJson: afterJson?.toString() ?? null,
       metadataJson: null,
       occurredAt: now,
     })
     if (auditEvent instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "account_unavailable",
-        detail: "account service unavailable",
-      })
+      throw new SystemAccountUnavailableError()
     }
     const auditStatements = new SystemAuditEventRepository({
       env: { DB: context.env.DB },
@@ -171,41 +129,21 @@ export const PATCH = systemFactory.createHandlers(
       auditStatements,
     )
     if (update instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "account_unavailable",
-        detail: "account service unavailable",
-      })
+      throw new SystemAccountUnavailableError()
     }
     if (update === "not_found") {
-      throw new SystemHttpError({
-        status: 404,
-        code: "account_not_found",
-        detail: "account not found",
-      })
+      throw new SystemAccountNotFoundError()
     }
     if (update === "forbidden") {
-      throw new SystemHttpError({
-        status: 403,
-        code: "forbidden",
-        detail: "forbidden",
-      })
+      throw new SystemForbiddenError()
     }
     if (update === "last_root") {
-      throw new SystemHttpError({
-        status: 409,
-        code: "last_root",
-        detail: "last root account",
-      })
+      throw new SystemLastRootAccountError()
     }
 
     const account = await repository.findById(targetAccountId.data)
     if (account === null || account instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "account_unavailable",
-        detail: "account service unavailable",
-      })
+      throw new SystemAccountUnavailableError()
     }
 
     return context.json(

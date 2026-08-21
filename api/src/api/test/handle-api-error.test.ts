@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { handleApiError } from "@/api/http/handle-api-error"
 import { companyValidationErrorMiddleware } from "@/api/http/company-validation-error-middleware"
 import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
-import { OidcHttpError } from "@system/interface/http/errors/oidc-http-error"
+import { OIDCInvalidTokenError } from "@system/interface/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { ValidationError } from "@/lib/errors"
 import type { HonoEnv } from "@/env"
@@ -30,11 +30,7 @@ const app = new Hono<HonoEnv>()
     })
   })
   .get("/oidc-invalid-token", () => {
-    throw new OidcHttpError({
-      code: "invalid_token",
-      status: 401,
-      authenticate: 'Bearer error="invalid_token"',
-    })
+    throw new OIDCInvalidTokenError()
   })
   .get("/application-error", () => {
     throw toHttpException(new ValidationError("Request is invalid", "invalid_request"))

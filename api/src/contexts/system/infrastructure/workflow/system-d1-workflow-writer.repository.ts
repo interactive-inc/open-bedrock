@@ -1,12 +1,49 @@
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import type {
-  SystemTaskPersistence,
-  SystemWorkflowDecisionPersistence,
-  SystemWorkflowDecisionResult,
-  SystemWorkflowWriter,
-} from "@system/infrastructure/workflow/system-workflow-writer.repository"
+import type { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
+import type { ProposalEntity } from "@system/domain/entities/proposal.entity"
+import type { SystemCaseEntity } from "@system/domain/entities/system-case.entity"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { SystemDecisionTaskBundle } from "@system/domain/values/system-decision-task-bundle.definition"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
+
+export type SystemWorkflowDecisionPersistence = Readonly<{
+  attestation: HumanAttestationEntity
+  decidedAt: Date
+  nextTask: SystemDecisionTaskBundle | null
+}>
+
+export type SystemWorkflowDecisionResult = Readonly<{
+  caseStatus: "pending" | "approved" | "rejected" | "returned"
+  taskOutcome: "pending" | "approved" | "rejected" | "returned"
+}>
+
+export type SystemWorkflowWriter = Readonly<{
+  start(
+    input: Readonly<{
+      proposal: ProposalEntity
+      workflowCase: SystemCaseEntity
+      firstTask: SystemDecisionTaskBundle
+    }>,
+  ): Promise<number | Error>
+  decide(input: SystemWorkflowDecisionPersistence): Promise<SystemWorkflowDecisionResult | Error>
+  cancel(
+    input: Readonly<{
+      number: number
+      createdByAccountId: AccountId
+      cancelledAt: Date
+    }>,
+  ): Promise<true | "not_found" | "not_pending" | Error>
+  reassign(
+    input: Readonly<{
+      caseId: string
+      taskKey: string
+      round: number
+      reassignedAt: Date
+      replacement: SystemDecisionTaskBundle
+    }>,
+  ): Promise<true | "not_pending" | Error>
+}>
 
 type DecisionStateRow = Readonly<{
   case_status: "pending" | "approved" | "rejected" | "returned"
@@ -375,7 +412,7 @@ export class SystemD1WorkflowWriter implements SystemWorkflowWriter {
     }
   }
 
-  private prepareTaskInsert(input: SystemTaskPersistence): D1PreparedStatement {
+  private prepareTaskInsert(input: SystemDecisionTaskBundle): D1PreparedStatement {
     return this.context.env.DB.prepare(
       `INSERT INTO system_decision_tasks
            (case_id, task_key, round, required_approvals, proposal_digest, opened_at, due_at)
@@ -392,7 +429,7 @@ export class SystemD1WorkflowWriter implements SystemWorkflowWriter {
   }
 
   private prepareExclusionInserts(
-    input: SystemTaskPersistence,
+    input: SystemDecisionTaskBundle,
   ): ReadonlyArray<D1PreparedStatement> {
     return input.exclusions.map((exclusion) =>
       this.context.env.DB.prepare(
@@ -410,7 +447,7 @@ export class SystemD1WorkflowWriter implements SystemWorkflowWriter {
   }
 
   private prepareCandidateInserts(
-    input: SystemTaskPersistence,
+    input: SystemDecisionTaskBundle,
     abortWhenInactive: boolean,
   ): ReadonlyArray<D1PreparedStatement> {
     return input.candidates.flatMap((candidate) => {

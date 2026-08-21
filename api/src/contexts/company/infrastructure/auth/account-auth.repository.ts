@@ -1,6 +1,5 @@
-import type { AccountStatus } from "@system/domain/auth/account-status"
-import type { AccountId } from "@system/domain/auth/account-id"
-import { resolveSystemAuthorization } from "@system/domain/iam/resolve-system-authorization"
+import type { AccountStatus } from "@system/domain/values/account-status.schema"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 import type {
   SystemD1Context,
@@ -66,19 +65,17 @@ export class AccountAuthRepository {
     accountId: AccountId,
   ): Promise<ResolvedAccountAuthorization | Error> {
     try {
-      const authorizationGraph = await new SystemD1AuthorizationRepository({
+      const authorization = await new SystemD1AuthorizationRepository({
         env: { DB: this.c.env.DB },
-      }).loadForAccount(accountId)
-      if (authorizationGraph instanceof Error) return authorizationGraph
-      if (authorizationGraph === null) {
-        return { roleKeys: [], permissions: new Set() }
-      }
-      const authorization = resolveSystemAuthorization(authorizationGraph, {
+      }).resolveForAccount({
+        accountId,
         resource: null,
         at: new Date(this.c.env.NOW ?? Date.now()),
       })
       if (authorization instanceof Error) return authorization
-
+      if (authorization === null) {
+        return { roleKeys: [], permissions: new Set() }
+      }
       return {
         roleKeys: authorization.roleKeys.map((key) => key.replace(/^company:/, "")),
         permissions: authorization.permissionKeys,

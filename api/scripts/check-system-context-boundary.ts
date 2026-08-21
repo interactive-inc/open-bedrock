@@ -18,6 +18,7 @@ const LEGACY_CONTEXT_LAYERS = [
 ] as const
 const CONTEXT_FIRST_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
 const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"] as const
+const SYSTEM_CAPABILITY_LAYERS = ["application", "infrastructure"] as const
 const SYSTEM_PATH_MAPPING_LAYERS = [...SYSTEM_SELF_REFERENCE_LAYERS, "interface"] as const
 const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain", "interface"] as const
 const SYSTEM_SCHEMA_PATHS = [
@@ -36,9 +37,9 @@ const SYSTEM_SELF_REFERENCE_ROOT = SYSTEM_IMPLEMENTATION_ROOTS.includes(SYSTEM_C
   : API_SOURCE_ROOT
 const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
 const SYSTEM_CAPABILITY_CATALOG_PATH = existsSync(
-  resolve(SYSTEM_CONTEXT_ROOT, "domain/configuration/system-capability.catalog.ts"),
+  resolve(SYSTEM_CONTEXT_ROOT, "domain/values/system-capability.catalog.ts"),
 )
-  ? resolve(SYSTEM_CONTEXT_ROOT, "domain/configuration/system-capability.catalog.ts")
+  ? resolve(SYSTEM_CONTEXT_ROOT, "domain/values/system-capability.catalog.ts")
   : resolve(API_SOURCE_ROOT, "domain/system/configuration/system-capability.catalog.ts")
 const SYSTEM_SOURCE_PATHS = [
   ...CONTEXT_FIRST_LAYERS.map((layer) => resolve(SYSTEM_CONTEXT_ROOT, layer)),
@@ -335,7 +336,7 @@ export function inspectLegacySystemRuntime(
   return [...violations].toSorted().map((reason) => ({ file, reason }))
 }
 
-/** application/domain/infrastructure の System 直下にある capability namespace を集める。 */
+/** application/infrastructure の System 直下にある capability namespace を集める。 */
 export function discoverSystemCapabilityNames(
   apiSourceRoots: string | ReadonlyArray<string> = SYSTEM_IMPLEMENTATION_ROOTS,
 ): ReadonlySet<string> {
@@ -343,7 +344,7 @@ export function discoverSystemCapabilityNames(
   const roots = typeof apiSourceRoots === "string" ? [apiSourceRoots] : apiSourceRoots
 
   for (const sourceRoot of roots) {
-    for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
+    for (const layer of SYSTEM_CAPABILITY_LAYERS) {
       const systemRoot = isContextFirstSystemRoot(sourceRoot)
         ? resolve(sourceRoot, layer)
         : resolve(sourceRoot, layer, "system")
@@ -354,6 +355,10 @@ export function discoverSystemCapabilityNames(
         if (layer === "infrastructure" && entry.name === "schema") continue
         if (entry.isDirectory()) capabilities.add(entry.name)
       }
+    }
+
+    if (isContextFirstSystemRoot(sourceRoot) && existsSync(resolve(sourceRoot, "interface"))) {
+      capabilities.add("http")
     }
   }
 
@@ -384,7 +389,7 @@ function inspectSystemCapabilityLayout(
   const roots = typeof apiSourceRoots === "string" ? [apiSourceRoots] : apiSourceRoots
 
   for (const sourceRoot of roots) {
-    for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
+    for (const layer of SYSTEM_CAPABILITY_LAYERS) {
       const systemRoot = isContextFirstSystemRoot(sourceRoot)
         ? resolve(sourceRoot, layer)
         : resolve(sourceRoot, layer, "system")

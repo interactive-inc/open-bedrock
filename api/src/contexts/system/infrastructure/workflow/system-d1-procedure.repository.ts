@@ -1,15 +1,9 @@
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import { zAccountId } from "@system/domain/auth/account-id"
-import type {
-  SystemProcedureList,
-  SystemProcedureRepository,
-} from "@system/infrastructure/workflow/system-procedure-port.repository"
-import { InvalidSystemProposalError } from "@system/domain/workflow/invalid-system-proposal.error"
-import {
-  ProcedureDefinition,
-  type ProcedureKey,
-} from "@system/domain/workflow/procedure-definition.entity"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import { InvalidSystemProposalError } from "@system/domain/errors"
+import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
+import type { ProcedureKey } from "@system/domain/values/procedure-key.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type ProcedureRow = Readonly<{
@@ -25,11 +19,16 @@ type ProcedureRow = Readonly<{
   created_at: number
 }>
 
+export type SystemProcedureList = Readonly<{
+  definitions: ReadonlyArray<ProcedureDefinitionEntity>
+  total: number
+}>
+
 /** System手続の版とlifecycleをD1へ永続化する。 */
-export class SystemD1ProcedureRepository implements SystemProcedureRepository {
+export class SystemD1ProcedureRepository {
   constructor(private readonly context: SystemD1Context) {}
 
-  async findCurrent(key: ProcedureKey): Promise<ProcedureDefinition | null | Error> {
+  async findCurrent(key: ProcedureKey): Promise<ProcedureDefinitionEntity | null | Error> {
     try {
       const row = await this.context.env.DB.prepare(
         `SELECT
@@ -130,7 +129,7 @@ export class SystemD1ProcedureRepository implements SystemProcedureRepository {
       )
         .bind(input.category)
         .first<number>("total")
-      const definitions: ProcedureDefinition[] = []
+      const definitions: ProcedureDefinitionEntity[] = []
       for (const row of rows.results) {
         const definition = this.restore(row)
         if (definition instanceof Error) return definition
@@ -146,7 +145,7 @@ export class SystemD1ProcedureRepository implements SystemProcedureRepository {
   }
 
   async publish(
-    definition: ProcedureDefinition,
+    definition: ProcedureDefinitionEntity,
     expectedRevision: number,
   ): Promise<true | "revision_conflict" | Error> {
     try {
@@ -199,7 +198,7 @@ export class SystemD1ProcedureRepository implements SystemProcedureRepository {
   }
 
   private prepareInitialPublish(
-    definition: ProcedureDefinition,
+    definition: ProcedureDefinitionEntity,
   ): ReadonlyArray<D1PreparedStatement> {
     return [
       this.context.env.DB.prepare(
@@ -215,7 +214,7 @@ export class SystemD1ProcedureRepository implements SystemProcedureRepository {
   }
 
   private prepareRevisionPublish(
-    definition: ProcedureDefinition,
+    definition: ProcedureDefinitionEntity,
     expectedRevision: number,
   ): ReadonlyArray<D1PreparedStatement> {
     return [
@@ -231,7 +230,7 @@ export class SystemD1ProcedureRepository implements SystemProcedureRepository {
   }
 
   private prepareRevisionInsert(
-    definition: ProcedureDefinition,
+    definition: ProcedureDefinitionEntity,
     conditional: boolean,
     expectedRevision = 0,
   ): D1PreparedStatement {
@@ -263,12 +262,12 @@ export class SystemD1ProcedureRepository implements SystemProcedureRepository {
     )
   }
 
-  private restore(row: ProcedureRow): ProcedureDefinition | Error {
+  private restore(row: ProcedureRow): ProcedureDefinitionEntity | Error {
     try {
       const accountId = zAccountId.safeParse(row.created_by_account_id)
       if (!accountId.success) return new InvalidSystemProposalError("invalid_shape")
 
-      return ProcedureDefinition.create({
+      return ProcedureDefinitionEntity.create({
         key: row.procedure_key,
         revision: row.revision,
         title: row.title,

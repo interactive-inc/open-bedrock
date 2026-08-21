@@ -1,4 +1,4 @@
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import type { Context } from "@/env"
 import { accountEmployeeLinks } from "@/contexts/company/infrastructure/schema/employee"
 import { eq } from "drizzle-orm"

@@ -1,4 +1,4 @@
-import type { AttachmentStatus } from "@system/domain/attachments/attachment-status"
+import type { AttachmentStatus } from "@system/domain/values/attachment-status.definition"
 import type { SystemAttachmentRow } from "@system/infrastructure/schema/system-attachment"
 import { systemAttachments } from "@system/infrastructure/schema/system-attachment"
 import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context.repository"

@@ -1,6 +1,6 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import { IamRole } from "@system/domain/iam/iam-role.entity"
-import type { IamRoleId } from "@system/domain/iam/iam-role.entity"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { IamRoleEntity } from "@system/domain/entities/iam-role.entity"
+import type { IamRoleId } from "@system/domain/values/iam-role.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type RoleRow = Readonly<{
@@ -35,7 +35,7 @@ export class SystemRoleAdministrationRepository {
     Object.freeze(this)
   }
 
-  async list(): Promise<ReadonlyArray<IamRole> | Error> {
+  async list(): Promise<ReadonlyArray<IamRoleEntity> | Error> {
     try {
       const rows = await this.context.env.DB.prepare(
         `SELECT role.id, role.key, role.kind, role.name, role.description,
@@ -52,7 +52,7 @@ export class SystemRoleAdministrationRepository {
     }
   }
 
-  async findById(roleId: IamRoleId): Promise<IamRole | null | Error> {
+  async findById(roleId: IamRoleId): Promise<IamRoleEntity | null | Error> {
     try {
       const rows = await this.context.env.DB.prepare(
         `SELECT role.id, role.key, role.kind, role.name, role.description,
@@ -78,7 +78,7 @@ export class SystemRoleAdministrationRepository {
 
   async create(
     actorAccountId: AccountId,
-    role: IamRole,
+    role: IamRoleEntity,
     auditStatements: ReadonlyArray<D1PreparedStatement>,
   ): Promise<SystemRoleMutation | Error> {
     try {
@@ -117,8 +117,8 @@ export class SystemRoleAdministrationRepository {
 
   async update(
     actorAccountId: AccountId,
-    previous: IamRole,
-    next: IamRole,
+    previous: IamRoleEntity,
+    next: IamRoleEntity,
     auditStatements: ReadonlyArray<D1PreparedStatement>,
   ): Promise<SystemRoleMutation | Error> {
     if (previous.kind === "managed") return "managed_role"
@@ -183,7 +183,7 @@ export class SystemRoleAdministrationRepository {
 
   async delete(
     actorAccountId: AccountId,
-    role: IamRole,
+    role: IamRoleEntity,
     auditStatements: ReadonlyArray<D1PreparedStatement>,
   ): Promise<SystemRoleMutation | Error> {
     if (role.kind === "managed") return "managed_role"
@@ -288,7 +288,7 @@ export class SystemRoleAdministrationRepository {
     )
   }
 
-  private toRoles(rows: ReadonlyArray<RoleRow>): ReadonlyArray<IamRole> | Error {
+  private toRoles(rows: ReadonlyArray<RoleRow>): ReadonlyArray<IamRoleEntity> | Error {
     const partsById = new Map<string, RoleParts>()
     for (const row of rows) {
       if (typeof row.id !== "string") return new Error("System IAM role identifier is invalid")
@@ -299,9 +299,9 @@ export class SystemRoleAdministrationRepository {
       partsById.set(row.id, parts)
     }
 
-    const roles: Array<IamRole> = []
+    const roles: Array<IamRoleEntity> = []
     for (const parts of partsById.values()) {
-      const role = IamRole.create({
+      const role = IamRoleEntity.create({
         id: parts.row.id,
         key: parts.row.key,
         kind: parts.row.kind,

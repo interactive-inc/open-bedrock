@@ -1,9 +1,9 @@
-import type { Session } from "@system/domain/auth/session.entity"
+import type { SessionEntity } from "@system/domain/entities/session.entity"
 
-/** Session発行後のrowがDomain入力と完全一致することをtransaction内で検証する。 */
+/** SessionEntity発行後のrowがDomain入力と完全一致することをtransaction内で検証する。 */
 export function prepareSystemSessionCreateInvariant(
   database: D1Database,
-  session: Session,
+  session: SessionEntity,
 ): D1PreparedStatement {
   return database
     .prepare(

@@ -1,4 +1,4 @@
-import { Session } from "@system/domain/auth/session.entity"
+import { SessionEntity } from "@system/domain/entities/session.entity"
 import { z } from "zod"
 
 const storageRowSchema = z
@@ -15,13 +15,14 @@ const storageRowSchema = z
   })
   .strict()
 
-/** untrustedなD1 rowをcanonical Sessionへfail closedに変換する。 */
-export function toSystemSession(storageRow: unknown): Session | Error {
+/** untrustedなD1 rowをcanonical SessionEntityへfail closedに変換する。 */
+export function toSystemSession(storageRow: unknown): SessionEntity | Error {
   const parsed = storageRowSchema.safeParse(storageRow)
 
-  if (!parsed.success) return new Error("stored System Session is invalid", { cause: parsed.error })
+  if (!parsed.success)
+    return new Error("stored System SessionEntity is invalid", { cause: parsed.error })
 
-  return Session.create({
+  return SessionEntity.create({
     id: parsed.data.id,
     accountId: parsed.data.account_id,
     familyId: parsed.data.family_id,

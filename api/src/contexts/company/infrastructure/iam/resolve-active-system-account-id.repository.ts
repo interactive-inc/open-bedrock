@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 
 /** Sessionが指すcanonical Accountの存在と現在の有効性を確認する。 */

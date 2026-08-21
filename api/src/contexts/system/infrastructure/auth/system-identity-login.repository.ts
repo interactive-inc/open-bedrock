@@ -1,7 +1,7 @@
-import { Account } from "@system/domain/auth/account.entity"
-import type { IdentityProvider } from "@system/domain/identity/identity-provider"
-import { IdentityBinding } from "@system/domain/identity/identity-binding.entity"
-import type { IdentitySubject } from "@system/domain/identity/identity-subject"
+import { AccountEntity } from "@system/domain/entities/account.entity"
+import type { IdentityProvider } from "@system/domain/values/identity-provider.schema"
+import { IdentityBindingEntity } from "@system/domain/entities/identity-binding.entity"
+import type { IdentitySubject } from "@system/domain/values/identity-subject.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type Row = Readonly<{
@@ -19,11 +19,11 @@ type Row = Readonly<{
 }>
 
 export type SystemIdentityLogin = Readonly<{
-  account: Account
-  identity: IdentityBinding
+  account: AccountEntity
+  identity: IdentityBindingEntity
 }>
 
-/** activeなIdentity bindingとSystem Accountだけを一つのlogin snapshotとして読む。 */
+/** activeなIdentity bindingとSystem AccountEntityだけを一つのlogin snapshotとして読む。 */
 export class SystemIdentityLoginRepository {
   constructor(private readonly context: SystemD1Context) {
     Object.freeze(this)
@@ -52,7 +52,7 @@ export class SystemIdentityLoginRepository {
         .first<Row>()
       if (row === null) return null
 
-      const account = Account.create({
+      const account = AccountEntity.create({
         id: row.account_id,
         status: row.account_status,
         tokenVersion: row.account_token_version,
@@ -66,7 +66,7 @@ export class SystemIdentityLoginRepository {
             : row.account_updated_at,
       })
       if (account instanceof Error) return account
-      const identity = IdentityBinding.create({
+      const identity = IdentityBindingEntity.create({
         id: row.identity_id,
         accountId: row.account_id,
         provider: row.identity_provider,

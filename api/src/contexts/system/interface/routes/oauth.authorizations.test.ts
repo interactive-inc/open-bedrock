@@ -3,6 +3,8 @@ import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { POST } from "@system/interface/routes/oauth.authorizations"
 import { describe, expect, test } from "bun:test"
+import { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
+import { OidcClientRegistryValue } from "@system/domain/values/oidc-client-registry.value"
 import { drizzle } from "drizzle-orm/d1"
 import { hc } from "hono/client"
 
@@ -10,6 +12,14 @@ const now = new Date("2026-01-01T00:00:00.000Z")
 const issuer = "https://identity.example.test"
 const clientId = "system-console"
 const redirectUri = "https://console.example.test/callback"
+
+function createOidcClientRegistry(): OidcClientRegistryValue {
+  const registry = OidcClientRegistryValue.restore({
+    [issuer]: [{ id: clientId, name: "System Console", redirectUris: [redirectUri] }],
+  })
+  if (registry instanceof Error) throw registry
+  return registry
+}
 
 describe("POST /oauth/authorizations", () => {
   test("認証済みAccountの同意をcanonical codeとSystem監査へ記録する", async () => {
@@ -24,14 +34,15 @@ describe("POST /oauth/authorizations", () => {
         context.set("accountTokenVersion", 0)
         context.set("role", "system:root")
         context.set("permissions", new Set(["system:admin"]))
-        context.set("oidcClientRegistry", {
-          [issuer]: [{ id: clientId, name: "System Console", redirectUris: [redirectUri] }],
-        })
-        context.set("oidcIssuerConfiguration", {
-          issuersByHostname: { "identity.example.test": issuer },
-          localProxyHostnames: [],
-          localIssuerHostname: null,
-        })
+        context.set("oidcClientRegistry", createOidcClientRegistry())
+        context.set(
+          "oidcIssuerConfiguration",
+          new OidcIssuerConfigurationValue({
+            issuersByHostname: { "identity.example.test": issuer },
+            localProxyHostnames: [],
+            localIssuerHostname: null,
+          }),
+        )
         await next()
       })
       .post("/oauth/authorizations", ...POST)

@@ -1,14 +1,14 @@
-import type { NotificationRepository } from "@system/infrastructure/notifications/notification-port.repository"
-import { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
-import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
+import { NotificationDeliveryBatchValue } from "@system/domain/values/notification-delivery-batch.value"
+import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
+import type { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 
 type Props = Readonly<{
-  notificationRepository: NotificationRepository
+  notificationRepository: Pick<SystemNotificationRepository, "publish">
 }>
 
 export type PublishSystemNotificationCommand = Readonly<{
-  message: NotificationMessage
-  deliveries: NotificationDeliveryBatch
+  message: NotificationMessageEntity
+  deliveries: NotificationDeliveryBatchValue
 }>
 
 export type PublishSystemNotificationRejection =
@@ -32,8 +32,8 @@ export class PublishSystemNotification {
     command: PublishSystemNotificationCommand,
   ): Promise<PublishSystemNotificationResult | Error> {
     if (
-      !(command.message instanceof NotificationMessage) ||
-      !(command.deliveries instanceof NotificationDeliveryBatch)
+      !(command.message instanceof NotificationMessageEntity) ||
+      !(command.deliveries instanceof NotificationDeliveryBatchValue)
     ) {
       return rejected("invalid_shape")
     }

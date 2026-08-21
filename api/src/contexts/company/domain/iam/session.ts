@@ -1,6 +1,6 @@
-import { PermissionValue } from "@/contexts/system/domain/iam/permission.value"
+import { PermissionValue } from "@system/domain/values/permission.value"
 import type { EmployeeStatus } from "@/contexts/company/domain/employee/employee-status"
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 
 type Props = {
   accountId: AccountId

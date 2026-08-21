@@ -5,9 +5,9 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { ApplicationError, ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { ExecutionAuthorization } from "@system/domain/workflow/execution-authorization.entity"
-import { proposalDigestSchema } from "@system/domain/workflow/system-case-reference"
-import { systemCaseIdSchema } from "@system/domain/workflow/system-case.entity"
+import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
+import { proposalDigestSchema } from "@system/domain/values/system-case-reference.schema"
+import { systemCaseIdSchema } from "@system/domain/values/system-case.schema"
 import { SystemD1AuthorizedExecutionWriter } from "@system/infrastructure/workflow/system-d1-authorized-execution-writer.repository"
 
 const OPERATION_KEY = "company.personnel-action.apply"
@@ -57,7 +57,7 @@ export class CompleteApprovedPersonnelActionRequest {
     if (!caseId.success || !digest.success) {
       return new UnexpectedError("人事変更申請のSystem証跡が不正です")
     }
-    const authorization = ExecutionAuthorization.create({
+    const authorization = ExecutionAuthorizationEntity.create({
       id: crypto.randomUUID(),
       caseId: caseId.data,
       operationKey: OPERATION_KEY,

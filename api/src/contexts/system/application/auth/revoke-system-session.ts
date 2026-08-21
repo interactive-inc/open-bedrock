@@ -1,11 +1,11 @@
-import { createSystemSessionAudit } from "@system/domain/audit/create-system-session-audit"
-import type { SessionRepository } from "@system/infrastructure/auth/session-port.repository"
-import type { SystemSessionAuditContext } from "@system/domain/auth/system-session-audit-context"
-import type { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material-port.repository"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import type { SystemSessionAuditContext } from "@system/domain/values/system-session-audit-context.definition"
+import type { SystemSessionMaterial } from "@system/application/auth/issue-system-session"
+import type { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
 
 type Props = Readonly<{
-  sessionRepository: SessionRepository
-  materialService: Pick<SystemSessionMaterialService, "hashRawToken">
+  sessionRepository: Pick<SystemSessionRepository, "findByTokenHash" | "revokeFamilyWithAudit">
+  materialService: Pick<SystemSessionMaterial, "hashRawToken">
 }>
 
 export type RevokeSystemSessionCommand = Readonly<{
@@ -33,7 +33,7 @@ export class RevokeSystemSession {
     if (session instanceof Error) return session
     if (session === null || session.revokedAt !== null) return RevokeSystemSession.completed()
 
-    const audit = createSystemSessionAudit({
+    const audit = SystemAuditEventEntity.createSession({
       actorAccountId: session.accountId,
       action: "auth.session.revoke",
       targetId: session.id,

@@ -29,7 +29,7 @@ import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infr
 import { CanonicalCompanyAccess } from "@/contexts/company/interface/utils/canonical-company-access"
 import { requireCanonicalCompany } from "@/contexts/company/interface/utils/require-canonical-company"
 import { accountEmployeeLinks } from "@/contexts/company/infrastructure/schema/employee"
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization.repository"
 import { eq } from "drizzle-orm"
 

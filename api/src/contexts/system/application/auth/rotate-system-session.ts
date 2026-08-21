@@ -1,22 +1,28 @@
-import type { SystemAuditEventAppender } from "@system/infrastructure/audit/system-audit-event-appender.repository"
-import type { AccountRepository } from "@system/infrastructure/auth/account-port.repository"
-import { createSystemSessionAudit } from "@system/domain/audit/create-system-session-audit"
-import { createSystemSessionRotationAudits } from "@system/domain/audit/create-system-session-rotation-audits"
-import { resolveAccountSession } from "@system/domain/auth/resolve-account-session"
-import type { SessionRepository } from "@system/infrastructure/auth/session-port.repository"
-import type { SystemSessionAuditContext } from "@system/domain/auth/system-session-audit-context"
-import type { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material-port.repository"
-import type { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer-port.repository"
-import type { AccountId } from "@system/domain/auth/account-id"
-import type { SessionId } from "@system/domain/auth/session-id"
-import { SessionRotation } from "@system/domain/auth/session-rotation"
-import { Session } from "@system/domain/auth/session.entity"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
+import type { SystemSessionAuditContext } from "@system/domain/values/system-session-audit-context.definition"
+import type {
+  SystemAccessTokenIssuer,
+  SystemSessionMaterial,
+} from "@system/application/auth/issue-system-session"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { SessionId } from "@system/domain/values/session-id.schema"
+import { SessionRotationValue } from "@system/domain/values/session-rotation.value"
+import { SessionEntity } from "@system/domain/entities/session.entity"
+import type { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
+
+export type SystemAuditEventAppender = Readonly<{
+  append: (event: SystemAuditEventEntity) => Promise<void | Error>
+}>
 
 type Props = Readonly<{
-  accountRepository: AccountRepository
-  sessionRepository: SessionRepository
+  accountRepository: Pick<SystemAccountRepository, "findById">
+  sessionRepository: Pick<
+    SystemSessionRepository,
+    "findByTokenHash" | "revokeFamilyWithAudit" | "rotateWithAudit"
+  >
   auditAppender: SystemAuditEventAppender
-  materialService: SystemSessionMaterialService
+  materialService: SystemSessionMaterial
   accessTokenIssuer: SystemAccessTokenIssuer
   sessionTtlMilliseconds: number
 }>
@@ -55,7 +61,7 @@ export class RotateSystemSession {
       this.props.sessionTtlMilliseconds <= 0 ||
       !Number.isSafeInteger(expiresAtEpochMilliseconds)
     ) {
-      return new Error("System Session rotation time is invalid")
+      return new Error("System SessionEntity rotation time is invalid")
     }
 
     const tokenHash = await this.props.materialService.hashRawToken(command.rawToken)
@@ -70,7 +76,7 @@ export class RotateSystemSession {
     }
     if (useRejection !== null) return this.rejectKnown(current, "invalid", command)
 
-    const accountSession = await resolveAccountSession({
+    const accountSession = await SystemAccountRepository.resolveSession({
       accountRepository: this.props.accountRepository,
       accountId: current.accountId,
       sessionTokenVersion: current.tokenVersion,
@@ -88,7 +94,7 @@ export class RotateSystemSession {
     if (successorTokenHash instanceof Error) return successorTokenHash
 
     const expiresAt = new Date(expiresAtEpochMilliseconds)
-    const successor = Session.create({
+    const successor = SessionEntity.create({
       id: sessionId,
       accountId: current.accountId,
       familyId: current.familyId,
@@ -101,9 +107,12 @@ export class RotateSystemSession {
     })
     if (successor instanceof Error) return successor
 
-    const rotation = SessionRotation.create(current, successor, command.now)
+    const rotation = SessionRotationValue.create(current, successor, command.now)
     if (rotation instanceof Error) return rotation
-    const audits = createSystemSessionRotationAudits(rotation, command.auditContext)
+    const audits = SystemAuditEventEntity.createSessionRotationEvents(
+      rotation,
+      command.auditContext,
+    )
     if (audits instanceof Error) return audits
 
     const accessToken = await this.props.accessTokenIssuer.issue({
@@ -133,7 +142,7 @@ export class RotateSystemSession {
   private async rejectUnknown(
     command: RotateSystemSessionCommand,
   ): Promise<RotateSystemSessionResult | Error> {
-    const audit = createSystemSessionAudit({
+    const audit = SystemAuditEventEntity.createSession({
       actorAccountId: null,
       action: "auth.session.rotate",
       targetId: null,
@@ -151,11 +160,11 @@ export class RotateSystemSession {
   }
 
   private async rejectKnown(
-    current: Session,
+    current: SessionEntity,
     reason: "reused" | "invalid",
     command: RotateSystemSessionCommand,
   ): Promise<RotateSystemSessionResult | Error> {
-    const audit = createSystemSessionAudit({
+    const audit = SystemAuditEventEntity.createSession({
       actorAccountId: current.accountId,
       action: "auth.session.rotate",
       targetId: current.id,

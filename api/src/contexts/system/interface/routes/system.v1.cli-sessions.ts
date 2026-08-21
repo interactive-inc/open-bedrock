@@ -1,7 +1,7 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { SystemCLICodeInvalidError, SystemCLILoginUnavailableError } from "@system/interface/errors"
 /** /system/v1/cli-sessions */
-import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import { validateSystemAccessTokenSecret } from "@system/domain/auth/validate-system-access-token-secret"
+import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { SystemAccessTokenSecretValue } from "@system/domain/values/system-access-token-secret.value"
 import { consumeSystemCliLoginCode } from "@system/infrastructure/auth/consume-system-cli-login-code.repository"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash.repository"
@@ -20,80 +20,51 @@ export const POST = systemFactory.createHandlers(
       jwtSecret: context.env.JWT_SECRET ?? "",
       sessionTtlMilliseconds: Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000,
     })
-    const metadataJson = toStableSystemAuditJson({ transport: "system.v1.cli-sessions" })
+    const metadataJson = StableSystemAuditJsonValue.create({ transport: "system.v1.cli-sessions" })
     if (
       applications instanceof Error ||
       metadataJson instanceof Error ||
-      validateSystemAccessTokenSecret(context.env.JWT_SECRET ?? "") !== null
+      !(
+        SystemAccessTokenSecretValue.create(context.env.JWT_SECRET ?? "") instanceof
+        SystemAccessTokenSecretValue
+      )
     ) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCLILoginUnavailableError()
     }
 
     const codeHash = await systemLoginCodeHash(context.req.valid("json").code)
     if (codeHash instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCLILoginUnavailableError()
     }
 
     const consumed = await consumeSystemCliLoginCode(context, codeHash, now)
     if (consumed instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCLILoginUnavailableError()
     }
     if (consumed === null) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_cli_code",
-        detail: "invalid CLI code",
-      })
+      throw new SystemCLICodeInvalidError()
     }
 
     const account = await new SystemAccountRepository({ database: context.env.DB }).findById(
       consumed.accountId,
     )
     if (account instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCLILoginUnavailableError()
     }
     if (account === null || account.status !== "active") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_cli_code",
-        detail: "invalid CLI code",
-      })
+      throw new SystemCLICodeInvalidError()
     }
     const issued = await applications.issue.execute({
       accountId: account.id,
       tokenVersion: account.tokenVersion,
       now,
-      auditContext: { authorizationJson: null, metadataJson },
+      auditContext: { authorizationJson: null, metadataJson: metadataJson?.toString() ?? null },
     })
     if (issued instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCLILoginUnavailableError()
     }
     if (issued.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_cli_code",
-        detail: "invalid CLI code",
-      })
+      throw new SystemCLICodeInvalidError()
     }
 
     return context.json(

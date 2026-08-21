@@ -3,8 +3,7 @@ import {
   CompanyHttpError,
   type CompanyHttpErrorStatus,
 } from "@/contexts/company/interface/http/errors/company-http-error"
-import { OidcHttpError } from "@system/interface/http/errors/oidc-http-error"
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { OIDCHTTPException, SystemHTTPException } from "@system/interface/errors"
 import { ApplicationError } from "@/lib/errors"
 import type { HonoEnv } from "@/env"
 import type { Context } from "hono"
@@ -30,7 +29,7 @@ const companyProblemTitleByStatus: Readonly<Record<CompanyHttpErrorStatus, strin
  * API 全体の例外を外部向け JSON に変換し、内部情報を応答へ漏らさない。
  */
 export async function handleApiError(error: Error, context: Context<HonoEnv>): Promise<Response> {
-  if (error instanceof OidcHttpError) {
+  if (error instanceof OIDCHTTPException) {
     if (error.status >= 500) console.error("[expected server error]", error.cause ?? error)
     if (error.authenticate !== null) {
       context.header("WWW-Authenticate", error.authenticate)
@@ -42,7 +41,7 @@ export async function handleApiError(error: Error, context: Context<HonoEnv>): P
     })
   }
 
-  if (error instanceof SystemHttpError) {
+  if (error instanceof SystemHTTPException) {
     if (error.status >= 500) console.error("[expected server error]", error.cause ?? error)
 
     return context.json({ error: error.detail, code: error.code, ...error.metadata }, error.status)

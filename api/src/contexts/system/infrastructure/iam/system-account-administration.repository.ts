@@ -1,7 +1,7 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import { zAccountId } from "@system/domain/auth/account-id"
-import type { AccountStatus } from "@system/domain/auth/account-status"
-import { Account } from "@system/domain/auth/account.entity"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import type { AccountStatus } from "@system/domain/values/account-status.schema"
+import { AccountEntity } from "@system/domain/entities/account.entity"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type AccountRow = Readonly<{
@@ -33,7 +33,7 @@ export type SystemAccountStatusUpdate =
   | "forbidden"
   | "last_root"
 
-/** Account一覧と、失効を伴うstatus変更をCompanyなしで保存する。 */
+/** AccountEntity一覧と、失効を伴うstatus変更をCompanyなしで保存する。 */
 export class SystemAccountAdministrationRepository {
   constructor(private readonly context: SystemD1Context) {
     Object.freeze(this)
@@ -93,11 +93,11 @@ export class SystemAccountAdministrationRepository {
       )
         .bind(accountId)
         .all<RoleKeyRow>()
-      if (!roleKeys.success) return new Error("failed to read System Account roles")
+      if (!roleKeys.success) return new Error("failed to read System AccountEntity roles")
 
       return this.toView(row, roleKeys.results)
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to read System Account")
+      return caught instanceof Error ? caught : new Error("failed to read System AccountEntity")
     }
   }
 
@@ -116,7 +116,7 @@ export class SystemAccountAdministrationRepository {
       ]
       const executions = await this.context.env.DB.batch(statements)
       if (executions.length !== statements.length || executions.some((entry) => !entry.success)) {
-        return new Error("System Account creation batch did not succeed")
+        return new Error("System AccountEntity creation batch did not succeed")
       }
 
       return "created"
@@ -125,7 +125,7 @@ export class SystemAccountAdministrationRepository {
         return "conflict"
       }
 
-      return caught instanceof Error ? caught : new Error("failed to create System Account")
+      return caught instanceof Error ? caught : new Error("failed to create System AccountEntity")
     }
   }
 
@@ -141,7 +141,7 @@ export class SystemAccountAdministrationRepository {
     if (target instanceof Error) return target
     if (actorAccountId === targetAccountId && status !== "active") return "forbidden"
 
-    const account = Account.create({
+    const account = AccountEntity.create({
       id: target.id,
       status: target.status,
       tokenVersion: target.tokenVersion,
@@ -187,7 +187,7 @@ export class SystemAccountAdministrationRepository {
       ]
       const executions = await this.context.env.DB.batch(statements)
       if (executions.length !== statements.length || executions.some((entry) => !entry.success)) {
-        return new Error("System Account status batch did not succeed")
+        return new Error("System AccountEntity status batch did not succeed")
       }
 
       return "updated"
@@ -199,7 +199,7 @@ export class SystemAccountAdministrationRepository {
         return "last_root"
       }
 
-      return caught instanceof Error ? caught : new Error("failed to update System Account")
+      return caught instanceof Error ? caught : new Error("failed to update System AccountEntity")
     }
   }
 
@@ -265,16 +265,16 @@ export class SystemAccountAdministrationRepository {
     roleKeyRows: ReadonlyArray<RoleKeyRow>,
   ): SystemAccountAdministrationView | Error {
     const accountId = zAccountId.safeParse(row.id)
-    if (!accountId.success) return new Error("System Account identifier is invalid")
+    if (!accountId.success) return new Error("System AccountEntity identifier is invalid")
     if (row.status !== "active" && row.status !== "suspended" && row.status !== "locked") {
-      return new Error("System Account status is invalid")
+      return new Error("System AccountEntity status is invalid")
     }
     if (
       typeof row.token_version !== "number" ||
       !Number.isSafeInteger(row.token_version) ||
       row.token_version < 0
     ) {
-      return new Error("System Account token version is invalid")
+      return new Error("System AccountEntity token version is invalid")
     }
     if (
       typeof row.created_at !== "number" ||
@@ -282,7 +282,7 @@ export class SystemAccountAdministrationRepository {
       !Number.isSafeInteger(row.created_at) ||
       !Number.isSafeInteger(row.updated_at)
     ) {
-      return new Error("System Account timestamp is invalid")
+      return new Error("System AccountEntity timestamp is invalid")
     }
 
     return Object.freeze({

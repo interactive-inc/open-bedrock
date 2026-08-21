@@ -17,7 +17,7 @@ import {
 import type { Context } from "@/env"
 import { ApplicationError } from "@/lib/errors"
 import { readWorkforceBaselineStates } from "@/contexts/company/infrastructure/workforce/read-workforce-baseline-states.repository"
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 
 type EmployeeRow = Readonly<{

@@ -17,8 +17,14 @@ export async function readOrganizationRevision(db: D1Database): Promise<number> 
   return revision
 }
 
-export async function createLifecycleRouteDb(): Promise<D1Database> {
-  const db = createD1TestDatabase(loadSchema())
+/**
+ * テスト用の共通 fixture DB を作る。
+ * onQuery を渡すと、発行された全クエリを数えられる（N+1 の検出に使う）。
+ */
+export async function createLifecycleRouteDb(
+  options?: Readonly<{ onQuery?: () => void }>,
+): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema(), options)
   await seedD1(
     db,
     "departments",

@@ -1,11 +1,20 @@
-import type { SystemAuthorizationRepository } from "@system/infrastructure/iam/system-authorization-port.repository"
-import type { SystemAuthorizationGraph } from "@system/domain/iam/system-authorization-graph"
-import type { AccountId } from "@system/domain/auth/account-id"
-import { IamRole } from "@system/domain/iam/iam-role.entity"
-import { RoleBinding } from "@system/domain/iam/role-binding.entity"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { IamRoleEntity } from "@system/domain/entities/iam-role.entity"
+import { RoleBindingEntity } from "@system/domain/entities/role-binding.entity"
+import type { RoleBindingResource } from "@system/domain/values/role-binding.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
-export class SystemD1AuthorizationRepository implements SystemAuthorizationRepository {
+export type SystemAuthorizationGraph = Readonly<{
+  roles: ReadonlyArray<IamRoleEntity>
+  bindings: ReadonlyArray<RoleBindingEntity>
+}>
+
+export type ResolvedSystemAuthorization = Readonly<{
+  permissionKeys: ReadonlySet<string>
+  roleKeys: ReadonlyArray<string>
+}>
+
+export class SystemD1AuthorizationRepository {
   constructor(private readonly context: SystemD1Context) {
     Object.freeze(this)
   }
@@ -57,7 +66,7 @@ export class SystemD1AuthorizationRepository implements SystemAuthorizationRepos
       }
 
       const roles = [...roleRows.values()].map(({ row, permissions }) =>
-        IamRole.create({
+        IamRoleEntity.create({
           id: row.role_id,
           key: row.role_key,
           kind: row.role_kind,
@@ -74,7 +83,7 @@ export class SystemD1AuthorizationRepository implements SystemAuthorizationRepos
         }),
       )
       const bindings = [...bindingRows.values()].map((row) =>
-        RoleBinding.create({
+        RoleBindingEntity.create({
           id: row.binding_id,
           accountId: row.account_id,
           roleId: row.role_id,
@@ -98,11 +107,39 @@ export class SystemD1AuthorizationRepository implements SystemAuthorizationRepos
       if (invalid instanceof Error) return invalid
 
       return Object.freeze({
-        roles: Object.freeze(roles as Array<IamRole>),
-        bindings: Object.freeze(bindings as Array<RoleBinding>),
+        roles: Object.freeze(roles as Array<IamRoleEntity>),
+        bindings: Object.freeze(bindings as Array<RoleBindingEntity>),
       })
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to resolve System authorization")
     }
+  }
+
+  async resolveForAccount(command: {
+    accountId: AccountId
+    resource: RoleBindingResource | null
+    at: Date
+  }): Promise<ResolvedSystemAuthorization | null | Error> {
+    if (!Number.isSafeInteger(command.at.getTime())) {
+      return new Error("System authorization time is invalid")
+    }
+
+    const graph = await this.loadForAccount(command.accountId)
+    if (graph === null || graph instanceof Error) return graph
+
+    const rolesById = new Map(graph.roles.map((role) => [role.id, role]))
+    const activeRoles = new Map(
+      graph.bindings.flatMap((binding) => {
+        if (!binding.isActiveAt(command.at) || !binding.appliesTo(command.resource)) return []
+        const role = rolesById.get(binding.roleId)
+        return role === undefined ? [] : [[role.id, role] as const]
+      }),
+    ).values()
+    const roles = [...activeRoles]
+
+    return Object.freeze({
+      permissionKeys: new Set(roles.flatMap((role) => role.permissionKeys)),
+      roleKeys: Object.freeze(roles.map((role) => role.key).sort()),
+    })
   }
 }

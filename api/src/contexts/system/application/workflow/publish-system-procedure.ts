@@ -1,7 +1,7 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import type { SystemProcedureRepository } from "@system/infrastructure/workflow/system-procedure-port.repository"
-import { InvalidSystemProposalError } from "@system/domain/workflow/invalid-system-proposal.error"
-import { ProcedureDefinition } from "@system/domain/workflow/procedure-definition.entity"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { InvalidSystemProposalError } from "@system/domain/errors"
+import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
+import type { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
 
 export type PublishSystemProcedureCommand = Readonly<{
   key: string
@@ -18,15 +18,15 @@ export type PublishSystemProcedureCommand = Readonly<{
 
 /** 楽観lockを使い、手続の新しい変更不能版だけを公開する。 */
 export class PublishSystemProcedure {
-  constructor(private readonly repository: SystemProcedureRepository) {}
+  constructor(private readonly repository: Pick<SystemD1ProcedureRepository, "publish">) {}
 
   async run(
     command: PublishSystemProcedureCommand,
-  ): Promise<ProcedureDefinition | "revision_conflict" | InvalidSystemProposalError | Error> {
+  ): Promise<ProcedureDefinitionEntity | "revision_conflict" | InvalidSystemProposalError | Error> {
     if (!Number.isSafeInteger(command.expectedRevision) || command.expectedRevision < 0) {
       return new InvalidSystemProposalError("invalid_shape")
     }
-    const definition = ProcedureDefinition.create({
+    const definition = ProcedureDefinitionEntity.create({
       key: command.key,
       revision: command.expectedRevision + 1,
       title: command.title,

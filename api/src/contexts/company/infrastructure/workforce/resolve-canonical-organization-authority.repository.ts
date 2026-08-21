@@ -18,7 +18,7 @@ import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructur
 import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 
 type EmployeeRow = Readonly<{ id: number; code: string | null }>
 

@@ -1,7 +1,7 @@
 /** /attachments */
 import { StoreAttachment } from "@system/application/attachments/store-attachment"
-import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+import { SystemHTTPException } from "@system/interface/errors"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { ApplicationError } from "@/lib/errors"
 
@@ -23,7 +23,7 @@ export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, 
   const file = form.file
 
   if (!(file instanceof File)) {
-    throw new SystemHttpError({
+    throw new SystemHTTPException({
       status: 400,
       code: "attachment_file_required",
       detail: "file field is required",
@@ -39,7 +39,7 @@ export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, 
   })
 
   if (stored instanceof ApplicationError) {
-    throw new SystemHttpError({
+    throw new SystemHTTPException({
       status: toHttpStatus(stored),
       code: stored.code,
       detail: stored.message,
@@ -47,7 +47,7 @@ export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, 
   }
 
   if (stored instanceof Error) {
-    throw new SystemHttpError({
+    throw new SystemHTTPException({
       status: 500,
       code: "attachment_store_failed",
       detail: "attachment store failed",

@@ -2,7 +2,7 @@ import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-v
 import type {
   SystemProposalStatus,
   SystemProposalView,
-} from "@system/infrastructure/workflow/system-proposal-query.repository"
+} from "@system/infrastructure/workflow/system-d1-proposal-query.repository"
 
 export function toApplicationStatus(
   status: SystemProposalStatus,

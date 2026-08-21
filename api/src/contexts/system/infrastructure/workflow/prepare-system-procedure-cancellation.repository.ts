@@ -1,5 +1,5 @@
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 /** 上位contextの更新と同じD1 batchへ組み込める、所有者限定のSystem Case取消文を作る。 */

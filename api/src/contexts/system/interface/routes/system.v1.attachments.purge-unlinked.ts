@@ -1,9 +1,9 @@
 import { AttachmentObjectStore } from "@system/infrastructure/attachments/attachment-object-store.repository"
 import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
-import { UNLINKED_ATTACHMENT_RETENTION_MILLISECONDS } from "@system/domain/attachments/unlinked-attachment-retention"
+import { UNLINKED_ATTACHMENT_RETENTION_MILLISECONDS } from "@system/domain/values/unlinked-attachment-retention.catalog"
 
-import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+import { SystemHTTPException } from "@system/interface/errors"
 import { systemFactory } from "@system/interface/http/system-factory"
 
 /**
@@ -13,7 +13,7 @@ import { systemFactory } from "@system/interface/http/system-factory"
 // @authorization permission - 本体を物理削除するため system:admin に限定する
 export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin")) {
-    throw new SystemHttpError({
+    throw new SystemHTTPException({
       status: 403,
       code: "forbidden",
       detail: "forbidden",
@@ -53,7 +53,7 @@ export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, 
   })()
 
   if (result instanceof Error) {
-    throw new SystemHttpError({
+    throw new SystemHTTPException({
       status: 503,
       code: "attachment_purge_unavailable",
       detail: "attachment purge unavailable",

@@ -1,4 +1,4 @@
-import { isSecureSystemIdentityIssuer } from "@system/domain/identity/is-secure-system-identity-issuer"
+import { SystemIdentityIssuerValue } from "@system/domain/values/system-identity-issuer.value"
 import { createLocalJWKSet, createRemoteJWKSet, type JWTVerifyGetKey } from "jose"
 import { z } from "zod"
 
@@ -48,7 +48,7 @@ export class SystemIdentityVerificationKeyResolver {
     try {
       const issuer = new URL(this.configuration.issuer)
       if (
-        !isSecureSystemIdentityIssuer(issuer) ||
+        !new SystemIdentityIssuerValue(issuer).isSecure ||
         issuer.username !== "" ||
         issuer.password !== "" ||
         issuer.pathname !== "/" ||

@@ -1,10 +1,10 @@
-import type { ProcedureKey } from "@system/domain/workflow/procedure-definition.entity"
-import type { DelegationId } from "@system/domain/workflow/delegation.entity"
+import type { ProcedureKey } from "@system/domain/values/procedure-key.schema"
+import type { DelegationId } from "@system/domain/values/delegation-id.schema"
 import { systemDelegations } from "@system/infrastructure/schema/system-workflow"
 import { systemProcedureDefinitions } from "@system/infrastructure/schema/system-procedure"
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
-/** System Delegationを特定のProcedureへ限定する任意scope。 */
+/** System DelegationEntityを特定のProcedureへ限定する任意scope。 */
 export const systemDelegationProcedureScopes = sqliteTable(
   "system_delegation_procedure_scopes",
   {
@@ -25,7 +25,7 @@ export const systemDelegationProcedureScopes = sqliteTable(
   ],
 )
 
-/** 外部APIで安定参照する変更不能な単調Delegation番号。 */
+/** 外部APIで安定参照する変更不能な単調DelegationEntity番号。 */
 export const systemDelegationNumbers = sqliteTable(
   "system_delegation_numbers",
   {

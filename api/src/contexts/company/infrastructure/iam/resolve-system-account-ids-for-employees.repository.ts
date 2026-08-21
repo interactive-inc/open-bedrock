@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
+import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
 
 export async function resolveSystemAccountIdsForEmployees(
   c: Context,

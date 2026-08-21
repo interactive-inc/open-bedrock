@@ -1,10 +1,14 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import {
+  SystemAuditEventNotFoundError,
+  SystemAuditUnavailableError,
+  SystemForbiddenError,
+} from "@system/interface/errors"
 /** /system/v1/audit-events/:eventId */
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
-import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
 import { SystemAuditEventQuery } from "@system/infrastructure/audit/system-audit-event-query.repository"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
-import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
+import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -16,36 +20,28 @@ export const GET = systemFactory.createHandlers(
   async (context) => {
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "audit_unavailable",
-        detail: "audit service unavailable",
-      })
+      throw new SystemAuditUnavailableError()
     }
     const eventId = context.req.valid("param").eventId
     const auditRepository = new SystemAuditEventRepository({ env: { DB: context.env.DB } })
-    const authorizationJson = toStableSystemAuditJson({
+    const authorizationJson = StableSystemAuditJsonValue.create({
       required_permission_keys: ["audit:read"],
     })
     if (authorizationJson instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "audit_unavailable",
-        detail: "audit service unavailable",
-      })
+      throw new SystemAuditUnavailableError()
     }
     if (
       !context.var.permissions.has("system:admin") &&
       !context.var.permissions.has("audit:read")
     ) {
-      const deniedAudit = createSystemAuditEvent({
+      const deniedAudit = SystemAuditEventEntity.create({
         actorAccountId: context.var.userId,
         action: "system.audit.detail",
         targetType: "system:audit-event",
         targetId: eventId,
         outcome: "denied",
         reasonCode: "forbidden",
-        authorizationJson,
+        authorizationJson: authorizationJson?.toString() ?? null,
         beforeJson: null,
         afterJson: null,
         metadataJson: null,
@@ -55,54 +51,34 @@ export const GET = systemFactory.createHandlers(
         deniedAudit instanceof Error ||
         (await auditRepository.append(deniedAudit)) instanceof Error
       ) {
-        throw new SystemHttpError({
-          status: 503,
-          code: "audit_unavailable",
-          detail: "audit service unavailable",
-        })
+        throw new SystemAuditUnavailableError()
       }
-      throw new SystemHttpError({
-        status: 403,
-        code: "forbidden",
-        detail: "forbidden",
-      })
+      throw new SystemForbiddenError()
     }
 
     const event = await new SystemAuditEventQuery({ env: { DB: context.env.DB } }).findById(eventId)
     if (event instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "audit_unavailable",
-        detail: "audit service unavailable",
-      })
+      throw new SystemAuditUnavailableError()
     }
     const outcome = event === null ? "denied" : "succeeded"
-    const readAudit = createSystemAuditEvent({
+    const readAudit = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
       action: "system.audit.detail",
       targetType: "system:audit-event",
       targetId: eventId,
       outcome,
       reasonCode: event === null ? "not_found" : null,
-      authorizationJson,
+      authorizationJson: authorizationJson?.toString() ?? null,
       beforeJson: null,
       afterJson: null,
       metadataJson: null,
       occurredAt: now,
     })
     if (readAudit instanceof Error || (await auditRepository.append(readAudit)) instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "audit_unavailable",
-        detail: "audit service unavailable",
-      })
+      throw new SystemAuditUnavailableError()
     }
     if (event === null) {
-      throw new SystemHttpError({
-        status: 404,
-        code: "audit_event_not_found",
-        detail: "audit event not found",
-      })
+      throw new SystemAuditEventNotFoundError()
     }
 
     return context.json(

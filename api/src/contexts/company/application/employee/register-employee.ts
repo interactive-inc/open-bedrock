@@ -5,7 +5,7 @@ import type { Context } from "@/env"
 import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity.repository"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { PrepareEmployeeAccountProvisioning } from "@/contexts/company/infrastructure/iam/prepare-employee-account-provisioning.repository"
-import { validateSystemPassword } from "@system/domain/auth/system-password-policy"
+import { SystemPasswordValue } from "@system/domain/values/system-password.value"
 import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
@@ -15,7 +15,6 @@ import {
   UnexpectedError,
   ValidationError,
 } from "@/lib/errors"
-import { hasSystemPermissionSuperset } from "@system/domain/iam/has-system-permission-superset"
 import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration.repository"
 
 export type Command = {
@@ -64,17 +63,17 @@ export class RegisterEmployee {
     }
     const role = roles.find((candidate) => candidate.key === `company:${command.employee.role}`)
     if (role === undefined) return new ValidationError("role not found", "role_not_found")
-    if (!hasSystemPermissionSuperset(command.session, role.permissionKeys)) {
+    if (!role.permissionKeys.every((permissionKey) => command.session.hasPermission(permissionKey))) {
       return new ForbiddenError(
         "cannot assign a role with permissions you do not hold",
         "role_escalation_forbidden",
       )
     }
-    const passwordViolation = validateSystemPassword(command.employee.password)
-    if (passwordViolation !== null) {
+    const password = SystemPasswordValue.create(command.employee.password)
+    if (password instanceof Error) {
       return new ValidationError(
         "password must be between 12 and 200 characters",
-        passwordViolation,
+        password.reason,
       )
     }
     const pepper = this.c.env.PEPPER_SECRET
@@ -117,7 +116,7 @@ export class RegisterEmployee {
     })
     if (prepared instanceof ApplicationError) return prepared
 
-    const passwordHash = await PasswordHashService.hash(command.employee.password, pepper)
+    const passwordHash = await PasswordHashService.hash(password.toString(), pepper)
     const now = new Date(this.c.env.NOW ?? Date.now())
     const accountStatements = new PrepareEmployeeAccountProvisioning(this.c).prepare({
       employeeCode: command.employee.code,

@@ -8,8 +8,8 @@ import type {
   SystemRequestAudit,
   SystemRequestAuditContext,
 } from "@system/infrastructure/configuration/system-context.repository"
-import type { OidcClientRegistry } from "@system/domain/identity/oidc-client.policy"
-import type { OidcIssuerConfiguration } from "@system/domain/identity/oidc.value"
+import type { OidcClientRegistryValue } from "@system/domain/values/oidc-client-registry.value"
+import type { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 
 /** Workers のバインディング（wrangler の vars / secrets / D1）。 */
@@ -22,8 +22,8 @@ export type Bindings = {
   EMAIL_SENDER_NAME?: string
   INVITE_EMAIL_FROM?: string
   INVITE_EMAIL_SEND_ENABLED?: string
-  OIDC_CLIENT_REGISTRY?: OidcClientRegistry
-  OIDC_ISSUER_CONFIGURATION?: OidcIssuerConfiguration
+  OIDC_CLIENT_REGISTRY?: unknown
+  OIDC_ISSUER_CONFIGURATION?: unknown
   // 添付本体（暗号文）を保管する R2 バケット。未設定なら添付機能は 503 を返す。
   ATTACHMENTS?: R2Bucket
   // 添付の DEK を包む KEK。`{"1": "<base64 32 bytes>"}` 形式で、最大 version が現行鍵。
@@ -85,8 +85,8 @@ export type Variables = {
   permissions: ReadonlySet<string>
   role: string
   roleKeys?: ReadonlyArray<string>
-  oidcClientRegistry: OidcClientRegistry
-  oidcIssuerConfiguration: OidcIssuerConfiguration
+  oidcClientRegistry: OidcClientRegistryValue
+  oidcIssuerConfiguration: OidcIssuerConfigurationValue
 }
 
 /** Hono の Env。new Hono<HonoEnv>() / createFactory<HonoEnv>() で使う。 */

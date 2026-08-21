@@ -1,9 +1,9 @@
-import { zAccountId } from "@system/domain/auth/account-id"
-import type { PasswordResetTokenHash } from "@system/domain/auth/password-reset-token-hash"
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
-import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import { zIdentityId } from "@system/domain/identity/identity-id"
-import { identitySubjectSchema } from "@system/domain/identity/identity-subject"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import type { PasswordResetTokenHash } from "@system/domain/values/password-reset-token-hash.schema"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { zIdentityId } from "@system/domain/values/identity-id.schema"
+import { identitySubjectSchema } from "@system/domain/values/identity-subject.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
@@ -55,14 +55,14 @@ export async function createPendingSystemPasswordIdentity(
       .first<number>("found")
     if (accountExists === null) return "account_not_found"
 
-    const afterJson = toStableSystemAuditJson({
+    const afterJson = StableSystemAuditJsonValue.create({
       account_id: accountId.data,
       email: subject.data,
       provider: "password",
       state: "pending",
     })
     if (afterJson instanceof Error) return afterJson
-    const identityAudit = createSystemAuditEvent({
+    const identityAudit = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
       action: "system.identity.created",
       targetType: "system:identity",
@@ -71,11 +71,11 @@ export async function createPendingSystemPasswordIdentity(
       reasonCode: null,
       authorizationJson: null,
       beforeJson: null,
-      afterJson,
+      afterJson: afterJson?.toString() ?? null,
       metadataJson: input.metadataJson,
       occurredAt: input.now,
     })
-    const challengeAudit = createSystemAuditEvent({
+    const challengeAudit = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
       action: "auth.password_setup.requested",
       targetType: "system:identity",

@@ -6,7 +6,7 @@ import type {
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import type { Context } from "@/env"
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 
 type LinkRow = Readonly<{

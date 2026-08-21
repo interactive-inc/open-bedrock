@@ -1,11 +1,8 @@
-import type {
-  SystemRootBootstrapRepository,
-  SystemRootBootstrapRepositoryResult,
-  SystemRootBootstrapWrite,
-} from "@system/infrastructure/iam/system-root-bootstrap-port.repository"
-import { zAccountId } from "@system/domain/auth/account-id"
-import { zIdentityId } from "@system/domain/identity/identity-id"
-import { roleBindingIdSchema } from "@system/domain/iam/role-binding.entity"
+import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zIdentityId, type IdentityId } from "@system/domain/values/identity-id.schema"
+import type { IdentitySubject } from "@system/domain/values/identity-subject.schema"
+import { roleBindingIdSchema, type RoleBindingId } from "@system/domain/values/role-binding.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
@@ -20,8 +17,36 @@ type CompletedBootstrapRow = Readonly<{
 
 const SYSTEM_ROOT_PERMISSION_KEYS = ["iam:read", "iam:write", "system:admin"] as const
 
+export type SystemRootBootstrapWrite = Readonly<{
+  accountId: AccountId
+  identityId: IdentityId
+  identitySubject: IdentitySubject
+  email: string
+  passwordHash: string
+  rootBindingId: RoleBindingId
+  occurredAt: Date
+  auditEvent: SystemAuditEventEntity<AccountId>
+}>
+
+export type SystemRootBootstrapRepositoryResult =
+  | Readonly<{
+      kind: "created"
+      accountId: AccountId
+      identityId: IdentityId
+      rootBindingId: RoleBindingId
+      email: string
+    }>
+  | Readonly<{
+      kind: "already_initialized"
+      accountId: AccountId | null
+      identityId: IdentityId | null
+      rootBindingId: RoleBindingId | null
+      email: string | null
+      state: "complete" | "account_exists_without_bootstrap_state"
+    }>
+
 /** canonical system_* tableだけへroot bootstrapを原子的に保存するD1 adapter。 */
-export class SystemRootBootstrapRepositoryD1 implements SystemRootBootstrapRepository {
+export class SystemRootBootstrapRepositoryD1 {
   constructor(private readonly context: SystemD1Context) {
     Object.freeze(this)
   }
@@ -216,7 +241,9 @@ export class SystemRootBootstrapRepositoryD1 implements SystemRootBootstrapRepos
       ).first<string>("id")
       return accountId !== null
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to read System Account state")
+      return caught instanceof Error
+        ? caught
+        : new Error("failed to read System AccountEntity state")
     }
   }
 

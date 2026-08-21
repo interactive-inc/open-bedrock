@@ -5,8 +5,8 @@ import {
   lifecycleRouteJwtSecret,
 } from "@/api/test/support/lifecycle-route-fixture"
 import { requestWithContext } from "@/api/test/support/request-with-context"
-import { zAccountId } from "@system/domain/auth/account-id"
-import { ProcedureDefinition } from "@system/domain/workflow/procedure-definition.entity"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
 import { describe, expect, test } from "bun:test"
 
@@ -42,7 +42,7 @@ async function createDb(): Promise<D1Database> {
     },
   })
   if (policy instanceof Error) throw policy
-  const definition = ProcedureDefinition.create({
+  const definition = ProcedureDefinitionEntity.create({
     key: "system_test_request",
     revision: 1,
     title: "System test request",

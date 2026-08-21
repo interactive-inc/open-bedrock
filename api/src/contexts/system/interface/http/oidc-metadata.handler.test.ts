@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test"
+import { OIDCTemporarilyUnavailableError } from "@/contexts/system/interface/errors"
 import { OidcMetadataHandler } from "@/contexts/system/interface/http/oidc-metadata.handler"
+import { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
 
-const issuerConfiguration = Object.freeze({
+const issuerConfiguration = new OidcIssuerConfigurationValue({
   issuersByHostname: Object.freeze({ "identity.example.test": "https://identity.example.test" }),
   localProxyHostnames: Object.freeze(["127.0.0.1", "localhost", "::1"]),
   localIssuerHostname: "identity.example.test",
@@ -44,7 +46,7 @@ describe("OidcMetadataHandler", () => {
     expect(await jwks?.text()).not.toContain('"d":')
   })
 
-  test("対象外pathを処理せず、鍵未設定は503で閉じる", () => {
+  test("対象外pathを処理せず、鍵未設定は例外を送出する", () => {
     expect(
       OidcMetadataHandler.handle({
         request: new Request("https://identity.example.test/"),
@@ -52,12 +54,12 @@ describe("OidcMetadataHandler", () => {
         issuerConfiguration,
       }),
     ).toBeNull()
-    expect(
+    expect(() =>
       OidcMetadataHandler.handle({
         request: new Request("https://identity.example.test/.well-known/jwks.json"),
         signingKeysRaw: undefined,
         issuerConfiguration,
-      })?.status,
-    ).toBe(503)
+      }),
+    ).toThrow(OIDCTemporarilyUnavailableError)
   })
 })

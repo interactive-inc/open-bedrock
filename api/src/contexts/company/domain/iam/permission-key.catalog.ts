@@ -1,5 +1,5 @@
 import { COMPANY_PERMISSION_KEYS } from "@/contexts/company/domain/iam/company-permission-key.catalog"
-import { SYSTEM_PERMISSION_KEYS } from "@/contexts/system/domain/iam/system-permission-key.catalog"
+import { SYSTEM_PERMISSION_KEYS } from "@system/domain/values/system-permission-key.catalog"
 import { BUSINESS_PERMISSION_KEYS } from "@/contexts/company/domain/iam/business-permission-key.catalog"
 import { SYSTEM_CAPABILITY_PERMISSION_KEYS } from "@/contexts/company/domain/iam/system-capability-permission-key.catalog"
 import { z } from "zod"

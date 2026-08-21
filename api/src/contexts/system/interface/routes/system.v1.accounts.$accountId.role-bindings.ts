@@ -1,15 +1,24 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import {
+  SystemAccountNotFoundError,
+  SystemForbiddenError,
+  SystemIAMUnavailableError,
+  SystemInvalidSessionError,
+  SystemRoleBindingConflictError,
+  SystemRoleBindingInvalidError,
+  SystemRoleNotFoundError,
+  SystemSelfAssignmentForbiddenError,
+} from "@system/interface/errors"
 /** /system/v1/accounts/:accountId/role-bindings */
-import { zAccountId } from "@system/domain/auth/account-id"
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
-import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import { iamRoleIdSchema } from "@system/domain/iam/iam-role.entity"
-import { RoleBinding } from "@system/domain/iam/role-binding.entity"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { iamRoleIdSchema } from "@system/domain/values/iam-role.schema"
+import { RoleBindingEntity } from "@system/domain/entities/role-binding.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { SystemAccountAdministrationRepository } from "@system/infrastructure/iam/system-account-administration.repository"
 import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration.repository"
 import { SystemRoleBindingAdministrationRepository } from "@system/infrastructure/iam/system-role-binding-administration.repository"
-import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
+import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -17,46 +26,26 @@ import { z } from "zod"
 // @authorization permission iam:read - Accountが所有するSystem Role Binding履歴を読む
 export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:read")) {
-    throw new SystemHttpError({
-      status: 403,
-      code: "forbidden",
-      detail: "forbidden",
-    })
+    throw new SystemForbiddenError()
   }
   const accountId = zAccountId.safeParse(context.req.param("accountId"))
   if (!accountId.success) {
-    throw new SystemHttpError({
-      status: 404,
-      code: "account_not_found",
-      detail: "account not found",
-    })
+    throw new SystemAccountNotFoundError()
   }
   const account = await new SystemAccountAdministrationRepository({
     env: { DB: context.env.DB },
   }).findById(accountId.data)
   if (account instanceof Error) {
-    throw new SystemHttpError({
-      status: 503,
-      code: "iam_unavailable",
-      detail: "IAM service unavailable",
-    })
+    throw new SystemIAMUnavailableError()
   }
   if (account === null) {
-    throw new SystemHttpError({
-      status: 404,
-      code: "account_not_found",
-      detail: "account not found",
-    })
+    throw new SystemAccountNotFoundError()
   }
   const bindings = await new SystemRoleBindingAdministrationRepository({
     env: { DB: context.env.DB },
   }).listForAccount(accountId.data)
   if (bindings instanceof Error) {
-    throw new SystemHttpError({
-      status: 503,
-      code: "iam_unavailable",
-      detail: "IAM service unavailable",
-    })
+    throw new SystemIAMUnavailableError()
   }
 
   return context.json(
@@ -102,70 +91,38 @@ export const POST = systemFactory.createHandlers(
   ),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
-      throw new SystemHttpError({
-        status: 403,
-        code: "forbidden",
-        detail: "forbidden",
-      })
+      throw new SystemForbiddenError()
     }
     const actorAccountId = zAccountId.safeParse(context.var.userId)
     const targetAccountId = zAccountId.safeParse(context.req.param("accountId"))
     if (!actorAccountId.success) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      throw new SystemInvalidSessionError()
     }
     if (!targetAccountId.success) {
-      throw new SystemHttpError({
-        status: 404,
-        code: "account_not_found",
-        detail: "account not found",
-      })
+      throw new SystemAccountNotFoundError()
     }
     if (actorAccountId.data === targetAccountId.data) {
-      throw new SystemHttpError({
-        status: 403,
-        code: "self_assignment",
-        detail: "self assignment is forbidden",
-      })
+      throw new SystemSelfAssignmentForbiddenError()
     }
     const body = context.req.valid("json")
     const roleId = iamRoleIdSchema.safeParse(body.role_id)
     if (!roleId.success) {
-      throw new SystemHttpError({
-        status: 404,
-        code: "role_not_found",
-        detail: "role not found",
-      })
+      throw new SystemRoleNotFoundError()
     }
     const role = await new SystemRoleAdministrationRepository({
       env: { DB: context.env.DB },
     }).findById(roleId.data)
     if (role instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "iam_unavailable",
-        detail: "IAM service unavailable",
-      })
+      throw new SystemIAMUnavailableError()
     }
     if (role === null) {
-      throw new SystemHttpError({
-        status: 404,
-        code: "role_not_found",
-        detail: "role not found",
-      })
+      throw new SystemRoleNotFoundError()
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "iam_unavailable",
-        detail: "IAM service unavailable",
-      })
+      throw new SystemIAMUnavailableError()
     }
-    const binding = RoleBinding.create({
+    const binding = RoleBindingEntity.create({
       id: crypto.randomUUID(),
       accountId: targetAccountId.data,
       roleId: role.id,
@@ -174,26 +131,18 @@ export const POST = systemFactory.createHandlers(
       revokedAt: null,
     })
     if (binding instanceof Error) {
-      throw new SystemHttpError({
-        status: 400,
-        code: "invalid_role_binding",
-        detail: "invalid role binding",
-      })
+      throw new SystemRoleBindingInvalidError()
     }
-    const afterJson = toStableSystemAuditJson({
+    const afterJson = StableSystemAuditJsonValue.create({
       account_id: binding.accountId,
       resource:
         binding.resource === null ? null : { id: binding.resource.id, type: binding.resource.type },
       role_id: binding.roleId,
     })
     if (afterJson instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "iam_unavailable",
-        detail: "IAM service unavailable",
-      })
+      throw new SystemIAMUnavailableError()
     }
-    const auditEvent = createSystemAuditEvent({
+    const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
       action: "system.iam.role_binding.created",
       targetType: "system:role-binding",
@@ -202,16 +151,12 @@ export const POST = systemFactory.createHandlers(
       reasonCode: null,
       authorizationJson: null,
       beforeJson: null,
-      afterJson,
+      afterJson: afterJson?.toString() ?? null,
       metadataJson: null,
       occurredAt: now,
     })
     if (auditEvent instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "iam_unavailable",
-        detail: "IAM service unavailable",
-      })
+      throw new SystemIAMUnavailableError()
     }
     const auditStatements = new SystemAuditEventRepository({
       env: { DB: context.env.DB },
@@ -220,25 +165,13 @@ export const POST = systemFactory.createHandlers(
       env: { DB: context.env.DB },
     }).create(actorAccountId.data, role, binding, auditStatements)
     if (creation instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "iam_unavailable",
-        detail: "IAM service unavailable",
-      })
+      throw new SystemIAMUnavailableError()
     }
     if (creation === "forbidden") {
-      throw new SystemHttpError({
-        status: 403,
-        code: "forbidden",
-        detail: "forbidden",
-      })
+      throw new SystemForbiddenError()
     }
     if (creation === "conflict") {
-      throw new SystemHttpError({
-        status: 409,
-        code: "role_binding_conflict",
-        detail: "role binding conflict",
-      })
+      throw new SystemRoleBindingConflictError()
     }
 
     return context.json(

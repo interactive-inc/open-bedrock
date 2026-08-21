@@ -4,9 +4,12 @@ import {
   OidcInvalidScopeApplicationError,
   OidcTemporarilyUnavailableApplicationError,
 } from "@/contexts/system/application/auth/errors"
-import { OidcValue } from "@/contexts/system/domain/identity/oidc.value"
-import { OidcHttpError } from "@/contexts/system/interface/http/errors/oidc-http-error"
-import { requireSystemAuthentication } from "@system/interface/http/require-system-authentication"
+import {
+  OIDCInvalidRequestError,
+  OIDCInvalidScopeError,
+  OIDCTemporarilyUnavailableError,
+} from "@system/interface/errors"
+import { requireSystemAuthentication } from "@system/interface/middlewares/require-system-authentication"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -36,25 +39,19 @@ export const POST = systemFactory.createHandlers(
     }),
     (result) => {
       if (!result.success) {
-        throw new OidcHttpError({
-          code: "invalid_request",
-          cause: result.error,
-        })
+        throw new OIDCInvalidRequestError(result.error)
       }
     },
   ),
   async (c) => {
     const body = c.req.valid("json")
-    const issuer = OidcValue.issuer(
-      {
-        requestUrl: c.req.url,
-        forwardedHost: c.req.header("X-Forwarded-Host") ?? null,
-      },
-      c.var.oidcIssuerConfiguration,
-    )
+    const issuer = c.var.oidcIssuerConfiguration.resolve({
+      requestUrl: c.req.url,
+      forwardedHost: c.req.header("X-Forwarded-Host") ?? null,
+    })
 
     if (issuer instanceof Error) {
-      throw new OidcHttpError({ code: "invalid_request", cause: issuer })
+      throw new OIDCInvalidRequestError(issuer)
     }
 
     const service = new CreateOidcAuthorization(c)
@@ -66,19 +63,15 @@ export const POST = systemFactory.createHandlers(
     })
 
     if (result instanceof OidcInvalidRequestApplicationError) {
-      throw new OidcHttpError({ code: "invalid_request", cause: result })
+      throw new OIDCInvalidRequestError(result)
     }
 
     if (result instanceof OidcInvalidScopeApplicationError) {
-      throw new OidcHttpError({ code: "invalid_scope", cause: result })
+      throw new OIDCInvalidScopeError(result)
     }
 
     if (result instanceof OidcTemporarilyUnavailableApplicationError) {
-      throw new OidcHttpError({
-        code: "temporarily_unavailable",
-        status: 503,
-        cause: result,
-      })
+      throw new OIDCTemporarilyUnavailableError(result)
     }
 
     return c.json(zAppOidcAuthorizationResponse.parse(result), 200, {

@@ -1,5 +1,5 @@
 import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret.repository"
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import type {
   SystemClockContext,
   SystemDatabaseContext,

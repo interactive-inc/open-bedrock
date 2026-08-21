@@ -6,15 +6,15 @@ import {
   createCompanyAuditRecord,
 } from "@/contexts/company/domain/audit/company-audit-record"
 import type {
+  AuditJsonValue,
   AuditClientName,
   AuditOutcome,
   CompanyAuditDetail,
   CompanyAuditRecord,
   CompanyAuditSummary,
 } from "@/contexts/company/domain/audit/company-audit-record"
-import type { AuditJsonValue } from "@system/interface/http/to-stable-audit-json"
 import { ValidationError } from "@/lib/errors"
-import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
+import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
 import { z } from "zod"
 
 export { auditClientNameSchema, auditOutcomeSchema, auditRequestContextSchema }

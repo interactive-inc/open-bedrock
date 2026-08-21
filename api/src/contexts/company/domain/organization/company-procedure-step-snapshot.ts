@@ -1,4 +1,4 @@
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 
 export type WorkflowStepCandidateSnapshot = Readonly<{
   employeeId: number

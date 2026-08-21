@@ -12,8 +12,8 @@ import {
 import type { PersonnelActionKind } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
-import { zAccountId } from "@system/domain/auth/account-id"
-import type { AccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 
 export type PersonnelActionRecord = {
   id: string

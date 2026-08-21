@@ -1,9 +1,7 @@
-import { resolveAccountSession } from "@system/domain/auth/resolve-account-session"
-import { resolveSystemAuthorization } from "@system/domain/iam/resolve-system-authorization"
-import type { AccountId } from "@system/domain/auth/account-id"
-import { zAccountId } from "@system/domain/auth/account-id"
-import { readBearerAuthorization } from "@system/interface/lib/authorization/bearer-authorization"
-import { validateSystemAccessTokenSecret } from "@system/domain/auth/validate-system-access-token-secret"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import { readBearerAuthorization } from "@system/interface/http/authorization/bearer-authorization"
+import { SystemAccessTokenSecretValue } from "@system/domain/values/system-access-token-secret.value"
 import { AccessTokenService } from "@system/infrastructure/auth/access-token-service.repository"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/infrastructure/auth/system-access-token-profile.repository"
@@ -44,14 +42,16 @@ export class SystemAccessTokenAuthenticator {
       return { kind: "rejected", reason: "invalid_token" }
     }
 
-    const invalidSecret = validateSystemAccessTokenSecret(jwtSecret)
-    if (invalidSecret !== null) return { kind: "unavailable", reason: "account" }
+    const accessTokenSecret = SystemAccessTokenSecretValue.create(jwtSecret)
+    if (!(accessTokenSecret instanceof SystemAccessTokenSecretValue)) {
+      return { kind: "unavailable", reason: "account" }
+    }
 
     const claims = await new AccessTokenService({
       profile: SYSTEM_ACCESS_TOKEN_PROFILE,
     }).verify(
       bearerAuthorization.token,
-      jwtSecret,
+      accessTokenSecret.toString(),
       this.props.accessTokenVerificationTime ?? new Date(),
     )
     if (claims instanceof Error) return { kind: "rejected", reason: "invalid_token" }
@@ -59,7 +59,7 @@ export class SystemAccessTokenAuthenticator {
     const accountId = zAccountId.safeParse(claims.sub)
     if (!accountId.success) return { kind: "rejected", reason: "invalid_token" }
 
-    const accountSession = await resolveAccountSession({
+    const accountSession = await SystemAccountRepository.resolveSession({
       accountRepository: new SystemAccountRepository({ database: this.props.database }),
       accountId: accountId.data,
       sessionTokenVersion: claims.ver,
@@ -83,18 +83,11 @@ export class SystemAccessTokenAuthenticator {
       return { kind: "rejected", reason: "token_version_mismatch" }
     }
 
-    const authorizationGraph = await new SystemD1AuthorizationRepository({
+    const authorization = await new SystemD1AuthorizationRepository({
       env: { DB: this.props.database },
-    }).loadForAccount(accountId.data)
-    if (authorizationGraph instanceof Error) {
-      return { kind: "unavailable", reason: "authorization" }
-    }
-    if (authorizationGraph === null) return { kind: "rejected", reason: "account_inactive" }
-    const authorization = resolveSystemAuthorization(authorizationGraph, {
-      resource: null,
-      at: now,
-    })
+    }).resolveForAccount({ accountId: accountId.data, resource: null, at: now })
     if (authorization instanceof Error) return { kind: "unavailable", reason: "authorization" }
+    if (authorization === null) return { kind: "rejected", reason: "account_inactive" }
 
     return Object.freeze({
       kind: "authenticated",

@@ -1,11 +1,16 @@
-import type { SystemSessionMaterialService as SystemSessionMaterialServicePort } from "@system/infrastructure/auth/system-session-material-port.repository"
-import { zSessionFamilyId, type SessionFamilyId } from "@system/domain/auth/session-family-id"
-import { zSessionId, type SessionId } from "@system/domain/auth/session-id"
-import { zSessionTokenHash, type SessionTokenHash } from "@system/domain/auth/session-token-hash"
+import {
+  zSessionFamilyId,
+  type SessionFamilyId,
+} from "@system/domain/values/session-family-id.schema"
+import { zSessionId, type SessionId } from "@system/domain/values/session-id.schema"
+import {
+  zSessionTokenHash,
+  type SessionTokenHash,
+} from "@system/domain/values/session-token-hash.schema"
 import { generateOpaqueToken } from "@system/infrastructure/auth/generate-opaque-token.repository"
 
 /** Web Cryptoで256-bit token・opaque ID・SHA-256 hashを生成するportable adapter。 */
-export class SystemSessionMaterialService implements SystemSessionMaterialServicePort {
+export class SystemSessionMaterialService {
   generateSessionId(): SessionId | Error {
     const parsed = zSessionId.safeParse(crypto.randomUUID())
 

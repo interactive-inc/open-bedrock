@@ -1,25 +1,26 @@
-import type { SystemPasswordHasher } from "@system/infrastructure/auth/system-password-hasher.repository"
+import type { InvalidSystemPasswordReason } from "@system/domain/errors"
+import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { EmailValue } from "@system/domain/values/email.value"
+import { SystemPasswordValue } from "@system/domain/values/system-password.value"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { zIdentityId } from "@system/domain/values/identity-id.schema"
+import { identitySubjectSchema } from "@system/domain/values/identity-subject.schema"
+import { roleBindingIdSchema } from "@system/domain/values/role-binding.schema"
 import type {
-  SystemRootBootstrapRepository,
+  SystemRootBootstrapRepositoryD1,
   SystemRootBootstrapRepositoryResult,
-} from "@system/infrastructure/iam/system-root-bootstrap-port.repository"
-import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
-import { EmailValue } from "@system/domain/auth/email.value"
-import {
-  validateSystemPassword,
-  type SystemPasswordPolicyViolation,
-} from "@system/domain/auth/system-password-policy"
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
-import { zIdentityId } from "@system/domain/identity/identity-id"
-import { identitySubjectSchema } from "@system/domain/identity/identity-subject"
-import { roleBindingIdSchema } from "@system/domain/iam/role-binding.entity"
+} from "@system/infrastructure/iam/system-root-bootstrap.repository"
 import { z } from "zod"
 
 const bootstrapEmailSchema = EmailValue.schema.pipe(z.string().max(254)).pipe(identitySubjectSchema)
 
+export type SystemPasswordHasher = Readonly<{
+  hash: (password: string) => Promise<string | Error>
+}>
+
 type Props = Readonly<{
   passwordHasher: SystemPasswordHasher
-  repository: SystemRootBootstrapRepository
+  repository: Pick<SystemRootBootstrapRepositoryD1, "bootstrap">
 }>
 
 export type BootstrapSystemRootCommand = Readonly<{
@@ -32,10 +33,10 @@ export type BootstrapSystemRootResult =
   | SystemRootBootstrapRepositoryResult
   | Readonly<{
       kind: "invalid_input"
-      reason: "invalid_email" | "invalid_time" | SystemPasswordPolicyViolation
+      reason: "invalid_email" | "invalid_time" | InvalidSystemPasswordReason
     }>
 
-/** Account・Identity・credential・root binding・監査をCompanyなしで初期化する。 */
+/** AccountEntity・Identity・credential・root binding・監査をCompanyなしで初期化する。 */
 export class BootstrapSystemRoot {
   constructor(private readonly props: Props) {
     Object.freeze(this)
@@ -51,9 +52,9 @@ export class BootstrapSystemRoot {
       return Object.freeze({ kind: "invalid_input" as const, reason: "invalid_email" as const })
     }
 
-    const passwordViolation = validateSystemPassword(command.password)
-    if (passwordViolation !== null) {
-      return Object.freeze({ kind: "invalid_input" as const, reason: passwordViolation })
+    const password = SystemPasswordValue.create(command.password)
+    if (!(password instanceof SystemPasswordValue)) {
+      return Object.freeze({ kind: "invalid_input" as const, reason: password.reason })
     }
 
     const accountId = zAccountId.safeParse(crypto.randomUUID())
@@ -65,13 +66,13 @@ export class BootstrapSystemRoot {
 
     let passwordHash: string | Error
     try {
-      passwordHash = await this.props.passwordHasher.hash(command.password)
+      passwordHash = await this.props.passwordHasher.hash(password.toString())
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to hash System password")
     }
     if (passwordHash instanceof Error) return passwordHash
 
-    const auditEvent = createSystemAuditEvent<AccountId>({
+    const auditEvent = SystemAuditEventEntity.create<AccountId>({
       actorAccountId: null,
       action: "system.bootstrap.completed",
       targetType: "system_account",

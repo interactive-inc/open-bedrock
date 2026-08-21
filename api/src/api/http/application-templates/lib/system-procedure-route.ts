@@ -7,8 +7,8 @@ import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/o
 import type { Context } from "@/env"
 import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
 import { PublishSystemProcedure } from "@system/application/workflow/publish-system-procedure"
-import type { ProcedureDefinition } from "@system/domain/workflow/procedure-definition.entity"
-import { procedureKeySchema } from "@system/domain/workflow/procedure-definition.entity"
+import type { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
+import { procedureKeySchema } from "@system/domain/values/procedure-key.schema"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
 
 export function systemProcedureRepository(c: Context): SystemD1ProcedureRepository {
@@ -18,7 +18,7 @@ export function systemProcedureRepository(c: Context): SystemD1ProcedureReposito
 export async function loadSystemProcedure(
   c: Context,
   code: string,
-): Promise<ProcedureDefinition | null | Error> {
+): Promise<ProcedureDefinitionEntity | null | Error> {
   const key = procedureKeySchema.safeParse(code)
   if (!key.success) return null
 
@@ -26,7 +26,7 @@ export async function loadSystemProcedure(
 }
 
 export function parseSystemProcedurePolicy(
-  definition: ProcedureDefinition,
+  definition: ProcedureDefinitionEntity,
 ): CompanyProcedureDecisionPolicy | Error {
   try {
     return parseCompanyProcedureDecisionPolicy(JSON.parse(definition.decisionPolicyJson))
@@ -36,7 +36,7 @@ export function parseSystemProcedurePolicy(
 }
 
 export function parseSystemProcedureInputSchema(
-  definition: ProcedureDefinition,
+  definition: ProcedureDefinitionEntity,
 ): Readonly<{ value: unknown }> | Error {
   const parsed = parseJsonValue(definition.inputSchemaJson)
   if (parsed instanceof Error) {
@@ -58,7 +58,7 @@ export async function publishSystemProcedure(
     policy: CompanyProcedureDecisionPolicy
     completionOperationKey: string | null
   }>,
-): Promise<ProcedureDefinition | "revision_conflict" | Error> {
+): Promise<ProcedureDefinitionEntity | "revision_conflict" | Error> {
   const session = c.var.session
   if (session === null) return new Error("authenticated session is missing")
   const accountId = await resolveActiveSystemAccountId(c, session.accountId)

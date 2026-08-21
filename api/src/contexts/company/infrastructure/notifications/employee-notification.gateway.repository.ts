@@ -4,11 +4,11 @@ import { ResolveAccountEmployeeLink } from "@/contexts/company/infrastructure/wo
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { AccountEmployeeLinkReadRepository } from "@/contexts/company/infrastructure/workforce/account-employee-link-read.repository"
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
-import { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
-import { NotificationDelivery } from "@system/domain/notifications/notification-delivery.entity"
-import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
+import { NotificationDeliveryBatchValue } from "@system/domain/values/notification-delivery-batch.value"
+import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
+import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
-import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
+import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
 
 export type EmployeeNotification = Readonly<{
   recipientEmployeeId: number
@@ -64,7 +64,7 @@ export class EmployeeNotificationGateway {
     const words = crypto.getRandomValues(new Uint32Array(2))
     const notificationId = ((words[0] ?? 0) & 0x000f_ffff) * 0x1_0000_0000 + (words[1] ?? 0) || 1
     const canonicalId = String(notificationId)
-    const message = NotificationMessage.create({
+    const message = NotificationMessageEntity.create({
       id: canonicalId,
       kind: `company:${props.kind}`,
       title: props.title,
@@ -77,7 +77,7 @@ export class EmployeeNotificationGateway {
     })
     if (message instanceof Error) return message
 
-    const delivery = NotificationDelivery.create({
+    const delivery = NotificationDeliveryEntity.create({
       id: canonicalId,
       messageId: message.id,
       recipientAccountId: recipientAccountId.data,
@@ -86,7 +86,7 @@ export class EmployeeNotificationGateway {
     })
     if (delivery instanceof Error) return delivery
 
-    const deliveries = NotificationDeliveryBatch.create([delivery])
+    const deliveries = NotificationDeliveryBatchValue.create([delivery])
     if (deliveries instanceof Error) return deliveries
 
     const result = await new PublishSystemNotification({

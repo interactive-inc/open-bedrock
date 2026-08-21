@@ -3,16 +3,13 @@ import {
   OidcInvalidScopeApplicationError,
   OidcTemporarilyUnavailableApplicationError,
 } from "@/contexts/system/application/auth/errors"
-import { createSystemOidcAudit } from "@system/domain/audit/create-system-oidc-audit"
-import type { AccountId } from "@system/domain/auth/account-id"
-import { zAccountId } from "@system/domain/auth/account-id"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { createOidcAuthorizationCode } from "@system/infrastructure/identity/create-oidc-authorization-code.repository"
-import {
-  OidcClientPolicy,
-  type OidcClientRegistry,
-} from "@system/domain/identity/oidc-client.policy"
-import { OidcScopeValue } from "@system/domain/identity/oidc-scope.value"
+import type { OidcClientRegistryValue } from "@system/domain/values/oidc-client-registry.value"
+import { OidcScopeValue } from "@system/domain/values/oidc-scope.value"
 import type {
   SystemAuthorizationContext,
   SystemClockContext,
@@ -29,7 +26,7 @@ type Props = Readonly<{
   state: string
   nonce: string
   codeChallenge: string
-  clientRegistry: OidcClientRegistry
+  clientRegistry: OidcClientRegistryValue
 }>
 
 type AuditProps = Readonly<{
@@ -50,20 +47,17 @@ export class CreateOidcAuthorization {
   ) {}
 
   async execute(props: Props) {
-    const client = OidcClientPolicy.resolve(
-      {
-        issuer: props.issuer,
-        clientId: props.clientId,
-        redirectUri: props.redirectUri,
-      },
-      props.clientRegistry,
-    )
+    const client = props.clientRegistry.resolve({
+      issuer: props.issuer,
+      clientId: props.clientId,
+      redirectUri: props.redirectUri,
+    })
 
     if (client === null) {
       return new OidcInvalidRequestApplicationError()
     }
 
-    const scope = OidcScopeValue.parse(props.scope)
+    const scope = OidcScopeValue.create(props.scope)
 
     if (scope instanceof Error) {
       return new OidcInvalidScopeApplicationError(scope)
@@ -88,7 +82,7 @@ export class CreateOidcAuthorization {
         reasonCode: "user_denied",
         issuer: props.issuer,
         clientId: client.id,
-        scope,
+        scope: scope.items,
       })
 
       if (auditError !== null) {
@@ -105,7 +99,7 @@ export class CreateOidcAuthorization {
       accountId: accountId.data,
       codeChallenge: props.codeChallenge,
       nonce: props.nonce,
-      scope,
+      scope: scope.items,
     })
 
     if (authorizationCode instanceof Error) {
@@ -120,7 +114,7 @@ export class CreateOidcAuthorization {
       reasonCode: null,
       issuer: props.issuer,
       clientId: client.id,
-      scope,
+      scope: scope.items,
     })
 
     if (auditError !== null) {
@@ -131,7 +125,7 @@ export class CreateOidcAuthorization {
   }
 
   private async recordAudit(props: AuditProps): Promise<Error | null> {
-    const audit = createSystemOidcAudit({
+    const audit = SystemAuditEventEntity.createOidc({
       accountId: props.accountId,
       action: "auth.oidc.authorization",
       outcome: props.outcome,

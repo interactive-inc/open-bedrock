@@ -22,8 +22,8 @@ import {
 } from "@/lib/errors"
 import { CancelSystemProcedure } from "@system/application/workflow/cancel-system-procedure"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
-import { procedureKeySchema } from "@system/domain/workflow/procedure-definition.entity"
-import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
+import { procedureKeySchema } from "@system/domain/values/procedure-key.schema"
+import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
 import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
 
@@ -167,7 +167,7 @@ export class CreatePersonnelActionRequest {
       target?.id ?? `prospective:${employeeCode}`,
       command.input,
     )
-    const payloadJson = toCanonicalSystemJson(command.input)
+    const payloadJson = CanonicalSystemJsonValue.create(command.input)
     if (payloadJson instanceof Error) {
       return new UnexpectedError("人事変更申請を正規化できません", { cause: payloadJson })
     }
@@ -197,7 +197,7 @@ export class CreatePersonnelActionRequest {
           : null,
       targetDepartmentCode: targetDepartmentCode(command.input),
       kind: command.input.kind,
-      payloadJson,
+        payloadJson: payloadJson.toString(),
       payloadFingerprint: fingerprint,
       requestedByEmployeeId: requester.id,
       baseEmployeeRevision: command.baseEmployeeRevision,

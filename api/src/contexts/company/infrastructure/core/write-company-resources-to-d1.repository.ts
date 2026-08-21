@@ -4,7 +4,7 @@ import { findCompanyResourceConflict } from "@/contexts/company/infrastructure/c
 import { fingerprintCompanyResourceChange } from "@/contexts/company/infrastructure/core/fingerprint-company-resource-change.repository"
 import { readCompanyCommandReceipt } from "@/contexts/company/infrastructure/core/read-company-command-receipt.repository"
 import { readCompanyOrganizationRevision } from "@/contexts/company/infrastructure/core/read-company-organization-revision.repository"
-import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
+import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
 
 export async function writeCompanyResourcesToD1(
   database: D1Database,
@@ -62,7 +62,7 @@ export async function writeCompanyResourcesToD1(
   )
 
   for (const resource of change.resources) {
-    const attributesJson = toCanonicalSystemJson(resource.attributes)
+    const attributesJson = CanonicalSystemJsonValue.create(resource.attributes)
     if (attributesJson instanceof Error) return { kind: "unavailable", cause: attributesJson }
     const values = [
       resource.organizationId,
@@ -73,7 +73,7 @@ export async function writeCompanyResourcesToD1(
       resource.state,
       resource.effectiveFrom,
       resource.effectiveTo,
-      attributesJson,
+      attributesJson.toString(),
     ] as const
     statements.push(
       database
