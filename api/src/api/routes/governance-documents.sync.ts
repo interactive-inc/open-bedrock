@@ -4,7 +4,7 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { readTrainingCourseCodeSet } from "@/api/http/governance-documents/read-training-course-code-set"
+import { readTrainingCourseCodeSet } from "@/contexts/training/interface/http/training-courses/read-training-course-code-set"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
