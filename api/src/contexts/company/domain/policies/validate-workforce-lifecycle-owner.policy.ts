@@ -1,6 +1,6 @@
 import { WorkforceInvariantViolationValue } from "@/contexts/company/domain/values/workforce-invariant-violation.value"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
-import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
+import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function validateWorkforceLifecycleOwner(
   schedule: WorkforceLifecycleSchedule,

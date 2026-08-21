@@ -1,13 +1,13 @@
 import { OrganizationalAuthorityError } from "@/contexts/company/domain/errors"
-import { isCanonicalWorkforcePeriod } from "@/contexts/company/domain/values/is-canonical-workforce-period.definition"
-import { isOrgResponsibilityType } from "@/contexts/company/domain/values/is-org-responsibility-type.definition"
+import { isCanonicalWorkforcePeriod } from "@/contexts/company/domain/definitions/is-canonical-workforce-period.definition"
+import { isOrgResponsibilityType } from "@/contexts/company/domain/definitions/is-org-responsibility-type.definition"
 import { isOrganizationalAuthorityStateEligible } from "@/contexts/company/domain/policies/is-organizational-authority-state-eligible.policy"
-import { listWorkforceStateAssignments } from "@/contexts/company/domain/values/list-workforce-state-assignments.definition"
-import type { OrganizationalAuthorityProjection } from "@/contexts/company/domain/values/organizational-authority.definition"
+import { listWorkforceStateAssignments } from "@/contexts/company/domain/definitions/list-workforce-state-assignments.definition"
+import type { OrganizationalAuthorityProjection } from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import { organizationalAuthorityStatesHaveManagementCycle } from "@/contexts/company/domain/policies/organizational-authority-states-have-management-cycle.policy"
-import { periodContainsDate } from "@/contexts/company/domain/values/period-contains-date.definition"
+import { periodContainsDate } from "@/contexts/company/domain/definitions/period-contains-date.definition"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function validateOrganizationalAuthorityProjection(
   projection: OrganizationalAuthorityProjection,

@@ -1,7 +1,7 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
-import type { WorkforceBaselineState } from "@/contexts/company/domain/values/workforce-schedule.definition"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { WorkforceBaselineState } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type BaselineRow = Readonly<{
   employee_id: number

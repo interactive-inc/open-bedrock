@@ -1,6 +1,6 @@
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
-import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
+import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { DELETE, GET as GET_ONE, PATCH } from "@system/interface/routes/system.v1.roles.$roleId"
 import { GET as GET_MANY, POST } from "@system/interface/routes/system.v1.roles"

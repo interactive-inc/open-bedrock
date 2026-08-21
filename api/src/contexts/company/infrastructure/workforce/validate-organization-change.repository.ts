@@ -1,5 +1,5 @@
 import { applyOrganizationWorkforceChanges } from "@/contexts/company/infrastructure/workforce/apply-organization-workforce-changes.repository"
-import { countOrganizationChangePeriods } from "@/contexts/company/domain/values/count-organization-change-periods.definition"
+import { countOrganizationChangePeriods } from "@/contexts/company/domain/definitions/count-organization-change-periods.definition"
 import { hasValidOrganizationChangeAuditMetadata } from "@/contexts/company/domain/policies/has-valid-organization-change-audit-metadata.policy"
 import { OrganizationChangeValidationError } from "@/contexts/company/domain/errors"
 import { organizationChangeHasCanonicalOperation } from "@/contexts/company/domain/policies/organization-change-has-canonical-operation.policy"
@@ -7,7 +7,7 @@ import type {
   OrganizationChangeReadPorts,
   OrganizationChangeSet,
   ValidateOrganizationChangeResult,
-} from "@/contexts/company/domain/values/organization-change.definition"
+} from "@/contexts/company/domain/definitions/organization-change.definition"
 import { replaceOrganizationChangePeriods } from "@/contexts/company/domain/policies/replace-organization-change-periods.policy"
 import { validateOrganizationChangeIdentities } from "@/contexts/company/domain/policies/validate-organization-change-identities.policy"
 import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"

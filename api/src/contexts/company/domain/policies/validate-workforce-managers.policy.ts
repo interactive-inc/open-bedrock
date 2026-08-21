@@ -1,10 +1,10 @@
 import { WorkforceInvariantViolationValue } from "@/contexts/company/domain/values/workforce-invariant-violation.value"
-import { isWorkforceScheduleActiveAt } from "@/contexts/company/domain/values/is-workforce-schedule-active-at.definition"
+import { isWorkforceScheduleActiveAt } from "@/contexts/company/domain/definitions/is-workforce-schedule-active-at.definition"
 import { listActiveWorkforceManagerRelations } from "@/contexts/company/domain/policies/list-active-workforce-manager-relations.policy"
-import { listWorkforceScheduleBoundaryDates } from "@/contexts/company/domain/values/list-workforce-schedule-boundary-dates.definition"
+import { listWorkforceScheduleBoundaryDates } from "@/contexts/company/domain/definitions/list-workforce-schedule-boundary-dates.definition"
 import { workforceManagerRelationsHaveCycle } from "@/contexts/company/domain/policies/workforce-manager-relations-have-cycle.policy"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
-import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
+import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function validateWorkforceManagers(
   schedules: ReadonlyArray<WorkforceLifecycleSchedule>,

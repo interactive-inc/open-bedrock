@@ -1,4 +1,4 @@
-import type { LifecyclePeriodBase } from "@/contexts/company/domain/values/lifecycle-schedule.definition"
+import type { LifecyclePeriodBase } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 
 /**
  * container の半開区間が nested を完全に包含するか判定する。

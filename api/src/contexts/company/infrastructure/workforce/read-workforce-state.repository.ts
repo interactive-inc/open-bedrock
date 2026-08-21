@@ -1,4 +1,4 @@
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type { OrganizationUnitReadPort } from "@/contexts/company/infrastructure/workforce/read-organization-state.repository"
 import {
   type OrganizationInvariantViolation,
@@ -10,9 +10,9 @@ import {
 } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
 import { WorkforceStateResolutionError } from "@/contexts/company/domain/errors"
 import { validateWorkforceLifecycleSchedule } from "@/contexts/company/domain/policies/validate-workforce-lifecycle-schedule.policy"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
-import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
+import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/errors"
 
 export type WorkforceLifecycleReadPortResult =

@@ -1,4 +1,4 @@
-import type { IdentityId } from "@system/domain/values/identity-id.schema"
+import type { IdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 /** System Identity profile の email 更新statementを作る。 */

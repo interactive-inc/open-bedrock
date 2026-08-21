@@ -1,14 +1,14 @@
-import type { ApplicationWorkflowStep } from "@/contexts/company/domain/values/company-procedure-workflow.definition"
+import type { ApplicationWorkflowStep } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import type {
   WorkflowApproverMatch,
   WorkflowApproverProvenance,
-} from "@/contexts/company/domain/values/company-procedure-approver.definition"
+} from "@/contexts/company/domain/definitions/company-procedure-approver.definition"
 import type {
   WorkflowStepCandidateSnapshot,
   WorkflowStepSnapshotDraft,
-} from "@/contexts/company/domain/values/company-procedure-step-snapshot.definition"
+} from "@/contexts/company/domain/definitions/company-procedure-step-snapshot.definition"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
-import { dueAt } from "@/contexts/company/domain/values/company-procedure-due-at.definition"
+import { dueAt } from "@/contexts/company/domain/definitions/company-procedure-due-at.definition"
 import { resolveWorkflowApproverMatches } from "@/contexts/company/infrastructure/organization/resolve-company-procedure-approver-matches.repository"
 import { UnresolvableWorkflowStepError } from "@/contexts/company/domain/errors"
 

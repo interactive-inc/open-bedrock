@@ -22,7 +22,7 @@ const SYSTEM_SELF_REFERENCE_ROOT = SYSTEM_CONTEXT_ROOT
 const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
 const SYSTEM_CAPABILITY_CATALOG_PATH = resolve(
   SYSTEM_CONTEXT_ROOT,
-  "domain/values/system-capability.catalog.ts",
+  "domain/catalogs/configuration/system-capability.catalog.ts",
 )
 const SYSTEM_SOURCE_PATHS = CONTEXT_FIRST_LAYERS.map((layer) =>
   resolve(SYSTEM_CONTEXT_ROOT, layer),
@@ -755,10 +755,7 @@ function getModuleSpecifier(node: ts.Node): string | null | Error {
     : new Error("System の動的依存先を静的に確認できません")
 }
 
-function inspectModuleSpecifier(
-  file: string,
-  moduleSpecifier: string,
-): SystemBoundaryViolation[] {
+function inspectModuleSpecifier(file: string, moduleSpecifier: string): SystemBoundaryViolation[] {
   if (moduleSpecifier.startsWith("./") || moduleSpecifier.startsWith("../")) {
     return [{ file, reason: "System の依存境界を迂回する相対 import があります" }]
   }

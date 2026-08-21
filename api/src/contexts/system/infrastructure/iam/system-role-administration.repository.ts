@@ -1,6 +1,6 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { IamRoleEntity } from "@system/domain/entities/iam-role.entity"
-import type { IamRoleId } from "@system/domain/values/iam-role.schema"
+import type { IamRoleId } from "@system/domain/schemas/iam/iam-role.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type RoleRow = Readonly<{

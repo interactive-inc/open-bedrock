@@ -1,4 +1,4 @@
-import type { PasswordResetTokenHash } from "@system/domain/values/password-reset-token-hash.schema"
+import type { PasswordResetTokenHash } from "@system/domain/schemas/auth/password-reset-token-hash.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"

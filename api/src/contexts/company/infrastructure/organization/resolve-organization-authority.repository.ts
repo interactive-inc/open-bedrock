@@ -1,4 +1,4 @@
-import type { OrganizationAuthority } from "@/contexts/company/domain/values/organization-authority.definition"
+import type { OrganizationAuthority } from "@/contexts/company/domain/definitions/organization-authority.definition"
 import { resolveEmployeeManagementAuthority } from "@/contexts/company/domain/policies/resolve-employee-management-authority.policy"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
 import { readCanonicalOrganizationState } from "@/contexts/company/infrastructure/organization/read-canonical-organization-state.repository"

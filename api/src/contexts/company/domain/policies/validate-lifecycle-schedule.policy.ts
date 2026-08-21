@@ -1,4 +1,4 @@
-import type { LifecycleSchedule } from "@/contexts/company/domain/values/lifecycle-schedule.definition"
+import type { LifecycleSchedule } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 import {
   toWorkforceLifecycleSchedules,
   toWorkforceOrganizationUnitId,
@@ -6,10 +6,10 @@ import {
 import type {
   WorkforceInvariantCode,
   WorkforceInvariantViolation,
-} from "@/contexts/company/domain/values/workforce-invariant.definition"
+} from "@/contexts/company/domain/definitions/workforce-invariant.definition"
 import { validateWorkforceLifecycleSchedules } from "@/contexts/company/domain/policies/validate-workforce-lifecycle-schedules.policy"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/restore-workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { CompanyOperationError, CompanyConflictError } from "@/contexts/company/domain/errors"
 
 type ValidateLifecycleSchedulesProps = {

@@ -1,9 +1,9 @@
 import type { DecisionTaskEntity } from "@system/domain/entities/decision-task.entity"
 import type { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
-import type { HumanAttestationId } from "@system/domain/values/human-attestation-id.schema"
+import type { HumanAttestationId } from "@system/domain/schemas/workflow/human-attestation-id.schema"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
-import type { ProposalDigest } from "@system/domain/values/system-case-reference.schema"
-import type { SystemCaseId } from "@system/domain/values/system-case.schema"
+import type { ProposalDigest } from "@system/domain/schemas/workflow/system-case-reference.schema"
+import type { SystemCaseId } from "@system/domain/schemas/workflow/system-case.schema"
 
 /** HumanAttestationEntity群をTask snapshotに照合して確定したSystem判断。 */
 export class DecisionEntity {

@@ -4,16 +4,16 @@ import type {
   LifecycleVersionMutation,
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
-} from "@/contexts/company/domain/values/lifecycle-schedule.definition"
+} from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 import {
   personnelActionSummarySchema,
   type PersonnelActionSummary,
-} from "@/contexts/company/domain/values/personnel-action-summary.definition"
-import type { PersonnelActionKind } from "@/contexts/company/domain/values/lifecycle-types.definition"
+} from "@/contexts/company/domain/definitions/personnel-action-summary.definition"
+import type { PersonnelActionKind } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import { CompanyOperationError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
-import { zAccountId } from "@system/domain/values/account-id.schema"
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 export type PersonnelActionRecord = {
   id: string

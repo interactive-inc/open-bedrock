@@ -1,7 +1,7 @@
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import { ReadWorkforceState } from "@/contexts/company/infrastructure/workforce/read-workforce-state.repository"
-import { isCalendarDate } from "@/contexts/company/domain/values/is-calendar-date.definition"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
 import {
   EmployeeLifecycleReadRepository,
@@ -17,7 +17,7 @@ import {
   CompanyUnavailableError,
   CompanyValidationError,
 } from "@/contexts/company/domain/errors"
-import { resolveCompanyBusinessDate } from "@/contexts/company/domain/values/resolve-company-business-date.definition"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 
 export class GetLifecycleState {
   constructor(private readonly c: CompanyContext) {

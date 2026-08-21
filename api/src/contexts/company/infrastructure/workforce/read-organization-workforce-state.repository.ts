@@ -1,8 +1,8 @@
-import type { WorkforceSnapshotReadPort } from "@/contexts/company/domain/values/organization-change.definition"
+import type { WorkforceSnapshotReadPort } from "@/contexts/company/domain/definitions/organization-change.definition"
 import type { OrganizationUnitReadPort } from "@/contexts/company/infrastructure/workforce/read-organization-state.repository"
 import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/errors"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
-import type { OrganizationUnitSnapshot } from "@/contexts/company/domain/values/organization-unit.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
+import type { OrganizationUnitSnapshot } from "@/contexts/company/domain/definitions/organization-unit.definition"
 import {
   resolveWorkforceStateAt,
   type WorkforceStateAt,
@@ -10,7 +10,7 @@ import {
 import type { WorkforceStateResolutionError } from "@/contexts/company/domain/errors"
 import type { OrganizationInvariantViolation } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
 import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
 import { validateWorkforceSchedules } from "@/contexts/company/domain/policies/validate-workforce-schedules.policy"
 
 export type ReadOrganizationWorkforceStateResult =

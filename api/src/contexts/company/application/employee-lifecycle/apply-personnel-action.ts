@@ -1,26 +1,26 @@
-import type { CompanyPersonnelSession } from "@/contexts/company/domain/values/company-personnel-session.definition"
+import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { createCompanySystemAuditEvent } from "@/contexts/company/infrastructure/audit/create-company-system-audit-event.repository"
-import { containsDate } from "@/contexts/company/domain/values/contains-date.definition"
+import { containsDate } from "@/contexts/company/domain/definitions/contains-date.definition"
 import type {
   LifecycleSchedule,
   LifecycleVersionMutation,
-} from "@/contexts/company/domain/values/lifecycle-schedule.definition"
+} from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 import {
   projectPersonnelAction,
   type PersonnelActionProjection,
 } from "@/contexts/company/domain/policies/project-personnel-action.policy"
-import type { PersonnelActionInput } from "@/contexts/company/domain/values/lifecycle-types.definition"
-import { fingerprintPersonnelAction } from "@/contexts/company/domain/values/fingerprint-personnel-action.definition"
-import { stableLifecycleJson } from "@/contexts/company/domain/values/stable-lifecycle-json.definition"
+import type { PersonnelActionInput } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
+import { fingerprintPersonnelAction } from "@/contexts/company/domain/definitions/fingerprint-personnel-action.definition"
+import { stableLifecycleJson } from "@/contexts/company/domain/definitions/stable-lifecycle-json.definition"
 import type {
   OrganizationChangeSet,
   WorkforceSnapshotReadPort,
-} from "@/contexts/company/domain/values/organization-change.definition"
+} from "@/contexts/company/domain/definitions/organization-change.definition"
 import { ValidateOrganizationChange } from "@/contexts/company/infrastructure/workforce/validate-organization-change.repository"
 import { toWorkforceLifecycleSchedules } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import { restoreOrgResponsibilityType } from "@/contexts/company/domain/values/restore-org-responsibility-type.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/restore-workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"
@@ -40,7 +40,7 @@ import {
   CompanyUnavailableError,
   CompanyValidationError,
 } from "@/contexts/company/domain/errors"
-import { resolveCompanyBusinessDate } from "@/contexts/company/domain/values/resolve-company-business-date.definition"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { z } from "zod"
 
 export type DirectPersonnelActionCommand = {

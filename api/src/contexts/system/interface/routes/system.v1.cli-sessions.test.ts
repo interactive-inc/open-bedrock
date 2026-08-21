@@ -1,5 +1,5 @@
 import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash.repository"
-import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
+import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import type { SystemHonoEnv } from "@system/interface/http/system-factory"
 import { POST } from "@system/interface/routes/system.v1.cli-sessions"
 import { describe, expect, test } from "bun:test"

@@ -2,8 +2,8 @@ import {
   ACCESS_TOKEN_TYPE,
   type AccessTokenClaims,
   zAccessTokenClaims,
-} from "@system/domain/values/access-token-claims.schema"
-import { SystemAccessTokenSecretValue } from "@system/domain/values/system-access-token-secret.value"
+} from "@system/domain/schemas/auth/access-token-claims.schema"
+import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-access-token-secret.value"
 import { jwtVerify, SignJWT } from "jose"
 
 export type AccessTokenProfile = Readonly<{

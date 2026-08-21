@@ -1,7 +1,7 @@
 import { WorkforceInvariantViolationValue } from "@/contexts/company/domain/values/workforce-invariant-violation.value"
-import { isCanonicalEmployee } from "@/contexts/company/domain/values/is-canonical-employee.definition"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
-import type { WorkforceSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import { isCanonicalEmployee } from "@/contexts/company/domain/definitions/is-canonical-employee.definition"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
+import type { WorkforceSchedule } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function validateWorkforceEmployee(
   schedule: WorkforceSchedule,

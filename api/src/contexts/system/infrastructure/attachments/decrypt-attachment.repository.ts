@@ -1,4 +1,4 @@
-import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
+import type { AttachmentBytes } from "@system/domain/definitions/attachments/attachment-bytes.definition"
 import { SystemAttachmentError } from "@system/domain/errors"
 import { fromBase64 } from "@system/infrastructure/attachments/from-base64.repository"
 import { importAesKey } from "@system/infrastructure/attachments/import-aes-key.repository"

@@ -1,6 +1,6 @@
 import { OrganizationChangeValidationError } from "@/contexts/company/domain/errors"
 import { organizationChangePeriodHasSameOwner } from "@/contexts/company/domain/policies/organization-change-period-has-same-owner.policy"
-import type { OrganizationChangeVersionedPeriod } from "@/contexts/company/domain/values/organization-change-versioned-period.definition"
+import type { OrganizationChangeVersionedPeriod } from "@/contexts/company/domain/definitions/organization-change-versioned-period.definition"
 
 export function replaceOrganizationChangePeriods<TPeriod extends OrganizationChangeVersionedPeriod>(
   current: ReadonlyArray<TPeriod>,

@@ -1,4 +1,4 @@
-import type { SurveySubmissionView } from "@/contexts/survey/domain/values/survey-submission-view.definition"
+import type { SurveySubmissionView } from "@/contexts/survey/domain/definitions/survey-submission-view.definition"
 import { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"

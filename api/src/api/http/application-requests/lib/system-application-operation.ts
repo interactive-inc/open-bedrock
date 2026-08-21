@@ -34,9 +34,9 @@ import {
 import { DecideSystemTask } from "@system/application/workflow/decide-system-task"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
 import type { SystemProposalView } from "@system/infrastructure/workflow/system-d1-proposal-query.repository"
-import { systemCaseIdSchema } from "@system/domain/values/system-case.schema"
-import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
-import { ProposalDigestValue } from "@system/domain/values/proposal-digest.value"
+import { systemCaseIdSchema } from "@system/domain/schemas/workflow/system-case.schema"
+import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
+import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { SystemD1ProposalQuery } from "@system/infrastructure/workflow/system-d1-proposal-query.repository"
 import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
 

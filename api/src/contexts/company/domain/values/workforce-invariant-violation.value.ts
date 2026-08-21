@@ -1,4 +1,4 @@
-import type { WorkforceInvariantCode } from "@/contexts/company/domain/values/workforce-invariant.definition"
+import type { WorkforceInvariantCode } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
 
 export class WorkforceInvariantViolationValue {
   constructor(

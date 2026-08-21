@@ -1,5 +1,5 @@
 import { applyLifecycleMutations } from "@/contexts/company/domain/policies/apply-lifecycle-mutations.policy"
-import { containsDate } from "@/contexts/company/domain/values/contains-date.definition"
+import { containsDate } from "@/contexts/company/domain/definitions/contains-date.definition"
 import type {
   EmployeeStatusPeriod,
   EmploymentPeriod,
@@ -7,18 +7,18 @@ import type {
   LifecycleVersionMutation,
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
-} from "@/contexts/company/domain/values/lifecycle-schedule.definition"
-import { normalizeLifecycleSchedule } from "@/contexts/company/domain/values/normalize-lifecycle-schedule.definition"
+} from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
+import { normalizeLifecycleSchedule } from "@/contexts/company/domain/definitions/normalize-lifecycle-schedule.definition"
 import {
   personnelActionInputSchema,
   type PersonnelActionInput,
-} from "@/contexts/company/domain/values/lifecycle-types.definition"
+} from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import {
   personnelActionSummarySchema,
   type PersonnelActionSummary,
-} from "@/contexts/company/domain/values/personnel-action-summary.definition"
+} from "@/contexts/company/domain/definitions/personnel-action-summary.definition"
 import { validateLifecycleSchedules } from "@/contexts/company/domain/policies/validate-lifecycle-schedule.policy"
-import { nextCalendarDate } from "@/contexts/company/domain/values/next-calendar-date.definition"
+import { nextCalendarDate } from "@/contexts/company/domain/definitions/next-calendar-date.definition"
 import {
   CompanyOperationError,
   CompanyConflictError,

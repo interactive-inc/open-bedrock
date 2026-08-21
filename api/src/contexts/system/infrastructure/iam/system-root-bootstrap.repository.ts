@@ -1,8 +1,11 @@
 import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
-import { zIdentityId, type IdentityId } from "@system/domain/values/identity-id.schema"
-import type { IdentitySubject } from "@system/domain/values/identity-subject.schema"
-import { roleBindingIdSchema, type RoleBindingId } from "@system/domain/values/role-binding.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { zIdentityId, type IdentityId } from "@system/domain/schemas/identity/identity-id.schema"
+import type { IdentitySubject } from "@system/domain/schemas/identity/identity-subject.schema"
+import {
+  roleBindingIdSchema,
+  type RoleBindingId,
+} from "@system/domain/schemas/iam/role-binding.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 

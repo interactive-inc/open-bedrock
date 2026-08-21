@@ -7,8 +7,8 @@ import {
 } from "@system/interface/errors"
 /** /system/v1/notifications */
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
-import { zAccountId } from "@system/domain/values/account-id.schema"
-import { NotificationDeliveryBatchValue } from "@system/domain/values/notification-delivery-batch.value"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
 import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import { SystemActiveAccountSet } from "@system/infrastructure/auth/system-active-account-set.repository"

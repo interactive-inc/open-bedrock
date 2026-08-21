@@ -4,7 +4,15 @@ import { readFileSync, readdirSync } from "node:fs"
 import { basename, resolve } from "node:path"
 
 const contextsRoot = resolve(import.meta.dir, "../../contexts")
-const allowedRootEntries = new Set(["entities", "values", "policies", "errors.ts"])
+const allowedRootEntries = new Set([
+  "entities",
+  "values",
+  "schemas",
+  "catalogs",
+  "definitions",
+  "policies",
+  "errors.ts",
+])
 
 describe("bounded context domain structure", () => {
   test("Domain直下をEntity・Value・Policy・集約Errorだけに限定する", () => {
@@ -31,7 +39,9 @@ describe("bounded context domain structure", () => {
   test("Domain file名を配置責務と一致させる", () => {
     const violations: string[] = []
 
-    for (const path of new Glob("*/domain/{entities,values,policies}/**/*.ts").scanSync({
+    for (const path of new Glob(
+      "*/domain/{entities,values,schemas,catalogs,definitions,policies}/**/*.ts",
+    ).scanSync({
       cwd: contextsRoot,
       onlyFiles: true,
     })) {
@@ -44,11 +54,17 @@ describe("bounded context domain structure", () => {
       if (path.includes("/policies/") && !/\.policy(?:\.test)?\.ts$/u.test(filename)) {
         violations.push(`${path}: Policy suffix`)
       }
-      if (
-        path.includes("/values/") &&
-        !/\.(?:catalog|definition|schema|value)(?:\.test)?\.ts$/u.test(filename)
-      ) {
+      if (path.includes("/values/") && !/\.value(?:\.test)?\.ts$/u.test(filename)) {
         violations.push(`${path}: Value suffix`)
+      }
+      if (path.includes("/schemas/") && !/\.schema(?:\.test)?\.ts$/u.test(filename)) {
+        violations.push(`${path}: Schema suffix`)
+      }
+      if (path.includes("/catalogs/") && !/\.catalog(?:\.test)?\.ts$/u.test(filename)) {
+        violations.push(`${path}: Catalog suffix`)
+      }
+      if (path.includes("/definitions/") && !/\.definition(?:\.test)?\.ts$/u.test(filename)) {
+        violations.push(`${path}: Definition suffix`)
       }
       if (/export class \w*Error extends Error/u.test(source)) {
         violations.push(`${path}: Domain Errorはdomain/errors.tsへ集約する`)

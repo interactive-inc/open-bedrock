@@ -1,5 +1,5 @@
 import type { Session } from "@/lib/auth/session"
-import type { CompanyActor } from "@/contexts/company/domain/values/company-actor.definition"
+import type { CompanyActor } from "@/contexts/company/domain/definitions/company-actor.definition"
 import type { schema } from "@/schema"
 import type {
   SystemD1Context,
@@ -8,8 +8,8 @@ import type {
   SystemRequestAudit,
   SystemRequestAuditContext,
 } from "@system/infrastructure/configuration/system-context.repository"
-import type { OidcClientRegistryValue } from "@system/domain/values/oidc-client-registry.value"
-import type { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
+import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
+import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 
 /** Workers のバインディング（wrangler の vars / secrets / D1）。 */

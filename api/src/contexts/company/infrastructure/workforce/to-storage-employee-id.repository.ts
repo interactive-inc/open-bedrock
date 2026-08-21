@@ -1,4 +1,4 @@
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 /** 現行storage adapterのcanonical Employee IDを既存数値主キーへ戻す。 */
 export function toStorageEmployeeId(employeeId: EmployeeId): number | Error {

@@ -1,4 +1,4 @@
-import type { SystemBatchJobStatus } from "@system/domain/values/system-batch-job-status.schema"
+import type { SystemBatchJobStatus } from "@system/domain/schemas/batch/system-batch-job-status.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 export type SystemBatchJobView = Readonly<{

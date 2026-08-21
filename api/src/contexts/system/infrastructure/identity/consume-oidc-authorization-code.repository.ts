@@ -1,6 +1,6 @@
 import { toPkceS256Challenge } from "@system/infrastructure/auth/to-pkce-s256-challenge.repository"
 import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret.repository"
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type {
   SystemClockContext,
   SystemDatabaseContext,

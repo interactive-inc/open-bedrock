@@ -1,7 +1,7 @@
 import type { OrganizationStructureValue } from "@/contexts/company/domain/values/organization-structure.value"
 import type { WorkforceScheduleEntity } from "@/contexts/company/domain/entities/workforce-schedule.entity"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { validateWorkforceOrganizationUnit } from "@/contexts/company/domain/policies/workforce-organization-unit.policy"
 
 function violation(

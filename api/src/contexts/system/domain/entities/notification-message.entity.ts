@@ -5,7 +5,7 @@ import {
   notificationSourceReferenceSchema,
   type NotificationMessageId,
   type NotificationSourceReference,
-} from "@system/domain/values/notification-reference.schema"
+} from "@system/domain/schemas/notifications/notification-reference.schema"
 import { z } from "zod"
 
 function hasTitleControlCharacter(value: string): boolean {

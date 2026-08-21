@@ -1,11 +1,11 @@
 import type { InvalidSystemPasswordReason } from "@system/domain/errors"
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
-import { EmailValue } from "@system/domain/values/email.value"
-import { SystemPasswordValue } from "@system/domain/values/system-password.value"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { EmailValue } from "@system/domain/values/identity/email.value"
+import { SystemPasswordValue } from "@system/domain/values/auth/system-password.value"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { zIdentityId } from "@system/domain/values/identity-id.schema"
-import { identitySubjectSchema } from "@system/domain/values/identity-subject.schema"
-import { roleBindingIdSchema } from "@system/domain/values/role-binding.schema"
+import { zIdentityId } from "@system/domain/schemas/identity/identity-id.schema"
+import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-subject.schema"
+import { roleBindingIdSchema } from "@system/domain/schemas/iam/role-binding.schema"
 import type {
   SystemRootBootstrapRepositoryD1,
   SystemRootBootstrapRepositoryResult,

@@ -13,7 +13,7 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { canRepairWorkflow } from "@/api/http/application-requests/lib/can-repair-workflow"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

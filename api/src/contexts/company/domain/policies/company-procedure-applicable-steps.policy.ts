@@ -1,7 +1,7 @@
 import type {
   ApplicationWorkflow,
   ApplicationWorkflowStep,
-} from "@/contexts/company/domain/values/company-procedure-workflow.definition"
+} from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 
 export type WorkflowApplicant = {
   /** 社員コード。外部プロビジョニングで作られた申請者は持たない（null）。条件照合では null は不一致になる。 */

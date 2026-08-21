@@ -1,7 +1,7 @@
 import { WorkforceInvariantViolationValue } from "@/contexts/company/domain/values/workforce-invariant-violation.value"
-import { isCalendarDate } from "@/contexts/company/domain/values/is-calendar-date.definition"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
-import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
+import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function validateWorkforcePeriodVersions(
   schedule: WorkforceLifecycleSchedule,

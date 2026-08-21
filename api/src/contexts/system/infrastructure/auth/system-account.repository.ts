@@ -1,4 +1,4 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { AccountEntity } from "@system/domain/entities/account.entity"
 import {
   getAccountSessionRejection,

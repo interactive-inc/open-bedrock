@@ -3,7 +3,7 @@ import {
   nonCorrectionPersonnelActionInputSchema,
   personnelActionInputSchema,
   type PersonnelActionInput,
-} from "@/contexts/company/domain/values/lifecycle-types.definition"
+} from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import type {
   NonCorrectionWirePersonnelActionInput,
   WirePersonnelActionInput,

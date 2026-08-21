@@ -1,5 +1,5 @@
-import type { ProcedureKey } from "@system/domain/values/procedure-key.schema"
-import type { DelegationId } from "@system/domain/values/delegation-id.schema"
+import type { ProcedureKey } from "@system/domain/schemas/workflow/procedure-key.schema"
+import type { DelegationId } from "@system/domain/schemas/workflow/delegation-id.schema"
 import { systemDelegations } from "@system/infrastructure/schema/system-workflow"
 import { systemProcedureDefinitions } from "@system/infrastructure/schema/system-procedure"
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"

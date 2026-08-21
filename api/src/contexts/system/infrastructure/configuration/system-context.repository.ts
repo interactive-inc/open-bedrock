@@ -1,6 +1,6 @@
 import * as systemSchema from "@system/infrastructure/schema/system"
-import type { OidcClientRegistryValue } from "@system/domain/values/oidc-client-registry.value"
-import type { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
+import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
+import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 
 type SystemDrizzleDatabase = DrizzleD1Database<typeof systemSchema>

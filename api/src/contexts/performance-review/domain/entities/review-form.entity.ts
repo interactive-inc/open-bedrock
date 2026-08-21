@@ -1,7 +1,7 @@
-import { toAnswers } from "@/contexts/performance-review/domain/values/review-answers.definition"
-import { toFormStatus } from "@/contexts/performance-review/domain/values/review-form-status.definition"
-import { toReviewerType } from "@/contexts/performance-review/domain/values/reviewer-type.definition"
-import { toVisibility } from "@/contexts/performance-review/domain/values/review-visibility.definition"
+import { toAnswers } from "@/contexts/performance-review/domain/definitions/review-answers.definition"
+import { toFormStatus } from "@/contexts/performance-review/domain/definitions/review-form-status.definition"
+import { toReviewerType } from "@/contexts/performance-review/domain/definitions/reviewer-type.definition"
+import { toVisibility } from "@/contexts/performance-review/domain/definitions/review-visibility.definition"
 import type { ReviewFormRow } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { z } from "zod"
 

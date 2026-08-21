@@ -1,4 +1,4 @@
-import type { AttachmentStatus } from "@system/domain/values/attachment-status.definition"
+import type { AttachmentStatus } from "@system/domain/definitions/attachments/attachment-status.definition"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"

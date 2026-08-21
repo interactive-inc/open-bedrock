@@ -12,9 +12,9 @@ import { requestContextMiddleware } from "@/api/http/middlewares/request-context
 import { factory } from "@/api/http/factory"
 import { auditNoStore } from "@/api/http/middlewares/audit-no-store"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import type { CompanyCapability } from "@/contexts/company/domain/values/company-actor.definition"
-import { OidcClientRegistryValue } from "@system/domain/values/oidc-client-registry.value"
-import { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
+import type { CompanyCapability } from "@/contexts/company/domain/definitions/company-actor.definition"
+import { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
+import { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import { SystemIdentityUnavailableError } from "@system/interface/errors"
 
 /** CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。 */

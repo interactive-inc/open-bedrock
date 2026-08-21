@@ -1,7 +1,7 @@
 import { SystemAuditUnavailableError, SystemForbiddenError } from "@system/interface/errors"
 /** /system/v1/audit-events */
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import { SystemAuditEventQuery } from "@system/infrastructure/audit/system-audit-event-query.repository"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"

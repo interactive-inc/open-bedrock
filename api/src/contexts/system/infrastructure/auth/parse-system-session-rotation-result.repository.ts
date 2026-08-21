@@ -1,5 +1,5 @@
-import type { SessionRotationAuditEvents } from "@system/domain/values/session-rotation-audit-events.definition"
-import type { RefreshTokenRotationDecision } from "@system/domain/values/refresh-token-rotation-decision.definition"
+import type { SessionRotationAuditEvents } from "@system/domain/definitions/auth/session-rotation-audit-events.definition"
+import type { RefreshTokenRotationDecision } from "@system/domain/definitions/auth/refresh-token-rotation-decision.definition"
 
 /** D1 RETURNINGのevent IDをclosedなrotation decisionへ変換する。 */
 export function parseSystemSessionRotationResult(

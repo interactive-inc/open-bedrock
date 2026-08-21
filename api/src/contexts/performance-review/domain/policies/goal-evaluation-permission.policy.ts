@@ -1,6 +1,6 @@
 import type { Session } from "@/lib/auth/session"
 import { canEvaluateGoalOf } from "@/contexts/performance-review/domain/policies/goal-evaluation-access.policy"
-import type { EmployeeRelation } from "@/contexts/company/domain/values/employee-relation.definition"
+import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import type { GoalEvaluationKind } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
 
 export type Forbidden = { reason: "forbidden" }

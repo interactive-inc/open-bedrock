@@ -1,7 +1,7 @@
 import {
   passwordResetTokenHashSchema,
   type PasswordResetTokenHash,
-} from "@system/domain/values/password-reset-token-hash.schema"
+} from "@system/domain/schemas/auth/password-reset-token-hash.schema"
 
 /** raw password reset tokenをportable Web Cryptoで一方向hash化する。 */
 export async function hashPasswordResetToken(

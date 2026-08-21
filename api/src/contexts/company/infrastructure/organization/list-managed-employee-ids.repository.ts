@@ -3,7 +3,7 @@ import { listManagedWorkforceEmployeeIds } from "@/contexts/company/domain/polic
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
 import { readCanonicalOrganizationState } from "@/contexts/company/infrastructure/organization/read-canonical-organization-state.repository"
 import { toStorageEmployeeId } from "@/contexts/company/infrastructure/workforce/to-storage-employee-id.repository"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 
 /** actor が管理できる社員IDを返す。受信箱の絞り込みに使う。 */
 export async function listManagedEmployeeIds(

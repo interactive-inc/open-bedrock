@@ -1,4 +1,4 @@
-import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
+import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { POST } from "@system/interface/routes/system.v1.bootstrap"
 import { describe, expect, test } from "bun:test"

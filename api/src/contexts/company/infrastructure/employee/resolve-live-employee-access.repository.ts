@@ -1,5 +1,5 @@
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
-import { resolveCompanyBusinessDate } from "@/contexts/company/domain/values/resolve-company-business-date.definition"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import {
   CompanyOperationError,
   CompanyUnexpectedError,

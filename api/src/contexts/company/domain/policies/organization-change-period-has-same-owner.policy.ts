@@ -1,4 +1,4 @@
-import type { OrganizationChangeVersionedPeriod } from "@/contexts/company/domain/values/organization-change-versioned-period.definition"
+import type { OrganizationChangeVersionedPeriod } from "@/contexts/company/domain/definitions/organization-change-versioned-period.definition"
 
 export function organizationChangePeriodHasSameOwner(
   left: OrganizationChangeVersionedPeriod,

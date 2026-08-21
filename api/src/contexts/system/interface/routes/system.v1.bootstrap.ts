@@ -7,7 +7,7 @@ import {
 } from "@system/interface/errors"
 /** /system/v1/bootstrap */
 import { BootstrapSystemRoot } from "@system/application/iam/bootstrap-system-root"
-import { SystemBootstrapTokenValue } from "@system/domain/values/system-bootstrap-token.value"
+import { SystemBootstrapTokenValue } from "@system/domain/values/auth/system-bootstrap-token.value"
 import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
 import { timingSafeStringEqual } from "@system/infrastructure/auth/timing-safe-string-equal.repository"
 import { SystemRootBootstrapRepositoryD1 } from "@system/infrastructure/iam/system-root-bootstrap.repository"

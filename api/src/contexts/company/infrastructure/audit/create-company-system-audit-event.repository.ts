@@ -1,5 +1,5 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import type { SystemRequestAudit } from "@system/infrastructure/configuration/system-context.repository"
 
 /** Company の重要操作を canonical System 監査イベントへ変換する。 */

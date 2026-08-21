@@ -1,4 +1,4 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { InvalidSystemProposalError } from "@system/domain/errors"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import type { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"

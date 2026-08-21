@@ -1,7 +1,7 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { IamRoleEntity } from "@system/domain/entities/iam-role.entity"
 import { RoleBindingEntity } from "@system/domain/entities/role-binding.entity"
-import type { RoleBindingId } from "@system/domain/values/role-binding.schema"
+import type { RoleBindingId } from "@system/domain/schemas/iam/role-binding.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type BindingRow = Readonly<{

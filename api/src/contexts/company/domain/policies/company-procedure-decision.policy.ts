@@ -1,7 +1,7 @@
 import {
   zApplicationWorkflow,
   type ApplicationWorkflow,
-} from "@/contexts/company/domain/values/company-procedure-workflow.definition"
+} from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import { z } from "zod"
 
 const policySchema = z

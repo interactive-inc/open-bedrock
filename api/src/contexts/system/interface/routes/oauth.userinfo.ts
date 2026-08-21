@@ -2,7 +2,7 @@ import {
   OidcInvalidTokenApplicationError,
   OidcTemporarilyUnavailableApplicationError,
 } from "@/contexts/system/application/auth/errors"
-import { OidcScopeValue } from "@system/domain/values/oidc-scope.value"
+import { OidcScopeValue } from "@system/domain/values/oauth/oidc-scope.value"
 import { findOidcAccessToken } from "@system/infrastructure/identity/find-oidc-access-token.repository"
 import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity.repository"
 import { OIDCInvalidTokenError, OIDCTemporarilyUnavailableError } from "@system/interface/errors"

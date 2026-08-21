@@ -1,6 +1,6 @@
 import { SystemBrowserLoginCodeUnavailableError } from "@system/interface/errors"
 /** /system/v1/browser-login-codes */
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { createSystemBrowserLoginCode } from "@system/infrastructure/auth/create-system-browser-login-code.repository"
 import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"

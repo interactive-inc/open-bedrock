@@ -1,9 +1,9 @@
-import type { SessionRotationAuditEvents } from "@system/domain/values/session-rotation-audit-events.definition"
+import type { SessionRotationAuditEvents } from "@system/domain/definitions/auth/session-rotation-audit-events.definition"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SessionRotationValue } from "@system/domain/values/session-rotation.value"
+import { SessionRotationValue } from "@system/domain/values/auth/session-rotation.value"
 import { SessionEntity } from "@system/domain/entities/session.entity"
 import { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
-import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
+import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { describe, expect, test } from "bun:test"
 
 const createdAt = new Date("2026-01-01T00:00:00.000Z")

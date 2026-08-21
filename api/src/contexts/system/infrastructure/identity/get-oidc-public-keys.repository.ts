@@ -1,7 +1,7 @@
 import type {
   OidcPublicKeyValue,
   OidcSigningKeysValue,
-} from "@system/domain/values/oidc-signing-keys.definition"
+} from "@system/domain/definitions/oauth/oidc-signing-keys.definition"
 
 /** 署名鍵ringから公開可能なJWKだけを返す。 */
 export function getOidcPublicKeys(keys: OidcSigningKeysValue): ReadonlyArray<OidcPublicKeyValue> {

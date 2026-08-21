@@ -1,11 +1,11 @@
-import { lifecycleSha256 } from "@/contexts/company/domain/values/lifecycle-sha256.definition"
+import { lifecycleSha256 } from "@/contexts/company/domain/definitions/lifecycle-sha256.definition"
 import {
   loadCompanyFixtureSnapshot,
   type CompanyFixtureSnapshot,
 } from "@/api/test/support/company/load-company-fixture-snapshot.repository"
-import { stableLifecycleJson } from "@/contexts/company/domain/values/stable-lifecycle-json.definition"
+import { stableLifecycleJson } from "@/contexts/company/domain/definitions/stable-lifecycle-json.definition"
 import { validateCompanyInitializationInput } from "@/api/test/support/company/validate-company-initialization-input"
-import { personnelActionSummarySchema } from "@/contexts/company/domain/values/personnel-action-summary.definition"
+import { personnelActionSummarySchema } from "@/contexts/company/domain/definitions/personnel-action-summary.definition"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 

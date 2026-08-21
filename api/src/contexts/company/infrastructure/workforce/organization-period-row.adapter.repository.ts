@@ -1,16 +1,16 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { InvalidOrganizationPeriodProjectionError } from "@/contexts/company/domain/errors"
 import type {
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
   WorkforceLifecycleSchedule,
-} from "@/contexts/company/domain/values/workforce-schedule.definition"
+} from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 import {
   orgAssignmentTypes,
   type OrgAssignmentType,
-} from "@/contexts/company/domain/values/org-assignment-type.definition"
-import { isOrgResponsibilityType } from "@/contexts/company/domain/values/is-org-responsibility-type.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/restore-workforce-id.definition"
+} from "@/contexts/company/domain/definitions/org-assignment-type.definition"
+import { isOrgResponsibilityType } from "@/contexts/company/domain/definitions/is-org-responsibility-type.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 
 type PeriodProjectionRow = Readonly<{
   periodId: string

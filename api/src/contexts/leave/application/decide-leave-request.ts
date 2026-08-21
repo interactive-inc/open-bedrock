@@ -1,7 +1,7 @@
 import type { Session } from "@/lib/auth/session"
 import type { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { hasLeaveBalanceTracking } from "@/contexts/leave/domain/policies/has-balance-tracking.policy"
-import { toFiscalYear } from "@/contexts/leave/domain/values/fiscal-year.definition"
+import { toFiscalYear } from "@/contexts/leave/domain/definitions/fiscal-year.definition"
 import type { Context } from "@/env"
 import {
   ConflictError,

@@ -1,6 +1,6 @@
-import { listWorkforceStateAssignments } from "@/contexts/company/domain/values/list-workforce-state-assignments.definition"
+import { listWorkforceStateAssignments } from "@/contexts/company/domain/definitions/list-workforce-state-assignments.definition"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function organizationalAuthorityStatesHaveManagementCycle(
   states: ReadonlyArray<WorkforceStateAt>,

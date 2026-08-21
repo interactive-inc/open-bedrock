@@ -1,6 +1,6 @@
 import { ReadOrganizationWorkforceState } from "@/contexts/company/infrastructure/workforce/read-organization-workforce-state.repository"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
 import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
@@ -9,7 +9,7 @@ import {
   CompanyUnavailableError,
   CompanyUnexpectedError,
 } from "@/contexts/company/domain/errors"
-import { resolveCompanyBusinessDate } from "@/contexts/company/domain/values/resolve-company-business-date.definition"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 
 /** 既存App向けに、会社営業日時点の検証済みcanonical Company snapshotを一度だけ読む。 */
 export async function readCanonicalOrganizationState(c: CompanyContext, asOf?: CalendarDate) {

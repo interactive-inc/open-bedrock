@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { StoreAttachment } from "@system/application/attachments/store-attachment"
 import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
 import { systemFactory } from "@system/interface/http/system-factory"

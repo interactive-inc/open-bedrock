@@ -1,8 +1,8 @@
 import { isEligibleWorkforceState } from "@/contexts/company/domain/policies/is-eligible-workforce-state.policy"
 import { isInWorkforceManagementChain } from "@/contexts/company/domain/policies/is-in-workforce-management-chain.policy"
-import { listWorkforceAssignments } from "@/contexts/company/domain/values/list-workforce-assignments.definition"
+import { listWorkforceAssignments } from "@/contexts/company/domain/definitions/list-workforce-assignments.definition"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 /** 検証済みsnapshotから、閲覧者と対象者のApp向け関係を解決する。 */
 export function resolveWorkforceEmployeeRelation(props: {

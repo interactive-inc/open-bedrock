@@ -1,8 +1,8 @@
 import type {
   OrganizationalAuthorityProjection,
   OrganizationalAuthorityResponsibilityEvidence,
-} from "@/contexts/company/domain/values/organizational-authority.definition"
-import type { OrgResponsibilityPeriod } from "@/contexts/company/domain/values/workforce-schedule.definition"
+} from "@/contexts/company/domain/definitions/organizational-authority.definition"
+import type { OrgResponsibilityPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function toOrganizationalAuthorityResponsibilityEvidence(
   responsibility: OrgResponsibilityPeriod,

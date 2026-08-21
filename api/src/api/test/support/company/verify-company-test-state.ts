@@ -3,8 +3,8 @@ import {
   type CompanyFixtureSnapshot,
 } from "@/api/test/support/company/load-company-fixture-snapshot.repository"
 import { validateCompanyInitializationInput } from "@/api/test/support/company/validate-company-initialization-input"
-import { containsDate } from "@/contexts/company/domain/values/contains-date.definition"
-import type { LifecycleSchedule } from "@/contexts/company/domain/values/lifecycle-schedule.definition"
+import { containsDate } from "@/contexts/company/domain/definitions/contains-date.definition"
+import type { LifecycleSchedule } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 import { validateLifecycleSchedules } from "@/contexts/company/domain/policies/validate-lifecycle-schedule.policy"
 import type { Context } from "@/env"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"

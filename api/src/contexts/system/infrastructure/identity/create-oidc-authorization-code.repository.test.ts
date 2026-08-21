@@ -1,5 +1,5 @@
-import { zAccountId } from "@system/domain/values/account-id.schema"
-import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { createOidcAuthorizationCode } from "@system/infrastructure/identity/create-oidc-authorization-code.repository"
 import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret.repository"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"

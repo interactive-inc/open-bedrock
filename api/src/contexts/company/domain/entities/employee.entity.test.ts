@@ -1,6 +1,6 @@
 import { EmployeeEntity } from "@/contexts/company/domain/entities/employee.entity"
 import { InvalidEmployeeError } from "@/contexts/company/domain/errors"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/workforce-id.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { describe, expect, test } from "bun:test"
 
 const canonical = {

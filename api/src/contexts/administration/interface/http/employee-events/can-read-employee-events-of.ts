@@ -1,5 +1,5 @@
 import type { Session } from "@/lib/auth/session"
-import type { EmployeeRelation } from "@/contexts/company/domain/values/employee-relation.definition"
+import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 
 /**
  * 対象従業員の異動・在籍イベント履歴を閲覧できるか、スコープ(self/all)で判定する。

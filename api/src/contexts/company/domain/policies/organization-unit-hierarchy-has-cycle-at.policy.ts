@@ -1,7 +1,7 @@
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
-import type { OrganizationUnitPeriod } from "@/contexts/company/domain/values/organization-unit.definition"
-import { periodContainsDate } from "@/contexts/company/domain/values/period-contains-date.definition"
-import type { OrganizationUnitId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
+import type { OrganizationUnitPeriod } from "@/contexts/company/domain/definitions/organization-unit.definition"
+import { periodContainsDate } from "@/contexts/company/domain/definitions/period-contains-date.definition"
+import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function organizationUnitHierarchyHasCycleAt(
   periods: ReadonlyArray<OrganizationUnitPeriod>,

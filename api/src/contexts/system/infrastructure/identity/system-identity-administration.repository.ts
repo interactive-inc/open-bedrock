@@ -1,6 +1,6 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { IdentityBindingEntity } from "@system/domain/entities/identity-binding.entity"
-import type { IdentityId } from "@system/domain/values/identity-id.schema"
+import type { IdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type IdentityRow = Readonly<{

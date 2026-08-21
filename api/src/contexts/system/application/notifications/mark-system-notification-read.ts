@@ -1,10 +1,10 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import {
   InvalidNotificationDeliveryError,
   type InvalidNotificationDeliveryReason,
 } from "@system/domain/errors"
 import type { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
-import type { NotificationDeliveryId } from "@system/domain/values/notification-delivery-id.schema"
+import type { NotificationDeliveryId } from "@system/domain/schemas/notifications/notification-delivery-id.schema"
 import type { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 
 type Props = Readonly<{

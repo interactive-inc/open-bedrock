@@ -1,4 +1,4 @@
-import type { ApplicationWorkflow } from "@/contexts/company/domain/values/company-procedure-workflow.definition"
+import type { ApplicationWorkflow } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { UnprocessableEntityError } from "@/lib/http/errors"
 import type { Context } from "@/env"

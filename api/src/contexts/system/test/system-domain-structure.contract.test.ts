@@ -5,13 +5,24 @@ import { resolve } from "node:path"
 
 const domainRoot = resolve(import.meta.dir, "../domain")
 
+const bucketSuffixes: Readonly<Record<string, RegExp>> = {
+  entities: /\.entity(?:\.test)?\.ts$/,
+  values: /\.value(?:\.test)?\.ts$/,
+  schemas: /\.schema(?:\.test)?\.ts$/,
+  catalogs: /\.catalog(?:\.test)?\.ts$/,
+  definitions: /\.definition(?:\.test)?\.ts$/,
+  policies: /\.policy(?:\.test)?\.ts$/,
+}
+
+const bucketNames = Object.keys(bucketSuffixes)
+
 describe("System domain structure", () => {
-  test("domain直下をentities・values・policies・errors.tsだけに限定する", () => {
+  test("domain直下をmodel bucketとerrors.tsだけに限定する", () => {
     expect(
       readdirSync(domainRoot, { withFileTypes: true })
         .map((entry) => `${entry.isDirectory() ? "directory" : "file"}:${entry.name}`)
         .toSorted(),
-    ).toEqual(["directory:entities", "directory:policies", "directory:values", "file:errors.ts"])
+    ).toEqual([...bucketNames.map((name) => `directory:${name}`).toSorted(), "file:errors.ts"])
 
     const paths = Array.from(new Glob("**/*.ts").scanSync({ cwd: domainRoot, onlyFiles: true }))
 
@@ -19,14 +30,29 @@ describe("System domain structure", () => {
       paths.filter((path) => {
         if (path === "errors.ts") return false
         const directory = path.split("/")[0]
-        return directory !== "entities" && directory !== "values" && directory !== "policies"
+        return directory === undefined || !bucketNames.includes(directory)
       }),
     ).toEqual([])
   })
 
+  test("各bucketにはそのsuffixのfileだけを置く", () => {
+    const violations: string[] = []
+
+    for (const [bucket, pattern] of Object.entries(bucketSuffixes)) {
+      for (const path of new Glob("**/*.ts").scanSync({
+        cwd: resolve(domainRoot, bucket),
+        onlyFiles: true,
+      })) {
+        if (!pattern.test(path)) violations.push(`${bucket}/${path}`)
+      }
+    }
+
+    expect(violations).toEqual([])
+  })
+
   test("Domain Errorをerrors.ts以外へ分散させない", () => {
     const violations = Array.from(
-      new Glob("{entities,values,policies}/**/*.ts").scanSync({
+      new Glob(`{${bucketNames.join(",")}}/**/*.ts`).scanSync({
         cwd: domainRoot,
         onlyFiles: true,
       }),

@@ -1,4 +1,4 @@
-import { maxPointsPerThanks } from "@/contexts/thanks/domain/values/thanks-point-limit.catalog"
+import { maxPointsPerThanks } from "@/contexts/thanks/domain/catalogs/thanks-point-limit.catalog"
 
 /**
  * 感謝に添えるポイントを検証する。0 はメッセージのみの感謝として許容する。

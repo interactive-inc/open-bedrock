@@ -1,8 +1,8 @@
 import { AccountEntity } from "@system/domain/entities/account.entity"
 import { IdentityBindingEntity } from "@system/domain/entities/identity-binding.entity"
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import type { IdentityId } from "@system/domain/values/identity-id.schema"
-import type { IdentitySubject } from "@system/domain/values/identity-subject.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { IdentityId } from "@system/domain/schemas/identity/identity-id.schema"
+import type { IdentitySubject } from "@system/domain/schemas/identity/identity-subject.schema"
 import {
   systemAccounts,
   systemIdentityBindings,

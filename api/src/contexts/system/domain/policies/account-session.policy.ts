@@ -1,4 +1,4 @@
-import type { AccountStatus } from "@system/domain/values/account-status.schema"
+import type { AccountStatus } from "@system/domain/schemas/iam/account-status.schema"
 
 export type AccountSessionRejection =
   | "account_inactive"

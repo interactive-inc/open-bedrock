@@ -1,6 +1,6 @@
 import { Session } from "@/lib/auth/session"
 import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
-import type { EmployeeRelation } from "@/contexts/company/domain/values/employee-relation.definition"
+import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import { describe, expect, test } from "bun:test"
 import { testAccountId } from "@/api/test/support/test-account-id"
 

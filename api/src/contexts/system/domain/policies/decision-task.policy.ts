@@ -2,9 +2,9 @@ import { DecisionTaskCandidateEntity } from "@system/domain/entities/decision-ta
 import { DecisionTaskEntity } from "@system/domain/entities/decision-task.entity"
 import type { SystemCaseEntity } from "@system/domain/entities/system-case.entity"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import type { ProposalDigest } from "@system/domain/values/system-case-reference.schema"
-import type { SystemDecisionTaskBundle } from "@system/domain/values/system-decision-task-bundle.definition"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { ProposalDigest } from "@system/domain/schemas/workflow/system-case-reference.schema"
+import type { SystemDecisionTaskBundle } from "@system/domain/definitions/workflow/system-decision-task-bundle.definition"
 
 export type StartSystemProcedureTaskCandidate = Readonly<{
   accountId: AccountId

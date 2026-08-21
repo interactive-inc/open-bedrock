@@ -1,12 +1,12 @@
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type {
   OrganizationRevisionReadResult,
   OrganizationUnitReadPort,
   OrganizationUnitSnapshotReadResult,
-} from "@/contexts/company/domain/values/organization-change.definition"
+} from "@/contexts/company/domain/definitions/organization-change.definition"
 import type { OrganizationInvariantViolation } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
 import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
-import type { OrganizationUnitSnapshot } from "@/contexts/company/domain/values/organization-unit.definition"
+import type { OrganizationUnitSnapshot } from "@/contexts/company/domain/definitions/organization-unit.definition"
 
 export type {
   OrganizationRevisionReadResult,

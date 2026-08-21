@@ -1,5 +1,5 @@
 import type { AuditEventFilters } from "@/api/http/audit/audit-event.repository"
-import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
+import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { auditUnavailable } from "@/api/http/utils/audit-unavailable"
 
 const FILTER_HASH_PREFIX = "open-karte:audit:filters:v1\0"

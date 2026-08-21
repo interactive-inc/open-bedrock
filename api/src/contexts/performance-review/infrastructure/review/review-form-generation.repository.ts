@@ -1,6 +1,6 @@
 import { readCanonicalOrganizationState } from "@/contexts/company/infrastructure/organization/read-canonical-organization-state.repository"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import type { ReviewCyclePolicy } from "@/contexts/performance-review/domain/values/review-cycle-policy.value"
 import type { Context } from "@/env"

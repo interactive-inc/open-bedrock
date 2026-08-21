@@ -1,5 +1,5 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import { oidcAccessTokenLifetime } from "@system/domain/values/oidc-token-lifetime.value"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { oidcAccessTokenLifetime } from "@system/domain/values/oauth/oidc-token-lifetime.value"
 import type {
   SystemClockContext,
   SystemDatabaseContext,

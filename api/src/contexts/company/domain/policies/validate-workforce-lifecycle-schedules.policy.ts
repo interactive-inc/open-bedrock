@@ -1,11 +1,11 @@
 import type {
   ValidateWorkforceLifecycleSchedulesProps,
   WorkforceInvariantViolation,
-} from "@/contexts/company/domain/values/workforce-invariant.definition"
+} from "@/contexts/company/domain/definitions/workforce-invariant.definition"
 import { WorkforceInvariantViolationValue } from "@/contexts/company/domain/values/workforce-invariant-violation.value"
 import { validateWorkforceLifecycleSchedule } from "@/contexts/company/domain/policies/validate-workforce-lifecycle-schedule.policy"
 import { validateWorkforceManagers } from "@/contexts/company/domain/policies/validate-workforce-managers.policy"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function validateWorkforceLifecycleSchedules(
   props: ValidateWorkforceLifecycleSchedulesProps,

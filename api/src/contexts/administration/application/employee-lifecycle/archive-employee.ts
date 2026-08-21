@@ -16,8 +16,8 @@ import {
   UnexpectedError,
 } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/contexts/administration/domain/values/effective-root-permission-key.catalog"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/contexts/administration/domain/catalogs/effective-root-permission-key.catalog"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 import { PrepareSystemAccountSuspension } from "@system/infrastructure/iam/prepare-system-account-suspension.repository"
 

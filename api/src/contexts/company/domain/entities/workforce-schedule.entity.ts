@@ -3,21 +3,21 @@ import {
   type EmployeeProps,
 } from "@/contexts/company/domain/entities/employee.entity"
 import { WorkforceStateResolutionError } from "@/contexts/company/domain/errors"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
-import { isCalendarDate } from "@/contexts/company/domain/values/is-calendar-date.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import {
   employmentStatuses,
   type EmploymentStatus,
-} from "@/contexts/company/domain/values/employment-status.definition"
+} from "@/contexts/company/domain/definitions/employment-status.definition"
 import {
   orgAssignmentTypes,
   type OrgAssignmentType,
-} from "@/contexts/company/domain/values/org-assignment-type.definition"
+} from "@/contexts/company/domain/definitions/org-assignment-type.definition"
 import {
   isOrgResponsibilityType,
   type OrgResponsibilityType,
-} from "@/contexts/company/domain/values/org-responsibility-type.definition"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
+} from "@/contexts/company/domain/definitions/org-responsibility-type.definition"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
 import { WorkforceStateValue } from "@/contexts/company/domain/values/workforce-state.value"
 import type {
   EmployeeId,
@@ -26,7 +26,7 @@ import type {
   PersonnelActionId,
   SystemAccountId,
   WorkforcePeriodId,
-} from "@/contexts/company/domain/values/workforce-id.definition"
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 /** revisionごとに追記される半開有効期間 [startsOn, endsOn)。 */
 export type WorkforcePeriodVersion = Readonly<{

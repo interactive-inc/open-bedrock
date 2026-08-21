@@ -1,14 +1,14 @@
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { IamRoleEntity } from "@system/domain/entities/iam-role.entity"
 import { InvalidIamGraphError } from "@system/domain/errors"
-import { permissionKeySchema } from "@system/domain/values/permission.value"
+import { permissionKeySchema } from "@system/domain/values/iam/permission.value"
 import { RoleBindingEntity } from "@system/domain/entities/role-binding.entity"
 import {
   roleBindingIdSchema,
   roleBindingResourceSchema,
   type RoleBindingResource,
-} from "@system/domain/values/role-binding.schema"
-import { SystemPermission } from "@system/domain/values/system-permission.catalog"
+} from "@system/domain/schemas/iam/role-binding.schema"
+import { SystemPermission } from "@system/domain/catalogs/iam/system-permission.catalog"
 
 const iamPermissionDecisions = Object.freeze(["allowed", "denied", "invalid"] as const)
 

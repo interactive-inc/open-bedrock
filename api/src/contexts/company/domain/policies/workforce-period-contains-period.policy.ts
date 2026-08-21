@@ -1,4 +1,4 @@
-import type { WorkforcePeriodVersion } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { WorkforcePeriodVersion } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 /** outerがinnerの半開区間全体を含むか判定する。 */
 export function workforcePeriodContainsPeriod(

@@ -4,7 +4,7 @@ import type {
   LifecycleSchedule,
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
-} from "@/contexts/company/domain/values/lifecycle-schedule.definition"
+} from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import type {
   LifecycleDepartmentReference,

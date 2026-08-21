@@ -2,9 +2,9 @@ import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { OrganizationStructureValue } from "@/contexts/company/domain/values/organization-structure.value"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import type { OrganizationRelation } from "@/contexts/company/domain/values/organization-relation.definition"
-import { orgAssignmentTypes } from "@/contexts/company/domain/values/org-assignment-type.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import type { OrganizationRelation } from "@/contexts/company/domain/definitions/organization-relation.definition"
+import { orgAssignmentTypes } from "@/contexts/company/domain/definitions/org-assignment-type.definition"
 
 function hasContainingOrganizationUnit(
   resource: CompanyResourceEntity,

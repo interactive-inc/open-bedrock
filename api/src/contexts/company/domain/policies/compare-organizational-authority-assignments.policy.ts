@@ -1,4 +1,4 @@
-import type { OrgAssignmentPeriod } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function compareOrganizationalAuthorityAssignments(
   left: OrgAssignmentPeriod,

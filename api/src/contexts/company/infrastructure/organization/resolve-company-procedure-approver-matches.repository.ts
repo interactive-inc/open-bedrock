@@ -1,6 +1,6 @@
-import type { OrganizationalAuthorityCriterion } from "@/contexts/company/domain/values/organizational-authority-candidate.definition"
-import type { WorkflowApproverMatch } from "@/contexts/company/domain/values/company-procedure-approver.definition"
-import type { WorkflowApproverSelector } from "@/contexts/company/domain/values/company-procedure-workflow.definition"
+import type { OrganizationalAuthorityCriterion } from "@/contexts/company/domain/definitions/organizational-authority-candidate.definition"
+import type { WorkflowApproverMatch } from "@/contexts/company/domain/definitions/company-procedure-approver.definition"
+import type { WorkflowApproverSelector } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import { resolveOrganizationalAuthorityCandidates } from "@/contexts/company/infrastructure/organization/resolve-organizational-authority-candidates.repository"
 

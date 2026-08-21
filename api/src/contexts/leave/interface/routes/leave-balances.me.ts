@@ -1,4 +1,4 @@
-import { toFiscalYear } from "@/contexts/leave/domain/values/fiscal-year.definition"
+import { toFiscalYear } from "@/contexts/leave/domain/definitions/fiscal-year.definition"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/lib/http/errors"

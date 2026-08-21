@@ -1,5 +1,5 @@
-import { zAccountId } from "@system/domain/values/account-id.schema"
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
 import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization.repository"
 import { describe, expect, test } from "bun:test"
 

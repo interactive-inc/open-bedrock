@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
-import { lifecycleSha256 } from "@/contexts/company/domain/values/lifecycle-sha256.definition"
-import { stableLifecycleJson } from "@/contexts/company/domain/values/stable-lifecycle-json.definition"
+import { lifecycleSha256 } from "@/contexts/company/domain/definitions/lifecycle-sha256.definition"
+import { stableLifecycleJson } from "@/contexts/company/domain/definitions/stable-lifecycle-json.definition"
 
 export type CompanyFixtureEmployee = {
   id: number

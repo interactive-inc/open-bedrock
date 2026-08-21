@@ -1,9 +1,9 @@
 import { InvalidSessionError } from "@system/domain/errors"
 import { SessionEntity } from "@system/domain/entities/session.entity"
-import { SessionRotationValue } from "@system/domain/values/session-rotation.value"
-import { zSessionFamilyId } from "@system/domain/values/session-family-id.schema"
-import { zSessionId } from "@system/domain/values/session-id.schema"
-import { zSessionTokenHash } from "@system/domain/values/session-token-hash.schema"
+import { SessionRotationValue } from "@system/domain/values/auth/session-rotation.value"
+import { zSessionFamilyId } from "@system/domain/schemas/auth/session-family-id.schema"
+import { zSessionId } from "@system/domain/schemas/auth/session-id.schema"
+import { zSessionTokenHash } from "@system/domain/schemas/auth/session-token-hash.schema"
 import { describe, expect, test } from "bun:test"
 
 const CREATED_AT = new Date("2026-08-11T00:00:00.000Z")

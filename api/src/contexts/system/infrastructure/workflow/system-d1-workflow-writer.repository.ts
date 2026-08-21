@@ -3,8 +3,8 @@ import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import type { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
 import type { ProposalEntity } from "@system/domain/entities/proposal.entity"
 import type { SystemCaseEntity } from "@system/domain/entities/system-case.entity"
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import type { SystemDecisionTaskBundle } from "@system/domain/values/system-decision-task-bundle.definition"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { SystemDecisionTaskBundle } from "@system/domain/definitions/workflow/system-decision-task-bundle.definition"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 export type SystemWorkflowDecisionPersistence = Readonly<{

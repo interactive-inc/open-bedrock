@@ -1,10 +1,10 @@
 import type {
   OrganizationalAuthorityManagementEdgeEvidence,
   OrganizationalAuthorityProjection,
-} from "@/contexts/company/domain/values/organizational-authority.definition"
+} from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import { toOrganizationalAuthorityAssignmentEvidence } from "@/contexts/company/domain/policies/to-organizational-authority-assignment-evidence.policy"
-import type { OrgAssignmentPeriod } from "@/contexts/company/domain/values/workforce-schedule.definition"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function toOrganizationalAuthorityManagementEdgeEvidence(
   assignment: OrgAssignmentPeriod,

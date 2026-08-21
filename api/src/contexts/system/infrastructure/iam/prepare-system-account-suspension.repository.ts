@@ -1,6 +1,6 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 

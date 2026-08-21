@@ -3,7 +3,7 @@ import type {
   OrganizationUnitReadPort,
   OrganizationUnitSnapshotReadResult,
 } from "@/contexts/company/infrastructure/workforce/read-organization-state.repository"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import {
   InvalidOrganizationLifecycleStateError,
   WorkforceSnapshotChangedError,

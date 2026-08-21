@@ -1,4 +1,4 @@
-import type { LifecycleEmployeeStatus } from "@/contexts/company/domain/values/lifecycle-types.definition"
+import type { LifecycleEmployeeStatus } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import { CompanyOperationError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 

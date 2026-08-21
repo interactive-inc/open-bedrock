@@ -2,7 +2,7 @@ import { activeWorkforcePeriods } from "@/contexts/company/domain/policies/activ
 import type {
   EmploymentPeriod,
   WorkforceLifecycleSchedule,
-} from "@/contexts/company/domain/values/workforce-schedule.definition"
+} from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function findWorkforceEmployment(
   schedule: WorkforceLifecycleSchedule,

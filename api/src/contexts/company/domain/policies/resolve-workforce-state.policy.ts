@@ -1,17 +1,17 @@
-import { periodContainsDate } from "@/contexts/company/domain/values/period-contains-date.definition"
+import { periodContainsDate } from "@/contexts/company/domain/definitions/period-contains-date.definition"
 import { compareWorkforcePeriods } from "@/contexts/company/domain/policies/compare-workforce-periods.policy"
 import { WorkforceStateResolutionError } from "@/contexts/company/domain/errors"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type {
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
   WorkforceLifecycleSchedule,
-} from "@/contexts/company/domain/values/workforce-schedule.definition"
-import type { EmploymentStatus } from "@/contexts/company/domain/values/employment-status.definition"
+} from "@/contexts/company/domain/definitions/workforce-schedule.definition"
+import type { EmploymentStatus } from "@/contexts/company/domain/definitions/employment-status.definition"
 import type {
   EmployeeId,
   EmploymentId,
-} from "@/contexts/company/domain/values/workforce-id.definition"
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type WorkforceStateAt = Readonly<{
   employeeId: EmployeeId

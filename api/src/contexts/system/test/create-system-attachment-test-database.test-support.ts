@@ -1,4 +1,4 @@
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
+import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
 import { readFileSync } from "node:fs"
 
 /** System の添付機能だけを検証できる、製品 migration 非依存の D1 テストDBを作る。 */

@@ -1,4 +1,4 @@
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 
 export function compareWorkforcePeriods(
   left: { startsOn: CalendarDate; periodId: string },

@@ -1,11 +1,11 @@
 import { applicableWorkflowSteps } from "@/contexts/company/domain/policies/company-procedure-applicable-steps.policy"
 import { resolveWorkflowStepSnapshot } from "@/contexts/company/infrastructure/organization/resolve-company-procedure-task-snapshot.repository"
 import type { CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
-import type { ApplicationWorkflowStep } from "@/contexts/company/domain/values/company-procedure-workflow.definition"
+import type { ApplicationWorkflowStep } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import type { StartSystemProcedureTask } from "@system/domain/policies/decision-task.policy"
-import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
-import { ProposalDigestValue } from "@system/domain/values/proposal-digest.value"
+import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
+import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 export type CompanyProcedureApplicant = Readonly<{
   id: number

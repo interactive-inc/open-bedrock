@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test"
 import { Database } from "bun:sqlite"
 import { readFileSync } from "node:fs"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
-import { readReleasedSystemMigration } from "@system/infrastructure/schema/read-released-system-migration.test-support"
+import { readReleasedSystemMigration } from "@system/test/read-released-system-migration.test-support"
 
 const coreSchemaSql = readFileSync(new URL("./system-core.sql", import.meta.url), "utf8")
 const workflowSchemaSql = readFileSync(new URL("./system-workflow.sql", import.meta.url), "utf8")

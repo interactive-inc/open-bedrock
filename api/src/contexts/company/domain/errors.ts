@@ -1,4 +1,4 @@
-import type { WorkforceIdKind } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { WorkforceIdKind } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type CompanyResourceValidationCode =
   | "invalid_identifier"

@@ -16,8 +16,8 @@ import { AUDIT_CSV_MAX_BYTES } from "@/contexts/administration/interface/http/au
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
 import { z } from "zod"
-import { zAccountId } from "@system/domain/values/account-id.schema"
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 const SEARCH_MAX_LIMIT = 100
 const SEARCH_SUMMARY_WIRE_BUDGET_BYTES = 4 * 1024 * 1024

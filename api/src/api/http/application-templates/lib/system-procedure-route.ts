@@ -5,7 +5,7 @@ import type { Context } from "@/env"
 import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
 import { PublishSystemProcedure } from "@system/application/workflow/publish-system-procedure"
 import type { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { procedureKeySchema } from "@system/domain/values/procedure-key.schema"
+import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
 
 export function systemProcedureRepository(c: Context): SystemD1ProcedureRepository {

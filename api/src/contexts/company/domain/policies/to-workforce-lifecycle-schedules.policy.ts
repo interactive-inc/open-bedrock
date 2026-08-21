@@ -1,19 +1,19 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import { restoreOrgResponsibilityType } from "@/contexts/company/domain/values/restore-org-responsibility-type.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
 import type {
   WorkforceLifecycleSchedule,
   WorkforcePeriodVersion,
-} from "@/contexts/company/domain/values/workforce-schedule.definition"
-import { type EmploymentId } from "@/contexts/company/domain/values/workforce-id.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/restore-workforce-id.definition"
+} from "@/contexts/company/domain/definitions/workforce-schedule.definition"
+import { type EmploymentId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import type {
   LifecyclePeriodBase,
   LifecycleSchedule,
-} from "@/contexts/company/domain/values/lifecycle-schedule.definition"
-import { normalizeLifecycleSchedule } from "@/contexts/company/domain/values/normalize-lifecycle-schedule.definition"
+} from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
+import { normalizeLifecycleSchedule } from "@/contexts/company/domain/definitions/normalize-lifecycle-schedule.definition"
 import { periodContainsPeriod } from "@/contexts/company/domain/policies/period-contains-period.policy"
-import { toWorkforceEmployeeId } from "@/contexts/company/domain/values/to-workforce-employee-id.definition"
-import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/values/to-workforce-organization-unit-id.definition"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 
 export { toWorkforceEmployeeId, toWorkforceOrganizationUnitId }
 

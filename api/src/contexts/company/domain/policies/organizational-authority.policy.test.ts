@@ -1,10 +1,10 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import { restoreOrgResponsibilityType } from "@/contexts/company/domain/values/restore-org-responsibility-type.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
 import { OrganizationalAuthorityError } from "@/contexts/company/domain/errors"
 import type {
   OrganizationalAuthorityCriterion,
   OrganizationalAuthorityProjection,
-} from "@/contexts/company/domain/values/organizational-authority.definition"
+} from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import { resolveOrganizationalAuthority } from "@/contexts/company/domain/policies/organizational-authority.policy"
 import type { WorkforceStateProps } from "@/contexts/company/domain/values/workforce-state.value"
 import type {
@@ -12,11 +12,11 @@ import type {
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
 } from "@/contexts/company/domain/entities/workforce-schedule.entity"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/workforce-id.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type {
   EmployeeId,
   OrganizationUnitId,
-} from "@/contexts/company/domain/values/workforce-id.definition"
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { describe, expect, test } from "bun:test"
 
 const asOf = restoreCalendarDate("2026-06-01")

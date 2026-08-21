@@ -1,10 +1,10 @@
-import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
+import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { POST } from "@system/interface/routes/oauth.authorizations"
 import { describe, expect, test } from "bun:test"
-import { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
-import { OidcClientRegistryValue } from "@system/domain/values/oidc-client-registry.value"
+import { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
+import { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import { drizzle } from "drizzle-orm/d1"
 import { hc } from "hono/client"
 

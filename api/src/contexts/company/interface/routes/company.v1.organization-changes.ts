@@ -1,7 +1,7 @@
 /** /company/v1/organization-changes */
 import { WriteOrganizationChange } from "@/contexts/company/application/organization/write-organization-change"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyResourceRepositoryD1 } from "@/contexts/company/infrastructure/core/company-resource.repository"
 import {
   CompanyAccessDeniedError,

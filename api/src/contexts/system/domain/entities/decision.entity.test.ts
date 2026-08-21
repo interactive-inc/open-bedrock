@@ -2,7 +2,7 @@ import { DecisionTaskEntity } from "@system/domain/entities/decision-task.entity
 import { DecisionEntity } from "@system/domain/entities/decision.entity"
 import { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
-import { proposalDigestSchema } from "@system/domain/values/system-case-reference.schema"
+import { proposalDigestSchema } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import { describe, expect, test } from "bun:test"
 
 const decidedAt = new Date("2026-08-16T00:00:00.000Z")

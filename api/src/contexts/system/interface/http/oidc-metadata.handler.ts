@@ -1,6 +1,6 @@
-import { OidcScopeValue } from "@system/domain/values/oidc-scope.value"
-import { oidcSigningAlgorithm } from "@system/domain/values/oidc-signing-algorithm.value"
-import type { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
+import { OidcScopeValue } from "@system/domain/values/oauth/oidc-scope.value"
+import { oidcSigningAlgorithm } from "@system/domain/values/oauth/oidc-signing-algorithm.value"
+import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import { getOidcPublicKeys } from "@system/infrastructure/identity/get-oidc-public-keys.repository"
 import { parseOidcSigningKeys } from "@system/infrastructure/identity/parse-oidc-signing-keys.repository"
 import {

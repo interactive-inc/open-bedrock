@@ -1,5 +1,5 @@
 import type { InferSelectModel } from "drizzle-orm"
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { sql } from "drizzle-orm"
 import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 

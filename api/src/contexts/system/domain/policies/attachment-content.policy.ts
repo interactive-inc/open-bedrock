@@ -2,12 +2,12 @@ import {
   ATTACHMENT_CONTENT_TYPES,
   ATTACHMENT_MAX_BYTE_SIZE,
   ATTACHMENT_MAX_FILE_NAME_LENGTH,
-} from "@system/domain/values/attachment-content.catalog"
+} from "@system/domain/catalogs/attachments/attachment-content.catalog"
 import type {
   AttachmentContentInput,
   AttachmentContentType,
   AttachmentContentViolation,
-} from "@system/domain/values/attachment-content.definition"
+} from "@system/domain/definitions/attachments/attachment-content.definition"
 
 function isAttachmentContentType(value: string): value is AttachmentContentType {
   return ATTACHMENT_CONTENT_TYPES.some((contentType) => contentType === value)

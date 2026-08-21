@@ -1,14 +1,17 @@
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
 import {
   proposalDigestSchema,
   type ProposalDigest,
-} from "@system/domain/values/system-case-reference.schema"
+} from "@system/domain/schemas/workflow/system-case-reference.schema"
 import {
   humanAttestationIdSchema,
   type HumanAttestationId,
-} from "@system/domain/values/human-attestation-id.schema"
-import { systemCaseIdSchema, type SystemCaseId } from "@system/domain/values/system-case.schema"
+} from "@system/domain/schemas/workflow/human-attestation-id.schema"
+import {
+  systemCaseIdSchema,
+  type SystemCaseId,
+} from "@system/domain/schemas/workflow/system-case.schema"
 import { z } from "zod"
 
 const propsSchema = z

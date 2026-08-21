@@ -1,7 +1,7 @@
-import { zAccountId } from "@system/domain/values/account-id.schema"
-import { zIdentityId } from "@system/domain/values/identity-id.schema"
-import { identitySubjectSchema } from "@system/domain/values/identity-subject.schema"
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { zIdentityId } from "@system/domain/schemas/identity/identity-id.schema"
+import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-subject.schema"
+import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
 import {
   SystemPasswordCredentialRepository,
   type SystemPasswordMaterialService,

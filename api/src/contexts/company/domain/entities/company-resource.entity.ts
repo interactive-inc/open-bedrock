@@ -1,16 +1,16 @@
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
-import { isCalendarDate } from "@/contexts/company/domain/values/is-calendar-date.definition"
-import { companyResourceRequiredAttributes } from "@/contexts/company/domain/values/company-resource-required-attributes.catalog"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
+import { companyResourceRequiredAttributes } from "@/contexts/company/domain/catalogs/company-resource-required-attributes.catalog"
 import {
   companyResourceTypes,
   type CompanyResourceType,
-} from "@/contexts/company/domain/values/company-resource-type.catalog"
+} from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
 import {
   organizationUnitKinds,
   type OrganizationUnitPeriod,
 } from "@/contexts/company/domain/values/organization-structure.value"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/workforce-id.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type CompanyResourceState = "active" | "void"
 export type CompanyJson =

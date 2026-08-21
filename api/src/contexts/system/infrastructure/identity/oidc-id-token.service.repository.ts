@@ -1,7 +1,7 @@
-import { oidcSigningAlgorithm } from "@system/domain/values/oidc-signing-algorithm.value"
-import { oidcAccessTokenLifetime } from "@system/domain/values/oidc-token-lifetime.value"
+import { oidcSigningAlgorithm } from "@system/domain/values/oauth/oidc-signing-algorithm.value"
+import { oidcAccessTokenLifetime } from "@system/domain/values/oauth/oidc-token-lifetime.value"
 import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret.repository"
-import type { OidcSigningKeysValue } from "@system/domain/values/oidc-signing-keys.definition"
+import type { OidcSigningKeysValue } from "@system/domain/definitions/oauth/oidc-signing-keys.definition"
 import type { SystemClockContext } from "@system/infrastructure/configuration/system-context.repository"
 import { importJWK, SignJWT } from "jose"
 
