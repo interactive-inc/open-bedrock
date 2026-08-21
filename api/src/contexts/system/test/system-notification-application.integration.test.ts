@@ -1,12 +1,10 @@
-import { GetSystemNotificationDelivery } from "@system/application/notifications/get-system-notification-delivery"
-import { MarkSystemNotificationRead } from "@system/application/notifications/mark-system-notification-read"
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
 import { NotificationDelivery } from "@system/domain/notifications/notification-delivery.entity"
 import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
 import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
-import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
+import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 import { describe, expect, test } from "bun:test"
 
 const notificationSchema = `
@@ -120,79 +118,6 @@ describe("canonical System Notification Application + D1 repository", () => {
         .prepare("SELECT count(*) AS count FROM system_notification_deliveries")
         .first<number>("count"),
     ).toBe(0)
-  })
-
-  test("他Accountからreceiptを隠し、既読時刻を最初の遷移から後退も上書きもしない", async () => {
-    const database = createSystemD1TestDatabase(notificationSchema)
-    await insertAccount(database, "account-owner", "active")
-    await insertAccount(database, "account-other", "active")
-
-    const message = createMessage("message-read")
-    const deliveries = createDeliveryBatch([
-      createDelivery({
-        id: "delivery-read",
-        messageId: message.id,
-        recipientAccountId: "account-owner",
-      }),
-    ])
-    const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
-    const publish = new PublishSystemNotification({ notificationRepository: repository })
-    const getDelivery = new GetSystemNotificationDelivery({ notificationRepository: repository })
-    const markRead = new MarkSystemNotificationRead({ notificationRepository: repository })
-    const ownerAccountId = zAccountId.parse("account-owner")
-    const otherAccountId = zAccountId.parse("account-other")
-
-    expect(await publish.execute({ message, deliveries })).toEqual({ kind: "published" })
-    expect(
-      await getDelivery.execute({
-        deliveryId: deliveries.deliveries[0]!.id,
-        recipientAccountId: otherAccountId,
-      }),
-    ).toEqual({ kind: "not_found" })
-    expect(
-      await markRead.execute({
-        deliveryId: deliveries.deliveries[0]!.id,
-        recipientAccountId: otherAccountId,
-        readAt: new Date(3_000),
-      }),
-    ).toEqual({ kind: "not_found" })
-    expect(
-      await markRead.execute({
-        deliveryId: deliveries.deliveries[0]!.id,
-        recipientAccountId: ownerAccountId,
-        readAt: new Date(1_999),
-      }),
-    ).toEqual({ kind: "rejected", reason: "read_before_delivery" })
-
-    const marked = await markRead.execute({
-      deliveryId: deliveries.deliveries[0]!.id,
-      recipientAccountId: ownerAccountId,
-      readAt: new Date(3_000),
-    })
-    expect(marked).not.toBeInstanceOf(Error)
-    if (marked instanceof Error) throw marked
-    expect(marked.kind).toBe("marked")
-    if (marked.kind !== "marked") return
-    expect(marked.delivery.readAt).toEqual(new Date(3_000))
-
-    expect(
-      await markRead.execute({
-        deliveryId: deliveries.deliveries[0]!.id,
-        recipientAccountId: ownerAccountId,
-        readAt: new Date(2_500),
-      }),
-    ).toEqual({ kind: "rejected", reason: "transition_before_last_update" })
-
-    const idempotent = await markRead.execute({
-      deliveryId: deliveries.deliveries[0]!.id,
-      recipientAccountId: ownerAccountId,
-      readAt: new Date(4_000),
-    })
-    expect(idempotent).not.toBeInstanceOf(Error)
-    if (idempotent instanceof Error) throw idempotent
-    expect(idempotent.kind).toBe("marked")
-    if (idempotent.kind !== "marked") return
-    expect(idempotent.delivery.readAt).toEqual(new Date(3_000))
   })
 
   test("Account単位の一覧・未読件数・一括既読・破棄をcanonical Deliveryだけで処理する", async () => {

@@ -11,7 +11,7 @@ import { zAppLeaveRequest, zAppLeaveRequestAdminList } from "@/lib/app-schemas"
 import { canReadLeaveOf } from "@/contexts/leave/interface/http/leave-requests/can-read-leave-of"
 import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/contexts/company/interface/utils/list-report-employee-ids"
-import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
+import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { isoDate, leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
 import {

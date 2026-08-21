@@ -7,7 +7,7 @@ import { throwAuditRouteError } from "@/contexts/company/interface/utils/throw-a
 import { auditExportPermission } from "@/contexts/company/interface/middlewares/audit-export-permission"
 import { auditExportValidation } from "@/contexts/company/interface/middlewares/audit-export-validation"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { toAuditCsv } from "@/contexts/company/application/audit/to-audit-csv"
+import { toAuditCsv } from "@/contexts/company/interface/http/audit/to-audit-csv"
 import { PayloadTooLargeError } from "@/lib/errors"
 import { factory } from "@/contexts/company/interface/utils/factory"
 

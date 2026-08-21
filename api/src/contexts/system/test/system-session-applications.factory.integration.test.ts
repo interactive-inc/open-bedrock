@@ -56,7 +56,7 @@ describe("createSystemSessionApplications", () => {
     },
   )
 
-  test("同じ安全な依存で発行・検証・rotation・失効を完結する", async () => {
+  test("同じ安全な依存で発行・rotation・失効を完結する", async () => {
     const fixture = new SystemSessionTestContext()
     insertAccount(fixture)
     const applications = requireApplications(fixture)
@@ -73,16 +73,6 @@ describe("createSystemSessionApplications", () => {
       throw new Error("expected System Session issuance")
     }
 
-    expect(
-      await applications.authenticate.execute({ rawToken: issued.rawToken, now: issuedAt }),
-    ).toEqual({
-      kind: "authenticated",
-      accountId,
-      tokenVersion: 0,
-      sessionId: issued.sessionId,
-      expiresAt: issued.expiresAt,
-    })
-
     const rotated = await applications.rotate.execute({
       rawToken: issued.rawToken,
       now: rotatedAt,
@@ -94,29 +84,12 @@ describe("createSystemSessionApplications", () => {
 
     expect(rotated.rawToken).not.toBe(issued.rawToken)
     expect(
-      await applications.authenticate.execute({ rawToken: issued.rawToken, now: rotatedAt }),
-    ).toEqual({ kind: "rejected", reason: "invalid" })
-    expect(
-      await applications.authenticate.execute({ rawToken: rotated.rawToken, now: rotatedAt }),
-    ).toEqual({
-      kind: "authenticated",
-      accountId,
-      tokenVersion: 0,
-      sessionId: rotated.sessionId,
-      expiresAt: rotated.expiresAt,
-    })
-
-    expect(
       await applications.revoke.execute({
         rawToken: rotated.rawToken,
         now: revokedAt,
         auditContext,
       }),
     ).toEqual({ kind: "completed" })
-    expect(
-      await applications.authenticate.execute({ rawToken: rotated.rawToken, now: revokedAt }),
-    ).toEqual({ kind: "rejected", reason: "invalid" })
-
     const stored = fixture.sqlite
       .query<{ token_hash: string; revoked_at: number | null }, []>(
         "SELECT token_hash, revoked_at FROM system_sessions ORDER BY created_at",

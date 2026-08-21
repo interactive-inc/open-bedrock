@@ -14,7 +14,7 @@ import {
   ForbiddenError,
   UnauthorizedError,
 } from "@/contexts/company/interface/lib/errors"
-import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form-repository"
+import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form.repository"
 
 // @authorization permission - 権限キーで判定する
 /**

@@ -3,8 +3,8 @@ import type {
   OrganizationChangeSet,
   OrganizationChangeWritePort,
   OrganizationChangeWriteResult,
-} from "@/contexts/company/application/workforce/organization-change"
-import { toOrganizationChangeFingerprint } from "@/contexts/company/infrastructure/workforce/to-organization-change-fingerprint"
+} from "@/contexts/company/domain/workforce/organization-change"
+import { toOrganizationChangeFingerprint } from "@/contexts/company/infrastructure/workforce/to-organization-change-fingerprint.repository"
 import {
   organizationAssignmentPeriodVersions,
   organizationResponsibilityPeriodVersions,

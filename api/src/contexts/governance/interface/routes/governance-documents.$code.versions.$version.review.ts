@@ -1,4 +1,4 @@
-import { GovernancePublication } from "@/contexts/governance/application/governance-publication"
+import { GovernancePublicationService } from "@/contexts/governance/application/governance-publication-service"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
@@ -23,7 +23,7 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
   const version = parseGovernanceVersion(c.req.param("version"))
   if (code === null || version === null) throw new NotFoundError("governance version not found")
   const body = c.req.valid("json")
-  const result = await new GovernancePublication(c).decideReview({
+  const result = await new GovernancePublicationService(c).decideReview({
     session,
     code,
     version,

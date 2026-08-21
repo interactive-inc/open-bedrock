@@ -1,13 +1,12 @@
-import { AuthenticateSystemSession } from "@system/application/auth/authenticate-system-session"
 import { IssueSystemSession } from "@system/application/auth/issue-system-session"
 import { RevokeSystemSession } from "@system/application/auth/revoke-system-session"
 import { RotateSystemSession } from "@system/application/auth/rotate-system-session"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
-import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer"
-import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service"
-import { SystemSessionRepository } from "@system/infrastructure/auth/system-session-repository"
-import type { SystemD1Context } from "@system/infrastructure/configuration/system-context"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
+import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer.repository"
+import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service.repository"
+import { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
+import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type Props = Readonly<{
   context: SystemD1Context
@@ -17,7 +16,6 @@ type Props = Readonly<{
 
 export type SystemSessionApplications = Readonly<{
   issue: IssueSystemSession
-  authenticate: AuthenticateSystemSession
   rotate: RotateSystemSession
   revoke: RevokeSystemSession
 }>
@@ -41,11 +39,6 @@ export function createSystemSessionApplications(props: Props): SystemSessionAppl
       materialService,
       accessTokenIssuer,
       sessionTtlMilliseconds: props.sessionTtlMilliseconds,
-    }),
-    authenticate: new AuthenticateSystemSession({
-      accountRepository,
-      sessionRepository,
-      materialService,
     }),
     rotate: new RotateSystemSession({
       accountRepository,

@@ -2,7 +2,7 @@ import { ThanksReward } from "@/contexts/thanks/domain/thanks-points/thanks-rewa
 import { UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward-repository"
+import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward.repository"
 
 export type Command = {
   name: string

@@ -1,5 +1,5 @@
 import { CreateCompanyCalendarDay } from "@/contexts/company-calendar/application/calendar/create-company-calendar-day"
-import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/calendar/company-calendar-day-repository"
+import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/calendar/company-calendar-day.repository"
 import {
   BadRequestError,
   InternalError,

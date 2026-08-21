@@ -1,5 +1,5 @@
 import { CreatePersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/create-personnel-action-request"
-import { listPersonnelActionRequests } from "@/contexts/company/infrastructure/employee-lifecycle/list-personnel-action-requests"
+import { listPersonnelActionRequests } from "@/contexts/company/infrastructure/employee-lifecycle/list-personnel-action-requests.repository"
 import { resolvePersonnelActionPosition } from "@/contexts/company/interface/utils/resolve-personnel-action-position"
 import { wirePersonnelActionInputSchema } from "@/contexts/company/interface/utils/wire-personnel-action-input"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"

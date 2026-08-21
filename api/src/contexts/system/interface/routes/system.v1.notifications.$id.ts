@@ -2,7 +2,7 @@ import { SystemHttpError } from "@system/interface/http/errors/system-http-error
 /** /system/v1/notifications/:id */
 import { MarkSystemNotificationRead } from "@system/application/notifications/mark-system-notification-read"
 import { zAccountId } from "@system/domain/auth/account-id"
-import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification-repository"
+import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"

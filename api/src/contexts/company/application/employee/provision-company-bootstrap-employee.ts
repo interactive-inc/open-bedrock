@@ -1,7 +1,7 @@
 import type {
   CompanyBootstrapEmployeeRepository,
   CompanyBootstrapEmployeeResult,
-} from "@/contexts/company/application/employee/company-bootstrap-employee-repository"
+} from "@/contexts/company/infrastructure/employee/company-bootstrap-employee-port.repository"
 import type { AccountId } from "@system/domain/auth/account-id"
 import { z } from "zod"
 

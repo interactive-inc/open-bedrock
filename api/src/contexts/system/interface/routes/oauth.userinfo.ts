@@ -2,16 +2,17 @@ import {
   OidcInvalidTokenApplicationError,
   OidcTemporarilyUnavailableApplicationError,
 } from "@/contexts/system/application/auth/errors"
-import { GetOidcUserinfo } from "@/contexts/system/application/auth/get-oidc-userinfo"
+import { OidcScopeValue } from "@system/domain/identity/oidc-scope.value"
+import { findOidcAccessToken } from "@system/infrastructure/identity/find-oidc-access-token.repository"
+import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity.repository"
 import { OidcValue } from "@/contexts/system/domain/identity/oidc.value"
+import { readOidcAccessToken } from "@system/interface/lib/authorization/oidc-access-token"
 import { OidcHttpError } from "@/contexts/system/interface/http/errors/oidc-http-error"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 
 // @authorization public - OIDC access token自体をcredentialとして検証する
 export const GET = systemFactory.createHandlers(async (c) => {
-  const accessToken = OidcValue.accessTokenFromAuthorizationHeader(
-    c.req.header("Authorization") ?? null,
-  )
+  const accessToken = readOidcAccessToken(c.req.header("Authorization") ?? null)
   const issuer = OidcValue.issuer(
     {
       requestUrl: c.req.url,
@@ -29,8 +30,32 @@ export const GET = systemFactory.createHandlers(async (c) => {
     })
   }
 
-  const service = new GetOidcUserinfo(c)
-  const result = await service.execute({ issuer, accessToken })
+  const foundAccessToken = await findOidcAccessToken(c, { issuer, accessToken })
+
+  const result = await (async () => {
+    if (foundAccessToken instanceof Error) {
+      return new OidcTemporarilyUnavailableApplicationError(foundAccessToken)
+    }
+    if (foundAccessToken === null) return new OidcInvalidTokenApplicationError()
+
+    const scope = OidcScopeValue.parse(foundAccessToken.scope)
+    if (scope instanceof Error) return new OidcInvalidTokenApplicationError(scope)
+
+    const identity = await new SystemOidcIdentityRepository(c).findByAccountId(
+      foundAccessToken.accountId,
+    )
+    if (identity instanceof Error) {
+      return new OidcTemporarilyUnavailableApplicationError(identity)
+    }
+    if (identity === null) return new OidcInvalidTokenApplicationError()
+
+    return {
+      sub: identity.subject,
+      ...(scope.includes("email") && identity.email !== null
+        ? { email: identity.email, email_verified: identity.emailVerified }
+        : {}),
+    }
+  })()
 
   if (result instanceof OidcInvalidTokenApplicationError) {
     throw new OidcHttpError({

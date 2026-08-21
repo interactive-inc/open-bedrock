@@ -1,4 +1,4 @@
-import { HealthCheckupRepository } from "@/contexts/health-checkup/infrastructure/health-checkup-repository"
+import { HealthCheckupRepository } from "@/contexts/health-checkup/infrastructure/health-checkup.repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { HealthCheckup } from "@/contexts/health-checkup/domain/health-checkup.entity"

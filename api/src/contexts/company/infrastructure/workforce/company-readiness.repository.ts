@@ -1,7 +1,7 @@
 import type {
   CompanyReadinessPort,
   CompanyReadinessPortResult,
-} from "@/contexts/company/application/workforce/read-company-readiness"
+} from "@/contexts/company/infrastructure/workforce/read-company-readiness.repository"
 
 /** lifecycle migration markerをcanonical Company APIのreadiness portへ接続する。 */
 export class CompanyReadinessRepository implements CompanyReadinessPort {

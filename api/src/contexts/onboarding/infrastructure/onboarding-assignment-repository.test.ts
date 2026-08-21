@@ -1,7 +1,7 @@
 import { OnboardingAssignment } from "@/contexts/onboarding/domain/onboarding-assignment.entity"
 import { OnboardingTemplate } from "@/contexts/onboarding/domain/onboarding-template.entity"
 import { OnboardingTemplateTask } from "@/contexts/onboarding/domain/onboarding-template-task.entity"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment-repository"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 

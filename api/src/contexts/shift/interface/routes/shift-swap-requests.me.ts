@@ -1,4 +1,6 @@
-import { ListMyShiftSwapRequests } from "@/contexts/shift/application/list-my-shift-swap-requests"
+import { UnexpectedError } from "@/lib/errors"
+import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/shift-swap-request.repository"
+
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppMyShiftSwapRequestList } from "@/lib/app-schemas"
@@ -41,11 +43,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const swapRequests = await new ListMyShiftSwapRequests(c).run({
-    requesterEmployeeId: session.employeeId,
-    limit,
-    offset,
-  })
+  const swapRequests = await (async () => {
+    const input = {
+      requesterEmployeeId: session.employeeId,
+      limit,
+      offset,
+    }
+
+    const swapRequestRepository = new ShiftSwapRequestRepository(c)
+
+    const swapRequests = await swapRequestRepository.findByRequesterId({
+      requesterEmployeeId: input.requesterEmployeeId,
+      limit: input.limit,
+      offset: input.offset,
+    })
+
+    if (swapRequests instanceof Error) {
+      return new UnexpectedError("failed to find shift swap requests", { cause: swapRequests })
+    }
+
+    return swapRequests
+  })()
 
   if (swapRequests instanceof ApplicationError) {
     throw toHttpException(swapRequests)

@@ -1,5 +1,5 @@
 import { ShiftAssignment } from "@/contexts/shift/domain/shift-assignment.entity"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment-repository"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 

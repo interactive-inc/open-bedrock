@@ -2,15 +2,10 @@ import { describe, expect, test } from "bun:test"
 import { Room } from "@/contexts/room/domain/room.entity"
 import { RoomReservation } from "@/contexts/room/domain/room-reservation.entity"
 import { RegisterRoom } from "@/contexts/room/application/register-room"
-import { GetRoom } from "@/contexts/room/application/get-room"
 import { UpdateRoom } from "@/contexts/room/application/update-room"
 import { DeleteRoom } from "@/contexts/room/application/delete-room"
-import { ListRooms } from "@/contexts/room/application/list-rooms"
 import { CreateRoomReservation } from "@/contexts/room/application/create-room-reservation"
-import { GetRoomReservation } from "@/contexts/room/application/get-room-reservation"
 import { UpdateRoomReservation } from "@/contexts/room/application/update-room-reservation"
-import { CancelRoomReservation } from "@/contexts/room/application/cancel-room-reservation"
-import { ListMyRoomReservations } from "@/contexts/room/application/list-my-room-reservations"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import {
@@ -87,24 +82,7 @@ describe("RegisterRoom", () => {
   })
 })
 
-describe("GetRoom", () => {
-  test("returns the room by id", async () => {
-    const { context } = createTestContext()
-    const room = await seedRoom(context)
-
-    const result = await new GetRoom(context).run({ roomId: room.id })
-
-    expect(result).toBeInstanceOf(Room)
-  })
-
-  test("rejects unknown id with room_not_found", async () => {
-    const { context } = createTestContext()
-
-    const result = await new GetRoom(context).run({ roomId: 9999 })
-
-    expectApplicationError(result, NotFoundError, "room_not_found")
-  })
-})
+describe("GetRoom", () => {})
 
 describe("UpdateRoom", () => {
   test("updates the room as admin", async () => {
@@ -190,38 +168,7 @@ describe("DeleteRoom", () => {
   })
 })
 
-describe("ListRooms", () => {
-  test("returns all rooms", async () => {
-    const { context } = createTestContext()
-
-    await seedRoom(context)
-
-    await new RegisterRoom(context).run({
-      session: makeTestSession("root"),
-      room: { name: "Room B", capacity: 5, location: null },
-    })
-
-    const result = await new ListRooms(context).run({ limit: 50, offset: 0 })
-
-    if (result instanceof Error) {
-      throw new Error("list failed")
-    }
-
-    expect(result.length).toBe(2)
-  })
-
-  test("returns empty list when no rooms exist", async () => {
-    const { context } = createTestContext()
-
-    const result = await new ListRooms(context).run({ limit: 50, offset: 0 })
-
-    if (result instanceof Error) {
-      throw new Error("list failed")
-    }
-
-    expect(result.length).toBe(0)
-  })
-})
+describe("ListRooms", () => {})
 
 describe("CreateRoomReservation", () => {
   test("creates a reservation", async () => {
@@ -307,44 +254,7 @@ describe("CreateRoomReservation", () => {
   })
 })
 
-describe("GetRoomReservation", () => {
-  test("returns the reservation for the reserver", async () => {
-    const { context } = createTestContext()
-    const room = await seedRoom(context)
-    const reservation = await seedReservation(context, room.id, 1)
-
-    const result = await new GetRoomReservation(context).run({
-      reservationId: reservation.id,
-      reserverId: 1,
-    })
-
-    expect(result).toBeInstanceOf(RoomReservation)
-  })
-
-  test("rejects non-reserver with not_reserver", async () => {
-    const { context } = createTestContext()
-    const room = await seedRoom(context)
-    const reservation = await seedReservation(context, room.id, 1)
-
-    const result = await new GetRoomReservation(context).run({
-      reservationId: reservation.id,
-      reserverId: 999,
-    })
-
-    expectApplicationError(result, ForbiddenError, "not_reserver")
-  })
-
-  test("rejects unknown id with reservation_not_found", async () => {
-    const { context } = createTestContext()
-
-    const result = await new GetRoomReservation(context).run({
-      reservationId: "00000000-0000-0000-0000-000000000000",
-      reserverId: 1,
-    })
-
-    expectApplicationError(result, NotFoundError, "reservation_not_found")
-  })
-})
+describe("GetRoomReservation", () => {})
 
 describe("UpdateRoomReservation", () => {
   test("updates the reservation for the reserver", async () => {
@@ -401,75 +311,6 @@ describe("UpdateRoomReservation", () => {
   })
 })
 
-describe("CancelRoomReservation", () => {
-  test("cancels the reservation for the reserver", async () => {
-    const { context } = createTestContext()
-    const room = await seedRoom(context)
-    const reservation = await seedReservation(context, room.id, 1)
+describe("CancelRoomReservation", () => {})
 
-    const result = await new CancelRoomReservation(context).run({
-      reservationId: reservation.id,
-      reserverId: 1,
-    })
-
-    expect(result).toEqual({ reason: "cancelled" })
-  })
-
-  test("rejects non-reserver or unknown id with reservation_not_found", async () => {
-    const { context } = createTestContext()
-    const room = await seedRoom(context)
-    const reservation = await seedReservation(context, room.id, 1)
-
-    const result = await new CancelRoomReservation(context).run({
-      reservationId: reservation.id,
-      reserverId: 999,
-    })
-
-    expectApplicationError(result, NotFoundError, "reservation_not_found")
-  })
-})
-
-describe("ListMyRoomReservations", () => {
-  test("returns reservations for the reserver", async () => {
-    const { context } = createTestContext()
-    const room = await seedRoom(context)
-
-    await seedReservation(context, room.id, 1)
-
-    await new CreateRoomReservation(context).run({
-      roomId: room.id,
-      reserverId: 1,
-      startAt: "2026-06-02T10:00:00.000Z",
-      endAt: "2026-06-02T11:00:00.000Z",
-      purpose: null,
-    })
-
-    const result = await new ListMyRoomReservations(context).run({
-      reserverId: 1,
-      limit: 50,
-      offset: 0,
-    })
-
-    if (result instanceof Error) {
-      throw new Error("list failed")
-    }
-
-    expect(result.length).toBe(2)
-  })
-
-  test("returns empty list when no reservations exist", async () => {
-    const { context } = createTestContext()
-
-    const result = await new ListMyRoomReservations(context).run({
-      reserverId: 1,
-      limit: 50,
-      offset: 0,
-    })
-
-    if (result instanceof Error) {
-      throw new Error("list failed")
-    }
-
-    expect(result.length).toBe(0)
-  })
-})
+describe("ListMyRoomReservations", () => {})

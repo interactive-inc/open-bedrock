@@ -3,7 +3,7 @@ import { Commendation } from "@/contexts/commendation/domain/commendation.entity
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CommendationRepository } from "@/contexts/commendation/infrastructure/commendation-repository"
+import { CommendationRepository } from "@/contexts/commendation/infrastructure/commendation.repository"
 
 export type Command = {
   session: Session

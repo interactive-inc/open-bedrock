@@ -1,4 +1,6 @@
-import { ListMyRedemptions } from "@/contexts/thanks/application/thanks-points/list-my-redemptions"
+import { UnexpectedError } from "@/lib/errors"
+import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption.repository"
+
 import type { ThanksRedemption } from "@/contexts/thanks/domain/thanks-points/thanks-redemption.entity"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksRedemptionList } from "@/lib/app-schemas"
@@ -38,11 +40,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const redemptions = await new ListMyRedemptions(c).run({
-    employeeId: session.employeeId,
-    limit,
-    offset,
-  })
+  const redemptions = await (async () => {
+    const props = {
+      employeeId: session.employeeId,
+      limit,
+      offset,
+    }
+
+    const redemptionRepository = new ThanksRedemptionRepository(c)
+
+    const redemptions = await redemptionRepository.findByEmployee({
+      employeeId: props.employeeId,
+      limit: props.limit,
+      offset: props.offset,
+    })
+
+    if (redemptions instanceof Error) {
+      return new UnexpectedError("failed to find redemptions", { cause: redemptions })
+    }
+
+    return redemptions
+  })()
 
   if (redemptions instanceof ApplicationError) {
     throw toHttpException(redemptions)

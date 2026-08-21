@@ -1,4 +1,4 @@
-import type { SystemD1Context } from "@system/infrastructure/configuration/system-context"
+import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 import { wrapSystemD1TestDatabase } from "@system/infrastructure/auth/wrap-system-d1-test-database.test-support"
 import { Database } from "bun:sqlite"
 

@@ -1,5 +1,5 @@
 import { Goal } from "@/contexts/performance-review/domain/goal/goal.entity"
-import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal-repository"
+import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 

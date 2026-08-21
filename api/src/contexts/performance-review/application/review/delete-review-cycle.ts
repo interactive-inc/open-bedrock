@@ -4,7 +4,7 @@ import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-wh
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-repository"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
 
 export type Input = {
   session: Session

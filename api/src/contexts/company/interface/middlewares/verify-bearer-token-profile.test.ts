@@ -2,8 +2,8 @@ import { ACCESS_TOKEN_TYPE } from "@/contexts/system/domain/auth/access-token-cl
 import {
   SYSTEM_ACCESS_TOKEN_AUDIENCE,
   SYSTEM_ACCESS_TOKEN_ISSUER,
-} from "@system/infrastructure/auth/system-access-token-profile"
-import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer"
+} from "@system/infrastructure/auth/system-access-token-profile.repository"
+import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"

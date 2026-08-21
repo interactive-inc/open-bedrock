@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { PasswordResetEmailGateway } from "@/contexts/system/infrastructure/auth/password-reset-email.gateway"
+import { PasswordResetEmailGateway } from "@/contexts/system/infrastructure/auth/password-reset-email.gateway.repository"
 
 describe("buildPasswordResetEmail", () => {
   test("再設定リンクに origin とトークンを埋め込む", () => {

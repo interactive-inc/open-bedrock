@@ -1,6 +1,8 @@
-import { GetSurveyResponse } from "@/contexts/survey/application/get-survey-response"
+import { ConflictError } from "@/lib/errors"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+
 import { UpdateSurveyResponse } from "@/contexts/survey/application/update-survey-response"
-import { WithdrawSurveyResponse } from "@/contexts/survey/application/withdraw-survey-response"
 import type { SurveyResponse } from "@/contexts/survey/domain/survey-response.entity"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { jsonPayloadSchema } from "@/contexts/company/interface/utils/json-payload-schema"
@@ -46,10 +48,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new BadRequestError("invalid response id")
   }
 
-  const response = await new GetSurveyResponse(c).run({
-    responseId,
-    respondentId: viewer.employeeId,
-  })
+  const response = await (async () => {
+    const command = {
+      responseId,
+      respondentId: viewer.employeeId,
+    }
+
+    const surveyRepository = new SurveyRepository(c)
+
+    const response = await surveyRepository.findResponseById(command.responseId)
+
+    if (response instanceof Error) {
+      return new UnexpectedError("failed to find survey response", { cause: response })
+    }
+
+    if (response === null) {
+      return new NotFoundError("survey response not found", "response_not_found")
+    }
+
+    if (response.respondentId !== command.respondentId) {
+      return new ForbiddenError("not the respondent", "not_respondent")
+    }
+
+    return response
+  })()
 
   if (response instanceof ApplicationError) {
     throw toHttpException(response)
@@ -108,10 +130,54 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new BadRequestError("invalid response id")
   }
 
-  const result = await new WithdrawSurveyResponse(c).run({
-    responseId,
-    respondentId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      responseId,
+      respondentId: viewer.employeeId,
+    }
+
+    const surveyRepository = new SurveyRepository(c)
+
+    const current = await surveyRepository.findResponseById(command.responseId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find survey response", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("survey response not found", "response_not_found")
+    }
+
+    if (current.respondentId !== command.respondentId) {
+      return new ForbiddenError("not the respondent", "not_respondent")
+    }
+
+    const survey = await surveyRepository.findById(current.surveyId)
+
+    if (survey instanceof Error) {
+      return new UnexpectedError("failed to find survey", { cause: survey })
+    }
+
+    if (survey === null || survey.isOpen() === false) {
+      return new ConflictError("survey is not open", "survey_not_open")
+    }
+
+    const deleted = await surveyRepository.deleteResponse(command.responseId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete survey response", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new NotFoundError("survey response not found", "response_not_found")
+    }
+
+    if (deleted !== true && "reason" in deleted) {
+      return new ConflictError("survey is not open", "survey_not_open")
+    }
+
+    return { reason: "withdrawn" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

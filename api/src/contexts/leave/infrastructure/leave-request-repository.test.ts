@@ -1,5 +1,5 @@
 import { LeaveRequest } from "@/contexts/leave/domain/leave-request.entity"
-import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request-repository"
+import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 

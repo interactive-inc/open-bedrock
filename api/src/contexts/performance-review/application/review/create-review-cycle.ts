@@ -3,12 +3,12 @@ import { ReviewCycle } from "@/contexts/performance-review/domain/review/review-
 import type { Context } from "@/env"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-repository"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
 import {
   defaultReviewCyclePolicy,
   type ReviewCyclePolicy,
 } from "@/contexts/performance-review/domain/review/review-cycle-policy"
-import { ReviewCyclePolicyRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-policy-repository"
+import { ReviewCyclePolicyRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-policy.repository"
 
 export type Input = {
   session: Session

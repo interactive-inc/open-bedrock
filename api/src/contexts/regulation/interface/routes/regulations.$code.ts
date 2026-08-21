@@ -1,5 +1,5 @@
 import { factory } from "@/contexts/company/interface/utils/factory"
-import { RegulationRepository } from "@/contexts/regulation/infrastructure/regulation-repository"
+import { RegulationRepository } from "@/contexts/regulation/infrastructure/regulation.repository"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import {
   InternalError,

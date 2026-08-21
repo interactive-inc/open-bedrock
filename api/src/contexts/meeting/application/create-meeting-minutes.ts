@@ -2,8 +2,8 @@ import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { MeetingMinutes } from "@/contexts/meeting/domain/meeting-minutes.entity"
 import type { Context } from "@/env"
-import { MeetingMinutesRepository } from "@/contexts/meeting/infrastructure/meeting-minutes-repository"
-import { MeetingRepository } from "@/contexts/meeting/infrastructure/meeting-repository"
+import { MeetingMinutesRepository } from "@/contexts/meeting/infrastructure/meeting-minutes.repository"
+import { MeetingRepository } from "@/contexts/meeting/infrastructure/meeting.repository"
 
 export type Command = {
   meetingCode: string

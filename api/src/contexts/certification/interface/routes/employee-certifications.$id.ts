@@ -1,4 +1,6 @@
-import { DeleteEmployeeCertification } from "@/contexts/certification/application/delete-employee-certification"
+import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/employee-certification.repository"
+import { NotFoundError, UnexpectedError } from "@/lib/errors"
+
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
@@ -27,7 +29,26 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new BadRequestError("invalid parameter")
   }
 
-  const deleted = await new DeleteEmployeeCertification(c).run({ id })
+  const deleted = await (async () => {
+    const props = { id }
+
+    const repository = new EmployeeCertificationRepository(c)
+
+    const deleted = await repository.delete(props.id)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete employee_certification", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new NotFoundError(
+        "employee certification not found",
+        "employee_certification_not_found",
+      )
+    }
+
+    return true
+  })()
 
   if (deleted instanceof Error) {
     throw toHttpException(deleted)

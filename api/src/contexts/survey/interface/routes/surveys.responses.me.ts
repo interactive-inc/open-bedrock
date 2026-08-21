@@ -1,4 +1,6 @@
-import { ListMySurveyResponses } from "@/contexts/survey/application/list-my-survey-responses"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"
+import { UnexpectedError } from "@/lib/errors"
+
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -37,11 +39,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const responses = await new ListMySurveyResponses(c).run({
-    respondentId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const responses = await (async () => {
+    const command = {
+      respondentId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const surveyRepository = new SurveyRepository(c)
+
+    const responses = await surveyRepository.findResponsesByRespondentId(
+      command.respondentId,
+      command.limit,
+      command.offset,
+    )
+
+    if (responses instanceof Error) {
+      return new UnexpectedError("failed to find survey responses", { cause: responses })
+    }
+
+    return responses
+  })()
 
   if (responses instanceof ApplicationError) {
     throw toHttpException(responses)

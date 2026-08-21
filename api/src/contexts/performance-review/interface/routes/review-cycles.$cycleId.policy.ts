@@ -1,5 +1,5 @@
 import { zReviewCyclePolicy } from "@/contexts/performance-review/domain/review/review-cycle-policy"
-import { ReviewCyclePolicyRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-policy-repository"
+import { ReviewCyclePolicyRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-policy.repository"
 import {
   ConflictError,
   ForbiddenError,

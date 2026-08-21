@@ -1,5 +1,5 @@
-import { resolveGovernanceOrgRole } from "@/contexts/governance/application/resolve-governance-org-role"
-import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance-repository"
+import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/resolve-governance-org-role.repository"
+import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   ForbiddenError,

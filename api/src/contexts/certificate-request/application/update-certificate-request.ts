@@ -2,7 +2,7 @@ import type { CertificateRequest } from "@/contexts/certificate-request/domain/c
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/certificate-request-repository"
+import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/certificate-request.repository"
 
 export type Command = {
   certificateRequestId: string

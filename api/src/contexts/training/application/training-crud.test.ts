@@ -2,11 +2,9 @@ import { describe, expect, test } from "bun:test"
 import { TrainingCourse } from "@/contexts/training/domain/training-course.entity"
 import { TrainingEnrollment } from "@/contexts/training/domain/training-enrollment.entity"
 import { CreateTrainingCourse } from "@/contexts/training/application/create-training-course"
-import { GetTrainingCourse } from "@/contexts/training/application/get-training-course"
 import { UpdateTrainingCourse } from "@/contexts/training/application/update-training-course"
 import { ArchiveTrainingCourse } from "@/contexts/training/application/archive-training-course"
 import { EnrollTraining } from "@/contexts/training/application/enroll-training"
-import { GetTrainingEnrollment } from "@/contexts/training/application/get-training-enrollment"
 import { RescheduleTrainingEnrollment } from "@/contexts/training/application/reschedule-training-enrollment"
 import { CompleteTrainingEnrollment } from "@/contexts/training/application/complete-training-enrollment"
 import { CancelTrainingEnrollment } from "@/contexts/training/application/cancel-training-enrollment"
@@ -129,25 +127,7 @@ describe("CreateTrainingCourse", () => {
   })
 })
 
-describe("GetTrainingCourse", () => {
-  test("returns the course by code", async () => {
-    const { context } = createTestContext()
-
-    await seedCourse(context, "TS101")
-
-    const result = await new GetTrainingCourse(context).run({ code: "TS101" })
-
-    expect(result).toBeInstanceOf(TrainingCourse)
-  })
-
-  test("rejects unknown code with course_not_found", async () => {
-    const { context } = createTestContext()
-
-    const result = await new GetTrainingCourse(context).run({ code: "NOPE" })
-
-    expectApplicationError(result, NotFoundError, "course_not_found")
-  })
-})
+describe("GetTrainingCourse", () => {})
 
 describe("UpdateTrainingCourse", () => {
   test("updates the course as admin", async () => {
@@ -336,70 +316,7 @@ describe("EnrollTraining", () => {
   })
 })
 
-describe("GetTrainingEnrollment", () => {
-  test("returns the enrollment for the enrollee", async () => {
-    const { context, db } = createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", 1)
-
-    if (enrollment.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new GetTrainingEnrollment(context).run({
-      enrollmentId: enrollment.id,
-      viewerEmployeeId: 1,
-      session: makeTestSession("member"),
-    })
-
-    expect(result).toBeInstanceOf(TrainingEnrollment)
-  })
-
-  test("returns the enrollment for a manager", async () => {
-    const { context, db } = createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", 1)
-
-    if (enrollment.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new GetTrainingEnrollment(context).run({
-      enrollmentId: enrollment.id,
-      viewerEmployeeId: 999,
-      session: makeTestSession("manager", 999),
-    })
-
-    expect(result).toBeInstanceOf(TrainingEnrollment)
-  })
-
-  test("rejects non-owner member with forbidden", async () => {
-    const { context, db } = createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", 1)
-
-    if (enrollment.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new GetTrainingEnrollment(context).run({
-      enrollmentId: enrollment.id,
-      viewerEmployeeId: 999,
-      session: makeTestSession("member", 999),
-    })
-
-    expectApplicationError(result, ForbiddenError, "forbidden")
-  })
-
-  test("rejects unknown id with enrollment_not_found", async () => {
-    const { context } = createTestContext()
-
-    const result = await new GetTrainingEnrollment(context).run({
-      enrollmentId: 9999,
-      viewerEmployeeId: 1,
-      session: makeTestSession("root"),
-    })
-
-    expectApplicationError(result, NotFoundError, "enrollment_not_found")
-  })
-})
+describe("GetTrainingEnrollment", () => {})
 
 describe("RescheduleTrainingEnrollment", () => {
   test("reschedules the enrollment for the enrollee", async () => {

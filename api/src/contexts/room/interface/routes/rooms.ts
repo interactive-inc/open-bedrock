@@ -1,4 +1,6 @@
-import { ListRooms } from "@/contexts/room/application/list-rooms"
+import { UnexpectedError } from "@/lib/errors"
+import { RoomRepository } from "@/contexts/room/infrastructure/room.repository"
+
 import { RegisterRoom } from "@/contexts/room/application/register-room"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
@@ -40,7 +42,19 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const result = await new ListRooms(c).run({ limit, offset })
+  const result = await (async () => {
+    const props = { limit, offset }
+
+    const roomRepository = new RoomRepository(c)
+
+    const rooms = await roomRepository.findAll({ limit: props.limit, offset: props.offset })
+
+    if (rooms instanceof Error) {
+      return new UnexpectedError("failed to find rooms", { cause: rooms })
+    }
+
+    return rooms
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

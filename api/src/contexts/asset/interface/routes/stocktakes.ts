@@ -1,7 +1,7 @@
 import { StartStocktake } from "@/contexts/asset/application/stocktake/start-stocktake"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { StocktakeRepository } from "@/contexts/asset/infrastructure/stocktake/stocktake-repository"
+import { StocktakeRepository } from "@/contexts/asset/infrastructure/stocktake/stocktake.repository"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

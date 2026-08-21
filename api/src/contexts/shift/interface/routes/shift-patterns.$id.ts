@@ -1,5 +1,6 @@
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
 import { DeleteShiftPattern } from "@/contexts/shift/application/delete-shift-pattern"
-import { GetShiftPattern } from "@/contexts/shift/application/get-shift-pattern"
 import { UpdateShiftPattern } from "@/contexts/shift/application/update-shift-pattern"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
@@ -36,10 +37,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const pattern = await new GetShiftPattern(c).run({
-    session: session,
-    patternId,
-  })
+  const pattern = await (async () => {
+    const input = {
+      session: session,
+      patternId,
+    }
+
+    if (input.session.hasPermission("shift:manage") === false) {
+      return new ForbiddenError("cannot manage shift", "forbidden")
+    }
+
+    const patternRepository = new ShiftPatternRepository(c)
+
+    const pattern = await patternRepository.findById(input.patternId)
+
+    if (pattern instanceof Error) {
+      return new UnexpectedError("failed to find shift pattern", { cause: pattern })
+    }
+
+    if (pattern === null) {
+      return new NotFoundError("shift pattern not found", "pattern_not_found")
+    }
+
+    return pattern
+  })()
 
   if (pattern instanceof ApplicationError) {
     throw toHttpException(pattern)

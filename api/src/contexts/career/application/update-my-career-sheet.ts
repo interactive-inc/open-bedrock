@@ -2,7 +2,7 @@ import { CareerSheet } from "@/contexts/career/domain/career-sheet.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CareerSheetRepository } from "@/contexts/career/infrastructure/career-sheet-repository"
+import { CareerSheetRepository } from "@/contexts/career/infrastructure/career-sheet.repository"
 
 export type Command = {
   employeeId: number

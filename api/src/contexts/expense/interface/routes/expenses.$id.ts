@@ -1,6 +1,16 @@
-import { DeleteExpense } from "@/contexts/expense/application/delete-expense"
+import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
+import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense.repository"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
+import {
+  ConflictError,
+  ForbiddenError as ApplicationForbiddenError,
+  NotFoundError as ApplicationNotFoundError,
+  UnexpectedError,
+} from "@/lib/errors"
+
 import { UpdateExpense } from "@/contexts/expense/application/update-expense"
-import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
+import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
 import type { Expense } from "@/contexts/expense/domain/expense.entity"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -10,7 +20,6 @@ import { toHttpException } from "@/contexts/company/interface/lib/to-http-except
 import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { DescribeAttachments } from "@system/application/attachments/describe-attachments"
 import { expenseAttachments, expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { eq } from "drizzle-orm"
 import {
@@ -92,7 +101,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(expenseAttachments)
     .where(eq(expenseAttachments.expenseId, expenseId))
 
-  const attachments = await new DescribeAttachments(c).run(links.map((link) => link.attachmentId))
+  const attachments = await (async () => {
+    const attachmentIds = links.map((link) => link.attachmentId)
+
+    const rows = await new AttachmentRepository(c).findManyByIds(attachmentIds)
+
+    if (rows instanceof Error) return rows
+
+    return rows.map((row) => ({
+      id: row.id,
+      fileName: row.fileName,
+      contentType: row.contentType,
+      byteSize: row.byteSize,
+    }))
+  })()
 
   if (attachments instanceof Error) {
     throw new InternalError("failed to read attachments")
@@ -173,10 +195,57 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const expenseId = validateIntParam(c.req.param("id"), "expense")
 
-  const result = await new DeleteExpense(c).run({
-    expenseId,
-    employeeId: session.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      expenseId,
+      employeeId: session.employeeId,
+    }
+
+    const repository = new ExpenseRepository(c)
+
+    const current = await repository.findById(command.expenseId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find expense", { cause: current })
+    }
+
+    if (current === null) {
+      return new ApplicationNotFoundError("expense not found", "expense_not_found")
+    }
+
+    if (current.employeeId !== command.employeeId) {
+      return new ApplicationForbiddenError("not the owner of expense", "not_owner")
+    }
+
+    if (current.status !== "pending") {
+      return new ConflictError("expense is not deletable", "not_deletable")
+    }
+
+    // expense_approvals と expenses を D1 batch でアトミックに削除する。
+    // expenses を status='pending' 付きで先に削除し、承認処理との TOCTOU 競合を防ぐ。
+    // 0 行削除（承認済みへ遷移済み）は abortWhenPreviousStatementChangedNoRows で
+    // 後続の expense_approvals 削除ごとロールバックし、孤児化を排除する。
+    try {
+      const db = c.env.DB
+      await db.batch([
+        db
+          .prepare("DELETE FROM expenses WHERE id = ?1 AND status = 'pending'")
+          .bind(command.expenseId),
+        abortWhenPreviousStatementChangedNoRows(db),
+        db.prepare("DELETE FROM expense_approvals WHERE expense_id = ?1").bind(command.expenseId),
+      ])
+    } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return new ConflictError("expense is not deletable", "not_deletable")
+      }
+
+      return error instanceof Error
+        ? new UnexpectedError("failed to delete expense", { cause: error })
+        : new UnexpectedError("failed to delete expense")
+    }
+
+    return { reason: "deleted" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

@@ -1,13 +1,15 @@
 import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
-/** /system/v1/sessions */
-import { AuthenticateSystemPassword } from "@system/application/auth/authenticate-system-password"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
-import { decoySystemPasswordHash } from "@system/infrastructure/auth/decoy-system-password-hash"
-import { LoginRateLimitService } from "@system/infrastructure/auth/login-rate-limit.service"
-import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service"
-import { SystemPasswordCredentialRepository } from "@system/infrastructure/auth/system-password-credential-repository"
-import { verifySystemPassword } from "@system/infrastructure/auth/verify-system-password"
+import { resolveAccountSession } from "@system/domain/auth/resolve-account-session"
+import { decoySystemPasswordHash } from "@system/infrastructure/auth/decoy-system-password-hash.repository"
+import { LoginRateLimitService } from "@system/infrastructure/auth/login-rate-limit.service.repository"
+import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
+import { SystemPasswordCredentialRepository } from "@system/infrastructure/auth/system-password-credential.repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
+import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service.repository"
+import { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
+import { verifySystemPassword } from "@system/infrastructure/auth/verify-system-password.repository"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { zValidator } from "@hono/zod-validator"
 import { drizzle } from "drizzle-orm/d1"
@@ -59,12 +61,9 @@ export const GET = factory.createHandlers(
       })
     }
 
-    const applications = createSystemSessionApplications({
-      context: { env: { DB: database } },
-      jwtSecret: context.env.JWT_SECRET ?? "",
-      sessionTtlMilliseconds,
-    })
-    if (applications instanceof Error) {
+    const materialService = new SystemSessionMaterialService()
+    const tokenHash = await materialService.hashRawToken(token)
+    if (tokenHash instanceof Error) {
       throw new SystemHttpError({
         status: 503,
         code: "session_unavailable",
@@ -72,15 +71,37 @@ export const GET = factory.createHandlers(
       })
     }
 
-    const authentication = await applications.authenticate.execute({ rawToken: token, now })
-    if (authentication instanceof Error) {
+    const session = await new SystemSessionRepository({
+      context: { env: { DB: database } },
+    }).findByTokenHash(tokenHash)
+    if (session instanceof Error) {
       throw new SystemHttpError({
         status: 503,
         code: "session_unavailable",
         detail: "session service unavailable",
       })
     }
-    if (authentication.kind === "rejected") {
+    if (session === null || session.getUseRejection(now) !== null) {
+      throw new SystemHttpError({
+        status: 401,
+        code: "invalid_session",
+        detail: "invalid session",
+      })
+    }
+
+    const accountSession = await resolveAccountSession({
+      accountRepository: new SystemAccountRepository({ database }),
+      accountId: session.accountId,
+      sessionTokenVersion: session.tokenVersion,
+    })
+    if (accountSession instanceof Error) {
+      throw new SystemHttpError({
+        status: 503,
+        code: "session_unavailable",
+        detail: "session service unavailable",
+      })
+    }
+    if (accountSession.kind === "rejected") {
       throw new SystemHttpError({
         status: 401,
         code: "invalid_session",
@@ -90,9 +111,9 @@ export const GET = factory.createHandlers(
 
     return context.json(
       {
-        account_id: authentication.accountId,
-        session_id: authentication.sessionId,
-        expires_at: authentication.expiresAt.toISOString(),
+        account_id: accountSession.account.id,
+        session_id: session.id,
+        expires_at: session.expiresAt.toISOString(),
       },
       200,
     )
@@ -157,14 +178,47 @@ export const POST = factory.createHandlers(
       })
     }
 
-    const authentication = await new AuthenticateSystemPassword({
-      credentialRepository: new SystemPasswordCredentialRepository({ database }),
-      passwordMaterialService: {
+    const passwordPepper = pepper
+    const authentication = await (async () => {
+      const command = { subject: body.subject, password: body.password, now }
+
+      const credentialRepository = new SystemPasswordCredentialRepository({ database })
+      const passwordMaterialService = {
         dummyHash: decoySystemPasswordHash,
-        needsRehash: (passwordHash) => PasswordHashService.needsRehash(passwordHash),
-        verify: (password, passwordHash) => verifySystemPassword(password, passwordHash, pepper),
-      },
-    }).execute({ subject: body.subject, password: body.password, now })
+        needsRehash: (passwordHash: string) => PasswordHashService.needsRehash(passwordHash),
+        verify: (password: string, passwordHash: string) =>
+          verifySystemPassword(password, passwordHash, passwordPepper),
+      }
+
+      if (!Number.isSafeInteger(command.now.getTime())) {
+        return new Error("System password authentication time is invalid")
+      }
+
+      const credential = await credentialRepository.findBySubject(command.subject)
+      if (credential instanceof Error) return credential
+
+      const verified = await passwordMaterialService.verify(
+        command.password,
+        credential?.passwordHash ?? passwordMaterialService.dummyHash,
+      )
+      if (verified instanceof Error) return verified
+      if (
+        credential === null ||
+        !verified ||
+        credential.account.status !== "active" ||
+        !credential.identity.wasActiveAt(command.now)
+      ) {
+        return Object.freeze({ kind: "rejected" as const, reason: "invalid_credentials" as const })
+      }
+
+      return Object.freeze({
+        kind: "authenticated" as const,
+        accountId: credential.account.id,
+        identityId: credential.identity.id,
+        requiresPasswordRehash: passwordMaterialService.needsRehash(credential.passwordHash),
+        tokenVersion: credential.account.tokenVersion,
+      })
+    })()
     if (authentication instanceof Error) {
       throw new SystemHttpError({
         status: 503,

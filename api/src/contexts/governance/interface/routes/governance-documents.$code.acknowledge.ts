@@ -1,4 +1,4 @@
-import { GovernancePublication } from "@/contexts/governance/application/governance-publication"
+import { GovernancePublicationService } from "@/contexts/governance/application/governance-publication-service"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError, NotFoundError } from "@/contexts/company/interface/lib/errors"
@@ -12,7 +12,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   if (session === null) throw new UnauthorizedError()
   const code = parseGovernanceCode(c.req.param("code"))
   if (code === null) throw new NotFoundError("governance document not found")
-  const result = await new GovernancePublication(c).acknowledge({ session, code })
+  const result = await new GovernancePublicationService(c).acknowledge({ session, code })
   if (result instanceof ApplicationError) throw toHttpException(result)
   if (result instanceof Error) throw result
   return c.json(result, 200)

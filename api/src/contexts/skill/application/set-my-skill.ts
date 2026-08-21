@@ -3,8 +3,8 @@ import type { Skill } from "@/contexts/skill/domain/skill.entity"
 import type { Context } from "@/env"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/employee-skill-repository"
-import { SkillRepository } from "@/contexts/skill/infrastructure/skill-repository"
+import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/employee-skill.repository"
+import { SkillRepository } from "@/contexts/skill/infrastructure/skill.repository"
 
 export type Command = {
   employeeId: number

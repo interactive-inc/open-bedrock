@@ -4,7 +4,7 @@ import {
   publishSystemProcedure,
   systemProcedureRepository,
 } from "@/api/http/application-templates/lib/system-procedure-route"
-import { findUnknownApproverRoles } from "@/contexts/company/application/organization/validate-procedure-policy-references"
+import { findUnknownApproverRoles } from "@/contexts/company/domain/organization/validate-procedure-policy-references"
 import {
   ForbiddenError,
   InternalError,

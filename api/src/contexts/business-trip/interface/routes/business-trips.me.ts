@@ -1,4 +1,6 @@
-import { ListMyBusinessTrips } from "@/contexts/business-trip/application/list-my-business-trips"
+import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/business-trip.repository"
+import { UnexpectedError } from "@/lib/errors"
+
 import { ApplicationError } from "@/lib/errors"
 import { zAppBusinessTripList } from "@/lib/app-schemas"
 import { factory } from "@/contexts/company/interface/utils/factory"
@@ -37,11 +39,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const businessTripRows = await new ListMyBusinessTrips(c).run({
-    travelerId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const businessTripRows = await (async () => {
+    const command = {
+      travelerId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const businessTripRepository = new BusinessTripRepository(c)
+
+    const businessTrips = await businessTripRepository.findByTravelerId({
+      travelerId: command.travelerId,
+      limit: command.limit,
+      offset: command.offset,
+    })
+
+    if (businessTrips instanceof Error) {
+      return new UnexpectedError("failed to find business trips", { cause: businessTrips })
+    }
+
+    return businessTrips
+  })()
 
   if (businessTripRows instanceof ApplicationError) {
     throw toHttpException(businessTripRows)

@@ -10,7 +10,7 @@ import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
-import { countPendingSystemCases } from "@system/infrastructure/workflow/count-pending-system-cases"
+import { countPendingSystemCases } from "@system/infrastructure/workflow/count-pending-system-cases.repository"
 import { and, count, eq, gte, like, sql } from "drizzle-orm"
 
 /**

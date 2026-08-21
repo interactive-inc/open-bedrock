@@ -1,6 +1,6 @@
 import { AttendanceRecord } from "@/contexts/attendance/domain/attendance-record.entity"
 import type { Context } from "@/env"
-import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/attendance-record-repository"
+import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/attendance-record.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

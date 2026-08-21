@@ -3,7 +3,7 @@ import { CertificateRequest } from "@/contexts/certificate-request/domain/certif
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/certificate-request-repository"
+import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/certificate-request.repository"
 
 export type Action = "issue" | "reject"
 

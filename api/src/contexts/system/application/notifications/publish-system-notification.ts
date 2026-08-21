@@ -1,4 +1,4 @@
-import type { NotificationRepository } from "@system/application/notifications/notification-repository"
+import type { NotificationRepository } from "@system/infrastructure/notifications/notification-port.repository"
 import { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
 import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
 

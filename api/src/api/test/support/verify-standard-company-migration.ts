@@ -1,6 +1,6 @@
 import { verifyCompanyMigration } from "@/api/test/support/verify-company-migration"
-import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments"
-import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments"
+import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments.repository"
+import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments.repository"
 
 /** 標準Company seedの組織定義を補い、本番と同じmigrationを完了する。 */
 export async function verifyStandardCompanyMigration(db: D1Database): Promise<void> {

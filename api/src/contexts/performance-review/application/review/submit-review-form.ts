@@ -1,10 +1,10 @@
-import { canSubmitForm } from "@/contexts/performance-review/application/review/can-submit-form"
+import { canSubmitForm } from "@/contexts/performance-review/domain/review/can-submit-form"
 import type { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-repository"
-import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form-repository"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
+import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form.repository"
 
 export type Input = {
   viewerEmployeeId: number

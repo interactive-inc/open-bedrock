@@ -1,6 +1,6 @@
-import { McpGrantTokenService } from "@/contexts/system/infrastructure/auth/mcp-grant-token.service"
+import { McpGrantTokenService } from "@/contexts/system/infrastructure/auth/mcp-grant-token.service.repository"
 import { describe, expect, test } from "bun:test"
-import { JwtTokenService } from "@/contexts/system/infrastructure/auth/jwt-token.service"
+import { JwtTokenService } from "@/contexts/system/infrastructure/auth/jwt-token.service.repository"
 
 const SECRET = "test-jwt-secret"
 

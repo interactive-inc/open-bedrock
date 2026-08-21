@@ -3,7 +3,7 @@ import type { ReviewCycle } from "@/contexts/performance-review/domain/review/re
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-repository"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
 
 export type Input = {
   session: Session

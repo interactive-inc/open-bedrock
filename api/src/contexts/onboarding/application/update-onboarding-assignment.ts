@@ -4,8 +4,8 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingAssignment } from "@/contexts/onboarding/domain/onboarding-assignment.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
 
 export type Command = {
   assignmentId: number

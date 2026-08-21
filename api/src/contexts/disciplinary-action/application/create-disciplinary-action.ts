@@ -3,7 +3,7 @@ import { DisciplinaryAction } from "@/contexts/disciplinary-action/domain/discip
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { DisciplinaryActionRepository } from "@/contexts/disciplinary-action/infrastructure/disciplinary-action-repository"
+import { DisciplinaryActionRepository } from "@/contexts/disciplinary-action/infrastructure/disciplinary-action.repository"
 
 export type Command = {
   session: Session

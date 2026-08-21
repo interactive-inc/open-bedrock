@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createLifecycleRouteDb } from "@/api/test/support/lifecycle-route-fixture"
 import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments"
+import { seedOrgDepartments } from "@/contexts/company/infrastructure/seed/seed-org-departments.repository"
 import { z } from "zod"
 
 const orgDepartmentResponseSchema = z.object({

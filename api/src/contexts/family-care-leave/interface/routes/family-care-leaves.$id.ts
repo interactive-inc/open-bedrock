@@ -1,5 +1,6 @@
-import { CancelFamilyCareLeave } from "@/contexts/family-care-leave/application/cancel-family-care-leave"
-import { GetFamilyCareLeave } from "@/contexts/family-care-leave/application/get-family-care-leave"
+import { ConflictError } from "@/lib/errors"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/family-care-leave.repository"
 import { UpdateFamilyCareLeave } from "@/contexts/family-care-leave/application/update-family-care-leave"
 import type { FamilyCareLeave } from "@/contexts/family-care-leave/domain/family-care-leave.entity"
 import { factory } from "@/contexts/company/interface/utils/factory"
@@ -36,10 +37,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const familyCareLeave = await new GetFamilyCareLeave(c).run({
-    familyCareLeaveId: validateUuidParam(c.req.param("id"), "family care leave"),
-    employeeId: viewer.employeeId,
-  })
+  const familyCareLeave = await (async () => {
+    const command = {
+      familyCareLeaveId: validateUuidParam(c.req.param("id"), "family care leave"),
+      employeeId: viewer.employeeId,
+    }
+
+    const familyCareLeaveRepository = new FamilyCareLeaveRepository(c)
+
+    const familyCareLeave = await familyCareLeaveRepository.findById(command.familyCareLeaveId)
+
+    if (familyCareLeave instanceof Error) {
+      return new UnexpectedError("failed to find family care leave", { cause: familyCareLeave })
+    }
+
+    if (familyCareLeave === null) {
+      return new NotFoundError("family care leave not found", "family_care_leave_not_found")
+    }
+
+    if (familyCareLeave.employeeId !== command.employeeId) {
+      return new ForbiddenError("not the applicant", "not_applicant")
+    }
+
+    return familyCareLeave
+  })()
 
   if (familyCareLeave instanceof ApplicationError) {
     throw toHttpException(familyCareLeave)
@@ -101,10 +122,44 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new CancelFamilyCareLeave(c).run({
-    familyCareLeaveId: validateUuidParam(c.req.param("id"), "family care leave"),
-    employeeId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      familyCareLeaveId: validateUuidParam(c.req.param("id"), "family care leave"),
+      employeeId: viewer.employeeId,
+    }
+
+    const familyCareLeaveRepository = new FamilyCareLeaveRepository(c)
+
+    const current = await familyCareLeaveRepository.findById(command.familyCareLeaveId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find family care leave", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("family care leave not found", "family_care_leave_not_found")
+    }
+
+    if (current.employeeId !== command.employeeId) {
+      return new ForbiddenError("not the applicant", "not_applicant")
+    }
+
+    if (current.status !== "requested") {
+      return new ConflictError("family care leave not modifiable", "not_modifiable")
+    }
+
+    const deleted = await familyCareLeaveRepository.delete(command.familyCareLeaveId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete family care leave", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new ConflictError("family care leave not modifiable", "not_modifiable")
+    }
+
+    return { reason: "cancelled" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

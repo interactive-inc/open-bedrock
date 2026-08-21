@@ -4,7 +4,7 @@ import type {
   NonCorrectionWirePersonnelActionInput,
   WirePersonnelActionInput,
 } from "@/contexts/company/interface/utils/wire-personnel-action-input"
-import { PositionRepository } from "@/contexts/company/infrastructure/position/position-repository"
+import { PositionRepository } from "@/contexts/company/infrastructure/position/position.repository"
 import { positionRequiresDepartment } from "@/contexts/company/interface/utils/position-requires-department"
 import { ApplicationError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 

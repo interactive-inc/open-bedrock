@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { TrainingCourse } from "@/contexts/training/domain/training-course.entity"
 import type { Context } from "@/env"
-import { TrainingCourseRepository } from "@/contexts/training/infrastructure/training-course-repository"
+import { TrainingCourseRepository } from "@/contexts/training/infrastructure/training-course.repository"
 
 export type Command = {
   session: Session

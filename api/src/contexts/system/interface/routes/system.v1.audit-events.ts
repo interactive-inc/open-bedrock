@@ -2,8 +2,8 @@ import { SystemHttpError } from "@system/interface/http/errors/system-http-error
 /** /system/v1/audit-events */
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import { SystemAuditEventQuery } from "@system/infrastructure/audit/system-audit-event-query"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
+import { SystemAuditEventQuery } from "@system/infrastructure/audit/system-audit-event-query.repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"

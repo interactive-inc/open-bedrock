@@ -1,6 +1,6 @@
 import { Survey } from "@/contexts/survey/domain/survey.entity"
 import { SurveyResponse } from "@/contexts/survey/domain/survey-response.entity"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/survey-repository"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { describe, expect, test } from "bun:test"

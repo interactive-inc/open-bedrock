@@ -2,8 +2,8 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-repository"
-import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form-repository"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
+import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form.repository"
 
 export type Input = {
   session: Session

@@ -1,14 +1,14 @@
-import { parseBearerAuthorization } from "@system/domain/auth/parse-bearer-authorization"
+import { readBearerAuthorization } from "@system/interface/lib/authorization/bearer-authorization"
 
 type SessionIssuedAt = Readonly<{ iat: number | null; issuedAtMs: number | null }>
 
 export class SessionPolicy {
   static hasBearerAuthorization(authorization: string | undefined): boolean {
-    return parseBearerAuthorization(authorization).kind !== "absent"
+    return readBearerAuthorization(authorization).kind !== "absent"
   }
 
   static bearerToken(authorization: string | undefined): string | undefined {
-    const parsed = parseBearerAuthorization(authorization)
+    const parsed = readBearerAuthorization(authorization)
 
     return parsed.kind === "token" ? parsed.token : undefined
   }

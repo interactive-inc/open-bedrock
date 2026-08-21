@@ -3,8 +3,8 @@ import { SalaryRevision } from "@/contexts/compensation-change/domain/salary-rev
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/salary-revision/salary-revision-repository"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/salary-revision/salary-revision.repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {

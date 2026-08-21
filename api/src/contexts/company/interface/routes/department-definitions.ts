@@ -1,5 +1,5 @@
 import { CreateDepartment } from "@/contexts/company/application/organization/create-department"
-import { DepartmentRepository } from "@/contexts/company/infrastructure/organization/department-repository"
+import { DepartmentRepository } from "@/contexts/company/infrastructure/organization/department.repository"
 import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"

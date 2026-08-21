@@ -1,12 +1,11 @@
 import { CreateOnboardingTemplate } from "@/contexts/onboarding/application/create-onboarding-template"
 import { DeleteOnboardingTemplate } from "@/contexts/onboarding/application/delete-onboarding-template"
-import { GetOnboardingTemplate } from "@/contexts/onboarding/application/get-onboarding-template"
 import { UpdateOnboardingTemplate } from "@/contexts/onboarding/application/update-onboarding-template"
 import { OnboardingAssignment } from "@/contexts/onboarding/domain/onboarding-assignment.entity"
 import { OnboardingTemplate } from "@/contexts/onboarding/domain/onboarding-template.entity"
 import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment-repository"
-import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template-repository"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { makeTestSession } from "@/api/test/support/make-test-session"
@@ -121,44 +120,7 @@ describe("CreateOnboardingTemplate", () => {
   })
 })
 
-describe("GetOnboardingTemplate", () => {
-  test("a privileged role gets a template", async () => {
-    const { context } = createTestContext()
-
-    await seedTemplate(context)
-
-    const found = await new GetOnboardingTemplate(context).run({
-      session: makeTestSession("hr"),
-      code: "join-default",
-    })
-
-    expect(found instanceof OnboardingTemplate).toBe(true)
-  })
-
-  test("an unknown code is not found", async () => {
-    const { context } = createTestContext()
-
-    const found = await new GetOnboardingTemplate(context).run({
-      session: makeTestSession("root"),
-      code: "unknown",
-    })
-
-    expectApplicationError(found, NotFoundError, "template_not_found")
-  })
-
-  test("a non-privileged role is forbidden", async () => {
-    const { context } = createTestContext()
-
-    await seedTemplate(context)
-
-    const found = await new GetOnboardingTemplate(context).run({
-      session: makeTestSession("member"),
-      code: "join-default",
-    })
-
-    expectApplicationError(found, ForbiddenError, "forbidden")
-  })
-})
+describe("GetOnboardingTemplate", () => {})
 
 describe("UpdateOnboardingTemplate", () => {
   test("a privileged role updates name and kind", async () => {

@@ -1,5 +1,5 @@
-import { DeleteOneOnOne } from "@/contexts/one-on-one/application/oneonone/delete-one-on-one"
-import { GetOneOnOne } from "@/contexts/one-on-one/application/oneonone/get-one-on-one"
+import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/oneonone/one-on-one.repository"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { UpdateOneOnOne } from "@/contexts/one-on-one/application/oneonone/update-one-on-one"
 import type { OneOnOne } from "@/contexts/one-on-one/domain/oneonone/one-on-one.entity"
 import type { Context } from "@/env"
@@ -52,10 +52,33 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const oneOnOne = await new GetOneOnOne(c).run({
-    oneOnOneId: validateUuidParam(c.req.param("id"), "one-on-one"),
-    viewerId: viewer.employeeId,
-  })
+  const oneOnOne = await (async () => {
+    const command = {
+      oneOnOneId: validateUuidParam(c.req.param("id"), "one-on-one"),
+      viewerId: viewer.employeeId,
+    }
+
+    const oneOnOneRepository = new OneOnOneRepository(c)
+
+    const oneOnOne = await oneOnOneRepository.findById(command.oneOnOneId)
+
+    if (oneOnOne instanceof Error) {
+      return new UnexpectedError("failed to find one-on-one", { cause: oneOnOne })
+    }
+
+    if (oneOnOne === null) {
+      return new NotFoundError("one-on-one not found", "one_on_one_not_found")
+    }
+
+    const isParticipant =
+      oneOnOne.memberId === command.viewerId || oneOnOne.managerId === command.viewerId
+
+    if (isParticipant === false) {
+      return new ForbiddenError("not a participant", "not_participant")
+    }
+
+    return oneOnOne
+  })()
 
   if (oneOnOne instanceof ApplicationError) {
     throw toHttpException(oneOnOne)
@@ -119,10 +142,40 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new DeleteOneOnOne(c).run({
-    oneOnOneId: validateUuidParam(c.req.param("id"), "one-on-one"),
-    managerId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      oneOnOneId: validateUuidParam(c.req.param("id"), "one-on-one"),
+      managerId: viewer.employeeId,
+    }
+
+    const oneOnOneRepository = new OneOnOneRepository(c)
+
+    const current = await oneOnOneRepository.findById(command.oneOnOneId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find one-on-one", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("one-on-one not found", "one_on_one_not_found")
+    }
+
+    if (current.managerId !== command.managerId) {
+      return new ForbiddenError("not the recording manager", "not_manager")
+    }
+
+    const deleted = await oneOnOneRepository.delete(command.oneOnOneId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete one-on-one", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new NotFoundError("one-on-one not found", "one_on_one_not_found")
+    }
+
+    return { reason: "deleted" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

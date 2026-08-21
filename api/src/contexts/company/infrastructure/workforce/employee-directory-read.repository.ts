@@ -1,7 +1,7 @@
 import type {
   EmployeeDirectoryReadPort,
   EmployeeDirectoryReadPortResult,
-} from "@/contexts/company/application/workforce/read-employee-directory"
+} from "@/contexts/company/infrastructure/workforce/read-employee-directory.repository"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"

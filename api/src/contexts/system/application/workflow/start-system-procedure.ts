@@ -2,8 +2,8 @@ import type { AccountId } from "@system/domain/auth/account-id"
 import {
   createSystemTaskPersistence,
   type StartSystemProcedureTask,
-} from "@system/application/workflow/create-system-task-persistence"
-import type { SystemWorkflowWriter } from "@system/application/workflow/system-workflow-writer"
+} from "@system/domain/workflow/create-system-task-persistence"
+import type { SystemWorkflowWriter } from "@system/infrastructure/workflow/system-workflow-writer.repository"
 import { InvalidSystemProposalError } from "@system/domain/workflow/invalid-system-proposal.error"
 import { InvalidSystemWorkflowError } from "@system/domain/workflow/invalid-system-workflow.error"
 import { Proposal } from "@system/domain/workflow/proposal.entity"

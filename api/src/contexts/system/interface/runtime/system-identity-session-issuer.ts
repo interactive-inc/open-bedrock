@@ -1,10 +1,10 @@
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { validateSystemAccessTokenSecret } from "@system/domain/auth/validate-system-access-token-secret"
-import { SystemIdentityLoginAuditRecorder } from "@system/infrastructure/audit/system-identity-login-audit-recorder"
-import { recordSystemIdentityLoginToken } from "@system/infrastructure/auth/record-system-identity-login-token"
-import { SystemIdentityLoginRepository } from "@system/infrastructure/auth/system-identity-login-repository"
-import { SystemIdentityTokenVerifier } from "@system/infrastructure/auth/system-identity-token-verifier"
-import { SystemIdentityVerificationKeyResolver } from "@system/infrastructure/auth/system-identity-verification-key-resolver"
+import { SystemIdentityLoginAuditRecorder } from "@system/infrastructure/audit/system-identity-login-audit-recorder.repository"
+import { recordSystemIdentityLoginToken } from "@system/infrastructure/auth/record-system-identity-login-token.repository"
+import { SystemIdentityLoginRepository } from "@system/infrastructure/auth/system-identity-login.repository"
+import { SystemIdentityTokenVerifier } from "@system/infrastructure/auth/system-identity-token-verifier.repository"
+import { SystemIdentityVerificationKeyResolver } from "@system/infrastructure/auth/system-identity-verification-key-resolver.repository"
 import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 
 type Props = Readonly<{

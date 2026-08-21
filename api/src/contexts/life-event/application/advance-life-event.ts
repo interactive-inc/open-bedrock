@@ -3,7 +3,7 @@ import { LifeEvent } from "@/contexts/life-event/domain/life-event.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { LifeEventRepository } from "@/contexts/life-event/infrastructure/life-event-repository"
+import { LifeEventRepository } from "@/contexts/life-event/infrastructure/life-event.repository"
 
 export type Action = "approve" | "reject"
 

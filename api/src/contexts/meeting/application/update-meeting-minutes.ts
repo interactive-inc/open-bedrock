@@ -3,7 +3,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { MeetingMinutes } from "@/contexts/meeting/domain/meeting-minutes.entity"
 import type { Context } from "@/env"
-import { MeetingMinutesRepository } from "@/contexts/meeting/infrastructure/meeting-minutes-repository"
+import { MeetingMinutesRepository } from "@/contexts/meeting/infrastructure/meeting-minutes.repository"
 
 export type Command = {
   session: Session

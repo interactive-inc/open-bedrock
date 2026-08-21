@@ -2,7 +2,7 @@ import { RentalReservation } from "@/contexts/rental/domain/rental-reservation.e
 import { ConflictError, ValidationError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation-repository"
+import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation.repository"
 
 export type Command = {
   requesterId: number

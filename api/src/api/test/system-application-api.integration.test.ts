@@ -7,7 +7,7 @@ import {
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { ProcedureDefinition } from "@system/domain/workflow/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure-repository"
+import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
 import { describe, expect, test } from "bun:test"
 
 const now = "2026-01-01T00:00:00.000Z"

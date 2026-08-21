@@ -1,6 +1,6 @@
 import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
-import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request"
-import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
+import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request.repository"
+import { resolveActiveSystemAccountId } from "@/contexts/company/infrastructure/iam/resolve-active-system-account-id.repository"
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
@@ -8,7 +8,7 @@ import { ApplicationError, ConflictError, NotFoundError, UnexpectedError } from 
 import { ExecutionAuthorization } from "@system/domain/workflow/execution-authorization.entity"
 import { proposalDigestSchema } from "@system/domain/workflow/system-case-reference"
 import { systemCaseIdSchema } from "@system/domain/workflow/system-case.entity"
-import { SystemD1AuthorizedExecutionWriter } from "@system/infrastructure/workflow/system-d1-authorized-execution-writer"
+import { SystemD1AuthorizedExecutionWriter } from "@system/infrastructure/workflow/system-d1-authorized-execution-writer.repository"
 
 const OPERATION_KEY = "company.personnel-action.apply"
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { JwtTokenService } from "@/contexts/system/infrastructure/auth/jwt-token.service"
+import { JwtTokenService } from "@/contexts/system/infrastructure/auth/jwt-token.service.repository"
 
 describe("JwtTokenService", () => {
   test("HS256で署名したpayloadを同じsecretだけで検証する", async () => {

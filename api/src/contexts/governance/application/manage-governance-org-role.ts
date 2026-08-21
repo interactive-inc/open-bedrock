@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
-import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance-repository"
-import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
+import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
+import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
 import {
   ConflictError,
   ForbiddenError,
@@ -10,7 +10,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import { isoDate } from "@/lib/schemas"
-import { prepareGovernanceAudit } from "@/contexts/governance/application/governance-audit"
+import { prepareGovernanceAudit } from "@/contexts/governance/infrastructure/governance-audit.repository"
 
 export class ManageGovernanceOrgRole {
   constructor(private readonly c: Context) {}

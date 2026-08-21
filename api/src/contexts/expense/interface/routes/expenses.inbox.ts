@@ -15,7 +15,7 @@ import {
   InternalError,
   UnauthorizedError,
 } from "@/contexts/company/interface/lib/errors"
-import { listManagedEmployeeIds } from "@/contexts/company/application/organization/list-managed-employee-ids"
+import { listManagedEmployeeIds } from "@/contexts/company/infrastructure/organization/list-managed-employee-ids.repository"
 
 // @authorization permission - 権限キーで判定する
 /** GET /expenses/inbox — 承認待ちの経費一覧（承認権限が必要） */

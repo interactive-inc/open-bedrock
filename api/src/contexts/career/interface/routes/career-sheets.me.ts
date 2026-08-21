@@ -1,4 +1,6 @@
-import { DeleteMyCareerSheet } from "@/contexts/career/application/delete-my-career-sheet"
+import { UnexpectedError } from "@/lib/errors"
+import { CareerSheetRepository } from "@/contexts/career/infrastructure/career-sheet.repository"
+
 import { UpdateMyCareerSheet } from "@/contexts/career/application/update-my-career-sheet"
 import { careerSheets } from "@/contexts/career/infrastructure/schema/career"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
@@ -58,9 +60,21 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new DeleteMyCareerSheet(c).run({
-    employeeId: session.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      employeeId: session.employeeId,
+    }
+
+    const repository = new CareerSheetRepository(c)
+
+    const deleted = await repository.deleteByEmployeeId(command.employeeId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete career sheet", { cause: deleted })
+    }
+
+    return { reason: "cleared" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

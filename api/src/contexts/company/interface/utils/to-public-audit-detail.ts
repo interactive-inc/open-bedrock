@@ -1,4 +1,4 @@
-import type { AuditEventDetail } from "@/contexts/company/application/audit/company-audit-event"
+import type { AuditEventDetail } from "@/contexts/company/domain/audit/company-audit-event"
 import { auditUnavailable } from "@/contexts/company/interface/utils/audit-unavailable"
 import { toPublicAuditSummary } from "@/contexts/company/interface/utils/to-public-audit-summary"
 import { zAppAuditEventDetail } from "@/lib/app-schemas"

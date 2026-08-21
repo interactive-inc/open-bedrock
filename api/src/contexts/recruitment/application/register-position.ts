@@ -3,7 +3,7 @@ import { RecruitmentPosition } from "@/contexts/recruitment/domain/recruitment-p
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/recruitment-repository"
+import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/recruitment.repository"
 
 export type Command = {
   session: Session

@@ -1,4 +1,6 @@
-import { ListMyLifeEvents } from "@/contexts/life-event/application/list-my-life-events"
+import { UnexpectedError } from "@/lib/errors"
+import { LifeEventRepository } from "@/contexts/life-event/infrastructure/life-event.repository"
+
 import { ApplicationError } from "@/lib/errors"
 import { zAppLifeEventList } from "@/lib/app-schemas"
 import { factory } from "@/contexts/company/interface/utils/factory"
@@ -37,11 +39,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const lifeEventRows = await new ListMyLifeEvents(c).run({
-    employeeId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const lifeEventRows = await (async () => {
+    const command = {
+      employeeId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const lifeEventRepository = new LifeEventRepository(c)
+
+    const lifeEvents = await lifeEventRepository.findByEmployeeId({
+      employeeId: command.employeeId,
+      limit: command.limit,
+      offset: command.offset,
+    })
+
+    if (lifeEvents instanceof Error) {
+      return new UnexpectedError("failed to find life events", { cause: lifeEvents })
+    }
+
+    return lifeEvents
+  })()
 
   if (lifeEventRows instanceof ApplicationError) {
     throw toHttpException(lifeEventRows)

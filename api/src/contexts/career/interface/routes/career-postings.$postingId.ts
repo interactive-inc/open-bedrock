@@ -1,5 +1,6 @@
+import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import { CareerPostingRepository } from "@/contexts/career/infrastructure/career-posting.repository"
 import { DeleteCareerPosting } from "@/contexts/career/application/delete-career-posting"
-import { GetCareerPosting } from "@/contexts/career/application/get-career-posting"
 import { UpdateCareerPosting } from "@/contexts/career/application/update-career-posting"
 import type { CareerPosting } from "@/contexts/career/domain/career-posting.entity"
 import { factory } from "@/contexts/company/interface/utils/factory"
@@ -35,9 +36,25 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const postingId = validateIntParam(c.req.param("postingId"), "posting")
 
-  const posting = await new GetCareerPosting(c).run({
-    postingId: postingId,
-  })
+  const posting = await (async () => {
+    const command = {
+      postingId: postingId,
+    }
+
+    const postingRepository = new CareerPostingRepository(c)
+
+    const posting = await postingRepository.findById(command.postingId)
+
+    if (posting instanceof Error) {
+      return new UnexpectedError("failed to find career posting", { cause: posting })
+    }
+
+    if (posting === null) {
+      return new NotFoundError("career posting not found", "posting_not_found")
+    }
+
+    return posting
+  })()
 
   if (posting instanceof ApplicationError) {
     throw toHttpException(posting)

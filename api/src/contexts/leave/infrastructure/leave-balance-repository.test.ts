@@ -1,4 +1,4 @@
-import { LeaveBalanceRepository } from "@/contexts/leave/infrastructure/leave-balance-repository"
+import { LeaveBalanceRepository } from "@/contexts/leave/infrastructure/leave-balance.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { LeaveBalance } from "@/contexts/leave/domain/leave-balance.entity"

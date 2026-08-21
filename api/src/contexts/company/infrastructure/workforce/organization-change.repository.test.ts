@@ -1,5 +1,5 @@
 import { createTestContext } from "@/api/test/support/create-test-context"
-import type { OrganizationChangeSet } from "@/contexts/company/application/workforce/organization-change"
+import type { OrganizationChangeSet } from "@/contexts/company/domain/workforce/organization-change"
 import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import { OrganizationChangeRepository } from "@/contexts/company/infrastructure/workforce/organization-change.repository"

@@ -3,8 +3,8 @@ import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { surveys } from "@/contexts/survey/infrastructure/schema/survey"
 import type { Context } from "@/env"
-import { countPendingSystemCases } from "@system/infrastructure/workflow/count-pending-system-cases"
-import { listSystemCaseMonthlyCounts } from "@system/infrastructure/workflow/list-system-case-monthly-counts"
+import { countPendingSystemCases } from "@system/infrastructure/workflow/count-pending-system-cases.repository"
+import { listSystemCaseMonthlyCounts } from "@system/infrastructure/workflow/list-system-case-monthly-counts.repository"
 import { count, eq } from "drizzle-orm"
 
 /** System・Company・評価・Surveyの集計を製品dashboard responseへ合成する。 */

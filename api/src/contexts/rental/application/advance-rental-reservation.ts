@@ -3,7 +3,7 @@ import { RentalReservation } from "@/contexts/rental/domain/rental-reservation.e
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation-repository"
+import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation.repository"
 
 export type Action = "lend" | "return"
 

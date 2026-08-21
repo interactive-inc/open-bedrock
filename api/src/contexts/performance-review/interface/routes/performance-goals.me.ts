@@ -1,4 +1,6 @@
-import { ListMyGoals } from "@/contexts/performance-review/application/goal/list-my-goals"
+import { UnexpectedError } from "@/lib/errors"
+import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
+
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppGoalList } from "@/lib/app-schemas"
@@ -37,11 +39,28 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const goalRows = await new ListMyGoals(c).run({
-    employeeId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const goalRows = await (async () => {
+    const command = {
+      employeeId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const repository = new GoalRepository(c)
+
+    const opts =
+      command.limit !== undefined && command.offset !== undefined
+        ? { limit: command.limit, offset: command.offset }
+        : undefined
+
+    const goals = await repository.findByEmployeeId(command.employeeId, opts)
+
+    if (goals instanceof Error) {
+      return new UnexpectedError("failed to load goals", { cause: goals })
+    }
+
+    return goals
+  })()
 
   if (goalRows instanceof ApplicationError) {
     throw toHttpException(goalRows)

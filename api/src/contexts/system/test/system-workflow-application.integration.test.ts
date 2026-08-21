@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { CancelSystemProcedure } from "@system/application/workflow/cancel-system-procedure"
 import { DecideSystemTask } from "@system/application/workflow/decide-system-task"
-import type { SystemTaskPersistence } from "@system/application/workflow/system-workflow-writer"
+import type { SystemTaskPersistence } from "@system/infrastructure/workflow/system-workflow-writer.repository"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { DecisionTaskCandidate } from "@system/domain/workflow/decision-task-candidate.entity"
@@ -9,7 +9,7 @@ import { DecisionTask } from "@system/domain/workflow/decision-task.entity"
 import { InvalidSystemWorkflowError } from "@system/domain/workflow/invalid-system-workflow.error"
 import { proposalDigestSchema } from "@system/domain/workflow/system-case-reference"
 import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
-import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer"
+import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
 import { readFileSync } from "node:fs"
 
 const schema = [

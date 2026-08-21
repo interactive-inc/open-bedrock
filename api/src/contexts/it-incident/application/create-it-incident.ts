@@ -3,7 +3,7 @@ import { ItIncident } from "@/contexts/it-incident/domain/it-incident.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/it-incident-repository"
+import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/it-incident.repository"
 
 export type Command = {
   session: Session

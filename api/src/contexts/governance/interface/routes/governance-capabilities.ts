@@ -1,4 +1,4 @@
-import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance-repository"
+import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   ForbiddenError,

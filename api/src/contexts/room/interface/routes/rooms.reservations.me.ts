@@ -1,4 +1,6 @@
-import { ListMyRoomReservations } from "@/contexts/room/application/list-my-room-reservations"
+import { UnexpectedError } from "@/lib/errors"
+import { RoomReservationRepository } from "@/contexts/room/infrastructure/room-reservation.repository"
+
 import { factory } from "@/contexts/company/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -37,11 +39,26 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const reservations = await new ListMyRoomReservations(c).run({
-    reserverId: viewer.employeeId,
-    limit,
-    offset,
-  })
+  const reservations = await (async () => {
+    const command = {
+      reserverId: viewer.employeeId,
+      limit,
+      offset,
+    }
+
+    const reservationRepository = new RoomReservationRepository(c)
+
+    const reservations = await reservationRepository.findByReserverId(command.reserverId, {
+      limit: command.limit,
+      offset: command.offset,
+    })
+
+    if (reservations instanceof Error) {
+      return new UnexpectedError("failed to find reservations", { cause: reservations })
+    }
+
+    return reservations
+  })()
 
   if (reservations instanceof ApplicationError) {
     throw toHttpException(reservations)

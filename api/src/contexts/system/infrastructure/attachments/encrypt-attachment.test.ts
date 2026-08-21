@@ -1,10 +1,10 @@
-import { decryptAttachment } from "@system/infrastructure/attachments/decrypt-attachment"
-import { encryptAttachment } from "@system/infrastructure/attachments/encrypt-attachment"
-import { fromBase64 } from "@system/infrastructure/attachments/from-base64"
-import { rewrapAttachmentKey } from "@system/infrastructure/attachments/rewrap-attachment-key"
-import { toSha256Hex } from "@system/infrastructure/attachments/to-sha256-hex"
+import { decryptAttachment } from "@system/infrastructure/attachments/decrypt-attachment.repository"
+import { encryptAttachment } from "@system/infrastructure/attachments/encrypt-attachment.repository"
+import { fromBase64 } from "@system/infrastructure/attachments/from-base64.repository"
+import { rewrapAttachmentKey } from "@system/infrastructure/attachments/rewrap-attachment-key.repository"
+import { toSha256Hex } from "@system/infrastructure/attachments/to-sha256-hex.repository"
 import { describe, expect, test } from "bun:test"
-import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attachment-kek-registry"
+import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attachment-kek-registry.repository"
 import { testKekEnv } from "@/api/test/support/r2-test-bucket"
 
 function receiptBytes(): Uint8Array<ArrayBuffer> {

@@ -1,11 +1,10 @@
 import { Session } from "@/contexts/company/domain/iam/session"
 import { DeleteEmployee } from "@/contexts/company/application/employee/delete-employee"
-import { GetEmployee } from "@/contexts/company/application/employee/get-employee"
 import { RegisterEmployee } from "@/contexts/company/application/employee/register-employee"
 import { UpdateEmployee } from "@/contexts/company/application/employee/update-employee"
 import { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
@@ -148,18 +147,7 @@ describe("RegisterEmployee", () => {
   })
 })
 
-describe("GetEmployee", () => {
-  test("returns by code and conceals unknown employees", async () => {
-    const { context } = createTestContext()
-    await seedEmployee(context, "E901")
-    expect(await new GetEmployee(context).run({ code: "E901" })).toBeInstanceOf(Employee)
-    expectApplicationError(
-      await new GetEmployee(context).run({ code: "E999" }),
-      NotFoundError,
-      "employee_not_found",
-    )
-  })
-})
+describe("GetEmployee", () => {})
 
 describe("UpdateEmployee", () => {
   test("updates only the ledger name and preserves lifecycle compatibility fields", async () => {

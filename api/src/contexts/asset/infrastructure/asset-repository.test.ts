@@ -1,5 +1,5 @@
 import { Asset } from "@/contexts/asset/domain/asset.entity"
-import { AssetRepository } from "@/contexts/asset/infrastructure/asset-repository"
+import { AssetRepository } from "@/contexts/asset/infrastructure/asset.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { assetLendings } from "@/contexts/asset/infrastructure/schema/asset"
 import { describe, expect, test } from "bun:test"

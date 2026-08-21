@@ -1,4 +1,4 @@
-import { ReadCompanyReadiness } from "@/contexts/company/application/workforce/read-company-readiness"
+import { ReadCompanyReadiness } from "@/contexts/company/infrastructure/workforce/read-company-readiness.repository"
 import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
 import { CompanyReadinessRepository } from "@/contexts/company/infrastructure/workforce/company-readiness.repository"
 import type { Context } from "@/env"

@@ -4,6 +4,7 @@
   "companyAreasByLayer": {
     "domain": [
       "account-profile",
+      "audit",
       "core",
       "employee",
       "employee-event",
@@ -40,6 +41,7 @@
     "infrastructure": [
       "account-profile",
       "audit",
+      "auth",
       "core",
       "employee",
       "employee-event",

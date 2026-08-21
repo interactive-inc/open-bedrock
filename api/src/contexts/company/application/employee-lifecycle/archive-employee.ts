@@ -1,10 +1,10 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { GetLifecycleState } from "@/contexts/company/application/employee-lifecycle/get-lifecycle-state"
-import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
+import { GetLifecycleState } from "@/contexts/company/infrastructure/employee-lifecycle/get-lifecycle-state.repository"
+import { createAuditEvent } from "@/contexts/company/domain/audit/company-audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event.repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
@@ -17,8 +17,8 @@ import {
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/contexts/company/domain/iam/effective-root-permission-key.catalog"
 import { zAccountId } from "@system/domain/auth/account-id"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
-import { PrepareSystemAccountSuspension } from "@system/infrastructure/iam/prepare-system-account-suspension"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
+import { PrepareSystemAccountSuspension } from "@system/infrastructure/iam/prepare-system-account-suspension.repository"
 
 export class ArchiveEmployee {
   constructor(private readonly c: Context) {}

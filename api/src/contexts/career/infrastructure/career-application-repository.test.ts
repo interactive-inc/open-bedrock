@@ -1,5 +1,5 @@
 import { CareerApplication } from "@/contexts/career/domain/career-application.entity"
-import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application-repository"
+import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 

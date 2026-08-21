@@ -1,7 +1,7 @@
 import { Asset } from "@/contexts/asset/domain/asset.entity"
 import { DeleteAsset } from "@/contexts/asset/application/delete-asset"
 import { UpdateAsset } from "@/contexts/asset/application/update-asset"
-import { AssetRepository } from "@/contexts/asset/infrastructure/asset-repository"
+import { AssetRepository } from "@/contexts/asset/infrastructure/asset.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

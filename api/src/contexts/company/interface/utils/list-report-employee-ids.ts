@@ -1,8 +1,8 @@
 import type { Context } from "@/env"
-import { readCanonicalOrganizationState } from "@/contexts/company/application/organization/read-canonical-organization-state"
+import { readCanonicalOrganizationState } from "@/contexts/company/infrastructure/organization/read-canonical-organization-state.repository"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { listReportWorkforceEmployeeIds } from "@/contexts/company/domain/workforce/list-report-workforce-employee-ids"
-import { toStorageEmployeeId } from "@/contexts/company/infrastructure/workforce/to-storage-employee-id"
+import { toStorageEmployeeId } from "@/contexts/company/infrastructure/workforce/to-storage-employee-id.repository"
 
 export type Props = {
   c: Context

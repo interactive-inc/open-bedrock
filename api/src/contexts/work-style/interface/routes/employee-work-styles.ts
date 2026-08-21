@@ -4,7 +4,7 @@ import { resolveTargetEmployeeId } from "@/contexts/company/interface/utils/reso
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEmployeeWorkStyle, zAppEmployeeWorkStyleList } from "@/lib/app-schemas"
-import { EmployeeWorkStyleRepository } from "@/contexts/work-style/infrastructure/employee-work-style-repository"
+import { EmployeeWorkStyleRepository } from "@/contexts/work-style/infrastructure/employee-work-style.repository"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

@@ -5,9 +5,9 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftSwapRequest } from "@/contexts/shift/domain/shift-swap-request.entity"
 import type { Context } from "@/env"
-import { EmployeeNotificationGateway } from "@/contexts/company/infrastructure/notifications/employee-notification.gateway"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment-repository"
-import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/shift-swap-request-repository"
+import { EmployeeNotificationGateway } from "@/contexts/company/infrastructure/notifications/employee-notification.gateway.repository"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
+import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/shift-swap-request.repository"
 
 export type Input = {
   session: Session

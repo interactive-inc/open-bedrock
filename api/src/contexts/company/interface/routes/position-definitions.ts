@@ -1,5 +1,5 @@
 import { CreatePosition } from "@/contexts/company/application/position/create-position"
-import { PositionRepository } from "@/contexts/company/infrastructure/position/position-repository"
+import { PositionRepository } from "@/contexts/company/infrastructure/position/position.repository"
 import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"

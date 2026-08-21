@@ -3,11 +3,11 @@ import {
   OidcInvalidScopeApplicationError,
   OidcTemporarilyUnavailableApplicationError,
 } from "@/contexts/system/application/auth/errors"
-import { createSystemOidcAudit } from "@system/application/auth/create-system-oidc-audit"
+import { createSystemOidcAudit } from "@system/domain/audit/create-system-oidc-audit"
 import type { AccountId } from "@system/domain/auth/account-id"
 import { zAccountId } from "@system/domain/auth/account-id"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
-import { createOidcAuthorizationCode } from "@system/infrastructure/identity/create-oidc-authorization-code"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
+import { createOidcAuthorizationCode } from "@system/infrastructure/identity/create-oidc-authorization-code.repository"
 import {
   OidcClientPolicy,
   type OidcClientRegistry,
@@ -18,7 +18,7 @@ import type {
   SystemClockContext,
   SystemD1Context,
   SystemDatabaseContext,
-} from "@system/infrastructure/configuration/system-context"
+} from "@system/infrastructure/configuration/system-context.repository"
 
 type Props = Readonly<{
   issuer: string

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { Goal } from "@/contexts/performance-review/domain/goal/goal.entity"
-import { buildGoalTree } from "@/contexts/performance-review/application/goal/build-goal-tree"
+import { buildGoalTree } from "@/contexts/performance-review/domain/goal/build-goal-tree"
 import type { GoalOwnerType } from "@/contexts/performance-review/domain/goal/goal.entity"
 
 /** テスト用の目標を組み立てる。 */

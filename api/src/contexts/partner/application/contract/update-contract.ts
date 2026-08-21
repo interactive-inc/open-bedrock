@@ -3,7 +3,7 @@ import type { Contract } from "@/contexts/partner/domain/contract/contract.entit
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ContractRepository } from "@/contexts/partner/infrastructure/contract/contract-repository"
+import { ContractRepository } from "@/contexts/partner/infrastructure/contract/contract.repository"
 
 export type Command = {
   session: Session

@@ -1,5 +1,5 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
+import { createAuditEvent } from "@/contexts/company/domain/audit/company-audit-event"
 import { containsDate } from "@/contexts/company/domain/employee-lifecycle/contains-date"
 import type {
   LifecycleSchedule,
@@ -10,23 +10,23 @@ import {
   type PersonnelActionProjection,
 } from "@/contexts/company/domain/employee-lifecycle/project-personnel-action"
 import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
-import { fingerprintPersonnelAction } from "@/contexts/company/application/employee-lifecycle/fingerprint-personnel-action"
-import { stableLifecycleJson } from "@/contexts/company/application/employee-lifecycle/stable-lifecycle-json"
+import { fingerprintPersonnelAction } from "@/contexts/company/domain/employee-lifecycle/fingerprint-personnel-action"
+import { stableLifecycleJson } from "@/contexts/company/domain/employee-lifecycle/stable-lifecycle-json"
 import type {
   OrganizationChangeSet,
   WorkforceSnapshotReadPort,
-} from "@/contexts/company/application/workforce/organization-change"
-import { ValidateOrganizationChange } from "@/contexts/company/application/workforce/validate-organization-change"
+} from "@/contexts/company/domain/workforce/organization-change"
+import { ValidateOrganizationChange } from "@/contexts/company/infrastructure/workforce/validate-organization-change.repository"
 import { toWorkforceLifecycleSchedules } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
 import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
 import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event.repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"
 import {
   PersonnelActionRepository,
   type PersonnelActionRecord,
-} from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action-repository"
+} from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action.repository"
 import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
 import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"

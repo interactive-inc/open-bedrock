@@ -2,8 +2,8 @@ import { SystemHttpError } from "@system/interface/http/errors/system-http-error
 /** /system/v1/cli-authorizations */
 import { isSecureSystemIdentityIssuer } from "@system/domain/identity/is-secure-system-identity-issuer"
 import { systemCliIdentityRedirectUri } from "@system/domain/identity/system-cli-identity-redirect-uri"
-import { createSystemCliLoginState } from "@system/infrastructure/auth/create-system-cli-login-state"
-import { createSystemPkce } from "@system/infrastructure/auth/create-system-pkce"
+import { createSystemCliLoginState } from "@system/infrastructure/auth/create-system-cli-login-state.repository"
+import { createSystemPkce } from "@system/infrastructure/auth/create-system-pkce.repository"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

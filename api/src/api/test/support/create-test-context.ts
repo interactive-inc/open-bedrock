@@ -3,7 +3,7 @@ import { schema } from "@/schema"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { drizzle } from "drizzle-orm/d1"
-import { seedPepperSecret } from "@/contexts/company/infrastructure/seed/seed-password-hash"
+import { seedPepperSecret } from "@/contexts/company/infrastructure/seed/seed-password-hash.repository"
 
 /**
  * テスト用: スキーマを流し込んだインメモリ D1 と Drizzle を載せた Context を作る。

@@ -1,6 +1,6 @@
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { zAccountId } from "@system/domain/auth/account-id"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import { systemFactory } from "@system/interface/http/system-factory"

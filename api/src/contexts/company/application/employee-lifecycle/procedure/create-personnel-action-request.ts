@@ -1,16 +1,16 @@
-import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
-import { fingerprintPersonnelAction } from "@/contexts/company/application/employee-lifecycle/fingerprint-personnel-action"
-import { GetLifecycleState } from "@/contexts/company/application/employee-lifecycle/get-lifecycle-state"
-import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
-import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
-import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
-import { resolveCompanyProcedureTask } from "@/contexts/company/application/organization/resolve-company-procedure-task"
+import { createAuditEvent } from "@/contexts/company/domain/audit/company-audit-event"
+import { fingerprintPersonnelAction } from "@/contexts/company/domain/employee-lifecycle/fingerprint-personnel-action"
+import { GetLifecycleState } from "@/contexts/company/infrastructure/employee-lifecycle/get-lifecycle-state.repository"
+import { resolveActiveSystemAccountId } from "@/contexts/company/infrastructure/iam/resolve-active-system-account-id.repository"
+import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
+import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
+import { resolveCompanyProcedureTask } from "@/contexts/company/infrastructure/organization/resolve-company-procedure-task.repository"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/parse-company-procedure-decision-policy"
 import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
-import { createPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/create-personnel-action-request"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event.repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { createPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/create-personnel-action-request.repository"
 import type { Context } from "@/env"
 import {
   ApplicationError,
@@ -24,8 +24,8 @@ import { CancelSystemProcedure } from "@system/application/workflow/cancel-syste
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
 import { procedureKeySchema } from "@system/domain/workflow/procedure-definition.entity"
 import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure-repository"
-import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer"
+import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
+import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
 
 export type CreatedPersonnelActionRequest = {
   id: string

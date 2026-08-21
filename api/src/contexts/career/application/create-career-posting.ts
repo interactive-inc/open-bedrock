@@ -3,7 +3,7 @@ import { CareerPosting } from "@/contexts/career/domain/career-posting.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CareerPostingRepository } from "@/contexts/career/infrastructure/career-posting-repository"
+import { CareerPostingRepository } from "@/contexts/career/infrastructure/career-posting.repository"
 
 export type Command = {
   session: Session

@@ -2,7 +2,7 @@ import type { EvaluationSheet } from "@/contexts/performance-review/domain/evalu
 import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/evaluation-sheet/evaluation-sheet-repository"
+import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/evaluation-sheet/evaluation-sheet.repository"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { inArray } from "drizzle-orm"
 

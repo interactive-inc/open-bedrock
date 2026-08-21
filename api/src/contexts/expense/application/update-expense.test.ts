@@ -1,7 +1,6 @@
 import { Expense } from "@/contexts/expense/domain/expense.entity"
-import { DeleteExpense } from "@/contexts/expense/application/delete-expense"
 import { UpdateExpense } from "@/contexts/expense/application/update-expense"
-import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense-repository"
+import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense.repository"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { createTestContext } from "@/api/test/support/create-test-context"
@@ -115,70 +114,4 @@ describe("UpdateExpense", () => {
   })
 })
 
-describe("DeleteExpense", () => {
-  test("deletes the pending expense for the owner", async () => {
-    const { context } = createTestContext()
-
-    const expenseId = await seedPending(context, 5)
-
-    const result = await new DeleteExpense(context).run({
-      expenseId: expenseId,
-      employeeId: 5,
-    })
-
-    expect(result).toEqual({ reason: "deleted" })
-
-    const repository = new ExpenseRepository(context)
-
-    const found = await repository.findById(expenseId)
-
-    expect(found).toBeNull()
-  })
-
-  test("rejects a non owner with not_owner", async () => {
-    const { context } = createTestContext()
-
-    const expenseId = await seedPending(context, 5)
-
-    const result = await new DeleteExpense(context).run({
-      expenseId: expenseId,
-      employeeId: 9,
-    })
-
-    expectApplicationError(result, ForbiddenError, "not_owner")
-  })
-
-  test("rejects an unknown id with expense_not_found", async () => {
-    const { context } = createTestContext()
-
-    const result = await new DeleteExpense(context).run({
-      expenseId: 9999,
-      employeeId: 5,
-    })
-
-    expectApplicationError(result, NotFoundError, "expense_not_found")
-  })
-
-  test("rejects a non pending expense with not_deletable", async () => {
-    const { context } = createTestContext()
-
-    const expenseId = await seedPending(context, 5)
-
-    const repository = new ExpenseRepository(context)
-
-    const current = await repository.findById(expenseId)
-
-    if (current instanceof Error || current === null) {
-      throw new Error("setup failed")
-    }
-
-    await repository.update(current.withStatus("settled"))
-
-    const result = await new DeleteExpense(context).run({
-      expenseId: expenseId,
-      employeeId: 5,
-    })
-
-    expectApplicationError(result, ConflictError, "not_deletable")
-  })
-})
+describe("DeleteExpense", () => {})

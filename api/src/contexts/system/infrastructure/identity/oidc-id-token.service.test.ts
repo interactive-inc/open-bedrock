@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { exportJWK, generateKeyPair, importJWK, jwtVerify } from "jose"
-import { OidcIdTokenService } from "@/contexts/system/infrastructure/identity/oidc-id-token.service"
-import { OidcSigningKeyService } from "@/contexts/system/infrastructure/identity/oidc-signing-key.service"
-import type { SystemClockContext } from "@system/infrastructure/configuration/system-context"
+import { OidcIdTokenService } from "@/contexts/system/infrastructure/identity/oidc-id-token.service.repository"
+import { OidcSigningKeyService } from "@/contexts/system/infrastructure/identity/oidc-signing-key.service.repository"
+import type { SystemClockContext } from "@system/infrastructure/configuration/system-context.repository"
 
 describe("OidcIdTokenService", () => {
   test("ES256でissuer・audience・nonceと許可scopeのclaimを署名する", async () => {

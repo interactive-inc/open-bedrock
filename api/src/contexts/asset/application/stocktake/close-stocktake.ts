@@ -3,7 +3,7 @@ import type { Stocktake } from "@/contexts/asset/domain/stocktake/stocktake.enti
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { StocktakeRepository } from "@/contexts/asset/infrastructure/stocktake/stocktake-repository"
+import { StocktakeRepository } from "@/contexts/asset/infrastructure/stocktake/stocktake.repository"
 
 export type Command = {
   session: Session

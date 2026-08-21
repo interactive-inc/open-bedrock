@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 
 import { createSystemIdentityTestKey } from "@system/infrastructure/identity/create-system-identity-test-key.test-support"
 import { createSystemIdentityToken } from "@system/infrastructure/identity/create-system-identity-token.test-support"
-import { SystemIdentityTokenVerifier } from "@system/infrastructure/auth/system-identity-token-verifier"
+import { SystemIdentityTokenVerifier } from "@system/infrastructure/auth/system-identity-token-verifier.repository"
 
 const identityKey = await createSystemIdentityTestKey()
 const wrongIdentityKey = await createSystemIdentityTestKey("wrong-key")

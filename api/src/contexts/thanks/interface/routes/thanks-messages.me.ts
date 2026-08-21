@@ -1,4 +1,6 @@
-import { ListMyThanks } from "@/contexts/thanks/application/list-my-thanks"
+import { UnexpectedError } from "@/lib/errors"
+import { ThanksRepository } from "@/contexts/thanks/infrastructure/thanks.repository"
+
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
@@ -38,11 +40,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const thanksList = await new ListMyThanks(c).run({
-    senderEmployeeId: session.employeeId,
-    limit,
-    offset,
-  })
+  const thanksList = await (async () => {
+    const props = {
+      senderEmployeeId: session.employeeId,
+      limit,
+      offset,
+    }
+
+    const thanksRepository = new ThanksRepository(c)
+
+    const thanksList = await thanksRepository.findBySender({
+      senderEmployeeId: props.senderEmployeeId,
+      limit: props.limit,
+      offset: props.offset,
+    })
+
+    if (thanksList instanceof Error) {
+      return new UnexpectedError("failed to find sent thanks", { cause: thanksList })
+    }
+
+    return thanksList
+  })()
 
   if (thanksList instanceof ApplicationError) {
     throw toHttpException(thanksList)

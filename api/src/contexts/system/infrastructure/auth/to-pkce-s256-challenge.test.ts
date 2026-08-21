@@ -1,4 +1,4 @@
-import { toPkceS256Challenge } from "@system/infrastructure/auth/to-pkce-s256-challenge"
+import { toPkceS256Challenge } from "@system/infrastructure/auth/to-pkce-s256-challenge.repository"
 import { expect, test } from "bun:test"
 
 test("RFC 7636 Appendix Bの既知ベクタを導出する", async () => {

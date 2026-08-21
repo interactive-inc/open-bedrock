@@ -1,13 +1,13 @@
-import { encryptAttachment } from "@system/infrastructure/attachments/encrypt-attachment"
+import { encryptAttachment } from "@system/infrastructure/attachments/encrypt-attachment.repository"
 import type { AttachmentBytes } from "@system/domain/attachments/attachment-bytes"
 import { validateAttachmentContent } from "@system/domain/attachments/attachment-content.policy"
-import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attachment-kek-registry"
-import { AttachmentObjectStore } from "@system/infrastructure/attachments/attachment-object-store"
-import { AttachmentRepository } from "@system/infrastructure/attachments/attachment-repository"
+import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attachment-kek-registry.repository"
+import { AttachmentObjectStore } from "@system/infrastructure/attachments/attachment-object-store.repository"
+import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
 import type {
   SystemAttachmentStorageContext,
   SystemDatabaseContext,
-} from "@system/infrastructure/configuration/system-context"
+} from "@system/infrastructure/configuration/system-context.repository"
 import { PayloadTooLargeError, ValidationError } from "@/lib/errors"
 
 export type StoreAttachmentCommand = Readonly<{

@@ -1,13 +1,13 @@
-import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
-import { ResolveSystemAuthorization } from "@system/application/iam/resolve-system-authorization"
+import { resolveAccountSession } from "@system/domain/auth/resolve-account-session"
+import { resolveSystemAuthorization } from "@system/domain/iam/resolve-system-authorization"
 import type { AccountId } from "@system/domain/auth/account-id"
 import { zAccountId } from "@system/domain/auth/account-id"
-import { parseBearerAuthorization } from "@system/domain/auth/parse-bearer-authorization"
+import { readBearerAuthorization } from "@system/interface/lib/authorization/bearer-authorization"
 import { validateSystemAccessTokenSecret } from "@system/domain/auth/validate-system-access-token-secret"
-import { AccessTokenService } from "@system/infrastructure/auth/access-token-service"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
-import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/infrastructure/auth/system-access-token-profile"
-import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization-repository"
+import { AccessTokenService } from "@system/infrastructure/auth/access-token-service.repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
+import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/infrastructure/auth/system-access-token-profile.repository"
+import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization.repository"
 
 type Props = Readonly<{
   database: D1Database
@@ -39,7 +39,7 @@ export class SystemAccessTokenAuthenticator {
     jwtSecret: string,
     now: Date,
   ): Promise<SystemAccessTokenAuthentication> {
-    const bearerAuthorization = parseBearerAuthorization(authorizationHeader)
+    const bearerAuthorization = readBearerAuthorization(authorizationHeader)
     if (bearerAuthorization.kind !== "token") {
       return { kind: "rejected", reason: "invalid_token" }
     }
@@ -83,11 +83,18 @@ export class SystemAccessTokenAuthenticator {
       return { kind: "rejected", reason: "token_version_mismatch" }
     }
 
-    const authorization = await new ResolveSystemAuthorization(
-      new SystemD1AuthorizationRepository({ env: { DB: this.props.database } }),
-    ).execute({ accountId: accountId.data, resource: null, at: now })
+    const authorizationGraph = await new SystemD1AuthorizationRepository({
+      env: { DB: this.props.database },
+    }).loadForAccount(accountId.data)
+    if (authorizationGraph instanceof Error) {
+      return { kind: "unavailable", reason: "authorization" }
+    }
+    if (authorizationGraph === null) return { kind: "rejected", reason: "account_inactive" }
+    const authorization = resolveSystemAuthorization(authorizationGraph, {
+      resource: null,
+      at: now,
+    })
     if (authorization instanceof Error) return { kind: "unavailable", reason: "authorization" }
-    if (authorization === null) return { kind: "rejected", reason: "account_inactive" }
 
     return Object.freeze({
       kind: "authenticated",

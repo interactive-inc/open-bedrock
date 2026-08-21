@@ -109,10 +109,10 @@ describe("ApplyPersonnelAction", () => {
 
   test("returns the existing action for an identical retry and rejects payload reuse", async () => {
     const { context, db } = await setupActiveEmployee()
-    const usecase = new ApplyPersonnelAction(context)
-    const first = await usecase.run(leaveCommand)
-    const replay = await usecase.run(leaveCommand)
-    const conflict = await usecase.run({
+    const service = new ApplyPersonnelAction(context)
+    const first = await service.run(leaveCommand)
+    const replay = await service.run(leaveCommand)
+    const conflict = await service.run({
       ...leaveCommand,
       input: { kind: "leave_started", employeeCode: "E001", eventOn: "2026-06-02" },
     })
@@ -214,12 +214,12 @@ describe("ApplyPersonnelAction", () => {
 
   test("applies a correction from the original action mutations without exposing its reason", async () => {
     const { context, db } = await setupActiveEmployee()
-    const usecase = new ApplyPersonnelAction(context)
-    const original = await usecase.run(leaveCommand)
+    const service = new ApplyPersonnelAction(context)
+    const original = await service.run(leaveCommand)
     expect(original).not.toBeInstanceOf(ApplicationError)
     const originalId = (original as Exclude<typeof original, ApplicationError>).action.id
 
-    const corrected = await usecase.run({
+    const corrected = await service.run({
       ...leaveCommand,
       idempotencyKey: "correction-operation-1",
       expectedEmployeeRevision: 1,

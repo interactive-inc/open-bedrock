@@ -1,8 +1,8 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
+import { createAuditEvent } from "@/contexts/company/domain/audit/company-audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event-repository"
-import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
+import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event.repository"
+import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
 
 export type LifecycleReadAuthorization = {
   scope: "self" | "organization" | "all"

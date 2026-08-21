@@ -7,8 +7,8 @@ import {
   UnexpectedError,
 } from "@/lib/errors"
 import type { Context } from "@/env"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { OrgDepartmentRepository } from "@/contexts/company/infrastructure/organization/org-department-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"
+import { OrgDepartmentRepository } from "@/contexts/company/infrastructure/organization/org-department.repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"

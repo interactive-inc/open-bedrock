@@ -1,5 +1,5 @@
-import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
-import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/application/iam/resolve-system-account-ids-for-employees"
+import { resolveCompanyAccountParticipants } from "@/contexts/company/interface/http/accounts/resolve-company-account-participants"
+import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/interface/http/accounts/resolve-system-account-ids-for-employees"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"

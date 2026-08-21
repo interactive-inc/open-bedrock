@@ -1,7 +1,7 @@
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
-import type { SystemD1Context } from "@system/infrastructure/configuration/system-context"
+import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 import { describe, expect, test } from "bun:test"
 
 function isolateChangesPerBatchStatement(context: SystemD1Context): SystemD1Context {

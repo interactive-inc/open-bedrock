@@ -1,4 +1,4 @@
-import type { CompanyAccountProfileRepository } from "@/contexts/company/application/account-profile/company-account-profile-repository"
+import type { CompanyAccountProfileRepository } from "@/contexts/company/infrastructure/account-profile/company-account-profile-port.repository"
 import { CompanyAccountProfileEntity } from "@/contexts/company/domain/account-profile/company-account-profile.entity"
 
 type CompanyAccountProfileRow = Readonly<{

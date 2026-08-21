@@ -1,13 +1,13 @@
-import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
-import { resolveActiveCompanyAccountParticipant } from "@/contexts/company/application/iam/resolve-active-company-account-participant"
-import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
-import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/application/iam/resolve-system-account-ids-for-employees"
-import { resolveCompanyProcedureTask } from "@/contexts/company/application/organization/resolve-company-procedure-task"
+import { resolveActiveSystemAccountId } from "@/contexts/company/infrastructure/iam/resolve-active-system-account-id.repository"
+import { resolveActiveCompanyAccountParticipant } from "@/contexts/company/infrastructure/iam/resolve-active-company-account-participant.repository"
+import { resolveCompanyAccountParticipants } from "@/contexts/company/infrastructure/iam/resolve-company-account-participants.repository"
+import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/infrastructure/iam/resolve-system-account-ids-for-employees.repository"
+import { resolveCompanyProcedureTask } from "@/contexts/company/infrastructure/organization/resolve-company-procedure-task.repository"
 import { type CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/parse-company-procedure-decision-policy"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee-repository"
+import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
-import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request"
+import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request.repository"
 import type { Context } from "@/env"
 import { canRepairWorkflow } from "@/api/http/application-requests/lib/can-repair-workflow"
 import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
@@ -30,15 +30,15 @@ import { CancelSystemProcedure } from "@system/application/workflow/cancel-syste
 import {
   createSystemTaskPersistence,
   type StartSystemProcedureTask,
-} from "@system/application/workflow/create-system-task-persistence"
+} from "@system/domain/workflow/create-system-task-persistence"
 import { DecideSystemTask } from "@system/application/workflow/decide-system-task"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
-import type { SystemProposalView } from "@system/application/workflow/system-proposal-query"
+import type { SystemProposalView } from "@system/infrastructure/workflow/system-proposal-query.repository"
 import { systemCaseIdSchema } from "@system/domain/workflow/system-case.entity"
 import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
 import { toSystemProposalDigest } from "@system/domain/workflow/to-system-proposal-digest"
-import { SystemD1ProposalQuery } from "@system/infrastructure/workflow/system-d1-proposal-query"
-import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer"
+import { SystemD1ProposalQuery } from "@system/infrastructure/workflow/system-d1-proposal-query.repository"
+import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
 
 export type SystemApplicationResult = Readonly<{
   proposal: SystemProposalView

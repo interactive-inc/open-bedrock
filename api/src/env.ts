@@ -1,5 +1,5 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { CompanyActor } from "@/contexts/company/application/core/company-actor"
+import type { CompanyActor } from "@/contexts/company/domain/core/company-actor"
 import type { schema } from "@/schema"
 import type {
   SystemD1Context,
@@ -7,7 +7,7 @@ import type {
   SystemEmailSender,
   SystemRequestAudit,
   SystemRequestAuditContext,
-} from "@system/infrastructure/configuration/system-context"
+} from "@system/infrastructure/configuration/system-context.repository"
 import type { OidcClientRegistry } from "@system/domain/identity/oidc-client.policy"
 import type { OidcIssuerConfiguration } from "@system/domain/identity/oidc.value"
 import type { DrizzleD1Database } from "drizzle-orm/d1"

@@ -1,5 +1,6 @@
-import { CancelAntisocialCheck } from "@/contexts/antisocial-check/application/cancel-antisocial-check"
-import { GetAntisocialCheck } from "@/contexts/antisocial-check/application/get-antisocial-check"
+import { ConflictError } from "@/lib/errors"
+import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/antisocial-check.repository"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { UpdateAntisocialCheck } from "@/contexts/antisocial-check/application/update-antisocial-check"
 import type { AntisocialCheck } from "@/contexts/antisocial-check/domain/antisocial-check.entity"
 import { factory } from "@/contexts/company/interface/utils/factory"
@@ -35,10 +36,33 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const antisocialCheck = await new GetAntisocialCheck(c).run({
-    antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
-    session: viewer,
-  })
+  const antisocialCheck = await (async () => {
+    const command = {
+      antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
+      session: viewer,
+    }
+
+    const antisocialCheckRepository = new AntisocialCheckRepository(c)
+
+    const antisocialCheck = await antisocialCheckRepository.findById(command.antisocialCheckId)
+
+    if (antisocialCheck instanceof Error) {
+      return new UnexpectedError("failed to find antisocial check", { cause: antisocialCheck })
+    }
+
+    if (antisocialCheck === null) {
+      return new NotFoundError("antisocial check not found", "antisocial_check_not_found")
+    }
+
+    if (
+      antisocialCheck.requesterId !== command.session.employeeId &&
+      command.session.hasPermission("antisocial_check:manage") === false
+    ) {
+      return new ForbiddenError("not the requester", "not_requester")
+    }
+
+    return antisocialCheck
+  })()
 
   if (antisocialCheck instanceof ApplicationError) {
     throw toHttpException(antisocialCheck)
@@ -95,10 +119,44 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new CancelAntisocialCheck(c).run({
-    antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
-    requesterId: viewer.employeeId,
-  })
+  const result = await (async () => {
+    const command = {
+      antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
+      requesterId: viewer.employeeId,
+    }
+
+    const antisocialCheckRepository = new AntisocialCheckRepository(c)
+
+    const current = await antisocialCheckRepository.findById(command.antisocialCheckId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find antisocial check", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("antisocial check not found", "antisocial_check_not_found")
+    }
+
+    if (current.requesterId !== command.requesterId) {
+      return new ForbiddenError("not the requester", "not_requester")
+    }
+
+    if (current.status !== "requested") {
+      return new ConflictError("antisocial check is not modifiable", "not_modifiable")
+    }
+
+    const deleted = await antisocialCheckRepository.delete(command.antisocialCheckId)
+
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete antisocial check", { cause: deleted })
+    }
+
+    if (deleted === null) {
+      return new ConflictError("antisocial check is not modifiable", "not_modifiable")
+    }
+
+    return { reason: "cancelled" }
+  })()
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

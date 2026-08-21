@@ -9,7 +9,7 @@ import { parseAuditEventId } from "@/contexts/company/interface/utils/parse-audi
 import { resolveAuditNow } from "@/contexts/company/interface/utils/resolve-audit-now"
 import { toAuditIsoString } from "@/contexts/company/interface/utils/to-audit-iso-string"
 import { AuditTrail } from "@/contexts/company/interface/utils/audit-trail"
-import type { AuditEventFilters } from "@/contexts/company/infrastructure/audit/audit-event-repository"
+import type { AuditEventFilters } from "@/contexts/company/infrastructure/audit/audit-event.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import type { AppAuditEventDetail, AppAuditEventPage } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"

@@ -3,7 +3,7 @@ import { Position } from "@/contexts/company/domain/position/position.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { PositionRepository } from "@/contexts/company/infrastructure/position/position-repository"
+import { PositionRepository } from "@/contexts/company/infrastructure/position/position.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {

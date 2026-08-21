@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
-import { readCanonicalOrganizationState } from "@/contexts/company/application/organization/read-canonical-organization-state"
-import { toStorageEmployeeId } from "@/contexts/company/infrastructure/workforce/to-storage-employee-id"
+import { readCanonicalOrganizationState } from "@/contexts/company/infrastructure/organization/read-canonical-organization-state.repository"
+import { toStorageEmployeeId } from "@/contexts/company/infrastructure/workforce/to-storage-employee-id.repository"
 
 export type Props = {
   c: Context

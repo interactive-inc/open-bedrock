@@ -1,4 +1,4 @@
-import type { ReadOrganizationWorkforceStateResult } from "@/contexts/company/application/workforce/read-organization-workforce-state"
+import type { ReadOrganizationWorkforceStateResult } from "@/contexts/company/infrastructure/workforce/read-organization-workforce-state.repository"
 import { periodContainsDate } from "@/contexts/company/domain/workforce/period-contains-date"
 import { toCompanyAssignmentResponse } from "@/contexts/company/interface/utils/to-company-assignment-response"
 import { toCompanyResponsibilityResponse } from "@/contexts/company/interface/utils/to-company-responsibility-response"

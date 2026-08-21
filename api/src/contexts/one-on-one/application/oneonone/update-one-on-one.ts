@@ -1,6 +1,6 @@
 import type { OneOnOne } from "@/contexts/one-on-one/domain/oneonone/one-on-one.entity"
 import type { Context } from "@/env"
-import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/oneonone/one-on-one-repository"
+import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/oneonone/one-on-one.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

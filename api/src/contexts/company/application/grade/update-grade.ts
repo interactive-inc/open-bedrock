@@ -3,7 +3,7 @@ import { Grade } from "@/contexts/company/domain/grade/grade.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { GradeRepository } from "@/contexts/company/infrastructure/grade/grade-repository"
+import { GradeRepository } from "@/contexts/company/infrastructure/grade/grade.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {

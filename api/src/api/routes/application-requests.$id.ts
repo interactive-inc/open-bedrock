@@ -1,6 +1,6 @@
-import { resolveActiveCompanyAccountParticipant } from "@/contexts/company/application/iam/resolve-active-company-account-participant"
-import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
-import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam/resolve-active-system-account-id"
+import { resolveActiveCompanyAccountParticipant } from "@/contexts/company/interface/http/accounts/resolve-active-company-account-participant"
+import { resolveCompanyAccountParticipants } from "@/contexts/company/interface/http/accounts/resolve-company-account-participants"
+import { resolveActiveSystemAccountId } from "@/contexts/company/interface/http/accounts/resolve-active-system-account-id"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/parse-company-procedure-decision-policy"
 import {
   reviseSystemApplication,

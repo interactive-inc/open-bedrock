@@ -1,4 +1,6 @@
-import { ResolveItIncident } from "@/contexts/it-incident/application/resolve-it-incident"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/it-incident.repository"
+
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppItIncident } from "@/lib/app-schemas"
@@ -16,11 +18,45 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const updated = await new ResolveItIncident(c).run({
-    session,
-    id: validateIntParam(c.req.param("id"), "it_incident"),
-    resolvedAt: c.env.NOW ?? new Date().toISOString(),
-  })
+  const updated = await (async () => {
+    const command = {
+      session,
+      id: validateIntParam(c.req.param("id"), "it_incident"),
+      resolvedAt: c.env.NOW ?? new Date().toISOString(),
+    }
+
+    const repository = new ItIncidentRepository(c)
+
+    if (command.session.hasPermission("it_incident:manage") === false) {
+      return new ForbiddenError("cannot manage it incidents", "forbidden")
+    }
+
+    const incident = await repository.findById(command.id)
+
+    if (incident instanceof Error) {
+      return new UnexpectedError("failed to find it incident", { cause: incident })
+    }
+
+    if (incident === null) {
+      return new NotFoundError("it incident not found", "it_incident_not_found")
+    }
+
+    if (incident.status === "resolved") {
+      return new ConflictError("it incident already resolved", "it_incident_already_resolved")
+    }
+
+    const updated = await repository.update(incident.resolve(command.resolvedAt))
+
+    if (updated instanceof Error) {
+      return new UnexpectedError("failed to resolve it incident", { cause: updated })
+    }
+
+    if (updated === null) {
+      return new NotFoundError("it incident not found", "it_incident_not_found")
+    }
+
+    return updated
+  })()
 
   if (updated instanceof ApplicationError) {
     throw toHttpException(updated)

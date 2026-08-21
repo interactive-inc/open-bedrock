@@ -3,7 +3,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Room } from "@/contexts/room/domain/room.entity"
 import type { Context } from "@/env"
-import { RoomRepository } from "@/contexts/room/infrastructure/room-repository"
+import { RoomRepository } from "@/contexts/room/infrastructure/room.repository"
 
 export type Command = {
   session: Session

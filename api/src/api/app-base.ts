@@ -12,7 +12,7 @@ import { requestContextMiddleware } from "@/contexts/company/interface/middlewar
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { auditNoStore } from "@/contexts/company/interface/middlewares/audit-no-store"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import type { CompanyCapability } from "@/contexts/company/application/core/company-actor"
+import type { CompanyCapability } from "@/contexts/company/domain/core/company-actor"
 import type { OidcClientRegistry } from "@system/domain/identity/oidc-client.policy"
 import type { OidcIssuerConfiguration } from "@system/domain/identity/oidc.value"
 

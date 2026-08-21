@@ -1,5 +1,5 @@
 import { Budget } from "@/contexts/expense/domain/budget/budget.entity"
-import { BudgetRepository } from "@/contexts/expense/infrastructure/budget/budget-repository"
+import { BudgetRepository } from "@/contexts/expense/infrastructure/budget/budget.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { describe, expect, test } from "bun:test"

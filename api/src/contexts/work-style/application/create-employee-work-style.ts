@@ -4,7 +4,7 @@ import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { WorkStyle } from "@/lib/schemas"
 import type { Context } from "@/env"
-import { EmployeeWorkStyleRepository } from "@/contexts/work-style/infrastructure/employee-work-style-repository"
+import { EmployeeWorkStyleRepository } from "@/contexts/work-style/infrastructure/employee-work-style.repository"
 
 export type Command = {
   session: Session

@@ -1,4 +1,5 @@
-import { CreateMcpGrant } from "@/contexts/system/application/auth/create-mcp-grant"
+import { JwtSecretMissingApplicationError } from "@/contexts/system/application/auth/errors"
+import { McpGrantTokenService } from "@/contexts/system/infrastructure/auth/mcp-grant-token.service.repository"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
 import { requireSystemAuthentication } from "@system/interface/http/require-system-authentication"
@@ -23,14 +24,21 @@ export const POST = systemFactory.createHandlers(
   zValidator("json", z.object({ challenge: z.string().min(1) })),
   async (c) => {
     const body = c.req.valid("json")
-    const service = new CreateMcpGrant()
+    const secret = c.env.JWT_SECRET
+    const result = await (async () => {
+      if (secret === undefined || secret.length === 0) {
+        return new JwtSecretMissingApplicationError()
+      }
 
-    const result = await service.execute({
-      accountId: c.var.userId,
-      tokenVersion: c.var.accountTokenVersion,
-      challenge: body.challenge,
-      secret: c.env.JWT_SECRET,
-    })
+      const grant = await McpGrantTokenService.create(
+        c.var.userId,
+        c.var.accountTokenVersion,
+        body.challenge,
+        secret,
+      )
+
+      return { item: { grant } }
+    })()
 
     if (result instanceof Error) {
       throw new SystemHttpError({
