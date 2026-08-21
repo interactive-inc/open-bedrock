@@ -1,4 +1,4 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import {
   createSystemDecisionTask,
   type StartSystemProcedureTask,
@@ -6,10 +6,16 @@ import {
 import { InvalidSystemProposalError } from "@system/domain/errors"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
-import { createProposalId, type ProposalId } from "@system/domain/values/proposal-id.schema"
-import type { SystemCaseReference } from "@system/domain/values/system-case-reference.schema"
+import {
+  createProposalId,
+  type ProposalId,
+} from "@system/domain/schemas/workflow/proposal-id.schema"
+import type { SystemCaseReference } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import { SystemCaseEntity } from "@system/domain/entities/system-case.entity"
-import { createSystemCaseId, type SystemCaseId } from "@system/domain/values/system-case.schema"
+import {
+  createSystemCaseId,
+  type SystemCaseId,
+} from "@system/domain/schemas/workflow/system-case.schema"
 import type { SystemWorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
 
 type Deps = Readonly<{

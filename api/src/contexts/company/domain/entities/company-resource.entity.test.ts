@@ -3,7 +3,7 @@ import {
   CompanyResourceEntity,
   type CompanyResourceProps,
 } from "@/contexts/company/domain/entities/company-resource.entity"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 
 const employee = {
   organizationId: "organization:default",

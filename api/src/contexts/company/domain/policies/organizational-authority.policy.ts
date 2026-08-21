@@ -5,7 +5,7 @@ import type {
   WorkforcePeriodVersion,
 } from "@/contexts/company/domain/entities/workforce-schedule.entity"
 import { OrganizationalAuthorityError } from "@/contexts/company/domain/errors"
-import type { OrganizationalAuthorityCandidateEvidence } from "@/contexts/company/domain/values/organizational-authority-candidate-evidence.definition"
+import type { OrganizationalAuthorityCandidateEvidence } from "@/contexts/company/domain/definitions/organizational-authority-candidate-evidence.definition"
 import type {
   OrganizationalAuthorityAssignmentEvidence,
   OrganizationalAuthorityCandidate,
@@ -15,14 +15,14 @@ import type {
   OrganizationalAuthorityProjection,
   OrganizationalAuthorityResolution,
   OrganizationalAuthorityResponsibilityEvidence,
-} from "@/contexts/company/domain/values/organizational-authority.definition"
-import { isCalendarDate } from "@/contexts/company/domain/values/is-calendar-date.definition"
-import { isOrgResponsibilityType } from "@/contexts/company/domain/values/org-responsibility-type.definition"
+} from "@/contexts/company/domain/definitions/organizational-authority.definition"
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
+import { isOrgResponsibilityType } from "@/contexts/company/domain/definitions/org-responsibility-type.definition"
 import {
   WorkforceStateValue,
   type WorkforceStateProps,
 } from "@/contexts/company/domain/values/workforce-state.value"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 function error(
   code: ConstructorParameters<typeof OrganizationalAuthorityError>[0],

@@ -1,13 +1,13 @@
 import type {
   WorkforceSnapshotReadPort,
   WorkforceSnapshotReadResult,
-} from "@/contexts/company/domain/values/organization-change.definition"
+} from "@/contexts/company/domain/definitions/organization-change.definition"
 import {
   toWorkforceEmployeeId,
   toWorkforceLifecycleSchedules,
 } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/restore-workforce-id.definition"
-import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"
 import {
   attachOrganizationPeriods,
@@ -17,7 +17,7 @@ import {
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { readWorkforceBaselineStates } from "@/contexts/company/infrastructure/workforce/read-workforce-baseline-states.repository"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 
 type EmployeeRow = Readonly<{

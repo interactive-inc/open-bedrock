@@ -3,8 +3,8 @@ import {
   SYSTEM_ACCESS_TOKEN_ISSUER,
 } from "@system/infrastructure/auth/system-access-token-profile.repository"
 import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer.repository"
-import { ACCESS_TOKEN_TYPE } from "@system/domain/values/access-token-claims.schema"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { ACCESS_TOKEN_TYPE } from "@system/domain/schemas/auth/access-token-claims.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SignJWT } from "jose"
 
 /**

@@ -1,7 +1,10 @@
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { InvalidSystemProposalError } from "@system/domain/errors"
-import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
-import { procedureKeySchema, type ProcedureKey } from "@system/domain/values/procedure-key.schema"
+import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
+import {
+  procedureKeySchema,
+  type ProcedureKey,
+} from "@system/domain/schemas/workflow/procedure-key.schema"
 import { z } from "zod"
 
 const propsSchema = z

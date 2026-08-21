@@ -3,7 +3,7 @@ import {
   SystemCLILoginUnavailableError,
 } from "@system/interface/errors"
 /** /system/v1/cli-authorization-callback */
-import { SystemCliIdentityRedirectUriValue } from "@system/domain/values/system-cli-identity-redirect-uri.value"
+import { SystemCliIdentityRedirectUriValue } from "@system/domain/values/oauth/system-cli-identity-redirect-uri.value"
 import { SystemCliLoginAuditRecorder } from "@system/infrastructure/audit/system-cli-login-audit-recorder.repository"
 import { consumeSystemCliLoginState } from "@system/infrastructure/auth/consume-system-cli-login-state.repository"
 import { createSystemCliLoginCode } from "@system/infrastructure/auth/create-system-cli-login-code.repository"

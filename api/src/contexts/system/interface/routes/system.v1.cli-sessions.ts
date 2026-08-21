@@ -1,7 +1,7 @@
 import { SystemCLICodeInvalidError, SystemCLILoginUnavailableError } from "@system/interface/errors"
 /** /system/v1/cli-sessions */
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
-import { SystemAccessTokenSecretValue } from "@system/domain/values/system-access-token-secret.value"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
+import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-access-token-secret.value"
 import { IssueSystemSession } from "@system/application/auth/issue-system-session"
 import { consumeSystemCliLoginCode } from "@system/infrastructure/auth/consume-system-cli-login-code.repository"
 import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer.repository"

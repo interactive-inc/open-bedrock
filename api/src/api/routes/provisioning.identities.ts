@@ -1,5 +1,5 @@
 import { ProvisionExternalIdentities } from "@/api/http/provisioning/provision-external-identities"
-import { identitySubjectSchema } from "@system/domain/values/identity-subject.schema"
+import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-subject.schema"
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
 import { verifyProvisioningKey } from "@/api/http/middlewares/verify-provisioning-key"

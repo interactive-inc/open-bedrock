@@ -1,4 +1,4 @@
-import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
+import type { AttachmentBytes } from "@system/domain/definitions/attachments/attachment-bytes.definition"
 
 /** base64 をバイト列に戻す。 */
 export function fromBase64(value: string): AttachmentBytes {

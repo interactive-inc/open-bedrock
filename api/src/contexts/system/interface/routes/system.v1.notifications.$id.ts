@@ -6,7 +6,7 @@ import {
 } from "@system/interface/errors"
 /** /system/v1/notifications/:id */
 import { MarkSystemNotificationRead } from "@system/application/notifications/mark-system-notification-read"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"

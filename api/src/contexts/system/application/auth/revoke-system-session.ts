@@ -1,5 +1,5 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import type { SystemSessionAuditContext } from "@system/domain/values/system-session-audit-context.definition"
+import type { SystemSessionAuditContext } from "@system/domain/definitions/audit/system-session-audit-context.definition"
 import type { SystemSessionMaterial } from "@system/application/auth/issue-system-session"
 import type { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
 

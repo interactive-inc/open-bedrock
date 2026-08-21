@@ -1,13 +1,13 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
-import type { SystemSessionAuditContext } from "@system/domain/values/system-session-audit-context.definition"
+import type { SystemSessionAuditContext } from "@system/domain/definitions/audit/system-session-audit-context.definition"
 import type {
   SystemAccessTokenIssuer,
   SystemSessionMaterial,
 } from "@system/application/auth/issue-system-session"
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import type { SessionId } from "@system/domain/values/session-id.schema"
-import { SessionRotationValue } from "@system/domain/values/session-rotation.value"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { SessionId } from "@system/domain/schemas/auth/session-id.schema"
+import { SessionRotationValue } from "@system/domain/values/auth/session-rotation.value"
 import { SessionEntity } from "@system/domain/entities/session.entity"
 import type { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
 

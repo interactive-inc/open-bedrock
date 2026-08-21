@@ -1,6 +1,6 @@
 import { resolveEmployeeManagementAuthority } from "@/contexts/company/domain/policies/resolve-employee-management-authority.policy"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 /** 検証済みCompany snapshotだけから、actorが管理できるEmployee IDを決定的に返す。 */
 export function listManagedWorkforceEmployeeIds(props: {

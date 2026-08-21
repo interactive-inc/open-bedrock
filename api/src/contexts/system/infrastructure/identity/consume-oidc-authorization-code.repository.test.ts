@@ -1,5 +1,5 @@
-import { zAccountId } from "@system/domain/values/account-id.schema"
-import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { consumeOidcAuthorizationCode } from "@system/infrastructure/identity/consume-oidc-authorization-code.repository"
 import { createOidcAuthorizationCode } from "@system/infrastructure/identity/create-oidc-authorization-code.repository"
 import { toPkceS256Challenge } from "@system/infrastructure/auth/to-pkce-s256-challenge.repository"

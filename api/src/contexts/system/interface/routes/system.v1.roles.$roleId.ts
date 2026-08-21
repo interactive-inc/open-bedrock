@@ -9,10 +9,10 @@ import {
   SystemRoleNotFoundError,
 } from "@system/interface/errors"
 /** /system/v1/roles/:roleId */
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
-import { iamRoleIdSchema } from "@system/domain/values/iam-role.schema"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
+import { iamRoleIdSchema } from "@system/domain/schemas/iam/iam-role.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"

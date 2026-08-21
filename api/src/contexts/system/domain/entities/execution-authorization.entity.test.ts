@@ -1,6 +1,6 @@
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
-import { proposalDigestSchema } from "@system/domain/values/system-case-reference.schema"
+import { proposalDigestSchema } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import { describe, expect, test } from "bun:test"
 
 const GRANTED_AT = new Date("2026-08-16T00:00:00.000Z")

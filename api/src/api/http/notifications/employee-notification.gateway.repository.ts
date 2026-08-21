@@ -4,11 +4,11 @@ import { ResolveAccountEmployeeLink } from "@/contexts/company/infrastructure/wo
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
 import { AccountEmployeeLinkReadRepository } from "@/contexts/company/infrastructure/workforce/account-employee-link-read.repository"
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
-import { NotificationDeliveryBatchValue } from "@system/domain/values/notification-delivery-batch.value"
+import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
 import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 export type EmployeeNotification = Readonly<{
   recipientEmployeeId: number

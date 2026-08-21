@@ -1,11 +1,11 @@
 import { OrganizationInvariantViolationValue } from "@/contexts/company/domain/values/organization-invariant-violation.value"
-import { isCalendarDate } from "@/contexts/company/domain/values/is-calendar-date.definition"
-import { isValidOrganizationUnitText } from "@/contexts/company/domain/values/is-valid-organization-unit-text.definition"
-import type { OrganizationInvariantViolation } from "@/contexts/company/domain/values/organization-invariant.definition"
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
+import { isValidOrganizationUnitText } from "@/contexts/company/domain/definitions/is-valid-organization-unit-text.definition"
+import type { OrganizationInvariantViolation } from "@/contexts/company/domain/definitions/organization-invariant.definition"
 import {
   organizationUnitKinds,
   type OrganizationUnitPeriod,
-} from "@/contexts/company/domain/values/organization-unit.definition"
+} from "@/contexts/company/domain/definitions/organization-unit.definition"
 
 export function validateOrganizationUnitPeriods(
   periods: ReadonlyArray<OrganizationUnitPeriod>,

@@ -1,8 +1,8 @@
 import type {
   PersonnelActionRequestRecord,
   PersonnelActionRequestStatus,
-} from "@/contexts/company/domain/values/personnel-action-request-record.definition"
-import { personnelActionInputSchema } from "@/contexts/company/domain/values/lifecycle-types.definition"
+} from "@/contexts/company/domain/definitions/personnel-action-request-record.definition"
+import { personnelActionInputSchema } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import type { Session } from "@/lib/auth/session"
 import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"

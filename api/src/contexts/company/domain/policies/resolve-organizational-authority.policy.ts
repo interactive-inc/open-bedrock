@@ -4,11 +4,11 @@ import type {
   OrganizationalAuthorityCandidate,
   OrganizationalAuthorityProjection,
   OrganizationalAuthorityResolution,
-} from "@/contexts/company/domain/values/organizational-authority.definition"
+} from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import { resolveOrganizationalAuthorityCriterion } from "@/contexts/company/domain/policies/resolve-organizational-authority-criterion.policy"
 import { validateOrganizationalAuthorityProjection } from "@/contexts/company/domain/policies/validate-organizational-authority-projection.policy"
-import type { AccountEmployeeLink } from "@/contexts/company/domain/values/workforce-schedule.definition"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { AccountEmployeeLink } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 /** Companyの固定済みWorkforce projectionだけから組織上の判断候補を解決する。 */
 export function resolveOrganizationalAuthority(

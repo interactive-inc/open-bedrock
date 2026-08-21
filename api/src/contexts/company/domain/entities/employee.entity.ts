@@ -1,5 +1,5 @@
 import { InvalidEmployeeError } from "@/contexts/company/domain/errors"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type EmployeeProps = Readonly<{
   id: EmployeeId

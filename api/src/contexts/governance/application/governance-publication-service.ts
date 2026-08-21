@@ -1,5 +1,5 @@
 import type { Session } from "@/lib/auth/session"
-import type { SystemJsonValue } from "@system/domain/values/system-json-value.definition"
+import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
 import type { Context } from "@/env"
 import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
 import { GovernanceAccessRepository } from "@/contexts/governance/infrastructure/governance-access.repository"

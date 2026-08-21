@@ -1,13 +1,13 @@
 import { compareOrganizationalAuthorityAssignments } from "@/contexts/company/domain/policies/compare-organizational-authority-assignments.policy"
-import { listWorkforceStateAssignments } from "@/contexts/company/domain/values/list-workforce-state-assignments.definition"
-import type { OrganizationalAuthorityCandidateEvidence } from "@/contexts/company/domain/values/organizational-authority-candidate-evidence.definition"
+import { listWorkforceStateAssignments } from "@/contexts/company/domain/definitions/list-workforce-state-assignments.definition"
+import type { OrganizationalAuthorityCandidateEvidence } from "@/contexts/company/domain/definitions/organizational-authority-candidate-evidence.definition"
 import type {
   OrganizationalAuthorityManagementEdgeEvidence,
   OrganizationalAuthorityProjection,
-} from "@/contexts/company/domain/values/organizational-authority.definition"
+} from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
 import { toOrganizationalAuthorityManagementEdgeEvidence } from "@/contexts/company/domain/policies/to-organizational-authority-management-edge-evidence.policy"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function listOrganizationalAuthorityManagementChainCandidates(props: {
   statesByEmployee: ReadonlyMap<EmployeeId, WorkforceStateAt>

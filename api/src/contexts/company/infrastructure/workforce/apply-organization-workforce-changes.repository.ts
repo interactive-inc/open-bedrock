@@ -1,7 +1,7 @@
-import type { OrganizationChangeSet } from "@/contexts/company/domain/values/organization-change.definition"
+import type { OrganizationChangeSet } from "@/contexts/company/domain/definitions/organization-change.definition"
 import { OrganizationChangeValidationError } from "@/contexts/company/domain/errors"
 import { replaceOrganizationChangePeriods } from "@/contexts/company/domain/policies/replace-organization-change-periods.policy"
-import type { WorkforceSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { WorkforceSchedule } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function applyOrganizationWorkforceChanges(
   schedules: ReadonlyArray<WorkforceSchedule>,

@@ -1,4 +1,4 @@
-import type { OrganizationChangeSet } from "@/contexts/company/domain/values/organization-change.definition"
+import type { OrganizationChangeSet } from "@/contexts/company/domain/definitions/organization-change.definition"
 
 export function hasValidOrganizationChangeAuditMetadata(change: OrganizationChangeSet): boolean {
   const actorIsValid =

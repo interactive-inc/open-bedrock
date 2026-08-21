@@ -1,5 +1,5 @@
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { AccountEntity } from "@system/domain/entities/account.entity"
 import { describe, expect, test } from "bun:test"
 

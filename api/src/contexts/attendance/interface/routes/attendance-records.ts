@@ -1,6 +1,6 @@
 import { resolveAttendanceSearchQuery } from "@/contexts/attendance/interface/http/attendance-records/resolve-attendance-search-query"
 import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
-import type { EmployeeRelation } from "@/contexts/company/domain/values/employee-relation.definition"
+import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/api/http/utils/list-report-employee-ids"
 import { attendanceListQuerySchema } from "@/contexts/attendance/interface/http/attendance-records/attendance-list-query"

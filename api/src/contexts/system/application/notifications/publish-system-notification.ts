@@ -1,4 +1,4 @@
-import { NotificationDeliveryBatchValue } from "@system/domain/values/notification-delivery-batch.value"
+import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import type { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 

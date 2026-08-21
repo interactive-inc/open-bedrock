@@ -1,10 +1,10 @@
 import { OrganizationInvariantViolationValue } from "@/contexts/company/domain/values/organization-invariant-violation.value"
-import { isCalendarDate } from "@/contexts/company/domain/values/is-calendar-date.definition"
-import { listActiveOrganizationUnitPeriods } from "@/contexts/company/domain/values/list-active-organization-unit-periods.definition"
-import { listOrganizationUnitBoundaryDates } from "@/contexts/company/domain/values/list-organization-unit-boundary-dates.definition"
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
+import { listActiveOrganizationUnitPeriods } from "@/contexts/company/domain/definitions/list-active-organization-unit-periods.definition"
+import { listOrganizationUnitBoundaryDates } from "@/contexts/company/domain/definitions/list-organization-unit-boundary-dates.definition"
 import { organizationUnitHierarchyHasCycleAt } from "@/contexts/company/domain/policies/organization-unit-hierarchy-has-cycle-at.policy"
-import type { OrganizationInvariantViolation } from "@/contexts/company/domain/values/organization-invariant.definition"
-import type { OrganizationUnitSnapshot } from "@/contexts/company/domain/values/organization-unit.definition"
+import type { OrganizationInvariantViolation } from "@/contexts/company/domain/definitions/organization-invariant.definition"
+import type { OrganizationUnitSnapshot } from "@/contexts/company/domain/definitions/organization-unit.definition"
 import { validateOrganizationUnitOverlaps } from "@/contexts/company/domain/policies/validate-organization-unit-overlaps.policy"
 import { validateOrganizationUnitParents } from "@/contexts/company/domain/policies/validate-organization-unit-parents.policy"
 import { validateOrganizationUnitPeriods } from "@/contexts/company/domain/policies/validate-organization-unit-periods.policy"
@@ -12,8 +12,8 @@ import { validateOrganizationUnitPeriods } from "@/contexts/company/domain/polic
 export type {
   OrganizationInvariantCode,
   OrganizationInvariantViolation,
-} from "@/contexts/company/domain/values/organization-invariant.definition"
-export { organizationInvariantCodes } from "@/contexts/company/domain/values/organization-invariant.definition"
+} from "@/contexts/company/domain/definitions/organization-invariant.definition"
+export { organizationInvariantCodes } from "@/contexts/company/domain/definitions/organization-invariant.definition"
 
 /** OrgUnitの最新revision projectionを全期間についてfail closedで検証する。 */
 export function validateOrganizationUnitSnapshot(

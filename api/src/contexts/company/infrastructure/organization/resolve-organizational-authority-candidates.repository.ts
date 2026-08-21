@@ -2,7 +2,7 @@ import type {
   OrganizationalAuthorityCandidateResolution,
   OrganizationalAuthorityCriterion,
   OrganizationalAuthoritySnapshot,
-} from "@/contexts/company/domain/values/organizational-authority-candidate.definition"
+} from "@/contexts/company/domain/definitions/organizational-authority-candidate.definition"
 import { resolveCanonicalOrganizationAuthority } from "@/contexts/company/infrastructure/workforce/resolve-canonical-organization-authority.repository"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
@@ -12,7 +12,7 @@ import {
   CompanyUnavailableError,
   CompanyUnexpectedError,
 } from "@/contexts/company/domain/errors"
-import { resolveCompanyBusinessDate } from "@/contexts/company/domain/values/resolve-company-business-date.definition"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 
 async function readOrganizationRevision(
   c: CompanyContext,

@@ -1,4 +1,4 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context.repository"
 import type { OidcIdentity } from "@system/infrastructure/identity/oidc-id-token.service.repository"
 import {

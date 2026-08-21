@@ -1,7 +1,7 @@
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
-import { zAccountId } from "@system/domain/values/account-id.schema"
-import { systemCaseIdSchema } from "@system/domain/values/system-case.schema"
-import { proposalDigestSchema } from "@system/domain/values/system-case-reference.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { systemCaseIdSchema } from "@system/domain/schemas/workflow/system-case.schema"
+import { proposalDigestSchema } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import { SystemCaseEntity } from "@system/domain/entities/system-case.entity"
 import { describe, expect, test } from "bun:test"
 

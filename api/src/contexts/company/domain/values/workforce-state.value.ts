@@ -4,17 +4,17 @@ import type {
   WorkforcePeriodVersion,
 } from "@/contexts/company/domain/entities/workforce-schedule.entity"
 import { InvalidWorkforceStateError } from "@/contexts/company/domain/errors"
-import { isOrgResponsibilityType } from "@/contexts/company/domain/values/org-responsibility-type.definition"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
-import { isCalendarDate } from "@/contexts/company/domain/values/is-calendar-date.definition"
+import { isOrgResponsibilityType } from "@/contexts/company/domain/definitions/org-responsibility-type.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import {
   employmentStatuses,
   type EmploymentStatus,
-} from "@/contexts/company/domain/values/employment-status.definition"
+} from "@/contexts/company/domain/definitions/employment-status.definition"
 import type {
   EmployeeId,
   EmploymentId,
-} from "@/contexts/company/domain/values/workforce-id.definition"
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type WorkforceStateProps = Readonly<{
   employeeId: EmployeeId

@@ -1,5 +1,5 @@
 import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
-import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
+import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { SystemHTTPException } from "@system/interface/errors"
 import {
   DELETE,

@@ -1,12 +1,12 @@
 import { activeWorkforcePeriods } from "@/contexts/company/domain/policies/active-workforce-periods.policy"
 import { WorkforceInvariantViolationValue } from "@/contexts/company/domain/values/workforce-invariant-violation.value"
 import { findWorkforceEmployment } from "@/contexts/company/domain/policies/find-workforce-employment.policy"
-import type { OrganizationUnitPeriod } from "@/contexts/company/domain/values/organization-unit.definition"
+import type { OrganizationUnitPeriod } from "@/contexts/company/domain/definitions/organization-unit.definition"
 import { workforcePeriodContainsPeriod } from "@/contexts/company/domain/policies/workforce-period-contains-period.policy"
 import { workforcePeriodsHaveOverlap } from "@/contexts/company/domain/policies/workforce-periods-have-overlap.policy"
 import { workforcePeriodsOverlap } from "@/contexts/company/domain/policies/workforce-periods-overlap.policy"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
-import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
+import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function validateWorkforceAssignments(
   schedule: WorkforceLifecycleSchedule,

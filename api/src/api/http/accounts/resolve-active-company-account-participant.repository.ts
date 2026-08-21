@@ -1,7 +1,7 @@
 import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants.repository"
 import type { CompanyAccountParticipant } from "@/api/http/accounts/resolve-company-account-participants.repository"
 import type { Context } from "@/env"
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 export async function resolveActiveCompanyAccountParticipant(
   c: Context,

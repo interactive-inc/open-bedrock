@@ -1,15 +1,15 @@
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { InvalidSessionError } from "@system/domain/errors"
 import {
   zSessionFamilyId,
   type SessionFamilyId,
-} from "@system/domain/values/session-family-id.schema"
-import { zSessionId, type SessionId } from "@system/domain/values/session-id.schema"
+} from "@system/domain/schemas/auth/session-family-id.schema"
+import { zSessionId, type SessionId } from "@system/domain/schemas/auth/session-id.schema"
 import {
   zSessionTokenHash,
   type SessionTokenHash,
-} from "@system/domain/values/session-token-hash.schema"
-import type { SessionUseRejection } from "@system/domain/values/session-use-rejection.definition"
+} from "@system/domain/schemas/auth/session-token-hash.schema"
+import type { SessionUseRejection } from "@system/domain/definitions/auth/session-use-rejection.definition"
 import { z } from "zod"
 
 const propsSchema = z

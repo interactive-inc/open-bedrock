@@ -1,5 +1,5 @@
 import type { Session } from "@/lib/auth/session"
-import type { EmployeeRelation } from "@/contexts/company/domain/values/employee-relation.definition"
+import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 
 /**
  * 対象従業員の目標を manager/final 評価できるか判定する。self は含めない。

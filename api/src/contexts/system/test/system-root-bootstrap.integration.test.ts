@@ -2,7 +2,7 @@ import {
   BootstrapSystemRoot,
   type SystemPasswordHasher,
 } from "@system/application/iam/bootstrap-system-root"
-import { wrapSystemD1TestDatabase } from "@system/infrastructure/auth/wrap-system-d1-test-database.test-support"
+import { wrapSystemD1TestDatabase } from "@system/test/wrap-system-d1-test-database.test-support"
 import { SystemRootBootstrapRepositoryD1 } from "@system/infrastructure/iam/system-root-bootstrap.repository"
 import { Database } from "bun:sqlite"
 import { afterEach, describe, expect, test } from "bun:test"

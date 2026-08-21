@@ -1,10 +1,10 @@
 import { MarkSystemNotificationRead } from "@system/application/notifications/mark-system-notification-read"
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
-import { zAccountId } from "@system/domain/values/account-id.schema"
-import { NotificationDeliveryBatchValue } from "@system/domain/values/notification-delivery-batch.value"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
 import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
+import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 import { describe, expect, test } from "bun:test"
 

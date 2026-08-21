@@ -5,13 +5,23 @@ import { resolve } from "node:path"
 
 const domainRoot = resolve(import.meta.dir, "../domain")
 
+const bucketSuffixes: Readonly<Record<string, RegExp>> = {
+  entities: /\.entity(?:\.test)?\.ts$/,
+  values: /\.value(?:\.test)?\.ts$/,
+  catalogs: /\.catalog(?:\.test)?\.ts$/,
+  definitions: /\.definition(?:\.test)?\.ts$/,
+  policies: /\.policy(?:\.test)?\.ts$/,
+}
+
+const bucketNames = Object.keys(bucketSuffixes)
+
 describe("Company domain structure", () => {
-  test("domain直下をentities・values・policies・errors.tsだけに限定する", () => {
+  test("domain直下をmodel bucketとerrors.tsだけに限定する", () => {
     expect(
       readdirSync(domainRoot, { withFileTypes: true })
         .map((entry) => `${entry.isDirectory() ? "directory" : "file"}:${entry.name}`)
         .toSorted(),
-    ).toEqual(["directory:entities", "directory:policies", "directory:values", "file:errors.ts"])
+    ).toEqual([...bucketNames.map((name) => `directory:${name}`).toSorted(), "file:errors.ts"])
 
     const paths = Array.from(new Glob("**/*.ts").scanSync({ cwd: domainRoot, onlyFiles: true }))
 
@@ -19,36 +29,35 @@ describe("Company domain structure", () => {
       paths.filter((path) => {
         if (path === "errors.ts") return false
         const directory = path.split("/")[0]
-        return directory !== "entities" && directory !== "values" && directory !== "policies"
+        return directory === undefined || !bucketNames.includes(directory)
       }),
     ).toEqual([])
   })
 
+  test("各bucketにはそのsuffixのfileだけを置く", () => {
+    const violations: string[] = []
+
+    for (const [bucket, pattern] of Object.entries(bucketSuffixes)) {
+      for (const path of new Glob("**/*.ts").scanSync({
+        cwd: resolve(domainRoot, bucket),
+        onlyFiles: true,
+      })) {
+        if (!pattern.test(path)) violations.push(`${bucket}/${path}`)
+      }
+    }
+
+    expect(violations).toEqual([])
+  })
+
   test("Domain Errorをerrors.ts以外へ分散させない", () => {
     const violations = Array.from(
-      new Glob("{entities,values,policies}/**/*.ts").scanSync({
+      new Glob(`{${bucketNames.join(",")}}/**/*.ts`).scanSync({
         cwd: domainRoot,
         onlyFiles: true,
       }),
     ).filter((path) =>
       /export class \w*Error extends Error/.test(readFileSync(resolve(domainRoot, path), "utf8")),
     )
-
-    expect(violations).toEqual([])
-  })
-
-  test("Entity・Value・Policyのfile suffixを責務と一致させる", () => {
-    const sourceFiles = [
-      ...new Glob("{entities,values,policies}/*.ts").scanSync({
-        cwd: domainRoot,
-      }),
-    ].filter((file) => !file.endsWith(".test.ts"))
-    const violations = sourceFiles.filter((file) => {
-      if (file.startsWith("entities/")) return !file.endsWith(".entity.ts")
-      if (file.startsWith("policies/")) return !file.endsWith(".policy.ts")
-
-      return !/\.(?:catalog|definition|schema|value)\.ts$/u.test(file)
-    })
 
     expect(violations).toEqual([])
   })

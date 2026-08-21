@@ -1,4 +1,4 @@
-import type { Department } from "@/contexts/company/domain/values/department.definition"
+import type { Department } from "@/contexts/company/domain/definitions/department.definition"
 
 export const seedDepartments: ReadonlyArray<Department> = [
   { id: 1, name: "経営企画部" },

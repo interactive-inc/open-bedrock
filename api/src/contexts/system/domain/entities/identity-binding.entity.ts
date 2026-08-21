@@ -1,13 +1,13 @@
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import {
   identityProviderSchema,
   type IdentityProvider,
-} from "@system/domain/values/identity-provider.schema"
-import { zIdentityId, type IdentityId } from "@system/domain/values/identity-id.schema"
+} from "@system/domain/schemas/identity/identity-provider.schema"
+import { zIdentityId, type IdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import {
   identitySubjectSchema,
   type IdentitySubject,
-} from "@system/domain/values/identity-subject.schema"
+} from "@system/domain/schemas/identity/identity-subject.schema"
 import { InvalidIdentityBindingError } from "@system/domain/errors"
 import { z } from "zod"
 

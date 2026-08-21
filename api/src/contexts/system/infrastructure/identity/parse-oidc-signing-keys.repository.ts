@@ -1,5 +1,5 @@
-import { oidcSigningAlgorithm } from "@system/domain/values/oidc-signing-algorithm.value"
-import type { OidcSigningKeysValue } from "@system/domain/values/oidc-signing-keys.definition"
+import { oidcSigningAlgorithm } from "@system/domain/values/oauth/oidc-signing-algorithm.value"
+import type { OidcSigningKeysValue } from "@system/domain/definitions/oauth/oidc-signing-keys.definition"
 import { z } from "zod"
 
 const coordinate = z.string().regex(/^[A-Za-z0-9_-]{43}$/)

@@ -1,5 +1,5 @@
 import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
-import { SystemPasswordValue } from "@system/domain/values/system-password.value"
+import { SystemPasswordValue } from "@system/domain/values/auth/system-password.value"
 import {
   PasswordResetTokenInvalidApplicationError,
   PepperSecretMissingApplicationError,
@@ -8,7 +8,7 @@ import {
 import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
 import { findSystemPasswordResetChallenge } from "@system/infrastructure/auth/find-system-password-reset-challenge.repository"
 import { completeSystemPasswordResetChallenge } from "@system/infrastructure/auth/complete-system-password-reset-challenge.repository"
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import type {
   SystemClockContext,
   SystemD1Context,

@@ -15,7 +15,7 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { ConflictError as ApplicationConflictError, UnprocessableError } from "@/lib/errors"
 import { zAppApplicationTemplate, zAppApplicationTemplateDetail } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/lib/http/validate-code-param"
-import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
+import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

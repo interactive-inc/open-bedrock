@@ -1,5 +1,5 @@
-import type { SessionRotationAuditEvents } from "@system/domain/values/session-rotation-audit-events.definition"
-import type { SessionRotationValue } from "@system/domain/values/session-rotation.value"
+import type { SessionRotationAuditEvents } from "@system/domain/definitions/auth/session-rotation-audit-events.definition"
+import type { SessionRotationValue } from "@system/domain/values/auth/session-rotation.value"
 
 type Props = Readonly<{
   database: D1Database

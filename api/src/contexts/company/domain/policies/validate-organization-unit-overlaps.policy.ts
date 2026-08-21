@@ -1,6 +1,6 @@
 import { OrganizationInvariantViolationValue } from "@/contexts/company/domain/values/organization-invariant-violation.value"
-import type { OrganizationInvariantViolation } from "@/contexts/company/domain/values/organization-invariant.definition"
-import type { OrganizationUnitPeriod } from "@/contexts/company/domain/values/organization-unit.definition"
+import type { OrganizationInvariantViolation } from "@/contexts/company/domain/definitions/organization-invariant.definition"
+import type { OrganizationUnitPeriod } from "@/contexts/company/domain/definitions/organization-unit.definition"
 import { workforcePeriodsOverlap } from "@/contexts/company/domain/policies/workforce-periods-overlap.policy"
 
 export function validateOrganizationUnitOverlaps(

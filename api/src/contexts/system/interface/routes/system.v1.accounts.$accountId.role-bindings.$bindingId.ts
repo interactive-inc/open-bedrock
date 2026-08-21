@@ -6,10 +6,10 @@ import {
   SystemRoleBindingNotFoundError,
 } from "@system/interface/errors"
 /** /system/v1/accounts/:accountId/role-bindings/:bindingId */
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
-import { roleBindingIdSchema } from "@system/domain/values/role-binding.schema"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
+import { roleBindingIdSchema } from "@system/domain/schemas/iam/role-binding.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration.repository"
 import { SystemRoleBindingAdministrationRepository } from "@system/infrastructure/iam/system-role-binding-administration.repository"

@@ -1,7 +1,10 @@
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
-import { procedureKeySchema, type ProcedureKey } from "@system/domain/values/procedure-key.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import {
+  procedureKeySchema,
+  type ProcedureKey,
+} from "@system/domain/schemas/workflow/procedure-key.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type DelegationRow = Readonly<{

@@ -1,4 +1,4 @@
-import { employeeStatusSchema } from "@/contexts/company/domain/values/employee-status.definition"
+import { employeeStatusSchema } from "@/contexts/company/domain/definitions/employee-status.definition"
 import { z } from "zod"
 
 const employeePropsSchema = z.object({

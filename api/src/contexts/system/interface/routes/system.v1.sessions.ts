@@ -5,7 +5,7 @@ import {
   SystemSessionUnavailableError,
 } from "@system/interface/errors"
 /** /system/v1/sessions */
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import { IssueSystemSession } from "@system/application/auth/issue-system-session"
 import { RevokeSystemSession } from "@system/application/auth/revoke-system-session"
 import { RotateSystemSession } from "@system/application/auth/rotate-system-session"

@@ -1,5 +1,5 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import type { IamRoleId } from "@system/domain/values/iam-role.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { IamRoleId } from "@system/domain/schemas/iam/iam-role.schema"
 import { PrepareSystemAccountProvisioning } from "@system/infrastructure/identity/prepare-system-account-provisioning.repository"
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"

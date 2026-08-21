@@ -1,4 +1,4 @@
-import type { WorkforcePeriodVersion } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { WorkforcePeriodVersion } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function activeWorkforcePeriods<TPeriod extends WorkforcePeriodVersion>(
   periods: ReadonlyArray<TPeriod>,

@@ -1,7 +1,7 @@
-import type { OrganizationChangeSet } from "@/contexts/company/domain/values/organization-change.definition"
+import type { OrganizationChangeSet } from "@/contexts/company/domain/definitions/organization-change.definition"
 import { OrganizationChangeValidationError } from "@/contexts/company/domain/errors"
-import type { OrganizationUnitPeriod } from "@/contexts/company/domain/values/organization-unit.definition"
-import type { OrganizationUnitId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { OrganizationUnitPeriod } from "@/contexts/company/domain/definitions/organization-unit.definition"
+import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function validateOrganizationChangeIdentities(
   currentPeriods: ReadonlyArray<OrganizationUnitPeriod>,

@@ -1,4 +1,4 @@
-import type { PasswordResetTokenHash } from "@system/domain/values/password-reset-token-hash.schema"
+import type { PasswordResetTokenHash } from "@system/domain/schemas/auth/password-reset-token-hash.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"

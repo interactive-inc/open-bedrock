@@ -3,18 +3,18 @@ import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/errors"
 import type {
   OrganizationalAuthorityCandidateResolution,
   OrganizationalAuthorityCriterion as ProcedureCriterion,
-} from "@/contexts/company/domain/values/organizational-authority-candidate.definition"
+} from "@/contexts/company/domain/definitions/organizational-authority-candidate.definition"
 import type {
   OrganizationalAuthorityCriterion,
   OrganizationalAuthorityEvidence,
-} from "@/contexts/company/domain/values/organizational-authority.definition"
+} from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import {
   toWorkforceEmployeeId,
   toWorkforceOrganizationUnitId,
 } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import { restoreOrgResponsibilityType } from "@/contexts/company/domain/values/restore-org-responsibility-type.definition"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
 import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
@@ -23,7 +23,7 @@ import {
   CompanyConflictError,
   CompanyUnexpectedError,
 } from "@/contexts/company/domain/errors"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 type EmployeeRow = Readonly<{ id: number; code: string | null }>
 

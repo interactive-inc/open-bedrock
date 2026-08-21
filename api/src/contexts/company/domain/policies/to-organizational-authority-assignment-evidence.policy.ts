@@ -1,8 +1,8 @@
 import type {
   OrganizationalAuthorityAssignmentEvidence,
   OrganizationalAuthorityProjection,
-} from "@/contexts/company/domain/values/organizational-authority.definition"
-import type { OrgAssignmentPeriod } from "@/contexts/company/domain/values/workforce-schedule.definition"
+} from "@/contexts/company/domain/definitions/organizational-authority.definition"
+import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function toOrganizationalAuthorityAssignmentEvidence(
   assignment: OrgAssignmentPeriod,

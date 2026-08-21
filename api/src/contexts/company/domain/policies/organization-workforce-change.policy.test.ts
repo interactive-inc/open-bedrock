@@ -5,8 +5,8 @@ import {
 import { OrganizationStructureValue } from "@/contexts/company/domain/values/organization-structure.value"
 import { OrganizationChangeValidationError } from "@/contexts/company/domain/errors"
 import { applyOrganizationWorkforceChange } from "@/contexts/company/domain/policies/organization-workforce-change.policy"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { describe, expect, test } from "bun:test"
 
 const asOf = restoreCalendarDate("2026-01-01")

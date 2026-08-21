@@ -14,7 +14,7 @@ import type {
   AdministrationAuditSummary,
 } from "@/contexts/administration/application/audit/create-administration-audit-record"
 import { ValidationError } from "@/lib/errors"
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { z } from "zod"
 
 export { auditClientNameSchema, auditOutcomeSchema, auditRequestContextSchema }

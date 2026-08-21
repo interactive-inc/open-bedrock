@@ -1,7 +1,7 @@
 import type {
   ValidateWorkforceSchedulesProps,
   WorkforceInvariantViolation,
-} from "@/contexts/company/domain/values/workforce-invariant.definition"
+} from "@/contexts/company/domain/definitions/workforce-invariant.definition"
 import { WorkforceInvariantViolationValue } from "@/contexts/company/domain/values/workforce-invariant-violation.value"
 import { validateWorkforceEmployee } from "@/contexts/company/domain/policies/validate-workforce-employee.policy"
 import { validateWorkforceLifecycleSchedules } from "@/contexts/company/domain/policies/validate-workforce-lifecycle-schedules.policy"

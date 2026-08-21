@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { SystemIdentityIssuerValue } from "@system/domain/values/system-identity-issuer.value"
+import { SystemIdentityIssuerValue } from "@system/domain/values/identity/system-identity-issuer.value"
 
 type Props = {
   code: string

@@ -9,8 +9,8 @@ import {
   type WorkforceScheduleProps,
 } from "@/contexts/company/domain/entities/workforce-schedule.entity"
 import { validateWorkforceOrganization } from "@/contexts/company/domain/policies/workforce-organization.policy"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 const managerId = restoreWorkforceId("employee", "employee-manager")
 const memberId = restoreWorkforceId("employee", "employee-member")

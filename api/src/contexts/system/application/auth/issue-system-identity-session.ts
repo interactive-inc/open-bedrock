@@ -1,5 +1,5 @@
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
-import { SystemAccessTokenSecretValue } from "@system/domain/values/system-access-token-secret.value"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
+import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-access-token-secret.value"
 import { IssueSystemSession } from "@system/application/auth/issue-system-session"
 import { SystemIdentityLoginAuditRecorder } from "@system/infrastructure/audit/system-identity-login-audit-recorder.repository"
 import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer.repository"

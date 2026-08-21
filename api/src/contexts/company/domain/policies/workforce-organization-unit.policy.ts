@@ -1,6 +1,6 @@
 import type { OrganizationStructureValue } from "@/contexts/company/domain/values/organization-structure.value"
 import type { WorkforceScheduleEntity } from "@/contexts/company/domain/entities/workforce-schedule.entity"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
 
 /** 一人のWorkforce scheduleが参照する組織単位の全期間が組織構造に含まれるか検証する。 */
 export function validateWorkforceOrganizationUnit(

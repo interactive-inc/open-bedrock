@@ -1,4 +1,4 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 export type CompanyBootstrapResult = Readonly<{
   employeeId: string | null

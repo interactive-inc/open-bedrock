@@ -1,4 +1,4 @@
-import { toAnswers } from "@/contexts/performance-review/domain/values/review-answers.definition"
+import { toAnswers } from "@/contexts/performance-review/domain/definitions/review-answers.definition"
 import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,

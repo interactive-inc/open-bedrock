@@ -1,9 +1,9 @@
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
-import type { CompanyResourceType } from "@/contexts/company/domain/values/company-resource-type.catalog"
+import type { CompanyResourceType } from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
 import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
-import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
+import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 
 export type CompanyResourceQuery = Readonly<{
   organizationId: string

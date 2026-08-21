@@ -1,6 +1,6 @@
 import { encryptAttachment } from "@system/infrastructure/attachments/encrypt-attachment.repository"
 import { SystemAttachmentError } from "@system/domain/errors"
-import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
+import type { AttachmentBytes } from "@system/domain/definitions/attachments/attachment-bytes.definition"
 import { validateAttachmentContent } from "@system/domain/policies/attachment-content.policy"
 import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attachment-kek-registry.repository"
 import { AttachmentObjectStore } from "@system/infrastructure/attachments/attachment-object-store.repository"

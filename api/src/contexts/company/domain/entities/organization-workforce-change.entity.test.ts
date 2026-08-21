@@ -3,8 +3,8 @@ import {
   type OrganizationWorkforceChangeProps,
 } from "@/contexts/company/domain/entities/organization-workforce-change.entity"
 import { OrganizationChangeValidationError } from "@/contexts/company/domain/errors"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { describe, expect, test } from "bun:test"
 
 const operationId = restoreWorkforceId("personnel_action", "action:organization-change")

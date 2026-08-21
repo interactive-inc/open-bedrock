@@ -4,12 +4,12 @@ import {
   OidcTemporarilyUnavailableApplicationError,
 } from "@/contexts/system/application/auth/errors"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { createOidcAuthorizationCode } from "@system/infrastructure/identity/create-oidc-authorization-code.repository"
-import type { OidcClientRegistryValue } from "@system/domain/values/oidc-client-registry.value"
-import { OidcScopeValue } from "@system/domain/values/oidc-scope.value"
+import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
+import { OidcScopeValue } from "@system/domain/values/oauth/oidc-scope.value"
 import type {
   SystemAuthorizationContext,
   SystemClockContext,

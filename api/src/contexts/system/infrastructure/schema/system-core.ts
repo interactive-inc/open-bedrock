@@ -1,8 +1,8 @@
-import type { AccountStatus } from "@system/domain/values/account-status.schema"
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import type { IdentityProvider } from "@system/domain/values/identity-provider.schema"
+import type { AccountStatus } from "@system/domain/schemas/iam/account-status.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { IdentityProvider } from "@system/domain/schemas/identity/identity-provider.schema"
 import type { SystemAuditOutcome } from "@system/domain/entities/system-audit-event.entity"
-import type { SystemBatchJobStatus } from "@system/domain/values/system-batch-job-status.schema"
+import type { SystemBatchJobStatus } from "@system/domain/schemas/batch/system-batch-job-status.schema"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import {

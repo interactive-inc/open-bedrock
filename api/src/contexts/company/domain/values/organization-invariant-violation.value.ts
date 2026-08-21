@@ -1,4 +1,4 @@
-import type { OrganizationInvariantCode } from "@/contexts/company/domain/values/organization-invariant.definition"
+import type { OrganizationInvariantCode } from "@/contexts/company/domain/definitions/organization-invariant.definition"
 
 export class OrganizationInvariantViolationValue {
   constructor(

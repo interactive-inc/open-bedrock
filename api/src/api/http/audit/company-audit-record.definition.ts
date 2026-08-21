@@ -1,8 +1,8 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
-import type { SystemJsonValue } from "@system/domain/values/system-json-value.definition"
+import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
+import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
 import { PayloadTooLargeError, ValidationError } from "@/lib/errors"
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { z } from "zod"
 
 export const auditOutcomeSchema = z.enum(["succeeded", "denied", "failed"])

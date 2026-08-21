@@ -1,7 +1,7 @@
 import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
 import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request.repository"
 import { resolveActiveSystemAccountId } from "@/contexts/company/infrastructure/account-profile/resolve-active-system-account-id.repository"
-import type { CompanyPersonnelSession } from "@/contexts/company/domain/values/company-personnel-session.definition"
+import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/contexts/company/infrastructure/database/abort-when-previous-statement-changed-no-rows.repository"
 import {
@@ -11,8 +11,8 @@ import {
   CompanyUnexpectedError,
 } from "@/contexts/company/domain/errors"
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
-import { proposalDigestSchema } from "@system/domain/values/system-case-reference.schema"
-import { systemCaseIdSchema } from "@system/domain/values/system-case.schema"
+import { proposalDigestSchema } from "@system/domain/schemas/workflow/system-case-reference.schema"
+import { systemCaseIdSchema } from "@system/domain/schemas/workflow/system-case.schema"
 import { SystemD1AuthorizedExecutionWriter } from "@system/infrastructure/workflow/system-d1-authorized-execution-writer.repository"
 
 const OPERATION_KEY = "company.personnel-action.apply"

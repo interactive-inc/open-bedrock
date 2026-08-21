@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { InvalidSystemProposalError } from "@system/domain/errors"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
-import { proposalIdSchema } from "@system/domain/values/proposal-id.schema"
+import { proposalIdSchema } from "@system/domain/schemas/workflow/proposal-id.schema"
 
 const accountId = zAccountId.parse("account-1")
 

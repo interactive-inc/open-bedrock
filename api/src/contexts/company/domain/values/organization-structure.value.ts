@@ -1,8 +1,8 @@
 import type { WorkforcePeriodVersion } from "@/contexts/company/domain/entities/workforce-schedule.entity"
-import type { OrganizationInvariantViolation } from "@/contexts/company/domain/values/organization-invariant.definition"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
-import { isCalendarDate } from "@/contexts/company/domain/values/is-calendar-date.definition"
-import type { OrganizationUnitId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { OrganizationInvariantViolation } from "@/contexts/company/domain/definitions/organization-invariant.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
+import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export const organizationUnitKinds = ["COMPANY", "DIVISION", "DEPARTMENT", "TEAM", "OTHER"] as const
 

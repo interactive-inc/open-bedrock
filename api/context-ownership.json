@@ -10,7 +10,7 @@
   ],
   "companySystemAdapterAreas": [],
   "companyAreasByLayer": {
-    "domain": ["entities", "policies", "values"],
+    "domain": ["catalogs", "definitions", "entities", "policies", "values"],
     "application": ["account-profile", "core", "employee-lifecycle", "organization"],
     "infrastructure": [
       "account-profile",

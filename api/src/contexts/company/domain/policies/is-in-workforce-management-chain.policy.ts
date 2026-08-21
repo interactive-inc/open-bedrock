@@ -1,7 +1,7 @@
 import { isEligibleWorkforceState } from "@/contexts/company/domain/policies/is-eligible-workforce-state.policy"
-import { listWorkforceAssignments } from "@/contexts/company/domain/values/list-workforce-assignments.definition"
+import { listWorkforceAssignments } from "@/contexts/company/domain/definitions/list-workforce-assignments.definition"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function isInWorkforceManagementChain(props: {
   states: ReadonlyMap<EmployeeId, WorkforceStateAt>

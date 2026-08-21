@@ -1,5 +1,5 @@
 import type { CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
-import { zApplicationWorkflow } from "@/contexts/company/domain/values/company-procedure-workflow.definition"
+import { zApplicationWorkflow } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import { z } from "zod"
 
 const currentPolicy = z

@@ -1,11 +1,11 @@
 import { InvalidSystemAuditEventError } from "@system/domain/errors"
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import type { SessionId } from "@system/domain/values/session-id.schema"
-import type { SystemAuditJsonValue } from "@system/domain/values/system-audit-json-value.definition"
-import type { SystemSessionAuditContext } from "@system/domain/values/system-session-audit-context.definition"
-import type { SessionRotationAuditEvents } from "@system/domain/values/session-rotation-audit-events.definition"
-import type { SessionRotationValue } from "@system/domain/values/session-rotation.value"
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { SessionId } from "@system/domain/schemas/auth/session-id.schema"
+import type { SystemAuditJsonValue } from "@system/domain/definitions/audit/system-audit-json-value.definition"
+import type { SystemSessionAuditContext } from "@system/domain/definitions/audit/system-session-audit-context.definition"
+import type { SessionRotationAuditEvents } from "@system/domain/definitions/auth/session-rotation-audit-events.definition"
+import type { SessionRotationValue } from "@system/domain/values/auth/session-rotation.value"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 
 /** 永続化方式を露出しない、opaqueなSystem識別子。 */
 export type SystemAuditIdentifier = string

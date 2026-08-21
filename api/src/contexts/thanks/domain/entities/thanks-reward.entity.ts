@@ -1,4 +1,4 @@
-import { maxRewardPointCost } from "@/contexts/thanks/domain/values/thanks-point-limit.catalog"
+import { maxRewardPointCost } from "@/contexts/thanks/domain/catalogs/thanks-point-limit.catalog"
 import type { ThanksRewardRow } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { z } from "zod"
 

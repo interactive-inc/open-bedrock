@@ -3,7 +3,7 @@ import {
   parseGovernanceMarkdown,
   type GovernanceReference,
   type ParsedGovernanceMarkdown,
-} from "@/contexts/governance/domain/values/governance-document.definition"
+} from "@/contexts/governance/domain/definitions/governance-document.definition"
 import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import type { Context } from "@/env"
 import type { GovernanceDocumentRecord } from "@/contexts/governance/infrastructure/governance.repository"

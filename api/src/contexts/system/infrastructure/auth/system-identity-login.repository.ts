@@ -1,7 +1,7 @@
 import { AccountEntity } from "@system/domain/entities/account.entity"
-import type { IdentityProvider } from "@system/domain/values/identity-provider.schema"
+import type { IdentityProvider } from "@system/domain/schemas/identity/identity-provider.schema"
 import { IdentityBindingEntity } from "@system/domain/entities/identity-binding.entity"
-import type { IdentitySubject } from "@system/domain/values/identity-subject.schema"
+import type { IdentitySubject } from "@system/domain/schemas/identity/identity-subject.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type Row = Readonly<{

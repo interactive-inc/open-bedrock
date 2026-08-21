@@ -1,9 +1,9 @@
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { InvalidSystemProposalError } from "@system/domain/errors"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import type { ProcedureKey } from "@system/domain/values/procedure-key.schema"
+import type { ProcedureKey } from "@system/domain/schemas/workflow/procedure-key.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type ProcedureRow = Readonly<{

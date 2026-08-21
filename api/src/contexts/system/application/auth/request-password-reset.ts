@@ -4,7 +4,7 @@ import { PasswordResetEmailGateway } from "@/contexts/system/infrastructure/auth
 import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
 import { generateOpaqueToken } from "@system/infrastructure/auth/generate-opaque-token.repository"
 import { createSystemPasswordResetChallenge } from "@system/infrastructure/auth/create-system-password-reset-challenge.repository"
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import type {
   SystemClockContext,
   SystemD1Context,

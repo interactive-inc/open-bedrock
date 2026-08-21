@@ -1,4 +1,4 @@
-import { zApplicationWorkflow } from "@/contexts/company/domain/values/company-procedure-workflow.definition"
+import { zApplicationWorkflow } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import {
   loadSystemProcedure,

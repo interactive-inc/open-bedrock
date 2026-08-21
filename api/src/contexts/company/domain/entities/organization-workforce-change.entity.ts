@@ -4,11 +4,11 @@ import type {
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
 } from "@/contexts/company/domain/entities/workforce-schedule.entity"
-import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type {
   OrganizationUnitId,
   PersonnelActionId,
-} from "@/contexts/company/domain/values/workforce-id.definition"
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type OrganizationUnitIdentity = Readonly<{
   id: OrganizationUnitId

@@ -1,8 +1,8 @@
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import {
   proposalDigestSchema,
   type ProposalDigest,
-} from "@system/domain/values/system-case-reference.schema"
+} from "@system/domain/schemas/workflow/system-case-reference.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 export type SystemProposalStatus =

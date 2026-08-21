@@ -3,7 +3,7 @@ import type { AuditEventFilters } from "@/api/http/audit/audit-event.repository"
 import { parseExactSecond } from "@/api/http/utils/parse-exact-second"
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 type Props = { filters: AuditEventFilters }
 

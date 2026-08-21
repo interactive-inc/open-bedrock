@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 export async function seedIamTestAccount(

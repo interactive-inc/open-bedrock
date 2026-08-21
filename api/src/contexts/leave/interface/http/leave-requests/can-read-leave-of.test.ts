@@ -1,6 +1,6 @@
 import { Session } from "@/lib/auth/session"
 import { canReadLeaveOf } from "@/contexts/leave/interface/http/leave-requests/can-read-leave-of"
-import type { EmployeeRelation } from "@/contexts/company/domain/values/employee-relation.definition"
+import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { testAccountId } from "@/api/test/support/test-account-id"
 import { describe, expect, test } from "bun:test"

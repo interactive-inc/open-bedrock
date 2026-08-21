@@ -1,6 +1,6 @@
 import { Session } from "@/lib/auth/session"
 import { SYSTEM_ROLE_PERMISSIONS } from "@/api/test/support/system-roles"
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 /**
  * テスト用: system role(member/manager/hr/admin)と employeeId から Session を組み立てる。

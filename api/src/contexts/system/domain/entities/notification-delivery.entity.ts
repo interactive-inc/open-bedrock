@@ -1,13 +1,13 @@
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { InvalidNotificationDeliveryError } from "@system/domain/errors"
 import {
   notificationDeliveryIdSchema,
   type NotificationDeliveryId,
-} from "@system/domain/values/notification-delivery-id.schema"
+} from "@system/domain/schemas/notifications/notification-delivery-id.schema"
 import {
   notificationMessageIdSchema,
   type NotificationMessageId,
-} from "@system/domain/values/notification-reference.schema"
+} from "@system/domain/schemas/notifications/notification-reference.schema"
 import { z } from "zod"
 
 const propsSchema = z

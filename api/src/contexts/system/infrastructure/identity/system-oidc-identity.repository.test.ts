@@ -1,4 +1,4 @@
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context.repository"
 import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity.repository"
 import * as schema from "@system/infrastructure/schema/system-core"

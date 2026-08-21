@@ -1,11 +1,11 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { InvalidOrganizationUnitProjectionError } from "@/contexts/company/domain/errors"
 import {
   organizationUnitKinds,
   type OrganizationUnitPeriod,
   type OrganizationUnitSnapshot,
-} from "@/contexts/company/domain/values/organization-unit.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/restore-workforce-id.definition"
+} from "@/contexts/company/domain/definitions/organization-unit.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 
 export type OrganizationUnitProjectionRow = Readonly<{
   periodId: string

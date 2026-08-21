@@ -1,4 +1,4 @@
-import { resolveCompanyBusinessDate } from "@/contexts/company/domain/values/resolve-company-business-date.definition"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { CompanyBootstrapRepository } from "@/contexts/company/infrastructure/employee/company-bootstrap.repository"
 import {
   CompanyAccessDeniedError,
@@ -6,7 +6,7 @@ import {
   CompanyBootstrapInputInvalidError,
   CompanyBootstrapUnavailableError,
 } from "@/contexts/company/interface/errors"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"

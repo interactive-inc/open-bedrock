@@ -8,10 +8,10 @@ import {
   SystemPasswordInvalidError,
 } from "@system/interface/errors"
 /** /system/v1/accounts/:accountId/identities */
-import { zAccountId } from "@system/domain/values/account-id.schema"
-import { SystemPasswordValue } from "@system/domain/values/system-password.value"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { SystemPasswordValue } from "@system/domain/values/auth/system-password.value"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import { IdentityBindingEntity } from "@system/domain/entities/identity-binding.entity"
 import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"

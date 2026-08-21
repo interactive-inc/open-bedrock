@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { PublishSystemProcedure } from "@system/application/workflow/publish-system-procedure"
-import { zAccountId } from "@system/domain/values/account-id.schema"
-import { procedureKeySchema } from "@system/domain/values/procedure-key.schema"
-import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
+import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
 import { readFileSync } from "node:fs"
 

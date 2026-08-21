@@ -1,6 +1,6 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
-import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
+import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 import { describe, expect, test } from "bun:test"
 

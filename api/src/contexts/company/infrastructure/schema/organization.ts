@@ -1,10 +1,10 @@
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 import { check, index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { organizationUnitKinds } from "@/contexts/company/domain/values/organization-unit.definition"
-import { orgAssignmentTypes } from "@/contexts/company/domain/values/org-assignment-type.definition"
+import { organizationUnitKinds } from "@/contexts/company/domain/definitions/organization-unit.definition"
+import { orgAssignmentTypes } from "@/contexts/company/domain/definitions/org-assignment-type.definition"
 import { organizationLifecycleState } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 /** Companyが所有する部署マスタ。 */
 export const departments = sqliteTable("departments", {

@@ -1,5 +1,5 @@
-import type { PersonnelActionKind } from "@/contexts/company/domain/values/lifecycle-types.definition"
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { PersonnelActionKind } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 import { check, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"

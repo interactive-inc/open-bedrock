@@ -1,10 +1,10 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
 import type {
   EmployeeId,
   OrganizationUnitId,
-} from "@/contexts/company/domain/values/workforce-id.definition"
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { departments, orgDepartments } from "@/contexts/company/infrastructure/schema/organization"
 import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
@@ -12,7 +12,7 @@ import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infr
 import { ReadOrganizationWorkforceState } from "@/contexts/company/infrastructure/workforce/read-organization-workforce-state.repository"
 import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import { CompanyUnavailableError } from "@/contexts/company/domain/errors"
-import { resolveCompanyBusinessDate } from "@/contexts/company/domain/values/resolve-company-business-date.definition"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { asc, eq, isNull } from "drizzle-orm"
 
 export type CurrentOrganizationAssignment = {

@@ -1,5 +1,5 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import { SystemAccessTokenSecretValue } from "@system/domain/values/system-access-token-secret.value"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-access-token-secret.value"
 import { AccessTokenService } from "@system/infrastructure/auth/access-token-service.repository"
 import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/infrastructure/auth/system-access-token-profile.repository"
 

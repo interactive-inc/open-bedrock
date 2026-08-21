@@ -1,5 +1,5 @@
-import type { WorkforceManagerRelation } from "@/contexts/company/domain/values/workforce-manager-relation.definition"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { WorkforceManagerRelation } from "@/contexts/company/domain/definitions/workforce-manager-relation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function workforceManagerRelationsHaveCycle(
   relations: ReadonlyArray<WorkforceManagerRelation>,

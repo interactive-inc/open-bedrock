@@ -1,12 +1,12 @@
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
-import { iamRoleIdSchema, type IamRoleId } from "@system/domain/values/iam-role.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { iamRoleIdSchema, type IamRoleId } from "@system/domain/schemas/iam/iam-role.schema"
 import { InvalidRoleBindingError } from "@system/domain/errors"
 import {
   roleBindingIdSchema,
   roleBindingResourceSchema,
   type RoleBindingId,
   type RoleBindingResource,
-} from "@system/domain/values/role-binding.schema"
+} from "@system/domain/schemas/iam/role-binding.schema"
 import { z } from "zod"
 
 const propsSchema = z

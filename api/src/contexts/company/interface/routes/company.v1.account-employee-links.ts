@@ -2,9 +2,9 @@
 import { WriteCompanyResources } from "@/contexts/company/application/core/write-company-resources"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
-import { isCalendarDate } from "@/contexts/company/domain/values/is-calendar-date.definition"
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyResourceRepositoryD1 } from "@/contexts/company/infrastructure/core/company-resource.repository"
 import {
   CompanyAccessDeniedError,

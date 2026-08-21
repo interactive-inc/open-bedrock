@@ -1,5 +1,5 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 /** 未失効のbrowser token交換用codeをDELETE RETURNINGで一度だけ消費する。 */

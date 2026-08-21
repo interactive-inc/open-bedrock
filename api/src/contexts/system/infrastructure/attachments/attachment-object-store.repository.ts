@@ -1,4 +1,4 @@
-import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
+import type { AttachmentBytes } from "@system/domain/definitions/attachments/attachment-bytes.definition"
 import { SystemAttachmentError } from "@system/domain/errors"
 import type { SystemAttachmentStorageContext } from "@system/infrastructure/configuration/system-context.repository"
 

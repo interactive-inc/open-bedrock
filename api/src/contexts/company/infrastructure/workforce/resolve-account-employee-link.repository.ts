@@ -1,8 +1,8 @@
-import type { AccountEmployeeLink } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { AccountEmployeeLink } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 import type {
   EmployeeId,
   SystemAccountId,
-} from "@/contexts/company/domain/values/workforce-id.definition"
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { AccountEmployeeLinkResolutionError } from "@/contexts/company/domain/errors"
 
 export type AccountEmployeeLinkQuery =

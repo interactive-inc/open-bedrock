@@ -1,18 +1,21 @@
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { InvalidSystemProposalError } from "@system/domain/errors"
-import { procedureKeySchema, type ProcedureKey } from "@system/domain/values/procedure-key.schema"
+import {
+  procedureKeySchema,
+  type ProcedureKey,
+} from "@system/domain/schemas/workflow/procedure-key.schema"
 import {
   proposalDigestSchema,
   type ProposalDigest,
-} from "@system/domain/values/system-case-reference.schema"
-import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
+} from "@system/domain/schemas/workflow/system-case-reference.schema"
+import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import {
   proposalIdSchema,
   proposalSeriesIdSchema,
   type ProposalId,
   type ProposalSeriesId,
-} from "@system/domain/values/proposal-id.schema"
-import { ProposalDigestValue } from "@system/domain/values/proposal-digest.value"
+} from "@system/domain/schemas/workflow/proposal-id.schema"
+import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { z } from "zod"
 
 const propsSchema = z

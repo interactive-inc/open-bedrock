@@ -1,7 +1,7 @@
 import { SystemCLILoginUnavailableError } from "@system/interface/errors"
 /** /system/v1/cli-authorizations */
-import { SystemIdentityIssuerValue } from "@system/domain/values/system-identity-issuer.value"
-import { SystemCliIdentityRedirectUriValue } from "@system/domain/values/system-cli-identity-redirect-uri.value"
+import { SystemIdentityIssuerValue } from "@system/domain/values/identity/system-identity-issuer.value"
+import { SystemCliIdentityRedirectUriValue } from "@system/domain/values/oauth/system-cli-identity-redirect-uri.value"
 import { createSystemCliLoginState } from "@system/infrastructure/auth/create-system-cli-login-state.repository"
 import { createSystemPkce } from "@system/infrastructure/auth/create-system-pkce.repository"
 import { systemFactory } from "@system/interface/http/system-factory"

@@ -1,13 +1,13 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type {
   SystemWorkflowDecisionResult,
   SystemWorkflowWriter,
 } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
-import type { SystemDecisionTaskBundle } from "@system/domain/values/system-decision-task-bundle.definition"
+import type { SystemDecisionTaskBundle } from "@system/domain/definitions/workflow/system-decision-task-bundle.definition"
 import { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
-import type { ProposalDigest } from "@system/domain/values/system-case-reference.schema"
-import type { SystemCaseId } from "@system/domain/values/system-case.schema"
+import type { ProposalDigest } from "@system/domain/schemas/workflow/system-case-reference.schema"
+import type { SystemCaseId } from "@system/domain/schemas/workflow/system-case.schema"
 
 export type DecideSystemTaskCommand = Readonly<{
   caseId: SystemCaseId

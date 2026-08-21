@@ -7,7 +7,7 @@ import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError, NotFoundError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
-import type { SystemJsonValue } from "@system/domain/values/system-json-value.definition"
+import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
 
 // @authorization service - session を application service に渡して判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

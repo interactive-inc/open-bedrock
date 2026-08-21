@@ -5,10 +5,10 @@ import type { Context } from "@/env"
 import { IdentityRepository } from "@/contexts/administration/infrastructure/auth/identity.repository"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { PrepareEmployeeAccountProvisioning } from "@/contexts/administration/infrastructure/iam/prepare-employee-account-provisioning.repository"
-import { SystemPasswordValue } from "@system/domain/values/system-password.value"
+import { SystemPasswordValue } from "@system/domain/values/auth/system-password.value"
 import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
   ApplicationError,

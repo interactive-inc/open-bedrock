@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { WorkforceStateValue } from "@/contexts/company/domain/values/workforce-state.value"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 const employeeId = restoreWorkforceId("employee", "employee:1")
 

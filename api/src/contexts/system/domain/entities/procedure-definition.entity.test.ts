@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { InvalidSystemProposalError } from "@system/domain/errors"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 

@@ -1,8 +1,8 @@
-import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import {
   accountStatusSchema,
   type AccountStatus,
-} from "@system/domain/values/account-status.schema"
+} from "@system/domain/schemas/iam/account-status.schema"
 import { InvalidAccountError } from "@system/domain/errors"
 import { z } from "zod"
 

@@ -1,6 +1,6 @@
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import type { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
-import type { ProposalDigest } from "@system/domain/values/system-case-reference.schema"
+import type { ProposalDigest } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 /** 承認済みCaseの一回限り実行許可と下位contextの変更を同じD1 batchへ閉じる。 */

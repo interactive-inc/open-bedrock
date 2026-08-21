@@ -3,7 +3,7 @@ import {
   SystemLoginCodeInvalidError,
 } from "@system/interface/errors"
 /** /system/v1/browser-sessions */
-import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import { IssueSystemSession } from "@system/application/auth/issue-system-session"
 import { consumeSystemBrowserLoginCode } from "@system/infrastructure/auth/consume-system-browser-login-code.repository"
 import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer.repository"

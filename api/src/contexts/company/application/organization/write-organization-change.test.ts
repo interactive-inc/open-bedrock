@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { WriteOrganizationChange } from "@/contexts/company/application/organization/write-organization-change"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 
 const actor = CompanyActorValue.restore({
   accountId: "account:1",

@@ -3,8 +3,8 @@ import {
   iamRoleIdSchema,
   iamRoleKeySchema,
   type IamRoleId,
-} from "@system/domain/values/iam-role.schema"
-import { permissionKeySchema } from "@system/domain/values/permission.value"
+} from "@system/domain/schemas/iam/iam-role.schema"
+import { permissionKeySchema } from "@system/domain/values/iam/permission.value"
 import { z } from "zod"
 
 const propsSchema = z

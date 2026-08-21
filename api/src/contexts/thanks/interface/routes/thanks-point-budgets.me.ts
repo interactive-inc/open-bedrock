@@ -1,4 +1,4 @@
-import { periodOf } from "@/contexts/thanks/domain/values/thanks-period.definition"
+import { periodOf } from "@/contexts/thanks/domain/definitions/thanks-period.definition"
 import { UnexpectedError } from "@/lib/errors"
 import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-budget.repository"
 

@@ -1,8 +1,11 @@
-import type { AccountId } from "@system/domain/values/account-id.schema"
-import type { ProcedureKey } from "@system/domain/values/procedure-key.schema"
-import type { ProposalId, ProposalSeriesId } from "@system/domain/values/proposal-id.schema"
-import type { ProposalDigest } from "@system/domain/values/system-case-reference.schema"
-import type { SystemCaseId } from "@system/domain/values/system-case.schema"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { ProcedureKey } from "@system/domain/schemas/workflow/procedure-key.schema"
+import type {
+  ProposalId,
+  ProposalSeriesId,
+} from "@system/domain/schemas/workflow/proposal-id.schema"
+import type { ProposalDigest } from "@system/domain/schemas/workflow/system-case-reference.schema"
+import type { SystemCaseId } from "@system/domain/schemas/workflow/system-case.schema"
 import { systemAccounts } from "@system/infrastructure/schema/system-core"
 import { systemCases } from "@system/infrastructure/schema/system-workflow"
 import { sql } from "drizzle-orm"

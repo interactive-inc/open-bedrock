@@ -1,5 +1,5 @@
-import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
-import { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
+import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
+import { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret.repository"
 import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret.repository"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"

@@ -1,6 +1,6 @@
 import { AttachmentObjectStore } from "@system/infrastructure/attachments/attachment-object-store.repository"
 import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
-import { UNLINKED_ATTACHMENT_RETENTION_MILLISECONDS } from "@system/domain/values/unlinked-attachment-retention.catalog"
+import { UNLINKED_ATTACHMENT_RETENTION_MILLISECONDS } from "@system/domain/catalogs/attachments/unlinked-attachment-retention.catalog"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import {
   SystemAttachmentPurgeUnavailableError,

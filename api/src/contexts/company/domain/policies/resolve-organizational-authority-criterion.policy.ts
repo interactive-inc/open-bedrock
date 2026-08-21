@@ -1,18 +1,18 @@
 import { compareOrganizationalAuthorityAssignments } from "@/contexts/company/domain/policies/compare-organizational-authority-assignments.policy"
 import { compareOrganizationalAuthorityResponsibilities } from "@/contexts/company/domain/policies/compare-organizational-authority-responsibilities.policy"
 import { listOrganizationalAuthorityManagementChainCandidates } from "@/contexts/company/domain/policies/list-organizational-authority-management-chain-candidates.policy"
-import { listWorkforceStateAssignments } from "@/contexts/company/domain/values/list-workforce-state-assignments.definition"
-import type { OrganizationalAuthorityCandidateEvidence } from "@/contexts/company/domain/values/organizational-authority-candidate-evidence.definition"
+import { listWorkforceStateAssignments } from "@/contexts/company/domain/definitions/list-workforce-state-assignments.definition"
+import type { OrganizationalAuthorityCandidateEvidence } from "@/contexts/company/domain/definitions/organizational-authority-candidate-evidence.definition"
 import type {
   OrganizationalAuthorityCriterion,
   OrganizationalAuthorityEvidence,
   OrganizationalAuthorityProjection,
-} from "@/contexts/company/domain/values/organizational-authority.definition"
+} from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
 import { toOrganizationalAuthorityAssignmentEvidence } from "@/contexts/company/domain/policies/to-organizational-authority-assignment-evidence.policy"
 import { toOrganizationalAuthorityManagementEdgeEvidence } from "@/contexts/company/domain/policies/to-organizational-authority-management-edge-evidence.policy"
 import { toOrganizationalAuthorityResponsibilityEvidence } from "@/contexts/company/domain/policies/to-organizational-authority-responsibility-evidence.policy"
-import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function resolveOrganizationalAuthorityCriterion(props: {
   criterion: OrganizationalAuthorityCriterion

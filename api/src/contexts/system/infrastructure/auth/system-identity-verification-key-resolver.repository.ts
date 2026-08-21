@@ -1,4 +1,4 @@
-import { SystemIdentityIssuerValue } from "@system/domain/values/system-identity-issuer.value"
+import { SystemIdentityIssuerValue } from "@system/domain/values/identity/system-identity-issuer.value"
 import { createLocalJWKSet, createRemoteJWKSet, type JWTVerifyGetKey } from "jose"
 import { z } from "zod"
 

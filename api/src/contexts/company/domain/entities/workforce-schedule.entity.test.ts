@@ -7,10 +7,10 @@ import {
   type OrgResponsibilityPeriod,
   type WorkforceScheduleProps,
 } from "@/contexts/company/domain/entities/workforce-schedule.entity"
-import { restoreOrgResponsibilityType } from "@/contexts/company/domain/values/restore-org-responsibility-type.definition"
-import type { OrgResponsibilityType } from "@/contexts/company/domain/values/org-responsibility-type.definition"
-import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/values/workforce-id.definition"
+import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
+import type { OrgResponsibilityType } from "@/contexts/company/domain/definitions/org-responsibility-type.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 const employeeId = restoreWorkforceId("employee", "employee-member")
 const unitId = restoreWorkforceId("organization_unit", "unit-root")

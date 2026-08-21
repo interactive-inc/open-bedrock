@@ -1,5 +1,5 @@
 import { COMPANY_PERMISSION_KEYS } from "@/api/http/permissions/company-permission-key.catalog"
-import { SYSTEM_PERMISSION_KEYS } from "@system/domain/values/system-permission-key.catalog"
+import { SYSTEM_PERMISSION_KEYS } from "@system/domain/catalogs/iam/system-permission-key.catalog"
 import { BUSINESS_PERMISSION_KEYS } from "@/api/http/permissions/business-permission-key.catalog"
 import { SYSTEM_CAPABILITY_PERMISSION_KEYS } from "@/api/http/permissions/system-capability-permission-key.catalog"
 import { z } from "zod"

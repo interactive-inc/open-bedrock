@@ -1,4 +1,4 @@
-import { identitySubjectSchema } from "@system/domain/values/identity-subject.schema"
+import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-subject.schema"
 import { jwtVerify, type JWTVerifyGetKey } from "jose"
 import { z } from "zod"
 

@@ -5,7 +5,7 @@ import {
 } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
 import { resolveEvaluationPermission } from "@/contexts/performance-review/domain/policies/goal-evaluation-permission.policy"
 import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
-import type { EmployeeRelation } from "@/contexts/company/domain/values/employee-relation.definition"
+import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

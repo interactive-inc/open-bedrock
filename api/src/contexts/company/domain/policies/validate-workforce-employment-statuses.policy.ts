@@ -3,8 +3,8 @@ import { WorkforceInvariantViolationValue } from "@/contexts/company/domain/valu
 import { findWorkforceEmployment } from "@/contexts/company/domain/policies/find-workforce-employment.policy"
 import { workforcePeriodContainsPeriod } from "@/contexts/company/domain/policies/workforce-period-contains-period.policy"
 import { workforcePeriodsHaveOverlap } from "@/contexts/company/domain/policies/workforce-periods-have-overlap.policy"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
-import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
+import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 
 export function validateWorkforceEmploymentStatuses(
   schedule: WorkforceLifecycleSchedule,
