@@ -12,6 +12,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/contexts/company/interface/utils/to-bounded-int"
+import { canRepairWorkflow } from "@/api/http/application-requests/lib/can-repair-workflow"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -34,10 +35,7 @@ export const GET = factory.createHandlers(
   async (c) => {
     const session = c.var.session
     if (session === null) throw new UnauthorizedError()
-    if (
-      !session.hasPermission("application:read:all") ||
-      !session.hasPermission("application_template:manage")
-    ) {
+    if (!canRepairWorkflow(session)) {
       throw new ForbiddenError()
     }
     const queryParameters = c.req.valid("query")

@@ -1,3 +1,4 @@
+import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
 import type {
   SystemProposalStatus,
   SystemProposalView,
@@ -19,11 +20,12 @@ export function toApplicationCurrentStep(proposal: SystemProposalView): string |
 export function parseSystemApplicationBody(
   proposal: SystemProposalView,
 ): Readonly<{ value: unknown }> | Error {
-  try {
-    return { value: JSON.parse(proposal.bodyJson) }
-  } catch (cause) {
-    return new Error("invalid System proposal body", { cause })
+  const parsed = parseJsonValue(proposal.bodyJson)
+  if (parsed instanceof Error) {
+    return new Error("invalid System proposal body", { cause: parsed })
   }
+
+  return parsed
 }
 
 export function toSystemStatuses(

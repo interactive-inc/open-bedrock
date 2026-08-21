@@ -5,6 +5,7 @@ import {
 } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/parse-company-procedure-decision-policy"
 import type { Context } from "@/env"
+import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
 import { PublishSystemProcedure } from "@system/application/workflow/publish-system-procedure"
 import type { ProcedureDefinition } from "@system/domain/workflow/procedure-definition.entity"
 import { procedureKeySchema } from "@system/domain/workflow/procedure-definition.entity"
@@ -37,11 +38,12 @@ export function parseSystemProcedurePolicy(
 export function parseSystemProcedureInputSchema(
   definition: ProcedureDefinition,
 ): Readonly<{ value: unknown }> | Error {
-  try {
-    return { value: JSON.parse(definition.inputSchemaJson) }
-  } catch (cause) {
-    return new Error("invalid System procedure input schema", { cause })
+  const parsed = parseJsonValue(definition.inputSchemaJson)
+  if (parsed instanceof Error) {
+    return new Error("invalid System procedure input schema", { cause: parsed })
   }
+
+  return parsed
 }
 
 export async function publishSystemProcedure(

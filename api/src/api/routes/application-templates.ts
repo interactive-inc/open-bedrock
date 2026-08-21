@@ -1,5 +1,6 @@
 import {
   createLegacyCompanyPolicy,
+  parseSystemProcedureInputSchema,
   publishSystemProcedure,
   systemProcedureRepository,
 } from "@/api/http/application-templates/lib/system-procedure-route"
@@ -25,8 +26,8 @@ import { codeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// @authorization service - session を application service に渡して判定する
-/** POST /templates — 申請テンプレートを作成（管理権限のみ） */
+// @authorization permission - application_template:manage を要求する
+/** POST /application-templates — 申請テンプレートを作成（管理権限のみ） */
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
@@ -84,13 +85,16 @@ export const POST = factory.createHandlers(
       throw new InternalError("failed to load template number")
     }
 
+    const schema = parseSystemProcedureInputSchema(created)
+    if (schema instanceof Error) throw new InternalError("invalid template data")
+
     const responseBody = zAppApplicationTemplateDetail.parse({
       id: number,
       code: created.key,
       name: created.title,
       category: created.category,
       description: created.description,
-      schema_json: JSON.parse(created.inputSchemaJson),
+      schema_json: schema.value,
       approver_roles: policy.approverRoles,
     })
 
@@ -99,7 +103,7 @@ export const POST = factory.createHandlers(
 )
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
-/** GET /templates — 申請テンプレート一覧（カテゴリで絞り込み可） */
+/** GET /application-templates — 申請テンプレート一覧（カテゴリで絞り込み可） */
 export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(
