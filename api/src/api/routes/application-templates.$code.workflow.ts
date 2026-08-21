@@ -20,7 +20,7 @@ import { toHttpException } from "@/contexts/company/interface/lib/to-http-except
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { ConflictError as ApplicationConflictError } from "@/lib/errors"
-import { validateApplicationWorkflowReferences } from "@/api/http/application-templates/lib/validate-application-workflow-references"
+import { validateApplicationWorkflowReferences } from "@/contexts/company/interface/http/procedure-workflows/validate-application-workflow-references"
 
 // @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

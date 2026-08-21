@@ -11,7 +11,7 @@ import { resolveActiveSystemAccountId } from "@/contexts/company/application/iam
 import { resolveCompanyAccountParticipants } from "@/contexts/company/application/iam/resolve-company-account-participants"
 import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/application/iam/resolve-system-account-ids-for-employees"
 import { createSystemProcedureDelegationRepository } from "@/api/http/approval-delegations/create-system-procedure-delegation-repository"
-import { findEmployeeIdByCode } from "@/api/http/approval-delegations/find-employee-id-by-code"
+import { findEmployeeIdByCode } from "@/contexts/company/interface/http/employees/find-employee-id-by-code"
 import { loadSystemProcedure } from "@/api/http/application-templates/lib/system-procedure-route"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"

@@ -1,4 +1,4 @@
-import { createCompanyAuditEventRepository } from "@/api/http/audit-events/create-company-audit-event-repository"
+import { createCompanyAuditEventRepository } from "@/contexts/company/interface/http/audit-events/create-company-audit-event-repository"
 import { AuditTrail } from "@/contexts/company/interface/utils/audit-trail"
 import { auditEventNotFound } from "@/contexts/company/interface/utils/audit-event-not-found"
 import { throwAuditRouteError } from "@/contexts/company/interface/utils/throw-audit-route-error"

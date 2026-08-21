@@ -1,7 +1,7 @@
 import {
   createCompanyAuditEventRepository,
   type CompanyAuditExportRows,
-} from "@/api/http/audit-events/create-company-audit-event-repository"
+} from "@/contexts/company/interface/http/audit-events/create-company-audit-event-repository"
 import { AuditTrail } from "@/contexts/company/interface/utils/audit-trail"
 import { throwAuditRouteError } from "@/contexts/company/interface/utils/throw-audit-route-error"
 import { auditExportPermission } from "@/contexts/company/interface/middlewares/audit-export-permission"

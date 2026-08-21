@@ -1,4 +1,4 @@
-import { toOvertimeEntries } from "@/api/http/attendance-records/overtime-summary/to-overtime-entries"
+import { toOvertimeEntries } from "@/contexts/attendance/domain/to-overtime-entries"
 import { describe, expect, test } from "bun:test"
 
 describe("toOvertimeEntries", () => {
