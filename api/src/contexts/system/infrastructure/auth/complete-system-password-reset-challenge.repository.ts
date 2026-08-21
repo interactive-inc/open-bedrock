@@ -1,5 +1,5 @@
-import type { PasswordResetTokenHash } from "@system/domain/auth/password-reset-token-hash"
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
+import type { PasswordResetTokenHash } from "@system/domain/values/password-reset-token-hash.schema"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
@@ -15,12 +15,12 @@ type Props = Readonly<{
   metadataJson: string | null
 }>
 
-/** credential更新・Account version増加・全Session失効・challenge消費・監査を不可分にする。 */
+/** credential更新・AccountEntity version増加・全Session失効・challenge消費・監査を不可分にする。 */
 export async function completeSystemPasswordResetChallenge(
   context: SystemD1Context,
   props: Props,
 ): Promise<boolean | Error> {
-  const audit = createSystemAuditEvent({
+  const audit = SystemAuditEventEntity.create({
     actorAccountId: null,
     action: "auth.password_reset.completed",
     targetType: "account",

@@ -1,4 +1,5 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
+import type { AuditJsonValue } from "@/contexts/company/domain/audit/company-audit-record"
 import {
   createAuditEvent,
   type AuditAction,
@@ -6,7 +7,6 @@ import {
 } from "@/contexts/company/domain/audit/company-audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event.repository"
-import type { AuditJsonValue } from "@system/interface/http/to-stable-audit-json"
 
 export function prepareGovernanceAudit(props: {
   c: Context

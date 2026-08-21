@@ -1,7 +1,7 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import type { IamRole } from "@system/domain/iam/iam-role.entity"
-import { RoleBinding } from "@system/domain/iam/role-binding.entity"
-import type { RoleBindingId } from "@system/domain/iam/role-binding.entity"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { IamRoleEntity } from "@system/domain/entities/iam-role.entity"
+import { RoleBindingEntity } from "@system/domain/entities/role-binding.entity"
+import type { RoleBindingId } from "@system/domain/values/role-binding.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type BindingRow = Readonly<{
@@ -28,7 +28,7 @@ export class SystemRoleBindingAdministrationRepository {
     Object.freeze(this)
   }
 
-  async listForAccount(accountId: AccountId): Promise<ReadonlyArray<RoleBinding> | Error> {
+  async listForAccount(accountId: AccountId): Promise<ReadonlyArray<RoleBindingEntity> | Error> {
     try {
       const rows = await this.context.env.DB.prepare(
         `SELECT id, account_id, role_id, resource_type, resource_id, created_at, revoked_at
@@ -40,7 +40,7 @@ export class SystemRoleBindingAdministrationRepository {
         .all<BindingRow>()
       if (!rows.success) return new Error("failed to list System role bindings")
 
-      const bindings: Array<RoleBinding> = []
+      const bindings: Array<RoleBindingEntity> = []
       for (const row of rows.results) {
         const binding = this.toBinding(row)
         if (binding instanceof Error) return binding
@@ -54,7 +54,7 @@ export class SystemRoleBindingAdministrationRepository {
     }
   }
 
-  async findById(bindingId: RoleBindingId): Promise<RoleBinding | null | Error> {
+  async findById(bindingId: RoleBindingId): Promise<RoleBindingEntity | null | Error> {
     try {
       const row = await this.context.env.DB.prepare(
         `SELECT id, account_id, role_id, resource_type, resource_id, created_at, revoked_at
@@ -74,8 +74,8 @@ export class SystemRoleBindingAdministrationRepository {
 
   async create(
     actorAccountId: AccountId,
-    role: IamRole,
-    binding: RoleBinding,
+    role: IamRoleEntity,
+    binding: RoleBindingEntity,
     auditStatements: ReadonlyArray<D1PreparedStatement>,
   ): Promise<SystemRoleBindingMutation | Error> {
     if (actorAccountId === binding.accountId) return "forbidden"
@@ -134,8 +134,8 @@ export class SystemRoleBindingAdministrationRepository {
 
   async revoke(
     actorAccountId: AccountId,
-    role: IamRole,
-    binding: RoleBinding,
+    role: IamRoleEntity,
+    binding: RoleBindingEntity,
     now: Date,
     auditStatements: ReadonlyArray<D1PreparedStatement>,
   ): Promise<SystemRoleBindingMutation | Error> {
@@ -176,7 +176,10 @@ export class SystemRoleBindingAdministrationRepository {
       }
       if (caught instanceof Error && caught.message.includes("malformed JSON")) {
         const current = await this.findById(binding.id)
-        if (current === null || (current instanceof RoleBinding && current.revokedAt !== null)) {
+        if (
+          current === null ||
+          (current instanceof RoleBindingEntity && current.revokedAt !== null)
+        ) {
           return "not_found"
         }
 
@@ -236,7 +239,7 @@ export class SystemRoleBindingAdministrationRepository {
     )
   }
 
-  private toBinding(row: BindingRow): RoleBinding | Error {
+  private toBinding(row: BindingRow): RoleBindingEntity | Error {
     if (
       (row.resource_type === null) !== (row.resource_id === null) ||
       (row.resource_type !== null && typeof row.resource_type !== "string") ||
@@ -245,7 +248,7 @@ export class SystemRoleBindingAdministrationRepository {
       return new Error("System role binding resource is invalid")
     }
 
-    return RoleBinding.create({
+    return RoleBindingEntity.create({
       id: row.id,
       accountId: row.account_id,
       roleId: row.role_id,

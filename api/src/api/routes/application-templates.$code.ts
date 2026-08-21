@@ -20,7 +20,7 @@ import { toHttpException } from "@/contexts/company/interface/lib/to-http-except
 import { ConflictError as ApplicationConflictError, UnprocessableError } from "@/lib/errors"
 import { zAppApplicationTemplate, zAppApplicationTemplateDetail } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
-import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
+import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -94,11 +94,23 @@ export const PUT = factory.createHandlers(
     })
     if (policy instanceof Error) throw new InternalError("failed to create procedure policy")
     const schemaJson = body.schema_json ?? {}
+    const currentSchemaJson = CanonicalSystemJsonValue.create(currentSchema.value)
+    const nextSchemaJson = CanonicalSystemJsonValue.create(schemaJson)
+    const currentApproverRolesJson = CanonicalSystemJsonValue.create(currentPolicy.approverRoles)
+    const nextApproverRolesJson = CanonicalSystemJsonValue.create(approverRoles)
+    if (
+      currentSchemaJson instanceof Error ||
+      nextSchemaJson instanceof Error ||
+      currentApproverRolesJson instanceof Error ||
+      nextApproverRolesJson instanceof Error
+    ) {
+      throw new InternalError("failed to canonicalize template data")
+    }
     if (
       current.completionOperationKey !== null &&
       (current.category !== body.category ||
-        toCanonicalSystemJson(currentSchema.value) !== toCanonicalSystemJson(schemaJson) ||
-        toCanonicalSystemJson(currentPolicy.approverRoles) !== toCanonicalSystemJson(approverRoles))
+        !currentSchemaJson.equals(nextSchemaJson) ||
+        !currentApproverRolesJson.equals(nextApproverRolesJson))
     ) {
       throw toHttpException(
         new UnprocessableError(

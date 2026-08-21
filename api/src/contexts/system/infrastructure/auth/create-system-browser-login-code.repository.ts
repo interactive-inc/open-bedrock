@@ -1,4 +1,4 @@
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 /** browser token交換用codeのhashとAccountだけを短期間保存する。 */

@@ -47,4 +47,4 @@ export type OrganizationalAuthorityCandidateResolution = Readonly<{
   snapshot: OrganizationalAuthoritySnapshot
   candidates: ReadonlyArray<OrganizationalAuthorityCandidate>
 }>
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"

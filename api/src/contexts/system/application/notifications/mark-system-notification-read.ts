@@ -1,16 +1,14 @@
-import type { NotificationRepository } from "@system/infrastructure/notifications/notification-port.repository"
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import {
   InvalidNotificationDeliveryError,
   type InvalidNotificationDeliveryReason,
-} from "@system/domain/notifications/invalid-notification-delivery.error"
-import type {
-  NotificationDeliveryId,
-  NotificationDelivery,
-} from "@system/domain/notifications/notification-delivery.entity"
+} from "@system/domain/errors"
+import type { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
+import type { NotificationDeliveryId } from "@system/domain/values/notification-delivery-id.schema"
+import type { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 
 type Props = Readonly<{
-  notificationRepository: NotificationRepository
+  notificationRepository: Pick<SystemNotificationRepository, "markDeliveryRead">
 }>
 
 export type MarkSystemNotificationReadCommand = Readonly<{
@@ -20,7 +18,7 @@ export type MarkSystemNotificationReadCommand = Readonly<{
 }>
 
 export type MarkSystemNotificationReadResult =
-  | Readonly<{ kind: "marked"; delivery: NotificationDelivery }>
+  | Readonly<{ kind: "marked"; delivery: NotificationDeliveryEntity }>
   | Readonly<{ kind: "not_found" }>
   | Readonly<{ kind: "rejected"; reason: InvalidNotificationDeliveryReason }>
 

@@ -1,5 +1,5 @@
-import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import { validateSystemAccessTokenSecret } from "@system/domain/auth/validate-system-access-token-secret"
+import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import { SystemAccessTokenSecretValue } from "@system/domain/values/system-access-token-secret.value"
 import { SystemIdentityLoginAuditRecorder } from "@system/infrastructure/audit/system-identity-login-audit-recorder.repository"
 import { recordSystemIdentityLoginToken } from "@system/infrastructure/auth/record-system-identity-login-token.repository"
 import { SystemIdentityLoginRepository } from "@system/infrastructure/auth/system-identity-login.repository"
@@ -47,7 +47,10 @@ export class SystemIdentitySessionIssuer {
       !Number.isSafeInteger(now.getTime()) ||
       !Number.isSafeInteger(this.props.sessionTtlMilliseconds) ||
       this.props.sessionTtlMilliseconds <= 0 ||
-      validateSystemAccessTokenSecret(this.props.jwtSecret) !== null
+      !(
+        SystemAccessTokenSecretValue.create(this.props.jwtSecret) instanceof
+        SystemAccessTokenSecretValue
+      )
     ) {
       return { kind: "unavailable" }
     }
@@ -81,7 +84,9 @@ export class SystemIdentitySessionIssuer {
     if (login === null) return await this.reject("account_not_found", now)
     if (login.account.status !== "active") return await this.reject("account_inactive", now)
 
-    const metadataJson = toStableSystemAuditJson({ transport: "system.v1.identity-sessions" })
+    const metadataJson = StableSystemAuditJsonValue.create({
+      transport: "system.v1.identity-sessions",
+    })
     const applications = createSystemSessionApplications({
       context: { env: { DB: this.props.database } },
       jwtSecret: this.props.jwtSecret,
@@ -93,7 +98,7 @@ export class SystemIdentitySessionIssuer {
       accountId: login.account.id,
       tokenVersion: login.account.tokenVersion,
       now,
-      auditContext: { authorizationJson: null, metadataJson },
+      auditContext: { authorizationJson: null, metadataJson: metadataJson?.toString() ?? null },
     })
     if (issuance instanceof Error) return { kind: "unavailable" }
     if (issuance.kind === "rejected") return await this.reject("account_inactive", now)

@@ -1,4 +1,4 @@
-import type { SystemAuditEvent } from "@system/domain/audit/system-audit-event"
+import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { prepareSystemAuditAppendInvariant } from "@system/infrastructure/audit/prepare-system-audit-append-invariant.repository"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
@@ -8,7 +8,9 @@ export class SystemAuditEventRepository {
     Object.freeze(this)
   }
 
-  prepareAppend(record: SystemAuditEvent): readonly [D1PreparedStatement, D1PreparedStatement] {
+  prepareAppend(
+    record: SystemAuditEventEntity,
+  ): readonly [D1PreparedStatement, D1PreparedStatement] {
     const database = this.context.env.DB
     const insert = database
       .prepare(
@@ -35,7 +37,7 @@ export class SystemAuditEventRepository {
     return Object.freeze([insert, prepareSystemAuditAppendInvariant(database, record)])
   }
 
-  async append(record: SystemAuditEvent): Promise<void | Error> {
+  async append(record: SystemAuditEventEntity): Promise<void | Error> {
     try {
       const statements = this.prepareAppend(record)
       const results = await this.context.env.DB.batch([...statements])

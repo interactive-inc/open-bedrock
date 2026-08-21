@@ -1,6 +1,6 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import type { SystemWorkflowWriter } from "@system/infrastructure/workflow/system-workflow-writer.repository"
-import { InvalidSystemWorkflowError } from "@system/domain/workflow/invalid-system-workflow.error"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { SystemWorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
+import { InvalidSystemWorkflowError } from "@system/domain/errors"
 
 /** 提案本文と判断履歴を消さず、現在の未完了Caseだけを取り消す。 */
 export class CancelSystemProcedure {

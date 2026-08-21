@@ -6,7 +6,7 @@ import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-
 import { OrganizationChangeRepository } from "@/contexts/company/infrastructure/workforce/organization-change.repository"
 import { ConflictError, UnavailableError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 
 describe("resolveOrganizationalAuthorityCandidates", () => {
   test("rejects an unverified migration instead of reading the legacy projection", async () => {

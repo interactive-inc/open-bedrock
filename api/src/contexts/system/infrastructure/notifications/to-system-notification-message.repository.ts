@@ -1,13 +1,13 @@
-import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
+import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 
 /** untrustedなD1 rowをcanonical Notification Messageへfail closedに変換する。 */
-export function toSystemNotificationMessage(row: unknown): NotificationMessage | Error {
+export function toSystemNotificationMessage(row: unknown): NotificationMessageEntity | Error {
   if (typeof row !== "object" || row === null || Array.isArray(row)) {
     return new Error("System Notification Message row is invalid")
   }
   const record = row as Record<string, unknown>
 
-  return NotificationMessage.create({
+  return NotificationMessageEntity.create({
     id: record.id,
     kind: record.kind,
     title: record.title,

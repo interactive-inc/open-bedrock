@@ -6,6 +6,8 @@ import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { POST } from "@system/interface/routes/oauth.token"
 import { describe, expect, test } from "bun:test"
+import { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
+import { OidcClientRegistryValue } from "@system/domain/values/oidc-client-registry.value"
 import { drizzle } from "drizzle-orm/d1"
 import { hc } from "hono/client"
 import { exportJWK, generateKeyPair } from "jose"
@@ -15,6 +17,14 @@ const issuer = "https://identity.example.test"
 const clientId = "system-console"
 const redirectUri = "https://console.example.test/callback"
 const verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+
+function createOidcClientRegistry(): OidcClientRegistryValue {
+  const registry = OidcClientRegistryValue.restore({
+    [issuer]: [{ id: clientId, name: "System Console", redirectUris: [redirectUri] }],
+  })
+  if (registry instanceof Error) throw registry
+  return registry
+}
 
 async function createSigningKeys(): Promise<string> {
   const generated = await generateKeyPair("ES256", { extractable: true })
@@ -40,7 +50,7 @@ async function createSigningKeys(): Promise<string> {
 }
 
 describe("POST /oauth/token", () => {
-  test("canonical Account・Identity・OIDC storageからtokenを発行してSystem監査を残す", async () => {
+  test("canonical AccountEntity・Identity・OIDC storageからtokenを発行してSystem監査を残す", async () => {
     const fixture = new SystemSessionTestContext()
     const code = createOidcSecret()
     const codeHash = await hashOidcSecret(code)
@@ -91,14 +101,15 @@ describe("POST /oauth/token", () => {
       .use("*", async (context, next) => {
         context.set("database", database)
         context.set("now", () => now)
-        context.set("oidcClientRegistry", {
-          [issuer]: [{ id: clientId, name: "System Console", redirectUris: [redirectUri] }],
-        })
-        context.set("oidcIssuerConfiguration", {
-          issuersByHostname: { "identity.example.test": issuer },
-          localProxyHostnames: [],
-          localIssuerHostname: null,
-        })
+        context.set("oidcClientRegistry", createOidcClientRegistry())
+        context.set(
+          "oidcIssuerConfiguration",
+          new OidcIssuerConfigurationValue({
+            issuersByHostname: { "identity.example.test": issuer },
+            localProxyHostnames: [],
+            localIssuerHostname: null,
+          }),
+        )
         await next()
       })
       .post("/oauth/token", ...POST)

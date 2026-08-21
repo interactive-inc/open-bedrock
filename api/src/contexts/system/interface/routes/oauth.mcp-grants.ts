@@ -1,8 +1,8 @@
 import { JwtSecretMissingApplicationError } from "@/contexts/system/application/auth/errors"
-import { McpGrantTokenService } from "@/contexts/system/infrastructure/auth/mcp-grant-token.service.repository"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
-import { requireSystemAuthentication } from "@system/interface/http/require-system-authentication"
+import { SystemApplicationError } from "@system/interface/errors"
+import { McpGrantTokenService } from "@system/infrastructure/auth/mcp-grant-token.service.repository"
+import { requireSystemAuthentication } from "@system/interface/middlewares/require-system-authentication"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { zAppMcpGrantResponse } from "@/contexts/system/interface/models/auth"
@@ -24,31 +24,16 @@ export const POST = systemFactory.createHandlers(
   zValidator("json", z.object({ challenge: z.string().min(1) })),
   async (c) => {
     const body = c.req.valid("json")
-    const secret = c.env.JWT_SECRET
-    const result = await (async () => {
-      if (secret === undefined || secret.length === 0) {
-        return new JwtSecretMissingApplicationError()
-      }
-
-      const grant = await McpGrantTokenService.create(
-        c.var.userId,
-        c.var.accountTokenVersion,
-        body.challenge,
-        secret,
-      )
-
-      return { item: { grant } }
-    })()
-
-    if (result instanceof Error) {
-      throw new SystemHttpError({
-        status: result.status,
-        code: result.body.error,
-        detail: result.body.message,
-        cause: result,
-      })
+    if (c.env.JWT_SECRET === undefined || c.env.JWT_SECRET.length === 0) {
+      throw new SystemApplicationError(new JwtSecretMissingApplicationError())
     }
+    const grant = await McpGrantTokenService.create(
+      c.var.userId,
+      c.var.accountTokenVersion,
+      body.challenge,
+      c.env.JWT_SECRET,
+    )
 
-    return c.json(zAppMcpGrantResponse.parse(result))
+    return c.json(zAppMcpGrantResponse.parse({ item: { grant } }))
   },
 )

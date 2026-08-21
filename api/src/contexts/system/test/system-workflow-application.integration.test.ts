@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test"
 import { CancelSystemProcedure } from "@system/application/workflow/cancel-system-procedure"
 import { DecideSystemTask } from "@system/application/workflow/decide-system-task"
-import type { SystemTaskPersistence } from "@system/infrastructure/workflow/system-workflow-writer.repository"
+import type { SystemDecisionTaskBundle } from "@system/domain/values/system-decision-task-bundle.definition"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
-import { zAccountId } from "@system/domain/auth/account-id"
-import { DecisionTaskCandidate } from "@system/domain/workflow/decision-task-candidate.entity"
-import { DecisionTask } from "@system/domain/workflow/decision-task.entity"
-import { InvalidSystemWorkflowError } from "@system/domain/workflow/invalid-system-workflow.error"
-import { proposalDigestSchema } from "@system/domain/workflow/system-case-reference"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import { DecisionTaskCandidateEntity } from "@system/domain/entities/decision-task-candidate.entity"
+import { DecisionTaskEntity } from "@system/domain/entities/decision-task.entity"
+import { InvalidSystemWorkflowError } from "@system/domain/errors"
+import { proposalDigestSchema } from "@system/domain/values/system-case-reference.schema"
 import { createSystemD1TestDatabase } from "@system/infrastructure/auth/create-system-d1-test-database.test-support"
 import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
 import { readFileSync } from "node:fs"
@@ -84,13 +84,13 @@ function candidate(
 }
 
 function nextTask(
-  caseId: Parameters<typeof DecisionTask.create>[0] extends infer _Unused ? string : never,
+  caseId: Parameters<typeof DecisionTaskEntity.create>[0] extends infer _Unused ? string : never,
   proposalDigest: typeof evidenceDigest,
   at: Date,
-): SystemTaskPersistence {
-  const finalCandidate = DecisionTaskCandidate.create(candidate("final-reviewer", at))
+): SystemDecisionTaskBundle {
+  const finalCandidate = DecisionTaskCandidateEntity.create(candidate("final-reviewer", at))
   if (finalCandidate instanceof InvalidSystemWorkflowError) throw finalCandidate
-  const task = DecisionTask.create({
+  const task = DecisionTaskEntity.create({
     caseId,
     key: "final-review",
     round: 1,

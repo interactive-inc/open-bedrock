@@ -1,6 +1,6 @@
 import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { SystemHTTPException } from "@system/interface/errors"
 import {
   DELETE,
   GET,
@@ -29,7 +29,7 @@ function createApp() {
     .delete("/system/v1/sessions", ...DELETE)
 
   app.onError((error, context) => {
-    if (!(error instanceof SystemHttpError)) throw error
+    if (!(error instanceof SystemHTTPException)) throw error
     return context.json({ error: error.detail, code: error.code, ...error.metadata }, error.status)
   })
 

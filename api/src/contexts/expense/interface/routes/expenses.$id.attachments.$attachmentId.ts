@@ -5,7 +5,7 @@ import { AttachmentObjectStore } from "@system/infrastructure/attachments/attach
 import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
 import { NotFoundError as ApplicationNotFoundError, UnprocessableError } from "@/lib/errors"
 import { canReadExpense } from "@/contexts/expense/infrastructure/can-read-expense.repository"
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { expenseAttachments, expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { factory } from "@/contexts/company/interface/utils/factory"
@@ -129,7 +129,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to read attachment")
   }
 
-  const audit = createSystemAuditEvent({
+  const audit = SystemAuditEventEntity.create({
     actorAccountId: String(session.accountId),
     action: "expense.attachment.read",
     targetType: "attachment",

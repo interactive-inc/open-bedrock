@@ -1,6 +1,6 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
-import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
@@ -24,9 +24,9 @@ export class PrepareSystemAccountSuspension {
     if (protectedPermissionKeys.some((key) => key.length === 0 || key.length > 200)) {
       return new Error("invalid protected permission keys")
     }
-    const afterJson = toStableSystemAuditJson({ status: "suspended" })
+    const afterJson = StableSystemAuditJsonValue.create({ status: "suspended" })
     if (afterJson instanceof Error) return afterJson
-    const auditEvent = createSystemAuditEvent({
+    const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: input.actorAccountId,
       action: "system.account.suspended",
       targetType: "system:account",
@@ -35,7 +35,7 @@ export class PrepareSystemAccountSuspension {
       reasonCode: null,
       authorizationJson: null,
       beforeJson: null,
-      afterJson,
+      afterJson: afterJson?.toString() ?? null,
       metadataJson: null,
       occurredAt: input.now,
     })

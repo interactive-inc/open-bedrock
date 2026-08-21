@@ -7,9 +7,9 @@ import type { ApplicationError } from "@/lib/errors"
 import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
 import { eq } from "drizzle-orm"
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
-import { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
-import { NotificationDelivery } from "@system/domain/notifications/notification-delivery.entity"
-import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
+import { NotificationDeliveryBatchValue } from "@system/domain/values/notification-delivery-batch.value"
+import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
+import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 
 export type Command = {
@@ -80,7 +80,7 @@ export class PublishAnnouncement {
       }
 
       const createdAt = new Date(createdAtValue)
-      const message = NotificationMessage.create({
+      const message = NotificationMessageEntity.create({
         id: crypto.randomUUID(),
         kind: "company:announcement",
         title: announcement.title,
@@ -93,9 +93,9 @@ export class PublishAnnouncement {
       })
       if (message instanceof Error) return message
 
-      const deliveries = NotificationDeliveryBatch.create(
+      const deliveries = NotificationDeliveryBatchValue.create(
         recipients.map((recipient) =>
-          NotificationDelivery.create({
+          NotificationDeliveryEntity.create({
             id: crypto.randomUUID(),
             messageId: message.id,
             recipientAccountId: String(recipient.accountId),

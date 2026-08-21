@@ -1,4 +1,4 @@
-import type { AttachmentBytes } from "@system/domain/attachments/attachment-bytes"
+import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
 
 /** 用途を限定した AES-GCM 鍵として取り込む。 */
 export function importAesKey(

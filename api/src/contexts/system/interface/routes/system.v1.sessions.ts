@@ -1,14 +1,16 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
-import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
+import {
+  SystemAuthenticationRateLimitedError,
+  SystemCredentialsInvalidError,
+  SystemInvalidSessionError,
+  SystemSessionUnavailableError,
+} from "@system/interface/errors"
+/** /system/v1/sessions */
+import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
 import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
-import { resolveAccountSession } from "@system/domain/auth/resolve-account-session"
 import { decoySystemPasswordHash } from "@system/infrastructure/auth/decoy-system-password-hash.repository"
 import { LoginRateLimitService } from "@system/infrastructure/auth/login-rate-limit.service.repository"
 import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
 import { SystemPasswordCredentialRepository } from "@system/infrastructure/auth/system-password-credential.repository"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
-import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service.repository"
-import { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
 import { verifySystemPassword } from "@system/infrastructure/auth/verify-system-password.repository"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { zValidator } from "@hono/zod-validator"
@@ -34,86 +36,43 @@ export const GET = factory.createHandlers(
   async (context) => {
     const database = context.env?.DB
     if (database === undefined) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const authorization = context.req.valid("header").authorization
     const token = authorization?.match(/^Bearer[ \t]+([0-9a-f]{64})$/iu)?.[1]
     if (token === undefined) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      throw new SystemInvalidSessionError()
     }
 
     const now = new Date(context.env.NOW ?? Date.now())
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
     if (!Number.isSafeInteger(now.getTime()) || !Number.isSafeInteger(sessionTtlMilliseconds)) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
-    const materialService = new SystemSessionMaterialService()
-    const tokenHash = await materialService.hashRawToken(token)
-    if (tokenHash instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
-    }
-
-    const session = await new SystemSessionRepository({
+    const applications = createSystemSessionApplications({
       context: { env: { DB: database } },
-    }).findByTokenHash(tokenHash)
-    if (session instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
-    }
-    if (session === null || session.getUseRejection(now) !== null) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      jwtSecret: context.env.JWT_SECRET ?? "",
+      sessionTtlMilliseconds,
+    })
+    if (applications instanceof Error) {
+      throw new SystemSessionUnavailableError()
     }
 
-    const accountSession = await resolveAccountSession({
-      accountRepository: new SystemAccountRepository({ database }),
-      accountId: session.accountId,
-      sessionTokenVersion: session.tokenVersion,
-    })
-    if (accountSession instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+    const authentication = await applications.authenticate.execute({ rawToken: token, now })
+    if (authentication instanceof Error) {
+      throw new SystemSessionUnavailableError()
     }
-    if (accountSession.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+    if (authentication.kind === "rejected") {
+      throw new SystemInvalidSessionError()
     }
 
     return context.json(
       {
-        account_id: accountSession.account.id,
-        session_id: session.id,
-        expires_at: session.expiresAt.toISOString(),
+        account_id: authentication.accountId,
+        session_id: authentication.sessionId,
+        expires_at: authentication.expiresAt.toISOString(),
       },
       200,
     )
@@ -141,21 +100,13 @@ export const POST = factory.createHandlers(
     const database = context.env?.DB
     const pepper = context.env?.PEPPER_SECRET
     if (database === undefined || pepper === undefined || pepper.length === 0) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const now = new Date(context.env.NOW ?? Date.now())
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
     if (!Number.isSafeInteger(now.getTime()) || !Number.isSafeInteger(sessionTtlMilliseconds)) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const body = context.req.valid("json")
@@ -171,80 +122,31 @@ export const POST = factory.createHandlers(
       now: now.getTime(),
     })
     if (gate.limited) {
-      throw new SystemHttpError({
-        status: 429,
-        code: "authentication_rate_limited",
-        detail: "too many requests",
-      })
+      throw new SystemAuthenticationRateLimitedError()
     }
 
-    const passwordPepper = pepper
-    const authentication = await (async () => {
-      const command = { subject: body.subject, password: body.password, now }
-
-      const credentialRepository = new SystemPasswordCredentialRepository({ database })
-      const passwordMaterialService = {
+    const authentication = await new SystemPasswordCredentialRepository({ database }).authenticate(
+      { subject: body.subject, password: body.password, now },
+      {
         dummyHash: decoySystemPasswordHash,
-        needsRehash: (passwordHash: string) => PasswordHashService.needsRehash(passwordHash),
-        verify: (password: string, passwordHash: string) =>
-          verifySystemPassword(password, passwordHash, passwordPepper),
-      }
-
-      if (!Number.isSafeInteger(command.now.getTime())) {
-        return new Error("System password authentication time is invalid")
-      }
-
-      const credential = await credentialRepository.findBySubject(command.subject)
-      if (credential instanceof Error) return credential
-
-      const verified = await passwordMaterialService.verify(
-        command.password,
-        credential?.passwordHash ?? passwordMaterialService.dummyHash,
-      )
-      if (verified instanceof Error) return verified
-      if (
-        credential === null ||
-        !verified ||
-        credential.account.status !== "active" ||
-        !credential.identity.wasActiveAt(command.now)
-      ) {
-        return Object.freeze({ kind: "rejected" as const, reason: "invalid_credentials" as const })
-      }
-
-      return Object.freeze({
-        kind: "authenticated" as const,
-        accountId: credential.account.id,
-        identityId: credential.identity.id,
-        requiresPasswordRehash: passwordMaterialService.needsRehash(credential.passwordHash),
-        tokenVersion: credential.account.tokenVersion,
-      })
-    })()
+        needsRehash: (passwordHash) => PasswordHashService.needsRehash(passwordHash),
+        verify: (password, passwordHash) => verifySystemPassword(password, passwordHash, pepper),
+      },
+    )
     if (authentication instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
     if (authentication.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_credentials",
-        detail: "invalid credentials",
-      })
+      throw new SystemCredentialsInvalidError()
     }
 
     await rateLimit.resetForIdentifier({ identifier: body.subject })
-    const metadataJson = toStableSystemAuditJson({
+    const metadataJson = StableSystemAuditJsonValue.create({
       client_ip: context.req.header("CF-Connecting-IP") ?? null,
       transport: "system.v1.sessions.password",
     })
     if (metadataJson instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
     const applications = createSystemSessionApplications({
       context: { env: { DB: database } },
@@ -252,31 +154,19 @@ export const POST = factory.createHandlers(
       sessionTtlMilliseconds,
     })
     if (applications instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
     const issuance = await applications.issue.execute({
       accountId: authentication.accountId,
       tokenVersion: authentication.tokenVersion,
       now,
-      auditContext: { authorizationJson: null, metadataJson },
+      auditContext: { authorizationJson: null, metadataJson: metadataJson?.toString() ?? null },
     })
     if (issuance instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
     if (issuance.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_credentials",
-        detail: "invalid credentials",
-      })
+      throw new SystemCredentialsInvalidError()
     }
 
     return context.json(
@@ -306,21 +196,13 @@ export const PATCH = factory.createHandlers(
   async (context) => {
     const database = context.env?.DB
     if (database === undefined) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const now = new Date(context.env.NOW ?? Date.now())
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
     if (!Number.isSafeInteger(now.getTime()) || !Number.isSafeInteger(sessionTtlMilliseconds)) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const applications = createSystemSessionApplications({
@@ -329,11 +211,7 @@ export const PATCH = factory.createHandlers(
       sessionTtlMilliseconds,
     })
     if (applications instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const rotation = await applications.rotate.execute({
@@ -342,18 +220,10 @@ export const PATCH = factory.createHandlers(
       auditContext: { authorizationJson: null, metadataJson: null },
     })
     if (rotation instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
     if (rotation.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      throw new SystemInvalidSessionError()
     }
 
     return context.json(
@@ -383,21 +253,13 @@ export const DELETE = factory.createHandlers(
   async (context) => {
     const database = context.env?.DB
     if (database === undefined) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const now = new Date(context.env.NOW ?? Date.now())
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
     if (!Number.isSafeInteger(now.getTime()) || !Number.isSafeInteger(sessionTtlMilliseconds)) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const applications = createSystemSessionApplications({
@@ -406,11 +268,7 @@ export const DELETE = factory.createHandlers(
       sessionTtlMilliseconds,
     })
     if (applications instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     const revocation = await applications.revoke.execute({
@@ -419,11 +277,7 @@ export const DELETE = factory.createHandlers(
       auditContext: { authorizationJson: null, metadataJson: null },
     })
     if (revocation instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "session_unavailable",
-        detail: "session service unavailable",
-      })
+      throw new SystemSessionUnavailableError()
     }
 
     return context.body(null, 204)

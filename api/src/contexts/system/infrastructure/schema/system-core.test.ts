@@ -145,7 +145,7 @@ describe("canonical System core schema", () => {
     database.close()
   })
 
-  test("Account・Identity・credential・Sessionの型、一意性、時系列をfail closedにする", () => {
+  test("AccountEntity・Identity・credential・Sessionの型、一意性、時系列をfail closedにする", () => {
     const database = createDatabase()
 
     expect(() =>
@@ -317,7 +317,7 @@ describe("canonical System core schema", () => {
     database.close()
   })
 
-  test("Notification messageをimmutableにし、Account delivery/readを一意かつ単調にする", () => {
+  test("Notification messageをimmutableにし、AccountEntity delivery/readを一意かつ単調にする", () => {
     const database = createDatabase()
     insertAccount(database)
 
@@ -368,7 +368,7 @@ describe("canonical System core schema", () => {
     database.close()
   })
 
-  test("audit actorをAccount FKから切り離し、eventをappend-onlyにする", () => {
+  test("audit actorをAccountEntity FKから切り離し、eventをappend-onlyにする", () => {
     const database = createDatabase()
     database.run(
       `INSERT INTO system_audit_events

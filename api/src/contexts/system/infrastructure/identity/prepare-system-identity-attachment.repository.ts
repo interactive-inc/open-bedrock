@@ -1,9 +1,9 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
-import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import type { IdentityProvider } from "@system/domain/identity/identity-provider"
-import { zIdentityId, type IdentityId } from "@system/domain/identity/identity-id"
-import { identitySubjectSchema } from "@system/domain/identity/identity-subject"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
+import type { IdentityProvider } from "@system/domain/values/identity-provider.schema"
+import { zIdentityId, type IdentityId } from "@system/domain/values/identity-id.schema"
+import { identitySubjectSchema } from "@system/domain/values/identity-subject.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
@@ -30,12 +30,12 @@ export class PrepareSystemIdentityAttachment {
     if (!identityId.success || !subject.success || !Number.isSafeInteger(input.now.getTime())) {
       return new Error("invalid System Identity attachment")
     }
-    const afterJson = toStableSystemAuditJson({
+    const afterJson = StableSystemAuditJsonValue.create({
       account_id: input.accountId,
       provider: input.provider,
     })
     if (afterJson instanceof Error) return afterJson
-    const auditEvent = createSystemAuditEvent({
+    const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: null,
       action: "system.identity.attached",
       targetType: "system:identity",
@@ -44,7 +44,7 @@ export class PrepareSystemIdentityAttachment {
       reasonCode: null,
       authorizationJson: null,
       beforeJson: null,
-      afterJson,
+      afterJson: afterJson?.toString() ?? null,
       metadataJson: null,
       occurredAt: input.now,
     })

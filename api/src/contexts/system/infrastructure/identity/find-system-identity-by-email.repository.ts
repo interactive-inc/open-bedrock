@@ -1,5 +1,5 @@
-import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
-import { zIdentityId, type IdentityId } from "@system/domain/identity/identity-id"
+import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { zIdentityId, type IdentityId } from "@system/domain/values/identity-id.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 export type SystemIdentityByEmail = Readonly<{

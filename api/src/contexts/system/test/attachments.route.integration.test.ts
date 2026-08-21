@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { GET } from "@system/interface/routes/attachments.$attachmentId"

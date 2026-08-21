@@ -14,7 +14,7 @@ import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/interface/http/audit/to-
 import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
 import { schema } from "@/schema"
 import { drizzle } from "drizzle-orm/d1"
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 
 const LARGE_STRESS_TEST_TIMEOUT_MS = 60_000
 

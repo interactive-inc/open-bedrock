@@ -1,4 +1,4 @@
-import type { AttachmentBytes } from "@system/domain/attachments/attachment-bytes"
+import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
 import { UnavailableError, ValidationError } from "@/lib/errors"
 
 /** KEK は 256bit。base64 で env に置く。 */

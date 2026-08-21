@@ -16,7 +16,7 @@ import {
 } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/contexts/company/domain/iam/effective-root-permission-key.catalog"
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 import { PrepareSystemAccountSuspension } from "@system/infrastructure/iam/prepare-system-account-suspension.repository"
 

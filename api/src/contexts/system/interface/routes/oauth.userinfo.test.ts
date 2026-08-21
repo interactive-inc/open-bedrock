@@ -1,9 +1,10 @@
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
+import { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
 import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret.repository"
 import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret.repository"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { systemFactory } from "@system/interface/http/system-factory"
-import { OidcHttpError } from "@system/interface/http/errors/oidc-http-error"
+import { OIDCHTTPException } from "@system/interface/errors"
 import { GET } from "@system/interface/routes/oauth.userinfo"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
@@ -50,7 +51,7 @@ describe("GET /oauth/userinfo", () => {
     const app = systemFactory
       .createApp()
       .onError((error, context) => {
-        if (!(error instanceof OidcHttpError)) throw error
+        if (!(error instanceof OIDCHTTPException)) throw error
         if (error.authenticate !== null) {
           context.header("WWW-Authenticate", error.authenticate)
         }
@@ -59,11 +60,14 @@ describe("GET /oauth/userinfo", () => {
       .use("*", async (context, next) => {
         context.set("database", database)
         context.set("now", () => now)
-        context.set("oidcIssuerConfiguration", {
-          issuersByHostname: { "identity.example.test": issuer },
-          localProxyHostnames: [],
-          localIssuerHostname: null,
-        })
+        context.set(
+          "oidcIssuerConfiguration",
+          new OidcIssuerConfigurationValue({
+            issuersByHostname: { "identity.example.test": issuer },
+            localProxyHostnames: [],
+            localIssuerHostname: null,
+          }),
+        )
         await next()
       })
       .get("/oauth/userinfo", ...GET)
@@ -110,7 +114,7 @@ describe("GET /oauth/userinfo", () => {
     const app = systemFactory
       .createApp()
       .onError((error, context) => {
-        if (!(error instanceof OidcHttpError)) throw error
+        if (!(error instanceof OIDCHTTPException)) throw error
         if (error.authenticate !== null) {
           context.header("WWW-Authenticate", error.authenticate)
         }
@@ -119,11 +123,14 @@ describe("GET /oauth/userinfo", () => {
       .use("*", async (context, next) => {
         context.set("database", database)
         context.set("now", () => now)
-        context.set("oidcIssuerConfiguration", {
-          issuersByHostname: { "identity.example.test": issuer },
-          localProxyHostnames: [],
-          localIssuerHostname: null,
-        })
+        context.set(
+          "oidcIssuerConfiguration",
+          new OidcIssuerConfigurationValue({
+            issuersByHostname: { "identity.example.test": issuer },
+            localProxyHostnames: [],
+            localIssuerHostname: null,
+          }),
+        )
         await next()
       })
       .get("/oauth/userinfo", ...GET)

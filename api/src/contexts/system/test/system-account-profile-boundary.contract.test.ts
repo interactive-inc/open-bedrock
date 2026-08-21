@@ -4,12 +4,12 @@ import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { getTableColumns } from "drizzle-orm"
 
-describe("System Account profile boundary", () => {
-  test("System Account schema does not expose a display name", () => {
+describe("System AccountEntity profile boundary", () => {
+  test("System AccountEntity schema does not expose a display name", () => {
     expect(Object.keys(getTableColumns(systemAccounts))).not.toContain("name")
   })
 
-  test("System production source does not read or define a downstream Account profile", () => {
+  test("System production source does not read or define a downstream AccountEntity profile", () => {
     const contextDirectory = new URL("../", import.meta.url)
     const violations = [...new Glob("**/*.ts").scanSync({ cwd: contextDirectory.pathname })]
       .filter((path) => !path.endsWith(".test.ts") && !path.startsWith("test/"))

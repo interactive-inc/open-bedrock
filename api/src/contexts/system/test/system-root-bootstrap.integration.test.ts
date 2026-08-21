@@ -1,6 +1,7 @@
-import { BootstrapSystemRoot } from "@system/application/iam/bootstrap-system-root"
-import type { SystemPasswordHasher } from "@system/infrastructure/auth/system-password-hasher.repository"
-import type { SystemRootBootstrapRepository } from "@system/infrastructure/iam/system-root-bootstrap-port.repository"
+import {
+  BootstrapSystemRoot,
+  type SystemPasswordHasher,
+} from "@system/application/iam/bootstrap-system-root"
 import { wrapSystemD1TestDatabase } from "@system/infrastructure/auth/wrap-system-d1-test-database.test-support"
 import { SystemRootBootstrapRepositoryD1 } from "@system/infrastructure/iam/system-root-bootstrap.repository"
 import { Database } from "bun:sqlite"
@@ -306,7 +307,7 @@ describe("System root bootstrap", () => {
         return passwordHash
       },
     }
-    const repository: SystemRootBootstrapRepository = {
+    const repository: Pick<SystemRootBootstrapRepositoryD1, "bootstrap"> = {
       bootstrap: async () => {
         repositoryCalls += 1
         return new Error("must not be called")

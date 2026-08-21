@@ -74,7 +74,7 @@ describe("Company Bootstrap HTTP", () => {
       { json: { name: "Root Admin" } },
       { headers: { authorization: `Bearer ${sessionBody.access_token}` } },
     )
-    expect(failed.status).toBe(503)
+    expect(Number(failed.status)).toBe(503)
     expect(
       await database.prepare("SELECT COUNT(*) AS total FROM employees").first<number>("total"),
     ).toBe(0)

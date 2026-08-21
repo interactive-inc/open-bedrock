@@ -1,4 +1,4 @@
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import {

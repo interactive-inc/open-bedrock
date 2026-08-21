@@ -1,4 +1,4 @@
-import { ACCESS_TOKEN_TYPE } from "@/contexts/system/domain/auth/access-token-claims"
+import { ACCESS_TOKEN_TYPE } from "@system/domain/values/access-token-claims.schema"
 import {
   SYSTEM_ACCESS_TOKEN_AUDIENCE,
   SYSTEM_ACCESS_TOKEN_ISSUER,

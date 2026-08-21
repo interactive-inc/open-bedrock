@@ -1,13 +1,19 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import {
+  SystemForbiddenError,
+  SystemInvalidSessionError,
+  SystemNotificationInvalidError,
+  SystemNotificationRecipientNotFoundError,
+  SystemNotificationUnavailableError,
+} from "@system/interface/errors"
 /** /system/v1/notifications */
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
-import { zAccountId } from "@system/domain/auth/account-id"
-import { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
-import { NotificationDelivery } from "@system/domain/notifications/notification-delivery.entity"
-import { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import { NotificationDeliveryBatchValue } from "@system/domain/values/notification-delivery-batch.value"
+import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
+import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import { SystemActiveAccountSet } from "@system/infrastructure/auth/system-active-account-set.repository"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
-import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
+import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -26,11 +32,7 @@ export const GET = systemFactory.createHandlers(
   async (context) => {
     const accountId = zAccountId.safeParse(context.var.userId)
     if (!accountId.success) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      throw new SystemInvalidSessionError()
     }
     const query = context.req.valid("query")
     const page = await new SystemNotificationRepository({
@@ -42,11 +44,7 @@ export const GET = systemFactory.createHandlers(
       offset: query.offset,
     })
     if (page instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "notification_unavailable",
-        detail: "notification service unavailable",
-      })
+      throw new SystemNotificationUnavailableError()
     }
 
     return context.json(
@@ -107,39 +105,23 @@ export const POST = systemFactory.createHandlers(
       !context.var.permissions.has("system:admin") &&
       !context.var.permissions.has("notification:send")
     ) {
-      throw new SystemHttpError({
-        status: 403,
-        code: "forbidden",
-        detail: "forbidden",
-      })
+      throw new SystemForbiddenError()
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "notification_unavailable",
-        detail: "notification service unavailable",
-      })
+      throw new SystemNotificationUnavailableError()
     }
     const body = context.req.valid("json")
     const recipientsAreActive = await new SystemActiveAccountSet({
       env: { DB: context.env.DB },
     }).containsAll(body.recipient_account_ids)
     if (recipientsAreActive instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "notification_unavailable",
-        detail: "notification service unavailable",
-      })
+      throw new SystemNotificationUnavailableError()
     }
     if (!recipientsAreActive) {
-      throw new SystemHttpError({
-        status: 404,
-        code: "notification_recipient_not_found",
-        detail: "notification recipient not found",
-      })
+      throw new SystemNotificationRecipientNotFoundError()
     }
-    const message = NotificationMessage.create({
+    const message = NotificationMessageEntity.create({
       id: crypto.randomUUID(),
       kind: body.kind,
       title: body.title,
@@ -148,14 +130,10 @@ export const POST = systemFactory.createHandlers(
       createdAt: now,
     })
     if (message instanceof Error) {
-      throw new SystemHttpError({
-        status: 400,
-        code: "invalid_notification",
-        detail: "invalid notification",
-      })
+      throw new SystemNotificationInvalidError()
     }
     const deliveries = body.recipient_account_ids.map((recipientAccountId) =>
-      NotificationDelivery.create({
+      NotificationDeliveryEntity.create({
         id: crypto.randomUUID(),
         messageId: message.id,
         recipientAccountId,
@@ -165,19 +143,11 @@ export const POST = systemFactory.createHandlers(
     )
     const invalidDelivery = deliveries.find((delivery) => delivery instanceof Error)
     if (invalidDelivery instanceof Error) {
-      throw new SystemHttpError({
-        status: 400,
-        code: "invalid_notification",
-        detail: "invalid notification",
-      })
+      throw new SystemNotificationInvalidError()
     }
-    const deliveryBatch = NotificationDeliveryBatch.create(deliveries)
+    const deliveryBatch = NotificationDeliveryBatchValue.create(deliveries)
     if (deliveryBatch instanceof Error) {
-      throw new SystemHttpError({
-        status: 400,
-        code: "invalid_notification",
-        detail: "invalid notification",
-      })
+      throw new SystemNotificationInvalidError()
     }
 
     const publication = await new PublishSystemNotification({
@@ -186,18 +156,10 @@ export const POST = systemFactory.createHandlers(
       }),
     }).execute({ message, deliveries: deliveryBatch })
     if (publication instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "notification_unavailable",
-        detail: "notification service unavailable",
-      })
+      throw new SystemNotificationUnavailableError()
     }
     if (publication.kind === "rejected") {
-      throw new SystemHttpError({
-        status: 400,
-        code: "invalid_notification",
-        detail: "invalid notification",
-      })
+      throw new SystemNotificationInvalidError()
     }
 
     return context.json(
@@ -217,29 +179,17 @@ export const PATCH = systemFactory.createHandlers(
   async (context) => {
     const accountId = zAccountId.safeParse(context.var.userId)
     if (!accountId.success) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_session",
-        detail: "invalid session",
-      })
+      throw new SystemInvalidSessionError()
     }
     const readAt = context.var.now()
     if (!Number.isSafeInteger(readAt.getTime())) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "notification_unavailable",
-        detail: "notification service unavailable",
-      })
+      throw new SystemNotificationUnavailableError()
     }
     const markedCount = await new SystemNotificationRepository({
       context: { env: { DB: context.env.DB } },
     }).markAllDeliveriesRead(accountId.data, readAt)
     if (markedCount instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "notification_unavailable",
-        detail: "notification service unavailable",
-      })
+      throw new SystemNotificationUnavailableError()
     }
 
     return context.json({ marked_count: markedCount }, 200)

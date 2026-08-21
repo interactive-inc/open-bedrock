@@ -4,11 +4,11 @@ import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attach
 import { AttachmentObjectStore } from "@system/infrastructure/attachments/attachment-object-store.repository"
 import { NotFoundError, UnprocessableError } from "@/lib/errors"
 /** /attachments/:attachmentId */
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
-import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+import { SystemHTTPException } from "@system/interface/errors"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { ApplicationError } from "@/lib/errors"
 
@@ -21,7 +21,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   const attachmentId = context.req.param("attachmentId") ?? ""
 
   if (attachmentId === "") {
-    throw new SystemHttpError({
+    throw new SystemHTTPException({
       status: 404,
       code: "attachment_not_found",
       detail: "attachment not found",
@@ -31,7 +31,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   const row = await new AttachmentRepository(context).findById(attachmentId)
 
   if (row instanceof Error) {
-    throw new SystemHttpError({
+    throw new SystemHTTPException({
       status: 503,
       code: "attachment_unavailable",
       detail: "attachment service unavailable",
@@ -39,7 +39,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
 
   if (row === null || row.ownerAccountId !== context.var.userId) {
-    throw new SystemHttpError({
+    throw new SystemHTTPException({
       status: 404,
       code: "attachment_not_found",
       detail: "attachment not found",
@@ -47,7 +47,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
 
   if (row.status !== "pending" && row.status !== "uploading") {
-    throw new SystemHttpError({
+    throw new SystemHTTPException({
       status: 404,
       code: "attachment_not_pending",
       detail: "attachment is linked to a record",
@@ -111,7 +111,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   })()
 
   if (content instanceof ApplicationError) {
-    throw new SystemHttpError({
+    throw new SystemHTTPException({
       status: content.code === "attachment_storage_unconfigured" ? 503 : 404,
       code: content.code,
       detail: content.message,
@@ -119,14 +119,14 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
 
   if (content instanceof Error) {
-    throw new SystemHttpError({
+    throw new SystemHTTPException({
       status: 500,
       code: "attachment_read_failed",
       detail: "attachment read failed",
     })
   }
 
-  const audit = createSystemAuditEvent({
+  const audit = SystemAuditEventEntity.create({
     actorAccountId: context.var.userId,
     action: "attachment.read",
     targetType: "attachment",

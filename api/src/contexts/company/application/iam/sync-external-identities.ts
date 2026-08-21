@@ -6,7 +6,7 @@ import { IdentityRepository } from "@/contexts/company/infrastructure/auth/ident
 import { AttachExternalIdentity } from "@/contexts/company/infrastructure/iam/attach-external-identity.repository"
 import { ProvisionExternalEmployee } from "@/contexts/company/infrastructure/iam/provision-external-employee.repository"
 import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 
 /** 外部 identity provider は OIDC ブローカー。identity の provider 値に対応する。 */
 const EXTERNAL_PROVIDER = "oidc" as const

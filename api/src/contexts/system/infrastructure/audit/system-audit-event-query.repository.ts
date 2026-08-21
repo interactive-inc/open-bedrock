@@ -1,8 +1,12 @@
-import type { SystemAuditEvent, SystemAuditOutcome } from "@system/domain/audit/system-audit-event"
+import {
+  SystemAuditEventEntity,
+  type SystemAuditEventProps,
+  type SystemAuditOutcome,
+} from "@system/domain/entities/system-audit-event.entity"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 export type SystemAuditEventPage = Readonly<{
-  events: ReadonlyArray<SystemAuditEvent>
+  events: ReadonlyArray<SystemAuditEventEntity>
   total: number
 }>
 
@@ -17,6 +21,23 @@ type ListQuery = Readonly<{
   limit: number
   offset: number
 }>
+
+function restoreEvent(row: Record<string, unknown>): SystemAuditEventEntity | Error {
+  return SystemAuditEventEntity.restore({
+    eventId: row.event_id,
+    actorAccountId: row.actor_account_id,
+    action: row.action,
+    targetType: row.target_type,
+    targetId: row.target_id,
+    outcome: row.outcome,
+    reasonCode: row.reason_code,
+    authorizationJson: row.authorization_json,
+    beforeJson: row.before_json,
+    afterJson: row.after_json,
+    metadataJson: row.metadata_json,
+    occurredAtEpochMilliseconds: row.occurred_at,
+  } as SystemAuditEventProps)
+}
 
 /** append-only System監査台帳を固定列・固定上限で読むquery adapter。 */
 export class SystemAuditEventQuery {
@@ -63,43 +84,13 @@ export class SystemAuditEventQuery {
         return new Error("System audit query did not succeed")
       }
 
-      const events: Array<SystemAuditEvent> = []
+      const events: Array<SystemAuditEventEntity> = []
       for (const value of results[0]?.results ?? []) {
         const row = value as Record<string, unknown>
-        if (
-          typeof row.event_id !== "string" ||
-          (row.actor_account_id !== null && typeof row.actor_account_id !== "string") ||
-          typeof row.action !== "string" ||
-          typeof row.target_type !== "string" ||
-          (row.target_id !== null && typeof row.target_id !== "string") ||
-          !["succeeded", "denied", "failed"].includes(String(row.outcome)) ||
-          (row.reason_code !== null && typeof row.reason_code !== "string") ||
-          (row.authorization_json !== null && typeof row.authorization_json !== "string") ||
-          (row.before_json !== null && typeof row.before_json !== "string") ||
-          (row.after_json !== null && typeof row.after_json !== "string") ||
-          (row.metadata_json !== null && typeof row.metadata_json !== "string") ||
-          typeof row.occurred_at !== "number" ||
-          !Number.isSafeInteger(row.occurred_at) ||
-          !Number.isFinite(new Date(row.occurred_at).getTime())
-        ) {
-          return new Error("System audit row is invalid")
-        }
-        events.push(
-          Object.freeze({
-            eventId: row.event_id,
-            actorAccountId: row.actor_account_id,
-            action: row.action,
-            targetType: row.target_type,
-            targetId: row.target_id,
-            outcome: row.outcome as SystemAuditOutcome,
-            reasonCode: row.reason_code,
-            authorizationJson: row.authorization_json,
-            beforeJson: row.before_json,
-            afterJson: row.after_json,
-            metadataJson: row.metadata_json,
-            occurredAtEpochMilliseconds: row.occurred_at,
-          }),
-        )
+        const event = restoreEvent(row)
+        if (event instanceof Error)
+          return new Error("System audit row is invalid", { cause: event })
+        events.push(event)
       }
       const total = (results[1]?.results?.[0] as Record<string, unknown> | undefined)?.total
       if (typeof total !== "number" || !Number.isSafeInteger(total) || total < 0) {
@@ -112,7 +103,7 @@ export class SystemAuditEventQuery {
     }
   }
 
-  async findById(eventId: string): Promise<SystemAuditEvent | null | Error> {
+  async findById(eventId: string): Promise<SystemAuditEventEntity | null | Error> {
     try {
       const row = await this.context.env.DB.prepare(
         `SELECT event_id, actor_account_id, action, target_type, target_id, outcome,
@@ -125,39 +116,10 @@ export class SystemAuditEventQuery {
         .bind(eventId)
         .first<Record<string, unknown>>()
       if (row === null) return null
-      if (
-        typeof row.event_id !== "string" ||
-        (row.actor_account_id !== null && typeof row.actor_account_id !== "string") ||
-        typeof row.action !== "string" ||
-        typeof row.target_type !== "string" ||
-        (row.target_id !== null && typeof row.target_id !== "string") ||
-        !["succeeded", "denied", "failed"].includes(String(row.outcome)) ||
-        (row.reason_code !== null && typeof row.reason_code !== "string") ||
-        (row.authorization_json !== null && typeof row.authorization_json !== "string") ||
-        (row.before_json !== null && typeof row.before_json !== "string") ||
-        (row.after_json !== null && typeof row.after_json !== "string") ||
-        (row.metadata_json !== null && typeof row.metadata_json !== "string") ||
-        typeof row.occurred_at !== "number" ||
-        !Number.isSafeInteger(row.occurred_at) ||
-        !Number.isFinite(new Date(row.occurred_at).getTime())
-      ) {
-        return new Error("System audit row is invalid")
-      }
-
-      return Object.freeze({
-        eventId: row.event_id,
-        actorAccountId: row.actor_account_id,
-        action: row.action,
-        targetType: row.target_type,
-        targetId: row.target_id,
-        outcome: row.outcome as SystemAuditOutcome,
-        reasonCode: row.reason_code,
-        authorizationJson: row.authorization_json,
-        beforeJson: row.before_json,
-        afterJson: row.after_json,
-        metadataJson: row.metadata_json,
-        occurredAtEpochMilliseconds: row.occurred_at,
-      })
+      const event = restoreEvent(row)
+      return event instanceof Error
+        ? new Error("System audit row is invalid", { cause: event })
+        : event
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to find System audit event")
     }

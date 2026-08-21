@@ -1,5 +1,5 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import type { IdentityProvider } from "@system/domain/identity/identity-provider"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { IdentityProvider } from "@system/domain/values/identity-provider.schema"
 import { PrepareSystemIdentityAttachment } from "@system/infrastructure/identity/prepare-system-identity-attachment.repository"
 import type { Context } from "@/env"
 

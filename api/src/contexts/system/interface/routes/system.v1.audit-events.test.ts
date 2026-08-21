@@ -1,5 +1,5 @@
-import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
-import { zAccountId } from "@system/domain/auth/account-id"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
@@ -45,7 +45,7 @@ describe("System Audit HTTP", () => {
       )
       .run(readerAccountId, occurredAt.getTime())
 
-    const seedEvent = createSystemAuditEvent({
+    const seedEvent = SystemAuditEventEntity.create({
       actorAccountId: readerAccountId,
       action: "system.session.issued",
       targetType: "system:session",

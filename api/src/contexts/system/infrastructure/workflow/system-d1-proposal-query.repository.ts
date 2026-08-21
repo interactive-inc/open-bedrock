@@ -1,14 +1,111 @@
-import { zAccountId } from "@system/domain/auth/account-id"
-import type {
-  SystemAttestationView,
-  SystemDecisionTaskView,
-  SystemProposalList,
-  SystemProposalQuery,
-  SystemProposalStatus,
-  SystemProposalView,
-} from "@system/infrastructure/workflow/system-proposal-query.repository"
-import { proposalDigestSchema } from "@system/domain/workflow/system-case-reference"
+import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import {
+  proposalDigestSchema,
+  type ProposalDigest,
+} from "@system/domain/values/system-case-reference.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
+
+export type SystemProposalStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "returned"
+  | "cancelled"
+  | "executed"
+
+export type SystemProposalView = Readonly<{
+  number: number
+  proposalId: string
+  seriesId: string
+  version: number
+  procedureKey: string
+  procedureRevision: number
+  procedureNumber: number
+  title: string
+  category: string
+  description: string | null
+  inputSchemaJson: string
+  decisionPolicyJson: string
+  completionOperationKey: string | null
+  bodyJson: string
+  digest: ProposalDigest
+  createdByAccountId: AccountId
+  createdAt: Date
+  caseId: string
+  status: SystemProposalStatus
+  updatedAt: Date
+  currentTaskKey: string | null
+  currentTaskRound: number | null
+  currentTaskOpenedAt: Date | null
+  currentTaskDueAt: Date | null
+  lastTaskKey: string
+  lastTaskRound: number
+  lastTaskOutcome: "pending" | "approved" | "rejected" | "returned" | "cancelled"
+}>
+
+export type SystemAttestationView = Readonly<{
+  id: string
+  taskKey: string
+  round: number
+  actorAccountId: AccountId
+  representedAccountId: AccountId
+  delegationId: string | null
+  action: "approve" | "reject" | "return"
+  comment: string | null
+  decidedAt: Date
+}>
+
+export type SystemProposalList = Readonly<{
+  proposals: ReadonlyArray<SystemProposalView>
+  total: number
+}>
+
+export type SystemDecisionTaskView = Readonly<{
+  key: string
+  round: number
+  requiredApprovals: number
+  openedAt: Date
+  dueAt: Date | null
+  outcome: "pending" | "approved" | "rejected" | "returned" | "cancelled"
+  closedAt: Date | null
+}>
+
+export type SystemProposalQuery = Readonly<{
+  findByNumber(number: number): Promise<SystemProposalView | null | Error>
+  list(
+    input: Readonly<{
+      creatorAccountIds: ReadonlyArray<AccountId> | null
+      actorAccountId: AccountId | null
+      statuses: ReadonlyArray<SystemProposalStatus> | null
+      procedureKey: string | null
+      createdFrom: Date | null
+      createdTo: Date | null
+      includeCancelled: boolean
+      sort: "created_at_asc" | "created_at_desc"
+      limit: number
+      offset: number
+      at: Date
+    }>,
+  ): Promise<SystemProposalList | Error>
+  listAttestations(caseId: string): Promise<ReadonlyArray<SystemAttestationView> | Error>
+  listTasks(caseId: string): Promise<ReadonlyArray<SystemDecisionTaskView> | Error>
+  listTaskCandidateAccountIds(
+    input: Readonly<{
+      caseId: string
+      taskKey: string
+      round: number
+      at: Date
+    }>,
+  ): Promise<ReadonlyArray<AccountId> | Error>
+  findDelegation(
+    input: Readonly<{
+      caseId: string
+      actorAccountId: AccountId
+      candidateAccountIds: ReadonlyArray<AccountId>
+      at: Date
+    }>,
+  ): Promise<Readonly<{ id: string; representedAccountId: AccountId }> | null | Error>
+}>
 
 type ProposalRow = Readonly<{
   number: number
@@ -264,7 +361,7 @@ export class SystemD1ProposalQuery implements SystemProposalQuery {
         const actorAccountId = zAccountId.safeParse(row.actor_account_id)
         const representedAccountId = zAccountId.safeParse(row.represented_account_id)
         if (!actorAccountId.success || !representedAccountId.success) {
-          return new Error("system attestation contains an invalid Account ID")
+          return new Error("system attestation contains an invalid AccountEntity ID")
         }
         attestations.push({
           id: row.id,
@@ -375,7 +472,7 @@ export class SystemD1ProposalQuery implements SystemProposalQuery {
       const representedAccountId = zAccountId.safeParse(row.delegator_account_id)
       return representedAccountId.success
         ? { id: row.id, representedAccountId: representedAccountId.data }
-        : new Error("delegation contains an invalid Account ID")
+        : new Error("delegation contains an invalid AccountEntity ID")
     } catch (cause) {
       return cause instanceof Error
         ? cause
@@ -399,7 +496,7 @@ export class SystemD1ProposalQuery implements SystemProposalQuery {
       const accountIds: ReturnType<typeof zAccountId.parse>[] = []
       for (const row of rows.results) {
         const accountId = zAccountId.safeParse(row.candidate_account_id)
-        if (!accountId.success) return new Error("candidate contains an invalid Account ID")
+        if (!accountId.success) return new Error("candidate contains an invalid AccountEntity ID")
         accountIds.push(accountId.data)
       }
       return accountIds

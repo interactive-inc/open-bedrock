@@ -1,11 +1,7 @@
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import type {
-  SystemProcedureDelegationRepository,
-  SystemProcedureDelegationView,
-} from "@system/infrastructure/workflow/system-procedure-delegation-port.repository"
-import { zAccountId } from "@system/domain/auth/account-id"
-import { procedureKeySchema } from "@system/domain/workflow/procedure-definition.entity"
+import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
+import { procedureKeySchema, type ProcedureKey } from "@system/domain/values/procedure-key.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type DelegationRow = Readonly<{
@@ -20,12 +16,39 @@ type DelegationRow = Readonly<{
   created_at: number
 }>
 
+export type SystemProcedureDelegationView = Readonly<{
+  number: number
+  id: string
+  delegatorAccountId: AccountId
+  delegateAccountId: AccountId
+  procedureKey: ProcedureKey | null
+  startsAt: Date
+  endsAt: Date
+  revokedAt: Date | null
+  createdAt: Date
+}>
+
+type CreateSystemProcedureDelegationInput = Readonly<{
+  delegatorAccountId: AccountId
+  delegateAccountId: AccountId
+  procedureKey: ProcedureKey | null
+  startsAt: Date
+  endsAt: Date
+  createdAt: Date
+}>
+
+type RevokeSystemProcedureDelegationInput = Readonly<{
+  number: number
+  delegatorAccountId: AccountId
+  revokedAt: Date
+}>
+
 /** Procedure scope付きSystem Delegationを原子的に永続化する。 */
-export class SystemD1ProcedureDelegationRepository implements SystemProcedureDelegationRepository {
+export class SystemD1ProcedureDelegationRepository {
   constructor(private readonly context: SystemD1Context) {}
 
   async create(
-    input: Parameters<SystemProcedureDelegationRepository["create"]>[0],
+    input: CreateSystemProcedureDelegationInput,
   ): Promise<SystemProcedureDelegationView | "overlap" | Error> {
     if (
       input.delegatorAccountId === input.delegateAccountId ||
@@ -141,9 +164,7 @@ export class SystemD1ProcedureDelegationRepository implements SystemProcedureDel
     }
   }
 
-  async list(
-    accountId: Parameters<SystemProcedureDelegationRepository["list"]>[0],
-  ): Promise<ReadonlyArray<SystemProcedureDelegationView> | Error> {
+  async list(accountId: AccountId): Promise<ReadonlyArray<SystemProcedureDelegationView> | Error> {
     try {
       const rows = await this.context.env.DB.prepare(
         `SELECT number.number, delegation.id, delegation.delegator_account_id,
@@ -173,9 +194,7 @@ export class SystemD1ProcedureDelegationRepository implements SystemProcedureDel
     }
   }
 
-  async revoke(
-    input: Parameters<SystemProcedureDelegationRepository["revoke"]>[0],
-  ): Promise<true | "not_found" | Error> {
+  async revoke(input: RevokeSystemProcedureDelegationInput): Promise<true | "not_found" | Error> {
     try {
       const result = await this.context.env.DB.prepare(
         `UPDATE system_delegations

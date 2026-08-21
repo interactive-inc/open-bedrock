@@ -3,9 +3,9 @@ import { resolveWorkflowStepSnapshot } from "@/contexts/company/infrastructure/o
 import type { CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
 import type { ApplicationWorkflowStep } from "@/contexts/company/domain/organization/company-procedure-workflow"
 import type { Context } from "@/env"
-import type { StartSystemProcedureTask } from "@system/domain/workflow/create-system-task-persistence"
-import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
-import { toSystemProposalDigest } from "@system/domain/workflow/to-system-proposal-digest"
+import type { StartSystemProcedureTask } from "@system/domain/policies/decision-task.policy"
+import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
+import { ProposalDigestValue } from "@system/domain/values/proposal-digest.value"
 
 export type CompanyProcedureApplicant = Readonly<{
   id: number
@@ -77,9 +77,9 @@ async function resolveConfiguredTask(
   if (snapshot instanceof Error) return snapshot
   const candidates: StartSystemProcedureTask["candidates"][number][] = []
   for (const candidate of snapshot.candidates) {
-    const evidence = toCanonicalSystemJson(JSON.parse(candidate.selectorsJson))
+    const evidence = CanonicalSystemJsonValue.create(JSON.parse(candidate.selectorsJson))
     if (evidence instanceof Error) return evidence
-    const digest = await toSystemProposalDigest(evidence)
+    const digest = await ProposalDigestValue.create(evidence)
     if (digest instanceof Error) return digest
     candidates.push({
       accountId: candidate.accountId,
@@ -88,7 +88,7 @@ async function resolveConfiguredTask(
       evidenceKind: "organizational-authority",
       evidenceId: snapshot.resolutionId,
       evidenceVersion: candidate.resolvedAt,
-      eligibilityDigest: digest,
+      eligibilityDigest: digest.toString(),
       eligibleFrom: candidate.eligibleFrom === null ? null : new Date(candidate.eligibleFrom),
       resolvedAt: new Date(candidate.resolvedAt),
     })

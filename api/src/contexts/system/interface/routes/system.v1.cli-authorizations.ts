@@ -1,7 +1,7 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { SystemCLILoginUnavailableError } from "@system/interface/errors"
 /** /system/v1/cli-authorizations */
-import { isSecureSystemIdentityIssuer } from "@system/domain/identity/is-secure-system-identity-issuer"
-import { systemCliIdentityRedirectUri } from "@system/domain/identity/system-cli-identity-redirect-uri"
+import { SystemIdentityIssuerValue } from "@system/domain/values/system-identity-issuer.value"
+import { SystemCliIdentityRedirectUriValue } from "@system/domain/values/system-cli-identity-redirect-uri.value"
 import { createSystemCliLoginState } from "@system/infrastructure/auth/create-system-cli-login-state.repository"
 import { createSystemPkce } from "@system/infrastructure/auth/create-system-pkce.repository"
 import { systemFactory } from "@system/interface/http/system-factory"
@@ -26,43 +26,27 @@ export const GET = systemFactory.createHandlers(
       apiOrigin === undefined ||
       apiOrigin.length === 0
     ) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCLILoginUnavailableError()
     }
 
     if (!URL.canParse(identityLoginUrl)) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCLILoginUnavailableError()
     }
     const brokerUrl = new URL(identityLoginUrl)
-    const redirectUri = systemCliIdentityRedirectUri(apiOrigin)
+    const redirectUri = SystemCliIdentityRedirectUriValue.create(apiOrigin)
     if (
-      !isSecureSystemIdentityIssuer(brokerUrl) ||
+      !new SystemIdentityIssuerValue(brokerUrl).isSecure ||
       brokerUrl.username !== "" ||
       brokerUrl.password !== "" ||
       brokerUrl.hash !== "" ||
       redirectUri instanceof Error
     ) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCLILoginUnavailableError()
     }
 
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCLILoginUnavailableError()
     }
     const pkce = await createSystemPkce()
     const brokerState = crypto.randomUUID()
@@ -76,14 +60,10 @@ export const GET = systemFactory.createHandlers(
       expiresAt: new Date(now.getTime() + 600_000),
     })
     if (created instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCLILoginUnavailableError()
     }
 
-    brokerUrl.searchParams.set("callback", redirectUri)
+    brokerUrl.searchParams.set("callback", redirectUri.toString())
     brokerUrl.searchParams.set("state", brokerState)
     brokerUrl.searchParams.set("code_challenge", pkce.challenge)
     brokerUrl.searchParams.set("code_challenge_method", "S256")

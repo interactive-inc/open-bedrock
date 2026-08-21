@@ -1,5 +1,5 @@
 import { PasswordHashService } from "@/contexts/system/infrastructure/auth/password-hash.service.repository"
-import { validateSystemPassword } from "@system/domain/auth/system-password-policy"
+import { SystemPasswordValue } from "@system/domain/values/system-password.value"
 import {
   PasswordResetTokenInvalidApplicationError,
   PepperSecretMissingApplicationError,
@@ -8,7 +8,7 @@ import {
 import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
 import { findSystemPasswordResetChallenge } from "@system/infrastructure/auth/find-system-password-reset-challenge.repository"
 import { completeSystemPasswordResetChallenge } from "@system/infrastructure/auth/complete-system-password-reset-challenge.repository"
-import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
+import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
 import type {
   SystemClockContext,
   SystemD1Context,
@@ -33,7 +33,8 @@ export class ResetPassword {
 
   async execute(props: Props) {
     const now = this.c.var.now()
-    if (validateSystemPassword(props.newPassword) !== null) {
+    const password = SystemPasswordValue.create(props.newPassword)
+    if (!(password instanceof SystemPasswordValue)) {
       return new PasswordResetTokenInvalidApplicationError()
     }
 
@@ -46,8 +47,11 @@ export class ResetPassword {
     const challenge = await findSystemPasswordResetChallenge(this.c, tokenHash, now)
     if (challenge instanceof Error) return new SystemAuthPersistenceApplicationError(challenge)
     if (challenge === null) return new PasswordResetTokenInvalidApplicationError()
-    const passwordHash = await PasswordHashService.hash(props.newPassword, this.c.env.PEPPER_SECRET)
-    const metadataJson = toStableSystemAuditJson({
+    const passwordHash = await PasswordHashService.hash(
+      password.toString(),
+      this.c.env.PEPPER_SECRET,
+    )
+    const metadataJson = StableSystemAuditJsonValue.create({
       client_ip: this.c.var.auditContext.clientIp,
       client_name: this.c.var.auditContext.clientName,
       request_id: this.c.var.auditContext.requestId,
@@ -62,7 +66,7 @@ export class ResetPassword {
       accountTokenVersion: challenge.accountTokenVersion,
       passwordHash,
       completedAt: now,
-      metadataJson,
+      metadataJson: metadataJson?.toString() ?? null,
     })
 
     if (completed instanceof Error) return new SystemAuthPersistenceApplicationError(completed)

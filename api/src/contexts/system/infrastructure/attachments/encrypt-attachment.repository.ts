@@ -1,4 +1,4 @@
-import type { AttachmentBytes } from "@system/domain/attachments/attachment-bytes"
+import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
 import { importAesKey } from "@system/infrastructure/attachments/import-aes-key.repository"
 import { toBase64 } from "@system/infrastructure/attachments/to-base64.repository"
 import { toSha256Hex } from "@system/infrastructure/attachments/to-sha256-hex.repository"

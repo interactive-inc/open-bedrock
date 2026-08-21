@@ -2,8 +2,8 @@ import {
   ACCESS_TOKEN_TYPE,
   type AccessTokenClaims,
   zAccessTokenClaims,
-} from "@system/domain/auth/access-token-claims"
-import { validateSystemAccessTokenSecret } from "@system/domain/auth/validate-system-access-token-secret"
+} from "@system/domain/values/access-token-claims.schema"
+import { SystemAccessTokenSecretValue } from "@system/domain/values/system-access-token-secret.value"
 import { jwtVerify, SignJWT } from "jose"
 
 export type AccessTokenProfile = Readonly<{
@@ -96,6 +96,8 @@ export class AccessTokenService {
     if (!Number.isSafeInteger(now.getTime()))
       return new Error("System access token time is invalid")
 
-    return validateSystemAccessTokenSecret(secret)
+    const accessTokenSecret = SystemAccessTokenSecretValue.create(secret)
+
+    return accessTokenSecret instanceof Error ? accessTokenSecret : null
   }
 }

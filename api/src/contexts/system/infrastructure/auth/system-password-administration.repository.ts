@@ -1,6 +1,6 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import { zIdentityId } from "@system/domain/identity/identity-id"
-import type { IdentityId } from "@system/domain/identity/identity-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { zIdentityId } from "@system/domain/values/identity-id.schema"
+import type { IdentityId } from "@system/domain/values/identity-id.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 type ResetProps = Readonly<{
@@ -14,7 +14,7 @@ type ResetProps = Readonly<{
 
 export type SystemPasswordAdministrationMutation = "reset" | "not_found" | "forbidden"
 
-/** password credential変更とAccount Session失効を同じSystem transactionで保存する。 */
+/** password credential変更とAccountEntity Session失効を同じSystem transactionで保存する。 */
 export class SystemPasswordAdministrationRepository {
   constructor(private readonly context: SystemD1Context) {
     Object.freeze(this)
@@ -37,7 +37,7 @@ export class SystemPasswordAdministrationRepository {
       if (!rows.success) return new Error("failed to read System password Identity")
       if (rows.results.length === 0) return null
       if (rows.results.length !== 1) {
-        return new Error("System Account has multiple active password Identities")
+        return new Error("System AccountEntity has multiple active password Identities")
       }
       const identityId = zIdentityId.safeParse(rows.results[0]?.id)
 

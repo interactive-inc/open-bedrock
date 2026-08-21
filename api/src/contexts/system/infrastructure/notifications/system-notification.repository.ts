@@ -1,17 +1,8 @@
-import type {
-  ListSystemNotificationsProps,
-  MarkNotificationDeliveryReadProps,
-  NotificationRepository,
-  SystemNotification,
-  SystemNotificationPage,
-} from "@system/infrastructure/notifications/notification-port.repository"
-import type { AccountId } from "@system/domain/auth/account-id"
-import type {
-  NotificationDeliveryId,
-  NotificationDelivery,
-} from "@system/domain/notifications/notification-delivery.entity"
-import type { NotificationDeliveryBatch } from "@system/domain/notifications/notification-delivery-batch"
-import type { NotificationMessage } from "@system/domain/notifications/notification-message.entity"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
+import type { NotificationDeliveryId } from "@system/domain/values/notification-delivery-id.schema"
+import type { NotificationDeliveryBatchValue } from "@system/domain/values/notification-delivery-batch.value"
+import type { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 import { toSystemNotificationDelivery } from "@system/infrastructure/notifications/to-system-notification-delivery.repository"
 import { toSystemNotificationMessage } from "@system/infrastructure/notifications/to-system-notification-message.repository"
@@ -30,15 +21,38 @@ type DeliveryPayload = Readonly<{
   readAt: number | null
 }>
 
+export type SystemNotification = Readonly<{
+  delivery: NotificationDeliveryEntity
+  message: NotificationMessageEntity
+}>
+
+export type SystemNotificationPage = Readonly<{
+  items: ReadonlyArray<SystemNotification>
+  total: number
+}>
+
+export type ListSystemNotificationsProps = Readonly<{
+  recipientAccountId: AccountId
+  read: boolean | null
+  limit: number
+  offset: number
+}>
+
+export type MarkNotificationDeliveryReadProps = Readonly<{
+  deliveryId: NotificationDeliveryId
+  recipientAccountId: AccountId
+  readAt: Date
+}>
+
 /** canonical MessageとAccount Deliveryだけを扱うportable D1 repository。 */
-export class SystemNotificationRepository implements NotificationRepository {
+export class SystemNotificationRepository {
   constructor(private readonly props: Props) {
     Object.freeze(this)
   }
 
   async publish(
-    message: NotificationMessage,
-    deliveries: NotificationDeliveryBatch,
+    message: NotificationMessageEntity,
+    deliveries: NotificationDeliveryBatchValue,
   ): Promise<void | Error> {
     const payload = toDeliveryPayload(deliveries)
 
@@ -63,7 +77,7 @@ export class SystemNotificationRepository implements NotificationRepository {
   async findDeliveryByIdForAccount(
     deliveryId: NotificationDeliveryId,
     recipientAccountId: AccountId,
-  ): Promise<NotificationDelivery | null | Error> {
+  ): Promise<NotificationDeliveryEntity | null | Error> {
     try {
       const row = await prepareDeliverySelect(
         this.props.context.env.DB,
@@ -184,7 +198,7 @@ export class SystemNotificationRepository implements NotificationRepository {
 
   async markDeliveryRead(
     props: MarkNotificationDeliveryReadProps,
-  ): Promise<NotificationDelivery | null | Error> {
+  ): Promise<NotificationDeliveryEntity | null | Error> {
     try {
       const database = this.props.context.env.DB
       const results = await database.batch([
@@ -273,7 +287,7 @@ export class SystemNotificationRepository implements NotificationRepository {
   }
 }
 
-function toDeliveryPayload(deliveries: NotificationDeliveryBatch): string | Error {
+function toDeliveryPayload(deliveries: NotificationDeliveryBatchValue): string | Error {
   const values: Array<DeliveryPayload> = deliveries.deliveries.map((delivery) => ({
     id: delivery.id,
     messageId: delivery.messageId,
@@ -290,7 +304,7 @@ function toDeliveryPayload(deliveries: NotificationDeliveryBatch): string | Erro
 
 function prepareMessageInsert(
   database: D1Database,
-  message: NotificationMessage,
+  message: NotificationMessageEntity,
 ): D1PreparedStatement {
   return database
     .prepare(
@@ -311,7 +325,7 @@ function prepareMessageInsert(
 
 function prepareDeliveryFanOut(
   database: D1Database,
-  message: NotificationMessage,
+  message: NotificationMessageEntity,
   payload: string,
 ): D1PreparedStatement {
   return database
@@ -337,7 +351,7 @@ function prepareDeliveryFanOut(
 
 function preparePublicationInvariant(
   database: D1Database,
-  message: NotificationMessage,
+  message: NotificationMessageEntity,
   payload: string,
 ): D1PreparedStatement {
   return database

@@ -1,6 +1,9 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import {
+  SystemCLIAuthorizationInvalidError,
+  SystemCLILoginUnavailableError,
+} from "@system/interface/errors"
 /** /system/v1/cli-authorization-callback */
-import { systemCliIdentityRedirectUri } from "@system/domain/identity/system-cli-identity-redirect-uri"
+import { SystemCliIdentityRedirectUriValue } from "@system/domain/values/system-cli-identity-redirect-uri.value"
 import { SystemCliLoginAuditRecorder } from "@system/infrastructure/audit/system-cli-login-audit-recorder.repository"
 import { consumeSystemCliLoginState } from "@system/infrastructure/auth/consume-system-cli-login-state.repository"
 import { createSystemCliLoginCode } from "@system/infrastructure/auth/create-system-cli-login-code.repository"
@@ -28,27 +31,15 @@ export const GET = systemFactory.createHandlers(
     const now = context.var.now()
     const query = context.req.valid("query")
     if (query.state === undefined) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_cli_authorization",
-        detail: "invalid CLI authorization",
-      })
+      throw new SystemCLIAuthorizationInvalidError()
     }
 
     const consumed = await consumeSystemCliLoginState(context, query.state, now)
     if (consumed instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "cli_login_unavailable",
-        detail: "CLI login is unavailable",
-      })
+      throw new SystemCLILoginUnavailableError()
     }
     if (consumed === null) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_cli_authorization",
-        detail: "invalid CLI authorization",
-      })
+      throw new SystemCLIAuthorizationInvalidError()
     }
 
     const loopbackUrl = new URL(`http://127.0.0.1:${consumed.port}/callback`)
@@ -68,7 +59,7 @@ export const GET = systemFactory.createHandlers(
     const redirectUri =
       apiOrigin === undefined
         ? new Error("API origin is not configured")
-        : systemCliIdentityRedirectUri(apiOrigin)
+        : SystemCliIdentityRedirectUriValue.create(apiOrigin)
     const verificationKey =
       issuer === undefined || issuer.length === 0
         ? new Error("identity issuer is not configured")
@@ -89,7 +80,7 @@ export const GET = systemFactory.createHandlers(
     const token = await exchangeSystemIdentityCode({
       code: query.code,
       codeVerifier: consumed.codeVerifier,
-      redirectUri,
+      redirectUri: redirectUri.toString(),
       issuer,
     })
     if (token instanceof Error) {
@@ -108,7 +99,7 @@ export const GET = systemFactory.createHandlers(
       token,
       verificationKey,
       issuer,
-      audience: new URL(redirectUri).origin,
+      audience: new URL(redirectUri.toString()).origin,
       now,
     })
     if ("reason" in claims || claims.email_verified !== true) {

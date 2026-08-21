@@ -1,13 +1,13 @@
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import type {
-  SystemTaskPersistence,
   SystemWorkflowDecisionResult,
   SystemWorkflowWriter,
-} from "@system/infrastructure/workflow/system-workflow-writer.repository"
-import { HumanAttestation } from "@system/domain/workflow/human-attestation.entity"
-import { InvalidSystemWorkflowError } from "@system/domain/workflow/invalid-system-workflow.error"
-import type { ProposalDigest } from "@system/domain/workflow/system-case-reference"
-import type { SystemCaseId } from "@system/domain/workflow/system-case.entity"
+} from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
+import type { SystemDecisionTaskBundle } from "@system/domain/values/system-decision-task-bundle.definition"
+import { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
+import { InvalidSystemWorkflowError } from "@system/domain/errors"
+import type { ProposalDigest } from "@system/domain/values/system-case-reference.schema"
+import type { SystemCaseId } from "@system/domain/values/system-case.schema"
 
 export type DecideSystemTaskCommand = Readonly<{
   caseId: SystemCaseId
@@ -20,7 +20,7 @@ export type DecideSystemTaskCommand = Readonly<{
   proposalDigest: ProposalDigest
   comment: string | null
   decidedAt: Date
-  nextTask: SystemTaskPersistence | null
+  nextTask: SystemDecisionTaskBundle | null
 }>
 
 /** 固定済みdigestへの人間判断を追記し、TaskとCaseを単調に進める。 */
@@ -34,7 +34,7 @@ export class DecideSystemTask {
       return new InvalidSystemWorkflowError("invalid_transition")
     }
 
-    const attestation = HumanAttestation.create({
+    const attestation = HumanAttestationEntity.create({
       id: crypto.randomUUID(),
       caseId: command.caseId,
       taskKey: command.taskKey,

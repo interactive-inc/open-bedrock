@@ -1,5 +1,5 @@
 import type { WorkflowApproverSelector } from "@/contexts/company/domain/organization/company-procedure-workflow"
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 
 export type WorkflowAccount = Readonly<{
   employeeId: number

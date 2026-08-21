@@ -1,8 +1,8 @@
-import { createSystemAuditEvent as createSystemAuditEventEnvelope } from "@/contexts/system/domain/audit/create-system-audit-event"
-import type { AuditJsonValue } from "@system/interface/http/to-stable-audit-json"
-import { toStableAuditJson } from "@system/interface/http/to-stable-audit-json"
-import { ValidationError } from "@/lib/errors"
-import { zAccountId, type AccountId } from "@system/domain/auth/account-id"
+import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
+import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
+import type { SystemJsonValue } from "@system/domain/values/system-json-value.definition"
+import { PayloadTooLargeError, ValidationError } from "@/lib/errors"
+import { zAccountId, type AccountId } from "@system/domain/values/account-id.schema"
 import { z } from "zod"
 
 export const auditOutcomeSchema = z.enum(["succeeded", "denied", "failed"])
@@ -35,6 +35,7 @@ const eventEnvelopeSchema = z.strictObject({
 export type AuditOutcome = z.infer<typeof auditOutcomeSchema>
 export type AuditClientName = z.infer<typeof auditClientNameSchema>
 export type AuditRequestContext = z.infer<typeof auditRequestContextSchema>
+export type AuditJsonValue = SystemJsonValue
 
 /** Company監査表へ投影するrequest文脈付きrecord。System永続化モデルとは共有しない。 */
 export type CompanyAuditRecord = Readonly<{
@@ -109,7 +110,20 @@ function parseManagedValue<Output>(
 }
 
 function serializeOptionalProjection(value: AuditJsonValue | undefined): string | null {
-  return value === undefined ? null : toStableAuditJson(value)
+  if (value === undefined) return null
+  const serialized = CanonicalSystemJsonValue.create(value)
+  if (serialized instanceof Error) {
+    throw new ValidationError("audit JSON contains an unsupported value", "audit_invalid_json", {
+      cause: serialized,
+    })
+  }
+  if (new TextEncoder().encode(serialized.toString()).byteLength > 65_536) {
+    throw new PayloadTooLargeError(
+      "audit JSON exceeds the 64 KiB limit",
+      "audit_payload_too_large",
+    )
+  }
+  return serialized.toString()
 }
 
 /** Account を主体とする汎用の append-only 監査エンベロープを生成する。 */
@@ -140,7 +154,7 @@ export function createCompanyAuditRecord(
     throw new ValidationError("audit event time is invalid", "audit_invalid_timestamp")
   }
 
-  const event = createSystemAuditEventEnvelope({
+  const event = SystemAuditEventEntity.create({
     actorAccountId: eventInput.actorAccountId,
     action: eventInput.action,
     targetType: eventInput.target.type,

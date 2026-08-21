@@ -1,4 +1,4 @@
-import type { IdentityProvider } from "@system/domain/identity/identity-provider"
+import type { IdentityProvider } from "@system/domain/values/identity-provider.schema"
 import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration.repository"
 import { PrepareSystemAccountProvisioning } from "@system/infrastructure/identity/prepare-system-account-provisioning.repository"
 import type { Context } from "@/env"

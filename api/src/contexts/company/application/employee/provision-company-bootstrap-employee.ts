@@ -2,7 +2,7 @@ import type {
   CompanyBootstrapEmployeeRepository,
   CompanyBootstrapEmployeeResult,
 } from "@/contexts/company/infrastructure/employee/company-bootstrap-employee-port.repository"
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import { z } from "zod"
 
 type Props = Readonly<{

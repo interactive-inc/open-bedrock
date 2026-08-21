@@ -1,5 +1,5 @@
-import type { AccountId } from "@system/domain/auth/account-id"
-import { OidcValue } from "@system/domain/identity/oidc.value"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import { oidcAccessTokenLifetime } from "@system/domain/values/oidc-token-lifetime.value"
 import type {
   SystemClockContext,
   SystemDatabaseContext,
@@ -22,7 +22,7 @@ export async function createOidcAccessToken(
   props: Props,
 ): Promise<Readonly<{ accessToken: string; expiresAt: Date }> | Error> {
   const now = context.var.now()
-  const expiresAt = new Date(now.getTime() + OidcValue.TOKEN_MAX_AGE_MS)
+  const expiresAt = new Date(now.getTime() + oidcAccessTokenLifetime.milliseconds)
   const accessToken = createOidcSecret()
   const tokenHash = await hashOidcSecret(accessToken)
 

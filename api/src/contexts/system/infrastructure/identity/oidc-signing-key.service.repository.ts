@@ -1,4 +1,4 @@
-import { OidcValue } from "@system/domain/identity/oidc.value"
+import { oidcSigningAlgorithm } from "@system/domain/values/oidc-signing-algorithm.value"
 import { z } from "zod"
 
 const base64UrlCoordinate = z.string().regex(/^[A-Za-z0-9_-]{43}$/)
@@ -12,7 +12,7 @@ const publicKeySchema = z
     y: base64UrlCoordinate,
     kid: keyId,
     use: z.literal("sig"),
-    alg: z.literal(OidcValue.ALGORITHM),
+    alg: z.literal(oidcSigningAlgorithm.toString()),
   })
   .strict()
 

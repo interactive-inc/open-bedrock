@@ -1,12 +1,14 @@
-import type { SystemSessionMaterialService as SystemSessionMaterialServicePort } from "@system/infrastructure/auth/system-session-material-port.repository"
-import type { SystemAccessTokenIssuer as SystemAccessTokenIssuerPort } from "@system/infrastructure/auth/system-access-token-issuer-port.repository"
-import { IssueSystemSession } from "@system/application/auth/issue-system-session"
+import {
+  IssueSystemSession,
+  type SystemAccessTokenIssuer,
+  type SystemSessionMaterial,
+} from "@system/application/auth/issue-system-session"
 import { RevokeSystemSession } from "@system/application/auth/revoke-system-session"
 import { RotateSystemSession } from "@system/application/auth/rotate-system-session"
-import { zAccountId } from "@system/domain/auth/account-id"
-import { zSessionFamilyId } from "@system/domain/auth/session-family-id"
-import { zSessionId } from "@system/domain/auth/session-id"
-import { zSessionTokenHash } from "@system/domain/auth/session-token-hash"
+import { zAccountId } from "@system/domain/values/account-id.schema"
+import { zSessionFamilyId } from "@system/domain/values/session-family-id.schema"
+import { zSessionId } from "@system/domain/values/session-id.schema"
+import { zSessionTokenHash } from "@system/domain/values/session-token-hash.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service.repository"
@@ -28,7 +30,7 @@ const auditContext = Object.freeze({
   authorizationJson: '{"permission":"auth:session"}',
   metadataJson: '{"client":"test"}',
 })
-const accessTokenIssuer: SystemAccessTokenIssuerPort = Object.freeze({
+const accessTokenIssuer: SystemAccessTokenIssuer = Object.freeze({
   issue: async (input) => `access-token-${input.tokenVersion}-${input.now.toISOString()}`,
 })
 
@@ -37,7 +39,7 @@ type MaterialProps = Readonly<{
   tokenHashes: Readonly<Record<string, string>>
 }>
 
-function createMaterialService(props: MaterialProps): SystemSessionMaterialServicePort {
+function createMaterialService(props: MaterialProps): SystemSessionMaterial {
   let sessionSequence = 0
   let familySequence = 0
   let rawTokenSequence = 0
@@ -73,7 +75,7 @@ function insertAccount(
 
 function createIssueSystemSession(
   fixture: SystemSessionTestContext,
-  materialService: SystemSessionMaterialServicePort,
+  materialService: SystemSessionMaterial,
   ttlMilliseconds = sessionTtlMilliseconds,
 ): IssueSystemSession {
   return new IssueSystemSession({
@@ -87,7 +89,7 @@ function createIssueSystemSession(
 
 function createRotateSystemSession(
   fixture: SystemSessionTestContext,
-  materialService: SystemSessionMaterialServicePort,
+  materialService: SystemSessionMaterial,
   ttlMilliseconds = sessionTtlMilliseconds,
 ): RotateSystemSession {
   return new RotateSystemSession({
@@ -100,9 +102,20 @@ function createRotateSystemSession(
   })
 }
 
+function createAuthenticateSystemSession(
+  fixture: SystemSessionTestContext,
+  materialService: SystemSessionMaterial,
+) {
+  const repository = new SystemSessionRepository({ context: fixture.context })
+  return {
+    execute: (command: Parameters<typeof repository.authenticate>[0]) =>
+      repository.authenticate(command, materialService),
+  }
+}
+
 function createRevokeSystemSession(
   fixture: SystemSessionTestContext,
-  materialService: SystemSessionMaterialServicePort,
+  materialService: SystemSessionMaterial,
 ): RevokeSystemSession {
   return new RevokeSystemSession({
     sessionRepository: new SystemSessionRepository({ context: fixture.context }),
@@ -112,7 +125,7 @@ function createRevokeSystemSession(
 
 async function issueInitialSession(
   fixture: SystemSessionTestContext,
-  materialService: SystemSessionMaterialServicePort,
+  materialService: SystemSessionMaterial,
   ttlMilliseconds = sessionTtlMilliseconds,
 ): Promise<void> {
   const result = await createIssueSystemSession(fixture, materialService, ttlMilliseconds).execute({
@@ -399,6 +412,102 @@ describe("RotateSystemSession", () => {
   })
 })
 
+describe("AuthenticateSystemSession", () => {
+  test("active Sessionをcanonical Accountと同じidentity・versionで認証する", async () => {
+    const fixture = new SystemSessionTestContext()
+    insertAccount(fixture)
+    const materialService = createMaterialService({
+      rawTokens: [firstRawToken],
+      tokenHashes: { [firstRawToken]: firstTokenHash },
+    })
+    await issueInitialSession(fixture, materialService)
+
+    expect(
+      await createAuthenticateSystemSession(fixture, materialService).execute({
+        rawToken: firstRawToken,
+        now,
+      }),
+    ).toEqual({
+      kind: "authenticated",
+      accountId,
+      tokenVersion: 0,
+      sessionId: zSessionId.parse("session-1"),
+      expiresAt: new Date(now.getTime() + sessionTtlMilliseconds),
+    })
+  })
+
+  test("未知・期限切れ・rotation済みtokenを同じinvalidへ畳む", async () => {
+    const fixture = new SystemSessionTestContext()
+    insertAccount(fixture)
+    const materialService = createMaterialService({
+      rawTokens: [firstRawToken, secondRawToken],
+      tokenHashes: {
+        [firstRawToken]: firstTokenHash,
+        [secondRawToken]: secondTokenHash,
+        unknown: thirdTokenHash,
+      },
+    })
+    await issueInitialSession(fixture, materialService)
+    const authenticate = createAuthenticateSystemSession(fixture, materialService)
+
+    expect(await authenticate.execute({ rawToken: "unknown", now })).toEqual({
+      kind: "rejected",
+      reason: "invalid",
+    })
+    expect(
+      await authenticate.execute({
+        rawToken: firstRawToken,
+        now: new Date(now.getTime() + sessionTtlMilliseconds),
+      }),
+    ).toEqual({ kind: "rejected", reason: "invalid" })
+
+    expect(
+      await createRotateSystemSession(fixture, materialService).execute({
+        rawToken: firstRawToken,
+        now: rotateAt,
+        auditContext,
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "rotated",
+        rawToken: secondRawToken,
+      }),
+    )
+    expect(await authenticate.execute({ rawToken: firstRawToken, now: rotateAt })).toEqual({
+      kind: "rejected",
+      reason: "invalid",
+    })
+    expect(await authenticate.execute({ rawToken: secondRawToken, now: rotateAt })).toEqual(
+      expect.objectContaining({ kind: "authenticated", accountId, tokenVersion: 0 }),
+    )
+  })
+
+  test("canonical Account停止とversion driftを同じinvalidへ畳む", async () => {
+    for (const scenario of ["locked", "version_drift"] as const) {
+      const fixture = new SystemSessionTestContext()
+      insertAccount(fixture)
+      const materialService = createMaterialService({
+        rawTokens: [firstRawToken],
+        tokenHashes: { [firstRawToken]: firstTokenHash },
+      })
+      await issueInitialSession(fixture, materialService)
+      fixture.sqlite.run(
+        `UPDATE system_accounts
+         SET status = ?1, token_version = ?2, updated_at = ?3
+         WHERE id = ?4`,
+        [scenario === "locked" ? "locked" : "active", 1, rotateAt.getTime(), accountId],
+      )
+
+      expect(
+        await createAuthenticateSystemSession(fixture, materialService).execute({
+          rawToken: firstRawToken,
+          now: rotateAt,
+        }),
+      ).toEqual({ kind: "rejected", reason: "invalid" })
+    }
+  })
+})
+
 describe("RevokeSystemSession", () => {
   test("既知tokenのfamilyを監査と同時に冪等失効する", async () => {
     const fixture = new SystemSessionTestContext()
@@ -436,6 +545,12 @@ describe("RevokeSystemSession", () => {
       await revoke.execute({ rawToken: secondRawToken, now: revokedAt, auditContext }),
     ).toEqual({ kind: "completed" })
     expect(auditRows(fixture)).toHaveLength(auditCount)
+    expect(
+      await createAuthenticateSystemSession(fixture, materialService).execute({
+        rawToken: secondRawToken,
+        now: revokedAt,
+      }),
+    ).toEqual({ kind: "rejected", reason: "invalid" })
   })
 
   test("未知tokenを実在するtokenと区別できない完了へ畳む", async () => {

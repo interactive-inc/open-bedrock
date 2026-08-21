@@ -28,15 +28,15 @@ import {
 import { validateAndNormalizeApplicationPayload } from "@/api/http/application-requests/lib/validate-system-procedure-payload"
 import { CancelSystemProcedure } from "@system/application/workflow/cancel-system-procedure"
 import {
-  createSystemTaskPersistence,
+  createSystemDecisionTask,
   type StartSystemProcedureTask,
-} from "@system/domain/workflow/create-system-task-persistence"
+} from "@system/domain/policies/decision-task.policy"
 import { DecideSystemTask } from "@system/application/workflow/decide-system-task"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
-import type { SystemProposalView } from "@system/infrastructure/workflow/system-proposal-query.repository"
-import { systemCaseIdSchema } from "@system/domain/workflow/system-case.entity"
-import { toCanonicalSystemJson } from "@system/domain/workflow/to-canonical-system-json"
-import { toSystemProposalDigest } from "@system/domain/workflow/to-system-proposal-digest"
+import type { SystemProposalView } from "@system/infrastructure/workflow/system-d1-proposal-query.repository"
+import { systemCaseIdSchema } from "@system/domain/values/system-case.schema"
+import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
+import { ProposalDigestValue } from "@system/domain/values/proposal-digest.value"
 import { SystemD1ProposalQuery } from "@system/infrastructure/workflow/system-d1-proposal-query.repository"
 import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
 
@@ -353,7 +353,7 @@ export async function decideSystemApplication(
     if (next !== null) {
       const caseId = systemCaseIdSchema.safeParse(proposal.caseId)
       if (!caseId.success) return new UnexpectedError("invalid System Case ID")
-      const persistence = createSystemTaskPersistence({
+      const persistence = createSystemDecisionTask({
         task: next.task,
         caseId: caseId.data,
         createdByAccountId: proposal.createdByAccountId,
@@ -526,7 +526,7 @@ export async function reassignSystemApplicationTask(
   const resolutionId = crypto.randomUUID()
   const candidates: StartSystemProcedureTask["candidates"][number][] = []
   for (const participant of liveParticipants) {
-    const evidence = toCanonicalSystemJson({
+    const evidence = CanonicalSystemJsonValue.create({
       actorAccountId,
       candidateAccountId: participant.accountId,
       candidateEmployeeId: participant.employeeId,
@@ -536,7 +536,7 @@ export async function reassignSystemApplicationTask(
     if (evidence instanceof Error) {
       return new UnexpectedError("failed to canonicalize repair evidence", { cause: evidence })
     }
-    const digest = await toSystemProposalDigest(evidence)
+    const digest = await ProposalDigestValue.create(evidence)
     if (digest instanceof Error) {
       return new UnexpectedError("failed to digest repair evidence", { cause: digest })
     }
@@ -547,7 +547,7 @@ export async function reassignSystemApplicationTask(
       evidenceKind: "manual-workflow-repair",
       evidenceId: resolutionId,
       evidenceVersion: input.reassignedAt.toISOString(),
-      eligibilityDigest: digest,
+      eligibilityDigest: digest.toString(),
       eligibleFrom: null,
       resolvedAt: input.reassignedAt,
     })
@@ -555,7 +555,7 @@ export async function reassignSystemApplicationTask(
   const caseId = systemCaseIdSchema.safeParse(proposal.caseId)
   if (!caseId.success) return new UnexpectedError("invalid System Case ID")
   const round = proposal.currentTaskRound + 1
-  const replacement = createSystemTaskPersistence({
+  const replacement = createSystemDecisionTask({
     task: {
       key: proposal.currentTaskKey,
       requiredApprovals,

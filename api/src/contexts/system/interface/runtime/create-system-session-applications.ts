@@ -16,6 +16,11 @@ type Props = Readonly<{
 
 export type SystemSessionApplications = Readonly<{
   issue: IssueSystemSession
+  authenticate: Readonly<{
+    execute: (
+      command: Readonly<{ rawToken: string; now: Date }>,
+    ) => ReturnType<SystemSessionRepository["authenticate"]>
+  }>
   rotate: RotateSystemSession
   revoke: RevokeSystemSession
 }>
@@ -39,6 +44,10 @@ export function createSystemSessionApplications(props: Props): SystemSessionAppl
       materialService,
       accessTokenIssuer,
       sessionTtlMilliseconds: props.sessionTtlMilliseconds,
+    }),
+    authenticate: Object.freeze({
+      execute: (command: Parameters<SystemSessionRepository["authenticate"]>[0]) =>
+        sessionRepository.authenticate(command, materialService),
     }),
     rotate: new RotateSystemSession({
       accountRepository,

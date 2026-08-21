@@ -1,9 +1,9 @@
-import type { SystemAuditEvent } from "@system/domain/audit/system-audit-event"
+import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 
 /** append後のSystem監査イベントが入力と完全一致することをtransaction内で検証する。 */
 export function prepareSystemAuditAppendInvariant(
   database: D1Database,
-  record: SystemAuditEvent,
+  record: SystemAuditEventEntity,
 ): D1PreparedStatement {
   return database
     .prepare(

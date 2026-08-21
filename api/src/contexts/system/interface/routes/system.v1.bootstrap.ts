@@ -1,7 +1,13 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import {
+  SystemAlreadyInitializedError,
+  SystemBootstrapCredentialInvalidError,
+  SystemBootstrapInputInvalidError,
+  SystemBootstrapUnavailableError,
+  SystemNotFoundError,
+} from "@system/interface/errors"
 /** /system/v1/bootstrap */
 import { BootstrapSystemRoot } from "@system/application/iam/bootstrap-system-root"
-import { isSystemBootstrapTokenUsable } from "@system/domain/configuration/is-system-bootstrap-token-usable"
+import { SystemBootstrapTokenValue } from "@system/domain/values/system-bootstrap-token.value"
 import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
 import { timingSafeStringEqual } from "@system/infrastructure/auth/timing-safe-string-equal.repository"
 import { SystemRootBootstrapRepositoryD1 } from "@system/infrastructure/iam/system-root-bootstrap.repository"
@@ -12,12 +18,8 @@ import { z } from "zod"
 // @authorization public - single-use secretと永続bootstrap stateで初期root作成だけを許す
 export const POST = systemFactory.createHandlers(
   systemFactory.createMiddleware(async (context, next) => {
-    if (!isSystemBootstrapTokenUsable(context.env.BOOTSTRAP_TOKEN)) {
-      throw new SystemHttpError({
-        status: 404,
-        code: "not_found",
-        detail: "not found",
-      })
+    if (SystemBootstrapTokenValue.create(context.env.BOOTSTRAP_TOKEN) === null) {
+      throw new SystemNotFoundError()
     }
 
     await next()
@@ -41,36 +43,20 @@ export const POST = systemFactory.createHandlers(
   ),
   async (context) => {
     const expectedToken = context.env.BOOTSTRAP_TOKEN
-    if (!isSystemBootstrapTokenUsable(expectedToken) || expectedToken === undefined) {
-      throw new SystemHttpError({
-        status: 404,
-        code: "not_found",
-        detail: "not found",
-      })
+    if (SystemBootstrapTokenValue.create(expectedToken) === null || expectedToken === undefined) {
+      throw new SystemNotFoundError()
     }
     const body = context.req.valid("json")
     if (!(await timingSafeStringEqual(body.token, expectedToken))) {
-      throw new SystemHttpError({
-        status: 401,
-        code: "invalid_credential",
-        detail: "invalid bootstrap credential",
-      })
+      throw new SystemBootstrapCredentialInvalidError()
     }
     const pepper = context.env.PEPPER_SECRET
     if (pepper === undefined || pepper.length === 0) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "bootstrap_unavailable",
-        detail: "bootstrap service unavailable",
-      })
+      throw new SystemBootstrapUnavailableError()
     }
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "bootstrap_unavailable",
-        detail: "bootstrap service unavailable",
-      })
+      throw new SystemBootstrapUnavailableError()
     }
     const bootstrap = await new BootstrapSystemRoot({
       passwordHasher: {
@@ -82,25 +68,13 @@ export const POST = systemFactory.createHandlers(
       repository: new SystemRootBootstrapRepositoryD1({ env: { DB: context.env.DB } }),
     }).execute({ email: body.email, password: body.password, now })
     if (bootstrap instanceof Error) {
-      throw new SystemHttpError({
-        status: 503,
-        code: "bootstrap_unavailable",
-        detail: "bootstrap service unavailable",
-      })
+      throw new SystemBootstrapUnavailableError()
     }
     if (bootstrap.kind === "invalid_input") {
-      throw new SystemHttpError({
-        status: 400,
-        code: bootstrap.reason,
-        detail: "invalid bootstrap input",
-      })
+      throw new SystemBootstrapInputInvalidError(bootstrap.reason)
     }
     if (bootstrap.kind === "already_initialized") {
-      throw new SystemHttpError({
-        status: 409,
-        code: "already_initialized",
-        detail: "already initialized",
-      })
+      throw new SystemAlreadyInitializedError()
     }
 
     return context.json(

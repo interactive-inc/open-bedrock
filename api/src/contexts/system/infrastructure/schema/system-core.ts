@@ -1,8 +1,8 @@
-import type { AccountStatus } from "@system/domain/auth/account-status"
-import type { AccountId } from "@system/domain/auth/account-id"
-import type { IdentityProvider } from "@system/domain/identity/identity-provider"
-import type { SystemAuditOutcome } from "@system/domain/audit/system-audit-event"
-import type { SystemBatchJobStatus } from "@system/domain/batch/system-batch-job-status"
+import type { AccountStatus } from "@system/domain/values/account-status.schema"
+import type { AccountId } from "@system/domain/values/account-id.schema"
+import type { IdentityProvider } from "@system/domain/values/identity-provider.schema"
+import type { SystemAuditOutcome } from "@system/domain/entities/system-audit-event.entity"
+import type { SystemBatchJobStatus } from "@system/domain/values/system-batch-job-status.schema"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import {
@@ -15,7 +15,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 
-/** 上位contextを知らない、portableなSystem Account永続化契約。 */
+/** 上位contextを知らない、portableなSystem AccountEntity永続化契約。 */
 export const systemAccounts = sqliteTable(
   "system_accounts",
   {
@@ -35,7 +35,7 @@ export const systemAccounts = sqliteTable(
 
 export type SystemAccountRow = InferSelectModel<typeof systemAccounts>
 
-/** Accountとprovider subjectのbinding。credential/contact projectionは別tableが所有する。 */
+/** AccountEntityとprovider subjectのbinding。credential/contact projectionは別tableが所有する。 */
 export const systemIdentityBindings = sqliteTable(
   "system_identity_bindings",
   {
@@ -164,7 +164,7 @@ export const systemPasswordResetChallenges = sqliteTable(
 
 export type SystemPasswordResetChallengeRow = InferSelectModel<typeof systemPasswordResetChallenges>
 
-/** 全isolateが共有する認証試行。認証前の資源なのでAccountへのFKを持たない。 */
+/** 全isolateが共有する認証試行。認証前の資源なのでAccountEntityへのFKを持たない。 */
 export const systemAuthenticationAttempts = sqliteTable(
   "system_authentication_attempts",
   {
@@ -284,7 +284,7 @@ export const systemCliLoginStates = sqliteTable(
 
 export type SystemCliLoginStateRow = InferSelectModel<typeof systemCliLoginStates>
 
-/** CLI callbackからtoken交換へAccountだけを渡すhashed single-use code。 */
+/** CLI callbackからtoken交換へAccountEntityだけを渡すhashed single-use code。 */
 export const systemCliLoginCodes = sqliteTable(
   "system_cli_login_codes",
   {
@@ -304,7 +304,7 @@ export const systemCliLoginCodes = sqliteTable(
 
 export type SystemCliLoginCodeRow = InferSelectModel<typeof systemCliLoginCodes>
 
-/** Web browserからtoken交換へAccountだけを渡すhashed single-use code。 */
+/** Web browserからtoken交換へAccountEntityだけを渡すhashed single-use code。 */
 export const systemBrowserLoginCodes = sqliteTable(
   "system_browser_login_codes",
   {
@@ -434,7 +434,7 @@ export const systemIamRolePermissions = sqliteTable(
 
 export type SystemIamRolePermissionRow = InferSelectModel<typeof systemIamRolePermissions>
 
-/** AccountへRoleをglobalまたはopaque resource単位で割り当てる。 */
+/** AccountEntityへRoleをglobalまたはopaque resource単位で割り当てる。 */
 export const systemRoleBindings = sqliteTable(
   "system_role_bindings",
   {
@@ -517,7 +517,7 @@ export const systemNotificationMessages = sqliteTable(
 
 export type SystemNotificationMessageRow = InferSelectModel<typeof systemNotificationMessages>
 
-/** concrete Account宛てのdeliveryと単調なread receipt。 */
+/** concrete AccountEntity宛てのdeliveryと単調なread receipt。 */
 export const systemNotificationDeliveries = sqliteTable(
   "system_notification_deliveries",
   {
@@ -577,7 +577,7 @@ export const systemBatchJobs = sqliteTable(
 
 export type SystemBatchJobRow = InferSelectModel<typeof systemBatchJobs>
 
-/** Account lifecycle後も残るappend-onlyなsecurity audit envelope。 */
+/** AccountEntity lifecycle後も残るappend-onlyなsecurity audit envelope。 */
 export const systemAuditEvents = sqliteTable(
   "system_audit_events",
   {
@@ -630,7 +630,7 @@ export const systemAuditEvents = sqliteTable(
 
 export type SystemAuditEventRow = InferSelectModel<typeof systemAuditEvents>
 
-/** Account・Identity・global root Bindingだけで完結するsingle-use bootstrap marker。 */
+/** AccountEntity・Identity・global root Bindingだけで完結するsingle-use bootstrap marker。 */
 export const systemBootstrapState = sqliteTable(
   "system_bootstrap_state",
   {

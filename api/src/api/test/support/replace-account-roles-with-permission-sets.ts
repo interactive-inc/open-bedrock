@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import type { AccountId } from "@/contexts/system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 
 export async function replaceAccountRolesWithPermissionSets(
   context: Context,

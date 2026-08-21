@@ -1,9 +1,9 @@
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { SystemBrowserLoginCodeUnavailableError } from "@system/interface/errors"
 /** /system/v1/browser-login-codes */
-import { zAccountId } from "@system/domain/auth/account-id"
+import { zAccountId } from "@system/domain/values/account-id.schema"
 import { createSystemBrowserLoginCode } from "@system/infrastructure/auth/create-system-browser-login-code.repository"
 import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash.repository"
-import { authenticateSystemAccessToken } from "@system/interface/http/authenticate-system-access-token"
+import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/http/system-factory"
 
 const CODE_TTL_MILLISECONDS = 60_000
@@ -13,21 +13,13 @@ export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, 
   const now = context.var.now()
   const accountId = zAccountId.safeParse(context.var.userId)
   if (!Number.isSafeInteger(now.getTime()) || !accountId.success) {
-    throw new SystemHttpError({
-      status: 503,
-      code: "browser_login_code_unavailable",
-      detail: "browser login is unavailable",
-    })
+    throw new SystemBrowserLoginCodeUnavailableError()
   }
 
   const rawCode = crypto.randomUUID()
   const codeHash = await systemLoginCodeHash(rawCode)
   if (codeHash instanceof Error) {
-    throw new SystemHttpError({
-      status: 503,
-      code: "browser_login_code_unavailable",
-      detail: "browser login is unavailable",
-    })
+    throw new SystemBrowserLoginCodeUnavailableError()
   }
   const creation = await createSystemBrowserLoginCode(
     { env: { DB: context.env.DB } },
@@ -39,11 +31,7 @@ export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, 
     },
   )
   if (creation instanceof Error) {
-    throw new SystemHttpError({
-      status: 503,
-      code: "browser_login_code_unavailable",
-      detail: "browser login is unavailable",
-    })
+    throw new SystemBrowserLoginCodeUnavailableError()
   }
 
   return context.json({ code: rawCode, expires_in: CODE_TTL_MILLISECONDS / 1_000 }, 201)

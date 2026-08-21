@@ -1,14 +1,14 @@
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import {
-  createSystemTaskPersistence,
+  createSystemDecisionTask,
   type StartSystemProcedureTask,
-} from "@system/domain/workflow/create-system-task-persistence"
-import type { SystemWorkflowWriter } from "@system/infrastructure/workflow/system-workflow-writer.repository"
-import { InvalidSystemProposalError } from "@system/domain/workflow/invalid-system-proposal.error"
-import { InvalidSystemWorkflowError } from "@system/domain/workflow/invalid-system-workflow.error"
-import { Proposal } from "@system/domain/workflow/proposal.entity"
-import type { SystemCaseReference } from "@system/domain/workflow/system-case-reference"
-import { SystemCase } from "@system/domain/workflow/system-case.entity"
+} from "@system/domain/policies/decision-task.policy"
+import { InvalidSystemProposalError } from "@system/domain/errors"
+import { InvalidSystemWorkflowError } from "@system/domain/errors"
+import { ProposalEntity } from "@system/domain/entities/proposal.entity"
+import type { SystemCaseReference } from "@system/domain/values/system-case-reference.schema"
+import { SystemCaseEntity } from "@system/domain/entities/system-case.entity"
+import type { SystemWorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
 
 export type StartSystemProcedureCommand = Readonly<{
   seriesId: string
@@ -25,8 +25,8 @@ export type StartSystemProcedureCommand = Readonly<{
 
 export type StartedSystemProcedure = Readonly<{
   number: number
-  proposal: Proposal
-  workflowCase: SystemCase
+  proposal: ProposalEntity
+  workflowCase: SystemCaseEntity
 }>
 
 /** 提案、Case、最初の判断Taskを検証後に一つのSystem transactionで開始する。 */
@@ -40,7 +40,7 @@ export class StartSystemProcedure {
   > {
     const proposalId = crypto.randomUUID()
     const workflowCaseId = crypto.randomUUID()
-    const proposal = await Proposal.create({
+    const proposal = await ProposalEntity.create({
       id: proposalId,
       seriesId: command.seriesId,
       version: command.version,
@@ -54,7 +54,7 @@ export class StartSystemProcedure {
 
     if (proposal instanceof InvalidSystemProposalError) return proposal
 
-    const workflowCase = SystemCase.create({
+    const workflowCase = SystemCaseEntity.create({
       id: workflowCaseId,
       subject: command.subject ?? {
         context: "system",
@@ -71,7 +71,7 @@ export class StartSystemProcedure {
 
     if (workflowCase instanceof InvalidSystemWorkflowError) return workflowCase
 
-    const firstTask = createSystemTaskPersistence({
+    const firstTask = createSystemDecisionTask({
       task: command.firstTask,
       caseId: workflowCase.id,
       createdByAccountId: workflowCase.createdByAccountId,

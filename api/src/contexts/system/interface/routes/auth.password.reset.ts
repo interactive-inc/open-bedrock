@@ -1,11 +1,11 @@
 import { RequestPasswordReset } from "@/contexts/system/application/auth/request-password-reset"
 import { ResetPassword } from "@/contexts/system/application/auth/reset-password"
 import { PasswordResetRequestApplicationError } from "@system/application/auth/errors"
-import { EmailValue } from "@/contexts/system/domain/auth/email.value"
-import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
+import { EmailValue } from "@/contexts/system/domain/values/email.value"
+import { identitySubjectSchema } from "@/contexts/system/domain/values/identity-subject.schema"
 import { findSystemPasswordResetRecipient } from "@system/infrastructure/auth/find-system-password-reset-recipient.repository"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
-import { SystemHttpError } from "@system/interface/http/errors/system-http-error"
+import { SystemApplicationError, SystemInternalServerError } from "@system/interface/errors"
 import { zAppAuthAcknowledgement } from "@/contexts/system/interface/models/auth"
 import { ApplicationError } from "@/lib/errors/application-error"
 import { zValidator } from "@hono/zod-validator"
@@ -28,12 +28,7 @@ export const POST = systemFactory.createHandlers(
     const recipient = accepted ? await findSystemPasswordResetRecipient(c, body.email) : null
     if (recipient instanceof Error) {
       const error = new PasswordResetRequestApplicationError(recipient)
-      throw new SystemHttpError({
-        status: error.status,
-        code: error.body.error,
-        detail: error.body.message,
-        cause: error,
-      })
+      throw new SystemApplicationError(error)
     }
 
     const requestOutcome = await action.execute({
@@ -44,20 +39,10 @@ export const POST = systemFactory.createHandlers(
 
     if (requestOutcome instanceof Error) {
       if (requestOutcome instanceof ApplicationError) {
-        throw new SystemHttpError({
-          status: requestOutcome.status,
-          code: requestOutcome.body.error,
-          detail: requestOutcome.body.message,
-          cause: requestOutcome,
-        })
+        throw new SystemApplicationError(requestOutcome)
       }
 
-      throw new SystemHttpError({
-        status: 500,
-        code: "internal_server_error",
-        detail: "処理に失敗しました。",
-        cause: requestOutcome,
-      })
+      throw new SystemInternalServerError(requestOutcome)
     }
 
     return c.json(zAppAuthAcknowledgement.parse({ item: requestOutcome }))
@@ -83,20 +68,10 @@ export const PATCH = systemFactory.createHandlers(
 
     if (completionOutcome instanceof Error) {
       if (completionOutcome instanceof ApplicationError) {
-        throw new SystemHttpError({
-          status: completionOutcome.status,
-          code: completionOutcome.body.error,
-          detail: completionOutcome.body.message,
-          cause: completionOutcome,
-        })
+        throw new SystemApplicationError(completionOutcome)
       }
 
-      throw new SystemHttpError({
-        status: 500,
-        code: "internal_server_error",
-        detail: "処理に失敗しました。",
-        cause: completionOutcome,
-      })
+      throw new SystemInternalServerError(completionOutcome)
     }
 
     return c.json(zAppAuthAcknowledgement.parse({ item: completionOutcome }))

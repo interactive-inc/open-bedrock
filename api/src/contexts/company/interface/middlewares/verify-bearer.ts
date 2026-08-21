@@ -3,7 +3,7 @@ import type { HonoEnv } from "@/env"
 import { AccountEmployeeLinkRepository } from "@/contexts/company/infrastructure/employee/account-employee-link.repository"
 import { resolveLiveEmployeeAccess } from "@/contexts/company/infrastructure/auth/resolve-live-employee-access.repository"
 import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { authenticateSystemAccessTokenRequest } from "@system/interface/runtime/authenticate-system-access-token-request"
+import { SystemAccessTokenAuthenticator } from "@system/interface/runtime/system-access-token-authenticator"
 import { createMiddleware } from "hono/factory"
 
 /**
@@ -17,12 +17,13 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     return
   }
 
-  const authentication = await authenticateSystemAccessTokenRequest({
+  const authentication = await new SystemAccessTokenAuthenticator({
     database: c.env.DB,
-    authorizationHeader: c.req.header("Authorization"),
-    jwtSecret: c.env.JWT_SECRET,
-    now: new Date(c.env.NOW ?? Date.now()),
-  })
+  }).authenticate(
+    c.req.header("Authorization"),
+    c.env.JWT_SECRET,
+    new Date(c.env.NOW ?? Date.now()),
+  )
 
   if (authentication.kind === "unavailable") {
     throw new UnauthorizedError(

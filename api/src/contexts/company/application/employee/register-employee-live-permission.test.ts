@@ -9,7 +9,7 @@ import { replaceAccountRolesWithPermissionSets } from "@/api/test/support/replac
 import { seedIamTestAccount } from "@/api/test/support/seed-iam-test-account"
 import { ForbiddenError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
-import type { AccountId } from "@/contexts/system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 
 describe("RegisterEmployee live actor authorization", () => {
   test("fails closed when employee:create is revoked before provisioning", async () => {

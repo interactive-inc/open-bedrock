@@ -1,12 +1,12 @@
-import type { AccountId } from "@system/domain/auth/account-id"
+import type { AccountId } from "@system/domain/values/account-id.schema"
 import {
   proposalDigestSchema,
   type ProposalDigest,
-} from "@system/domain/workflow/system-case-reference"
+} from "@system/domain/values/system-case-reference.schema"
 import {
   systemCaseStatusSchema,
   type SystemCaseStatus,
-} from "@system/domain/workflow/system-case.entity"
+} from "@system/domain/values/system-case.schema"
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
 
 export type SystemWorkflowReference = Readonly<{
