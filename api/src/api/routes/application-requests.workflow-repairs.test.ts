@@ -12,16 +12,29 @@ import { describe, expect, test } from "bun:test"
 
 const now = "2026-01-01T00:00:00.000Z"
 
-/** 申請者。fixture 上で employee 4 を management chain の承認者に持つ。 */
+/** 申請者。fixture 上で D003 に属し、上長として employee 4 を持つ。 */
 const applicantEmployeeId = 5
 
 /** 申請者名。バッチ解決した Map から申請者を引けているかの検証に使う。 */
 const applicantName = "Emery Lane"
 
-/** 凍結された承認候補。提出後に retired へ落として修復対象を作る。 */
-const approverEmployeeId = 4
+/**
+ * 凍結される承認候補の全員。
+ * management_chain は直属の上長だけでなく、そこから上へ辿れる責任者まで候補にする。
+ * fixture では employee 5 の上長 employee 4（D003 の department_manager）と、
+ * さらに上位の employee 1 の 2 名が候補になる。
+ * 承認モードは any（requiredApprovals = 1）なので、片方だけ retired にしても
+ * もう片方が在籍のまま残り reachable >= requiredApprovals が成立して検出されない。
+ * 修復対象を作るには候補を全員 retired にする必要がある。
+ */
+const approverEmployeeIds = [4, 1] as const
 
-/** workflow 監査と template 管理の両権限を持つ閲覧者。 */
+/**
+ * workflow 監査と template 管理の両権限を持つ閲覧者。
+ * seed で root ロールを持つのは employee 1 だけであり、この 1 名は承認候補でもある。
+ * 権限は System の role binding が持ち、employees の status とは独立なので、
+ * retired にした後も閲覧者として認証・認可を通過する。
+ */
 const inspectorEmployeeId = 1
 
 type TestState = Readonly<{
@@ -123,10 +136,12 @@ async function seedBrokenProposals(state: TestState, count: number): Promise<voi
     await submit(state.db, `Repair candidate ${index + 1}`)
   }
 
-  await state.db
-    .prepare("UPDATE employees SET status = 'retired' WHERE id = ?1")
-    .bind(approverEmployeeId)
-    .run()
+  for (const employeeId of approverEmployeeIds) {
+    await state.db
+      .prepare("UPDATE employees SET status = 'retired' WHERE id = ?1")
+      .bind(employeeId)
+      .run()
+  }
 }
 
 async function listRepairs(state: TestState): Promise<Response> {
