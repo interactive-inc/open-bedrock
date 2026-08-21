@@ -4,14 +4,14 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock one-on-ones create --member-email <e> [--topics <t>] [--manager-note <n>] [--next-action <a>]`
+export const help = `bedrock one-on-ones create --member-code <code> [--topics <t>] [--manager-note <n>] [--next-action <a>]`
 
 export default factory.createHandlers(
   zValidator(
     "json",
     z.object({
       help: z.string().optional(),
-      "member-email": z.string().optional(),
+      "member-code": z.string().optional(),
       topics: z.string().optional(),
       "manager-note": z.string().optional(),
       "next-action": z.string().optional(),
@@ -22,14 +22,14 @@ export default factory.createHandlers(
 
     if (query.help) return c.text(help)
 
-    if (!query["member-email"]) throw new UsageError("--member-email が必要です")
+    if (!query["member-code"]) throw new UsageError("--member-code が必要です")
 
     const json: {
-      member_email: string
+      member_employee_code: string
       topics?: string
       manager_note?: string
       next_action?: string
-    } = { member_email: query["member-email"] }
+    } = { member_employee_code: query["member-code"] }
 
     if (query.topics) json.topics = query.topics
 

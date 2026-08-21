@@ -1,23 +1,23 @@
-import type { WorkforceSnapshotReadPort } from "@/contexts/company/domain/workforce/organization-change"
+import type { WorkforceSnapshotReadPort } from "@/contexts/company/domain/values/organization-change.definition"
 import type { OrganizationUnitReadPort } from "@/contexts/company/infrastructure/workforce/read-organization-state.repository"
-import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/workforce/workforce-snapshot-changed-error"
-import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/errors"
+import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
 import type {
   OrganizationalAuthorityCriterion,
   OrganizationalAuthorityResolution,
-} from "@/contexts/company/domain/workforce/organizational-authority"
-import { OrganizationalAuthorityError } from "@/contexts/company/domain/workforce/organizational-authority-error"
-import { resolveOrganizationalAuthority } from "@/contexts/company/domain/workforce/resolve-organizational-authority"
+} from "@/contexts/company/domain/values/organizational-authority.definition"
+import { OrganizationalAuthorityError } from "@/contexts/company/domain/errors"
+import { resolveOrganizationalAuthority } from "@/contexts/company/domain/policies/resolve-organizational-authority.policy"
 import {
   resolveWorkforceStateAt,
   type WorkforceStateAt,
-} from "@/contexts/company/domain/workforce/resolve-workforce-state"
-import type { WorkforceStateResolutionError } from "@/contexts/company/domain/workforce/workforce-state-resolution-error"
-import type { OrganizationInvariantViolation } from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
-import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/workforce/workforce-invariant"
-import { validateWorkforceSchedules } from "@/contexts/company/domain/workforce/validate-workforce-schedules"
-import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
+} from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
+import type { WorkforceStateResolutionError } from "@/contexts/company/domain/errors"
+import type { OrganizationInvariantViolation } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
+import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
+import { validateWorkforceSchedules } from "@/contexts/company/domain/policies/validate-workforce-schedules.policy"
+import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
 
 export type ResolveOrganizationAuthorityResult =
   | Readonly<{ kind: "resolved"; resolution: OrganizationalAuthorityResolution }>

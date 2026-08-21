@@ -1,10 +1,10 @@
 import { CreateMeetingMinutes } from "@/contexts/meeting/application/create-meeting-minutes"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
+import { validateCodeParam } from "@/lib/http/validate-code-param"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppMeetingMinutes, zAppMeetingMinutesList } from "@/lib/app-schemas"
 import { meetingMinutes, meetings } from "@/contexts/meeting/infrastructure/schema/meeting"
 import { count, desc, eq } from "drizzle-orm"
@@ -13,7 +13,7 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedShiftAssignments } from "@/contexts/shift/infrastructure/seed/seed-shift-assignments.repository"
 import { seedShiftPatterns } from "@/contexts/shift/infrastructure/seed/seed-shift-patterns.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "shift-assignment-crud-test-secret"
 
@@ -65,15 +66,14 @@ async function createTestDb(): Promise<D1Database> {
       published_at: assignment.publishedAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -97,7 +97,7 @@ describe("GET /shift-assignments/:id", () => {
   test("privileged role reads an assignment and returns 200", async () => {
     const response = await request({
       path: "/shift-assignments/1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -114,7 +114,7 @@ describe("GET /shift-assignments/:id", () => {
   test("member is forbidden", async () => {
     const response = await request({
       path: "/shift-assignments/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)
@@ -123,7 +123,7 @@ describe("GET /shift-assignments/:id", () => {
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
       path: "/shift-assignments/9999",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(404)
@@ -140,7 +140,7 @@ describe("PUT /shift-assignments/:id", () => {
   test("privileged role updates pattern, date and note and returns 200", async () => {
     const response = await request({
       path: "/shift-assignments/2",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PUT",
       body: { pattern_code: "LATE", date: "2026-06-10", note: "Updated" },
     })
@@ -161,7 +161,7 @@ describe("PUT /shift-assignments/:id", () => {
   test("clears the pattern when pattern_code is null", async () => {
     const response = await request({
       path: "/shift-assignments/2",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PUT",
       body: { pattern_code: null, date: "2026-06-10", note: null },
     })
@@ -180,7 +180,7 @@ describe("PUT /shift-assignments/:id", () => {
   test("returns 404 for an unknown pattern code", async () => {
     const response = await request({
       path: "/shift-assignments/2",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PUT",
       body: { pattern_code: "UNKNOWN", date: "2026-06-10", note: null },
     })
@@ -191,7 +191,7 @@ describe("PUT /shift-assignments/:id", () => {
   test("member is forbidden", async () => {
     const response = await request({
       path: "/shift-assignments/2",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: { pattern_code: "LATE", date: "2026-06-10", note: null },
     })
@@ -202,7 +202,7 @@ describe("PUT /shift-assignments/:id", () => {
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
       path: "/shift-assignments/9999",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PUT",
       body: { pattern_code: "LATE", date: "2026-06-10", note: null },
     })
@@ -215,7 +215,7 @@ describe("DELETE /shift-assignments/:id", () => {
   test("privileged role deletes an assignment and returns 204", async () => {
     const response = await request({
       path: "/shift-assignments/2",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "DELETE",
     })
 
@@ -225,7 +225,7 @@ describe("DELETE /shift-assignments/:id", () => {
   test("member is forbidden", async () => {
     const response = await request({
       path: "/shift-assignments/2",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "DELETE",
     })
 
@@ -235,7 +235,7 @@ describe("DELETE /shift-assignments/:id", () => {
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
       path: "/shift-assignments/9999",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "DELETE",
     })
 

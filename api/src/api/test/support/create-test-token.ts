@@ -8,16 +8,13 @@ import { zAccountId } from "@system/domain/values/account-id.schema"
 import { SignJWT } from "jose"
 
 /**
- * テスト用トークンの入力。後方互換のため email/role も受け付けるが署名には載せない。
- * accountId 省略時は employeeId を流用(テストは account.id=employee.id で seed する)、
- * tokenVersion 省略時は 0(seed の既定値)。
+ * canonical System Account access tokenを作るテスト入力。
+ * accountId 省略時はemployeeIdを流用し、tokenVersion省略時はseed既定値の0を使う。
  */
 export type TestTokenPayload = {
   employeeId: number
   accountId?: number | string
   tokenVersion?: number
-  email?: string
-  role?: string
 }
 
 /**

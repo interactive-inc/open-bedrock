@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { AttendanceRecord } from "@/contexts/attendance/domain/attendance-record.entity"
+import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import { ClockIn } from "@/contexts/attendance/application/clock-in"
 import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/attendance-record.repository"
 import { ApplicationError, ConflictError } from "@/lib/errors"

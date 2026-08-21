@@ -4,16 +4,17 @@ import { HTTPException } from "hono/http-exception"
 import { DELETE, PUT } from "@/contexts/asset/interface/routes/assets.$code"
 import { databaseMiddleware } from "@/api/database-middleware"
 import type { Bindings } from "@/env"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { seedAssetLendings } from "@/contexts/asset/infrastructure/seed/seed-asset-lendings.repository"
 import { seedAssets } from "@/contexts/asset/infrastructure/seed/seed-assets.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "asset-crud-route-test-secret"
 
@@ -86,6 +87,7 @@ async function createTestDb(): Promise<D1Database> {
       returned_at: lending.returnedAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -93,16 +95,12 @@ async function createTestDb(): Promise<D1Database> {
 function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
-    email: "you+e001@example.com",
-    role: "root",
   })
 }
 
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 5,
-    email: "you+e005@example.com",
-    role: "member",
   })
 }
 
@@ -122,6 +120,7 @@ async function request(
     DB: await createTestDb(),
     JWT_SECRET: jwtSecret,
     AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+    COMPANY_TIME_ZONE: "Asia/Tokyo",
     NOW: "2026-01-01T00:00:00.000Z",
   }
 

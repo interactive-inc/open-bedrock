@@ -1,7 +1,7 @@
 import type {
   EvaluationTemplate,
   EvaluationTemplateStatus,
-} from "@/contexts/performance-review/domain/evaluation-template/evaluation-template.entity"
+} from "@/contexts/performance-review/domain/entities/evaluation-template.entity"
 import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

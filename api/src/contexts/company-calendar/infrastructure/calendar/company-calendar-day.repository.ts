@@ -1,4 +1,4 @@
-import { CompanyCalendarDay } from "@/contexts/company-calendar/domain/calendar/company-calendar-day.entity"
+import { CompanyCalendarDay } from "@/contexts/company-calendar/domain/entities/company-calendar-day.entity"
 import type { Context } from "@/env"
 import { companyCalendarDays } from "@/contexts/company-calendar/infrastructure/schema/company-calendar"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"

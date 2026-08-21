@@ -7,15 +7,19 @@ product-specific workflows or the System account implementation.
 ## Dependency direction
 
 ```text
-interface -> application -> domain
-     |             |
-     +-> infrastructure
+interface -> application -> infrastructure
+     |             |              |
+     +-------------+------------> domain
 ```
 
-- Domain is pure company policy.
-- Application exposes named use cases and depends on function-shaped persistence ports.
-- Infrastructure implements those ports with D1 and may know the database SDK.
-- Interface owns Hono, Zod request schemas, HTTP status codes, and problem responses.
+- Domain contains only `entities/`, `values/`, `policies/`, and `errors.ts`; it is pure company policy.
+- Application contains only write services that create or mutate Domain models before persistence.
+  Reads, queries, simple CRUD, and HTTP conversion stay directly in Hono route handlers.
+- Infrastructure contains only `*.repository.ts` production implementations, plus owned schema/SQL
+  and tests. Repositories may know the database SDK.
+- Application must not contain Repository, Persistence, Gateway, or Port definition files.
+- Interface owns Hono, route-local Zod request schemas, and semantic HTTP exceptions. Only the API
+  root `onError` serializes those exceptions into response JSON.
 - The API root composes routes; the context never imports a product API root.
 
 ## Explicit operations
@@ -25,17 +29,18 @@ that file exports both `GET` and `POST` so the complete HTTP contract is readabl
 Zod schemas are written directly in each validator. A schema change therefore cannot silently
 change unrelated endpoints through a shared schema graph.
 
-Application functions exist only when they enforce policy or invariants. A function that only
-renames another function or forwards its arguments is forbidden. Shared code is limited to
-security and consistency mechanisms that must have one implementation: organization access,
-capability checks, revision conflicts, idempotency, canonical serialization, and the atomic
-audit/write transaction.
+Application classes exist only for writes that enforce Domain policy or invariants. Read/query
+classes and functions are forbidden. A route handler performs its read authorization and query
+validation before calling a repository directly. Shared persistence consistency mechanisms such as
+revision conflicts, idempotency, canonical serialization, and the atomic audit/write transaction
+remain private to a repository.
 
 ## HTTP contract
 
 Zod schemas in each route are the request contract. Hono validators expose those inferred inputs to
 `hono/client` so tests and consumers use typed path, method, header, query, and JSON values.
-Application and domain code do not depend on Hono or Zod.
+Application and domain code do not depend on Hono. Domain definition files may use Zod to keep one
+runtime schema and its inferred type, while entities and policies remain transport-independent.
 
 ## Safety
 

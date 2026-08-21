@@ -65,7 +65,6 @@ export const FORM_CONSTRAINTS = {
     commentMax: 3_000,
   },
   oneOnOne: {
-    memberEmailMax: 254,
     textMax: 5_000,
   },
   survey: {

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { contextStorage } from "hono/context-storage"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedLeaveRequests } from "@/contexts/leave/infrastructure/seed/seed-leave-requests.repository"
 import * as leaveRequestDetailRoute from "@/contexts/leave/interface/routes/leave-requests.$id"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -11,9 +11,9 @@ import { databaseMiddleware } from "@/api/database-middleware"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 import type { Bindings } from "@/env"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { z } from "zod"
 
 const leaveRequestResponseSchema = z.object({
@@ -108,16 +108,14 @@ async function createTestDb(): Promise<D1Database> {
     },
   ])
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -160,7 +158,7 @@ describe("GET /leave-requests/:id", () => {
   test("returns the request for its applicant", async () => {
     const response = await request({
       path: "/leave-requests/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(200)
@@ -201,7 +199,7 @@ describe("GET /leave-requests/:id", () => {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${await tokenFor(4, "manager")}`,
+          Authorization: `Bearer ${await tokenFor(4)}`,
         },
       },
       bindings,
@@ -222,7 +220,7 @@ describe("GET /leave-requests/:id", () => {
   test("returns 403 for a manager outside the applicant organization scope", async () => {
     const response = await request({
       path: "/leave-requests/1",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
     })
 
     expect(response.status).toBe(403)
@@ -254,7 +252,7 @@ describe("GET /leave-requests/:id", () => {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${await tokenFor(2, "hr")}`,
+          Authorization: `Bearer ${await tokenFor(2)}`,
         },
       },
       bindings,
@@ -275,7 +273,7 @@ describe("GET /leave-requests/:id", () => {
   test("returns 403 for another person's request", async () => {
     const response = await request({
       path: "/leave-requests/2",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)
@@ -284,7 +282,7 @@ describe("GET /leave-requests/:id", () => {
   test("returns 404 for an unknown request", async () => {
     const response = await request({
       path: "/leave-requests/9999",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(404)
@@ -301,7 +299,7 @@ describe("PUT /leave-requests/:id", () => {
   test("revises a pending request for its applicant", async () => {
     const response = await request({
       path: "/leave-requests/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: {
         leave_type: "special",
@@ -329,7 +327,7 @@ describe("PUT /leave-requests/:id", () => {
     // 自己除外 (excludeId) が無いと自分にヒットして 409 になってしまう。
     const response = await request({
       path: "/leave-requests/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: {
         leave_type: "annual",
@@ -377,7 +375,7 @@ describe("PUT /leave-requests/:id", () => {
       {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${await tokenFor(5, "member")}`,
+          Authorization: `Bearer ${await tokenFor(5)}`,
           "content-type": "application/json",
         },
         body: JSON.stringify({
@@ -396,7 +394,7 @@ describe("PUT /leave-requests/:id", () => {
   test("returns 409 when revising a decided request", async () => {
     const response = await request({
       path: "/leave-requests/2",
-      token: await tokenFor(10, "member"),
+      token: await tokenFor(10),
       method: "PUT",
       body: {
         leave_type: "annual",
@@ -412,7 +410,7 @@ describe("PUT /leave-requests/:id", () => {
   test("returns 403 when revising another person's request", async () => {
     const response = await request({
       path: "/leave-requests/1",
-      token: await tokenFor(10, "member"),
+      token: await tokenFor(10),
       method: "PUT",
       body: {
         leave_type: "annual",
@@ -428,7 +426,7 @@ describe("PUT /leave-requests/:id", () => {
   test("returns 404 for an unknown request", async () => {
     const response = await request({
       path: "/leave-requests/9999",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "PUT",
       body: {
         leave_type: "annual",
@@ -446,7 +444,7 @@ describe("DELETE /leave-requests/:id", () => {
   test("withdraws a pending request and returns 204", async () => {
     const response = await request({
       path: "/leave-requests/1",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "DELETE",
     })
 
@@ -456,7 +454,7 @@ describe("DELETE /leave-requests/:id", () => {
   test("returns 409 when withdrawing a decided request", async () => {
     const response = await request({
       path: "/leave-requests/2",
-      token: await tokenFor(10, "member"),
+      token: await tokenFor(10),
       method: "DELETE",
     })
 
@@ -466,7 +464,7 @@ describe("DELETE /leave-requests/:id", () => {
   test("returns 403 when withdrawing another person's request", async () => {
     const response = await request({
       path: "/leave-requests/1",
-      token: await tokenFor(10, "member"),
+      token: await tokenFor(10),
       method: "DELETE",
     })
 
@@ -476,7 +474,7 @@ describe("DELETE /leave-requests/:id", () => {
   test("returns 404 for an unknown request", async () => {
     const response = await request({
       path: "/leave-requests/9999",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "DELETE",
     })
 

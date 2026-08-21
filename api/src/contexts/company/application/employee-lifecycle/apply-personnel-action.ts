@@ -1,27 +1,28 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { createAuditEvent } from "@/contexts/company/domain/audit/company-audit-event"
-import { containsDate } from "@/contexts/company/domain/employee-lifecycle/contains-date"
+import type { CompanyPersonnelSession } from "@/contexts/company/domain/values/company-personnel-session.definition"
+import { createCompanySystemAuditEvent } from "@/contexts/company/infrastructure/audit/create-company-system-audit-event.repository"
+import { containsDate } from "@/contexts/company/domain/values/contains-date.definition"
 import type {
   LifecycleSchedule,
   LifecycleVersionMutation,
-} from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
+} from "@/contexts/company/domain/values/lifecycle-schedule.definition"
 import {
   projectPersonnelAction,
   type PersonnelActionProjection,
-} from "@/contexts/company/domain/employee-lifecycle/project-personnel-action"
-import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
-import { fingerprintPersonnelAction } from "@/contexts/company/domain/employee-lifecycle/fingerprint-personnel-action"
-import { stableLifecycleJson } from "@/contexts/company/domain/employee-lifecycle/stable-lifecycle-json"
+} from "@/contexts/company/domain/policies/project-personnel-action.policy"
+import type { PersonnelActionInput } from "@/contexts/company/domain/values/lifecycle-types.definition"
+import { fingerprintPersonnelAction } from "@/contexts/company/domain/values/fingerprint-personnel-action.definition"
+import { stableLifecycleJson } from "@/contexts/company/domain/values/stable-lifecycle-json.definition"
 import type {
   OrganizationChangeSet,
   WorkforceSnapshotReadPort,
-} from "@/contexts/company/domain/workforce/organization-change"
+} from "@/contexts/company/domain/values/organization-change.definition"
 import { ValidateOrganizationChange } from "@/contexts/company/infrastructure/workforce/validate-organization-change.repository"
-import { toWorkforceLifecycleSchedules } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
-import type { Context } from "@/env"
-import { AuditEventRepository } from "@/contexts/company/infrastructure/audit/audit-event.repository"
+import { toWorkforceLifecycleSchedules } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { restoreOrgResponsibilityType } from "@/contexts/company/domain/values/restore-org-responsibility-type.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/values/restore-workforce-id.definition"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"
 import {
   PersonnelActionRepository,
@@ -29,21 +30,21 @@ import {
 } from "@/contexts/company/infrastructure/employee-lifecycle/personnel-action.repository"
 import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
 import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/contexts/company/infrastructure/database/abort-when-previous-statement-changed-no-rows.repository"
+import { isAbortedByGuard } from "@/contexts/company/infrastructure/database/is-aborted-by-guard.repository"
 import {
-  ApplicationError,
-  ConflictError,
-  ForbiddenError,
-  UnexpectedError,
-  UnavailableError,
-  ValidationError,
-} from "@/lib/errors"
-import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
+  CompanyOperationError,
+  CompanyConflictError,
+  CompanyForbiddenError,
+  CompanyUnexpectedError,
+  CompanyUnavailableError,
+  CompanyValidationError,
+} from "@/contexts/company/domain/errors"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/values/resolve-company-business-date.definition"
 import { z } from "zod"
 
 export type DirectPersonnelActionCommand = {
-  session: Session
+  session: CompanyPersonnelSession
   employeeId: number
   input: PersonnelActionInput
   idempotencyKey: string
@@ -263,7 +264,7 @@ function canonicalOrganizationChange(props: {
   reason: string
   evidenceReferences: OrganizationChangeSet["evidenceReferences"]
   projection: PersonnelActionProjection
-}): OrganizationChangeSet | ApplicationError {
+}): OrganizationChangeSet | CompanyOperationError {
   try {
     const operationId = restoreWorkforceId("personnel_action", props.actionId)
     const assignments: OrganizationChangeSet["assignments"][number][] = []
@@ -303,7 +304,7 @@ function canonicalOrganizationChange(props: {
           candidate.employeeId === period.employeeId && containsPeriod(candidate, period),
       )
       if (employment === undefined) {
-        return new ValidationError(
+        return new CompanyValidationError(
           "組織責務に対応する雇用期間がありません",
           "personnel_action_invalid_transition",
         )
@@ -317,7 +318,7 @@ function canonicalOrganizationChange(props: {
           "organization_unit",
           `department:${period.departmentCode}`,
         ),
-        responsibilityType: "MANAGER",
+        responsibilityType: restoreOrgResponsibilityType("MANAGER"),
         startsOn: restoreCalendarDate(period.startsOn),
         endsOn: period.endsOn === null ? null : restoreCalendarDate(period.endsOn),
         isVoid: period.isVoid,
@@ -340,7 +341,7 @@ function canonicalOrganizationChange(props: {
       responsibilities,
     }
   } catch (cause) {
-    return new ValidationError(
+    return new CompanyValidationError(
       "組織変更を共通形式へ変換できません",
       "personnel_action_invalid_transition",
       { cause },
@@ -349,14 +350,14 @@ function canonicalOrganizationChange(props: {
 }
 
 async function validateCanonicalOrganizationChange(
-  c: Context,
+  c: CompanyContext,
   props: Parameters<typeof canonicalOrganizationChange>[0] &
     Readonly<{
       prospectiveEmployee?: Readonly<{ id: number; code: string; name: string }>
     }>,
-): Promise<ApplicationError | null> {
+): Promise<CompanyOperationError | null> {
   const change = canonicalOrganizationChange(props)
-  if (change instanceof ApplicationError) return change
+  if (change instanceof CompanyOperationError) return change
 
   const currentWorkforce = new OrganizationWorkforceSnapshotRepository(c)
   const prospectiveEmployee = props.prospectiveEmployee
@@ -411,21 +412,25 @@ async function validateCanonicalOrganizationChange(
   }).execute(change)
   if (result.kind === "valid") return null
   if (result.kind === "conflict") {
-    return new ConflictError("組織情報が更新されています", "personnel_action_stale")
+    return new CompanyConflictError("組織情報が更新されています", "personnel_action_stale")
   }
   if (result.kind === "operation_conflict") {
-    return new ConflictError("組織変更IDが再利用されています", "personnel_action_stale")
+    return new CompanyConflictError("組織変更IDが再利用されています", "personnel_action_stale")
   }
   if (result.kind === "invalid") {
-    return new ValidationError(
+    return new CompanyValidationError(
       "人事発令後の組織状態が不正です",
       "personnel_action_invalid_transition",
       { cause: result.error },
     )
   }
-  return new UnavailableError("組織変更を安全に検証できません", "organization_change_unavailable", {
-    cause: result.cause,
-  })
+  return new CompanyUnavailableError(
+    "組織変更を安全に検証できません",
+    "organization_change_unavailable",
+    {
+      cause: result.cause,
+    },
+  )
 }
 
 function toSafeAuditState(
@@ -444,12 +449,12 @@ function toSafeAuditState(
   }
 }
 
-function unexpected(cause: unknown): ApplicationError {
-  if (cause instanceof ApplicationError) {
+function unexpected(cause: unknown): CompanyOperationError {
+  if (cause instanceof CompanyOperationError) {
     return cause
   }
 
-  return new UnexpectedError("人事発令の確定に失敗しました", { cause })
+  return new CompanyUnexpectedError("人事発令の確定に失敗しました", { cause })
 }
 
 type PersistenceProps = {
@@ -463,7 +468,10 @@ type PersistenceProps = {
   prospectiveEmployee?: { code: string; name: string }
 }
 
-function preparePersistenceStatements(c: Context, props: PersistenceProps): D1PreparedStatement[] {
+function preparePersistenceStatements(
+  c: CompanyContext,
+  props: PersistenceProps,
+): D1PreparedStatement[] | CompanyOperationError {
   const db = c.env.DB
   const nextEmployeeRevision = props.revisions.employeeRevision + 1
   const canonicalMutations = organizationMutations(props.projection.mutations)
@@ -475,32 +483,34 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
     props.businessDate,
     props.employeeCodes,
   )
-  const audit = createAuditEvent(
-    {
-      actorAccountId: props.command.session.accountId,
-      actorEmployeeId: props.command.session.employeeId,
-      action:
-        props.action.kind === "corrected"
-          ? "employee.lifecycle.corrected"
-          : "employee.lifecycle.applied",
-      target: { type: "employee", id: String(props.action.employeeId) },
-      outcome: "succeeded",
-      reasonCode: null,
-      authorization:
-        props.action.sourceType === "application"
-          ? { workflowTask: true, applicationId: props.action.sourceApplicationId }
-          : { permission: "employee:lifecycle:apply" },
-      before: toSafeAuditState(
-        before,
-        props.revisions.employeeRevision,
-        props.revisions.organizationRevision,
-      ),
-      after: toSafeAuditState(after, nextEmployeeRevision, nextOrganizationRevision),
-      metadata: { actionKind: props.action.kind, effectiveOn: props.action.eventOn },
-      now: new Date(props.action.recordedAt * 1_000),
-    },
-    c.var.auditContext,
-  )
+  const audit = createCompanySystemAuditEvent({
+    actorAccountId: props.command.session.accountId,
+    actorEmployeeId: props.command.session.employeeId,
+    action:
+      props.action.kind === "corrected"
+        ? "employee.lifecycle.corrected"
+        : "employee.lifecycle.applied",
+    targetType: "employee",
+    targetId: String(props.action.employeeId),
+    outcome: "succeeded",
+    reasonCode: null,
+    authorization:
+      props.action.sourceType === "application"
+        ? { workflowTask: true, applicationId: props.action.sourceApplicationId }
+        : { permission: "employee:lifecycle:apply" },
+    before: toSafeAuditState(
+      before,
+      props.revisions.employeeRevision,
+      props.revisions.organizationRevision,
+    ),
+    after: toSafeAuditState(after, nextEmployeeRevision, nextOrganizationRevision),
+    metadata: { actionKind: props.action.kind, effectiveOn: props.action.eventOn },
+    occurredAt: new Date(props.action.recordedAt * 1_000),
+    requestAudit: c.var.auditContext,
+  })
+  if (audit instanceof Error) {
+    return new CompanyUnexpectedError("人事発令の監査イベントを作成できません", { cause: audit })
+  }
   const statements: Array<D1PreparedStatement> = []
 
   if (props.prospectiveEmployee !== undefined) {
@@ -673,20 +683,20 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
     )
   }
 
-  statements.push(...new AuditEventRepository(c).prepareAppend(audit))
+  statements.push(...new SystemAuditEventRepository({ env: { DB: c.env.DB } }).prepareAppend(audit))
   return statements
 }
 
 export class ApplyPersonnelAction {
-  constructor(private readonly c: Context) {
+  constructor(private readonly c: CompanyContext) {
     Object.freeze(this)
   }
 
   async run(
     command: DirectPersonnelActionCommand,
-  ): Promise<{ action: PersonnelActionRecord; replayed: boolean } | ApplicationError> {
+  ): Promise<{ action: PersonnelActionRecord; replayed: boolean } | CompanyOperationError> {
     if (!command.session.hasPermission("employee:lifecycle:apply")) {
-      return new ForbiddenError("人事発令を確定する権限がありません", "forbidden")
+      return new CompanyForbiddenError("人事発令を確定する権限がありません", "forbidden")
     }
 
     const operationResult = idempotencyKeySchema.safeParse(command.idempotencyKey)
@@ -700,14 +710,17 @@ export class ApplyPersonnelAction {
       !employeeRevisionResult.success ||
       !organizationRevisionResult.success
     ) {
-      return new ValidationError("人事発令の競合制御入力が不正です", "personnel_action_stale")
+      return new CompanyValidationError(
+        "人事発令の競合制御入力が不正です",
+        "personnel_action_stale",
+      )
     }
 
     const fingerprint = await fingerprintPersonnelAction(command.employeeId, command.input)
     const actionRepository = new PersonnelActionRepository(this.c)
     const existing = await actionRepository.findByOperationId(command.idempotencyKey)
 
-    if (existing instanceof ApplicationError) {
+    if (existing instanceof CompanyOperationError) {
       return existing
     }
 
@@ -716,18 +729,6 @@ export class ApplyPersonnelAction {
     }
 
     const lifecycleRepository = new EmployeeLifecycleRepository(this.c)
-    const migrationStatus = await lifecycleRepository.migrationStatus()
-
-    if (migrationStatus instanceof ApplicationError) {
-      return migrationStatus
-    }
-
-    if (migrationStatus !== "verified") {
-      return new UnavailableError(
-        "人事ライフサイクル移行が完了していません",
-        "lifecycle_migration_incomplete",
-      )
-    }
 
     const now = this.c.env.NOW ?? new Date().toISOString()
     const businessDate = resolveCompanyBusinessDate({
@@ -736,9 +737,13 @@ export class ApplyPersonnelAction {
     })
 
     if (typeof businessDate !== "string") {
-      return new UnavailableError("会社営業日を解決できません", "company_timezone_unavailable", {
-        cause: businessDate,
-      })
+      return new CompanyUnavailableError(
+        "会社営業日を解決できません",
+        "company_timezone_unavailable",
+        {
+          cause: businessDate,
+        },
+      )
     }
 
     const [schedule, organizationSchedules, references, revisions] = await Promise.all([
@@ -749,18 +754,21 @@ export class ApplyPersonnelAction {
     ])
 
     for (const result of [schedule, organizationSchedules, references, revisions]) {
-      if (result instanceof ApplicationError) {
+      if (result instanceof CompanyOperationError) {
         return result
       }
     }
 
     const loadedSchedule = schedule as LifecycleSchedule
     const loadedOrganizationSchedules = organizationSchedules as ReadonlyArray<LifecycleSchedule>
-    const loadedReferences = references as Exclude<typeof references, ApplicationError>
-    const loadedRevisions = revisions as Exclude<typeof revisions, ApplicationError>
+    const loadedReferences = references as Exclude<typeof references, CompanyOperationError>
+    const loadedRevisions = revisions as Exclude<typeof revisions, CompanyOperationError>
 
     if (loadedRevisions.employeeRevision !== command.expectedEmployeeRevision) {
-      return new ConflictError("従業員の人事情報が更新されています", "personnel_action_stale")
+      return new CompanyConflictError(
+        "従業員の人事情報が更新されています",
+        "personnel_action_stale",
+      )
     }
 
     const target = loadedReferences.employees.find((employee) => employee.id === command.employeeId)
@@ -770,7 +778,10 @@ export class ApplyPersonnelAction {
         : command.input.employeeCode
 
     if (target === undefined || target.code !== commandEmployeeCode) {
-      return new ValidationError("対象従業員が一致しません", "personnel_action_invalid_transition")
+      return new CompanyValidationError(
+        "対象従業員が一致しません",
+        "personnel_action_invalid_transition",
+      )
     }
 
     let correction:
@@ -788,17 +799,17 @@ export class ApplyPersonnelAction {
       ])
 
       if (
-        mutations instanceof ApplicationError ||
-        alreadyCorrected instanceof ApplicationError ||
-        original instanceof ApplicationError
+        mutations instanceof CompanyOperationError ||
+        alreadyCorrected instanceof CompanyOperationError ||
+        original instanceof CompanyOperationError
       ) {
         return [mutations, alreadyCorrected, original].find(
-          (result): result is ApplicationError => result instanceof ApplicationError,
-        ) as ApplicationError
+          (result): result is CompanyOperationError => result instanceof CompanyOperationError,
+        ) as CompanyOperationError
       }
 
       if (original === null || original.employeeId !== command.employeeId) {
-        return new ValidationError(
+        return new CompanyValidationError(
           "訂正対象の人事発令が見つかりません",
           "personnel_action_invalid_transition",
         )
@@ -823,7 +834,7 @@ export class ApplyPersonnelAction {
       },
     })
 
-    if (projected instanceof ApplicationError) {
+    if (projected instanceof CompanyOperationError) {
       return projected
     }
 
@@ -831,7 +842,7 @@ export class ApplyPersonnelAction {
       projected.affectsOrganization &&
       command.expectedOrganizationRevision !== loadedRevisions.organizationRevision
     ) {
-      return new ConflictError("組織情報が更新されています", "personnel_action_stale")
+      return new CompanyConflictError("組織情報が更新されています", "personnel_action_stale")
     }
     if (projected.affectsOrganization) {
       const validation = await validateCanonicalOrganizationChange(this.c, {
@@ -884,7 +895,7 @@ export class ApplyPersonnelAction {
   }
 
   async prepareApplicationCompletion(command: {
-    session: Session
+    session: CompanyPersonnelSession
     employeeId: number | null
     input: PersonnelActionInput
     sourceApplicationId: number | null
@@ -893,16 +904,22 @@ export class ApplyPersonnelAction {
     expectedEmployeeRevision: number
     expectedOrganizationRevision: number | null
     expectedPayloadFingerprint: string
-  }): Promise<PreparedPersonnelActionCompletion | ApplicationError> {
+  }): Promise<PreparedPersonnelActionCompletion | CompanyOperationError> {
     const employeeRevisionResult = revisionSchema.safeParse(command.expectedEmployeeRevision)
     const organizationRevisionResult = z
       .union([revisionSchema, z.null()])
       .safeParse(command.expectedOrganizationRevision)
     if (!employeeRevisionResult.success || !organizationRevisionResult.success) {
-      return new ValidationError("人事発令の競合制御入力が不正です", "personnel_action_stale")
+      return new CompanyValidationError(
+        "人事発令の競合制御入力が不正です",
+        "personnel_action_stale",
+      )
     }
     if (command.employeeId === null && command.input.kind !== "hire") {
-      return new ValidationError("対象従業員が一致しません", "personnel_action_invalid_transition")
+      return new CompanyValidationError(
+        "対象従業員が一致しません",
+        "personnel_action_invalid_transition",
+      )
     }
     const prospectiveKey =
       command.input.kind === "hire" ? `prospective:${command.input.employeeCode}` : null
@@ -911,40 +928,36 @@ export class ApplyPersonnelAction {
       command.input,
     )
     if (fingerprint !== command.expectedPayloadFingerprint) {
-      return new ConflictError("申請内容の整合性を確認できません", "idempotency_conflict")
+      return new CompanyConflictError("申請内容の整合性を確認できません", "idempotency_conflict")
     }
     const operationId =
       command.sourceApplicationId === null
         ? command.idempotencyKey
         : `application:${command.sourceApplicationId}`
     if (operationId === undefined) {
-      return new ValidationError("冪等キーが必要です", "idempotency_conflict")
+      return new CompanyValidationError("冪等キーが必要です", "idempotency_conflict")
     }
     const actionRepository = new PersonnelActionRepository(this.c)
     const existing = await actionRepository.findByOperationId(operationId)
-    if (existing instanceof ApplicationError) return existing
+    if (existing instanceof CompanyOperationError) return existing
     if (existing !== null) {
-      return new ConflictError("申請はすでに人事発令へ反映されています", "already_decided")
+      return new CompanyConflictError("申請はすでに人事発令へ反映されています", "already_decided")
     }
 
     const lifecycleRepository = new EmployeeLifecycleRepository(this.c)
-    const migrationStatus = await lifecycleRepository.migrationStatus()
-    if (migrationStatus instanceof ApplicationError) return migrationStatus
-    if (migrationStatus !== "verified") {
-      return new UnavailableError(
-        "人事ライフサイクル移行が完了していません",
-        "lifecycle_migration_incomplete",
-      )
-    }
     const now = this.c.env.NOW ?? new Date().toISOString()
     const businessDate = resolveCompanyBusinessDate({
       now,
       timeZone: this.c.env.COMPANY_TIME_ZONE,
     })
     if (typeof businessDate !== "string") {
-      return new UnavailableError("会社営業日を解決できません", "company_timezone_unavailable", {
-        cause: businessDate,
-      })
+      return new CompanyUnavailableError(
+        "会社営業日を解決できません",
+        "company_timezone_unavailable",
+        {
+          cause: businessDate,
+        },
+      )
     }
     const allocatedEmployeeId =
       command.employeeId ??
@@ -959,11 +972,11 @@ export class ApplyPersonnelAction {
       lifecycleRepository.loadRevisions(allocatedEmployeeId),
     ])
     for (const result of [schedule, organizationSchedules, references, revisions]) {
-      if (result instanceof ApplicationError) return result
+      if (result instanceof CompanyOperationError) return result
     }
     const loadedSchedule = schedule as LifecycleSchedule
     const loadedOrganizationSchedules = organizationSchedules as ReadonlyArray<LifecycleSchedule>
-    const loadedReferences = references as Exclude<typeof references, ApplicationError>
+    const loadedReferences = references as Exclude<typeof references, CompanyOperationError>
     const effectiveReferences =
       command.employeeId === null && command.input.kind === "hire"
         ? {
@@ -974,9 +987,12 @@ export class ApplyPersonnelAction {
             ],
           }
         : loadedReferences
-    const loadedRevisions = revisions as Exclude<typeof revisions, ApplicationError>
+    const loadedRevisions = revisions as Exclude<typeof revisions, CompanyOperationError>
     if (loadedRevisions.employeeRevision !== command.expectedEmployeeRevision) {
-      return new ConflictError("従業員の人事情報が更新されています", "personnel_action_stale")
+      return new CompanyConflictError(
+        "従業員の人事情報が更新されています",
+        "personnel_action_stale",
+      )
     }
     const target = effectiveReferences.employees.find(
       (employee) => employee.id === allocatedEmployeeId,
@@ -986,7 +1002,10 @@ export class ApplyPersonnelAction {
         ? command.input.replacementAction.employeeCode
         : command.input.employeeCode
     if (target === undefined || target.code !== commandEmployeeCode) {
-      return new ValidationError("対象従業員が一致しません", "personnel_action_invalid_transition")
+      return new CompanyValidationError(
+        "対象従業員が一致しません",
+        "personnel_action_invalid_transition",
+      )
     }
     let correction:
       | { mutations: ReadonlyArray<LifecycleVersionMutation>; alreadyCorrected: boolean }
@@ -998,16 +1017,16 @@ export class ApplyPersonnelAction {
         actionRepository.findById(command.input.correctsActionId),
       ])
       if (
-        mutations instanceof ApplicationError ||
-        alreadyCorrected instanceof ApplicationError ||
-        original instanceof ApplicationError
+        mutations instanceof CompanyOperationError ||
+        alreadyCorrected instanceof CompanyOperationError ||
+        original instanceof CompanyOperationError
       ) {
         return [mutations, alreadyCorrected, original].find(
-          (result): result is ApplicationError => result instanceof ApplicationError,
-        ) as ApplicationError
+          (result): result is CompanyOperationError => result instanceof CompanyOperationError,
+        ) as CompanyOperationError
       }
       if (original === null || original.employeeId !== allocatedEmployeeId) {
-        return new ValidationError(
+        return new CompanyValidationError(
           "訂正対象の人事発令が見つかりません",
           "personnel_action_invalid_transition",
         )
@@ -1029,12 +1048,12 @@ export class ApplyPersonnelAction {
         correction,
       },
     })
-    if (projected instanceof ApplicationError) return projected
+    if (projected instanceof CompanyOperationError) return projected
     if (
       projected.affectsOrganization &&
       command.expectedOrganizationRevision !== loadedRevisions.organizationRevision
     ) {
-      return new ConflictError("組織情報が更新されています", "personnel_action_stale")
+      return new CompanyConflictError("組織情報が更新されています", "personnel_action_stale")
     }
     if (projected.affectsOrganization) {
       const validation = await validateCanonicalOrganizationChange(this.c, {
@@ -1087,32 +1106,30 @@ export class ApplyPersonnelAction {
       expectedEmployeeRevision: command.expectedEmployeeRevision,
       expectedOrganizationRevision: command.expectedOrganizationRevision,
     }
-    return {
+    const statements = preparePersistenceStatements(this.c, {
+      command: persistenceCommand,
       action,
-      statements: preparePersistenceStatements(this.c, {
-        command: persistenceCommand,
-        action,
-        projection: projected,
-        scheduleBefore: loadedSchedule,
-        businessDate,
-        employeeCodes: new Map(
-          effectiveReferences.employees.map((employee) => [employee.id, employee.code]),
-        ),
-        revisions: loadedRevisions,
-        prospectiveEmployee:
-          command.employeeId === null && command.input.kind === "hire"
-            ? { code: command.input.employeeCode, name: command.input.employeeName }
-            : undefined,
-      }),
-    }
+      projection: projected,
+      scheduleBefore: loadedSchedule,
+      businessDate,
+      employeeCodes: new Map(
+        effectiveReferences.employees.map((employee) => [employee.id, employee.code]),
+      ),
+      revisions: loadedRevisions,
+      prospectiveEmployee:
+        command.employeeId === null && command.input.kind === "hire"
+          ? { code: command.input.employeeCode, name: command.input.employeeName }
+          : undefined,
+    })
+    return statements instanceof CompanyOperationError ? statements : { action, statements }
   }
 
   async prepareDirectProspectiveHire(command: {
-    session: Session
+    session: CompanyPersonnelSession
     input: Extract<PersonnelActionInput, { kind: "hire" }>
     idempotencyKey: string
     expectedOrganizationRevision: number
-  }): Promise<PreparedPersonnelActionCompletion | ApplicationError> {
+  }): Promise<PreparedPersonnelActionCompletion | CompanyOperationError> {
     const fingerprint = await fingerprintPersonnelAction(
       `prospective:${command.input.employeeCode}`,
       command.input,
@@ -1134,7 +1151,7 @@ export class ApplyPersonnelAction {
     existing: PersonnelActionRecord,
     command: DirectPersonnelActionCommand,
     fingerprint: string,
-  ): { action: PersonnelActionRecord; replayed: true } | ApplicationError {
+  ): { action: PersonnelActionRecord; replayed: true } | CompanyOperationError {
     if (
       existing.employeeId !== command.employeeId ||
       existing.recordedByAccountId !== command.session.accountId ||
@@ -1142,7 +1159,10 @@ export class ApplyPersonnelAction {
       existing.payloadFingerprint !== fingerprint ||
       existing.sourceType !== "direct"
     ) {
-      return new ConflictError("冪等キーが別の人事発令に使われています", "idempotency_conflict")
+      return new CompanyConflictError(
+        "冪等キーが別の人事発令に使われています",
+        "idempotency_conflict",
+      )
     }
 
     return { action: existing, replayed: true }
@@ -1150,9 +1170,10 @@ export class ApplyPersonnelAction {
 
   private async persist(
     props: PersistenceProps,
-  ): Promise<{ action: PersonnelActionRecord; replayed: boolean } | ApplicationError> {
+  ): Promise<{ action: PersonnelActionRecord; replayed: boolean } | CompanyOperationError> {
     const db = this.c.env.DB
     const statements = preparePersistenceStatements(this.c, props)
+    if (statements instanceof CompanyOperationError) return statements
 
     try {
       const results = await db.batch(statements)
@@ -1164,14 +1185,14 @@ export class ApplyPersonnelAction {
       return { action: props.action, replayed: false }
     } catch (cause) {
       if (isAbortedByGuard(cause)) {
-        return new ConflictError("人事情報が同時に更新されました", "personnel_action_stale")
+        return new CompanyConflictError("人事情報が同時に更新されました", "personnel_action_stale")
       }
 
       const raced = await new PersonnelActionRepository(this.c).findByOperationId(
         props.action.operationId,
       )
 
-      if (!(raced instanceof ApplicationError) && raced !== null) {
+      if (!(raced instanceof CompanyOperationError) && raced !== null) {
         const replay = this.classifyReplay(raced, props.command, props.action.payloadFingerprint)
         return replay
       }

@@ -5,8 +5,9 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyCompanyMigrationFixture } from "@/api/test/support/verify-company-migration-fixture"
+import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "overtime-summary-route-test-secret"
 
@@ -97,7 +98,7 @@ async function createScopeTestDb(): Promise<D1Database> {
 
   await seedD1(db, "attendance_records", records)
 
-  await verifyCompanyMigrationFixture({
+  await initializeCompanyTestFixture({
     db,
     departments: [{ id: 1, code: "D001", name: "Dept", managerEmployeeCode: "M002" }],
   })
@@ -105,11 +106,9 @@ async function createScopeTestDb(): Promise<D1Database> {
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -119,7 +118,7 @@ describe("GET /attendance-records/overtime-summary", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/attendance-records/overtime-summary?month=2026-06&scope=reports",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
       now: "2026-06-15T00:00:00.000Z",
     })
 
@@ -147,7 +146,7 @@ describe("GET /attendance-records/overtime-summary", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/attendance-records/overtime-summary?scope=reports",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
       now: "2026-06-15T00:00:00.000Z",
     })
 
@@ -159,7 +158,7 @@ describe("GET /attendance-records/overtime-summary", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/attendance-records/overtime-summary?scope=all",
-      token: await tokenFor(20, "member"),
+      token: await tokenFor(20),
       now: "2026-06-15T00:00:00.000Z",
     })
 
@@ -171,7 +170,7 @@ describe("GET /attendance-records/overtime-summary", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/attendance-records/overtime-summary?month=2026-06",
-      token: await tokenFor(21, "member"),
+      token: await tokenFor(21),
       now: "2026-06-15T00:00:00.000Z",
     })
 
@@ -193,7 +192,7 @@ describe("GET /attendance-records/overtime-summary", () => {
       db: await createScopeTestDb(),
       jwtSecret,
       path: "/attendance-records/overtime-summary?month=2026-6",
-      token: await tokenFor(21, "member"),
+      token: await tokenFor(21),
       now: "2026-06-15T00:00:00.000Z",
     })
 

@@ -1,4 +1,4 @@
-import type { OrgAssignmentPeriod } from "@/contexts/company/domain/workforce/workforce-schedule"
+import type { OrgAssignmentPeriod } from "@/contexts/company/domain/values/workforce-schedule.definition"
 import type { LifecycleAssignmentState } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read.repository"
 import { toLifecycleStorageId } from "@/contexts/company/infrastructure/workforce/to-lifecycle-storage-id.repository"
 

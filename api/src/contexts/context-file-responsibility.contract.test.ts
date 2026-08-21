@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { Glob } from "bun"
 import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 
 const contextsDirectory = new URL(".", import.meta.url)
 const productionFiles = [
@@ -22,6 +23,29 @@ const allContextProductionFiles = [
   .filter((file) => !file.endsWith(".test.ts") && !file.endsWith(".test-support.ts"))
   .sort()
 
+function usesDomainModel(source: string): boolean {
+  if (source.includes("/domain/")) return true
+
+  const repositoryModules = [
+    ...[...source.matchAll(/from "@\/contexts\/([^\"]+\/infrastructure\/[^\"]+)"/g)].map(
+      (match) => match[1],
+    ),
+    ...[...source.matchAll(/from "@system\/(infrastructure\/[^\"]+)"/g)].map(
+      (match) => `system/${match[1]}`,
+    ),
+  ].filter((module): module is string => module !== undefined)
+
+  return repositoryModules.some((module) => {
+    const repository = resolve(contextsDirectory.pathname, `${module}.ts`)
+
+    try {
+      return readFileSync(repository, "utf8").includes("/domain/")
+    } catch {
+      return false
+    }
+  })
+}
+
 describe("Context file responsibility contract", () => {
   test("Infrastructureのproduction実装はrepository fileだけにする", () => {
     expect(
@@ -31,11 +55,9 @@ describe("Context file responsibility contract", () => {
     ).toEqual([])
   })
 
-  test("ApplicationはDomain modelを経由するwrite classだけにする", () => {
-    const writeOperationName =
-      /^(?:Add|Advance|Apply|Approve|Archive|Assign|Backfill|Bootstrap|Cancel|Change|Check|Clock|Close|Complete|Create|Decide|Delete|Disclose|Dispose|Enroll|Exchange|Issue|Lend|Manage|Mark|Process|Provision|Publish|Rebuild|Register|Remove|Request|Reset|Reschedule|Return|Revoke|Rotate|Send|Set|Start|Store|Submit|Supersede|Sync|Transition|Uncomplete|Update|Verify|Withdraw|Write)|Service$/
-    const readOperationName =
-      /^(?:Read|List|Get|Find|Resolve|Fetch|Query|Search|Download|Preview|Generate|Export|Authenticate|Analyze|View)/
+  test("Applicationは1ファイル1操作でDomain modelを経由する", () => {
+    const operationName =
+      /^(?:Add|Advance|Analyze|Apply|Approve|Archive|Assign|Authenticate|Backfill|Bootstrap|Cancel|Change|Check|Clock|Close|Complete|Create|Decide|Delete|Disclose|Dispose|Download|Enroll|Exchange|Export|Fetch|Find|Generate|Get|Issue|Lend|List|Manage|Mark|Preview|Process|Provision|Publish|Query|Read|Rebuild|Register|Remove|Request|Reset|Reschedule|Resolve|Return|Revoke|Rotate|Search|Send|Set|Start|Store|Submit|Supersede|Sync|Transition|Uncomplete|Update|Verify|View|Withdraw|Write)|Service$/i
     const violations = productionFiles
       .filter((file) => file.includes("/application/") && !file.endsWith("errors.ts"))
       .flatMap((file) => {
@@ -50,13 +72,13 @@ describe("Context file responsibility contract", () => {
         ].map((match) => match[1] ?? match[2]!)
 
         return [
-          ...(classes.length === 1 ? [] : [`${file}: write class count=${classes.length}`]),
-          ...classes.flatMap((name) => [
-            ...(readOperationName.test(name) ? [`${file}: read operation ${name}`] : []),
-            ...(writeOperationName.test(name) ? [] : [`${file}: non-write operation ${name}`]),
-          ]),
-          ...functions.map((name) => `${file}: exported function ${name}`),
-          ...(source.includes("/domain/") ? [] : [`${file}: Domain model is not used`]),
+          ...(classes.length + functions.length === 1
+            ? []
+            : [`${file}: operation count=${classes.length + functions.length}`]),
+          ...[...classes, ...functions]
+            .filter((name) => !operationName.test(name))
+            .map((name) => `${file}: invalid operation name ${name}`),
+          ...(usesDomainModel(source) ? [] : [`${file}: Domain model is not used`]),
           ...(/usecase/i.test(source) ? [`${file}: useCase naming`] : []),
         ]
       })

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedAssets } from "@/contexts/asset/infrastructure/seed/seed-assets.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedStocktakeItems } from "@/contexts/asset/infrastructure/seed/seed-stocktake-items.repository"
 import { seedStocktakes } from "@/contexts/asset/infrastructure/seed/seed-stocktakes.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -10,6 +10,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "stocktake-route-test-secret"
 
@@ -97,6 +98,7 @@ async function createTestDb(): Promise<D1Database> {
       location_note: item.locationNote,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -104,16 +106,12 @@ async function createTestDb(): Promise<D1Database> {
 function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
-    email: "you+e001@example.com",
-    role: "root",
   })
 }
 
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 5,
-    email: "you+e005@example.com",
-    role: "member",
   })
 }
 

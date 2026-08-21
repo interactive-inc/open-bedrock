@@ -1,4 +1,4 @@
-import { Asset, assetRowSchema } from "@/contexts/asset/domain/asset.entity"
+import { Asset, assetRowSchema } from "@/contexts/asset/domain/entities/asset.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { parseD1Row } from "@/lib/d1/parse-d1-row"

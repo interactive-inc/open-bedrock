@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { EmployeeWorkStyle } from "@/contexts/work-style/domain/employee-work-style.entity"
+import type { Session } from "@/lib/auth/session"
+import { EmployeeWorkStyle } from "@/contexts/work-style/domain/entities/employee-work-style.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { WorkStyle } from "@/lib/schemas"

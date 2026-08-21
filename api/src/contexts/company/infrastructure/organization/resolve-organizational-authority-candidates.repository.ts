@@ -2,26 +2,34 @@ import type {
   OrganizationalAuthorityCandidateResolution,
   OrganizationalAuthorityCriterion,
   OrganizationalAuthoritySnapshot,
-} from "@/contexts/company/domain/organization/organizational-authority-candidate"
-import { ReadCompanyReadiness } from "@/contexts/company/infrastructure/workforce/read-company-readiness.repository"
+} from "@/contexts/company/domain/values/organizational-authority-candidate.definition"
 import { resolveCanonicalOrganizationAuthority } from "@/contexts/company/infrastructure/workforce/resolve-canonical-organization-authority.repository"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { CompanyReadinessRepository } from "@/contexts/company/infrastructure/workforce/company-readiness.repository"
-import type { Context } from "@/env"
-import { ApplicationError, ConflictError, UnavailableError, UnexpectedError } from "@/lib/errors"
-import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import {
+  CompanyOperationError,
+  CompanyConflictError,
+  CompanyUnavailableError,
+  CompanyUnexpectedError,
+} from "@/contexts/company/domain/errors"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/values/resolve-company-business-date.definition"
 
-async function readOrganizationRevision(c: Context): Promise<number | ApplicationError> {
+async function readOrganizationRevision(
+  c: CompanyContext,
+): Promise<number | CompanyOperationError> {
   try {
     const revision = await c.env.DB.prepare(
       "SELECT revision FROM organization_lifecycle_states WHERE id = 1",
     ).first<number>("revision")
 
     return revision === null
-      ? new UnavailableError("組織 revision がありません", "organization_snapshot_unavailable")
+      ? new CompanyUnavailableError(
+          "組織 revision がありません",
+          "organization_snapshot_unavailable",
+        )
       : revision
   } catch (cause) {
-    return new UnavailableError(
+    return new CompanyUnavailableError(
       "組織 revision を読み出せません",
       "organization_snapshot_unavailable",
       { cause },
@@ -30,42 +38,19 @@ async function readOrganizationRevision(c: Context): Promise<number | Applicatio
 }
 
 async function resolveSnapshot(
-  c: Context,
+  c: CompanyContext,
   resolvedAt: string,
-): Promise<OrganizationalAuthoritySnapshot | ApplicationError> {
+): Promise<OrganizationalAuthoritySnapshot | CompanyOperationError> {
   const asOf = resolveCompanyBusinessDate({
     now: resolvedAt,
     timeZone: c.env.COMPANY_TIME_ZONE,
   })
   if (typeof asOf !== "string") {
-    return new UnexpectedError("判断資格の基準日を解決できません", { cause: asOf })
-  }
-
-  const readiness = await new ReadCompanyReadiness(
-    new CompanyReadinessRepository(c.env.DB),
-  ).execute(c.env.COMPANY_TIME_ZONE)
-  if (readiness.kind === "incomplete") {
-    return new UnavailableError(
-      "Company migrationが完了していません",
-      "company_migration_incomplete",
-    )
-  }
-  if (readiness.kind === "unavailable") {
-    return new UnavailableError(
-      "Company migrationの状態を確認できません",
-      "company_migration_unavailable",
-      { cause: readiness.cause },
-    )
-  }
-  if (asOf < readiness.baselineOn) {
-    return new UnavailableError(
-      "Company snapshotの基準日がmigration baselineより前です",
-      "company_as_of_before_baseline",
-    )
+    return new CompanyUnexpectedError("判断資格の基準日を解決できません", { cause: asOf })
   }
 
   const organizationRevision = await readOrganizationRevision(c)
-  return organizationRevision instanceof ApplicationError
+  return organizationRevision instanceof CompanyOperationError
     ? organizationRevision
     : {
         schemaVersion: 1,
@@ -75,8 +60,8 @@ async function resolveSnapshot(
       }
 }
 
-function revisionConflict(): ConflictError {
-  return new ConflictError(
+function revisionConflict(): CompanyConflictError {
+  return new CompanyConflictError(
     "組織 revision が変化したため判断資格を固定できません",
     "organization_revision_conflict",
   )
@@ -84,14 +69,14 @@ function revisionConflict(): ConflictError {
 
 /** canonical Company組織だけから判断候補と変更不能な証拠snapshotを解決する。 */
 export async function resolveOrganizationalAuthorityCandidates(props: {
-  c: Context
+  c: CompanyContext
   subjectEmployeeId: number | null
   criteria: ReadonlyArray<OrganizationalAuthorityCriterion>
   resolvedAt: string
   targetDepartmentCode?: string | null
-}): Promise<OrganizationalAuthorityCandidateResolution | ApplicationError> {
+}): Promise<OrganizationalAuthorityCandidateResolution | CompanyOperationError> {
   const snapshot = await resolveSnapshot(props.c, props.resolvedAt)
-  if (snapshot instanceof ApplicationError) return snapshot
+  if (snapshot instanceof CompanyOperationError) return snapshot
 
   try {
     const employeeRows = await props.c.var.database
@@ -105,16 +90,16 @@ export async function resolveOrganizationalAuthorityCandidates(props: {
       targetDepartmentCode: props.targetDepartmentCode ?? null,
       asOf: snapshot.asOf,
     })
-    if (resolution instanceof ApplicationError) return resolution
+    if (resolution instanceof CompanyOperationError) return resolution
 
     const finalOrganizationRevision = await readOrganizationRevision(props.c)
-    if (finalOrganizationRevision instanceof ApplicationError) return finalOrganizationRevision
+    if (finalOrganizationRevision instanceof CompanyOperationError) return finalOrganizationRevision
     if (finalOrganizationRevision !== resolution.snapshot.organizationRevision) {
       return revisionConflict()
     }
 
     return resolution
   } catch (cause) {
-    return new UnexpectedError("組織上の判断資格を解決できません", { cause })
+    return new CompanyUnexpectedError("組織上の判断資格を解決できません", { cause })
   }
 }

@@ -1,12 +1,8 @@
-import {
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { resolveActiveSystemAccountId } from "@/contexts/company/interface/http/accounts/resolve-active-system-account-id"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
+import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id"
+import { validateIntParam } from "@/lib/http/validate-int-param"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
 import { createSystemProcedureDelegationRepository } from "@/api/http/approval-delegations/create-system-procedure-delegation-repository"
 
 // @authorization owner - 委任元本人だけが取消できる

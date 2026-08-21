@@ -1,11 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "recruitment-route-test-secret"
 
@@ -27,15 +28,14 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -45,7 +45,7 @@ async function createPosition(db: D1Database): Promise<number> {
     db,
     jwtSecret,
     path: "/job-openings",
-    token: await tokenFor(1, "root"),
+    token: await tokenFor(1),
     method: "POST",
     body: { title: "Backend Engineer", department_code: "D003" },
   })
@@ -67,7 +67,7 @@ describe("recruitment positions", () => {
       db,
       jwtSecret,
       path: "/job-openings",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(list.status).toBe(200)
@@ -82,7 +82,7 @@ describe("recruitment positions", () => {
       db,
       jwtSecret,
       path: `/job-openings/${positionId}`,
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PUT",
       body: { title: "Backend Engineer", status: "closed" },
     })
@@ -99,7 +99,7 @@ describe("recruitment positions", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/job-openings",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)
@@ -110,7 +110,7 @@ describe("recruitment positions", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/job-openings",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { title: "x" },
     })
@@ -140,7 +140,7 @@ describe("recruitment candidates", () => {
       db,
       jwtSecret,
       path: `/job-openings/${positionId}/candidates`,
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { name: "Applicant One", email: "applicant@example.com" },
     })
@@ -155,7 +155,7 @@ describe("recruitment candidates", () => {
       db,
       jwtSecret,
       path: `/recruitment-candidates/${candidate.id}/advance`,
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { stage: "screening" },
     })
@@ -176,7 +176,7 @@ describe("recruitment candidates", () => {
       db,
       jwtSecret,
       path: `/job-openings/${positionId}/candidates`,
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { name: "Applicant Two" },
     })
@@ -188,7 +188,7 @@ describe("recruitment candidates", () => {
       db,
       jwtSecret,
       path: `/recruitment-candidates/${candidate.id}/advance`,
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { stage: "interview" },
     })
@@ -205,7 +205,7 @@ describe("recruitment candidates", () => {
       db,
       jwtSecret,
       path: `/job-openings/${positionId}/candidates`,
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)

@@ -1,23 +1,28 @@
 import { ResolveOrganizationAuthority } from "@/contexts/company/infrastructure/workforce/resolve-organization-authority.repository"
-import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/workforce/workforce-snapshot-changed-error"
+import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/errors"
 import type {
   OrganizationalAuthorityCandidateResolution,
-  OrganizationalAuthorityCriterion as LegacyCriterion,
-} from "@/contexts/company/domain/organization/organizational-authority-candidate"
+  OrganizationalAuthorityCriterion as ProcedureCriterion,
+} from "@/contexts/company/domain/values/organizational-authority-candidate.definition"
 import type {
   OrganizationalAuthorityCriterion,
   OrganizationalAuthorityEvidence,
-} from "@/contexts/company/domain/workforce/organizational-authority"
+} from "@/contexts/company/domain/values/organizational-authority.definition"
 import {
   toWorkforceEmployeeId,
   toWorkforceOrganizationUnitId,
-} from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
-import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
+} from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { restoreOrgResponsibilityType } from "@/contexts/company/domain/values/restore-org-responsibility-type.definition"
+import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
 import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
 import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
-import type { Context } from "@/env"
-import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import {
+  CompanyOperationError,
+  CompanyConflictError,
+  CompanyUnexpectedError,
+} from "@/contexts/company/domain/errors"
 import { zAccountId } from "@system/domain/values/account-id.schema"
 
 type EmployeeRow = Readonly<{ id: number; code: string | null }>
@@ -28,10 +33,10 @@ type CanonicalCriteria = Readonly<{
 }>
 
 function toCriteria(props: {
-  criteria: ReadonlyArray<LegacyCriterion>
+  criteria: ReadonlyArray<ProcedureCriterion>
   employeeRows: ReadonlyArray<EmployeeRow>
   targetDepartmentCode: string | null
-}): CanonicalCriteria | ApplicationError {
+}): CanonicalCriteria | CompanyOperationError {
   const byCode = new Map(
     props.employeeRows.flatMap((employee) =>
       employee.code === null ? [] : [[employee.code, toWorkforceEmployeeId(employee.id)]],
@@ -41,11 +46,11 @@ function toCriteria(props: {
   const indexes: number[] = []
 
   for (const [index, criterion] of props.criteria.entries()) {
-    if (criterion.kind === "legacy_account_role") continue
+    if (criterion.kind === "technical_role") continue
     if (criterion.kind === "employee") {
       const employeeId = byCode.get(criterion.employeeCode)
       if (employeeId === undefined) {
-        return new ConflictError(
+        return new CompanyConflictError(
           "判断資格の従業員を解決できません",
           "organizational_authority_employee_reference_missing",
         )
@@ -55,7 +60,7 @@ function toCriteria(props: {
       criteria.push({ kind: "subject_organization_manager" })
     } else if (criterion.kind === "target_department_manager") {
       if (props.targetDepartmentCode === null) {
-        return new ConflictError(
+        return new CompanyConflictError(
           "対象組織が指定されていません",
           "organizational_authority_organization_reference_missing",
         )
@@ -67,7 +72,7 @@ function toCriteria(props: {
     } else if (criterion.kind === "responsibility") {
       criteria.push({
         kind: "responsibility",
-        responsibilityType: criterion.responsibilityType,
+        responsibilityType: restoreOrgResponsibilityType(criterion.responsibilityType),
         organizationUnitId:
           criterion.organizationUnitCode === null
             ? null
@@ -144,15 +149,15 @@ function evidence(value: OrganizationalAuthorityEvidence): Readonly<Record<strin
 
 /** canonical Company snapshotと共通Application serviceから既存内部wireを構成する。 */
 export async function resolveCanonicalOrganizationAuthority(props: {
-  c: Context
+  c: CompanyContext
   subjectEmployeeId: number | null
-  criteria: ReadonlyArray<LegacyCriterion>
+  criteria: ReadonlyArray<ProcedureCriterion>
   employeeRows: ReadonlyArray<EmployeeRow>
   targetDepartmentCode: string | null
   asOf: string
-}): Promise<OrganizationalAuthorityCandidateResolution | ApplicationError> {
+}): Promise<OrganizationalAuthorityCandidateResolution | CompanyOperationError> {
   const canonicalCriteria = toCriteria(props)
-  if (canonicalCriteria instanceof ApplicationError) return canonicalCriteria
+  if (canonicalCriteria instanceof CompanyOperationError) return canonicalCriteria
 
   const result = await new ResolveOrganizationAuthority({
     organization: new OrganizationUnitReadRepository(props.c.var.database),
@@ -166,16 +171,16 @@ export async function resolveCanonicalOrganizationAuthority(props: {
 
   if (result.kind === "unavailable") {
     if (result.cause instanceof WorkforceSnapshotChangedError) {
-      return new ConflictError(
+      return new CompanyConflictError(
         "組織 revision が変化したため判断資格を固定できません",
         "organization_revision_conflict",
         { cause: result.cause },
       )
     }
-    return new UnexpectedError("組織資格のsnapshotを固定できません", { cause: result.cause })
+    return new CompanyUnexpectedError("組織資格のsnapshotを固定できません", { cause: result.cause })
   }
   if (result.kind === "invalid") {
-    return new ConflictError(
+    return new CompanyConflictError(
       "組織投影が不整合なため判断資格を固定できません",
       "code" in result.error ? String(result.error.code) : "lifecycle_projection_mismatch",
       { cause: result.error },
@@ -187,7 +192,7 @@ export async function resolveCanonicalOrganizationAuthority(props: {
     const employeeId = storageEmployeeId(candidate.employeeId)
     const criterionIndex = canonicalCriteria.indexes[candidate.qualification.criterionIndex]
     if (employeeId instanceof Error || criterionIndex === undefined) {
-      return new UnexpectedError("組織資格を既存APIへ変換できません", { cause: employeeId })
+      return new CompanyUnexpectedError("組織資格を既存APIへ変換できません", { cause: employeeId })
     }
     candidates.push({
       employeeId,

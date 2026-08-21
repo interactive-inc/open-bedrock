@@ -21,9 +21,7 @@ const API_ROOT_FILES = new Set([
   "app-base.ts",
   "app.ts",
   "database-middleware.ts",
-  "read-http-exception-problem.ts",
   "route-module.registry.ts",
-  "to-negotiated-http-exception-response.ts",
 ])
 const LAYER_FIRST_PLATFORM_DIRECTORIES = new Set([
   "lib",
@@ -399,6 +397,9 @@ function inspectModuleDependency(
     (moduleSpecifier.startsWith("@/api/") &&
       !/^@\/api\/(?:domain|application|infrastructure|interface)\//.test(moduleSpecifier))
   ) {
+    if (source.layer === "interface" && moduleSpecifier.startsWith("@/api/http/")) {
+      return []
+    }
     return [{ file, reason: `contextから API root へ依存しています: ${moduleSpecifier}` }]
   }
 

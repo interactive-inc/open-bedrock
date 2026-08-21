@@ -1,8 +1,8 @@
-import { Employee } from "@/contexts/company/domain/employee/employee.entity"
+import { EmployeeDirectoryEntryValue } from "@/contexts/company/domain/values/employee-directory-entry.value"
 import { restoreEmployee } from "@/contexts/company/infrastructure/employee/employee.mapper.repository"
-import type { Context } from "@/env"
-import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import { isCompanyUniqueConstraintError } from "@/contexts/company/infrastructure/employee/is-company-unique-constraint-error.repository"
+import { CompanyUniqueConstraintError } from "@/contexts/company/domain/errors"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
@@ -21,17 +21,17 @@ export type NewEmployee = {
 }
 
 export class EmployeeRepository {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: CompanyContext) {}
 
-  async findById(employeeId: number): Promise<Employee | null | Error> {
+  async findById(employeeId: number): Promise<EmployeeDirectoryEntryValue | null | Error> {
     return this.findOne(eq(employees.id, employeeId))
   }
 
-  async findByCode(code: string): Promise<Employee | null | Error> {
+  async findByCode(code: string): Promise<EmployeeDirectoryEntryValue | null | Error> {
     return this.findOne(eq(employees.code, code))
   }
 
-  private async findOne(condition: SQL): Promise<Employee | null | Error> {
+  private async findOne(condition: SQL): Promise<EmployeeDirectoryEntryValue | null | Error> {
     try {
       const rows = await this.c.var.database.select().from(employees).where(condition).limit(1)
 
@@ -44,7 +44,7 @@ export class EmployeeRepository {
   }
 
   /** 新規従業員を登録し、採番後の行を返す。認証情報は AccountProvisioner が別途払い出す。 */
-  async create(newEmployee: NewEmployee): Promise<Employee | Error> {
+  async create(newEmployee: NewEmployee): Promise<EmployeeDirectoryEntryValue | Error> {
     try {
       const rows = await this.c.var.database
         .insert(employees)
@@ -62,8 +62,8 @@ export class EmployeeRepository {
 
       return row === undefined ? new Error("failed to insert employee") : restoreEmployee(row)
     } catch (error) {
-      if (isUniqueConstraintError(error)) {
-        return new UniqueConstraintError("employee unique constraint violated", {
+      if (isCompanyUniqueConstraintError(error)) {
+        return new CompanyUniqueConstraintError("employee unique constraint violated", {
           cause: error,
         })
       }
@@ -73,7 +73,9 @@ export class EmployeeRepository {
   }
 
   /** 氏名・部署・役職・在籍状況を更新する。code と認証・認可情報には触れない。 */
-  async updateProfile(employee: Employee): Promise<Employee | null | Error> {
+  async updateProfile(
+    employee: EmployeeDirectoryEntryValue,
+  ): Promise<EmployeeDirectoryEntryValue | null | Error> {
     try {
       const rows = await this.c.var.database
         .update(employees)
@@ -91,8 +93,8 @@ export class EmployeeRepository {
 
       return row === undefined ? null : restoreEmployee(row)
     } catch (error) {
-      if (isUniqueConstraintError(error)) {
-        return new UniqueConstraintError("employee unique constraint violated", {
+      if (isCompanyUniqueConstraintError(error)) {
+        return new CompanyUniqueConstraintError("employee unique constraint violated", {
           cause: error,
         })
       }
@@ -102,7 +104,10 @@ export class EmployeeRepository {
   }
 
   /** 本人が自己申告する電話番号を更新する。他の項目には触れない。 */
-  async updatePhone(employeeId: number, phone: string | null): Promise<Employee | null | Error> {
+  async updatePhone(
+    employeeId: number,
+    phone: string | null,
+  ): Promise<EmployeeDirectoryEntryValue | null | Error> {
     try {
       const rows = await this.c.var.database
         .update(employees)

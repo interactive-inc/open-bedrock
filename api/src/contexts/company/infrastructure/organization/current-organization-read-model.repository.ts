@@ -1,20 +1,18 @@
-import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
-import type { WorkforceStateAt } from "@/contexts/company/domain/workforce/resolve-workforce-state"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
 import type {
   EmployeeId,
   OrganizationUnitId,
-} from "@/contexts/company/domain/workforce/workforce-id"
+} from "@/contexts/company/domain/values/workforce-id.definition"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { departments, orgDepartments } from "@/contexts/company/infrastructure/schema/organization"
-import { CompanyReadinessRepository } from "@/contexts/company/infrastructure/workforce/company-readiness.repository"
 import { OrganizationUnitReadRepository } from "@/contexts/company/infrastructure/workforce/organization-unit-read.repository"
 import { OrganizationWorkforceSnapshotRepository } from "@/contexts/company/infrastructure/workforce/organization-workforce-snapshot.repository"
-import { ReadCompanyReadiness } from "@/contexts/company/infrastructure/workforce/read-company-readiness.repository"
 import { ReadOrganizationWorkforceState } from "@/contexts/company/infrastructure/workforce/read-organization-workforce-state.repository"
-import type { Context } from "@/env"
-import { UnavailableError } from "@/lib/errors"
-import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import { CompanyUnavailableError } from "@/contexts/company/domain/errors"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/values/resolve-company-business-date.definition"
 import { asc, eq, isNull } from "drizzle-orm"
 
 export type CurrentOrganizationAssignment = {
@@ -52,7 +50,7 @@ export type CurrentOrganizationReadModel = {
   managerByDepartmentCode: ReadonlyMap<string, string>
 }
 
-type EmployeeCompatibilityRow = Readonly<{
+type EmployeeDirectoryRow = Readonly<{
   id: number
   code: string | null
   name: string
@@ -67,29 +65,16 @@ function activeStatus(state: WorkforceStateAt): "active" | "leave" | null {
 
 /** 現在有効なCompany Organization投影を読み込む。 */
 export async function loadCurrentOrganization(
-  c: Context,
+  c: CompanyContext,
 ): Promise<CurrentOrganizationReadModel | Error> {
   try {
-    const readiness = await new ReadCompanyReadiness(
-      new CompanyReadinessRepository(c.env.DB),
-    ).execute(c.env.COMPANY_TIME_ZONE)
-    if (readiness.kind !== "ready") {
-      return new UnavailableError(
-        "Company migrationが完了していません",
-        readiness.kind === "incomplete"
-          ? "company_migration_incomplete"
-          : "company_migration_unavailable",
-        readiness.kind === "unavailable" ? { cause: readiness.cause } : undefined,
-      )
-    }
-
     const businessDate = resolveCompanyBusinessDate({
       now: c.env.NOW ?? new Date().toISOString(),
       timeZone: c.env.COMPANY_TIME_ZONE,
     })
     if (typeof businessDate !== "string") return businessDate
 
-    const [compatibilityDepartments, employeeRows, snapshot] = await Promise.all([
+    const [directoryDepartments, employeeRows, snapshot] = await Promise.all([
       c.var.database
         .select({
           code: orgDepartments.code,
@@ -116,7 +101,7 @@ export async function loadCurrentOrganization(
       }).execute(restoreCalendarDate(businessDate)),
     ])
     if (snapshot.kind !== "found") {
-      return new UnavailableError(
+      return new CompanyUnavailableError(
         "Company organization snapshotを安全に解決できません",
         snapshot.kind === "invalid"
           ? "company_organization_invalid"
@@ -125,23 +110,23 @@ export async function loadCurrentOrganization(
       )
     }
 
-    const employeeById = new Map<EmployeeId, EmployeeCompatibilityRow>(
+    const employeeById = new Map<EmployeeId, EmployeeDirectoryRow>(
       employeeRows.map((employee) => [toWorkforceEmployeeId(employee.id), employee]),
     )
-    const compatibilityByCode = new Map(
-      compatibilityDepartments.map((department) => [department.code, department]),
+    const directoryByCode = new Map(
+      directoryDepartments.map((department) => [department.code, department]),
     )
     const unitById = new Map(
       snapshot.organization.units.map((unit) => [unit.organizationUnitId, unit]),
     )
     const codeByUnitId = new Map<OrganizationUnitId, string>()
     for (const unit of snapshot.organization.units) {
-      if (compatibilityByCode.has(unit.code)) codeByUnitId.set(unit.organizationUnitId, unit.code)
+      if (directoryByCode.has(unit.code)) codeByUnitId.set(unit.organizationUnitId, unit.code)
     }
 
-    const currentDepartments = compatibilityDepartments.flatMap((compatibility) => {
+    const currentDepartments = directoryDepartments.flatMap((directory) => {
       const unit = snapshot.organization.units.find(
-        (candidate) => candidate.code === compatibility.code,
+        (candidate) => candidate.code === directory.code,
       )
       if (unit === undefined) return []
       const parent =
@@ -151,12 +136,12 @@ export async function loadCurrentOrganization(
 
       return [
         {
-          code: compatibility.code,
-          departmentId: compatibility.departmentId,
-          name: compatibility.name,
+          code: directory.code,
+          departmentId: directory.departmentId,
+          name: directory.name,
           parentCode:
-            parent === undefined || !compatibilityByCode.has(parent.code) ? null : parent.code,
-          order: compatibility.order,
+            parent === undefined || !directoryByCode.has(parent.code) ? null : parent.code,
+          order: directory.order,
         },
       ]
     })

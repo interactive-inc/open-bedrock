@@ -1,4 +1,4 @@
-import { SalaryRevision } from "@/contexts/compensation-change/domain/salary-revision/salary-revision.entity"
+import { SalaryRevision } from "@/contexts/compensation-change/domain/entities/salary-revision.entity"
 import type { Context } from "@/env"
 import { salaryRevisions } from "@/contexts/compensation-change/infrastructure/schema/compensation-change"
 import { count, desc, eq } from "drizzle-orm"

@@ -1,5 +1,5 @@
-import { ReviewCycle } from "@/contexts/performance-review/domain/review/review-cycle.entity"
-import { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
+import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
+import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import { toReviewResultView } from "@/contexts/performance-review/interface/http/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
 import { describe, expect, test } from "bun:test"
 

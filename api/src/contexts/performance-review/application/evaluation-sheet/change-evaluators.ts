@@ -1,4 +1,4 @@
-import type { EvaluationSheet } from "@/contexts/performance-review/domain/evaluation-sheet/evaluation-sheet.entity"
+import type { EvaluationSheet } from "@/contexts/performance-review/domain/entities/evaluation-sheet.entity"
 import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

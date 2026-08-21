@@ -1,22 +1,18 @@
-import { resolveCompanyAccountParticipants } from "@/contexts/company/interface/http/accounts/resolve-company-account-participants"
-import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/interface/http/accounts/resolve-system-account-ids-for-employees"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants"
+import { resolveSystemAccountIdsForEmployees } from "@/api/http/accounts/resolve-system-account-ids-for-employees"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import {
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppApplicationAdminList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { z } from "zod"
-import { loadCurrentEmployeeDepartmentNames } from "@/contexts/company/interface/utils/current-employee-departments"
+import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
 import {
   toApplicationCurrentStep,

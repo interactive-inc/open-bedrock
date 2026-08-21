@@ -6,7 +6,7 @@ import { OidcScopeValue } from "@system/domain/values/oidc-scope.value"
 import { findOidcAccessToken } from "@system/infrastructure/identity/find-oidc-access-token.repository"
 import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity.repository"
 import { OIDCInvalidTokenError, OIDCTemporarilyUnavailableError } from "@system/interface/errors"
-import { readOidcAccessToken } from "@system/interface/http/authorization/oidc-access-token"
+import { readOidcAccessToken } from "@system/interface/lib/authorization/oidc-access-token"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 
 // @authorization public - OIDC access token自体をcredentialとして検証する

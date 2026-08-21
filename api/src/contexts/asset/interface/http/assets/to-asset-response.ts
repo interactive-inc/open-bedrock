@@ -1,4 +1,4 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/lib/auth/session"
 import type { AssetRow } from "@/contexts/asset/infrastructure/schema/asset"
 
 type AssetResponse = {

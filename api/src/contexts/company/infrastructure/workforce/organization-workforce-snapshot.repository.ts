@@ -1,21 +1,21 @@
 import type {
   WorkforceSnapshotReadPort,
   WorkforceSnapshotReadResult,
-} from "@/contexts/company/domain/workforce/organization-change"
+} from "@/contexts/company/domain/values/organization-change.definition"
 import {
   toWorkforceEmployeeId,
   toWorkforceLifecycleSchedules,
-} from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
-import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/workforce/workforce-schedule"
+} from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import { restoreWorkforceId } from "@/contexts/company/domain/values/restore-workforce-id.definition"
+import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"
 import {
   attachOrganizationPeriods,
   type OrgAssignmentProjectionRow,
   type OrgResponsibilityProjectionRow,
 } from "@/contexts/company/infrastructure/workforce/organization-period-row.adapter.repository"
-import type { Context } from "@/env"
-import { ApplicationError } from "@/lib/errors"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { readWorkforceBaselineStates } from "@/contexts/company/infrastructure/workforce/read-workforce-baseline-states.repository"
 import { zAccountId } from "@system/domain/values/account-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
@@ -44,7 +44,7 @@ function emptySchedule(
 
 /** 既存Employee・lifecycle保存を共通の全社Workforce snapshotへ接続する。 */
 export class OrganizationWorkforceSnapshotRepository implements WorkforceSnapshotReadPort {
-  constructor(private readonly c: Context) {
+  constructor(private readonly c: CompanyContext) {
     Object.freeze(this)
   }
 
@@ -82,7 +82,7 @@ export class OrganizationWorkforceSnapshotRepository implements WorkforceSnapsho
           ).all<ResponsibilityRow>(),
           readWorkforceBaselineStates(this.c.env.DB),
         ])
-      if (sourceSchedules instanceof ApplicationError) {
+      if (sourceSchedules instanceof CompanyOperationError) {
         return { ok: false, cause: sourceSchedules }
       }
 

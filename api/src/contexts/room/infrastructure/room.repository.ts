@@ -1,4 +1,4 @@
-import { Room } from "@/contexts/room/domain/room.entity"
+import { Room } from "@/contexts/room/domain/entities/room.entity"
 import type { Context } from "@/env"
 import { rooms } from "@/contexts/room/infrastructure/schema/room"
 import { asc, eq } from "drizzle-orm"

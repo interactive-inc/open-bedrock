@@ -1,4 +1,4 @@
-import { Skill } from "@/contexts/skill/domain/skill.entity"
+import { Skill } from "@/contexts/skill/domain/entities/skill.entity"
 import { SkillRepository } from "@/contexts/skill/infrastructure/skill.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"

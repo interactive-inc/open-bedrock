@@ -1,6 +1,6 @@
 import { app } from "@/api/app"
 import type { Bindings } from "@/env"
-import { seedPepperSecret } from "@/contexts/company/infrastructure/seed/seed-password-hash.repository"
+import { seedPepperSecret } from "@/api/test/support/company/seed-password-hash.repository"
 
 export type Props = {
   db: D1Database
@@ -18,8 +18,8 @@ export type Props = {
   identityAudience?: string
   identityLoginUrl?: string
   apiOrigin?: string
-  enabledOptionalFeatures?: string
-  disabledStandardFeatures?: string
+  enabledOptInApps?: string
+  disabledDefaultApps?: string
 }
 
 /**
@@ -59,8 +59,8 @@ export function requestWithContext(props: Props): Promise<Response> {
     API_ORIGIN: props.apiOrigin,
     // 既存の route テストは全機能有効を前提に書かれているため、テストの既定は "all" にする。
     // feature gate のテストだけが明示的に上書きする。
-    ENABLED_OPTIONAL_FEATURES: props.enabledOptionalFeatures ?? "all",
-    DISABLED_STANDARD_FEATURES: props.disabledStandardFeatures,
+    ENABLED_OPT_IN_APPS: props.enabledOptInApps ?? "all",
+    DISABLED_DEFAULT_APPS: props.disabledDefaultApps,
   }
 
   return Promise.resolve(

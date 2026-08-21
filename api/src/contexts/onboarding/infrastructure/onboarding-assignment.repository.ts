@@ -1,5 +1,5 @@
-import { OnboardingAssignment } from "@/contexts/onboarding/domain/onboarding-assignment.entity"
-import { OnboardingTask } from "@/contexts/onboarding/domain/onboarding-task.entity"
+import { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
+import { OnboardingTask } from "@/contexts/onboarding/domain/entities/onboarding-task.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"

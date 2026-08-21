@@ -1,4 +1,4 @@
-import { ShiftPattern } from "@/contexts/shift/domain/shift-pattern.entity"
+import { ShiftPattern } from "@/contexts/shift/domain/entities/shift-pattern.entity"
 import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { describe, expect, test } from "bun:test"

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { companyNotificationKindSchema } from "@/contexts/company/domain/notifications/notification-kind"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { companyNotificationKindSchema } from "@/api/http/notifications/notification-kind.definition"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedSystemNotifications } from "@/api/test/support/seed-notifications"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const notificationResponseSchema = z.object({
   id: z.number(),
@@ -45,15 +46,14 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
   await seedSystemNotifications(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -77,7 +77,7 @@ describe("POST /notifications", () => {
   test("privileged role sends a notification and returns 201", async () => {
     const response = await request({
       path: "/notifications",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: {
         recipient_employee_code: "E005",
@@ -102,7 +102,7 @@ describe("POST /notifications", () => {
   test("member is forbidden", async () => {
     const response = await request({
       path: "/notifications",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: {
         recipient_employee_code: "E009",
@@ -116,7 +116,7 @@ describe("POST /notifications", () => {
   test("returns 404 for an unknown recipient_employee_code", async () => {
     const response = await request({
       path: "/notifications",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: {
         recipient_employee_code: "E999",
@@ -130,7 +130,7 @@ describe("POST /notifications", () => {
   test("returns 400 when the title is missing", async () => {
     const response = await request({
       path: "/notifications",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: { recipient_employee_code: "E005" },
     })
@@ -141,7 +141,7 @@ describe("POST /notifications", () => {
   test("returns 400 when source_id is negative", async () => {
     const response = await request({
       path: "/notifications",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: {
         recipient_employee_code: "E005",
@@ -156,7 +156,7 @@ describe("POST /notifications", () => {
   test("returns 400 when source_id is a decimal", async () => {
     const response = await request({
       path: "/notifications",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: {
         recipient_employee_code: "E005",

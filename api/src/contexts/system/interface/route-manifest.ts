@@ -1,6 +1,26 @@
 /** 公開routeの宣言的な正本。API rootの生成器だけが合成する。 */
 export const systemRouteManifest = [
   {
+    method: "POST",
+    path: "/attachments",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/attachments",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/attachments/:attachmentId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/attachments.$attachmentId",
+      exportName: "GET",
+    },
+  },
+  {
     method: "GET",
     path: "/health",
     phase: "pre-database",
@@ -183,6 +203,16 @@ export const systemRouteManifest = [
     handler: {
       kind: "module",
       module: "@system/interface/routes/system.v1.bootstrap",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/v1/attachments/purge-unlinked",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.v1.attachments.purge-unlinked",
       exportName: "POST",
     },
   },

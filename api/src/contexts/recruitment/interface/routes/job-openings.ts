@@ -1,8 +1,8 @@
 import { RegisterPosition } from "@/contexts/recruitment/application/register-position"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppRecruitmentPosition, zAppRecruitmentPositionList } from "@/lib/app-schemas"
 import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/recruitment.repository"
 import {
@@ -10,9 +10,9 @@ import {
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { InternalError } from "@/contexts/company/interface/lib/errors"
+} from "@/lib/http/to-bounded-int"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { InternalError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

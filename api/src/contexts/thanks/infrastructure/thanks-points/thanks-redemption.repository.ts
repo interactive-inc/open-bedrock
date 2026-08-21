@@ -1,4 +1,4 @@
-import { ThanksRedemption } from "@/contexts/thanks/domain/thanks-points/thanks-redemption.entity"
+import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/lib/d1/parse-d1-row"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"

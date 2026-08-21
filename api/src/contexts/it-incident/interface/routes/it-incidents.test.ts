@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedItIncidents } from "@/contexts/it-incident/infrastructure/seed/seed-it-incidents.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "it-incident-route-test-secret"
 
@@ -57,15 +58,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: incident.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -80,7 +80,7 @@ async function request(
 
 describe("GET /it-incidents", () => {
   test("returns 200 with all incidents for a read:all viewer (admin)", async () => {
-    const response = await request("/it-incidents", await tokenFor(1, "root"))
+    const response = await request("/it-incidents", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -94,7 +94,7 @@ describe("GET /it-incidents", () => {
   })
 
   test("filters by status=open", async () => {
-    const response = await request("/it-incidents?status=open", await tokenFor(1, "root"))
+    const response = await request("/it-incidents?status=open", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -109,7 +109,7 @@ describe("GET /it-incidents", () => {
   })
 
   test("returns 403 for a viewer without read:all (member)", async () => {
-    const response = await request("/it-incidents", await tokenFor(5, "member"))
+    const response = await request("/it-incidents", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
@@ -117,7 +117,7 @@ describe("GET /it-incidents", () => {
 
 describe("POST /it-incidents", () => {
   test("creates an incident as admin", async () => {
-    const response = await request("/it-incidents", await tokenFor(1, "root"), "POST", {
+    const response = await request("/it-incidents", await tokenFor(1), "POST", {
       occurred_at: "2026-03-01T10:00:00Z",
       title: "Disk full",
       summary: "A server ran out of disk space.",
@@ -137,7 +137,7 @@ describe("POST /it-incidents", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/it-incidents", await tokenFor(5, "member"), "POST", {
+    const response = await request("/it-incidents", await tokenFor(5), "POST", {
       occurred_at: "2026-03-01T10:00:00Z",
       title: "Blocked",
       summary: "Should not be created.",
@@ -149,7 +149,7 @@ describe("POST /it-incidents", () => {
 
 describe("POST /it-incidents/:id/resolve", () => {
   test("resolves an open incident as admin", async () => {
-    const response = await request("/it-incidents/2/resolve", await tokenFor(1, "root"), "POST")
+    const response = await request("/it-incidents/2/resolve", await tokenFor(1), "POST")
 
     expect(response.status).toBe(200)
 
@@ -164,13 +164,13 @@ describe("POST /it-incidents/:id/resolve", () => {
   })
 
   test("returns 409 when already resolved", async () => {
-    const response = await request("/it-incidents/1/resolve", await tokenFor(1, "root"), "POST")
+    const response = await request("/it-incidents/1/resolve", await tokenFor(1), "POST")
 
     expect(response.status).toBe(409)
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/it-incidents/2/resolve", await tokenFor(5, "member"), "POST")
+    const response = await request("/it-incidents/2/resolve", await tokenFor(5), "POST")
 
     expect(response.status).toBe(403)
   })

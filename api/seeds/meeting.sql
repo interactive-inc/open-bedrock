@@ -6,7 +6,7 @@ INSERT INTO meetings (id, code, name, cadence, description, status, created_at) 
   (1, 'MTG-EXEC', '経営会議', '毎週月曜', '経営方針・重要案件の審議', 'active', '2026-01-05T00:00:00Z'),
   (2, 'MTG-DEV-WEEKLY', '開発定例', '毎週水曜', '開発部の進捗共有と課題整理', 'active', '2026-01-05T00:00:00Z'),
   (3, 'MTG-SAFETY', '安全衛生委員会', '毎月第2金曜', '労働安全衛生に関する審議', 'active', '2026-01-05T00:00:00Z'),
-  (4, 'MTG-LEGACY', '旧・全体朝会', NULL, '週次の全体朝会（廃止済み）', 'archived', '2026-01-05T00:00:00Z');
+  (4, 'MTG-ARCHIVED', '全体朝会（終了）', NULL, '週次の全体朝会（廃止済み）', 'archived', '2026-01-05T00:00:00Z');
 
 INSERT INTO meeting_minutes_records (id, meeting_id, held_on, title, attendees, body_md, author_employee_id, created_at) VALUES
   (1, 1, '2026-07-27', '2026-07-27 経営会議', 'E001, E002, E004, E009', '## 議題

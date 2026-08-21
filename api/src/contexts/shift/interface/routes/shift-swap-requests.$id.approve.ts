@@ -1,11 +1,12 @@
 import { ApproveShiftSwapRequest } from "@/contexts/shift/application/approve-shift-swap-request"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { EmployeeNotificationGateway } from "@/api/http/notifications/employee-notification.gateway.repository"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppShiftSwapRequest } from "@/lib/app-schemas"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { validateIntParam } from "@/lib/http/validate-int-param"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /shift-swap-requests/:id/approve — 特権ロールが保留中の交代申請を承認する */
@@ -18,7 +19,9 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const swapRequest = await new ApproveShiftSwapRequest(c).run({
+  const swapRequest = await new ApproveShiftSwapRequest(c, (notification) =>
+    new EmployeeNotificationGateway(c).create(notification),
+  ).run({
     session: session,
     approverId: session.employeeId,
     swapRequestId,

@@ -1,5 +1,5 @@
-import type { PermissionKey } from "@/contexts/company/domain/iam/permission-key.catalog"
-import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/contexts/company/domain/iam/effective-root-permission-key.catalog"
+import type { PermissionKey } from "@/api/http/permissions/permission-key.catalog"
+import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/api/http/permissions/effective-root-permission-key.catalog"
 
 /** 全従業員が持つガバナンスの基本権限。 */
 const MEMBER_PERMISSIONS: ReadonlyArray<PermissionKey> = [

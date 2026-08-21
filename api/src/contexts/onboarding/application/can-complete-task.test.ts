@@ -1,4 +1,4 @@
-import { canCompleteTask } from "@/contexts/onboarding/domain/can-complete-task"
+import { canCompleteTask } from "@/contexts/onboarding/domain/policies/task-completion.policy"
 import { makeTestSession } from "@/api/test/support/make-test-session"
 import { describe, expect, test } from "bun:test"
 

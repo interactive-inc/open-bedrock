@@ -1,4 +1,4 @@
-import { HealthCheckup } from "@/contexts/health-checkup/domain/health-checkup.entity"
+import { HealthCheckup } from "@/contexts/health-checkup/domain/entities/health-checkup.entity"
 import type { Context } from "@/env"
 import { healthCheckups } from "@/contexts/health-checkup/infrastructure/schema/health-checkup"
 import { and, desc, eq } from "drizzle-orm"

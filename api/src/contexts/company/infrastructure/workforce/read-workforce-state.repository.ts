@@ -1,19 +1,19 @@
-import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
+import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
 import type { OrganizationUnitReadPort } from "@/contexts/company/infrastructure/workforce/read-organization-state.repository"
 import {
   type OrganizationInvariantViolation,
   validateOrganizationUnitSnapshot,
-} from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
+} from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
 import {
   resolveWorkforceStateAt,
   type WorkforceStateAt,
-} from "@/contexts/company/domain/workforce/resolve-workforce-state"
-import { WorkforceStateResolutionError } from "@/contexts/company/domain/workforce/workforce-state-resolution-error"
-import { validateWorkforceLifecycleSchedule } from "@/contexts/company/domain/workforce/validate-workforce-lifecycle-schedule"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/workforce/workforce-invariant"
-import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/workforce/workforce-schedule"
-import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
-import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/workforce/workforce-snapshot-changed-error"
+} from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
+import { WorkforceStateResolutionError } from "@/contexts/company/domain/errors"
+import { validateWorkforceLifecycleSchedule } from "@/contexts/company/domain/policies/validate-workforce-lifecycle-schedule.policy"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
+import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
+import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/errors"
 
 export type WorkforceLifecycleReadPortResult =
   | Readonly<{ ok: true; schedule: WorkforceLifecycleSchedule | null }>

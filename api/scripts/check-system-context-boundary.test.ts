@@ -5,7 +5,7 @@ import {
   discoverSystemCapabilityNames,
   inspectSystemCapabilityCatalog,
   inspectSystemCapabilityRootEntries,
-  inspectLegacySystemRuntime,
+  inspectRetiredSystemStorage,
   inspectSystemOwnershipManifest,
   inspectSystemSelfReferencePathMappings,
   inspectSystemSource,
@@ -200,10 +200,10 @@ describe("System storage ownership", () => {
   })
 })
 
-describe("legacy System runtime", () => {
-  test("旧schema module、export、物理table参照を拒否する", () => {
-    const violations = inspectLegacySystemRuntime(
-      "src/contexts/system/infrastructure/auth/legacy.ts",
+describe("retired System storage", () => {
+  test("廃止済みschema module、export、物理table参照を拒否する", () => {
+    const violations = inspectRetiredSystemStorage(
+      "src/contexts/system/infrastructure/auth/retired-storage.ts",
       [
         'import { users } from "@system/infrastructure/schema/system-runtime"',
         "const identity = userIdentities.id",
@@ -212,16 +212,16 @@ describe("legacy System runtime", () => {
     )
 
     expect(violations.map((violation) => violation.reason)).toEqual([
-      "旧System schema exportを参照しています: userIdentities",
-      "旧System schema exportを参照しています: users",
-      "旧System schema moduleをimportしています: @system/infrastructure/schema/system-runtime",
-      "旧System tableを参照しています: user_identities",
+      "廃止済みSystem schema exportを参照しています: userIdentities",
+      "廃止済みSystem schema exportを参照しています: users",
+      "廃止済みSystem schema moduleをimportしています: @system/infrastructure/schema/system-runtime",
+      "廃止済みSystem tableを参照しています: user_identities",
     ])
   })
 
   test("canonical schemaとtableだけを使う実装は許可する", () => {
     expect(
-      inspectLegacySystemRuntime(
+      inspectRetiredSystemStorage(
         "src/contexts/system/infrastructure/auth/canonical.ts",
         [
           'import { systemAccounts } from "@system/infrastructure/schema/system-core"',
@@ -266,22 +266,16 @@ describe("System capability catalog", () => {
 })
 
 describe("discoverSystemCapabilityNames", () => {
-  test("context-first・legacy・混在構成の capability を同じ集合へ統合する", () => {
-    const temporaryRoot = mkdtempSync(resolve(tmpdir(), "system-boundary-"))
-    const contextRoot = resolve(temporaryRoot, "src/contexts/system")
-    const legacyRoot = resolve(temporaryRoot, "src/api")
+  test("contexts/system直下のcapabilityだけを収集する", () => {
+    const projectFixtureRoot = mkdtempSync(resolve(tmpdir(), "system-boundary-"))
+    const contextRoot = resolve(projectFixtureRoot, "src/contexts/system")
 
     try {
       mkdirSync(resolve(contextRoot, "application/auth"), { recursive: true })
-      mkdirSync(resolve(legacyRoot, "application/system/batch"), { recursive: true })
 
       expect(discoverSystemCapabilityNames(contextRoot)).toEqual(new Set(["auth"]))
-      expect(discoverSystemCapabilityNames(legacyRoot)).toEqual(new Set(["batch"]))
-      expect(discoverSystemCapabilityNames([contextRoot, legacyRoot])).toEqual(
-        new Set(["auth", "batch"]),
-      )
     } finally {
-      rmSync(temporaryRoot, { recursive: true, force: true })
+      rmSync(projectFixtureRoot, { recursive: true, force: true })
     }
   })
 })
@@ -302,18 +296,12 @@ describe("selectDownstreamContextNames", () => {
 })
 
 describe("inspectSystemSource", () => {
-  test("構成差を越えて System・共通部品・専用 schema への依存を許可する", () => {
+  test("System self-reference・中立なlib・外部packageへの依存を許可する", () => {
     const violations = inspectSystemSource(
-      "src/application/system/example.ts",
+      "src/contexts/system/application/auth/example.ts",
       [
-        'import { Token } from "@/domain/system/auth/token"',
-        'import { Account } from "@/api/domain/system/account"',
         'import { Session } from "@system/domain/auth/session"',
-        'import { Id } from "@/api/domain/core/identity/id"',
         'import { SharedId } from "@/lib/identity/id"',
-        'import { parse } from "@/infrastructure/shared/parse"',
-        'import { accounts } from "@/schema/system"',
-        'import { systemAccounts } from "@/schema/system-core"',
         'import { contextUsers } from "@/contexts/system/infrastructure/schema/system"',
         'import { contextAccounts } from "@/contexts/system/infrastructure/schema/system-core"',
         'import { z } from "zod"',

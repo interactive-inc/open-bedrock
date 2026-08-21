@@ -1,4 +1,4 @@
-import { Thanks, thanksRowSchema } from "@/contexts/thanks/domain/thanks.entity"
+import { Thanks, thanksRowSchema } from "@/contexts/thanks/domain/entities/thanks.entity"
 import { parseD1Row } from "@/lib/d1/parse-d1-row"
 import {
   ConflictError,
@@ -8,11 +8,10 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { periodOf } from "@/contexts/thanks/domain/thanks-points/period-of"
-import { toNonNegativePoints } from "@/contexts/thanks/domain/to-non-negative-points"
+import { periodOf } from "@/contexts/thanks/domain/values/thanks-period.definition"
+import { toNonNegativePoints } from "@/contexts/thanks/domain/values/non-negative-points.value"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
-import { EmployeeNotificationGateway } from "@/contexts/company/infrastructure/notifications/employee-notification.gateway.repository"
 import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-budget.repository"
 
 export type Command = {
@@ -25,15 +24,24 @@ export type Command = {
 
 /**
  * 全従業員が他の従業員へ感謝を送る。感謝を保存し、受信者にだけ通知を作成する。
- * 既存 SendNotification の role gate は感謝に不適合なため Company gateway を直接使う。
+ * 既存 PublishEmployeeNotification の role gate は感謝に不適合なため Company gateway を直接使う。
  */
 export class SendThanks {
-  constructor(private readonly c: Context) {}
+  constructor(
+    private readonly c: Context,
+    private readonly publishEmployeeNotification: (notification: {
+      recipientEmployeeId: number
+      kind: "thanks"
+      title: string
+      body: string | null
+      sourceDomain: string
+      sourceId: number | null
+      createdAt: string
+    }) => Promise<unknown> = async () => null,
+  ) {}
 
   async run(command: Command): Promise<Thanks | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
-
-    const notificationGateway = new EmployeeNotificationGateway(this.c)
 
     const sender = await employeeRepository.findById(command.senderEmployeeId)
 
@@ -119,7 +127,7 @@ export class SendThanks {
       return new ValidationError("insufficient thanks point budget", "insufficient_budget")
     }
 
-    const notified = await notificationGateway.create({
+    const notified = await this.publishEmployeeNotification({
       recipientEmployeeId: recipient.id,
       kind: "thanks",
       title: `${sender.name}さんから感謝が届きました`,

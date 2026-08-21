@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -8,6 +8,7 @@ import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash.repository"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "browser-token-route-jwt-secret"
 const now = "2026-01-01T00:00:00.000Z"
@@ -43,6 +44,8 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
   await seedIamForEmployees(db)
+  await initializeStandardCompanyTestState(db)
+
   return db
 }
 

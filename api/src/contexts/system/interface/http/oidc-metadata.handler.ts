@@ -1,7 +1,8 @@
 import { OidcScopeValue } from "@system/domain/values/oidc-scope.value"
 import { oidcSigningAlgorithm } from "@system/domain/values/oidc-signing-algorithm.value"
 import type { OidcIssuerConfigurationValue } from "@system/domain/values/oidc-issuer-configuration.value"
-import { OidcSigningKeyService } from "@/contexts/system/infrastructure/identity/oidc-signing-key.service.repository"
+import { getOidcPublicKeys } from "@system/infrastructure/identity/get-oidc-public-keys.repository"
+import { parseOidcSigningKeys } from "@system/infrastructure/identity/parse-oidc-signing-keys.repository"
 import {
   OIDCMetadataNotFoundError,
   OIDCMethodNotAllowedError,
@@ -23,73 +24,67 @@ type Props = Readonly<{
   issuerConfiguration: OidcIssuerConfigurationValue
 }>
 
-export class OidcMetadataHandler {
-  static matches(request: Request): boolean {
-    const pathname = new URL(request.url).pathname
-    return pathname === DISCOVERY_PATH || pathname === JWKS_PATH
+export function handleOidcMetadataRequest(props: Props): Response | null {
+  const pathname = new URL(props.request.url).pathname
+  if (pathname !== DISCOVERY_PATH && pathname !== JWKS_PATH) {
+    return null
   }
 
-  static handle(props: Props): Response | null {
-    const pathname = new URL(props.request.url).pathname
-    if (!OidcMetadataHandler.matches(props.request)) {
-      return null
-    }
-
-    if (props.request.method !== "GET" && props.request.method !== "HEAD") {
-      throw new OIDCMethodNotAllowedError()
-    }
-
-    const issuer = props.issuerConfiguration.resolve({
-      requestUrl: props.request.url,
-      forwardedHost: props.request.headers.get("X-Forwarded-Host"),
-    })
-    if (issuer instanceof Error) {
-      throw new OIDCMetadataNotFoundError(issuer)
-    }
-
-    const signingKeys = OidcSigningKeyService.parse(props.signingKeysRaw)
-    if (signingKeys instanceof Error) {
-      console.error("OIDC signing keys are not configured")
-      throw new OIDCTemporarilyUnavailableError(signingKeys)
-    }
-
-    if (pathname === JWKS_PATH) {
-      return OidcMetadataHandler.metadataResponse(props.request, {
-        keys: OidcSigningKeyService.publicKeys(signingKeys),
-      })
-    }
-
-    return OidcMetadataHandler.metadataResponse(props.request, {
-      issuer,
-      authorization_endpoint: `${issuer}/oauth/authorize`,
-      token_endpoint: `${issuer}/api/oauth/token`,
-      userinfo_endpoint: `${issuer}/api/oauth/userinfo`,
-      jwks_uri: `${issuer}${JWKS_PATH}`,
-      scopes_supported: OidcScopeValue.supported().items,
-      response_types_supported: ["code"],
-      response_modes_supported: ["query"],
-      grant_types_supported: ["authorization_code"],
-      subject_types_supported: ["public"],
-      id_token_signing_alg_values_supported: [oidcSigningAlgorithm.toString()],
-      token_endpoint_auth_methods_supported: ["none"],
-      code_challenge_methods_supported: ["S256"],
-      authorization_response_iss_parameter_supported: true,
-      claims_supported: [
-        "sub",
-        "iss",
-        "aud",
-        "exp",
-        "iat",
-        "nonce",
-        "name",
-        "email",
-        "email_verified",
-      ],
-    })
+  if (props.request.method !== "GET" && props.request.method !== "HEAD") {
+    throw new OIDCMethodNotAllowedError()
   }
 
-  private static metadataResponse(request: Request, value: unknown): Response {
-    const body = request.method === "HEAD" ? null : JSON.stringify(value)
-    return new Response(body, { headers: PUBLIC_METADATA_HEADERS })
+  const issuer = props.issuerConfiguration.resolve({
+    requestUrl: props.request.url,
+    forwardedHost: props.request.headers.get("X-Forwarded-Host"),
+  })
+  if (issuer instanceof Error) {
+    throw new OIDCMetadataNotFoundError(issuer)
   }
+
+  const signingKeys = parseOidcSigningKeys(props.signingKeysRaw)
+  if (signingKeys instanceof Error) {
+    console.error("OIDC signing keys are not configured")
+    throw new OIDCTemporarilyUnavailableError(signingKeys)
+  }
+
+  if (pathname === JWKS_PATH) {
+    return new Response(
+      props.request.method === "HEAD"
+        ? null
+        : JSON.stringify({ keys: getOidcPublicKeys(signingKeys) }),
+      { headers: PUBLIC_METADATA_HEADERS },
+    )
+  }
+
+  const metadata = {
+    issuer,
+    authorization_endpoint: `${issuer}/oauth/authorize`,
+    token_endpoint: `${issuer}/api/oauth/token`,
+    userinfo_endpoint: `${issuer}/api/oauth/userinfo`,
+    jwks_uri: `${issuer}${JWKS_PATH}`,
+    scopes_supported: OidcScopeValue.supported().items,
+    response_types_supported: ["code"],
+    response_modes_supported: ["query"],
+    grant_types_supported: ["authorization_code"],
+    subject_types_supported: ["public"],
+    id_token_signing_alg_values_supported: [oidcSigningAlgorithm.toString()],
+    token_endpoint_auth_methods_supported: ["none"],
+    code_challenge_methods_supported: ["S256"],
+    authorization_response_iss_parameter_supported: true,
+    claims_supported: [
+      "sub",
+      "iss",
+      "aud",
+      "exp",
+      "iat",
+      "nonce",
+      "name",
+      "email",
+      "email_verified",
+    ],
+  }
+  return new Response(props.request.method === "HEAD" ? null : JSON.stringify(metadata), {
+    headers: PUBLIC_METADATA_HEADERS,
+  })
 }

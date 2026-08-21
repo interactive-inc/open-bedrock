@@ -2,17 +2,15 @@ import { InvalidIdValueError } from "@/lib/identity/invalid-id-value.error"
 import { z } from "zod"
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-const legacyIdPattern = /^[a-z0-9][a-z0-9_-]{0,127}$/i
 const zValue = z
   .string()
-  .refine((value) => uuidPattern.test(value) || legacyIdPattern.test(value))
-  .transform((value) => (uuidPattern.test(value) ? value.toLowerCase() : value))
+  .regex(uuidPattern)
+  .transform((value) => value.toLowerCase())
 
 /**
  * 全テーブルで共通の永続化済み内部 ID。
  *
- * 新規採番は create() に限定して prefix のない UUID を生成する。ID migration が完了するまでは、
- * 既存行の復元と既存参照に限り過去の英数字・ハイフン・アンダースコア形式も受理する。
+ * 新規採番は create() に限定して prefix のない UUID を生成する。
  * 短い URL が必要な場合は別の CodeValue を使い、API で型を明示したい場合だけ
  * toApiString を使う。
  */

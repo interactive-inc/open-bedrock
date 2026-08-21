@@ -1,5 +1,5 @@
-import { RecruitmentPosition } from "@/contexts/recruitment/domain/recruitment-position.entity"
-import { RecruitmentCandidate } from "@/contexts/recruitment/domain/recruitment-candidate.entity"
+import { RecruitmentPosition } from "@/contexts/recruitment/domain/entities/recruitment-position.entity"
+import { RecruitmentCandidate } from "@/contexts/recruitment/domain/entities/recruitment-candidate.entity"
 import type { Context } from "@/env"
 import {
   recruitmentCandidates,

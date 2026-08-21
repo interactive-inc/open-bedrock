@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { LifeEvent } from "@/contexts/life-event/domain/life-event.entity"
+import type { Session } from "@/lib/auth/session"
+import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

@@ -1,5 +1,5 @@
-import type { EmploymentStatus } from "@/contexts/company/domain/workforce/employment-status"
-import type { LifecycleEmployeeStatus } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
+import type { EmploymentStatus } from "@/contexts/company/domain/values/employment-status.definition"
+import type { LifecycleEmployeeStatus } from "@/contexts/company/domain/values/lifecycle-types.definition"
 
 /** 共通Workforceの在籍状態を既存APIの語彙へ変換する。 */
 export function toLifecycleStatus(status: EmploymentStatus): LifecycleEmployeeStatus {

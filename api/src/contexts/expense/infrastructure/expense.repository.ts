@@ -1,5 +1,5 @@
-import { Expense, expenseRowSchema } from "@/contexts/expense/domain/expense.entity"
-import { ExpenseApproval } from "@/contexts/expense/domain/expense-approval.entity"
+import { Expense, expenseRowSchema } from "@/contexts/expense/domain/entities/expense.entity"
+import { ExpenseApproval } from "@/contexts/expense/domain/entities/expense-approval.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/lib/d1/parse-d1-row"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"

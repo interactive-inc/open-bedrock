@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { Partner } from "@/contexts/partner/domain/partner.entity"
+import { Partner } from "@/contexts/partner/domain/entities/partner.entity"
 import { RegisterPartner } from "@/contexts/partner/application/register-partner"
 import { UpdatePartner } from "@/contexts/partner/application/update-partner"
 import { ArchivePartner } from "@/contexts/partner/application/archive-partner"

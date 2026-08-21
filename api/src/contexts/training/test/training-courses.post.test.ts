@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedTrainingCourses } from "@/contexts/training/infrastructure/seed/seed-training-courses.repository"
 import { seedTrainingEnrollments } from "@/contexts/training/infrastructure/seed/seed-training-enrollments.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const trainingCourseResponseSchema = z.object({
   id: z.number(),
@@ -70,15 +71,14 @@ async function createTestDb(): Promise<D1Database> {
       due_date: enrollment.dueDate,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -99,7 +99,7 @@ async function request(
 
 describe("POST /training-courses", () => {
   test("privileged role creates a course and returns 201", async () => {
-    const response = await request("/training-courses", await tokenFor(1, "root"), {
+    const response = await request("/training-courses", await tokenFor(1), {
       method: "POST",
       body: { code: "TR-NEW-01", title: "New Course", category: "skill" },
     })
@@ -117,7 +117,7 @@ describe("POST /training-courses", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/training-courses", await tokenFor(5, "member"), {
+    const response = await request("/training-courses", await tokenFor(5), {
       method: "POST",
       body: { code: "TR-NEW-02", title: "X", category: "skill" },
     })
@@ -126,7 +126,7 @@ describe("POST /training-courses", () => {
   })
 
   test("duplicate code returns 409", async () => {
-    const response = await request("/training-courses", await tokenFor(1, "root"), {
+    const response = await request("/training-courses", await tokenFor(1), {
       method: "POST",
       body: { code: "TR-SEC-01", title: "Duplicate", category: "compliance" },
     })
@@ -135,7 +135,7 @@ describe("POST /training-courses", () => {
   })
 
   test("returns 400 when a required field is missing", async () => {
-    const response = await request("/training-courses", await tokenFor(1, "root"), {
+    const response = await request("/training-courses", await tokenFor(1), {
       method: "POST",
       body: { code: "TR-NEW-03", category: "skill" },
     })

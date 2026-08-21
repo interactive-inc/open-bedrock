@@ -1,11 +1,11 @@
 import { ArchiveRegulation } from "@/contexts/regulation/application/archive-regulation"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppRegulation } from "@/lib/app-schemas"
-import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
+import { validateCodeParam } from "@/lib/http/validate-code-param"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /regulations/:code/archive — 規程をアーカイブ（regulation:manage）。 */

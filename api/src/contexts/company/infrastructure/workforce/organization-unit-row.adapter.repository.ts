@@ -1,10 +1,11 @@
-import { restoreCalendarDate } from "@/contexts/company/domain/workforce/restore-calendar-date"
+import { restoreCalendarDate } from "@/contexts/company/domain/values/restore-calendar-date.definition"
+import { InvalidOrganizationUnitProjectionError } from "@/contexts/company/domain/errors"
 import {
   organizationUnitKinds,
   type OrganizationUnitPeriod,
   type OrganizationUnitSnapshot,
-} from "@/contexts/company/domain/workforce/organization-unit"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
+} from "@/contexts/company/domain/values/organization-unit.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/values/restore-workforce-id.definition"
 
 export type OrganizationUnitProjectionRow = Readonly<{
   periodId: string
@@ -20,15 +21,6 @@ export type OrganizationUnitProjectionRow = Readonly<{
   recordedByActionId: string
   recordedAt: number | Date
 }>
-
-export class InvalidOrganizationUnitProjectionError extends Error {
-  readonly code = "invalid_organization_unit_projection"
-
-  constructor() {
-    super("organization unit rows cannot be projected to the canonical model")
-    this.name = "InvalidOrganizationUnitProjectionError"
-  }
-}
 
 function timestamp(value: number | Date): number {
   return value instanceof Date ? value.getTime() : value

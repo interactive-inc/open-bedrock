@@ -1,7 +1,7 @@
 import { LeaveBalanceRepository } from "@/contexts/leave/infrastructure/leave-balance.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
-import { LeaveBalance } from "@/contexts/leave/domain/leave-balance.entity"
+import { LeaveBalance } from "@/contexts/leave/domain/entities/leave-balance.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("LeaveBalanceRepository", () => {

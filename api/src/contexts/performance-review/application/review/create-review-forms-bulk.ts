@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import type { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
+import type { Session } from "@/lib/auth/session"
+import type { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

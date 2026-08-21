@@ -1,16 +1,21 @@
 import { decryptAttachment } from "@system/infrastructure/attachments/decrypt-attachment.repository"
+import { SystemAttachmentError } from "@system/domain/errors"
 import { toSha256Hex } from "@system/infrastructure/attachments/to-sha256-hex.repository"
 import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attachment-kek-registry.repository"
 import { AttachmentObjectStore } from "@system/infrastructure/attachments/attachment-object-store.repository"
-import { NotFoundError, UnprocessableError } from "@/lib/errors"
 /** /attachments/:attachmentId */
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
+import {
+  SystemAttachmentInternalError,
+  SystemAttachmentNotFoundError,
+  SystemAttachmentNotPendingError,
+  SystemAttachmentReadError,
+  SystemAttachmentUnavailableError,
+} from "@system/interface/errors"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { SystemHTTPException } from "@system/interface/errors"
 import { systemFactory } from "@system/interface/http/system-factory"
-import { ApplicationError } from "@/lib/errors"
 
 /**
  * 紐づけ前の添付を、預けた本人だけが取り出す。業務レコードへ紐づいた後の閲覧は
@@ -21,37 +26,21 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   const attachmentId = context.req.param("attachmentId") ?? ""
 
   if (attachmentId === "") {
-    throw new SystemHTTPException({
-      status: 404,
-      code: "attachment_not_found",
-      detail: "attachment not found",
-    })
+    throw new SystemAttachmentNotFoundError()
   }
 
   const row = await new AttachmentRepository(context).findById(attachmentId)
 
   if (row instanceof Error) {
-    throw new SystemHTTPException({
-      status: 503,
-      code: "attachment_unavailable",
-      detail: "attachment service unavailable",
-    })
+    throw new SystemAttachmentUnavailableError({ cause: row })
   }
 
   if (row === null || row.ownerAccountId !== context.var.userId) {
-    throw new SystemHTTPException({
-      status: 404,
-      code: "attachment_not_found",
-      detail: "attachment not found",
-    })
+    throw new SystemAttachmentNotFoundError()
   }
 
   if (row.status !== "pending" && row.status !== "uploading") {
-    throw new SystemHTTPException({
-      status: 404,
-      code: "attachment_not_pending",
-      detail: "attachment is linked to a record",
-    })
+    throw new SystemAttachmentNotPendingError()
   }
 
   const content = await (async () => {
@@ -60,11 +49,11 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
     if (row instanceof Error) return row
 
     if (row === null) {
-      return new NotFoundError("添付が見つかりません", "attachment_not_found")
+      return new SystemAttachmentError("not_found", "attachment_not_found", "添付が見つかりません")
     }
 
     if (row.status === "erased" || row.wrappedDek === null || row.wrappedDekIv === null) {
-      return new NotFoundError("この添付は消去済みです", "attachment_erased")
+      return new SystemAttachmentError("not_found", "attachment_erased", "この添付は消去済みです")
     }
 
     const registry = AttachmentKekRegistry.fromEnv(context.env.ATTACHMENT_KEKS)
@@ -95,9 +84,10 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
     const digest = await toSha256Hex(plaintext)
 
     if (digest !== row.plaintextSha256) {
-      return new UnprocessableError(
-        "添付の内容がメタデータと一致しません",
+      return new SystemAttachmentError(
+        "unprocessable",
         "attachment_integrity_mismatch",
+        "添付の内容がメタデータと一致しません",
       )
     }
 
@@ -110,19 +100,20 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
     }
   })()
 
-  if (content instanceof ApplicationError) {
-    throw new SystemHTTPException({
-      status: content.code === "attachment_storage_unconfigured" ? 503 : 404,
+  if (content instanceof SystemAttachmentError) {
+    throw new SystemAttachmentReadError({
       code: content.code,
       detail: content.message,
+      unavailable: content.code === "attachment_storage_unconfigured",
+      cause: content,
     })
   }
 
   if (content instanceof Error) {
-    throw new SystemHTTPException({
-      status: 500,
+    throw new SystemAttachmentInternalError({
       code: "attachment_read_failed",
       detail: "attachment read failed",
+      cause: content,
     })
   }
 

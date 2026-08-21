@@ -1,4 +1,4 @@
-import { PERMISSION_KEYS } from "@/contexts/company/domain/iam/permission-key.catalog"
+import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
 import { SYSTEM_ROLE_PERMISSIONS } from "@/api/test/support/system-roles"
 import { describe, expect, test } from "bun:test"
 

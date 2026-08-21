@@ -13,7 +13,7 @@ const kindLabels: Readonly<Record<string, string>> = {
   returned: "復職",
   retired: "退職",
   corrected: "訂正",
-  legacy_baseline: "移行時点",
+  initial_state: "初期状態",
 }
 
 export function formatLifecycleKind(kind: string): string {

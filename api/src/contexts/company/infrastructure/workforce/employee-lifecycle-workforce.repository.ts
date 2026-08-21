@@ -5,17 +5,17 @@ import type {
 import {
   toWorkforceEmployeeId,
   toWorkforceLifecycleSchedules,
-} from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/workforce/workforce-schedule"
-import type { EmployeeId } from "@/contexts/company/domain/workforce/workforce-id"
+} from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import type { WorkforceLifecycleSchedule } from "@/contexts/company/domain/values/workforce-schedule.definition"
+import type { EmployeeId } from "@/contexts/company/domain/values/workforce-id.definition"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"
 import {
   attachOrganizationPeriods,
   type OrgAssignmentProjectionRow,
   type OrgResponsibilityProjectionRow,
 } from "@/contexts/company/infrastructure/workforce/organization-period-row.adapter.repository"
-import type { Context } from "@/env"
-import { ApplicationError } from "@/lib/errors"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { readWorkforceBaselineStates } from "@/contexts/company/infrastructure/workforce/read-workforce-baseline-states.repository"
 
 type AssignmentRow = Omit<OrgAssignmentProjectionRow, "isVoid"> & Readonly<{ isVoid: number }>
@@ -43,7 +43,7 @@ function emptySchedule(employeeId: EmployeeId): WorkforceLifecycleSchedule {
 
 /** open-bedrockのD1 lifecycle tablesを共通Workforce Application portへ接続する。 */
 export class EmployeeLifecycleWorkforceRepository implements WorkforceLifecycleReadPort {
-  constructor(private readonly c: Context) {
+  constructor(private readonly c: CompanyContext) {
     Object.freeze(this)
   }
 
@@ -58,7 +58,7 @@ export class EmployeeLifecycleWorkforceRepository implements WorkforceLifecycleR
       if (exists === null) return { ok: true, schedule: null }
 
       const source = await new EmployeeLifecycleRepository(this.c).loadSchedule(sourceEmployeeId)
-      if (source instanceof ApplicationError) return { ok: false, cause: source }
+      if (source instanceof CompanyOperationError) return { ok: false, cause: source }
 
       const [assignments, responsibilities, baselineStates] = await Promise.all([
         this.c.env.DB.prepare(

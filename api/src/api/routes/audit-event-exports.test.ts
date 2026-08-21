@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { app } from "@/api/app"
-import type { AuditEventDetail } from "@/contexts/company/domain/audit/company-audit-event"
+import type { AuditEventDetail } from "@/api/http/audit/company-audit-event.definition"
 import type { Bindings } from "@/env"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -8,8 +8,9 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { toAuditCsv } from "@/contexts/company/interface/http/audit/to-audit-csv"
-import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/interface/http/audit/to-audit-csv-row"
+import { toAuditCsv } from "@/api/http/audit/to-audit-csv"
+import { AUDIT_CSV_MAX_BYTES } from "@/api/http/audit/to-audit-csv-row"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "audit-export-route-test-secret"
 const now = "2026-01-03T00:00:00.000Z"
@@ -35,6 +36,7 @@ async function createTestDb(withFixture = true): Promise<TestDb> {
   await grantPermission(db, 2, "export-read-only", "audit:read")
   await grantPermission(db, 3, "export-only", "audit:export")
   if (withFixture) await seedExportRow(db)
+  await initializeStandardCompanyTestState(db)
 
   return {
     db,
@@ -81,9 +83,9 @@ async function seedExportRow(db: D1Database): Promise<void> {
        (event_id, request_id, actor_account_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
-       VALUES ('legacy-41', 'legacy-request', -41, 'legacy.action', 'legacy_target',
-               '=formula', 'succeeded', 'legacy_reason', '7', '"before"', '[1,2]',
-               '{"legacy_text":"value"}', '192.0.2.41', 'cli', 1767225600)`,
+       VALUES ('custom-41', 'custom-request', -41, 'custom.action', 'custom_target',
+               '=formula', 'succeeded', 'custom_reason', '7', '"before"', '[1,2]',
+               '{"custom_text":"value"}', '192.0.2.41', 'cli', 1767225600)`,
     )
     .run()
 }
@@ -113,6 +115,7 @@ function bindings(db: D1Database): Bindings {
     DB: db,
     JWT_SECRET: jwtSecret,
     AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+    COMPANY_TIME_ZONE: "Asia/Tokyo",
     NOW: now,
   }
 }
@@ -174,8 +177,8 @@ async function insertBulkRows(db: D1Database, count: number): Promise<void> {
     )
     INSERT INTO audit_events
       (id, event_id, request_id, action, outcome, client_name, created_at)
-    SELECT value, 'legacy-' || (100000 + value), 'r' || value,
-           'legacy.bulk', 'succeeded', 'api', 1767225600 + value
+    SELECT value, 'custom-' || (100000 + value), 'r' || value,
+           'custom.bulk', 'succeeded', 'api', 1767225600 + value
     FROM sequence
   `)
 }
@@ -386,8 +389,8 @@ describe("POST /audit-event-exports", () => {
     const response = await request(db, await token(3), {
       ...exportRange,
       actor_account_id: "-41",
-      action: "legacy.action",
-      target_type: "legacy_target",
+      action: "custom.action",
+      target_type: "custom_target",
       target_id: "=formula",
       outcome: "succeeded",
     })
@@ -458,7 +461,7 @@ describe("POST /audit-event-exports", () => {
       reason_code: "audit_export_too_large",
     })
     expect(JSON.parse(String(audit.metadata_json))).toMatchObject({ format: "csv" })
-    expect(requestQueries).toBe(19)
+    expect(requestQueries).toBe(18)
     expect(requestQueries).toBeLessThanOrEqual(28)
     expect(requestQueries).toBeLessThanOrEqual(33)
   }, 20_000)
@@ -501,7 +504,7 @@ describe("POST /audit-event-exports", () => {
     fiftyThousand.resetQueries()
     const success = await request(fiftyThousand.db, await token(3))
     expect(success.status).toBe(200)
-    expect(fiftyThousand.queries()).toBe(19)
+    expect(fiftyThousand.queries()).toBe(18)
     expect(fiftyThousand.queries()).toBeLessThanOrEqual(28)
     expect(fiftyThousand.queries()).toBeLessThanOrEqual(33)
 
@@ -513,7 +516,7 @@ describe("POST /audit-event-exports", () => {
       to: "1970-02-01T00:00:00Z",
     })
     expect(worst.status).toBe(200)
-    expect(formalWorst.queries()).toBe(27)
+    expect(formalWorst.queries()).toBe(26)
     expect(formalWorst.queries()).toBeLessThanOrEqual(33)
   }, 20_000)
 

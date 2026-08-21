@@ -1,4 +1,4 @@
-import { LifeEvent } from "@/contexts/life-event/domain/life-event.entity"
+import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

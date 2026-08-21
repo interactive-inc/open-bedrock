@@ -1,4 +1,4 @@
-import { CareerSheet } from "@/contexts/career/domain/career-sheet.entity"
+import { CareerSheet } from "@/contexts/career/domain/entities/career-sheet.entity"
 import type { Context } from "@/env"
 import { careerSheets } from "@/contexts/career/infrastructure/schema/career"
 import { eq } from "drizzle-orm"

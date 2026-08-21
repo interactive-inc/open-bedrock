@@ -1,10 +1,6 @@
-import {
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { readDashboard } from "@/api/http/dashboard/read-dashboard"
 
 // @authorization permission - 権限キーで判定する

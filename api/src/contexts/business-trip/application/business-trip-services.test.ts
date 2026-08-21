@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { CreateBusinessTrip } from "@/contexts/business-trip/application/create-business-trip"
 import { UpdateBusinessTrip } from "@/contexts/business-trip/application/update-business-trip"
-import { BusinessTrip } from "@/contexts/business-trip/domain/business-trip.entity"
+import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
 import type { Context } from "@/env"
 import { ForbiddenError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

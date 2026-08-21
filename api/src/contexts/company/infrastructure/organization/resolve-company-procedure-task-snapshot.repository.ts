@@ -1,24 +1,24 @@
-import type { ApplicationWorkflowStep } from "@/contexts/company/domain/organization/company-procedure-workflow"
+import type { ApplicationWorkflowStep } from "@/contexts/company/domain/values/company-procedure-workflow.definition"
 import type {
   WorkflowApproverMatch,
   WorkflowApproverProvenance,
-} from "@/contexts/company/domain/organization/company-procedure-approver"
+} from "@/contexts/company/domain/values/company-procedure-approver.definition"
 import type {
   WorkflowStepCandidateSnapshot,
   WorkflowStepSnapshotDraft,
-} from "@/contexts/company/domain/organization/company-procedure-step-snapshot"
-import type { Context } from "@/env"
-import { dueAt } from "@/contexts/company/domain/organization/company-procedure-due-at"
-import { resolveWorkflowApproverMatches } from "@/contexts/company/domain/organization/resolve-company-procedure-approver-matches"
-import { UnresolvableWorkflowStepError } from "@/contexts/company/domain/organization/unresolvable-company-procedure-task.error"
+} from "@/contexts/company/domain/values/company-procedure-step-snapshot.definition"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import { dueAt } from "@/contexts/company/domain/values/company-procedure-due-at.definition"
+import { resolveWorkflowApproverMatches } from "@/contexts/company/infrastructure/organization/resolve-company-procedure-approver-matches.repository"
+import { UnresolvableWorkflowStepError } from "@/contexts/company/domain/errors"
 
 export async function resolveWorkflowStepSnapshot(props: {
-  c: Context
+  c: CompanyContext
   applicantEmployeeId: number | null
   step: ApplicationWorkflowStep
   activatedAt: string
   resolvedAt?: string
-  resolutionReason?: "activation" | "legacy_backfill"
+  resolutionReason?: "activation" | "initialization"
   excludedEmployeeIds?: ReadonlySet<number>
   targetDepartmentCode?: string | null
 }): Promise<WorkflowStepSnapshotDraft | Error> {

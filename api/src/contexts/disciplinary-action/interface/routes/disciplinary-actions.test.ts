@@ -1,11 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "disciplinary-action-route-test-secret"
 
@@ -27,15 +28,14 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -44,7 +44,7 @@ async function createAction(db: D1Database): Promise<number> {
     db,
     jwtSecret,
     path: "/disciplinary-actions",
-    token: await tokenFor(1, "root"),
+    token: await tokenFor(1),
     method: "POST",
     body: { employee_id: 5, kind: "warning", summary: "policy breach", decided_on: "2026-06-01" },
   })
@@ -66,7 +66,7 @@ describe("disciplinary actions", () => {
       db,
       jwtSecret,
       path: "/disciplinary-actions",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(list.status).toBe(200)
@@ -83,7 +83,7 @@ describe("disciplinary actions", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/disciplinary-actions",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)
@@ -94,7 +94,7 @@ describe("disciplinary actions", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/disciplinary-actions",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
     })
 
     expect(response.status).toBe(403)
@@ -110,7 +110,7 @@ describe("disciplinary actions", () => {
       db,
       jwtSecret,
       path: "/disciplinary-actions?employee_id=5",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(403)
@@ -121,7 +121,7 @@ describe("disciplinary actions", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/disciplinary-actions",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { employee_id: 6, kind: "warning", summary: "x", decided_on: "2026-06-01" },
     })

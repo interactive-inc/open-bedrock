@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { TrainingCourse } from "@/contexts/training/domain/training-course.entity"
-import { TrainingEnrollment } from "@/contexts/training/domain/training-enrollment.entity"
+import { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
+import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import { CreateTrainingCourse } from "@/contexts/training/application/create-training-course"
 import { UpdateTrainingCourse } from "@/contexts/training/application/update-training-course"
 import { ArchiveTrainingCourse } from "@/contexts/training/application/archive-training-course"

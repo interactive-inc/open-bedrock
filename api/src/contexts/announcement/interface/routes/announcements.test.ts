@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedAnnouncements } from "@/contexts/announcement/infrastructure/seed/seed-announcements.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "announcement-route-test-secret"
 
@@ -67,15 +68,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: announcement.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -90,7 +90,7 @@ async function request(
 
 describe("GET /announcements", () => {
   test("returns only published for a member", async () => {
-    const response = await request("/announcements", await tokenFor(5, "member"))
+    const response = await request("/announcements", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -105,7 +105,7 @@ describe("GET /announcements", () => {
   })
 
   test("admin can filter drafts via status query", async () => {
-    const response = await request("/announcements?status=draft", await tokenFor(1, "root"))
+    const response = await request("/announcements?status=draft", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -128,7 +128,7 @@ describe("GET /announcements", () => {
 
 describe("GET /announcements/:id", () => {
   test("member can read a published announcement", async () => {
-    const response = await request("/announcements/1", await tokenFor(5, "member"))
+    const response = await request("/announcements/1", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -138,13 +138,13 @@ describe("GET /announcements/:id", () => {
   })
 
   test("member gets 404 for a draft announcement", async () => {
-    const response = await request("/announcements/3", await tokenFor(5, "member"))
+    const response = await request("/announcements/3", await tokenFor(5))
 
     expect(response.status).toBe(404)
   })
 
   test("admin can read a draft announcement", async () => {
-    const response = await request("/announcements/3", await tokenFor(1, "root"))
+    const response = await request("/announcements/3", await tokenFor(1))
 
     expect(response.status).toBe(200)
   })
@@ -152,7 +152,7 @@ describe("GET /announcements/:id", () => {
 
 describe("POST /announcements", () => {
   test("admin creates a draft announcement", async () => {
-    const response = await request("/announcements", await tokenFor(1, "root"), "POST", {
+    const response = await request("/announcements", await tokenFor(1), "POST", {
       title: "New Announcement",
       body_md: "hello everyone",
     })
@@ -169,7 +169,7 @@ describe("POST /announcements", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/announcements", await tokenFor(5, "member"), "POST", {
+    const response = await request("/announcements", await tokenFor(5), "POST", {
       title: "Blocked",
       body_md: "no",
     })
@@ -180,7 +180,7 @@ describe("POST /announcements", () => {
 
 describe("PUT /announcements/:id", () => {
   test("admin updates title and body", async () => {
-    const response = await request("/announcements/3", await tokenFor(1, "root"), "PUT", {
+    const response = await request("/announcements/3", await tokenFor(1), "PUT", {
       title: "Updated Draft",
       body_md: "updated body",
     })
@@ -197,7 +197,7 @@ describe("PUT /announcements/:id", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/announcements/3", await tokenFor(5, "member"), "PUT", {
+    const response = await request("/announcements/3", await tokenFor(5), "PUT", {
       title: "x",
       body_md: "y",
     })
@@ -216,7 +216,7 @@ describe("POST /announcements/:id/publish", () => {
       db,
       jwtSecret,
       path: "/announcements/3/publish",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       now,
     })
@@ -246,7 +246,7 @@ describe("POST /announcements/:id/publish", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/announcements/3/publish", await tokenFor(5, "member"), "POST")
+    const response = await request("/announcements/3/publish", await tokenFor(5), "POST")
 
     expect(response.status).toBe(403)
   })
@@ -254,7 +254,7 @@ describe("POST /announcements/:id/publish", () => {
 
 describe("POST /announcements/:id/archive", () => {
   test("admin archives an announcement", async () => {
-    const response = await request("/announcements/1/archive", await tokenFor(1, "root"), "POST")
+    const response = await request("/announcements/1/archive", await tokenFor(1), "POST")
 
     expect(response.status).toBe(200)
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { Room } from "@/contexts/room/domain/room.entity"
-import { RoomReservation } from "@/contexts/room/domain/room-reservation.entity"
+import { Room } from "@/contexts/room/domain/entities/room.entity"
+import { RoomReservation } from "@/contexts/room/domain/entities/room-reservation.entity"
 import { RegisterRoom } from "@/contexts/room/application/register-room"
 import { UpdateRoom } from "@/contexts/room/application/update-room"
 import { DeleteRoom } from "@/contexts/room/application/delete-room"

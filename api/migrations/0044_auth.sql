@@ -1,5 +1,0 @@
--- IAM Phase 7: 認証(email/password)は identities が正に移譲済み。
--- ログイン照合は identities(provider='password', subject=正規化email)で行い、
--- そのキーは uniq_identities_provider_subject(0003_iam.sql)が担う。
--- 旧 employees.email を使ったログイン照合用インデックスはここでは作らない。
--- /me は token の employeeId(= employees.id)で本人を引く。id は PK なので追加索引は不要。

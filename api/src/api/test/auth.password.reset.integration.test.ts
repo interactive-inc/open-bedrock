@@ -3,12 +3,12 @@ import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import {
   seedPasswordHash,
   seedPepperSecret,
-} from "@/contexts/company/infrastructure/seed/seed-password-hash.repository"
-import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
+} from "@/api/test/support/company/seed-password-hash.repository"
+import { verifyPassword } from "@system/infrastructure/auth/verify-password.repository"
 import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
 import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
@@ -52,7 +52,7 @@ describe("System password reset HTTP", () => {
       AUDIT_HMAC_SECRET: "password-reset-test-audit-secret",
       COMPANY_TIME_ZONE: "Asia/Tokyo",
       NOW: "2026-01-01T00:00:00.000Z",
-      ENABLED_OPTIONAL_FEATURES: "all",
+      ENABLED_OPT_IN_APPS: "all",
       INVITE_EMAIL_SEND_ENABLED: "true",
       INVITE_EMAIL_FROM: "system@example.test",
       EMAIL_SENDER_NAME: "System",
@@ -99,7 +99,7 @@ describe("System password reset HTTP", () => {
     expect(
       credential === null
         ? false
-        : await PasswordHashService.verify("new-password-value", credential, seedPepperSecret),
+        : await verifyPassword("new-password-value", credential, seedPepperSecret),
     ).toBe(true)
     expect(
       await database

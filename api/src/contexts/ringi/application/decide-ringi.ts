@@ -1,5 +1,4 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { NotifyApprovalResult } from "@/contexts/company/infrastructure/notifications/notify-approval-result.repository"
+import type { Session } from "@/lib/auth/session"
 import type { Context } from "@/env"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/ringi-request.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -23,7 +22,17 @@ export type RingiDecision = {
  * pending 以外からの遷移は 409 を返す。条件付き UPDATE で二重決定を防ぐ（TOCTOU 競合にも強い）。
  */
 export class DecideRingi {
-  constructor(private readonly c: Context) {}
+  constructor(
+    private readonly c: Context,
+    private readonly notifyApprovalResult: (command: {
+      recipientEmployeeId: number
+      action: "approve" | "reject"
+      subjectLabel: string
+      sourceDomain: string
+      sourceId: number | null
+      createdAt: string
+    }) => Promise<unknown> = async () => null,
+  ) {}
 
   async run(command: Command): Promise<RingiDecision | ApplicationError> {
     const repository = new RingiRequestRepository(this.c)
@@ -75,7 +84,7 @@ export class DecideRingi {
     }
 
     // 決定は確定済みのため、起案者への結果通知が失敗しても決定は返す。
-    await new NotifyApprovalResult(this.c).run({
+    await this.notifyApprovalResult({
       recipientEmployeeId: existing.applicantId,
       action: command.action,
       subjectLabel: "稟議",

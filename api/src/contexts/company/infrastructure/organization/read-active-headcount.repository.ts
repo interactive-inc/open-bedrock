@@ -1,5 +1,5 @@
 import { readCanonicalOrganizationState } from "@/contexts/company/infrastructure/organization/read-canonical-organization-state.repository"
-import type { Context } from "@/env"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 
 export type ActiveHeadcount = Readonly<{
   total: number
@@ -7,7 +7,7 @@ export type ActiveHeadcount = Readonly<{
 }>
 
 /** 検証済みCompany snapshotから、同じ社員を組織単位ごとに一度だけ数える。 */
-export async function readActiveHeadcount(c: Context): Promise<ActiveHeadcount | Error> {
+export async function readActiveHeadcount(c: CompanyContext): Promise<ActiveHeadcount | Error> {
   const snapshot = await readCanonicalOrganizationState(c)
   if (snapshot instanceof Error) return snapshot
 

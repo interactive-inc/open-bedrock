@@ -1,11 +1,12 @@
 import { GovernancePublicationService } from "@/contexts/governance/application/governance-publication-service"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { prepareGovernanceAudit } from "@/api/http/audit/prepare-governance-audit"
+import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { parseGovernanceCode } from "@/contexts/company/interface/utils/parse-governance-code"
-import { parseGovernanceVersion } from "@/contexts/company/interface/utils/parse-governance-version"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { parseGovernanceCode } from "@/api/http/utils/parse-governance-code"
+import { parseGovernanceVersion } from "@/api/http/utils/parse-governance-version"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -23,7 +24,9 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
   const version = parseGovernanceVersion(c.req.param("version"))
   if (code === null || version === null) throw new NotFoundError("governance version not found")
   const body = c.req.valid("json")
-  const result = await new GovernancePublicationService(c).decideReview({
+  const result = await new GovernancePublicationService(c, (audit) =>
+    prepareGovernanceAudit({ c, ...audit }),
+  ).decideReview({
     session,
     code,
     version,

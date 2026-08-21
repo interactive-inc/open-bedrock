@@ -2,7 +2,7 @@ import { zAccountId } from "@system/domain/values/account-id.schema"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import { systemFactory } from "@system/interface/http/system-factory"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
+import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
 import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
 

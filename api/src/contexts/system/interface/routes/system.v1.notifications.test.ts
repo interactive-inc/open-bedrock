@@ -1,5 +1,5 @@
 import { zAccountId } from "@system/domain/values/account-id.schema"
-import { createSystemSessionApplications } from "@system/interface/runtime/create-system-session-applications"
+import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import {
   DELETE as DELETE_ONE,

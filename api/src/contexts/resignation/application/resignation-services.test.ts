@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { CreateResignation } from "@/contexts/resignation/application/create-resignation"
 import { UpdateResignation } from "@/contexts/resignation/application/update-resignation"
-import { Resignation } from "@/contexts/resignation/domain/resignation.entity"
+import { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
 import type { Context } from "@/env"
 import { ForbiddenError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

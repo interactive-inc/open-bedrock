@@ -1,4 +1,4 @@
-import { Partner } from "@/contexts/partner/domain/partner.entity"
+import { Partner } from "@/contexts/partner/domain/entities/partner.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"

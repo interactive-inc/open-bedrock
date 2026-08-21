@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { Stocktake } from "@/contexts/asset/domain/stocktake/stocktake.entity"
+import type { Session } from "@/lib/auth/session"
+import { Stocktake } from "@/contexts/asset/domain/entities/stocktake.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

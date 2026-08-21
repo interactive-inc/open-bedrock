@@ -1,4 +1,4 @@
-import { Document } from "@/contexts/document/domain/document.entity"
+import { Document } from "@/contexts/document/domain/entities/document.entity"
 import type { Context } from "@/env"
 import { documents } from "@/contexts/document/infrastructure/schema/document"
 import { eq } from "drizzle-orm"

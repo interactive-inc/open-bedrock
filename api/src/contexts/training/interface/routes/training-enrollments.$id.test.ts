@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedTrainingCourses } from "@/contexts/training/infrastructure/seed/seed-training-courses.repository"
 import { seedTrainingEnrollments } from "@/contexts/training/infrastructure/seed/seed-training-enrollments.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const trainingEnrollmentResponseSchema = z.object({
   id: z.number(),
@@ -69,15 +70,14 @@ async function createTestDb(): Promise<D1Database> {
       due_date: enrollment.dueDate,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -98,7 +98,7 @@ async function request(
 
 describe("GET /training-enrollments/:id", () => {
   test("the owner reads their enrollment and returns 200", async () => {
-    const response = await request("/training-enrollments/1", await tokenFor(5, "member"))
+    const response = await request("/training-enrollments/1", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -109,19 +109,19 @@ describe("GET /training-enrollments/:id", () => {
   })
 
   test("a privileged role reads another's enrollment and returns 200", async () => {
-    const response = await request("/training-enrollments/1", await tokenFor(1, "root"))
+    const response = await request("/training-enrollments/1", await tokenFor(1))
 
     expect(response.status).toBe(200)
   })
 
   test("a member reading another's enrollment is forbidden", async () => {
-    const response = await request("/training-enrollments/2", await tokenFor(5, "member"))
+    const response = await request("/training-enrollments/2", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for a missing enrollment", async () => {
-    const response = await request("/training-enrollments/999", await tokenFor(5, "member"))
+    const response = await request("/training-enrollments/999", await tokenFor(5))
 
     expect(response.status).toBe(404)
   })
@@ -135,7 +135,7 @@ describe("GET /training-enrollments/:id", () => {
 
 describe("PUT /training-enrollments/:id", () => {
   test("the owner reschedules their enrollment and returns 200", async () => {
-    const response = await request("/training-enrollments/1", await tokenFor(5, "member"), {
+    const response = await request("/training-enrollments/1", await tokenFor(5), {
       method: "PUT",
       body: { due_date: "2026-09-30" },
     })
@@ -148,7 +148,7 @@ describe("PUT /training-enrollments/:id", () => {
   })
 
   test("a member rescheduling another's enrollment is forbidden", async () => {
-    const response = await request("/training-enrollments/2", await tokenFor(5, "member"), {
+    const response = await request("/training-enrollments/2", await tokenFor(5), {
       method: "PUT",
       body: { due_date: "2026-09-30" },
     })
@@ -157,7 +157,7 @@ describe("PUT /training-enrollments/:id", () => {
   })
 
   test("returns 409 when the enrollment is already completed", async () => {
-    const response = await request("/training-enrollments/2", await tokenFor(4, "member"), {
+    const response = await request("/training-enrollments/2", await tokenFor(4), {
       method: "PUT",
       body: { due_date: "2026-09-30" },
     })
@@ -166,7 +166,7 @@ describe("PUT /training-enrollments/:id", () => {
   })
 
   test("returns 404 for a missing enrollment", async () => {
-    const response = await request("/training-enrollments/999", await tokenFor(5, "member"), {
+    const response = await request("/training-enrollments/999", await tokenFor(5), {
       method: "PUT",
       body: { due_date: null },
     })
@@ -177,7 +177,7 @@ describe("PUT /training-enrollments/:id", () => {
 
 describe("DELETE /training-enrollments/:id", () => {
   test("the owner cancels their enrollment and returns 204", async () => {
-    const response = await request("/training-enrollments/1", await tokenFor(5, "member"), {
+    const response = await request("/training-enrollments/1", await tokenFor(5), {
       method: "DELETE",
       body: {},
     })
@@ -186,7 +186,7 @@ describe("DELETE /training-enrollments/:id", () => {
   })
 
   test("a member cancelling another's enrollment is forbidden", async () => {
-    const response = await request("/training-enrollments/2", await tokenFor(5, "member"), {
+    const response = await request("/training-enrollments/2", await tokenFor(5), {
       method: "DELETE",
       body: {},
     })
@@ -195,7 +195,7 @@ describe("DELETE /training-enrollments/:id", () => {
   })
 
   test("returns 409 when cancelling a completed enrollment", async () => {
-    const response = await request("/training-enrollments/2", await tokenFor(4, "member"), {
+    const response = await request("/training-enrollments/2", await tokenFor(4), {
       method: "DELETE",
       body: {},
     })
@@ -204,7 +204,7 @@ describe("DELETE /training-enrollments/:id", () => {
   })
 
   test("returns 404 for a missing enrollment", async () => {
-    const response = await request("/training-enrollments/999", await tokenFor(5, "member"), {
+    const response = await request("/training-enrollments/999", await tokenFor(5), {
       method: "DELETE",
       body: {},
     })

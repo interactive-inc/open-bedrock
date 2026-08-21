@@ -1,4 +1,4 @@
-import { CareerPosting } from "@/contexts/career/domain/career-posting.entity"
+import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"

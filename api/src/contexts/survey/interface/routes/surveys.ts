@@ -1,16 +1,16 @@
-import { InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { InternalError, UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { CreateSurvey } from "@/contexts/survey/application/create-survey"
-import { surveyQuestionSchema } from "@/contexts/survey/domain/survey-question.value"
-import { Survey } from "@/contexts/survey/domain/survey.entity"
+import { surveyQuestionSchema } from "@/contexts/survey/domain/values/survey-question.value"
+import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import { surveys } from "@/contexts/survey/infrastructure/schema/survey"
 import { zAppSurvey, zAppSurveyList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"

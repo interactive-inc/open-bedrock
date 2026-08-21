@@ -1,7 +1,7 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Meeting } from "@/contexts/meeting/domain/meeting.entity"
+import type { Meeting } from "@/contexts/meeting/domain/entities/meeting.entity"
 import type { Context } from "@/env"
 import { MeetingRepository } from "@/contexts/meeting/infrastructure/meeting.repository"
 

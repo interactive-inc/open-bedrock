@@ -1,14 +1,14 @@
 import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
-import { buildGoalTree } from "@/contexts/performance-review/domain/goal/build-goal-tree"
-import { canReadGoalOf } from "@/contexts/performance-review/domain/goal/can-read-goal-of"
+import { buildGoalTree } from "@/contexts/performance-review/domain/policies/goal-tree.policy"
+import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
 import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
-import type { Goal } from "@/contexts/performance-review/domain/goal/goal.entity"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import type { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
+import { factory } from "@/api/http/factory"
 import { UnexpectedError } from "@/lib/errors"
 import { zAppGoalTree } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { UnauthorizedError } from "@/lib/http/errors"
 
 // @authorization service - session を application service に渡して判定する
 /**

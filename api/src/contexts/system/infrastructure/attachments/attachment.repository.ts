@@ -1,9 +1,9 @@
 import type { AttachmentStatus } from "@system/domain/values/attachment-status.definition"
+import { SystemAttachmentError } from "@system/domain/errors"
 import type { SystemAttachmentRow } from "@system/infrastructure/schema/system-attachment"
 import { systemAttachments } from "@system/infrastructure/schema/system-attachment"
 import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context.repository"
 import { and, eq, inArray, lt } from "drizzle-orm"
-import { UnexpectedError } from "@/lib/errors"
 
 export type NewAttachment = Readonly<{
   id: string
@@ -52,7 +52,12 @@ export class AttachmentRepository {
 
       return undefined
     } catch (error) {
-      return new UnexpectedError("添付の予約に失敗しました", { cause: error })
+      return new SystemAttachmentError(
+        "unexpected",
+        "attachment_reservation_failed",
+        "添付の予約に失敗しました",
+        { cause: error },
+      )
     }
   }
 
@@ -79,12 +84,21 @@ export class AttachmentRepository {
         .returning({ id: systemAttachments.id })
 
       if (updated.length === 0) {
-        return new UnexpectedError(`添付の状態を ${from} から ${to} へ変更できませんでした`)
+        return new SystemAttachmentError(
+          "unexpected",
+          "attachment_transition_failed",
+          `添付の状態を ${from} から ${to} へ変更できませんでした`,
+        )
       }
 
       return undefined
     } catch (error) {
-      return new UnexpectedError("添付の状態更新に失敗しました", { cause: error })
+      return new SystemAttachmentError(
+        "unexpected",
+        "attachment_transition_failed",
+        "添付の状態更新に失敗しました",
+        { cause: error },
+      )
     }
   }
 
@@ -98,7 +112,12 @@ export class AttachmentRepository {
 
       return rows.at(0) ?? null
     } catch (error) {
-      return new UnexpectedError("添付の取得に失敗しました", { cause: error })
+      return new SystemAttachmentError(
+        "unexpected",
+        "attachment_read_failed",
+        "添付の取得に失敗しました",
+        { cause: error },
+      )
     }
   }
 
@@ -113,7 +132,12 @@ export class AttachmentRepository {
         .from(systemAttachments)
         .where(inArray(systemAttachments.id, [...ids]))
     } catch (error) {
-      return new UnexpectedError("添付の取得に失敗しました", { cause: error })
+      return new SystemAttachmentError(
+        "unexpected",
+        "attachment_read_failed",
+        "添付の取得に失敗しました",
+        { cause: error },
+      )
     }
   }
 
@@ -134,7 +158,12 @@ export class AttachmentRepository {
         )
         .limit(limit)
     } catch (error) {
-      return new UnexpectedError("添付の走査に失敗しました", { cause: error })
+      return new SystemAttachmentError(
+        "unexpected",
+        "attachment_scan_failed",
+        "添付の走査に失敗しました",
+        { cause: error },
+      )
     }
   }
 
@@ -152,7 +181,12 @@ export class AttachmentRepository {
 
       return undefined
     } catch (error) {
-      return new UnexpectedError("添付の削除に失敗しました", { cause: error })
+      return new SystemAttachmentError(
+        "unexpected",
+        "attachment_delete_failed",
+        "添付の削除に失敗しました",
+        { cause: error },
+      )
     }
   }
 }

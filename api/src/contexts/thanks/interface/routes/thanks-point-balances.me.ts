@@ -1,10 +1,10 @@
 import { ThanksPointBalanceRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-balance.repository"
 import { UnexpectedError } from "@/lib/errors"
 import { zAppThanksBalance } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
 
 // @authorization owner - 本人のリソースに限定する
 /**

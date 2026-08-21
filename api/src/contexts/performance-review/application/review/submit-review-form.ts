@@ -1,5 +1,5 @@
-import { canSubmitForm } from "@/contexts/performance-review/domain/review/can-submit-form"
-import type { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
+import { canSubmitForm } from "@/contexts/performance-review/domain/policies/review-form-submission.policy"
+import type { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { CompanyCalendarDay } from "@/contexts/company-calendar/domain/calendar/company-calendar-day.entity"
+import type { Session } from "@/lib/auth/session"
+import { CompanyCalendarDay } from "@/contexts/company-calendar/domain/entities/company-calendar-day.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { CalendarDayKind } from "@/lib/schemas"

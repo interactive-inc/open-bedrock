@@ -1,7 +1,7 @@
 import { oidcSigningAlgorithm } from "@system/domain/values/oidc-signing-algorithm.value"
 import { oidcAccessTokenLifetime } from "@system/domain/values/oidc-token-lifetime.value"
 import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret.repository"
-import type { OidcSigningKeys } from "@/contexts/system/infrastructure/identity/oidc-signing-key.service.repository"
+import type { OidcSigningKeysValue } from "@system/domain/values/oidc-signing-keys.definition"
 import type { SystemClockContext } from "@system/infrastructure/configuration/system-context.repository"
 import { importJWK, SignJWT } from "jose"
 
@@ -12,7 +12,7 @@ export type OidcIdentity = Readonly<{
 }>
 
 type Props = Readonly<{
-  keys: OidcSigningKeys
+  keys: OidcSigningKeysValue
   issuer: string
   clientId: string
   identity: OidcIdentity

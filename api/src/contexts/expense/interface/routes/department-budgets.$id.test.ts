@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { seedBudgets } from "@/contexts/expense/infrastructure/seed/seed-budgets.repository"
-import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedDepartments } from "@/api/test/support/company/seed-departments.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedExpenses } from "@/contexts/expense/infrastructure/seed/seed-expenses.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -10,6 +10,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "budget-detail-route-test-secret"
 
@@ -89,15 +90,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: budget.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -124,7 +124,7 @@ describe("GET /department-budgets/:id", () => {
     // dept 3(Engineering)は seed-expenses の approved 経費(id:2, 3300)のみが消化に入る。
     const response = await request({
       path: "/department-budgets/1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -145,7 +145,7 @@ describe("GET /department-budgets/:id", () => {
     // dept 4(Sales)の seed-expenses は id:3 のみで status は pending → 消化 0。
     const response = await request({
       path: "/department-budgets/2",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -163,7 +163,7 @@ describe("GET /department-budgets/:id", () => {
   test("returns 404 for a missing budget", async () => {
     const response = await request({
       path: "/department-budgets/999",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(404)
@@ -172,7 +172,7 @@ describe("GET /department-budgets/:id", () => {
   test("returns 403 without budget:manage", async () => {
     const response = await request({
       path: "/department-budgets/1",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
     })
 
     expect(response.status).toBe(403)
@@ -183,7 +183,7 @@ describe("PATCH /department-budgets/:id", () => {
   test("updates amount, name and note", async () => {
     const response = await request({
       path: "/department-budgets/1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PATCH",
       body: { amount: 1200000, name: "Engineering FY2026 (revised)", note: "raised" },
     })
@@ -201,7 +201,7 @@ describe("PATCH /department-budgets/:id", () => {
   test("returns 404 for a missing budget", async () => {
     const response = await request({
       path: "/department-budgets/999",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "PATCH",
       body: { amount: 1, name: "x" },
     })
@@ -212,7 +212,7 @@ describe("PATCH /department-budgets/:id", () => {
   test("returns 403 without budget:manage", async () => {
     const response = await request({
       path: "/department-budgets/1",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
       method: "PATCH",
       body: { amount: 1, name: "x" },
     })
@@ -225,7 +225,7 @@ describe("DELETE /department-budgets/:id", () => {
   test("returns 204 and removes the budget", async () => {
     const response = await request({
       path: "/department-budgets/1",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "DELETE",
     })
 
@@ -235,7 +235,7 @@ describe("DELETE /department-budgets/:id", () => {
   test("returns 404 for a missing budget", async () => {
     const response = await request({
       path: "/department-budgets/999",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "DELETE",
     })
 
@@ -245,7 +245,7 @@ describe("DELETE /department-budgets/:id", () => {
   test("returns 403 without budget:manage", async () => {
     const response = await request({
       path: "/department-budgets/1",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
       method: "DELETE",
     })
 

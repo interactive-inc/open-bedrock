@@ -1,4 +1,4 @@
-import { RingiRequest } from "@/contexts/ringi/domain/ringi-request.entity"
+import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/ringi-request.repository"

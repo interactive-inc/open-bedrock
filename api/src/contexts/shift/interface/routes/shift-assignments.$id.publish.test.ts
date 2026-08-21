@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedShiftAssignments } from "@/contexts/shift/infrastructure/seed/seed-shift-assignments.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "shift-assignments-publish-route-test-secret"
 
@@ -53,15 +54,14 @@ async function createTestDb(): Promise<D1Database> {
       published_at: assignment.publishedAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -87,7 +87,7 @@ describe("POST /shift-assignments/:id/publish", () => {
   test("privileged role publishes a draft assignment and returns 200", async () => {
     const response = await request({
       path: "/shift-assignments/2/publish",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -105,7 +105,7 @@ describe("POST /shift-assignments/:id/publish", () => {
   test("returns 409 when already published", async () => {
     const response = await request({
       path: "/shift-assignments/1/publish",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -115,7 +115,7 @@ describe("POST /shift-assignments/:id/publish", () => {
   test("returns 404 for a missing assignment", async () => {
     const response = await request({
       path: "/shift-assignments/9999/publish",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -125,7 +125,7 @@ describe("POST /shift-assignments/:id/publish", () => {
   test("member is forbidden", async () => {
     const response = await request({
       path: "/shift-assignments/2/publish",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
     })
 

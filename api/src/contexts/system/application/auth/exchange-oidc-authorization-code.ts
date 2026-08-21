@@ -16,7 +16,7 @@ import type {
 import { createOidcAccessToken } from "@system/infrastructure/identity/create-oidc-access-token.repository"
 import { consumeOidcAuthorizationCode } from "@system/infrastructure/identity/consume-oidc-authorization-code.repository"
 import { OidcIdTokenService } from "@system/infrastructure/identity/oidc-id-token.service.repository"
-import { OidcSigningKeyService } from "@system/infrastructure/identity/oidc-signing-key.service.repository"
+import { parseOidcSigningKeys } from "@system/infrastructure/identity/parse-oidc-signing-keys.repository"
 import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity.repository"
 
 type Props = Readonly<{
@@ -43,7 +43,7 @@ export class ExchangeOidcAuthorizationCode {
     const client = props.clientRegistry.resolve(props)
     if (client === null) return new OidcInvalidGrantApplicationError()
 
-    const signingKeys = OidcSigningKeyService.parse(this.context.env.OIDC_SIGNING_KEYS)
+    const signingKeys = parseOidcSigningKeys(this.context.env.OIDC_SIGNING_KEYS)
     if (signingKeys instanceof Error) {
       return new OidcTemporarilyUnavailableApplicationError(signingKeys)
     }

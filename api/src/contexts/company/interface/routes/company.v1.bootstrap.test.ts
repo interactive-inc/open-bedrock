@@ -1,17 +1,64 @@
-import { app } from "@/api/app"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
+import { CompanyHTTPException } from "@/contexts/company/interface/errors"
+import { TEST_MIGRATIONS_DIR } from "@/api/test/migrations-directory"
+import { POST as companyBootstrapPOST } from "@/contexts/company/interface/routes/company.v1.bootstrap"
+import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { SystemHTTPException } from "@system/interface/errors"
+import { systemFactory } from "@system/interface/http/system-factory"
+import { POST as systemBootstrapPOST } from "@system/interface/routes/system.v1.bootstrap"
+import { POST as systemSessionPOST } from "@system/interface/routes/system.v1.sessions"
 import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
+import { readFileSync, readdirSync } from "node:fs"
+import { join } from "node:path"
 
 const now = new Date()
 const bootstrapToken = "company-bootstrap-test-token"
 const jwtSecret = "company-bootstrap-test-jwt-secret"
 const pepper = "company-bootstrap-test-pepper"
+const schemaSql = readdirSync(TEST_MIGRATIONS_DIR)
+  .filter((file) => file.endsWith(".sql"))
+  .sort()
+  .map((file) => readFileSync(join(TEST_MIGRATIONS_DIR, file), "utf8"))
+  .join("\n")
 
 describe("Company Bootstrap HTTP", () => {
   test("System rootだけがCompanyを初期化でき、失敗後はCompanyだけを安全に再実行できる", async () => {
-    const database = createD1TestDatabase(loadSchema())
+    const database = createCompanyD1TestDatabase(schemaSql)
+    const app = systemFactory
+      .createApp()
+      .onError((error, context) => {
+        if (!(error instanceof SystemHTTPException || error instanceof CompanyHTTPException)) {
+          throw error
+        }
+
+        const title =
+          error.status === 400
+            ? "Bad Request"
+            : error.status === 401
+              ? "Unauthorized"
+              : error.status === 409
+                ? "Conflict"
+                : "Service Unavailable"
+
+        return context.json(
+          {
+            type: `/problems/${error.code}`,
+            title,
+            status: error.status,
+            code: error.code,
+            detail: error.detail,
+          },
+          error.status,
+          { "content-type": "application/problem+json" },
+        )
+      })
+      .use("*", async (context, next) => {
+        context.set("now", () => now)
+        await next()
+      })
+      .post("/system/v1/bootstrap", ...systemBootstrapPOST)
+      .post("/system/v1/sessions", ...systemSessionPOST)
+      .post("/company/v1/bootstrap", ...companyBootstrapPOST)
     const request = (
       input: Parameters<typeof app.request>[0],
       init?: Parameters<typeof app.request>[1],
@@ -65,7 +112,8 @@ describe("Company Bootstrap HTTP", () => {
 
     await database.exec(`
       CREATE TRIGGER reject_company_bootstrap_link
-      BEFORE INSERT ON account_employee_links
+      BEFORE INSERT ON company_resource_heads
+      WHEN NEW.resource_type = 'account-employee-link'
       BEGIN
         SELECT RAISE(ABORT, 'link unavailable');
       END;
@@ -76,7 +124,11 @@ describe("Company Bootstrap HTTP", () => {
     )
     expect(Number(failed.status)).toBe(503)
     expect(
-      await database.prepare("SELECT COUNT(*) AS total FROM employees").first<number>("total"),
+      await database
+        .prepare(
+          "SELECT COUNT(*) AS total FROM company_resource_heads WHERE resource_type = 'employee'",
+        )
+        .first<number>("total"),
     ).toBe(0)
     expect(
       await database
@@ -91,7 +143,7 @@ describe("Company Bootstrap HTTP", () => {
     )
     expect(created.status).toBe(201)
     const createdBody = await created.json()
-    expect(createdBody).toMatchObject({ employee_id: 1 })
+    expect(createdBody).toMatchObject({ employee_id: expect.stringMatching(/^employee:/) })
     expect("account_id" in createdBody).toBe(true)
 
     const repeated = await client.company.v1.bootstrap.$post(
@@ -108,7 +160,11 @@ describe("Company Bootstrap HTTP", () => {
       detail: "Company is already initialized",
     })
     expect(
-      await database.prepare("SELECT COUNT(*) AS total FROM employees").first<number>("total"),
+      await database
+        .prepare(
+          "SELECT COUNT(*) AS total FROM company_resource_heads WHERE resource_type = 'employee'",
+        )
+        .first<number>("total"),
     ).toBe(1)
   })
 })

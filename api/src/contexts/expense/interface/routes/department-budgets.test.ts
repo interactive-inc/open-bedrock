@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { seedBudgets } from "@/contexts/expense/infrastructure/seed/seed-budgets.repository"
-import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedDepartments } from "@/api/test/support/company/seed-departments.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "budget-route-test-secret"
 
@@ -84,15 +85,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: budget.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -119,7 +119,7 @@ describe("GET /department-budgets", () => {
   test("returns budgets with department name for a budget:manage role", async () => {
     const response = await request({
       path: "/department-budgets",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -137,7 +137,7 @@ describe("GET /department-budgets", () => {
   test("filters by fiscal_period and department_id", async () => {
     const response = await request({
       path: "/department-budgets?department_id=3&fiscal_period=2026",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -155,7 +155,7 @@ describe("GET /department-budgets", () => {
   test("returns 403 without budget:manage", async () => {
     const response = await request({
       path: "/department-budgets",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
     })
 
     expect(response.status).toBe(403)
@@ -172,7 +172,7 @@ describe("POST /department-budgets", () => {
   test("returns 201 with the created budget", async () => {
     const response = await request({
       path: "/department-budgets",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: {
         department_id: 5,
@@ -201,7 +201,7 @@ describe("POST /department-budgets", () => {
   test("returns 404 when the department does not exist", async () => {
     const response = await request({
       path: "/department-budgets",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: {
         department_id: 999,
@@ -219,7 +219,7 @@ describe("POST /department-budgets", () => {
   test("returns 400 when period_end precedes period_start", async () => {
     const response = await request({
       path: "/department-budgets",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: {
         department_id: 3,
@@ -237,7 +237,7 @@ describe("POST /department-budgets", () => {
   test("returns 400 when amount is not positive", async () => {
     const response = await request({
       path: "/department-budgets",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       method: "POST",
       body: {
         department_id: 3,
@@ -255,7 +255,7 @@ describe("POST /department-budgets", () => {
   test("returns 403 without budget:manage", async () => {
     const response = await request({
       path: "/department-budgets",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
       method: "POST",
       body: {
         department_id: 3,

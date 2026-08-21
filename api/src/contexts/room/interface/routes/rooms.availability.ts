@@ -1,14 +1,14 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { roomAvailabilityQuerySchema } from "@/contexts/room/interface/http/rooms/availability/room-availability-query"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { BadRequestError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { BadRequestError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppRoomAvailabilityList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { roomReservations, rooms } from "@/contexts/room/infrastructure/schema/room"
 import { and, count, gt, gte, inArray, lt } from "drizzle-orm"
 

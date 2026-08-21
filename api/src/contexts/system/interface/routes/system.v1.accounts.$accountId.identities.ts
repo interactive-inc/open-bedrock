@@ -13,7 +13,7 @@ import { SystemPasswordValue } from "@system/domain/values/system-password.value
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { StableSystemAuditJsonValue } from "@system/domain/values/stable-system-audit-json.value"
 import { IdentityBindingEntity } from "@system/domain/entities/identity-binding.entity"
-import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
+import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { SystemAccountAdministrationRepository } from "@system/infrastructure/iam/system-account-administration.repository"
 import { SystemIdentityAdministrationRepository } from "@system/infrastructure/identity/system-identity-administration.repository"
@@ -146,7 +146,7 @@ export const POST = systemFactory.createHandlers(
     }
     const passwordHash =
       body.provider === "password" && pepper !== undefined
-        ? await PasswordHashService.hash(body.password, pepper).catch((caught: unknown) =>
+        ? await hashPassword(body.password, pepper).catch((caught: unknown) =>
             caught instanceof Error ? caught : new Error("failed to hash System password"),
           )
         : null

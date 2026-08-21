@@ -1,16 +1,16 @@
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { CreateReviewCycle } from "@/contexts/performance-review/application/review/create-review-cycle"
-import { zReviewCyclePolicy } from "@/contexts/performance-review/domain/review/review-cycle-policy"
-import { toReviewCycleStatus } from "@/contexts/performance-review/domain/review/review-cycle-status.value"
+import { zReviewCyclePolicy } from "@/contexts/performance-review/domain/values/review-cycle-policy.value"
+import { toReviewCycleStatus } from "@/contexts/performance-review/domain/values/review-cycle-status.value"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { zAppReviewCycle, zAppReviewCycleList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"

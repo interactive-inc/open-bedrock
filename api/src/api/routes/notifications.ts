@@ -1,11 +1,11 @@
-import { SendNotification } from "@/contexts/company/application/notification/send-notification"
-import { companyNotificationKindSchema } from "@/contexts/company/domain/notifications/notification-kind"
+import { PublishEmployeeNotification } from "@/api/http/notifications/publish-employee-notification"
+import { companyNotificationKindSchema } from "@/api/http/notifications/notification-kind.definition"
 import { ApplicationError } from "@/lib/errors"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppNotification } from "@/lib/app-schemas"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -34,7 +34,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const result = await new SendNotification(c).run({
+    const result = await new PublishEmployeeNotification(c).run({
       session: session,
       recipientEmployeeCode: body.recipient_employee_code,
       kind: body.kind,

@@ -1,7 +1,7 @@
 import { JwtSecretMissingApplicationError } from "@/contexts/system/application/auth/errors"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 import { SystemApplicationError } from "@system/interface/errors"
-import { McpGrantTokenService } from "@system/infrastructure/auth/mcp-grant-token.service.repository"
+import { createMcpGrantToken } from "@system/infrastructure/auth/create-mcp-grant-token.repository"
 import { requireSystemAuthentication } from "@system/interface/middlewares/require-system-authentication"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -27,7 +27,7 @@ export const POST = systemFactory.createHandlers(
     if (c.env.JWT_SECRET === undefined || c.env.JWT_SECRET.length === 0) {
       throw new SystemApplicationError(new JwtSecretMissingApplicationError())
     }
-    const grant = await McpGrantTokenService.create(
+    const grant = await createMcpGrantToken(
       c.var.userId,
       c.var.accountTokenVersion,
       body.challenge,

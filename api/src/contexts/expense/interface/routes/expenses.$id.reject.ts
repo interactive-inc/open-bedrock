@@ -1,12 +1,13 @@
 import { DecideExpense } from "@/contexts/expense/application/decide-expense"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result.repository"
+import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppExpenseDecision } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { validateIntParam } from "@/lib/http/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { z } from "zod"
 
 // @authorization permission - 権限キーで判定する
@@ -34,7 +35,9 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const updated = await new DecideExpense(c).run({
+    const updated = await new DecideExpense(c, (command) =>
+      new NotifyApprovalResult(c).run(command),
+    ).run({
       session: session,
       expenseId,
       approverId: session.employeeId,

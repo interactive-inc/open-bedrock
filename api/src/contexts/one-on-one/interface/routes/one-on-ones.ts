@@ -1,22 +1,22 @@
 import { CreateOneOnOne } from "@/contexts/one-on-one/application/oneonone/create-one-on-one"
-import { listDepartmentEmployeeIds } from "@/contexts/company/interface/utils/list-department-employee-ids"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
+import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppOneOnOne, zAppOneOnOneList } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/contexts/company/interface/lib/errors"
+} from "@/lib/http/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { oneOnOnes } from "@/contexts/one-on-one/infrastructure/schema/one-on-one"
 import { zValidator } from "@hono/zod-validator"
@@ -140,18 +140,12 @@ export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z
-      .object({
-        member_employee_code: z.string().min(1).max(100).optional(),
-        member_email: z.string().min(1).max(254).optional(),
-        topics: z.string().max(5_000).nullable().optional(),
-        manager_note: z.string().max(5_000).nullable().optional(),
-        next_action: z.string().max(5_000).nullable().optional(),
-      })
-      .refine(
-        (body) => body.member_employee_code !== undefined || body.member_email !== undefined,
-        { message: "member_employee_code or member_email is required" },
-      ),
+    z.object({
+      member_employee_code: z.string().min(1).max(100),
+      topics: z.string().max(5_000).nullable().optional(),
+      manager_note: z.string().max(5_000).nullable().optional(),
+      next_action: z.string().max(5_000).nullable().optional(),
+    }),
   ),
   async (c) => {
     const session = c.var.session
@@ -167,8 +161,7 @@ export const POST = factory.createHandlers(
     const json = c.req.valid("json")
 
     const created = await new CreateOneOnOne(c).run({
-      memberCode: json.member_employee_code ?? null,
-      memberEmail: json.member_email ?? null,
+      memberCode: json.member_employee_code,
       managerId: session.employeeId,
       heldAt: c.env.NOW ?? new Date().toISOString(),
       topics: json.topics ?? null,

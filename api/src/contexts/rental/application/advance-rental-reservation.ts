@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { RentalReservation } from "@/contexts/rental/domain/rental-reservation.entity"
+import type { Session } from "@/lib/auth/session"
+import { RentalReservation } from "@/contexts/rental/domain/entities/rental-reservation.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

@@ -3,20 +3,20 @@ import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/e
 import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
 import { CancelOnboardingAssignment } from "@/contexts/onboarding/application/cancel-onboarding-assignment"
 import { UpdateOnboardingAssignment } from "@/contexts/onboarding/application/update-onboarding-assignment"
-import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
-import type { OnboardingAssignment } from "@/contexts/onboarding/domain/onboarding-assignment.entity"
+import type { EmployeeDirectoryEntryValue } from "@/contexts/company/domain/values/employee-directory-entry.value"
+import type { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { UnauthorizedError } from "@/lib/http/errors"
 import { zAppOnboardingAssignment } from "@/lib/app-schemas"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { validateIntParam } from "@/lib/http/validate-int-param"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 /** 割り当てをレスポンス用の snake_case に整形する。 */
-function toResponseBody(assignment: OnboardingAssignment, employee: Employee) {
+function toResponseBody(assignment: OnboardingAssignment, employee: EmployeeDirectoryEntryValue) {
   return zAppOnboardingAssignment.parse({
     id: assignment.id,
     employee_code: employee.code,

@@ -344,11 +344,6 @@ import employeeArchiveHandler from "@/app/employees/archive/route"
 import personnelActionRequestHandler from "@/app/personnel-actions/request/route"
 import personnelActionApplyHandler from "@/app/personnel-actions/apply/route"
 import personnelActionCorrectHandler from "@/app/personnel-actions/correct/route"
-import lifecyclePreflightHandler from "@/app/batch/employee-lifecycle/preflight/route"
-import lifecycleBackfillHandler from "@/app/batch/employee-lifecycle/backfill/route"
-import lifecycleVerifyHandler from "@/app/batch/employee-lifecycle/verify/route"
-import lifecycleRebuildHandler from "@/app/batch/employee-lifecycle/rebuild-projections/route"
-import lifecycleOutboxHandler from "@/app/batch/employee-lifecycle/process-outbox/route"
 import expenseDeleteHandler from "@/app/expenses/delete/[expense_id]/route"
 import expenseUpdateHandler from "@/app/expenses/update/[expense_id]/route"
 import goalDeleteHandler from "@/app/performance-goals/delete/route"
@@ -891,11 +886,6 @@ routes.post("/employees/archive", ...employeeArchiveHandler)
 routes.post("/personnel-actions/request", ...personnelActionRequestHandler)
 routes.post("/personnel-actions/apply", ...personnelActionApplyHandler)
 routes.post("/personnel-actions/correct", ...personnelActionCorrectHandler)
-routes.post("/batch/employee-lifecycle/preflight", ...lifecyclePreflightHandler)
-routes.post("/batch/employee-lifecycle/backfill", ...lifecycleBackfillHandler)
-routes.post("/batch/employee-lifecycle/verify", ...lifecycleVerifyHandler)
-routes.post("/batch/employee-lifecycle/rebuild-projections", ...lifecycleRebuildHandler)
-routes.post("/batch/employee-lifecycle/process-outbox", ...lifecycleOutboxHandler)
 routes.post("/expenses/delete/:expense_id?", ...expenseDeleteHandler)
 routes.post("/expenses/update/:expense_id?", ...expenseUpdateHandler)
 routes.post("/performance-goals/delete", ...goalDeleteHandler)

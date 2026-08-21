@@ -1,10 +1,10 @@
-import { resolveActiveSystemAccountId } from "@/contexts/company/infrastructure/iam/resolve-active-system-account-id.repository"
-import { resolveActiveCompanyAccountParticipant } from "@/contexts/company/infrastructure/iam/resolve-active-company-account-participant.repository"
-import { resolveCompanyAccountParticipants } from "@/contexts/company/infrastructure/iam/resolve-company-account-participants.repository"
-import { resolveSystemAccountIdsForEmployees } from "@/contexts/company/infrastructure/iam/resolve-system-account-ids-for-employees.repository"
+import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id.repository"
+import { resolveActiveCompanyAccountParticipant } from "@/api/http/accounts/resolve-active-company-account-participant.repository"
+import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants.repository"
+import { resolveSystemAccountIdsForEmployees } from "@/api/http/accounts/resolve-system-account-ids-for-employees.repository"
 import { resolveCompanyProcedureTask } from "@/contexts/company/infrastructure/organization/resolve-company-procedure-task.repository"
-import { type CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
-import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/parse-company-procedure-decision-policy"
+import { type CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
+import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
 import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request.repository"
@@ -313,7 +313,7 @@ export async function decideSystemApplication(
       const personnelRequest = await findPersonnelActionRequest(c, session, {
         applicationId: proposal.number,
       })
-      if (personnelRequest instanceof ApplicationError) return personnelRequest
+      if (personnelRequest instanceof Error) return personnelRequest
       if (personnelRequest === null) {
         return new UnexpectedError("Company personnel action association is missing")
       }

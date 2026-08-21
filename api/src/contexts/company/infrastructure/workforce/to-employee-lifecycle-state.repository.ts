@@ -1,7 +1,7 @@
 import { resolveLifecycleAssignment } from "@/contexts/company/infrastructure/workforce/resolve-lifecycle-assignment.repository"
 import { toLifecycleStatus } from "@/contexts/company/infrastructure/workforce/to-lifecycle-status.repository"
 import { toLifecycleStorageId } from "@/contexts/company/infrastructure/workforce/to-lifecycle-storage-id.repository"
-import type { WorkforceStateAt } from "@/contexts/company/domain/workforce/resolve-workforce-state"
+import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
 import type {
   EmployeeLifecycleState,
   LifecycleAssignmentState,

@@ -87,15 +87,6 @@ export default async function AuditEventDetailPage(props: Props) {
         actions={<BackButton href="/system/audit-events" label="一覧に戻る" prefetch={false} />}
       />
 
-      {event.event_id.startsWith("legacy-") ? (
-        <Alert>
-          <AlertTitle>移行前の監査イベントです</AlertTitle>
-          <AlertDescription>
-            メタデータには現行の機密情報除去ルールが適用されていない可能性があります。
-          </AlertDescription>
-        </Alert>
-      ) : null}
-
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader>

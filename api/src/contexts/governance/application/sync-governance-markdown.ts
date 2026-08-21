@@ -1,15 +1,13 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/lib/auth/session"
 import {
   parseGovernanceMarkdown,
   type GovernanceReference,
   type ParsedGovernanceMarkdown,
-} from "@/contexts/governance/domain/governance-document"
+} from "@/contexts/governance/domain/values/governance-document.definition"
 import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import type { Context } from "@/env"
 import type { GovernanceDocumentRecord } from "@/contexts/governance/infrastructure/governance.repository"
 import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
-import { PERMISSION_KEYS } from "@/contexts/company/domain/iam/permission-key.catalog"
-import { prepareGovernanceAudit } from "@/contexts/governance/infrastructure/governance-audit.repository"
 import {
   ConflictError,
   ForbiddenError,
@@ -48,7 +46,17 @@ type PreparedDocument = {
 }
 
 export class SyncGovernanceMarkdown {
-  constructor(private readonly c: Context) {}
+  constructor(
+    private readonly c: Context,
+    private readonly permissionKeys: ReadonlyArray<string>,
+    private readonly prepareAudit: (props: {
+      session: Session
+      action: "governance.document.synced"
+      targetType: "governance_document"
+      targetId: string
+      metadata: Readonly<Record<string, string>>
+    }) => readonly [D1PreparedStatement, D1PreparedStatement],
+  ) {}
 
   async run(props: {
     session: Session
@@ -193,8 +201,7 @@ export class SyncGovernanceMarkdown {
         now,
         existingDocument: document,
         existingVersion,
-        auditStatements: prepareGovernanceAudit({
-          c: this.c,
+        auditStatements: this.prepareAudit({
           session: props.session,
           action: "governance.document.synced",
           targetType: "governance_document",
@@ -236,7 +243,7 @@ export class SyncGovernanceMarkdown {
       const known = {
         capability: new Set(capabilities.map((item) => item.code)),
         org_role: new Set(orgRoles.map((item) => item.code)),
-        permission: new Set(PERMISSION_KEYS),
+        permission: new Set(this.permissionKeys),
         training: referenceCatalog.training ?? new Set<string>(),
         policy: new Set(
           storedDocuments.filter((item) => item.kind === "policy").map((item) => item.code),

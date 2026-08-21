@@ -1,4 +1,4 @@
-import { Session } from "@/contexts/company/domain/iam/session"
+import { Session } from "@/lib/auth/session"
 import { canReadWorkStylesOf } from "@/contexts/work-style/interface/http/employee-work-styles/can-read-work-styles-of"
 import { describe, expect, test } from "bun:test"
 import { testAccountId } from "@/api/test/support/test-account-id"

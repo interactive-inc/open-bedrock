@@ -1,6 +1,6 @@
 import {
-  optionalFeatureRoutePrefixes,
-  standardFeatureRoutePrefixes,
+  optInAppRoutePrefixes,
+  defaultAppRoutePrefixes,
 } from "@/lib/feature/feature-route-registry"
 import { resolveDisabledFeatureKeys } from "@/lib/feature/resolve-disabled-feature-keys"
 import type { Props } from "@/lib/feature/resolve-disabled-feature-keys"
@@ -13,8 +13,7 @@ export function resolveDisabledRoutePrefixes(props: Props): ReadonlyArray<string
   const disabledPrefixes: Array<string> = []
 
   for (const featureKey of resolveDisabledFeatureKeys(props)) {
-    const routePrefixes =
-      optionalFeatureRoutePrefixes[featureKey] ?? standardFeatureRoutePrefixes[featureKey]
+    const routePrefixes = optInAppRoutePrefixes[featureKey] ?? defaultAppRoutePrefixes[featureKey]
 
     if (routePrefixes !== undefined) {
       disabledPrefixes.push(...routePrefixes)

@@ -1,6 +1,6 @@
 import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
+import { SystemAttachmentError } from "@system/domain/errors"
 import type { SystemAttachmentStorageContext } from "@system/infrastructure/configuration/system-context.repository"
-import { NotFoundError, UnavailableError, UnexpectedError } from "@/lib/errors"
 
 /**
  * 添付本体の保管。暗号文だけを扱い、同じキーへの上書き API を持たない（write-once）。
@@ -15,9 +15,10 @@ export class AttachmentObjectStore {
     const bucket = this.c.env.ATTACHMENTS
 
     if (bucket === undefined) {
-      return new UnavailableError(
-        "添付機能が設定されていません（ATTACHMENTS binding 未設定）",
+      return new SystemAttachmentError(
+        "unavailable",
         "attachment_storage_unconfigured",
+        "添付機能が設定されていません（ATTACHMENTS binding 未設定）",
       )
     }
 
@@ -34,7 +35,12 @@ export class AttachmentObjectStore {
 
       return undefined
     } catch (error) {
-      return new UnexpectedError("添付の保存に失敗しました", { cause: error })
+      return new SystemAttachmentError(
+        "unexpected",
+        "attachment_store_failed",
+        "添付の保存に失敗しました",
+        { cause: error },
+      )
     }
   }
 
@@ -47,12 +53,21 @@ export class AttachmentObjectStore {
       const object = await bucket.get(objectKey)
 
       if (object === null) {
-        return new NotFoundError("添付の実体が見つかりません", "attachment_object_missing")
+        return new SystemAttachmentError(
+          "not_found",
+          "attachment_object_missing",
+          "添付の実体が見つかりません",
+        )
       }
 
       return new Uint8Array(await object.arrayBuffer())
     } catch (error) {
-      return new UnexpectedError("添付の取得に失敗しました", { cause: error })
+      return new SystemAttachmentError(
+        "unexpected",
+        "attachment_read_failed",
+        "添付の取得に失敗しました",
+        { cause: error },
+      )
     }
   }
 
@@ -64,7 +79,12 @@ export class AttachmentObjectStore {
     try {
       return (await bucket.head(objectKey)) !== null
     } catch (error) {
-      return new UnexpectedError("添付の存在確認に失敗しました", { cause: error })
+      return new SystemAttachmentError(
+        "unexpected",
+        "attachment_head_failed",
+        "添付の存在確認に失敗しました",
+        { cause: error },
+      )
     }
   }
 
@@ -79,7 +99,12 @@ export class AttachmentObjectStore {
 
       return undefined
     } catch (error) {
-      return new UnexpectedError("添付の削除に失敗しました", { cause: error })
+      return new SystemAttachmentError(
+        "unexpected",
+        "attachment_delete_failed",
+        "添付の削除に失敗しました",
+        { cause: error },
+      )
     }
   }
 }

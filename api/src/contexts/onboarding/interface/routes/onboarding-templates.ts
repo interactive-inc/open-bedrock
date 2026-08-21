@@ -1,20 +1,16 @@
 import { CreateOnboardingTemplate } from "@/contexts/onboarding/application/create-onboarding-template"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import {
-  BadRequestError,
-  ForbiddenError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppOnboardingTemplate, zAppOnboardingTemplateList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
+} from "@/lib/http/to-bounded-int"
 import { lifecycleEffectTemplateBindings } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
 import {
   onboardingTemplates,

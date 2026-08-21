@@ -1,11 +1,11 @@
-import { SyncExternalIdentities } from "@/contexts/company/application/iam/sync-external-identities"
+import { ProvisionExternalIdentities } from "@/api/http/provisioning/provision-external-identities"
 import { identitySubjectSchema } from "@system/domain/values/identity-subject.schema"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyProvisioningKey } from "@/contexts/company/interface/middlewares/verify-provisioning-key"
+import { factory } from "@/api/http/factory"
+import { verifyProvisioningKey } from "@/api/http/middlewares/verify-provisioning-key"
 import { zAppProvisioningSummary } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { z } from "zod"
 
 const identityInputSchema = z.object({
@@ -31,7 +31,7 @@ export const POST = factory.createHandlers(
 
     const now = c.env.NOW === undefined ? new Date() : new Date(c.env.NOW)
 
-    const result = await new SyncExternalIdentities(c).run(inputs, now)
+    const result = await new ProvisionExternalIdentities(c).run(inputs, now)
 
     if (result instanceof ApplicationError) {
       throw toHttpException(result)

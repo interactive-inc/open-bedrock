@@ -1,14 +1,10 @@
 import { CompleteHealthCheckup } from "@/contexts/health-checkup/application/complete-health-checkup"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppHealthCheckup } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import {
-  BadRequestError,
-  ForbiddenError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

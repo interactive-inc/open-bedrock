@@ -2,17 +2,17 @@ import { UnexpectedError } from "@/lib/errors"
 import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation.repository"
 
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { zAppRentalReservationList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+} from "@/lib/http/to-bounded-int"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { UnauthorizedError } from "@/lib/http/errors"
 import { rentalReservations } from "@/contexts/rental/infrastructure/schema/rental"
 import { count, eq } from "drizzle-orm"
 

@@ -3,9 +3,9 @@ import type {
   AccountEmployeeLinkReadPort,
   AccountEmployeeLinkReadPortResult,
 } from "@/contexts/company/infrastructure/workforce/resolve-account-employee-link.repository"
-import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import { restoreWorkforceId } from "@/contexts/company/domain/workforce/restore-workforce-id"
-import type { Context } from "@/env"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import { restoreWorkforceId } from "@/contexts/company/domain/values/restore-workforce-id.definition"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import { zAccountId } from "@system/domain/values/account-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
 
@@ -25,7 +25,7 @@ function storageEmployeeId(employeeId: string): number | null {
 
 /** Company link tableとcanonical System Accountを共通Application portへ接続する。 */
 export class AccountEmployeeLinkReadRepository implements AccountEmployeeLinkReadPort {
-  constructor(private readonly c: Context) {
+  constructor(private readonly c: CompanyContext) {
     Object.freeze(this)
   }
 

@@ -1,7 +1,0 @@
--- dashboard ドメインは独自のテーブルを持たない（横断的な読み取り集計のみ）。
--- 集計対象テーブルは各ドメインの migration が所有する:
---   employees      … 0001_org_and_employee.sql, employee.sql
---   goals          … goal.sql      （status の集計に使用）
---   applications   … application.sql（idx_applications_status を所有）
---   surveys        … survey.sql    （idx_surveys_status を所有）
--- DDL を持たないため、本ファイルに実行文はない。

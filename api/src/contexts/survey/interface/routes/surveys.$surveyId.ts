@@ -1,17 +1,13 @@
 import { DeleteSurvey } from "@/contexts/survey/application/delete-survey"
 import { UpdateSurvey } from "@/contexts/survey/application/update-survey"
-import { Survey } from "@/contexts/survey/domain/survey.entity"
-import { surveyQuestionSchema } from "@/contexts/survey/domain/survey-question.value"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import {
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
+import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
+import { surveyQuestionSchema } from "@/contexts/survey/domain/values/survey-question.value"
+import { factory } from "@/api/http/factory"
+import { validateIntParam } from "@/lib/http/validate-int-param"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppSurvey } from "@/lib/app-schemas"
 import type { AppSurvey } from "@/lib/app-schemas"
 import { surveys } from "@/contexts/survey/infrastructure/schema/survey"

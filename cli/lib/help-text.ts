@@ -325,11 +325,6 @@ commands:
   salary-revisions list                       給与改定履歴 (--employee-id) ※最機微・salary_revision 権限のみ
   salary-revisions create                     給与改定を記録 (--employee-id --effective-date --previous-base-salary --new-base-salary [--reason])
   batch                                       バッチ状況
-  batch employee-lifecycle preflight          人事履歴移行を事前検査
-  batch employee-lifecycle backfill           旧台帳を人事履歴へ移行
-  batch employee-lifecycle verify             移行結果を検証して正本化
-  batch employee-lifecycle rebuild-projections  互換投影を再構築
-  batch employee-lifecycle process-outbox     入退社手続きを展開
   roles                                       ロール一覧（iam:manage_roles）
   accounts                                    アカウント一覧（account:manage）
   dashboard                                   ダッシュボード集計

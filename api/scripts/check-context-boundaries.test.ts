@@ -23,9 +23,7 @@ describe("API root structure", () => {
     expect(inspectApiRootPath("src/api/app-base.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/app.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/database-middleware.ts")).toEqual([])
-    expect(inspectApiRootPath("src/api/read-http-exception-problem.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/route-module.registry.ts")).toEqual([])
-    expect(inspectApiRootPath("src/api/to-negotiated-http-exception-response.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/http/dashboard/get-dashboard.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/routes/inbox/counts/route.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/test/app.test.ts")).toEqual([])
@@ -156,6 +154,25 @@ describe("context dependency matrix", () => {
     expect(violations).toEqual([])
   })
 
+  test("contextのHTTP adapterだけが共通API runtimeを利用できる", () => {
+    expect(
+      inspectContextSource(
+        "src/contexts/care/interface/routes/example.ts",
+        [
+          'import { factory } from "@/api/http/factory"',
+          'import { verifyBearer } from "@/api/http/verify-bearer"',
+          'import { gate } from "@/api/http/middlewares/feature-gate"',
+        ].join("\n"),
+      ),
+    ).toEqual([])
+    expect(
+      inspectContextSource(
+        "src/contexts/care/application/example.ts",
+        'import { factory } from "@/api/http/factory"',
+      ),
+    ).not.toEqual([])
+  })
+
   test("context外schema・API root・route composition・相対importを拒否する", () => {
     const sources = [
       'import { users } from "@/schema"',
@@ -189,9 +206,9 @@ describe("context dependency matrix", () => {
 
 describe("ownership manifest", () => {
   test("Company直下をDDDの4層と横断testに限定し、互換directoryを残さない", () => {
-    expect(inspectCompanyRootPath("src/contexts/company/domain/core/company-resource.ts")).toEqual(
-      [],
-    )
+    expect(
+      inspectCompanyRootPath("src/contexts/company/domain/entities/company-resource.entity.ts"),
+    ).toEqual([])
     expect(
       inspectCompanyRootPath("src/contexts/company/test/company-api.integration.test.ts"),
     ).toEqual([])
@@ -201,11 +218,13 @@ describe("ownership manifest", () => {
   })
 
   test("Companyの各層をmanifestで宣言した領域へ限定する", () => {
-    expect(inspectCompanyAreaPath("src/contexts/company/domain/core/company-resource.ts")).toEqual(
-      [],
-    )
     expect(
-      inspectCompanyAreaPath("src/contexts/company/application/workforce/read-workforce-state.ts"),
+      inspectCompanyAreaPath("src/contexts/company/domain/entities/company-resource.entity.ts"),
+    ).toEqual([])
+    expect(
+      inspectCompanyAreaPath(
+        "src/contexts/company/application/organization/write-organization-change.ts",
+      ),
     ).toEqual([])
     expect(
       inspectCompanyAreaPath("src/contexts/company/domain/expense/expense.entity.ts"),

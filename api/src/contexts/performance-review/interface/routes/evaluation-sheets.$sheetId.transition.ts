@@ -2,16 +2,12 @@ import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
 import { TransitionEvaluationSheet } from "@/contexts/performance-review/application/evaluation-sheet/transition-evaluation-sheet"
-import { evaluationSheetStatusSchema } from "@/contexts/performance-review/domain/evaluation-sheet/evaluation-sheet.entity"
-import {
-  ForbiddenError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { evaluationSheetStatusSchema } from "@/contexts/performance-review/domain/entities/evaluation-sheet.entity"
+import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { validateIntParam } from "@/lib/http/validate-int-param"
 import { zAppEvaluationSheet } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { evaluationSheets } from "@/contexts/performance-review/infrastructure/schema/performance-review"

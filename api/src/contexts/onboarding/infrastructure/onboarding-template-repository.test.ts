@@ -1,4 +1,4 @@
-import { OnboardingTemplate } from "@/contexts/onboarding/domain/onboarding-template.entity"
+import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"

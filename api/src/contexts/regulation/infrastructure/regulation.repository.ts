@@ -1,5 +1,5 @@
-import { Regulation } from "@/contexts/regulation/domain/regulation.entity"
-import { RegulationVersion } from "@/contexts/regulation/domain/regulation-version.entity"
+import { Regulation } from "@/contexts/regulation/domain/entities/regulation.entity"
+import { RegulationVersion } from "@/contexts/regulation/domain/entities/regulation-version.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"

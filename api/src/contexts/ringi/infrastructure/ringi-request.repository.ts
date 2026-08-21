@@ -1,4 +1,4 @@
-import { RingiRequest } from "@/contexts/ringi/domain/ringi-request.entity"
+import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import type { Context } from "@/env"
 import { ringiRequests } from "@/contexts/ringi/infrastructure/schema/ringi"
 import { and, eq } from "drizzle-orm"

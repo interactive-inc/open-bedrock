@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import type { Document } from "@/contexts/document/domain/document.entity"
+import type { Session } from "@/lib/auth/session"
+import type { Document } from "@/contexts/document/domain/entities/document.entity"
 import type { Context } from "@/env"
 import { DocumentRepository } from "@/contexts/document/infrastructure/document.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

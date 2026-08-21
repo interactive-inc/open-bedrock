@@ -1,17 +1,17 @@
-import type { WorkforceSnapshotReadPort } from "@/contexts/company/domain/workforce/organization-change"
+import type { WorkforceSnapshotReadPort } from "@/contexts/company/domain/values/organization-change.definition"
 import type { OrganizationUnitReadPort } from "@/contexts/company/infrastructure/workforce/read-organization-state.repository"
-import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/workforce/workforce-snapshot-changed-error"
-import type { CalendarDate } from "@/contexts/company/domain/workforce/calendar-date"
-import type { OrganizationUnitSnapshot } from "@/contexts/company/domain/workforce/organization-unit"
+import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/errors"
+import type { CalendarDate } from "@/contexts/company/domain/values/calendar-date.definition"
+import type { OrganizationUnitSnapshot } from "@/contexts/company/domain/values/organization-unit.definition"
 import {
   resolveWorkforceStateAt,
   type WorkforceStateAt,
-} from "@/contexts/company/domain/workforce/resolve-workforce-state"
-import type { WorkforceStateResolutionError } from "@/contexts/company/domain/workforce/workforce-state-resolution-error"
-import type { OrganizationInvariantViolation } from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
-import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/workforce/validate-organization-unit-snapshot"
-import type { WorkforceInvariantViolation } from "@/contexts/company/domain/workforce/workforce-invariant"
-import { validateWorkforceSchedules } from "@/contexts/company/domain/workforce/validate-workforce-schedules"
+} from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
+import type { WorkforceStateResolutionError } from "@/contexts/company/domain/errors"
+import type { OrganizationInvariantViolation } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
+import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
+import type { WorkforceInvariantViolation } from "@/contexts/company/domain/values/workforce-invariant.definition"
+import { validateWorkforceSchedules } from "@/contexts/company/domain/policies/validate-workforce-schedules.policy"
 
 export type ReadOrganizationWorkforceStateResult =
   | Readonly<{

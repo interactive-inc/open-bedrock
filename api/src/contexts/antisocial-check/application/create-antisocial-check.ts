@@ -1,4 +1,4 @@
-import { AntisocialCheck } from "@/contexts/antisocial-check/domain/antisocial-check.entity"
+import { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
 import type { Context } from "@/env"
 import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/antisocial-check.repository"
 import { UnexpectedError } from "@/lib/errors"

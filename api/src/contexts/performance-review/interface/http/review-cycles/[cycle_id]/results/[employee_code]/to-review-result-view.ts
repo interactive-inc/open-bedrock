@@ -1,5 +1,5 @@
-import type { ReviewCycle } from "@/contexts/performance-review/domain/review/review-cycle.entity"
-import type { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
+import type { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
+import type { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import type { ReviewerTypeSummary } from "@/contexts/performance-review/interface/lib/to-reviewer-type-summary"
 import { toReviewerTypeSummary } from "@/contexts/performance-review/interface/lib/to-reviewer-type-summary"
 

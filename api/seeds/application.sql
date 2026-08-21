@@ -5,10 +5,15 @@ INSERT INTO system_procedure_definitions (key, current_revision, status, created
   ('paid_leave', 1, 'active', 0, 0),
   ('expense', 1, 'active', 0, 0),
   ('remote_work', 1, 'active', 0, 0),
-  ('equipment', 1, 'active', 0, 0);
+  ('equipment', 1, 'active', 0, 0),
+  ('personnel_action_request', 1, 'active', 0, 0);
 
 INSERT INTO system_procedure_numbers (number, procedure_key) VALUES
-  (1, 'paid_leave'), (2, 'expense'), (3, 'remote_work'), (4, 'equipment');
+  (1, 'paid_leave'),
+  (2, 'expense'),
+  (3, 'remote_work'),
+  (4, 'equipment'),
+  (900000001, 'personnel_action_request');
 
 INSERT INTO system_procedure_definition_revisions
   (procedure_key, revision, title, category, description, input_schema_json,
@@ -17,19 +22,24 @@ VALUES
   ('paid_leave', 1, '有給休暇申請', 'attendance', '有給休暇の取得を申請します',
    '{"fields":[{"id":"start_date","label":"開始日","type":"date","required":true,"description":null,"options":null},{"id":"end_date","label":"終了日","type":"date","required":true,"description":null,"options":null},{"id":"reason","label":"理由","type":"text","required":false,"description":null,"options":null}]}',
    '{"schemaVersion":1,"qualificationContext":"company","approverRoles":[],"workflow":{"version":1,"steps":[{"key":"manager_approval","name":"Manager approval","approvers":[{"type":"management_chain"}],"approval_mode":"any","condition_mode":"all","conditions":[],"due_days":null,"escalation_approvers":[],"rejection_behavior":"reject","allow_delegation":true}]},"workflowRevision":1}',
-   NULL, 'system:migration', 0),
+   NULL, '1', 0),
   ('expense', 1, '経費精算申請', 'accounting', '立て替えた経費の精算を申請します',
    '{"fields":[{"id":"amount","label":"金額","type":"number","required":true,"description":null,"options":null},{"id":"category","label":"内訳","type":"text","required":true,"description":null,"options":null},{"id":"note","label":"備考","type":"text","required":false,"description":null,"options":null}]}',
    '{"schemaVersion":1,"qualificationContext":"company","approverRoles":[],"workflow":{"version":1,"steps":[{"key":"manager_approval","name":"Manager approval","approvers":[{"type":"management_chain"}],"approval_mode":"any","condition_mode":"all","conditions":[],"due_days":null,"escalation_approvers":[],"rejection_behavior":"reject","allow_delegation":true}]},"workflowRevision":1}',
-   NULL, 'system:migration', 0),
+   NULL, '1', 0),
   ('remote_work', 1, '在宅勤務申請', 'attendance', '在宅勤務の事前申請をします',
    '{"fields":[{"id":"date","label":"対象日","type":"date","required":true,"description":null,"options":null},{"id":"reason","label":"理由","type":"text","required":false,"description":null,"options":null}]}',
    '{"schemaVersion":1,"qualificationContext":"company","approverRoles":[],"workflow":{"version":1,"steps":[{"key":"manager_approval","name":"Manager approval","approvers":[{"type":"management_chain"}],"approval_mode":"any","condition_mode":"all","conditions":[],"due_days":null,"escalation_approvers":[],"rejection_behavior":"reject","allow_delegation":true}]},"workflowRevision":1}',
-   NULL, 'system:migration', 0),
+   NULL, '1', 0),
   ('equipment', 1, '備品購入申請', 'general_affairs', '業務用備品の購入を申請します',
    '{"fields":[{"id":"item","label":"品目","type":"text","required":true,"description":null,"options":null},{"id":"amount","label":"金額","type":"number","required":true,"description":null,"options":null},{"id":"reason","label":"理由","type":"text","required":false,"description":null,"options":null}]}',
    '{"schemaVersion":1,"qualificationContext":"company","approverRoles":[],"workflow":{"version":1,"steps":[{"key":"manager_approval","name":"Manager approval","approvers":[{"type":"management_chain"}],"approval_mode":"any","condition_mode":"all","conditions":[],"due_days":null,"escalation_approvers":[],"rejection_behavior":"reject","allow_delegation":true}]},"workflowRevision":1}',
-   NULL, 'system:migration', 0);
+   NULL, '1', 0),
+  ('personnel_action_request', 1, '人事異動申請', 'employee',
+   '発効日付きの雇用ライフサイクル変更を申請します。',
+   '{"fields":[{"id":"kind","label":"変更種別","type":"select","required":true,"description":null,"options":["transferred"]},{"id":"employeeCode","label":"従業員コード","type":"text","required":true,"description":null,"options":null},{"id":"eventOn","label":"発効日","type":"date","required":true,"description":null,"options":null},{"id":"departmentCode","label":"異動先部門コード","type":"text","required":true,"description":null,"options":null},{"id":"positionTitle","label":"役職名","type":"text","required":false,"description":null,"options":null},{"id":"managerEmployeeCode","label":"上長従業員コード","type":"text","required":false,"description":null,"options":null}]}',
+   '{"schemaVersion":1,"qualificationContext":"company","approverRoles":["hr"],"workflow":{"version":1,"steps":[{"key":"hr_approval","name":"HR approval","approvers":[{"type":"role","role_key":"hr"}],"approval_mode":"any","condition_mode":"all","conditions":[],"due_days":null,"escalation_approvers":[],"rejection_behavior":"reject","allow_delegation":true}]},"workflowRevision":1}',
+   'company.personnel-action.apply', '1', 0);
 
 INSERT INTO system_proposal_series (id, procedure_key, created_by_account_id, created_at) VALUES
   ('seed-application-series-1', 'paid_leave', '5', 1779238800000),

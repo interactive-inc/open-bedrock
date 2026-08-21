@@ -3,7 +3,7 @@ import {
   seedRegulations,
   seedRegulationVersions,
 } from "@/contexts/regulation/infrastructure/seed/seed-regulations.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -11,6 +11,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "regulation-route-test-secret"
 
@@ -104,15 +105,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: version.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -127,7 +127,7 @@ async function request(
 
 describe("GET /regulations", () => {
   test("any authenticated user sees the list with latest version metadata", async () => {
-    const response = await request("/regulations", await tokenFor(5, "member"))
+    const response = await request("/regulations", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -146,7 +146,7 @@ describe("GET /regulations", () => {
   })
 
   test("filters by status", async () => {
-    const response = await request("/regulations?status=archived", await tokenFor(5, "member"))
+    const response = await request("/regulations?status=archived", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -169,7 +169,7 @@ describe("GET /regulations", () => {
 
 describe("GET /regulations/:code", () => {
   test("returns latest version and full version list", async () => {
-    const response = await request("/regulations/REG-001", await tokenFor(5, "member"))
+    const response = await request("/regulations/REG-001", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -186,7 +186,7 @@ describe("GET /regulations/:code", () => {
   })
 
   test("returns 404 for unknown code", async () => {
-    const response = await request("/regulations/NOPE", await tokenFor(5, "member"))
+    const response = await request("/regulations/NOPE", await tokenFor(5))
 
     expect(response.status).toBe(404)
   })
@@ -194,7 +194,7 @@ describe("GET /regulations/:code", () => {
 
 describe("POST /regulations", () => {
   test("admin creates a regulation with an initial version", async () => {
-    const response = await request("/regulations", await tokenFor(1, "root"), "POST", {
+    const response = await request("/regulations", await tokenFor(1), "POST", {
       code: "REG-100",
       title: "New Policy",
       body_md: "the policy body",
@@ -214,7 +214,7 @@ describe("POST /regulations", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/regulations", await tokenFor(5, "member"), "POST", {
+    const response = await request("/regulations", await tokenFor(5), "POST", {
       code: "REG-101",
       title: "Blocked",
       body_md: "no",
@@ -225,7 +225,7 @@ describe("POST /regulations", () => {
   })
 
   test("duplicate code conflicts", async () => {
-    const response = await request("/regulations", await tokenFor(1, "root"), "POST", {
+    const response = await request("/regulations", await tokenFor(1), "POST", {
       code: "REG-001",
       title: "Dup",
       body_md: "dup",
@@ -238,16 +238,11 @@ describe("POST /regulations", () => {
 
 describe("POST /regulations/:code/versions", () => {
   test("admin adds the next version", async () => {
-    const response = await request(
-      "/regulations/REG-002/versions",
-      await tokenFor(1, "root"),
-      "POST",
-      {
-        body_md: "revised travel rules",
-        effective_on: "2026-10-01",
-        note: "annual update",
-      },
-    )
+    const response = await request("/regulations/REG-002/versions", await tokenFor(1), "POST", {
+      body_md: "revised travel rules",
+      effective_on: "2026-10-01",
+      note: "annual update",
+    })
 
     expect(response.status).toBe(201)
 
@@ -262,12 +257,10 @@ describe("POST /regulations/:code/versions", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request(
-      "/regulations/REG-002/versions",
-      await tokenFor(5, "member"),
-      "POST",
-      { body_md: "x", effective_on: "2026-10-01" },
-    )
+    const response = await request("/regulations/REG-002/versions", await tokenFor(5), "POST", {
+      body_md: "x",
+      effective_on: "2026-10-01",
+    })
 
     expect(response.status).toBe(403)
   })
@@ -275,11 +268,7 @@ describe("POST /regulations/:code/versions", () => {
 
 describe("POST /regulations/:code/archive", () => {
   test("admin archives a regulation", async () => {
-    const response = await request(
-      "/regulations/REG-001/archive",
-      await tokenFor(1, "root"),
-      "POST",
-    )
+    const response = await request("/regulations/REG-001/archive", await tokenFor(1), "POST")
 
     expect(response.status).toBe(200)
 

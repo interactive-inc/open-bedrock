@@ -1,8 +1,8 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import { canCompleteEnrollment } from "@/contexts/training/domain/can-complete-enrollment"
+import type { Session } from "@/lib/auth/session"
+import { canCompleteEnrollment } from "@/contexts/training/domain/policies/enrollment-completion.policy"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { TrainingEnrollment } from "@/contexts/training/domain/training-enrollment.entity"
+import type { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import type { Context } from "@/env"
 import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/training-enrollment.repository"
 

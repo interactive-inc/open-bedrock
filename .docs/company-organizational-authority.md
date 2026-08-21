@@ -20,7 +20,7 @@ Technical Permission は、認証済み Account が特定の API operation を�
 
 一方だけで判断を許可しない。`expense:approve` を持っていても対象部門への責任がなければ候補にならない。部門責任者でも必要な Technical Permission、Account の有効性、本人性を満たさなければ判断できない。
 
-旧 `role` selector と `approverRoles` は保存済み定義を読めるよう構文上だけ残すが、Account role から判断候補を列挙しない。workflow が未定義なら手続きは fail closed になり、`role` selector しかない step は候補ゼロになる。経理責任者、人事責任者、契約決裁者などの会社上の資格は Company の ResponsibilityAssignment で表し、Technical Permission は操作能力だけに使う。
+Account role から判断候補を列挙しない。workflow が会社上の資格条件を定義していなければ手続きは fail closed になる。経理責任者、人事責任者、契約決裁者などの資格は Company の ResponsibilityAssignment で表し、Technical Permission は操作能力だけに使う。
 
 ## 入力契約
 
@@ -33,9 +33,7 @@ Company は呼び出し元の selector 型を import しない。各 App は自�
 - `responsibility`: 安定した責務 code と、任意の対象 OrgUnit で責任保持者を指す
 - `management_chain`: subject から上位へ辿れる管理系列を指す
 
-旧 `legacy_account_role` は過去定義を読み取るための互換値であり、候補を返す条件ではない。新しい workflow には使わない。
-
-入力には `resolvedAt` を必須とする。resolver が内部時計を暗黙に読むと、同じ command の再試行、legacy backfill、監査再構成で別の日の組織が選ばれ得る。`resolvedAt` を会社 timezone の営業日 `asOf` へ変換し、すべての条件を同じ基準日で評価する。
+入力には `resolvedAt` を必須とする。resolver が内部時計を暗黙に読むと、同じ command の再試行や監査再構成で別の日の組織が選ばれ得る。`resolvedAt` を会社 timezone の営業日 `asOf` へ変換し、すべての条件を同じ基準日で評価する。
 
 subject が存在しない提案では subject Employee を null にできる。この場合、直属上司や管理系列は候補を返さない。特定 Employee、責任、対象組織など、subject を必要としない条件だけが評価できる。Company は対象を推測して補わない。
 
@@ -50,7 +48,7 @@ snapshot は次を持つ。
 - 会社 timezone で固定した `asOf`
 - organization revision
 
-現行resolverが新しく作るsnapshotの出典は`lifecycle`だけである。保存済みの過去snapshotを読めるよう`legacy`値はschema上に残すが、新しい判断でlegacy投影へfallbackしない。
+snapshotの出典はcanonicalな`lifecycle`だけである。別の組織投影へfallbackせず、必要なrevisionと証拠が揃わなければ判断を停止する。
 
 候補は次を持つ。
 
@@ -75,9 +73,7 @@ resolver は lifecycle 投影を読む前に organization revision を固定し�
 
 各 lifecycle 証拠には assignment period ID、Employee revision、organization revision、`asOf` を含める。管理系列では各 edge の証拠を順番付き path として保存する。現在の組織図だけから過去の経路を推測しない。
 
-過去に保存されたlegacy snapshotはorganization revisionを持たず、完全な履歴正本ではない。これは過去証拠の読取互換であり、現在のresolverが同じ経路を使ってよい理由にならない。migrationが未検証なら新しい判断を停止し、legacy snapshotをlifecycleと同じ保証で表示しない。
-
-migrationを実行するAccountがログインできなくなる循環を避けるため、Systemの認証control planeだけは未移行中のEmployee active状態をbootstrapに利用できる。この例外はCompanyの資格resolverへ入らず、上司、所属、Responsibility、対象範囲を導かない。migration検証後は認証もcanonical Workforceへ切り替わる。
+organization revisionを持たないsnapshotは完全な履歴証拠として受理しない。canonicalなlifecycleを検証できなければ、新しい判断を停止する。
 
 `resolvedAt` と `asOf` は用途が違う。`resolvedAt` は候補解決を実行した instant、`asOf` は会社の勤務・組織規則を評価した営業日である。System の候補 row は `resolvedAt` を持ち、Company の authority snapshot は `asOf` を持つことで両方を失わない。
 
@@ -87,9 +83,7 @@ Company は Account と Employee の一対一対応を所有する。候補 Empl
 
 Account の認証状態や session は System の正本であり、Company snapshot だけで判断を許可しない。候補 snapshot 作成後に Account が停止された場合、System は HumanAttestation の書込み境界で再検査して拒否する。Company snapshot は資格を固定し、System の live guard を置き換えない。
 
-現行の Company 対応 table と Session は整数 Account ID を使うが、resolver は対応する active な `system_accounts` を同じ解決内で確認し、opaque string の canonical System Account ID を返す。System workflow の候補、actor、更新者、委任作成者はこの canonical ID を使う。旧整数と canonical ID の接続規則、live guard、migration の保証は [Workflow Account identity](./workflow-account-identity.md) に定める。
-
-Company の旧対応 table が残ることは、System Account ID を整数として扱ってよい理由にならない。整数は Company 内部の互換キー、文字列は context 境界を越える認証主体の正本である。Company は両者と Employee の対応を検証するが、System は旧整数または Employee を解釈しない。
+resolver は対応する active な `system_accounts` を同じ解決内で確認し、opaque string の canonical System Account ID を返す。System workflow の候補、actor、更新者、委任作成者はこの canonical ID を使う。Company は Account と Employee の対応を検証するが、System は Employee ID を解釈しない。接続規則とlive guardは [Workflow Account identity](./workflow-account-identity.md) に定める。
 
 ## 呼び出し側との接続
 
@@ -106,7 +100,7 @@ flowchart LR
 
 一つの step の primary 条件と escalation 条件は、一回の Company resolver 呼出しで解決する。二回に分けると途中の組織変更で異なる organization revision が混ざり、同じ step snapshot が一つの会社時点を表さなくなる。adapter は一つの解決結果を primary と escalation に分類し、selector index だけを各配列内の index へ戻す。
 
-組織変更後に既存 Task の候補を再解決しない。再解決が必要な場合は新しい round と resolution ID を作り、旧候補、旧証拠、旧判断を残す。legacy backfill も backfill 実行時刻を明示し、当初から存在した snapshot のように扱わない。
+組織変更後に既存 Task の候補を再解決しない。再解決が必要な場合は新しい round と resolution ID を作り、以前の候補、証拠、判断を残す。
 
 ## System との接続
 
@@ -169,10 +163,10 @@ Company 自体を持たない製品では、この resolver を登録しない�
 - 組織資格だけで API 操作能力または本人性を満たしたと扱う
 - resolver が暗黙の現在時刻で再試行し、別の候補を返す
 - 進行中 Task の候補が組織変更で暗黙に書き換わる
-- legacy と lifecycle の証拠を同じ保証として表示する
+- organization revisionを持たない証拠をcanonical lifecycleと同じ保証として表示する
 - Account に対応しない Employee ID を System 候補として渡す
 - snapshot 作成時の Account 有効性だけで判断時の再検査を省く
-- legacy Session の整数 Account ID を各呼び出し側で独自に文字列化する
+- Employee IDを各呼び出し側でSystem Account IDとして扱う
 
 矛盾が必要に見える場合は例外を足さず、会社上の責任、対象 scope、評価時点、Account 対応、System の判断規則のどれが欠けているかを特定する。
 
@@ -193,20 +187,20 @@ OrgUnit は変更される名称や親子関係そのものを ID にしない�
 
 検証済み変更だけを一回の atomic batch で追記する。DB は operation の再利用、expected revision 不一致、部分適用、非連続 period revision、追記済み事実の更新と削除を拒否する。operation が `PENDING` の間は snapshot を読めないため、変更途中の組織を権限判断へ公開しない。
 
-Personnel Action は製品固有の入力と既存 wire を維持する adapter であり、所属または責務を変える発令は同じ `OrganizationChangeSet` validator を必ず通す。採用予定者は、同一 transaction で作成される Employee profile、Employment、Status だけを検証用 snapshot に補い、所属を二重適用しない。発令事実、組織 operation、period version、現行互換 projection、監査は同じ batch で確定する。
+Personnel Action はCompanyへの人事入力adapterであり、所属または責務を変える発令は同じ `OrganizationChangeSet` validator を必ず通す。採用予定者は、同一 transaction で作成される Employee profile、Employment、Status だけを検証用 snapshot に補い、所属を二重適用しない。発令事実、組織 operation、period version、current projection、監査は同じ batch で確定する。
 
-migration は明示済みの OrgUnit、lifecycle assignment、manager responsibility だけを決定的に backfill する。Account role、役職名、権限から会社上の責務を推測しない。`PEOPLE_OPERATIONS` など manager 以外の責務は、Company の組織変更 operation として明示的に割り当てる。推測できない旧 workflow は自動補完せず、明示的な authority workflow と必要な Responsibility が設定されるまで拒否する。
+初期化は明示済みの OrgUnit、lifecycle assignment、manager responsibility だけを決定的に作る。Account role、役職名、権限から会社上の責務を推測しない。`PEOPLE_OPERATIONS` など manager 以外の責務は、Company の組織変更 operation として明示的に割り当てる。authority workflow と必要な Responsibility が設定されていない判断は拒否する。
 
 ## 現行実装
 
-`api/src/contexts/company/domain/workforce/resolve-organizational-authority.ts` が、固定済み Workforce state と AccountEmployeeLink だけから資格候補を解決する正本である。DB、Hono、Worker、System schema、暗黙の時計を読まない。criterion、snapshot、candidate、evidence は opaque ID と判別可能な union だけで表し、整数 Employee ID、Department code、自由形式の DB evidence を公開しない。
+`api/src/contexts/company/domain/policies/organizational-authority.policy.ts` が、固定済み Workforce state と AccountEmployeeLink だけから資格候補を解決する正本である。DB、Hono、Worker、System schema、暗黙の時計を読まない。criterion、snapshot、candidate、evidence は opaque ID と判別可能な union だけで表し、storage IDや自由形式のDB evidenceを公開しない。
 
 純粋 resolver は同じ `asOf`、Employee state の一意性、period の所有者と有効期間、Account と Employee の一対一対応、参照先 Employee、組織全体の管理循環を先に検査する。候補が存在しない正常結果と、組織事実を安全に評価できない `OrganizationalAuthorityError` を区別する。候補探索は criterion 順、opaque ID、period IDで決定的に行い、入力配列やDB読取順へ依存しない。
 
-`api/src/contexts/company/application/organization/resolve-organizational-authority-candidates.ts` はcanonical OrgUnit、Assignment、Responsibilityだけを読み、同じ解決内で一つの`asOf`とorganization revisionを固定してから純粋resolverを呼ぶ。migrationが未検証ならlegacy部署とmembershipを読まず停止する。旧整数IDとEmployee codeを既存workflow wireへ戻す変換は互換adapterだけが持ち、Account roleを候補資格として読まない。
+`api/src/contexts/company/infrastructure/organization/resolve-organizational-authority-candidates.repository.ts` はcanonical OrgUnit、Assignment、Responsibilityだけを読み、同じ解決内で一つの`asOf`とorganization revisionを固定してから純粋resolverを呼ぶ。canonical stateを検証できなければ停止し、Account roleを候補資格として読まない。
 
-`api/src/contexts/company/application/organization/resolve-company-procedure-task.ts` は procedure selector から Company criterion への adapter である。候補列挙、在籍判定、組織探索、Account 対応を自分では実装せず、Company resolver の証拠を System Task の候補 snapshot へ変換する。
+`api/src/contexts/company/infrastructure/organization/resolve-company-procedure-task.repository.ts` は procedure selector から Company criterion への adapter である。候補列挙、在籍判定、組織探索、Account 対応を自分では実装せず、Company resolver の証拠を System Task の候補 snapshot へ変換する。
 
-現行実装はOrgUnit identity、期間付き階層、Assignment、汎用Responsibility、organization revision、atomic operation、Company資格候補、時点snapshot、canonical System Account ID、System TaskとCompany APIへの接続を実装した。正規条件の探索と検証は共通の純粋resolverへ収束し、Personnel Actionも共通の変更validatorに接続した。`legacy_account_role`と旧整数のCompany対応tableは過去wireの読取互換境界に残るが、新しい候補解決はlegacy組織投影を読まない。法人、地域、金額などOrgUnit以外の条件scopeと合議体は、必要になった時点で別の明示型として拡張する。
+現行実装はOrgUnit identity、期間付き階層、Assignment、汎用Responsibility、organization revision、atomic operation、Company資格候補、時点snapshot、canonical System Account ID、System TaskとCompany APIへの接続を実装した。正規条件の探索と検証は共通の純粋resolverへ収束し、Personnel Actionも共通の変更validatorに接続した。法人、地域、金額などOrgUnit以外の条件scopeと合議体は、必要になった時点で別の明示型として拡張する。
 
 判断時の Employee 対応と在籍の再検査は Company の公開 resolver を経由し、Account 状態の正本は canonical `system_accounts` である。System HumanAttestation は Company table を直接読まず、API composition が Company の live な主体対応と System の候補資格を合成する。

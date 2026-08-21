@@ -1,11 +1,11 @@
-import { createCompanyAuditEventRepository } from "@/contexts/company/interface/http/audit-events/create-company-audit-event-repository"
-import { AuditTrail } from "@/contexts/company/interface/utils/audit-trail"
-import { throwAuditRouteError } from "@/contexts/company/interface/utils/throw-audit-route-error"
-import { toPublicAuditPage } from "@/contexts/company/interface/utils/to-public-audit-page"
-import { auditListPermission } from "@/contexts/company/interface/middlewares/audit-list-permission"
-import { auditListValidation } from "@/contexts/company/interface/middlewares/audit-list-validation"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { createCompanyAuditEventRepository } from "@/api/http/audit-events/create-company-audit-event-repository"
+import { AuditTrail } from "@/api/http/utils/audit-trail"
+import { throwAuditRouteError } from "@/api/http/utils/throw-audit-route-error"
+import { toPublicAuditPage } from "@/api/http/utils/to-public-audit-page"
+import { auditListPermission } from "@/api/http/middlewares/audit-list-permission"
+import { auditListValidation } from "@/api/http/middlewares/audit-list-validation"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
 
 // @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(

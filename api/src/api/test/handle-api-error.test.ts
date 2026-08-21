@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import { handleApiError } from "@/api/http/handle-api-error"
 import { companyValidationErrorMiddleware } from "@/api/http/company-validation-error-middleware"
-import { CompanyHttpError } from "@/contexts/company/interface/http/errors/company-http-error"
+import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import { OIDCInvalidTokenError } from "@system/interface/errors"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { ValidationError } from "@/lib/errors"
 import type { HonoEnv } from "@/env"
 import { Hono } from "hono"
@@ -14,7 +14,7 @@ const app = new Hono<HonoEnv>()
   .onError(handleApiError)
   .use("*", companyValidationErrorMiddleware())
   .get("/company-conflict", () => {
-    throw new CompanyHttpError({
+    throw new CompanyHTTPException({
       status: 409,
       code: "company_revision_conflict",
       detail: "Company revision has changed",
@@ -22,7 +22,7 @@ const app = new Hono<HonoEnv>()
     })
   })
   .get("/company-unavailable", () => {
-    throw new CompanyHttpError({
+    throw new CompanyHTTPException({
       status: 503,
       code: "company_read_unavailable",
       detail: "Company data could not be read",

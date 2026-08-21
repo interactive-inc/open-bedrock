@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import type { Survey } from "@/contexts/survey/domain/survey.entity"
+import type { Session } from "@/lib/auth/session"
+import type { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

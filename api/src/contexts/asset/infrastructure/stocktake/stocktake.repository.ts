@@ -1,4 +1,4 @@
-import { Stocktake, stocktakeRowSchema } from "@/contexts/asset/domain/stocktake/stocktake.entity"
+import { Stocktake, stocktakeRowSchema } from "@/contexts/asset/domain/entities/stocktake.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/lib/d1/parse-d1-row"
 import { assets } from "@/contexts/asset/infrastructure/schema/asset"

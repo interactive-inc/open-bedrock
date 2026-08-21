@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedExpenseApprovals } from "@/contexts/expense/infrastructure/seed/seed-expense-approvals.repository"
 import { seedExpenses } from "@/contexts/expense/infrastructure/seed/seed-expenses.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -8,7 +8,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const categoryEnum = z.enum(["transport", "supplies", "entertainment", "books", "other"])
@@ -79,16 +79,14 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -117,7 +115,7 @@ const expenseInboxListResponseSchema = z.object({
 
 describe("GET /expenses/inbox", () => {
   test("returns 200 with joined applicant names for a manager", async () => {
-    const response = await request({ path: "/expenses/inbox", token: await tokenFor(2, "manager") })
+    const response = await request({ path: "/expenses/inbox", token: await tokenFor(2) })
 
     expect(response.status).toBe(200)
 
@@ -136,7 +134,7 @@ describe("GET /expenses/inbox", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request({ path: "/expenses/inbox", token: await tokenFor(5, "member") })
+    const response = await request({ path: "/expenses/inbox", token: await tokenFor(5) })
 
     expect(response.status).toBe(403)
   })

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedExpenseApprovals } from "@/contexts/expense/infrastructure/seed/seed-expense-approvals.repository"
 import { seedExpenses } from "@/contexts/expense/infrastructure/seed/seed-expenses.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const categoryEnum = z.enum(["transport", "supplies", "entertainment", "books", "other"])
 
@@ -71,15 +72,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: approval.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -108,7 +108,7 @@ const expenseMineListResponseSchema = z.object({
 
 describe("GET /expenses/me", () => {
   test("returns 200 with only the token employee's expenses", async () => {
-    const response = await request({ path: "/expenses/me", token: await tokenFor(5, "member") })
+    const response = await request({ path: "/expenses/me", token: await tokenFor(5) })
 
     expect(response.status).toBe(200)
 
@@ -125,7 +125,7 @@ describe("GET /expenses/me", () => {
   test("filters by status", async () => {
     const response = await request({
       path: "/expenses/me?status=approved",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     expect(response.status).toBe(200)

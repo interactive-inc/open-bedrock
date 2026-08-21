@@ -6,6 +6,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "management-dashboard-route-test-secret"
 
@@ -284,15 +285,14 @@ async function createTestDb(): Promise<D1Database> {
       updated_at: Date.parse(`2026-06-0${index + 1}T00:00:00Z`),
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -302,7 +302,7 @@ describe("GET /dashboard/management", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/dashboard/management",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
       now,
     })
 
@@ -349,7 +349,7 @@ describe("GET /dashboard/management", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/dashboard/management",
-      token: await tokenFor(2, "member"),
+      token: await tokenFor(2),
       now,
     })
 

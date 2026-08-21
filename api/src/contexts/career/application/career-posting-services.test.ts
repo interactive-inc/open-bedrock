@@ -3,7 +3,7 @@ import { ApplyToCareerPosting } from "@/contexts/career/application/apply-to-car
 import { CreateCareerPosting } from "@/contexts/career/application/create-career-posting"
 import { DeleteCareerPosting } from "@/contexts/career/application/delete-career-posting"
 import { UpdateCareerPosting } from "@/contexts/career/application/update-career-posting"
-import { CareerPosting } from "@/contexts/career/domain/career-posting.entity"
+import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
 import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application.repository"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"

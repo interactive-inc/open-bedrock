@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedLeaveBalances } from "@/contexts/leave/infrastructure/seed/seed-leave-balances.repository"
 import { seedLeaveRequests } from "@/contexts/leave/infrastructure/seed/seed-leave-requests.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -8,7 +8,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const leaveBalanceResponseSchema = z.object({
@@ -97,16 +97,14 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role,
   })
 }
 
@@ -131,7 +129,7 @@ describe("POST /leave-requests/:id/approve", () => {
   test("approves a pending request and decrements the balance", async () => {
     const db = await createTestDb()
 
-    const managerToken = await tokenFor(4, "manager")
+    const managerToken = await tokenFor(4)
 
     const approveResponse = await requestWithContext({
       db,
@@ -157,7 +155,7 @@ describe("POST /leave-requests/:id/approve", () => {
       expect(approveParsed.data.leave_type).toBe("annual")
     }
 
-    const ownerToken = await tokenFor(5, "member")
+    const ownerToken = await tokenFor(5)
 
     const balanceResponse = await requestWithContext({
       db,
@@ -178,7 +176,7 @@ describe("POST /leave-requests/:id/approve", () => {
   test("re-approving an already-decided request returns 409 and does not decrement the balance twice", async () => {
     const db = await createTestDb()
 
-    const managerToken = await tokenFor(4, "manager")
+    const managerToken = await tokenFor(4)
 
     function approve(): Promise<Response> {
       return requestWithContext({
@@ -205,7 +203,7 @@ describe("POST /leave-requests/:id/approve", () => {
       jwtSecret,
       now: fiscalNow,
       path: "/leave-balances/me",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
     })
 
     const balances = z.array(leaveBalanceResponseSchema).parse(await balanceResponse.json())
@@ -235,7 +233,7 @@ describe("POST /leave-requests/:id/approve", () => {
       jwtSecret,
       now: fiscalNow,
       path: "/leave-requests/1/approve",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
       method: "POST",
       body: { comment: "approved" },
     })
@@ -280,7 +278,7 @@ describe("POST /leave-requests/:id/approve", () => {
       jwtSecret,
       now: fiscalNow,
       path: "/leave-requests/1/approve",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
       method: "POST",
       body: { comment: "approved" },
     })
@@ -313,7 +311,7 @@ describe("POST /leave-requests/:id/approve", () => {
       jwtSecret,
       now: fiscalNow,
       path: "/leave-requests/100/approve",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
       method: "POST",
       body: { comment: "approved" },
     })
@@ -339,7 +337,7 @@ describe("POST /leave-requests/:id/approve", () => {
   test("returns 403 for a member", async () => {
     const response = await request({
       path: "/leave-requests/1/approve",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { comment: null },
     })
@@ -350,7 +348,7 @@ describe("POST /leave-requests/:id/approve", () => {
   test("returns 404 when the request does not exist", async () => {
     const response = await request({
       path: "/leave-requests/9999/approve",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
       method: "POST",
       body: { comment: null },
     })
@@ -361,7 +359,7 @@ describe("POST /leave-requests/:id/approve", () => {
   test("returns 404 for an invalid id", async () => {
     const response = await request({
       path: "/leave-requests/abc/approve",
-      token: await tokenFor(4, "manager"),
+      token: await tokenFor(4),
       method: "POST",
       body: { comment: null },
     })

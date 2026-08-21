@@ -1,5 +1,5 @@
-import { ThanksPointBudget } from "@/contexts/thanks/domain/thanks-points/thanks-point-budget.entity"
-import { monthlyBudgetPoints } from "@/contexts/thanks/domain/thanks-points/monthly-budget-points"
+import { ThanksPointBudget } from "@/contexts/thanks/domain/entities/thanks-point-budget.entity"
+import { monthlyBudgetPoints } from "@/contexts/thanks/domain/values/thanks-point-limit.catalog"
 import type { Context } from "@/env"
 import { thanksPointBudgets } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { and, eq, gt, sql } from "drizzle-orm"

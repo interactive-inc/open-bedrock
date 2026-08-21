@@ -1,4 +1,4 @@
-import type { EmployeeStatus } from "@/contexts/company/domain/employee/employee-status"
+import type { EmployeeStatus } from "@/contexts/company/domain/values/employee-status.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 import type { AccountId } from "@system/domain/values/account-id.schema"

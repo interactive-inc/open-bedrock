@@ -1,12 +1,12 @@
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+} from "@/lib/http/to-bounded-int"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppAntisocialCheckAdminList } from "@/lib/app-schemas"
 import { antisocialChecks } from "@/contexts/antisocial-check/infrastructure/schema/antisocial-check"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"

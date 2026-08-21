@@ -1,8 +1,8 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
+import type { Session } from "@/lib/auth/session"
+import type { EmployeeDirectoryEntryValue } from "@/contexts/company/domain/values/employee-directory-entry.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { OnboardingAssignment } from "@/contexts/onboarding/domain/onboarding-assignment.entity"
+import type { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
@@ -15,7 +15,7 @@ export type Command = {
 
 export type UpdateOnboardingAssignmentResult = {
   assignment: OnboardingAssignment
-  employee: Employee
+  employee: EmployeeDirectoryEntryValue
 }
 
 /**

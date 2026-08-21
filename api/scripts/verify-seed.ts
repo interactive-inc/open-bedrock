@@ -45,7 +45,7 @@ const order = [
   "personnel-action",
   "position",
   "grade",
-  "company-core",
+  "company",
 ]
 
 const seedFiles = readdirSync(seedsDir)
@@ -71,9 +71,6 @@ for (const file of ordered) {
   db.exec(sql)
 }
 
-const lifecycleState = db
-  .query("SELECT status, employee_count FROM lifecycle_migration_states WHERE id = 1")
-  .get() as { status: string; employee_count: number }
 const employeeCount = (
   db.query("SELECT COUNT(*) AS count FROM employees").get() as {
     count: number
@@ -81,15 +78,11 @@ const employeeCount = (
 ).count
 const baselineCount = (
   db
-    .query("SELECT COUNT(*) AS count FROM personnel_actions WHERE kind = 'legacy_baseline'")
+    .query("SELECT COUNT(*) AS count FROM personnel_actions WHERE kind = 'initial_state'")
     .get() as { count: number }
 ).count
 
-if (
-  lifecycleState.status !== "verified" ||
-  lifecycleState.employee_count !== employeeCount ||
-  baselineCount !== employeeCount
-) {
+if (baselineCount !== employeeCount) {
   throw new Error("employee lifecycle seed is incomplete")
 }
 
@@ -111,6 +104,75 @@ if (
   throw new Error(
     `canonical Company seed is incomplete: organizationRevision=${companyOrganization?.revision ?? "missing"}, ` +
       `heads=${companyHeadCount}, revisions=${companyRevisionCount}, employees=${employeeCount}`,
+  )
+}
+
+const pendingOrganizationChanges = (
+  db
+    .query(
+      "SELECT count(*) AS count FROM organization_change_operations WHERE status != 'COMPLETED'",
+    )
+    .get() as { count: number }
+).count
+const organizationUnitCount = (
+  db.query("SELECT count(*) AS count FROM organization_unit_period_versions").get() as {
+    count: number
+  }
+).count
+const departmentCount = (
+  db.query("SELECT count(*) AS count FROM org_departments").get() as { count: number }
+).count
+const organizationAssignmentCount = (
+  db.query("SELECT count(*) AS count FROM organization_assignment_period_versions").get() as {
+    count: number
+  }
+).count
+const employedEmployeeCount = (
+  db.query("SELECT count(*) AS count FROM employees WHERE status IN ('active', 'leave')").get() as {
+    count: number
+  }
+).count
+const managerResponsibilityCount = (
+  db
+    .query(
+      "SELECT count(*) AS count FROM organization_responsibility_period_versions WHERE responsibility_type = 'MANAGER'",
+    )
+    .get() as { count: number }
+).count
+const expectedManagerResponsibilityCount = (
+  db
+    .query(
+      `SELECT count(*) AS count
+       FROM org_departments AS organization
+       JOIN employees AS manager ON manager.code = organization.manager_employee_code
+       WHERE manager.status IN ('active', 'leave')`,
+    )
+    .get() as { count: number }
+).count
+const peopleOperationsCount = (
+  db
+    .query(
+      "SELECT count(*) AS count FROM organization_responsibility_period_versions WHERE responsibility_type = 'PEOPLE_OPERATIONS'",
+    )
+    .get() as { count: number }
+).count
+const foreignKeyViolations = db.query("PRAGMA foreign_key_check").all()
+
+if (
+  pendingOrganizationChanges !== 0 ||
+  organizationUnitCount !== departmentCount + 1 ||
+  organizationAssignmentCount !== employedEmployeeCount ||
+  managerResponsibilityCount !== expectedManagerResponsibilityCount ||
+  peopleOperationsCount !== 1 ||
+  foreignKeyViolations.length !== 0
+) {
+  throw new Error(
+    `Company organization seed is incomplete: pending=${pendingOrganizationChanges}, ` +
+      `units=${organizationUnitCount}/${departmentCount + 1}, ` +
+      `assignments=${organizationAssignmentCount}/${employedEmployeeCount}, ` +
+      `managers=${managerResponsibilityCount}/${expectedManagerResponsibilityCount}, ` +
+      `peopleOperations=${peopleOperationsCount}/1, ` +
+      `foreignKeys=${JSON.stringify(foreignKeyViolations)}`,
   )
 }
 

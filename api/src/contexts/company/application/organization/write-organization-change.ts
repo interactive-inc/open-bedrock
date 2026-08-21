@@ -1,29 +1,22 @@
-import type { CompanyActor } from "@/contexts/company/domain/core/company-actor"
-import { canAccessCompanyOrganization } from "@/contexts/company/domain/core/can-access-company-organization"
-import { hasCompanyCapability } from "@/contexts/company/domain/core/has-company-capability"
-import type {
-  ReadCompanyResourcePersistence,
-  WriteCompanyResourcePersistence,
-} from "@/contexts/company/infrastructure/core/company-resource-port.repository"
+import type { WriteCompanyResourcesResult } from "@/contexts/company/application/core/write-company-resources"
 import {
-  WriteCompanyResources,
-  type WriteCompanyResourcesResult,
-} from "@/contexts/company/application/core/write-company-resources"
-import type { CompanyResourceChange } from "@/contexts/company/domain/core/company-resource"
-import { validateCompanyOrganizationChange } from "@/contexts/company/domain/core/validate-company-organization-change"
-import { validateCompanyResourceChange } from "@/contexts/company/domain/core/validate-company-resource-change"
+  CompanyResourceChangeEntity,
+  type CompanyResourceChangeProps,
+} from "@/contexts/company/domain/entities/company-resource-change.entity"
+import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
+import { validateCompanyOrganizationChange } from "@/contexts/company/domain/policies/company-organization.policy"
+import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
+import type { CompanyResourceRepository } from "@/contexts/company/infrastructure/core/company-resource.repository"
 
+/** 組織snapshot全体の不変条件を検証してから変更を永続化する。 */
 export class WriteOrganizationChange {
   constructor(
-    private readonly actor: CompanyActor,
-    private readonly read: ReadCompanyResourcePersistence,
-    private readonly write: WriteCompanyResourcePersistence,
-  ) {
-    Object.freeze(this)
-  }
+    private readonly actor: CompanyActorValue,
+    private readonly repository: CompanyResourceRepository,
+  ) {}
 
   async execute(
-    change: Omit<CompanyResourceChange, "actorAccountId">,
+    change: Omit<CompanyResourceChangeProps, "actorAccountId">,
   ): Promise<WriteCompanyResourcesResult> {
     const organizationResourceTypes = [
       "organization-unit",
@@ -32,19 +25,23 @@ export class WriteOrganizationChange {
       "organizational-authority",
     ] as const
     const organizationId = change.resources[0]?.organizationId ?? ""
-    const command = { ...change, actorAccountId: this.actor.accountId }
-    const genericError = validateCompanyResourceChange(command)
-    if (genericError !== null) return { kind: "invalid", error: genericError }
+    const command = CompanyResourceChangeEntity.create({
+      ...change,
+      actorAccountId: this.actor.accountId,
+    })
+    if (command instanceof CompanyResourceValidationError) {
+      return { kind: "invalid", error: command }
+    }
     if (
-      !canAccessCompanyOrganization(this.actor, organizationId) ||
-      !hasCompanyCapability(this.actor, "company:write")
+      !this.actor.canAccessOrganization(organizationId) ||
+      !this.actor.hasCapability("company:write")
     ) {
       return { kind: "forbidden" }
     }
 
     let current
     try {
-      current = await this.read({ organizationId, types: organizationResourceTypes })
+      current = await this.repository.read({ organizationId, types: organizationResourceTypes })
     } catch (cause) {
       return { kind: "unavailable", cause }
     }
@@ -55,6 +52,10 @@ export class WriteOrganizationChange {
     const organizationError = validateCompanyOrganizationChange(current.resources, command)
     if (organizationError !== null) return { kind: "invalid", error: organizationError }
 
-    return new WriteCompanyResources(this.actor, this.write).execute(change)
+    try {
+      return await this.repository.write(command)
+    } catch (cause) {
+      return { kind: "unavailable", cause }
+    }
   }
 }

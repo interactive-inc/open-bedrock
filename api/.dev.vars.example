@@ -18,5 +18,5 @@ IDENTITY_LOGIN_URL="http://localhost:18790"
 API_ORIGIN="http://localhost:18787"
 # 初期 ROOT の作成時だけ設定し、作成後は削除する。未設定なら POST /system/v1/bootstrap は 404。
 BOOTSTRAP_TOKEN=
-# 有効化する company-optional 機能。"all" か機能キーのカンマ区切り。正本は .docs/feature-tiers.md。
-ENABLED_OPTIONAL_FEATURES="all"
+# 有効化する opt-in App 機能。"all" か機能キーのカンマ区切り。正本は .docs/feature-tiers.md。
+ENABLED_OPT_IN_APPS="all"

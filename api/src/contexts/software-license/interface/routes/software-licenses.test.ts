@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedLicenses } from "@/contexts/software-license/infrastructure/seed/seed-licenses.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "license-route-test-secret"
 
@@ -61,15 +62,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: license.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -84,7 +84,7 @@ async function request(
 
 describe("GET /software-licenses", () => {
   test("returns 200 with all licenses for a read:all viewer (admin)", async () => {
-    const response = await request("/software-licenses", await tokenFor(1, "root"))
+    const response = await request("/software-licenses", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -98,7 +98,7 @@ describe("GET /software-licenses", () => {
   })
 
   test("returns 403 for a viewer without read:all (member)", async () => {
-    const response = await request("/software-licenses", await tokenFor(5, "member"))
+    const response = await request("/software-licenses", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
@@ -112,7 +112,7 @@ describe("GET /software-licenses", () => {
 
 describe("POST /software-licenses", () => {
   test("creates a license as admin", async () => {
-    const response = await request("/software-licenses", await tokenFor(1, "root"), "POST", {
+    const response = await request("/software-licenses", await tokenFor(1), "POST", {
       name: "New SaaS",
       category: "saas",
       seats: 5,
@@ -132,7 +132,7 @@ describe("POST /software-licenses", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/software-licenses", await tokenFor(5, "member"), "POST", {
+    const response = await request("/software-licenses", await tokenFor(5), "POST", {
       name: "Blocked",
     })
 
@@ -142,7 +142,7 @@ describe("POST /software-licenses", () => {
 
 describe("PUT /software-licenses/:id", () => {
   test("updates a license as admin", async () => {
-    const response = await request("/software-licenses/1", await tokenFor(1, "root"), "PUT", {
+    const response = await request("/software-licenses/1", await tokenFor(1), "PUT", {
       name: "Renamed Tracker",
       seats: 60,
       renewal_deadline: "2026-04-30",
@@ -161,7 +161,7 @@ describe("PUT /software-licenses/:id", () => {
   })
 
   test("returns 404 for unknown id", async () => {
-    const response = await request("/software-licenses/9999", await tokenFor(1, "root"), "PUT", {
+    const response = await request("/software-licenses/9999", await tokenFor(1), "PUT", {
       name: "Missing",
     })
 
@@ -171,7 +171,7 @@ describe("PUT /software-licenses/:id", () => {
 
 describe("POST /software-licenses/:id/cancel", () => {
   test("cancels a license as admin", async () => {
-    const response = await request("/software-licenses/1/cancel", await tokenFor(1, "root"), "POST")
+    const response = await request("/software-licenses/1/cancel", await tokenFor(1), "POST")
 
     expect(response.status).toBe(200)
 
@@ -185,11 +185,7 @@ describe("POST /software-licenses/:id/cancel", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request(
-      "/software-licenses/1/cancel",
-      await tokenFor(5, "member"),
-      "POST",
-    )
+    const response = await request("/software-licenses/1/cancel", await tokenFor(5), "POST")
 
     expect(response.status).toBe(403)
   })

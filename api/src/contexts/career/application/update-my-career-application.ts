@@ -1,4 +1,4 @@
-import type { CareerApplication } from "@/contexts/career/domain/career-application.entity"
+import type { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

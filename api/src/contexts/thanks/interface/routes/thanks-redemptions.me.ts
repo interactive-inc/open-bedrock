@@ -1,19 +1,19 @@
 import { UnexpectedError } from "@/lib/errors"
 import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption.repository"
 
-import type { ThanksRedemption } from "@/contexts/thanks/domain/thanks-points/thanks-redemption.entity"
+import type { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksRedemptionList } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { UnauthorizedError } from "@/lib/http/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
-} from "@/contexts/company/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
+} from "@/lib/http/to-bounded-int"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
 import { thanksRedemptions } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { count, eq } from "drizzle-orm"
 

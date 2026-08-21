@@ -1,4 +1,4 @@
-import type { PersonnelActionKind } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
+import type { PersonnelActionKind } from "@/contexts/company/domain/values/lifecycle-types.definition"
 import type { AccountId } from "@system/domain/values/account-id.schema"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
@@ -15,9 +15,7 @@ export const personnelActions = sqliteTable(
     recordedAt: integer("recorded_at").notNull(),
     recordedByAccountId: text("recorded_by_account_id").$type<AccountId>(),
     requestedByEmployeeId: integer("requested_by_employee_id"),
-    sourceType: text("source_type")
-      .notNull()
-      .$type<"application" | "direct" | "migration" | "system">(),
+    sourceType: text("source_type").notNull().$type<"application" | "direct" | "system">(),
     sourceApplicationId: integer("source_application_id"),
     correctsActionId: text("corrects_action_id"),
     operationId: text("operation_id").notNull().unique(),
@@ -38,7 +36,7 @@ export const personnelActions = sqliteTable(
         'concurrent_assignment_started', 'assignment_ended', 'position_changed',
         'manager_changed', 'department_responsibility_started',
         'department_responsibility_ended', 'leave_started', 'returned', 'retired',
-        'corrected', 'legacy_baseline'
+        'corrected', 'initial_state'
       )`,
     ),
     check(
@@ -217,7 +215,7 @@ export const personnelActionRequests = sqliteTable(
     targetEmployeeId: integer("target_employee_id"),
     subjectSnapshotJson: text("subject_snapshot_json"),
     targetDepartmentCode: text("target_department_code"),
-    kind: text("kind").notNull().$type<Exclude<PersonnelActionKind, "legacy_baseline">>(),
+    kind: text("kind").notNull().$type<Exclude<PersonnelActionKind, "initial_state">>(),
     payloadJson: text("payload_json").notNull(),
     payloadFingerprint: text("payload_fingerprint"),
     requestedByEmployeeId: integer("requested_by_employee_id").notNull(),
@@ -236,20 +234,6 @@ export const personnelActionRequests = sqliteTable(
 )
 
 export type PersonnelActionRequestRow = InferSelectModel<typeof personnelActionRequests>
-
-export const lifecycleMigrationState = sqliteTable("lifecycle_migration_states", {
-  id: integer("id").primaryKey(),
-  status: text("status").notNull().$type<"pending" | "backfilled" | "verified">(),
-  baselineOn: text("baseline_on"),
-  companyTimeZone: text("company_time_zone"),
-  legacySourceFingerprint: text("legacy_source_fingerprint"),
-  employeeCount: integer("employee_count").notNull().default(0),
-  departmentCount: integer("department_count").notNull().default(0),
-  backfilledAt: integer("backfilled_at"),
-  verifiedAt: integer("verified_at"),
-})
-
-export type LifecycleMigrationStateRow = InferSelectModel<typeof lifecycleMigrationState>
 
 export const lifecycleOutbox = sqliteTable(
   "lifecycle_outbox_entries",

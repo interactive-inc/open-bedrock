@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -7,6 +7,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "features-route-test-secret"
 
@@ -30,6 +31,7 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -37,8 +39,6 @@ async function createTestDb(): Promise<D1Database> {
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: "member",
   })
 }
 
@@ -49,7 +49,7 @@ describe("GET /features", () => {
       jwtSecret,
       path: "/features",
       token: await tokenFor(5),
-      enabledOptionalFeatures: "all",
+      enabledOptInApps: "all",
     })
 
     expect(response.status).toBe(200)
@@ -69,8 +69,8 @@ describe("GET /features", () => {
       jwtSecret,
       path: "/features",
       token: await tokenFor(5),
-      enabledOptionalFeatures: "thanks",
-      disabledStandardFeatures: "rooms",
+      enabledOptInApps: "thanks",
+      disabledDefaultApps: "rooms",
     })
 
     expect(response.status).toBe(200)
@@ -93,7 +93,7 @@ describe("GET /features", () => {
       jwtSecret,
       path: "/features",
       token: null,
-      enabledOptionalFeatures: "all",
+      enabledOptInApps: "all",
     })
 
     expect(response.status).toBe(401)

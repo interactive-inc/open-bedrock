@@ -2,7 +2,7 @@ import { zAccountId } from "@system/domain/values/account-id.schema"
 import {
   createSystemSessionApplications,
   type SystemSessionApplications,
-} from "@system/interface/runtime/create-system-session-applications"
+} from "@system/test/create-system-session-applications.test-support"
 import { SystemSessionTestContext } from "@system/infrastructure/auth/system-session-test-context.test-support"
 import { describe, expect, test } from "bun:test"
 

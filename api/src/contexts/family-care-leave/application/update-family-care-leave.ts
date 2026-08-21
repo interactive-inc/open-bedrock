@@ -1,4 +1,4 @@
-import type { FamilyCareLeave } from "@/contexts/family-care-leave/domain/family-care-leave.entity"
+import type { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import {
   ConflictError,
   ForbiddenError,

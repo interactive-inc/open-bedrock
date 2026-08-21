@@ -1,8 +1,8 @@
-import { applicableWorkflowSteps } from "@/contexts/company/domain/organization/company-procedure-applicable-steps"
+import { applicableWorkflowSteps } from "@/contexts/company/domain/policies/company-procedure-applicable-steps.policy"
 import { resolveWorkflowStepSnapshot } from "@/contexts/company/infrastructure/organization/resolve-company-procedure-task-snapshot.repository"
-import type { CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
-import type { ApplicationWorkflowStep } from "@/contexts/company/domain/organization/company-procedure-workflow"
-import type { Context } from "@/env"
+import type { CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
+import type { ApplicationWorkflowStep } from "@/contexts/company/domain/values/company-procedure-workflow.definition"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 import type { StartSystemProcedureTask } from "@system/domain/policies/decision-task.policy"
 import { CanonicalSystemJsonValue } from "@system/domain/values/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/proposal-digest.value"
@@ -27,7 +27,7 @@ export type ResolvedCompanyProcedureTask = Readonly<{
 /** Company policyを評価し、Systemへ渡せるAccount候補とopaque資格証拠だけを返す。 */
 export async function resolveCompanyProcedureTask(
   input: Readonly<{
-    c: Context
+    c: CompanyContext
     policy: CompanyProcedureDecisionPolicy
     payload: unknown
     applicant: CompanyProcedureApplicant

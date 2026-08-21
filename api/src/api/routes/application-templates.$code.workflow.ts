@@ -1,5 +1,5 @@
-import { zApplicationWorkflow } from "@/contexts/company/domain/organization/company-procedure-workflow"
-import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/organization/company-procedure-decision-policy"
+import { zApplicationWorkflow } from "@/contexts/company/domain/values/company-procedure-workflow.definition"
+import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import {
   loadSystemProcedure,
   parseSystemProcedureInputSchema,
@@ -12,15 +12,15 @@ import {
   NotFoundError,
   UnauthorizedError,
   UnprocessableEntityError,
-} from "@/contexts/company/interface/lib/errors"
-import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { factory } from "@/contexts/company/interface/utils/factory"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+} from "@/lib/http/errors"
+import { validateCodeParam } from "@/lib/http/validate-code-param"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { factory } from "@/api/http/factory"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { ConflictError as ApplicationConflictError } from "@/lib/errors"
-import { validateApplicationWorkflowReferences } from "@/contexts/company/interface/http/procedure-workflows/validate-application-workflow-references"
+import { validateApplicationWorkflowReferences } from "@/api/http/procedure-workflows/validate-application-workflow-references"
 
 // @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

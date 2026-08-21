@@ -1,11 +1,11 @@
 import { readCanonicalOrganizationState } from "@/contexts/company/infrastructure/organization/read-canonical-organization-state.repository"
-import { toWorkforceEmployeeId } from "@/contexts/company/domain/employee-lifecycle/to-workforce-lifecycle-schedules"
-import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
-import { resolveWorkforceEmployeeRelation } from "@/contexts/company/domain/workforce/resolve-workforce-employee-relation"
-import type { Context } from "@/env"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import type { EmployeeRelation } from "@/contexts/company/domain/values/employee-relation.definition"
+import { resolveWorkforceEmployeeRelation } from "@/contexts/company/domain/policies/resolve-workforce-employee-relation.policy"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
 
 export type Props = {
-  c: Context
+  c: CompanyContext
   viewerEmployeeId: number
   targetEmployeeId: number
 }

@@ -19,11 +19,11 @@ describe("getAuditEvents", () => {
     const page = {
       data: [
         {
-          event_id: "legacy-1",
+          event_id: "custom-1",
           request_id: "request-1",
           actor_account_id: "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y",
           actor_employee_id: null,
-          action: "legacy.action",
+          action: "custom.action",
           target_type: null,
           target_id: null,
           outcome: "succeeded" as const,
@@ -38,7 +38,7 @@ describe("getAuditEvents", () => {
     const json = vi.fn().mockResolvedValue(page)
     const get = vi.fn().mockResolvedValue({ ok: true, status: 200, json })
     mocks.createClient.mockResolvedValue({ "audit-events": { $get: get } })
-    const query = { action: "legacy.action", limit: "25", cursor: "opaque" }
+    const query = { action: "custom.action", limit: "25", cursor: "opaque" }
 
     await expect(getAuditEvents(query)).resolves.toEqual(page)
     expect(get).toHaveBeenCalledWith({ query }, { init: { cache: "no-store" } })

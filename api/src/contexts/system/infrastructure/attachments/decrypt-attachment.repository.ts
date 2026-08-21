@@ -1,10 +1,10 @@
 import type { AttachmentBytes } from "@system/domain/values/attachment-bytes.definition"
+import { SystemAttachmentError } from "@system/domain/errors"
 import { fromBase64 } from "@system/infrastructure/attachments/from-base64.repository"
 import { importAesKey } from "@system/infrastructure/attachments/import-aes-key.repository"
 import { unwrapDek } from "@system/infrastructure/attachments/unwrap-dek.repository"
 import type { AttachmentKek } from "@system/infrastructure/attachments/attachment-kek-registry.repository"
 import type { WrappedKeyMaterial } from "@system/infrastructure/attachments/attachment-key-material.repository"
-import { UnprocessableError } from "@/lib/errors"
 
 /** 暗号文を復号する。鍵破棄済み（wrappedDek が無い）ものはここへ来る前に拒否する。 */
 export async function decryptAttachment(
@@ -27,6 +27,10 @@ export async function decryptAttachment(
 
     return new Uint8Array(plaintext)
   } catch {
-    return new UnprocessableError("添付を復号できません", "attachment_decrypt_failed")
+    return new SystemAttachmentError(
+      "unprocessable",
+      "attachment_decrypt_failed",
+      "添付を復号できません",
+    )
   }
 }

@@ -230,7 +230,7 @@ describe("POST /provisioning/identities", () => {
 
       expect(response.status).toBe(400)
       expect(await count(db, "system_identity_bindings")).toBe(0)
-      expect(await count(db, "system_accounts")).toBe(1)
+      expect(await count(db, "system_accounts")).toBe(0)
     },
   )
 

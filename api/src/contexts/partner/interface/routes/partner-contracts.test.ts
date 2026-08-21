@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedPartners } from "@/contexts/partner/infrastructure/seed/seed-partners.repository"
 import { seedContracts } from "@/contexts/partner/infrastructure/seed/seed-contracts.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "contract-route-test-secret"
 
@@ -78,15 +79,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: contract.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -101,7 +101,7 @@ async function request(
 
 describe("GET /partner-contracts", () => {
   test("returns 200 with all contracts for a read:all viewer (admin)", async () => {
-    const response = await request("/partner-contracts", await tokenFor(1, "root"))
+    const response = await request("/partner-contracts", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -115,7 +115,7 @@ describe("GET /partner-contracts", () => {
   })
 
   test("filters by partner_id", async () => {
-    const response = await request("/partner-contracts?partner_id=1", await tokenFor(1, "root"))
+    const response = await request("/partner-contracts?partner_id=1", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -130,7 +130,7 @@ describe("GET /partner-contracts", () => {
   })
 
   test("returns 403 for a viewer without read:all (member)", async () => {
-    const response = await request("/partner-contracts", await tokenFor(5, "member"))
+    const response = await request("/partner-contracts", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
@@ -144,7 +144,7 @@ describe("GET /partner-contracts", () => {
 
 describe("POST /partner-contracts", () => {
   test("creates a contract as admin", async () => {
-    const response = await request("/partner-contracts", await tokenFor(1, "root"), "POST", {
+    const response = await request("/partner-contracts", await tokenFor(1), "POST", {
       partner_id: 1,
       title: "New Agreement",
       contract_date: "2026-02-01",
@@ -164,7 +164,7 @@ describe("POST /partner-contracts", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/partner-contracts", await tokenFor(5, "member"), "POST", {
+    const response = await request("/partner-contracts", await tokenFor(5), "POST", {
       partner_id: 1,
       title: "Blocked",
       contract_date: "2026-02-01",
@@ -174,7 +174,7 @@ describe("POST /partner-contracts", () => {
   })
 
   test("returns 404 for an unknown partner", async () => {
-    const response = await request("/partner-contracts", await tokenFor(1, "root"), "POST", {
+    const response = await request("/partner-contracts", await tokenFor(1), "POST", {
       partner_id: 9999,
       title: "Ghost",
       contract_date: "2026-02-01",
@@ -186,7 +186,7 @@ describe("POST /partner-contracts", () => {
 
 describe("PUT /partner-contracts/:id", () => {
   test("updates a contract as admin", async () => {
-    const response = await request("/partner-contracts/1", await tokenFor(1, "root"), "PUT", {
+    const response = await request("/partner-contracts/1", await tokenFor(1), "PUT", {
       title: "Amended Agreement",
       contract_date: "2026-01-15",
       renewal_deadline: "2026-11-30",
@@ -204,7 +204,7 @@ describe("PUT /partner-contracts/:id", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/partner-contracts/1", await tokenFor(5, "member"), "PUT", {
+    const response = await request("/partner-contracts/1", await tokenFor(5), "PUT", {
       title: "Hijacked",
       contract_date: "2026-01-15",
     })
@@ -213,7 +213,7 @@ describe("PUT /partner-contracts/:id", () => {
   })
 
   test("returns 404 for unknown id", async () => {
-    const response = await request("/partner-contracts/9999", await tokenFor(1, "root"), "PUT", {
+    const response = await request("/partner-contracts/9999", await tokenFor(1), "PUT", {
       title: "Missing",
       contract_date: "2026-01-15",
     })

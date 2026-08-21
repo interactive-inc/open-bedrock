@@ -1,5 +1,5 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
-import type { ThanksRedemption } from "@/contexts/thanks/domain/thanks-points/thanks-redemption.entity"
+import type { Session } from "@/lib/auth/session"
+import type { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

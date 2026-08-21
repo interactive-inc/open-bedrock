@@ -27,9 +27,13 @@ class SqliteD1Statement {
     return new SqliteD1Statement(this.database, this.sql, values) as unknown as D1PreparedStatement
   }
 
-  async first<T>(): Promise<T | null> {
+  async first<T>(column?: string): Promise<T | null> {
     const values = this.values.map(toSqliteBinding)
-    return (this.database.query<T, SqliteBinding[]>(this.sql).get(...values) as T | null) ?? null
+    const row = this.database
+      .query<Record<string, unknown>, SqliteBinding[]>(this.sql)
+      .get(...values)
+    if (row === null) return null
+    return (column === undefined ? row : (row[column] ?? null)) as T | null
   }
 
   async all<T>(): Promise<D1Result<T>> {
@@ -44,6 +48,10 @@ class SqliteD1Statement {
 
   async run(): Promise<D1Result> {
     return this.execute()
+  }
+
+  async raw<T = unknown[]>(): Promise<T[]> {
+    return this.database.query(this.sql).values(...this.values.map(toSqliteBinding)) as T[]
   }
 
   execute(): D1Result {
@@ -63,7 +71,7 @@ class SqliteD1Statement {
   }
 }
 
-/** canonical Company integration testが両製品で共有する最小D1互換adapter。 */
+/** canonical Company integration testが両製品で共有する最小D1 adapter。 */
 export function createCompanyD1TestDatabase(schemaSql: string): D1Database {
   const sqlite = new Database(":memory:")
   sqlite.exec("PRAGMA foreign_keys = ON")
@@ -77,6 +85,10 @@ export function createCompanyD1TestDatabase(schemaSql: string): D1Database {
       return sqlite.transaction(() =>
         statements.map((statement) => (statement as unknown as SqliteD1Statement).execute()),
       )()
+    },
+    async exec(sql: string): Promise<D1ExecResult> {
+      sqlite.exec(sql)
+      return { count: 0, duration: 0 }
     },
   }
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedSalaryRevisions } from "@/contexts/compensation-change/infrastructure/seed/seed-salary-revisions.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "salary-revision-route-test-secret"
 
@@ -55,15 +56,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: revision.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -78,7 +78,7 @@ async function request(
 
 describe("GET /salary-revisions", () => {
   test("returns 200 for admin viewing an employee's history", async () => {
-    const response = await request("/salary-revisions?employee_id=5", await tokenFor(1, "root"))
+    const response = await request("/salary-revisions?employee_id=5", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -93,7 +93,7 @@ describe("GET /salary-revisions", () => {
   })
 
   test("returns 403 for a member viewing their own history (no self exception)", async () => {
-    const response = await request("/salary-revisions?employee_id=5", await tokenFor(5, "member"))
+    const response = await request("/salary-revisions?employee_id=5", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
@@ -107,7 +107,7 @@ describe("GET /salary-revisions", () => {
 
 describe("POST /salary-revisions", () => {
   test("creates a salary revision as admin", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
+    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
       employee_id: 1,
       effective_date: "2026-04-01",
       previous_base_salary: 280000,
@@ -127,7 +127,7 @@ describe("POST /salary-revisions", () => {
   })
 
   test("returns 409 on duplicate employee + effective_date", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
+    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
       employee_id: 5,
       effective_date: "2025-04-01",
       previous_base_salary: 280000,
@@ -138,7 +138,7 @@ describe("POST /salary-revisions", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/salary-revisions", await tokenFor(5, "member"), "POST", {
+    const response = await request("/salary-revisions", await tokenFor(5), "POST", {
       employee_id: 1,
       effective_date: "2026-05-01",
       previous_base_salary: 1,
@@ -149,7 +149,7 @@ describe("POST /salary-revisions", () => {
   })
 
   test("returns 404 for an unknown employee", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
+    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
       employee_id: 9999,
       effective_date: "2026-05-01",
       previous_base_salary: 1,
@@ -160,7 +160,7 @@ describe("POST /salary-revisions", () => {
   })
 
   test("creates a salary revision by employee_code", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
+    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
       employee_code: "E001",
       effective_date: "2026-04-01",
       previous_base_salary: 280000,
@@ -180,7 +180,7 @@ describe("POST /salary-revisions", () => {
   })
 
   test("returns 404 for an unknown employee_code", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
+    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
       employee_code: "E999",
       effective_date: "2026-05-01",
       previous_base_salary: 1,
@@ -191,7 +191,7 @@ describe("POST /salary-revisions", () => {
   })
 
   test("returns 400 when both employee_id and employee_code are given", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
+    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
       employee_id: 1,
       employee_code: "E001",
       effective_date: "2026-05-01",
@@ -203,7 +203,7 @@ describe("POST /salary-revisions", () => {
   })
 
   test("returns 400 when neither employee_id nor employee_code is given", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
+    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
       effective_date: "2026-05-01",
       previous_base_salary: 1,
       new_base_salary: 2,

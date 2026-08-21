@@ -16,7 +16,7 @@ export class InvalidApplicationPayloadError extends Error {
 
 /**
  * テンプレートの schema_json を信頼境界として payload を検証し、永続化用の値へ正規化する。
- * 現行の FormBuilder 形式と、初期 seed で使われている JSON Schema object 形式を扱う。
+ * 現行の FormBuilder 形式だけを受け付ける。
  */
 export function validateAndNormalizeApplicationPayload(
   schema: unknown,
@@ -33,12 +33,7 @@ export function validateAndNormalizeApplicationPayload(
     return normalizeFormPayload(fields, payload)
   }
 
-  if (isJsonObject(schema) && schema.type === "object" && isJsonObject(schema.properties)) {
-    return normalizeLegacyJsonSchemaPayload(schema, payload)
-  }
-
-  // schema_json を持たなかった旧テンプレートは、オブジェクト境界だけを保証して互換維持する。
-  return { ...payload }
+  return invalid("template schema must contain fields")
 }
 
 function parseFormFields(
@@ -124,73 +119,6 @@ function normalizeFormPayload(
   return normalized
 }
 
-function normalizeLegacyJsonSchemaPayload(
-  schema: JsonObject,
-  payload: JsonObject,
-): JsonObject | InvalidApplicationPayloadError {
-  if (isJsonObject(schema.properties) === false) {
-    return invalid("template properties must be an object")
-  }
-  const properties = schema.properties
-  const required = Array.isArray(schema.required)
-    ? schema.required.filter((field): field is string => typeof field === "string")
-    : []
-
-  for (const field of required) {
-    if (Object.hasOwn(payload, field) === false || payload[field] === undefined) {
-      return invalid(`payload is missing required field: ${field}`)
-    }
-  }
-
-  if (schema.additionalProperties === false) {
-    const unknownField = Object.keys(payload).find(
-      (key) => Object.hasOwn(properties, key) === false,
-    )
-    if (unknownField !== undefined)
-      return invalid(`payload contains unknown field: ${unknownField}`)
-  }
-
-  const normalized: JsonObject = { ...payload }
-
-  for (const [field, propertySchema] of Object.entries(properties)) {
-    if (Object.hasOwn(payload, field) === false) continue
-    if (isJsonObject(propertySchema) === false) {
-      return invalid(`template contains an invalid property schema: ${field}`)
-    }
-
-    const value = payload[field]
-    if (matchesLegacyProperty(propertySchema, value) === false) {
-      return invalid(`payload field does not match schema: ${field}`)
-    }
-
-    normalized[field] = value
-  }
-
-  return normalized
-}
-
-function matchesLegacyProperty(schema: JsonObject, value: unknown): boolean {
-  if (
-    Array.isArray(schema.enum) &&
-    schema.enum.some((option) => deepJsonEqual(option, value)) === false
-  ) {
-    return false
-  }
-
-  if (schema.type === undefined) return true
-  if (schema.type === "string") {
-    return typeof value === "string" && (schema.format !== "date" || isIsoDate(value))
-  }
-  if (schema.type === "number") return typeof value === "number" && Number.isFinite(value)
-  if (schema.type === "integer") return typeof value === "number" && Number.isInteger(value)
-  if (schema.type === "boolean") return typeof value === "boolean"
-  if (schema.type === "object") return isJsonObject(value)
-  if (schema.type === "array") return Array.isArray(value)
-  if (schema.type === "null") return value === null
-
-  return false
-}
-
 function isFormFieldType(value: unknown): value is FormFieldDefinition["type"] {
   return (
     value === "text" ||
@@ -214,10 +142,6 @@ function isIsoDate(value: unknown): value is string {
   return (
     date.getUTCFullYear() === year && date.getUTCMonth() + 1 === month && date.getUTCDate() === day
   )
-}
-
-function deepJsonEqual(left: unknown, right: unknown): boolean {
-  return JSON.stringify(left) === JSON.stringify(right)
 }
 
 function invalid(message: string): InvalidApplicationPayloadError {

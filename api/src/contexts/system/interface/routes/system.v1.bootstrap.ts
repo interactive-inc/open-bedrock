@@ -8,7 +8,7 @@ import {
 /** /system/v1/bootstrap */
 import { BootstrapSystemRoot } from "@system/application/iam/bootstrap-system-root"
 import { SystemBootstrapTokenValue } from "@system/domain/values/system-bootstrap-token.value"
-import { PasswordHashService } from "@system/infrastructure/auth/password-hash.service.repository"
+import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
 import { timingSafeStringEqual } from "@system/infrastructure/auth/timing-safe-string-equal.repository"
 import { SystemRootBootstrapRepositoryD1 } from "@system/infrastructure/iam/system-root-bootstrap.repository"
 import { systemFactory } from "@system/interface/http/system-factory"
@@ -61,7 +61,7 @@ export const POST = systemFactory.createHandlers(
     const bootstrap = await new BootstrapSystemRoot({
       passwordHasher: {
         hash: (password) =>
-          PasswordHashService.hash(password, pepper).catch((caught: unknown) =>
+          hashPassword(password, pepper).catch((caught: unknown) =>
             caught instanceof Error ? caught : new Error("failed to hash System password"),
           ),
       },

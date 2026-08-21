@@ -1,24 +1,19 @@
-import { toReviewCycleStatus } from "@/contexts/performance-review/domain/review/review-cycle-status.value"
-import { ReviewCycle } from "@/contexts/performance-review/domain/review/review-cycle.entity"
-import { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
+import { toReviewCycleStatus } from "@/contexts/performance-review/domain/values/review-cycle-status.value"
+import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
+import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import { toReviewResultView } from "@/contexts/performance-review/interface/http/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { factory } from "@/api/http/factory"
 import { zAppReviewResult } from "@/lib/app-schemas"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { verifyBearer } from "@/api/http/verify-bearer"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import {
   reviewCycles,
   reviewForms,
 } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { and, asc, eq } from "drizzle-orm"
-import {
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/contexts/company/interface/lib/errors"
-import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
+import { validateCodeParam } from "@/lib/http/validate-code-param"
+import { validateIntParam } from "@/lib/http/validate-int-param"
 
 // @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

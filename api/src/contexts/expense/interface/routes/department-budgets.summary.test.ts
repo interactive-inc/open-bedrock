@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { seedBudgets } from "@/contexts/expense/infrastructure/seed/seed-budgets.repository"
-import { seedDepartments } from "@/contexts/company/infrastructure/seed/seed-departments.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedDepartments } from "@/api/test/support/company/seed-departments.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedExpenses } from "@/contexts/expense/infrastructure/seed/seed-expenses.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -10,6 +10,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "budget-summary-route-test-secret"
 
@@ -82,15 +83,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: budget.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -107,7 +107,7 @@ describe("GET /department-budgets/summary", () => {
   test("returns per-department budget, consumption and remaining for the fiscal period", async () => {
     const response = await request({
       path: "/department-budgets/summary?fiscal_period=2026",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(200)
@@ -135,7 +135,7 @@ describe("GET /department-budgets/summary", () => {
   test("returns 400 without fiscal_period", async () => {
     const response = await request({
       path: "/department-budgets/summary",
-      token: await tokenFor(1, "root"),
+      token: await tokenFor(1),
     })
 
     expect(response.status).toBe(400)
@@ -144,7 +144,7 @@ describe("GET /department-budgets/summary", () => {
   test("returns 403 without budget:manage", async () => {
     const response = await request({
       path: "/department-budgets/summary?fiscal_period=2026",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
     })
 
     expect(response.status).toBe(403)

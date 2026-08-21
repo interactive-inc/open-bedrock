@@ -1,4 +1,4 @@
-import { ReviewForm } from "@/contexts/performance-review/domain/review/review-form.entity"
+import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form.repository"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { seedD1 } from "@/api/test/support/seed-d1"

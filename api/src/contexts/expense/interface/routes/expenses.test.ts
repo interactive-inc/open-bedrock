@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedExpenseApprovals } from "@/contexts/expense/infrastructure/seed/seed-expense-approvals.repository"
 import { seedExpenses } from "@/contexts/expense/infrastructure/seed/seed-expenses.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const categoryEnum = z.enum(["transport", "supplies", "entertainment", "books", "other"])
 
@@ -75,15 +76,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: approval.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -109,7 +109,7 @@ describe("POST /expenses", () => {
   test("returns 201 with a pending expense from the token employee", async () => {
     const response = await request({
       path: "/expenses",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { category: "transport", amount: 1500, spent_at: "2026-05-25" },
     })
@@ -131,7 +131,7 @@ describe("POST /expenses", () => {
   test("returns 400 when amount is not positive", async () => {
     const response = await request({
       path: "/expenses",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { category: "transport", amount: 0, spent_at: "2026-05-25" },
     })
@@ -142,7 +142,7 @@ describe("POST /expenses", () => {
   test("returns 400 when amount is not an integer", async () => {
     const response = await request({
       path: "/expenses",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { category: "transport", amount: 1.005, spent_at: "2026-05-25" },
     })
@@ -153,7 +153,7 @@ describe("POST /expenses", () => {
   test("returns 400 when amount exceeds the safe integer range", async () => {
     const response = await request({
       path: "/expenses",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { category: "transport", amount: Number.MAX_SAFE_INTEGER + 2, spent_at: "2026-05-25" },
     })
@@ -164,7 +164,7 @@ describe("POST /expenses", () => {
   test("returns 400 when category is invalid", async () => {
     const response = await request({
       path: "/expenses",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { category: "travel", amount: 100, spent_at: "2026-05-25" },
     })

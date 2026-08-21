@@ -29,10 +29,6 @@ function createFixture(): {
   databases.push(database)
   database.run("PRAGMA foreign_keys = ON")
   database.exec(schema)
-  database.run(
-    `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-     VALUES ('system:migration', 'active', 0, 0, 0)`,
-  )
   const repository = new SystemRootBootstrapRepositoryD1({
     env: { DB: wrapSystemD1TestDatabase(database) },
   })
@@ -172,14 +168,14 @@ describe("System root bootstrap", () => {
       email: "root@example.com",
       state: "complete",
     })
-    expect(count(database, "system_accounts")).toBe(2)
+    expect(count(database, "system_accounts")).toBe(1)
     expect(count(database, "system_identity_bindings")).toBe(1)
     expect(count(database, "system_role_bindings")).toBe(1)
     expect(count(database, "system_bootstrap_state")).toBe(1)
     expect(count(database, "system_audit_events")).toBe(1)
   })
 
-  test("予約Account以外が先に存在する不完全環境は上書きせずfail closedする", async () => {
+  test("Accountが先に存在する不完全環境は上書きせずfail closedする", async () => {
     const { application, database } = createFixture()
     database.run(
       `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
@@ -200,7 +196,7 @@ describe("System root bootstrap", () => {
       email: null,
       state: "account_exists_without_bootstrap_state",
     })
-    expect(count(database, "system_accounts")).toBe(2)
+    expect(count(database, "system_accounts")).toBe(1)
     expect(count(database, "system_identity_bindings")).toBe(0)
     expect(count(database, "system_bootstrap_state")).toBe(0)
   })
@@ -248,7 +244,7 @@ describe("System root bootstrap", () => {
         now,
       }),
     ).toBeInstanceOf(Error)
-    expect(count(database, "system_accounts")).toBe(1)
+    expect(count(database, "system_accounts")).toBe(0)
     expect(count(database, "system_identity_bindings")).toBe(0)
     expect(count(database, "system_iam_roles")).toBe(0)
     expect(count(database, "system_bootstrap_state")).toBe(0)

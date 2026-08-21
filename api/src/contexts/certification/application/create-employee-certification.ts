@@ -2,7 +2,7 @@ import { CertificationRepository } from "@/contexts/certification/infrastructure
 import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/employee-certification.repository"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { EmployeeCertification } from "@/contexts/certification/domain/employee-certification.entity"
+import type { EmployeeCertification } from "@/contexts/certification/domain/entities/employee-certification.entity"
 import type { Context } from "@/env"
 
 /**

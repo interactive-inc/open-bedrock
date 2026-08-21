@@ -21,6 +21,16 @@ export const companyRouteManifest = [
     },
   },
   {
+    method: "POST",
+    path: "/company/v1/bootstrap",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.v1.bootstrap",
+      exportName: "POST",
+    },
+  },
+  {
     method: "GET",
     path: "/company/v1/capabilities",
     phase: "authenticated",

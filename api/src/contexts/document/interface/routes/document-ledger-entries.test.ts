@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedDocuments } from "@/contexts/document/infrastructure/seed/seed-documents.repository"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"
@@ -8,6 +8,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "document-route-test-secret"
 
@@ -62,15 +63,14 @@ async function createTestDb(): Promise<D1Database> {
       created_at: document.createdAt,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -85,7 +85,7 @@ async function request(
 
 describe("GET /document-ledger-entries", () => {
   test("admin (document:read:all) gets the list sorted by nearest expiry, nulls last", async () => {
-    const response = await request("/document-ledger-entries", await tokenFor(1, "root"))
+    const response = await request("/document-ledger-entries", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -103,16 +103,13 @@ describe("GET /document-ledger-entries", () => {
   })
 
   test("member without document:read:all is forbidden", async () => {
-    const response = await request("/document-ledger-entries", await tokenFor(5, "member"))
+    const response = await request("/document-ledger-entries", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
 
   test("filters by category", async () => {
-    const response = await request(
-      "/document-ledger-entries?category=license",
-      await tokenFor(1, "root"),
-    )
+    const response = await request("/document-ledger-entries?category=license", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -135,7 +132,7 @@ describe("GET /document-ledger-entries", () => {
 
 describe("POST /document-ledger-entries", () => {
   test("admin registers a document", async () => {
-    const response = await request("/document-ledger-entries", await tokenFor(1, "root"), "POST", {
+    const response = await request("/document-ledger-entries", await tokenFor(1), "POST", {
       title: "NDA Template",
       location: "cabinet-C/nda",
       expires_on: "2028-01-01",
@@ -153,15 +150,10 @@ describe("POST /document-ledger-entries", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request(
-      "/document-ledger-entries",
-      await tokenFor(5, "member"),
-      "POST",
-      {
-        title: "Blocked",
-        location: "nowhere",
-      },
-    )
+    const response = await request("/document-ledger-entries", await tokenFor(5), "POST", {
+      title: "Blocked",
+      location: "nowhere",
+    })
 
     expect(response.status).toBe(403)
   })
@@ -169,7 +161,7 @@ describe("POST /document-ledger-entries", () => {
 
 describe("PUT /document-ledger-entries/:id", () => {
   test("admin updates a document", async () => {
-    const response = await request("/document-ledger-entries/1", await tokenFor(1, "root"), "PUT", {
+    const response = await request("/document-ledger-entries/1", await tokenFor(1), "PUT", {
       title: "Office Lease Agreement (renewed)",
       location: "cabinet-A/lease",
       partner_code: "P0001",
@@ -189,15 +181,10 @@ describe("PUT /document-ledger-entries/:id", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request(
-      "/document-ledger-entries/1",
-      await tokenFor(5, "member"),
-      "PUT",
-      {
-        title: "x",
-        location: "y",
-      },
-    )
+    const response = await request("/document-ledger-entries/1", await tokenFor(5), "PUT", {
+      title: "x",
+      location: "y",
+    })
 
     expect(response.status).toBe(403)
   })

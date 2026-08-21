@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedRoomReservations } from "@/contexts/room/infrastructure/seed/seed-room-reservations.repository"
 import { seedRooms } from "@/contexts/room/infrastructure/seed/seed-rooms.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const roomAvailabilityResponseSchema = z.object({
   room: z.object({
@@ -64,6 +65,7 @@ async function createTestDb(): Promise<D1Database> {
       purpose: reservation.purpose,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
@@ -71,8 +73,6 @@ async function createTestDb(): Promise<D1Database> {
 function managerToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 4,
-    email: "you+e004@example.com",
-    role: "manager",
   })
 }
 
@@ -178,8 +178,8 @@ describe("GET /rooms/availability", () => {
         id: 4,
         code: "E004",
         name: "Manager",
-        dept_id: 1,
-        dept_name: "Engineering",
+        dept_id: 3,
+        dept_name: "開発部",
         position: "Manager",
         status: "active",
       },
@@ -209,6 +209,7 @@ describe("GET /rooms/availability", () => {
         purpose: "Second overlap",
       },
     ])
+    await initializeStandardCompanyTestState(db)
 
     const token = await managerToken()
     const response = await requestWithContext({
@@ -249,8 +250,8 @@ describe("GET /rooms/availability", () => {
         id: 4,
         code: "E004",
         name: "Manager",
-        dept_id: 1,
-        dept_name: "Engineering",
+        dept_id: 3,
+        dept_name: "開発部",
         position: "Manager",
         status: "active",
       },
@@ -293,6 +294,7 @@ describe("GET /rooms/availability", () => {
         purpose: "Gamma conflict 1",
       },
     ])
+    await initializeStandardCompanyTestState(db)
 
     const token = await managerToken()
     const response = await requestWithContext({

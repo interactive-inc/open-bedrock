@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const jwtSecret = "thanks-redemption-admin-route-test-secret"
@@ -101,16 +101,14 @@ async function createTestDb(): Promise<D1Database> {
     },
   ])
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -125,7 +123,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /thanks-redemptions/admin", () => {
   test("returns 200 with all redemptions for admin", async () => {
-    const response = await request("/thanks-redemptions/admin", await tokenFor(1, "root"))
+    const response = await request("/thanks-redemptions/admin", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -144,13 +142,13 @@ describe("GET /thanks-redemptions/admin", () => {
   })
 
   test("returns 403 for manager", async () => {
-    const response = await request("/thanks-redemptions/admin", await tokenFor(4, "manager"))
+    const response = await request("/thanks-redemptions/admin", await tokenFor(4))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 403 for member", async () => {
-    const response = await request("/thanks-redemptions/admin", await tokenFor(5, "member"))
+    const response = await request("/thanks-redemptions/admin", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
@@ -162,10 +160,7 @@ describe("GET /thanks-redemptions/admin", () => {
   })
 
   test("filters by status", async () => {
-    const response = await request(
-      "/thanks-redemptions/admin?status=fulfilled",
-      await tokenFor(1, "root"),
-    )
+    const response = await request("/thanks-redemptions/admin?status=fulfilled", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -179,10 +174,7 @@ describe("GET /thanks-redemptions/admin", () => {
   })
 
   test("filters by employee_id", async () => {
-    const response = await request(
-      "/thanks-redemptions/admin?employee_id=5",
-      await tokenFor(1, "root"),
-    )
+    const response = await request("/thanks-redemptions/admin?employee_id=5", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -196,10 +188,7 @@ describe("GET /thanks-redemptions/admin", () => {
   })
 
   test("filters by reward_id", async () => {
-    const response = await request(
-      "/thanks-redemptions/admin?reward_id=1",
-      await tokenFor(1, "root"),
-    )
+    const response = await request("/thanks-redemptions/admin?reward_id=1", await tokenFor(1))
 
     expect(response.status).toBe(200)
 

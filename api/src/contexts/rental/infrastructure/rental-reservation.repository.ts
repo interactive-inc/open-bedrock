@@ -1,4 +1,4 @@
-import { RentalReservation } from "@/contexts/rental/domain/rental-reservation.entity"
+import { RentalReservation } from "@/contexts/rental/domain/entities/rental-reservation.entity"
 import type { Context } from "@/env"
 import { rentalReservations } from "@/contexts/rental/infrastructure/schema/rental"
 import { and, asc, eq, gte, lte, ne, sql } from "drizzle-orm"

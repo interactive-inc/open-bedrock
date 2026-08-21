@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedExpenseApprovals } from "@/contexts/expense/infrastructure/seed/seed-expense-approvals.repository"
 import { seedExpenses } from "@/contexts/expense/infrastructure/seed/seed-expenses.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -8,7 +8,7 @@ import { loadSchema } from "@/api/test/support/load-schema"
 import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { verifyStandardCompanyMigration } from "@/api/test/support/verify-standard-company-migration"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const statusEnum = z.enum(["pending", "approved", "rejected", "settled"])
@@ -70,16 +70,14 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await verifyStandardCompanyMigration(db)
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -105,7 +103,7 @@ describe("POST /expenses/:id/approve", () => {
   test("returns 200 and flips status to approved", async () => {
     const response = await request({
       path: "/expenses/1/approve",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
       method: "POST",
       body: { comment: "looks fine" },
     })
@@ -124,7 +122,7 @@ describe("POST /expenses/:id/approve", () => {
   test("accepts a null comment", async () => {
     const response = await request({
       path: "/expenses/1/approve",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
       method: "POST",
       body: { comment: null },
     })
@@ -136,7 +134,7 @@ describe("POST /expenses/:id/approve", () => {
     // seed の expense_approvals は空である前提（カウントは 1 回目の承認分のみになる）。
     const db = await createTestDb()
 
-    const token = await tokenFor(2, "manager")
+    const token = await tokenFor(2)
 
     const first = await requestWithContext({
       db,
@@ -170,7 +168,7 @@ describe("POST /expenses/:id/approve", () => {
   test("returns 403 for a member", async () => {
     const response = await request({
       path: "/expenses/1/approve",
-      token: await tokenFor(5, "member"),
+      token: await tokenFor(5),
       method: "POST",
       body: { comment: null },
     })
@@ -181,7 +179,7 @@ describe("POST /expenses/:id/approve", () => {
   test("returns 400 when comment is omitted", async () => {
     const response = await request({
       path: "/expenses/1/approve",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
       method: "POST",
       body: {},
     })
@@ -192,7 +190,7 @@ describe("POST /expenses/:id/approve", () => {
   test("returns 404 for an unknown id", async () => {
     const response = await request({
       path: "/expenses/9999/approve",
-      token: await tokenFor(2, "manager"),
+      token: await tokenFor(2),
       method: "POST",
       body: { comment: null },
     })

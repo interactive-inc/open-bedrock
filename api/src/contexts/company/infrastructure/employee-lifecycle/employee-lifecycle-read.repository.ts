@@ -1,6 +1,6 @@
-import type { LifecycleEmployeeStatus } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
-import type { Context } from "@/env"
-import { ApplicationError, UnexpectedError } from "@/lib/errors"
+import type { LifecycleEmployeeStatus } from "@/contexts/company/domain/values/lifecycle-types.definition"
+import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
+import { CompanyOperationError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 
 export type LifecycleAssignmentState = {
   periodId: string
@@ -72,14 +72,14 @@ function placeholders(ids: ReadonlyArray<number>): string {
 }
 
 export class EmployeeLifecycleReadRepository {
-  constructor(private readonly c: Context) {
+  constructor(private readonly c: CompanyContext) {
     Object.freeze(this)
   }
 
   async findStatesAt(
     employeeIds: ReadonlyArray<number>,
     asOf: string,
-  ): Promise<ReadonlyMap<number, EmployeeLifecycleState> | ApplicationError> {
+  ): Promise<ReadonlyMap<number, EmployeeLifecycleState> | CompanyOperationError> {
     const ids = [...new Set(employeeIds)]
     if (ids.length === 0) return new Map()
     const idList = placeholders(ids)
@@ -228,7 +228,7 @@ export class EmployeeLifecycleReadRepository {
 
       return states
     } catch (cause) {
-      return new UnexpectedError("基準日現在の人事状態を取得できません", { cause })
+      return new CompanyUnexpectedError("基準日現在の人事状態を取得できません", { cause })
     }
   }
 }

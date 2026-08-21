@@ -188,7 +188,7 @@ domain object の検証だけに依存してはならない。複数 command が
 
 Company には、営業日、組織投影、organization revision、根拠を固定する OrganizationalAuthority resolver がある。これは System の構成要素ではなく、API composition または業務 App から利用される独立した Company 能力である。
 
-Company resolver が返す候補、workflow actor、定義更新者、委任作成者は canonical System Account ID へ統一されている。legacy Session からの変換は Company 境界の一箇所に閉じ、System は整数 Account ID または Employee ID を解釈しない。責任は [Workflow Account identity](./workflow-account-identity.md) に定める。
+Company resolver が返す候補、workflow actor、定義更新者、委任作成者は canonical System Account ID へ統一されている。API compositionは認証済みSystem AccountとCompany Employeeの明示的な対応だけを解決し、Systemは整数Account IDまたはEmployee IDを解釈しない。責任は [Workflow Account identity](./workflow-account-identity.md) に定める。
 
 Company の人事変更申請は、Company が業務 subject と payload fingerprint を所有し、同じ D1 batch で System Proposal、Case、最初の Task と対応を作る。最終承認後は一回限りの ExecutionAuthorization と Company の発令事実を同じ batch で確定する。対象 revision が競合した場合は Case を approved のまま保ち、業務事実を上書きせず、安全に再試行できる。
 

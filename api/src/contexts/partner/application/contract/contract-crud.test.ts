@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { Contract } from "@/contexts/partner/domain/contract/contract.entity"
-import { Partner } from "@/contexts/partner/domain/partner.entity"
+import { Contract } from "@/contexts/partner/domain/entities/contract.entity"
+import { Partner } from "@/contexts/partner/domain/entities/partner.entity"
 import { RegisterPartner } from "@/contexts/partner/application/register-partner"
 import { CreateContract } from "@/contexts/partner/application/contract/create-contract"
 import { UpdateContract } from "@/contexts/partner/application/contract/update-contract"

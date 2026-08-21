@@ -216,10 +216,10 @@ describe("collectRegistrations", () => {
       alias: "healthRoute",
     })
     expect(registrations).toContainEqual({
-      module: "@/contexts/company/interface/routes/departments",
-      url: "/departments",
+      module: "@/contexts/company/interface/routes/company.v1.people",
+      url: "/company/v1/people",
       method: "GET",
-      alias: "departmentsRoute",
+      alias: "companyV1PeopleRoute",
     })
   })
 

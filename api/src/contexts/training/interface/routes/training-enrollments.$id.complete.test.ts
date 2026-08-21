@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/contexts/company/infrastructure/seed/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
 import { seedTrainingCourses } from "@/contexts/training/infrastructure/seed/seed-training-courses.repository"
 import { seedTrainingEnrollments } from "@/contexts/training/infrastructure/seed/seed-training-enrollments.repository"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
@@ -9,6 +9,7 @@ import { requestWithContext } from "@/api/test/support/request-with-context"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
 import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const trainingEnrollmentResponseSchema = z.object({
   id: z.number(),
@@ -71,15 +72,14 @@ async function createTestDb(): Promise<D1Database> {
       due_date: enrollment.dueDate,
     })),
   )
+  await initializeStandardCompanyTestState(db)
 
   return db
 }
 
-function tokenFor(employeeId: number, role: string): Promise<string> {
+function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: employeeId,
-    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: role,
   })
 }
 
@@ -100,14 +100,10 @@ async function request(
 
 describe("POST /training-enrollments/:id/complete", () => {
   test("the owner completes their enrollment and returns 200", async () => {
-    const response = await request(
-      "/training-enrollments/1/complete",
-      await tokenFor(5, "member"),
-      {
-        method: "POST",
-        body: { score: 85 },
-      },
-    )
+    const response = await request("/training-enrollments/1/complete", await tokenFor(5), {
+      method: "POST",
+      body: { score: 85 },
+    })
 
     expect(response.status).toBe(200)
 
@@ -120,51 +116,38 @@ describe("POST /training-enrollments/:id/complete", () => {
 
   test("rejects an out-of-range or non-integer score with 400", async () => {
     for (const score of [150, -5, 85.5]) {
-      const response = await request(
-        "/training-enrollments/1/complete",
-        await tokenFor(5, "member"),
-        {
-          method: "POST",
-          body: { score: score },
-        },
-      )
+      const response = await request("/training-enrollments/1/complete", await tokenFor(5), {
+        method: "POST",
+        body: { score: score },
+      })
 
       expect(response.status).toBe(400)
     }
   })
 
   test("returns 404 for a missing enrollment", async () => {
-    const response = await request(
-      "/training-enrollments/999/complete",
-      await tokenFor(5, "member"),
-      { method: "POST", body: {} },
-    )
+    const response = await request("/training-enrollments/999/complete", await tokenFor(5), {
+      method: "POST",
+      body: {},
+    })
 
     expect(response.status).toBe(404)
   })
 
   test("a member completing another's enrollment is forbidden", async () => {
-    const response = await request(
-      "/training-enrollments/2/complete",
-      await tokenFor(5, "member"),
-      {
-        method: "POST",
-        body: {},
-      },
-    )
+    const response = await request("/training-enrollments/2/complete", await tokenFor(5), {
+      method: "POST",
+      body: {},
+    })
 
     expect(response.status).toBe(403)
   })
 
   test("returns 409 when already completed", async () => {
-    const response = await request(
-      "/training-enrollments/2/complete",
-      await tokenFor(4, "member"),
-      {
-        method: "POST",
-        body: {},
-      },
-    )
+    const response = await request("/training-enrollments/2/complete", await tokenFor(4), {
+      method: "POST",
+      body: {},
+    })
 
     expect(response.status).toBe(409)
   })

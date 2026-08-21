@@ -1,4 +1,4 @@
-import { Budget } from "@/contexts/expense/domain/budget/budget.entity"
+import { Budget } from "@/contexts/expense/domain/entities/budget.entity"
 import type { Context } from "@/env"
 import { budgets } from "@/contexts/expense/infrastructure/schema/budget"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"

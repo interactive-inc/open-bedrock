@@ -1,5 +1,12 @@
-import type { CompanyAccountProfileRepository } from "@/contexts/company/infrastructure/account-profile/company-account-profile-port.repository"
-import { CompanyAccountProfileEntity } from "@/contexts/company/domain/account-profile/company-account-profile.entity"
+import { CompanyAccountProfileEntity } from "@/contexts/company/domain/entities/company-account-profile.entity"
+
+export type CompanyAccountProfileRepository = Readonly<{
+  find: (
+    organizationId: string,
+    accountId: string,
+  ) => Promise<CompanyAccountProfileEntity | null | Error>
+  save: (profile: CompanyAccountProfileEntity) => Promise<void | Error>
+}>
 
 type CompanyAccountProfileRow = Readonly<{
   organization_id: string

@@ -1,4 +1,4 @@
-import { RentalReservation } from "@/contexts/rental/domain/rental-reservation.entity"
+import { RentalReservation } from "@/contexts/rental/domain/entities/rental-reservation.entity"
 import { ConflictError, ValidationError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

@@ -1,7 +1,7 @@
-import type { Session } from "@/contexts/company/domain/iam/session"
+import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { TrainingCourse } from "@/contexts/training/domain/training-course.entity"
+import type { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
 import type { Context } from "@/env"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/training-course.repository"
 

@@ -1,5 +1,26 @@
 export type SystemAuditJsonErrorCode = "invalid_json" | "payload_too_large"
 
+type SystemAttachmentErrorKind =
+  | "not_found"
+  | "payload_too_large"
+  | "unexpected"
+  | "unprocessable"
+  | "unavailable"
+  | "validation"
+
+export class SystemAttachmentError extends Error {
+  constructor(
+    readonly kind: SystemAttachmentErrorKind,
+    readonly code: string,
+    message: string,
+    options?: ErrorOptions,
+  ) {
+    super(message, options)
+    this.name = "SystemAttachmentError"
+    Object.freeze(this)
+  }
+}
+
 function toSystemAuditJsonErrorMessage(code: SystemAuditJsonErrorCode): string {
   return code === "payload_too_large"
     ? "system audit JSON exceeds the 64 KiB limit"

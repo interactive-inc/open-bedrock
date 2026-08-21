@@ -1,4 +1,4 @@
-import { DisciplinaryAction } from "@/contexts/disciplinary-action/domain/disciplinary-action.entity"
+import { DisciplinaryAction } from "@/contexts/disciplinary-action/domain/entities/disciplinary-action.entity"
 import type { Context } from "@/env"
 import { disciplinaryActions } from "@/contexts/disciplinary-action/infrastructure/schema/disciplinary-action"
 import { and, count, desc, eq } from "drizzle-orm"

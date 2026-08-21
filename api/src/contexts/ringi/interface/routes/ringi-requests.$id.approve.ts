@@ -1,12 +1,13 @@
 import { DecideRingi } from "@/contexts/ringi/application/decide-ringi"
-import { factory } from "@/contexts/company/interface/utils/factory"
+import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result.repository"
+import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppRingiDecision } from "@/lib/app-schemas"
-import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { validateIntParam } from "@/contexts/company/interface/utils/validate-int-param"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { validateIntParam } from "@/lib/http/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
-import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { UnauthorizedError } from "@/lib/http/errors"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する
@@ -30,7 +31,9 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const updated = await new DecideRingi(c).run({
+    const updated = await new DecideRingi(c, (command) =>
+      new NotifyApprovalResult(c).run(command),
+    ).run({
       session: session,
       ringiId,
       approverId: session.employeeId,

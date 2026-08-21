@@ -1,4 +1,4 @@
-import { ThanksReward } from "@/contexts/thanks/domain/thanks-points/thanks-reward.entity"
+import { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
 import { NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
