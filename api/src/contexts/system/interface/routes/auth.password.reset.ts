@@ -1,6 +1,6 @@
 import { RequestPasswordReset } from "@/contexts/system/application/auth/request-password-reset"
 import { ResetPassword } from "@/contexts/system/application/auth/reset-password"
-import { PasswordResetRequestApplicationError } from "@system/application/auth/errors"
+import { PasswordResetRequestApplicationError } from "@system/application/errors"
 import { EmailValue } from "@/contexts/system/domain/values/identity/email.value"
 import { identitySubjectSchema } from "@/contexts/system/domain/schemas/identity/identity-subject.schema"
 import { findSystemPasswordResetRecipient } from "@system/infrastructure/auth/find-system-password-reset-recipient.repository"

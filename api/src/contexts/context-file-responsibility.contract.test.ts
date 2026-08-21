@@ -50,7 +50,10 @@ describe("Context file responsibility contract", () => {
   test("Infrastructureのproduction実装はrepository fileだけにする", () => {
     expect(
       productionFiles.filter(
-        (file) => file.includes("/infrastructure/") && !file.endsWith(".repository.ts"),
+        (file) =>
+          file.includes("/infrastructure/") &&
+          !file.endsWith(".repository.ts") &&
+          !file.endsWith("/errors.ts"),
       ),
     ).toEqual([])
   })

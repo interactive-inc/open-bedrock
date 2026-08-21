@@ -3,7 +3,7 @@ import {
   OidcInvalidRequestApplicationError,
   OidcInvalidScopeApplicationError,
   OidcTemporarilyUnavailableApplicationError,
-} from "@/contexts/system/application/auth/errors"
+} from "@/contexts/system/application/errors"
 import {
   OIDCInvalidRequestError,
   OIDCInvalidScopeError,

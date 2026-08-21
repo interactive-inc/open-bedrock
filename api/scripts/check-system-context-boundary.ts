@@ -336,6 +336,9 @@ export function discoverSystemCapabilityNames(
   return capabilities
 }
 
+/** domain / interface と同じく、層をまたいで共有する errors.ts だけは層直下に置ける。 */
+const SYSTEM_CAPABILITY_ROOT_SHARED_FILES: ReadonlySet<string> = new Set(["errors.ts"])
+
 export function inspectSystemCapabilityRootEntries(
   file: string,
   entries: Iterable<Readonly<{ name: string; isDirectory: boolean }>>,
@@ -345,7 +348,8 @@ export function inspectSystemCapabilityRootEntries(
       (entry) =>
         !entry.isDirectory &&
         /\.tsx?$/.test(entry.name) &&
-        !/\.(?:test|spec)\.tsx?$/.test(entry.name),
+        !/\.(?:test|spec)\.tsx?$/.test(entry.name) &&
+        !SYSTEM_CAPABILITY_ROOT_SHARED_FILES.has(entry.name),
     )
     .map((entry) => ({
       file: `${file}/${entry.name}`,

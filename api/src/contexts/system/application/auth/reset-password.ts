@@ -4,7 +4,7 @@ import {
   PasswordResetTokenInvalidApplicationError,
   PepperSecretMissingApplicationError,
   SystemAuthPersistenceApplicationError,
-} from "@/contexts/system/application/auth/errors"
+} from "@/contexts/system/application/errors"
 import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
 import { findSystemPasswordResetChallenge } from "@system/infrastructure/auth/find-system-password-reset-challenge.repository"
 import { completeSystemPasswordResetChallenge } from "@system/infrastructure/auth/complete-system-password-reset-challenge.repository"

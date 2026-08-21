@@ -2,7 +2,7 @@ import {
   OidcInvalidRequestApplicationError,
   OidcInvalidScopeApplicationError,
   OidcTemporarilyUnavailableApplicationError,
-} from "@/contexts/system/application/auth/errors"
+} from "@/contexts/system/application/errors"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"

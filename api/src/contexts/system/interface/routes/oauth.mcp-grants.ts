@@ -1,4 +1,4 @@
-import { JwtSecretMissingApplicationError } from "@/contexts/system/application/auth/errors"
+import { JwtSecretMissingApplicationError } from "@/contexts/system/application/errors"
 import { systemFactory } from "@/contexts/system/interface/http/system-factory"
 import { SystemApplicationError } from "@system/interface/errors"
 import { createMcpGrantToken } from "@system/infrastructure/auth/create-mcp-grant-token.repository"
