@@ -9,7 +9,7 @@ import { SystemAccountRepository } from "@system/infrastructure/auth/system-acco
 import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash.repository"
 import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service.repository"
 import { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

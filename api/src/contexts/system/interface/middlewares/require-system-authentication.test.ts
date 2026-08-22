@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test"
 import { Hono } from "hono"
-import { systemFactory, type SystemHonoEnv } from "@system/interface/http/system-factory"
+import {
+  systemFactory,
+  type SystemHonoEnv,
+} from "@system/interface/request-environment/system-factory"
 import { requireSystemAuthentication } from "@system/interface/middlewares/require-system-authentication"
 
 const protectedHandler = systemFactory.createHandlers(

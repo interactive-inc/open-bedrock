@@ -1,6 +1,6 @@
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { POST } from "@system/interface/routes/oauth.authorizations"
 import { describe, expect, test } from "bun:test"
 import { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"

@@ -9,7 +9,7 @@ import { MarkSystemNotificationRead } from "@system/application/notifications/ma
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

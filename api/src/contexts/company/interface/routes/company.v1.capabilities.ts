@@ -2,7 +2,7 @@
 import {
   COMPANY_API_VERSION,
   COMPANY_CORE_CAPABILITIES,
-} from "@/contexts/company/interface/http/company-capabilities"
+} from "@/contexts/company/interface/capabilities/company-capabilities"
 import { createFactory } from "hono/factory"
 
 const factory = createFactory()

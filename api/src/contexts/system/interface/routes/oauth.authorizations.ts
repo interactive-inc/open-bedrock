@@ -10,7 +10,7 @@ import {
   OIDCTemporarilyUnavailableError,
 } from "@system/interface/errors"
 import { requireSystemAuthentication } from "@system/interface/middlewares/require-system-authentication"
-import { systemFactory } from "@/contexts/system/interface/http/system-factory"
+import { systemFactory } from "@/contexts/system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { zAppOidcAuthorizationResponse } from "@/contexts/system/interface/models/auth"

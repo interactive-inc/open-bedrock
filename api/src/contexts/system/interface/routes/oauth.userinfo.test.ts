@@ -3,7 +3,7 @@ import { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-i
 import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret.repository"
 import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret.repository"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { OIDCHTTPException } from "@system/interface/errors"
 import { GET } from "@system/interface/routes/oauth.userinfo"
 import { describe, expect, test } from "bun:test"

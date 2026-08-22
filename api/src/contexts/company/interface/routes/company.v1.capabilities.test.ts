@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { COMPANY_CORE_CAPABILITIES } from "@/contexts/company/interface/http/company-capabilities"
+import { COMPANY_CORE_CAPABILITIES } from "@/contexts/company/interface/capabilities/company-capabilities"
 import { Hono } from "hono"
 import { hc } from "hono/client"
 import { GET } from "./company.v1.capabilities"

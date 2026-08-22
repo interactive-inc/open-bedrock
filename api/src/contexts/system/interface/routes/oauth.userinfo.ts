@@ -7,7 +7,7 @@ import { findOidcAccessToken } from "@system/infrastructure/identity/find-oidc-a
 import { SystemOidcIdentityRepository } from "@system/infrastructure/identity/system-oidc-identity.repository"
 import { OIDCInvalidTokenError, OIDCTemporarilyUnavailableError } from "@system/interface/errors"
 import { readOidcAccessToken } from "@system/interface/lib/authorization/oidc-access-token"
-import { systemFactory } from "@/contexts/system/interface/http/system-factory"
+import { systemFactory } from "@/contexts/system/interface/request-environment/system-factory"
 
 // @authorization public - OIDC access token自体をcredentialとして検証する
 export const GET = systemFactory.createHandlers(async (c) => {

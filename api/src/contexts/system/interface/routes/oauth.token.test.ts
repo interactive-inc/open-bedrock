@@ -3,7 +3,7 @@ import { toPkceS256Challenge } from "@system/infrastructure/auth/to-pkce-s256-ch
 import { createOidcSecret } from "@system/infrastructure/identity/create-oidc-secret.repository"
 import { hashOidcSecret } from "@system/infrastructure/identity/hash-oidc-secret.repository"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { POST } from "@system/interface/routes/oauth.token"
 import { describe, expect, test } from "bun:test"
 import { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"

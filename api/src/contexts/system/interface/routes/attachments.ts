@@ -8,7 +8,7 @@ import {
   SystemAttachmentValidationError,
 } from "@system/interface/errors"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 
 // @authorization authenticated - ログインしていれば自分の添付を預けられる。業務レコードへの紐づけは各業務contextが認可する
 /** POST /attachments — 添付を暗号化して預け、pending の attachment_id を返す */

@@ -1,5 +1,5 @@
 import { SystemInvalidSessionError, SystemSessionUnavailableError } from "@system/interface/errors"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-access-token-secret.value"
 import { AccessTokenService } from "@system/infrastructure/auth/access-token-service.repository"

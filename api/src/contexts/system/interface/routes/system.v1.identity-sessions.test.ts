@@ -1,5 +1,5 @@
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
-import type { SystemHonoEnv } from "@system/interface/http/system-factory"
+import type { SystemHonoEnv } from "@system/interface/request-environment/system-factory"
 import { SystemHTTPException } from "@system/interface/errors"
 import { POST } from "@system/interface/routes/system.v1.identity-sessions"
 import { createSystemIdentityTestKey } from "@system/test/create-system-identity-test-key.test-support"

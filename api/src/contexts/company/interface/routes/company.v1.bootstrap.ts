@@ -8,7 +8,7 @@ import {
 } from "@/contexts/company/interface/errors"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

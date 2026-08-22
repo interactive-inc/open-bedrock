@@ -4,7 +4,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { createSystemBrowserLoginCode } from "@system/infrastructure/auth/create-system-browser-login-code.repository"
 import { systemLoginCodeHash } from "@system/infrastructure/auth/system-login-code-hash.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 
 const CODE_TTL_MILLISECONDS = 60_000
 

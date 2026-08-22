@@ -3,7 +3,7 @@ import {
   SystemIdentityLoginUnavailableError,
 } from "@system/interface/errors"
 /** /system/v1/identity-sessions */
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { IssueSystemIdentitySession } from "@system/application/auth/issue-system-identity-session"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

@@ -1,6 +1,6 @@
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
 import { describe, expect, test } from "bun:test"
