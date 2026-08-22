@@ -1,5 +1,11 @@
 import { HTTPException } from "hono/http-exception"
 
+export type HTTPErrorBodyInput = Readonly<
+  { error: string; message?: string } & Record<string, unknown>
+>
+
+export type HTTPErrorBody = Readonly<{ error: string; message: string } & Record<string, unknown>>
+
 type SystemHTTPExceptionStatus =
   | 400
   | 401
