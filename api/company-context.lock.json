@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "2a7c53f31645fbedec6d3b9a525454a9871cbcbfa79cdef0c5b360c87c29ac83",
+    "company-context.manifest.json": "4fc5cdc654b4d29b849b6c6a3da715888b2ecad7d57a5065cd67540bfdcbd624",
     "src/contexts/company/README.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-profile/update-company-account-profile.ts": "71854103a50e1ff218127fe23eeaf2aa0ec7e5e1bd3c913fba51898230c55c2c",
     "src/contexts/company/application/core/write-company-resources.ts": "cd27d5230849bb332a4f3d5aeeaccd7eb06968a4efe1bdb0c581e88675f630ff",
@@ -194,6 +194,7 @@
     "src/contexts/company/infrastructure/organization/resolve-organizational-authority-candidates.repository.ts": "fdb77ddef459d3db1ccb6141b86bf63eeb67ac6dd3824fd803d8b6b09b2c1b09",
     "src/contexts/company/infrastructure/organization/validate-employee-active.repository.ts": "7e50ef92e35b19160a2cebe7ac620c243e4a2a2563303e496853b7e682388489",
     "src/contexts/company/infrastructure/schema/audit.ts": "6244060f9007679a0d6dc5a2db1837977a1c45f678c750f7597c2bdd21869fa8",
+    "src/contexts/company/infrastructure/schema/company-relations.ts": "9e275d2d42f7de39e336c286fe347dcbaf6c3f2cfb5106b3ad3f6297af8424f2",
     "src/contexts/company/infrastructure/schema/company-sql.contract.test.ts": "2d6507db9e55675999ed64fe10d78e32f9ee67456dadb8306797196e0820f889",
     "src/contexts/company/infrastructure/schema/company.sql": "213b72ea4be3259f6dc73e5c999be2ebb3b0c8010e34a0701343ad8aa38bef93",
     "src/contexts/company/infrastructure/schema/company.ts": "668933019a06663a6a04ebc07a2f0e18b041c6d2c390b66c569dbbbb601caa41",
