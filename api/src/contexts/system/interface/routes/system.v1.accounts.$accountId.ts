@@ -12,7 +12,7 @@ import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-s
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { SystemAccountAdministrationRepository } from "@system/infrastructure/iam/system-account-administration.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

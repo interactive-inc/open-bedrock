@@ -15,7 +15,7 @@ import {
   SystemAttachmentUnavailableError,
 } from "@system/interface/errors"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 
 /**
  * 紐づけ前の添付を、預けた本人だけが取り出す。業務レコードへ紐づいた後の閲覧は

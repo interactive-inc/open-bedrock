@@ -22,7 +22,7 @@ import {
   CompanyRevisionConflictError,
   CompanyWriteUnavailableError,
 } from "@/contexts/company/interface/errors"
-import type { CompanyHttpEnvironment } from "@/contexts/company/interface/http/company-http-environment"
+import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { zValidator } from "@hono/zod-validator"
 import { createFactory } from "hono/factory"
 import { z } from "zod"

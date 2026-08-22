@@ -4,7 +4,7 @@ import { PasswordResetRequestApplicationError } from "@system/application/errors
 import { EmailValue } from "@/contexts/system/domain/values/identity/email.value"
 import { identitySubjectSchema } from "@/contexts/system/domain/schemas/identity/identity-subject.schema"
 import { findSystemPasswordResetRecipient } from "@system/infrastructure/auth/find-system-password-reset-recipient.repository"
-import { systemFactory } from "@/contexts/system/interface/http/system-factory"
+import { systemFactory } from "@/contexts/system/interface/request-environment/system-factory"
 import { SystemApplicationError, SystemInternalServerError } from "@system/interface/errors"
 import { zAppAuthAcknowledgement } from "@/contexts/system/interface/models/auth"
 import { ApplicationError } from "@/lib/errors/application-error"

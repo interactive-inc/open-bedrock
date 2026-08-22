@@ -1,7 +1,7 @@
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { DELETE } from "@system/interface/routes/system.v1.accounts.$accountId.role-bindings.$bindingId"
 import { GET, POST } from "@system/interface/routes/system.v1.accounts.$accountId.role-bindings"
 import { describe, expect, test } from "bun:test"

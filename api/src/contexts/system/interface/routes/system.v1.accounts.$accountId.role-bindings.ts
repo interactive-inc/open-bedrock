@@ -19,7 +19,7 @@ import { SystemAccountAdministrationRepository } from "@system/infrastructure/ia
 import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration.repository"
 import { SystemRoleBindingAdministrationRepository } from "@system/infrastructure/iam/system-role-binding-administration.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

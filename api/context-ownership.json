@@ -24,7 +24,7 @@
       "schema",
       "workforce"
     ],
-    "interface": ["http", "routes"]
+    "interface": ["capabilities", "request-environment", "routes"]
   },
   "businessAreaOwners": {
     "administration": "administration",

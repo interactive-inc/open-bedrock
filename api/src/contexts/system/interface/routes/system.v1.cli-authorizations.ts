@@ -4,7 +4,7 @@ import { SystemIdentityIssuerValue } from "@system/domain/values/identity/system
 import { SystemCliIdentityRedirectUriValue } from "@system/domain/values/oauth/system-cli-identity-redirect-uri.value"
 import { createSystemCliLoginState } from "@system/infrastructure/auth/create-system-cli-login-state.repository"
 import { createSystemPkce } from "@system/infrastructure/auth/create-system-pkce.repository"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

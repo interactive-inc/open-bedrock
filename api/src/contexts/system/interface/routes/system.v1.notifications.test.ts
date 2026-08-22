@@ -12,7 +12,7 @@ import {
   POST,
 } from "@system/interface/routes/system.v1.notifications"
 import { GET as GET_UNREAD_COUNT } from "@system/interface/routes/system.v1.notifications.unread-count"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
 

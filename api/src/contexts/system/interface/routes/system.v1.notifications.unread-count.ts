@@ -6,7 +6,7 @@ import {
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 
 // @authorization authenticated - 自分のAccount Deliveryだけを集計する
 export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {

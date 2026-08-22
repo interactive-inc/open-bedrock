@@ -1,5 +1,5 @@
 import { SystemAuthenticationRequiredError } from "@system/interface/errors"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 
 /** 製品compositionが検証済みSystem主体を注入しなければ、認証routeを必ず閉じる。 */
 export const requireSystemAuthentication = systemFactory.createMiddleware(async (context, next) => {

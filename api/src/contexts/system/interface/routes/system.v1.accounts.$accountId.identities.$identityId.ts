@@ -14,7 +14,7 @@ import { zIdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { SystemIdentityAdministrationRepository } from "@system/infrastructure/identity/system-identity-administration.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 
 // @authorization permission iam:read - 一つのIdentity bindingと公開profileだけを読む
 export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {

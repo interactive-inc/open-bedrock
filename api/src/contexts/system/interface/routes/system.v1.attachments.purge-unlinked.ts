@@ -6,7 +6,7 @@ import {
   SystemAttachmentPurgeUnavailableError,
   SystemForbiddenError,
 } from "@system/interface/errors"
-import { systemFactory } from "@system/interface/http/system-factory"
+import { systemFactory } from "@system/interface/request-environment/system-factory"
 
 /**
  * 紐づかないまま期限を過ぎた添付を掃除する。既存のバッチ同様、実行は HTTP から起こす

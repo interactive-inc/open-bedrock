@@ -8,7 +8,7 @@ import {
   OIDCInvalidRequestError,
   OIDCTemporarilyUnavailableError,
 } from "@system/interface/errors"
-import { systemFactory } from "@/contexts/system/interface/http/system-factory"
+import { systemFactory } from "@/contexts/system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

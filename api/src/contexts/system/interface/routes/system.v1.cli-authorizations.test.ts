@@ -1,5 +1,5 @@
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
-import type { SystemHonoEnv } from "@system/interface/http/system-factory"
+import type { SystemHonoEnv } from "@system/interface/request-environment/system-factory"
 import { GET } from "@system/interface/routes/system.v1.cli-authorizations"
 import { describe, expect, test } from "bun:test"
 import { Hono } from "hono"
