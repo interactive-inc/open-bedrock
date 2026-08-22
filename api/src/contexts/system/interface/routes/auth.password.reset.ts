@@ -7,7 +7,7 @@ import { findSystemPasswordResetRecipient } from "@system/infrastructure/auth/fi
 import { systemFactory } from "@/contexts/system/interface/request-environment/system-factory"
 import { SystemApplicationError, SystemInternalServerError } from "@system/interface/errors"
 import { zAppAuthAcknowledgement } from "@/contexts/system/interface/models/auth"
-import { ApplicationError } from "@/lib/errors/application-error"
+import { ApplicationError } from "@system/application/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
