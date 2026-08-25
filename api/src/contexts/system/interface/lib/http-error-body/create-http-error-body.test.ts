@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test"
+import { expect, test } from "bun:test"
 import { createHTTPErrorBody } from "@system/interface/lib/http-error-body/create-http-error-body"
 
 test("HTTPエラー本文へstatus別の既定メッセージを補う", () => {
