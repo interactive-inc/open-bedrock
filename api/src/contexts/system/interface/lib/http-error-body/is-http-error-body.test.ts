@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test"
+import { expect, test } from "bun:test"
 import { isHTTPErrorBody } from "@system/interface/lib/http-error-body/is-http-error-body"
 
 test("公開HTTPエラー本文だけを判別する", () => {

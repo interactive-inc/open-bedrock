@@ -124,6 +124,15 @@ async function createFixture(): Promise<Fixture> {
   }
 }
 
+/**
+ * ルートハンドラが素の Response を返す経路では Hono が JSON schema を推論できず、
+ * `response.json()` の戻り値が undefined 型になる。実際の body は実行時に組み立てられる。
+ * handle-api-error.test.ts と同じ形で unknown として読み、比較は toEqual に委ねる。
+ */
+async function responseJson(response: Response): Promise<unknown> {
+  return response.json()
+}
+
 describe("POST /system/v1/attachments/purge-unlinked", () => {
   test("system:admin は期限切れの未紐づけ添付を掃除できる", async () => {
     const fixture = await createFixture()
@@ -140,7 +149,7 @@ describe("POST /system/v1/attachments/purge-unlinked", () => {
     })
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ purged_count: 1 })
+    expect(await responseJson(response)).toEqual({ purged_count: 1 })
     expect(fixture.bucket.size()).toBe(0)
   })
 
