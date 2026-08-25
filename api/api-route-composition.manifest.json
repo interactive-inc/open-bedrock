@@ -59,6 +59,12 @@
       "reason": "System workflowとCompany・評価・Surveyの集計を製品ダッシュボードへ合成する"
     },
     {
+      "routePrefix": "directory",
+      "participants": ["administration", "company", "system"],
+      "routes": ["directory.accounts"],
+      "reason": "System Account・IdentityとCompany従業員プロフィールを管理用ディレクトリwireへ合成する"
+    },
+    {
       "routePrefix": "features",
       "participants": ["company", "system"],
       "routes": ["features"],

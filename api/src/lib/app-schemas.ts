@@ -598,6 +598,24 @@ export const zAppEmployeeDirectoryList = z.object({
 
 export type AppEmployeeDirectoryList = z.infer<typeof zAppEmployeeDirectoryList>
 
+/** System Account と Company Employee を合成した管理用ディレクトリの行。 */
+export const zAppAccountDirectoryItem = z.object({
+  account_id: z.string().min(1).max(255),
+  name: z.string().min(1),
+  email: z.string().email().nullable(),
+  status: z.enum(["active", "suspended", "locked"]),
+})
+
+export type AppAccountDirectoryItem = z.infer<typeof zAppAccountDirectoryItem>
+
+/** 管理用アカウントディレクトリ一覧。 */
+export const zAppAccountDirectoryList = z.object({
+  data: z.array(zAppAccountDirectoryItem),
+  total: z.number().int().nonnegative(),
+})
+
+export type AppAccountDirectoryList = z.infer<typeof zAppAccountDirectoryList>
+
 const zAppCompanyOrganizationPeriod = z.strictObject({
   period_id: z.string(),
   revision: z.number().int().positive(),
