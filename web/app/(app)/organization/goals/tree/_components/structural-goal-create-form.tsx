@@ -5,15 +5,24 @@ import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { createStructuralGoalAction } from "@/app/(app)/organization/goals/actions"
 import type { GoalActionState } from "@/app/(app)/organization/goals/actions"
+import type { GoalPeriodOption } from "@/app/(app)/organization/goals/_lib/to-goal-period-options"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   canCreateCompany: boolean
   canCreateDepartment: boolean
   defaultPeriod: string | null
+  periodOptions: GoalPeriodOption[]
 }
 
 const initialState: GoalActionState = { ok: false, error: null }
@@ -85,14 +94,19 @@ export function StructuralGoalCreateForm(props: Props) {
           <Field>
             <FieldLabel htmlFor="structural-period">期間</FieldLabel>
 
-            <Input
-              id="structural-period"
-              name="period"
-              placeholder="2026-H1"
-              defaultValue={props.defaultPeriod ?? ""}
-              maxLength={FORM_CONSTRAINTS.goal.periodMax}
-              required
-            />
+            <Select name="period" defaultValue={props.defaultPeriod ?? undefined} required>
+              <SelectTrigger id="structural-period" className="w-full">
+                <SelectValue placeholder="期間を選択" />
+              </SelectTrigger>
+
+              <SelectContent>
+                {props.periodOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
 
           <Field>

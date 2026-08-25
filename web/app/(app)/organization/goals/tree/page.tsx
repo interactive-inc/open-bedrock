@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
+import { toGoalPeriodOptions } from "@/app/(app)/organization/goals/_lib/to-goal-period-options"
 import { GoalTreeView } from "@/app/(app)/organization/goals/tree/_components/goal-tree-view"
 import { StructuralGoalCreateForm } from "@/app/(app)/organization/goals/tree/_components/structural-goal-create-form"
 import { FetchError } from "@/components/fetch-error"
@@ -8,6 +9,7 @@ import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { getGoalTree } from "@/lib/api/get-goal-tree"
 import { getMe } from "@/lib/api/get-me"
+import { getReviewPeriods } from "@/lib/api/get-review-periods"
 import { canWriteCompanyGoal } from "@/lib/goal/can-write-company-goal"
 import { canWriteDepartmentGoal } from "@/lib/goal/can-write-department-goal"
 
@@ -26,7 +28,7 @@ export default async function GoalTreePage(props: Props) {
 
   const period = typeof searchParams.period === "string" ? searchParams.period : null
 
-  const me = await getMe()
+  const [me, periods] = await Promise.all([getMe(), getReviewPeriods()])
 
   const canCreateCompany = me instanceof Error ? false : canWriteCompanyGoal(me.permissions)
 
@@ -54,6 +56,7 @@ export default async function GoalTreePage(props: Props) {
           canCreateCompany={canCreateCompany}
           canCreateDepartment={canCreateDepartment}
           defaultPeriod={period}
+          periodOptions={toGoalPeriodOptions(periods instanceof Error ? [] : periods, period)}
         />
       ) : null}
 

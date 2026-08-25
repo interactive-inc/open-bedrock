@@ -1,7 +1,7 @@
 import { DeleteReviewCycle } from "@/contexts/performance-review/application/review/delete-review-cycle"
 import { UpdateReviewCycle } from "@/contexts/performance-review/application/review/update-review-cycle"
 import { factory } from "@/api/http/factory"
-import { isoDate } from "@/lib/schemas"
+import { halfYearPeriod, isoDate } from "@/lib/schemas"
 import { ApplicationError } from "@/lib/errors"
 import { zAppReviewCycle } from "@/lib/app-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -19,7 +19,7 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       title: z.string().min(1).max(500),
-      period: z.string().min(1).max(100),
+      period: halfYearPeriod,
       dueDate: isoDate.nullable().optional(),
     }),
   ),

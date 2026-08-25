@@ -100,6 +100,8 @@ export function ReviewCycleCreateForm() {
             name="period"
             placeholder="2026-H1"
             maxLength={FORM_CONSTRAINTS.review.periodMax}
+            pattern={FORM_CONSTRAINTS.review.periodPattern}
+            title="YYYY-H1 または YYYY-H2 の形式で入力してください"
             required
           />
         </Field>

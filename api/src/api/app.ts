@@ -221,6 +221,7 @@ import * as reviewCyclesCycleIdFormsBulkRoute from "@/contexts/performance-revie
 import * as reviewCyclesCycleIdOpenRoute from "@/contexts/performance-review/interface/routes/review-cycles.$cycleId.open"
 import * as reviewCyclesCycleIdPolicyRoute from "@/contexts/performance-review/interface/routes/review-cycles.$cycleId.policy"
 import * as reviewCyclesCycleIdResultsEmployeeCodeRoute from "@/contexts/performance-review/interface/routes/review-cycles.$cycleId.results.$employeeCode"
+import * as reviewCyclesPeriodsRoute from "@/contexts/performance-review/interface/routes/review-cycles.periods"
 import * as reviewFormsRoute from "@/contexts/performance-review/interface/routes/review-forms"
 import * as reviewFormsFormIdSubmitRoute from "@/contexts/performance-review/interface/routes/review-forms.$formId.submit"
 import * as reviewFormsMeRoute from "@/contexts/performance-review/interface/routes/review-forms.me"
@@ -808,6 +809,7 @@ const routePart34 = createRouteApp()
   .post("/resignations/:id/reject", ...resignationsIdRejectRoute.POST)
   .get("/review-cycles", ...reviewCyclesRoute.GET)
   .post("/review-cycles", ...reviewCyclesRoute.POST)
+  .get("/review-cycles/periods", ...reviewCyclesPeriodsRoute.GET)
   .put("/review-cycles/:cycleId", ...reviewCyclesCycleIdRoute.PUT)
   .delete("/review-cycles/:cycleId", ...reviewCyclesCycleIdRoute.DELETE)
   .post("/review-cycles/:cycleId/close", ...reviewCyclesCycleIdCloseRoute.POST)
@@ -826,9 +828,9 @@ const routePart34 = createRouteApp()
   .post("/ringi-requests", ...ringiRequestsRoute.POST)
   .get("/ringi-requests/admin", ...ringiRequestsAdminRoute.GET)
   .get("/ringi-requests/inbox", ...ringiRequestsInboxRoute.GET)
-  .get("/ringi-requests/me", ...ringiRequestsMeRoute.GET)
 
 const routePart35 = createRouteApp()
+  .get("/ringi-requests/me", ...ringiRequestsMeRoute.GET)
   .post("/ringi-requests/:id/approve", ...ringiRequestsIdApproveRoute.POST)
   .post("/ringi-requests/:id/reject", ...ringiRequestsIdRejectRoute.POST)
   .get("/rooms", ...roomsRoute.GET)
@@ -876,9 +878,9 @@ const routePart35 = createRouteApp()
   .get("/surveys", ...surveysRoute.GET)
   .post("/surveys", ...surveysRoute.POST)
   .get("/surveys/responses/me", ...surveysResponsesMeRoute.GET)
-  .get("/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.GET)
 
 const routePart36 = createRouteApp()
+  .get("/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.GET)
   .put("/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.PUT)
   .delete("/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.DELETE)
   .get("/surveys/:surveyId", ...surveysSurveyIdRoute.GET)
@@ -947,9 +949,9 @@ const routePart36 = createRouteApp()
   .patch("/system/v1/sessions", ...systemV1SessionsRoute.PATCH)
   .delete("/system/v1/sessions", ...systemV1SessionsRoute.DELETE)
   .get("/thanks-messages", ...thanksMessagesRoute.GET)
-  .post("/thanks-messages", ...thanksMessagesRoute.POST)
 
 const routePart37 = createRouteApp()
+  .post("/thanks-messages", ...thanksMessagesRoute.POST)
   .get("/thanks-messages/me", ...thanksMessagesMeRoute.GET)
   .get("/thanks-point-balances/me", ...thanksPointBalancesMeRoute.GET)
   .get("/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)

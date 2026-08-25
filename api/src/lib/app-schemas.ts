@@ -1694,6 +1694,19 @@ export const zAppReviewCycleList = z.object({
 
 export type AppReviewCycleList = z.infer<typeof zAppReviewCycleList>
 
+/**
+ * 評価期間ラベルの一覧レスポンス。
+ *
+ * 期間の選択肢を必要とする画面（目標の作成・編集・絞り込みなど）のための read model。
+ * サイクルの title / status / due_date は返さない。まだ open していないサイクルの
+ * 表題や締切を全従業員へ広げずに、期間ラベルだけを共有するため。
+ */
+export const zAppReviewPeriodList = z.object({
+  data: z.array(z.string()),
+})
+
+export type AppReviewPeriodList = z.infer<typeof zAppReviewPeriodList>
+
 /** 評価フォーム 1 件のレスポンス。submit は comment を含む。 */
 export const zAppReviewForm = z.object({
   id: z.number(),

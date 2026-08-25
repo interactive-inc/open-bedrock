@@ -14,7 +14,7 @@ import { toReviewCycleStatus } from "@/contexts/performance-review/domain/values
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { zAppReviewCycle, zAppReviewCycleList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { isoDate } from "@/lib/schemas"
+import { halfYearPeriod, isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { asc, count, eq } from "drizzle-orm"
 import { z } from "zod"
@@ -27,7 +27,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       title: z.string().min(1).max(500),
-      period: z.string().min(1).max(100),
+      period: halfYearPeriod,
       dueDate: isoDate.optional(),
       policy: zReviewCyclePolicy.optional(),
     }),

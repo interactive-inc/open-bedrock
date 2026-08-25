@@ -3,10 +3,12 @@ import Link from "next/link"
 import { Suspense } from "react"
 import { GoalFilterForm } from "@/app/(app)/organization/goals/_components/goal-filter-form"
 import { GoalList } from "@/app/(app)/organization/goals/_components/goal-list"
+import { toGoalPeriodOptions } from "@/app/(app)/organization/goals/_lib/to-goal-period-options"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
+import { getReviewPeriods } from "@/lib/api/get-review-periods"
 
 export const metadata = { title: "目標" }
 
@@ -19,7 +21,11 @@ type Props = {
  * 作成は /goals/new に分離。
  */
 export default async function GoalsPage(props: Props) {
-  const [searchParams, currentUser] = await Promise.all([props.searchParams, getMe()])
+  const [searchParams, currentUser, periods] = await Promise.all([
+    props.searchParams,
+    getMe(),
+    getReviewPeriods(),
+  ])
 
   const canViewOthers =
     currentUser instanceof Error ? false : currentUser.permissions.includes("goal:read:all")
@@ -61,7 +67,12 @@ export default async function GoalsPage(props: Props) {
         }
       />
 
-      <GoalFilterForm period={period} employeeId={employeeId} canFilterEmployee={canViewOthers} />
+      <GoalFilterForm
+        period={period}
+        employeeId={employeeId}
+        canFilterEmployee={canViewOthers}
+        periodOptions={toGoalPeriodOptions(periods instanceof Error ? [] : periods, period)}
+      />
 
       <Suspense key={`${period ?? ""}:${employeeId ?? ""}`} fallback={<ListSkeleton rows={5} />}>
         <GoalList period={period} employeeId={employeeId} />
