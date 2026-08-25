@@ -25,6 +25,7 @@ import * as auditEventsRoute from "@/api/routes/audit-events"
 import * as auditEventsEventIdRoute from "@/api/routes/audit-events.$eventId"
 import * as dashboardRoute from "@/api/routes/dashboard"
 import * as dashboardManagementRoute from "@/api/routes/dashboard.management"
+import * as directoryAccountsRoute from "@/api/routes/directory.accounts"
 import * as featuresRoute from "@/api/routes/features"
 import * as governanceDocumentsImpactRoute from "@/api/routes/governance-documents.impact"
 import * as governanceDocumentsSyncRoute from "@/api/routes/governance-documents.sync"
@@ -558,6 +559,7 @@ const routePart26 = createRouteApp()
   .put("/departments/:code", ...departmentsCodeRoute.PUT)
   .delete("/departments/:code", ...departmentsCodeRoute.DELETE)
   .get("/departments/:code/members", ...departmentsCodeMembersRoute.GET)
+  .get("/directory/accounts", ...directoryAccountsRoute.GET)
   .get("/directory/employees", ...directoryEmployeesRoute.GET)
   .get("/disciplinary-actions", ...disciplinaryActionsRoute.GET)
   .post("/disciplinary-actions", ...disciplinaryActionsRoute.POST)
@@ -597,9 +599,9 @@ const routePart26 = createRouteApp()
   .get("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.GET)
   .put("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PUT)
   .patch("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PATCH)
-  .post("/expenses", ...expensesRoute.POST)
 
 const routePart27 = createRouteApp()
+  .post("/expenses", ...expensesRoute.POST)
   .get("/expenses/admin", ...expensesAdminRoute.GET)
   .get("/expenses/inbox", ...expensesInboxRoute.GET)
   .get("/expenses/me", ...expensesMeRoute.GET)
@@ -656,9 +658,9 @@ const routePart27 = createRouteApp()
   .post("/it-incidents/:id/resolve", ...itIncidentsIdResolveRoute.POST)
   .get("/job-openings", ...jobOpeningsRoute.GET)
   .post("/job-openings", ...jobOpeningsRoute.POST)
-  .get("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.GET)
 
 const routePart28 = createRouteApp()
+  .get("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.GET)
   .put("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.PUT)
   .get("/job-openings/:jobOpeningId/candidates", ...jobOpeningsJobOpeningIdCandidatesRoute.GET)
   .post("/job-openings/:jobOpeningId/candidates", ...jobOpeningsJobOpeningIdCandidatesRoute.POST)
@@ -706,12 +708,12 @@ const routePart28 = createRouteApp()
   .post("/oauth/token", ...oauthTokenRoute.POST)
   .get("/oauth/userinfo", ...oauthUserinfoRoute.GET)
   .post("/onboarding-assignments", ...onboardingAssignmentsRoute.POST)
+
+const routePart29 = createRouteApp()
   .get(
     "/onboarding-assignments/employees/:employeeCode",
     ...onboardingAssignmentsEmployeesEmployeeCodeRoute.GET,
   )
-
-const routePart29 = createRouteApp()
   .get("/onboarding-assignments/me", ...onboardingAssignmentsMeRoute.GET)
   .get("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.GET)
   .put("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.PUT)
