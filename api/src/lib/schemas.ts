@@ -34,6 +34,16 @@ function isRealCalendarDate(value: string): boolean {
  */
 export const yearMonth = z.string().regex(/^\d{4}-\d{2}$/, "YYYY-MM 形式で入力してください")
 
+/**
+ * YYYY-H1 / YYYY-H2 形式の評価期間ラベル。日付ではなく半期を表すラベルとして扱う。
+ *
+ * 目標と評価サイクルはこの文字列だけで突き合わせるため、「2026-h1」「2026-H3」「26-H1」の
+ * ような揺れが混ざると、同じ半期のつもりの目標とサイクルが別物になる。入口で形を固定する。
+ */
+export const halfYearPeriod = z
+  .string()
+  .regex(/^\d{4}-H[12]$/, "YYYY-H1 または YYYY-H2 の形式で入力してください")
+
 /** コード・識別子フィールド共通。空文字と長すぎる値を弾く。 */
 export const codeSchema = z.string().min(1).max(200)
 

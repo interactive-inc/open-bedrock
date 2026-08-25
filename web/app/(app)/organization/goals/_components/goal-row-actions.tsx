@@ -4,6 +4,7 @@ import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { deleteGoalAction, updateGoalAction } from "@/app/(app)/organization/goals/actions"
 import type { GoalActionState } from "@/app/(app)/organization/goals/actions"
+import type { GoalPeriodOption } from "@/app/(app)/organization/goals/_lib/to-goal-period-options"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,11 +28,19 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import type { GoalResponse } from "@/lib/api/types/goal-types"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   goal: GoalResponse
+  periodOptions: GoalPeriodOption[]
 }
 
 /**
@@ -47,7 +56,7 @@ export function GoalRowActions(props: Props) {
 
   return (
     <TableRowActions>
-      <UpdateGoalDialog goal={props.goal} goalId={goalId} />
+      <UpdateGoalDialog goal={props.goal} goalId={goalId} periodOptions={props.periodOptions} />
 
       <DeleteGoalButton goalId={goalId} />
     </TableRowActions>
@@ -55,7 +64,11 @@ export function GoalRowActions(props: Props) {
 }
 
 /** 目標変更フォームを Dialog で開く。期間・タイトル・KPI・ウェイトを編集して送信する。 */
-function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
+function UpdateGoalDialog(props: {
+  goal: GoalResponse
+  goalId: number
+  periodOptions: GoalPeriodOption[]
+}) {
   const [open, setOpen] = useState(false)
 
   async function reduce(
@@ -98,12 +111,19 @@ function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
             <Field>
               <FieldLabel htmlFor="update_period">期間</FieldLabel>
 
-              <Input
-                id="update_period"
-                name="period"
-                defaultValue={props.goal.period}
-                maxLength={FORM_CONSTRAINTS.goal.periodMax}
-              />
+              <Select name="period" defaultValue={props.goal.period} required>
+                <SelectTrigger id="update_period" className="w-full">
+                  <SelectValue placeholder="期間を選択" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {props.periodOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field>

@@ -75,6 +75,8 @@ export const FORM_CONSTRAINTS = {
   review: {
     titleMax: 500,
     periodMax: 100,
+    /** YYYY-H1 / YYYY-H2 の評価期間ラベル。API 側の halfYearPeriod と同じ形。 */
+    periodPattern: "\\d{4}-H[12]",
     scoreMin: 0,
     scoreMax: 100,
     commentMax: 3_000,

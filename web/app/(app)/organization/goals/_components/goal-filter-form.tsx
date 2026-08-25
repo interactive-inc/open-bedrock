@@ -1,16 +1,21 @@
+import type { GoalPeriodOption } from "@/app/(app)/organization/goals/_lib/to-goal-period-options"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 type Props = {
   period: string | null
   employeeId: string | null
   canFilterEmployee: boolean
+  periodOptions: GoalPeriodOption[]
 }
 
 /**
  * 一覧の絞り込みフォーム。native な GET フォームで /goals?period=&employee_id= へ遷移する。
  * searchParams を更新するだけなので Server Action を使わず method="get" のままにする。
+ *
+ * 期間は native な select にする。GET フォームがそのまま送信でき、値も評価期間ラベルに固定される。
  */
 export function GoalFilterForm(props: Props) {
   return (
@@ -18,13 +23,20 @@ export function GoalFilterForm(props: Props) {
       <div className="flex flex-col gap-2">
         <Label htmlFor="filter-period">期間</Label>
 
-        <Input
+        <NativeSelect
           id="filter-period"
           name="period"
-          placeholder="2026-H1"
           defaultValue={props.period ?? ""}
-          className="w-40"
-        />
+          className="w-52"
+        >
+          <NativeSelectOption value="">すべて</NativeSelectOption>
+
+          {props.periodOptions.map((option) => (
+            <NativeSelectOption key={option.value} value={option.value}>
+              {option.label}
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
       </div>
 
       {props.canFilterEmployee ? (

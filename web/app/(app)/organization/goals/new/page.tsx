@@ -1,7 +1,9 @@
 import { GoalCreateForm } from "@/app/(app)/organization/goals/_components/goal-create-form"
+import { toGoalPeriodOptions } from "@/app/(app)/organization/goals/_lib/to-goal-period-options"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
+import { getReviewPeriods } from "@/lib/api/get-review-periods"
 
 export const metadata = { title: "目標を作成" }
 
@@ -17,6 +19,11 @@ export default async function NewGoalPage(props: Props) {
 
   const period = typeof searchParams.period === "string" ? searchParams.period : null
 
+  const periods = await getReviewPeriods()
+
+  // 期間一覧を引けなくても作成自体は止めない。引き継いだ期間だけを選択肢にする。
+  const periodOptions = toGoalPeriodOptions(periods instanceof Error ? [] : periods, period)
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -27,7 +34,7 @@ export default async function NewGoalPage(props: Props) {
 
       <Card className="max-w-xl">
         <CardContent>
-          <GoalCreateForm defaultPeriod={period} />
+          <GoalCreateForm defaultPeriod={period} periodOptions={periodOptions} />
         </CardContent>
       </Card>
     </div>
