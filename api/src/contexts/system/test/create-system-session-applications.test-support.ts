@@ -1,12 +1,12 @@
 import { IssueSystemSession } from "@system/application/auth/issue-system-session"
 import { RevokeSystemSession } from "@system/application/auth/revoke-system-session"
 import { RotateSystemSession } from "@system/application/auth/rotate-system-session"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
-import { SystemAccessTokenIssuer } from "@system/infrastructure/auth/system-access-token-issuer.repository"
-import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service.repository"
-import { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
-import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
+import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
+import { SystemSessionMaterialService } from "@system/lib/auth/system-session-material-service"
+import { SystemSessionRepository } from "@system/infrastructure/repositories/auth/system-session.repository"
+import type { SystemD1Context } from "@system/configuration/system-context"
 
 type Props = Readonly<{
   context: SystemD1Context

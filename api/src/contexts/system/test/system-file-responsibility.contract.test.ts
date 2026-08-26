@@ -34,8 +34,10 @@ test("System ApplicationへRepository・Persistence・Gateway・Portを置かな
     .filter((file) => !file.endsWith(".test.ts"))
     .flatMap((file) => {
       const source = readFileSync(new URL(file, applicationDirectory), "utf8")
+      const isErrorDefinition = file.startsWith("errors/") && file.endsWith(".error.ts")
       return [
-        ...(/(?:^|\/)[^/]*(?:repository|persistence|gateway|port)(?:[.-]|$)/i.test(file)
+        ...(!isErrorDefinition &&
+        /(?:^|\/)[^/]*(?:repository|persistence|gateway|port)(?:[.-]|$)/i.test(file)
           ? [`${file}: persistence contract file in Application`]
           : []),
         ...(/export (?:type|interface|class) \w*(?:Repository|Persistence|Gateway|Port|Reader|Writer)\b/.test(

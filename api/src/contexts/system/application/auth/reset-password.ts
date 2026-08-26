@@ -1,35 +1,36 @@
-import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
+import { hashPassword } from "@system/lib/auth/hash-password"
 import { SystemPasswordValue } from "@system/domain/values/auth/system-password.value"
 import {
   PasswordResetTokenInvalidApplicationError,
   PepperSecretMissingApplicationError,
   SystemAuthPersistenceApplicationError,
 } from "@/contexts/system/application/errors"
-import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
-import { findSystemPasswordResetChallenge } from "@system/infrastructure/auth/find-system-password-reset-challenge.repository"
-import { completeSystemPasswordResetChallenge } from "@system/infrastructure/auth/complete-system-password-reset-challenge.repository"
+import { hashPasswordResetToken } from "@system/lib/auth/hash-password-reset-token"
+import { FindSystemPasswordResetChallengeAdapter } from "@system/infrastructure/adapters/auth/find-system-password-reset-challenge.adapter"
+import { CompleteSystemPasswordResetChallengeAdapter } from "@system/infrastructure/adapters/auth/complete-system-password-reset-challenge.adapter"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import type {
   SystemClockContext,
   SystemD1Context,
   SystemPasswordHashContext,
   SystemRequestAuditContext,
-} from "@system/infrastructure/configuration/system-context.repository"
+} from "@system/configuration/system-context"
 
 type Props = Readonly<{
   rawToken: string
   newPassword: string
 }>
+type Context = SystemD1Context &
+  SystemClockContext &
+  SystemPasswordHashContext &
+  SystemRequestAuditContext
 
 export class ResetPassword {
   static readonly featureId = "00450023"
 
-  constructor(
-    private readonly c: SystemD1Context &
-      SystemClockContext &
-      SystemPasswordHashContext &
-      SystemRequestAuditContext,
-  ) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async execute(props: Props) {
     const now = this.c.var.now()
@@ -44,7 +45,9 @@ export class ResetPassword {
 
     const tokenHash = await hashPasswordResetToken(props.rawToken)
     if (tokenHash instanceof Error) return new PasswordResetTokenInvalidApplicationError()
-    const challenge = await findSystemPasswordResetChallenge(this.c, tokenHash, now)
+    const challenge = await new FindSystemPasswordResetChallengeAdapter(
+      this.c,
+    ).findSystemPasswordResetChallenge(tokenHash, now)
     if (challenge instanceof Error) return new SystemAuthPersistenceApplicationError(challenge)
     if (challenge === null) return new PasswordResetTokenInvalidApplicationError()
     const passwordHash = await hashPassword(password.toString(), this.c.env.PEPPER_SECRET)
@@ -55,7 +58,9 @@ export class ResetPassword {
     })
     if (metadataJson instanceof Error)
       return new SystemAuthPersistenceApplicationError(metadataJson)
-    const completed = await completeSystemPasswordResetChallenge(this.c, {
+    const completed = await new CompleteSystemPasswordResetChallengeAdapter(
+      this.c,
+    ).completeSystemPasswordResetChallenge({
       challengeId: challenge.id,
       tokenHash,
       accountId: challenge.accountId,

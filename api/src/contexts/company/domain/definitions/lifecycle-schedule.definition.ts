@@ -1,3 +1,8 @@
+import type {
+  EmployeeId,
+  EmploymentId,
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
+
 /** 有効日と訂正revisionを持つCompany従業員ライフサイクルの共通期間。 */
 export type LifecyclePeriodBase = {
   periodId: string
@@ -10,28 +15,30 @@ export type LifecyclePeriodBase = {
 }
 
 export type EmploymentPeriod = LifecyclePeriodBase & {
-  employeeId: number
+  employeeId: EmployeeId
+  employmentId: EmploymentId
 }
 
 export type EmployeeStatusPeriod = LifecyclePeriodBase & {
-  employmentPeriodId: string
-  employeeId: number
+  employmentPeriodId: EmploymentId
+  employeeId: EmployeeId
   status: "active" | "leave"
 }
 
 export type OrgAssignmentPeriod = LifecyclePeriodBase & {
-  employmentPeriodId: string
-  employeeId: number
+  employmentPeriodId: EmploymentId
+  employeeId: EmployeeId
   departmentCode: string
   assignmentType: "primary" | "concurrent"
   positionTitle: string | null
-  managerEmployeeId: number | null
+  managerEmployeeId: EmployeeId | null
 }
 
 export type OrgResponsibilityPeriod = LifecyclePeriodBase & {
+  employmentId: EmploymentId
   departmentCode: string
   responsibilityType: "department_manager"
-  employeeId: number
+  employeeId: EmployeeId
 }
 
 export type LifecycleSchedule = {

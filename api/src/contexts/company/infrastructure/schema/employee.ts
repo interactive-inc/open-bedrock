@@ -1,39 +1,64 @@
-import type { EmployeeStatus } from "@/contexts/company/domain/definitions/employee-status.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { sql } from "drizzle-orm"
+import { check, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { systemAccounts } from "@system/infrastructure/schema/system-core"
 
 /**
- * 従業員台帳。認証はSystem identity、認可はSystem IAMが正であり、Companyは人との対応だけを持つ。
- * codeは外部identityプロビジョニングで未採番の従業員を許すためnull許容。
+ * Companyで働く人の正本。雇用期間・組織配属・System Accountとの対応から独立した安定IDを持つ。
+ * employeeCodeは外部identityプロビジョニングで未採番の従業員を許すためnull許容。
  */
-export const employees = sqliteTable("employees", {
-  id: integer("id").primaryKey(),
-  code: text("code").unique(),
-  name: text("name").notNull(),
-  deptId: integer("dept_id"),
-  deptName: text("dept_name"),
-  position: text("position"),
-  status: text("status").notNull().$type<EmployeeStatus>(),
-  phone: text("phone"),
-  archivedAt: integer("archived_at"),
-  archivedByAccountId: text("archived_by_account_id").$type<AccountId>(),
-})
+export const employees = sqliteTable(
+  "company_employees",
+  {
+    id: text("id").primaryKey().$type<EmployeeId>(),
+    officialName: text("official_name").notNull(),
+    employeeCode: text("employee_code"),
+    email: text("email"),
+    phone: text("phone"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("company_employees_employee_code_uniq").on(table.employeeCode),
+    check("company_employees_id_length", sql`length(${table.id}) BETWEEN 1 AND 128`),
+    check(
+      "company_employees_official_name",
+      sql`length(${table.officialName}) BETWEEN 1 AND 200 AND trim(${table.officialName}) = ${table.officialName}`,
+    ),
+    check(
+      "company_employees_employee_code",
+      sql`${table.employeeCode} IS NULL OR (length(${table.employeeCode}) BETWEEN 1 AND 64 AND trim(${table.employeeCode}) = ${table.employeeCode})`,
+    ),
+    check(
+      "company_employees_email",
+      sql`${table.email} IS NULL OR (length(${table.email}) BETWEEN 1 AND 320 AND trim(${table.email}) = ${table.email})`,
+    ),
+    check(
+      "company_employees_phone",
+      sql`${table.phone} IS NULL OR (length(${table.phone}) BETWEEN 1 AND 64 AND trim(${table.phone}) = ${table.phone})`,
+    ),
+    check("company_employees_chronology", sql`${table.updatedAt} >= ${table.createdAt}`),
+  ],
+)
 
 export type EmployeeRow = InferSelectModel<typeof employees>
 
 /** Companyが所有するSystem Accountと従業員台帳の1対1対応。 */
 export const accountEmployeeLinks = sqliteTable(
-  "account_employee_links",
+  "company_account_employee_links",
   {
     accountId: text("account_id")
       .primaryKey()
       .$type<AccountId>()
-      .references(() => systemAccounts.id, { onDelete: "cascade" }),
-    employeeId: integer("employee_id").notNull().unique(),
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
+    employeeId: text("employee_id")
+      .notNull()
+      .$type<EmployeeId>()
+      .references(() => employees.id, { onDelete: "restrict" }),
   },
-  (table) => [index("idx_account_employee_links_employee").on(table.employeeId)],
+  (table) => [uniqueIndex("company_account_employee_links_employee_uniq").on(table.employeeId)],
 )
 
 export type AccountEmployeeLinkRow = InferSelectModel<typeof accountEmployeeLinks>

@@ -28,14 +28,14 @@ describe("RoleBindingEntity", () => {
   test("global bindingは全resourceへ、resource bindingは完全一致だけへ適用する", () => {
     const global = requireBinding(bindingProps())
     const scoped = requireBinding(
-      bindingProps({ resource: { type: "company:facility", id: "Facility-A" } }),
+      bindingProps({ resource: { type: "example:resource", id: "Facility-A" } }),
     )
 
     expect(global.appliesTo(null)).toBe(true)
-    expect(global.appliesTo({ type: "care:resident", id: "resident-1" })).toBe(true)
+    expect(global.appliesTo({ type: "example:resident", id: "resident-1" })).toBe(true)
     expect(scoped.appliesTo(null)).toBe(false)
-    expect(scoped.appliesTo({ type: "company:facility", id: "Facility-A" })).toBe(true)
-    expect(scoped.appliesTo({ type: "company:facility", id: "facility-a" })).toBe(false)
+    expect(scoped.appliesTo({ type: "example:resource", id: "Facility-A" })).toBe(true)
+    expect(scoped.appliesTo({ type: "example:resource", id: "facility-a" })).toBe(false)
   })
 
   test("作成・失効時刻からactive状態を導出し、revocationを冪等にする", () => {
@@ -51,7 +51,7 @@ describe("RoleBindingEntity", () => {
   })
 
   test("resourceとDateの可変参照を保持・公開しない", () => {
-    const resource = { type: "company:facility", id: "facility-1" }
+    const resource = { type: "example:resource", id: "facility-1" }
     const createdAt = new Date(CREATED_AT)
     const binding = requireBinding(bindingProps({ resource, createdAt }))
 
@@ -59,7 +59,7 @@ describe("RoleBindingEntity", () => {
     createdAt.setUTCFullYear(2030)
     binding.createdAt.setUTCFullYear(2031)
 
-    expect(binding.resource).toEqual({ type: "company:facility", id: "facility-1" })
+    expect(binding.resource).toEqual({ type: "example:resource", id: "facility-1" })
     expect(binding.createdAt).toEqual(CREATED_AT)
     expect(Object.isFrozen(binding.resource)).toBe(true)
     expect(Object.isFrozen(binding)).toBe(true)
@@ -69,7 +69,7 @@ describe("RoleBindingEntity", () => {
     [bindingProps({ extra: true }), "invalid_shape"],
     [bindingProps({ accountId: "" }), "invalid_shape"],
     [bindingProps({ resource: { type: "facility", id: "f-1" } }), "invalid_shape"],
-    [bindingProps({ resource: { type: "company:facility", id: "" } }), "invalid_shape"],
+    [bindingProps({ resource: { type: "example:resource", id: "" } }), "invalid_shape"],
     [bindingProps({ revokedAt: new Date(CREATED_AT.getTime() - 1) }), "revocation_before_creation"],
   ] as const)("破損bindingをfail closedで拒否する", (input, reason) => {
     const binding = RoleBindingEntity.create(input)

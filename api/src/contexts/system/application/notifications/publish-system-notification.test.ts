@@ -2,7 +2,7 @@ import { PublishSystemNotification } from "@system/application/notifications/pub
 import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
 import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
-import type { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
+import type { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
 import { describe, expect, test } from "bun:test"
 
 const unreachableRepository: Pick<SystemNotificationRepository, "publish"> = {

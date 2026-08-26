@@ -6,8 +6,8 @@ import {
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
-import { createOidcAuthorizationCode } from "@system/infrastructure/identity/create-oidc-authorization-code.repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { CreateOidcAuthorizationCodeAdapter } from "@system/infrastructure/adapters/identity/create-oidc-authorization-code.adapter"
 import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import { OidcScopeValue } from "@system/domain/values/oauth/oidc-scope.value"
 import type {
@@ -15,7 +15,7 @@ import type {
   SystemClockContext,
   SystemD1Context,
   SystemDatabaseContext,
-} from "@system/infrastructure/configuration/system-context.repository"
+} from "@system/configuration/system-context"
 
 type Props = Readonly<{
   issuer: string
@@ -37,14 +37,15 @@ type AuditProps = Readonly<{
   clientId: string
   scope: ReadonlyArray<string>
 }>
+type Context = SystemDatabaseContext &
+  SystemD1Context &
+  SystemClockContext &
+  SystemAuthorizationContext
 
 export class CreateOidcAuthorization {
-  constructor(
-    private readonly c: SystemDatabaseContext &
-      SystemD1Context &
-      SystemClockContext &
-      SystemAuthorizationContext,
-  ) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async execute(props: Props) {
     const client = props.clientRegistry.resolve({
@@ -92,7 +93,9 @@ export class CreateOidcAuthorization {
       return { redirect_uri: redirect.toString() }
     }
 
-    const authorizationCode = await createOidcAuthorizationCode(this.c, {
+    const authorizationCode = await new CreateOidcAuthorizationCodeAdapter(
+      this.c,
+    ).createOidcAuthorizationCode({
       issuer: props.issuer,
       clientId: client.id,
       redirectUri: props.redirectUri,

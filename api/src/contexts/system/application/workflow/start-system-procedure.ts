@@ -16,11 +16,16 @@ import {
   createSystemCaseId,
   type SystemCaseId,
 } from "@system/domain/schemas/workflow/system-case.schema"
-import type { SystemWorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
+import type { SystemWorkflowWriter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 
 type Deps = Readonly<{
   createProposalId?: () => ProposalId
   createSystemCaseId?: () => SystemCaseId
+}>
+
+type Context = Readonly<{
+  writer: SystemWorkflowWriter
+  deps?: Deps
 }>
 
 export type StartSystemProcedureCommand = Readonly<{
@@ -44,10 +49,7 @@ export type StartedSystemProcedure = Readonly<{
 
 /** 提案、Case、最初の判断Taskを検証後に一つのSystem transactionで開始する。 */
 export class StartSystemProcedure {
-  constructor(
-    private readonly writer: SystemWorkflowWriter,
-    private readonly deps: Deps = {},
-  ) {
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
@@ -56,8 +58,8 @@ export class StartSystemProcedure {
   ): Promise<
     StartedSystemProcedure | InvalidSystemProposalError | InvalidSystemWorkflowError | Error
   > {
-    const proposalId = (this.deps.createProposalId ?? createProposalId)()
-    const workflowCaseId = (this.deps.createSystemCaseId ?? createSystemCaseId)()
+    const proposalId = (this.c.deps?.createProposalId ?? createProposalId)()
+    const workflowCaseId = (this.c.deps?.createSystemCaseId ?? createSystemCaseId)()
     const proposal = await ProposalEntity.create({
       id: proposalId,
       seriesId: command.seriesId,
@@ -99,7 +101,7 @@ export class StartSystemProcedure {
     if (firstTask.task.openedAt.getTime() < command.createdAt.getTime()) {
       return new InvalidSystemWorkflowError("invalid_chronology")
     }
-    const persisted = await this.writer.start({
+    const persisted = await this.c.writer.start({
       proposal,
       workflowCase,
       firstTask,

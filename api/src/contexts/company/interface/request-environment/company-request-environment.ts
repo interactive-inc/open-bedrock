@@ -3,7 +3,7 @@ import type { Context } from "hono"
 
 export type CompanyHttpEnvironment = {
   Bindings: { DB?: D1Database }
-  Variables: { companyActor?: CompanyActorValue }
+  Variables: { companyActor?: CompanyActorValue; companyClock?: () => Date }
 }
 
 export type CompanyHttpContext = Context<CompanyHttpEnvironment>

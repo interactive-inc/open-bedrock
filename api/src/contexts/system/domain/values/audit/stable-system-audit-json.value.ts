@@ -240,34 +240,30 @@ function validateValue(value: unknown, depth: number, state: ValidationState): n
   }
 }
 
-class AuditJsonWriter {
-  readonly #chunks: string[] = []
-  #byteLength = 0
+type AuditJsonWriter = {
+  byteLength: number
+  chunks: string[]
+}
 
-  get remainingBytes(): number {
-    return maximumAuditJsonBytes - this.#byteLength
-  }
+function remainingAuditJsonBytes(writer: AuditJsonWriter): number {
+  return maximumAuditJsonBytes - writer.byteLength
+}
 
-  write(chunk: string): void {
-    // UTF-16 length is a safe lower bound for UTF-8 bytes. Check it before
-    // allocating an encoded copy, especially for a single oversized string.
-    if (chunk.length > this.remainingBytes) throw payloadTooLarge()
+function writeAuditJsonChunk(writer: AuditJsonWriter, chunk: string): void {
+  // UTF-16 length is a safe lower bound for UTF-8 bytes. Check it before
+  // allocating an encoded copy, especially for a single oversized string.
+  if (chunk.length > remainingAuditJsonBytes(writer)) throw payloadTooLarge()
 
-    const chunkBytes = textEncoder.encode(chunk).byteLength
-    if (chunkBytes > this.remainingBytes) throw payloadTooLarge()
+  const chunkBytes = textEncoder.encode(chunk).byteLength
+  if (chunkBytes > remainingAuditJsonBytes(writer)) throw payloadTooLarge()
 
-    this.#chunks.push(chunk)
-    this.#byteLength += chunkBytes
-  }
+  writer.chunks.push(chunk)
+  writer.byteLength += chunkBytes
+}
 
-  writeJsonString(value: string): void {
-    if (value.length + 2 > this.remainingBytes) throw payloadTooLarge()
-    this.write(JSON.stringify(value))
-  }
-
-  toString(): string {
-    return this.#chunks.join("")
-  }
+function writeAuditJsonString(writer: AuditJsonWriter, value: string): void {
+  if (value.length + 2 > remainingAuditJsonBytes(writer)) throw payloadTooLarge()
+  writeAuditJsonChunk(writer, JSON.stringify(value))
 }
 
 function getSortedEntries(
@@ -293,15 +289,15 @@ function getSortedEntries(
 
 function serializeValue(value: unknown, state: ValidationState, writer: AuditJsonWriter): void {
   if (value === null) {
-    writer.write("null")
+    writeAuditJsonChunk(writer, "null")
     return
   }
   if (typeof value === "boolean" || typeof value === "number") {
-    writer.write(JSON.stringify(value))
+    writeAuditJsonChunk(writer, JSON.stringify(value))
     return
   }
   if (typeof value === "string") {
-    writer.writeJsonString(value)
+    writeAuditJsonString(writer, value)
     return
   }
   if (typeof value !== "object") throw invalidJson()
@@ -310,30 +306,30 @@ function serializeValue(value: unknown, state: ValidationState, writer: AuditJso
   if (snapshot === undefined) throw invalidJson()
 
   if (snapshot.kind === "array") {
-    writer.write("[")
+    writeAuditJsonChunk(writer, "[")
     for (let index = 0; index < snapshot.values.length; index += 1) {
-      if (index > 0) writer.write(",")
+      if (index > 0) writeAuditJsonChunk(writer, ",")
       serializeValue(snapshot.values[index], state, writer)
     }
-    writer.write("]")
+    writeAuditJsonChunk(writer, "]")
     return
   }
 
-  const entries = getSortedEntries(snapshot, writer.remainingBytes)
-  writer.write("{")
+  const entries = getSortedEntries(snapshot, remainingAuditJsonBytes(writer))
+  writeAuditJsonChunk(writer, "{")
   for (let index = 0; index < entries.length; index += 1) {
     const entry = entries[index]
     if (entry === undefined) throw invalidJson()
-    if (index > 0) writer.write(",")
-    writer.writeJsonString(entry.key)
-    writer.write(":")
+    if (index > 0) writeAuditJsonChunk(writer, ",")
+    writeAuditJsonString(writer, entry.key)
+    writeAuditJsonChunk(writer, ":")
     if (entry.sensitive) {
-      writer.writeJsonString(redactedValue)
+      writeAuditJsonString(writer, redactedValue)
     } else {
       serializeValue(entry.value, state, writer)
     }
   }
-  writer.write("}")
+  writeAuditJsonChunk(writer, "}")
 }
 
 /**
@@ -360,9 +356,9 @@ export class StableSystemAuditJsonValue {
       }
       validateValue(value, 0, state)
 
-      const writer = new AuditJsonWriter()
+      const writer: AuditJsonWriter = { byteLength: 0, chunks: [] }
       serializeValue(value, state, writer)
-      return new StableSystemAuditJsonValue(writer.toString())
+      return new StableSystemAuditJsonValue(writer.chunks.join(""))
     } catch (error) {
       return error instanceof SystemAuditJsonError ? error : invalidJson({ cause: error })
     }

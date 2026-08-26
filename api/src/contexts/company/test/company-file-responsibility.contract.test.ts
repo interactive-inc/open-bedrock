@@ -9,12 +9,14 @@ const productionFiles = [...new Glob("**/*.ts").scanSync({ cwd: contextDirectory
   .sort()
 
 describe("Company file responsibility contract", () => {
-  test("Infrastructureのproduction実装はrepositoryだけにする", () => {
+  test("Infrastructureのproduction実装をrepositoriesとadaptersへ分離する", () => {
     const violations = productionFiles.filter(
       (file) =>
         file.startsWith("infrastructure/") &&
         !file.startsWith("infrastructure/schema/") &&
-        !file.endsWith(".repository.ts"),
+        !file.endsWith("/errors.ts") &&
+        !(file.startsWith("infrastructure/repositories/") && file.endsWith(".repository.ts")) &&
+        !(file.startsWith("infrastructure/adapters/") && file.endsWith(".adapter.ts")),
     )
 
     expect(violations).toEqual([])
@@ -66,7 +68,7 @@ describe("Company file responsibility contract", () => {
       "profile",
     ]
     const violations = pairedRoutes.flatMap((route) => {
-      const file = `interface/routes/company.v1.${route}.ts`
+      const file = `interface/routes/company.${route}.ts`
       const source = readFileSync(new URL(file, contextDirectory), "utf8")
       return [
         ...(!source.includes("export const GET") || !source.includes("export const POST")
@@ -78,7 +80,7 @@ describe("Company file responsibility contract", () => {
         ...(source.includes("Schema") || source.includes("schema")
           ? [`${file}: shared HTTP schema import`]
           : []),
-        ...(manifest.split(`module: "@/contexts/company/interface/routes/company.v1.${route}"`)
+        ...(manifest.split(`module: "@/contexts/company/interface/routes/company.${route}"`)
           .length -
           1 ===
         2
@@ -138,7 +140,7 @@ describe("Company file responsibility contract", () => {
   test("HTTP testはHono hc clientから呼び出す", () => {
     const files = [
       "test/company-api.integration.test.ts",
-      "interface/routes/company.v1.capabilities.test.ts",
+      "interface/routes/company.capabilities.test.ts",
     ]
     const violations = files.flatMap((file) => {
       const source = readFileSync(new URL(file, contextDirectory), "utf8")

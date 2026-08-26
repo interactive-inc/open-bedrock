@@ -1,6 +1,6 @@
-import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
-import { passwordHashNeedsRehash } from "@system/infrastructure/auth/password-hash-needs-rehash.repository"
-import { verifyPassword } from "@system/infrastructure/auth/verify-password.repository"
+import { hashPassword } from "@system/lib/auth/hash-password"
+import { passwordHashNeedsRehash } from "@system/lib/auth/password-hash-needs-rehash"
+import { verifyPassword } from "@system/lib/auth/verify-password"
 import { describe, expect, test } from "bun:test"
 
 const TEST_PEPPER = "test-pepper-fixed-value"

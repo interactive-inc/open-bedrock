@@ -3,14 +3,15 @@ import { zIdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-subject.schema"
 import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
 import {
-  SystemPasswordCredentialRepository,
+  SystemPasswordCredentialAdapter,
   type SystemPasswordMaterialService,
-} from "@system/infrastructure/auth/system-password-credential.repository"
+} from "@system/infrastructure/adapters/auth/system-password-credential.adapter"
 import { describe, expect, test } from "bun:test"
 
 const schema = `
   CREATE TABLE system_accounts (
     id TEXT PRIMARY KEY, status TEXT NOT NULL, token_version INTEGER NOT NULL,
+    closed_at INTEGER,
     created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
   );
   CREATE TABLE system_identity_bindings (
@@ -35,7 +36,7 @@ function createService(database: D1Database, verifiedHashes: string[]) {
       return passwordHash === "valid-password-hash-value"
     },
   }
-  const repository = new SystemPasswordCredentialRepository({ database })
+  const repository = new SystemPasswordCredentialAdapter({ database })
   return {
     execute: (command: Parameters<typeof repository.authenticate>[0]) =>
       repository.authenticate(command, material),
@@ -48,7 +49,11 @@ async function insertCredential(
   activatedAt: number | null = now.getTime(),
 ) {
   await database
-    .prepare(`INSERT INTO system_accounts VALUES ('account-1', ?1, 3, ?2, ?2)`)
+    .prepare(
+      `INSERT INTO system_accounts
+         (id, status, token_version, closed_at, created_at, updated_at)
+       VALUES ('account-1', ?1, 3, NULL, ?2, ?2)`,
+    )
     .bind(status, now.getTime() - 1_000)
     .run()
   await database

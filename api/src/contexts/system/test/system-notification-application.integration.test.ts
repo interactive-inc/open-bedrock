@@ -5,7 +5,7 @@ import { NotificationDeliveryBatchValue } from "@system/domain/values/notificati
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
 import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
-import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
+import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
 import { describe, expect, test } from "bun:test"
 
 const notificationSchema = `
@@ -15,6 +15,7 @@ CREATE TABLE system_accounts (
   id TEXT PRIMARY KEY NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('active', 'suspended', 'locked')),
   token_version INTEGER NOT NULL DEFAULT 0,
+  closed_at INTEGER,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );

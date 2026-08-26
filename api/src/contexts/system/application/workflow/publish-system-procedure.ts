@@ -1,7 +1,7 @@
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { InvalidSystemProposalError } from "@system/domain/errors"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import type { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
+import type { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
 
 export type PublishSystemProcedureCommand = Readonly<{
   key: string
@@ -15,10 +15,14 @@ export type PublishSystemProcedureCommand = Readonly<{
   createdByAccountId: AccountId
   createdAt: Date
 }>
+type PublishSystemProcedureContext = Pick<SystemD1ProcedureRepository, "publish">
+type Context = PublishSystemProcedureContext
 
 /** 楽観lockを使い、手続の新しい変更不能版だけを公開する。 */
 export class PublishSystemProcedure {
-  constructor(private readonly repository: Pick<SystemD1ProcedureRepository, "publish">) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(
     command: PublishSystemProcedureCommand,
@@ -40,7 +44,7 @@ export class PublishSystemProcedure {
     })
 
     if (definition instanceof InvalidSystemProposalError) return definition
-    const persisted = await this.repository.publish(definition, command.expectedRevision)
+    const persisted = await this.c.publish(definition, command.expectedRevision)
 
     return persisted === true ? definition : persisted
   }

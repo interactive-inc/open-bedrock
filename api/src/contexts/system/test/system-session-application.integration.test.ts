@@ -9,10 +9,10 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { zSessionFamilyId } from "@system/domain/schemas/auth/session-family-id.schema"
 import { zSessionId } from "@system/domain/schemas/auth/session-id.schema"
 import { zSessionTokenHash } from "@system/domain/schemas/auth/session-token-hash.schema"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
-import { SystemSessionMaterialService } from "@system/infrastructure/auth/system-session-material.service.repository"
-import { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
+import { SystemSessionMaterialService } from "@system/lib/auth/system-session-material-service"
+import { SystemSessionRepository } from "@system/infrastructure/repositories/auth/system-session.repository"
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { describe, expect, test } from "bun:test"
 
@@ -160,7 +160,7 @@ function auditRows(fixture: SystemSessionTestContext): ReadonlyArray<Record<stri
     .all()
 }
 
-/** SystemのApplication orchestrationと永続化adapterを共通fixtureで横断検証する。 */
+/** SystemのApplication API compositionと永続化adapterを共通fixtureで横断検証する。 */
 describe("IssueSystemSession", () => {
   test("active Accountのcanonical versionでraw tokenを保存せずSessionと監査を発行する", async () => {
     const fixture = new SystemSessionTestContext()

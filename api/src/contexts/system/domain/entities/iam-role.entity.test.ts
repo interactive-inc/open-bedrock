@@ -38,9 +38,19 @@ describe("IamRoleEntity", () => {
   })
 
   test("Role keyはpermissionとは独立にhyphenを含むnamespaced識別子を許可する", () => {
-    expect(requireRole(roleProps({ key: "company:facility-manager" })).key).toBe(
-      "company:facility-manager",
+    expect(requireRole(roleProps({ key: "example:resource-manager" })).key).toBe(
+      "example:resource-manager",
     )
+  })
+
+  test("Roleが宣言したresource typeにだけbindingできる", () => {
+    const global = requireRole(roleProps())
+    const scoped = requireRole(roleProps({ resourceType: "example:resource" }))
+
+    expect(global.acceptsBindingResource(null)).toBe(true)
+    expect(global.acceptsBindingResource("example:resource")).toBe(false)
+    expect(scoped.acceptsBindingResource("example:resource")).toBe(true)
+    expect(scoped.acceptsBindingResource(null)).toBe(false)
   })
 
   test("custom Roleのpermissionをimmutableに置換する", () => {

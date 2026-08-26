@@ -1,6 +1,5 @@
 import { InvalidWorkforceIdError } from "@/contexts/company/domain/errors"
-
-declare const workforceIdBrand: unique symbol
+import type { $brand } from "zod"
 
 export type WorkforceIdKind =
   | "employee"
@@ -10,9 +9,7 @@ export type WorkforceIdKind =
   | "personnel_action"
   | "system_account"
 
-export type WorkforceId<TKind extends WorkforceIdKind> = string & {
-  readonly [workforceIdBrand]: TKind
-}
+export type WorkforceId<TKind extends WorkforceIdKind> = string & $brand<`WorkforceId:${TKind}`>
 
 export type EmployeeId = WorkforceId<"employee">
 export type EmploymentId = WorkforceId<"employment">

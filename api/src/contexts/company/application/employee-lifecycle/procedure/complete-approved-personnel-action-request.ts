@@ -1,9 +1,9 @@
 import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
-import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request.repository"
-import { resolveActiveSystemAccountId } from "@/contexts/company/infrastructure/account-profile/resolve-active-system-account-id.repository"
+import { FindPersonnelActionRequestAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/find-personnel-action-request.adapter"
+import { ResolveActiveSystemAccountIdAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/resolve-active-system-account-id.adapter"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
-import type { CompanyContext } from "@/contexts/company/infrastructure/configuration/company-context.repository"
-import { abortWhenPreviousStatementChangedNoRows } from "@/contexts/company/infrastructure/database/abort-when-previous-statement-changed-no-rows.repository"
+import type { CompanyContext } from "@/contexts/company/configuration/company-context"
+import { PersonnelActionPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter"
 import {
   CompanyOperationError,
   CompanyConflictError,
@@ -13,13 +13,15 @@ import {
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
 import { proposalDigestSchema } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import { systemCaseIdSchema } from "@system/domain/schemas/workflow/system-case.schema"
-import { SystemD1AuthorizedExecutionWriter } from "@system/infrastructure/workflow/system-d1-authorized-execution-writer.repository"
-
-const OPERATION_KEY = "company.personnel-action.apply"
+type Context = CompanyContext
 
 /** 承認済みSystem提案を、digestを保った一回限りのCompany人事発令へ反映する。 */
 export class CompleteApprovedPersonnelActionRequest {
-  constructor(private readonly c: CompanyContext) {}
+  private static readonly operationKey = "company.personnel-action.apply"
+
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(
     command: Readonly<{
@@ -28,9 +30,12 @@ export class CompleteApprovedPersonnelActionRequest {
       completedAt: Date
     }>,
   ): Promise<Readonly<{ actionId: string }> | CompanyOperationError> {
-    const request = await findPersonnelActionRequest(this.c, command.session, {
-      applicationId: command.applicationId,
-    })
+    const request = await new FindPersonnelActionRequestAdapter(this.c).findPersonnelActionRequest(
+      command.session,
+      {
+        applicationId: command.applicationId,
+      },
+    )
     if (request instanceof CompanyOperationError) return request
     if (request === null) {
       return new CompanyNotFoundError(
@@ -54,7 +59,9 @@ export class CompleteApprovedPersonnelActionRequest {
       expectedPayloadFingerprint: request.payloadFingerprint,
     })
     if (prepared instanceof CompanyOperationError) return prepared
-    const accountId = await resolveActiveSystemAccountId(this.c, command.session.accountId)
+    const accountId = await new ResolveActiveSystemAccountIdAdapter(
+      this.c,
+    ).resolveActiveSystemAccountId(command.session.accountId)
     if (accountId instanceof Error) {
       return new CompanyUnexpectedError("実行者のSystemアカウントを解決できません", {
         cause: accountId,
@@ -68,7 +75,7 @@ export class CompleteApprovedPersonnelActionRequest {
     const authorization = ExecutionAuthorizationEntity.create({
       id: crypto.randomUUID(),
       caseId: caseId.data,
-      operationKey: OPERATION_KEY,
+      operationKey: CompleteApprovedPersonnelActionRequest.operationKey,
       proposalDigest: digest.data,
       grantedToAccountId: accountId,
       grantedAt: command.completedAt,
@@ -78,27 +85,20 @@ export class CompleteApprovedPersonnelActionRequest {
     if (authorization instanceof Error) {
       return new CompanyUnexpectedError("System実行許可を作成できません", { cause: authorization })
     }
-    const executed = await new SystemD1AuthorizedExecutionWriter({
-      env: { DB: this.c.env.DB },
-    }).execute({
+    const executed = await new PersonnelActionPersistenceAdapter(this.c).executeAuthorized({
       authorization,
       proposalDigest: digest.data,
       executedAt: command.completedAt,
-      operationStatements: [
-        ...prepared.statements,
-        this.c.env.DB.prepare(
-          `UPDATE personnel_action_requests
-             SET applied_action_id = ?2, target_employee_id = ?4
-             WHERE id = ?1 AND application_id = ?3
-               AND applied_action_id IS NULL AND withdrawn_at IS NULL`,
-        ).bind(request.id, prepared.action.id, request.applicationId, prepared.action.employeeId),
-        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-      ],
+      persistence: prepared.persistence,
+      request: { id: request.id, applicationId: request.applicationId },
     })
     if (executed instanceof Error) {
-      const replay = await findPersonnelActionRequest(this.c, command.session, {
-        applicationId: command.applicationId,
-      })
+      const replay = await new FindPersonnelActionRequestAdapter(this.c).findPersonnelActionRequest(
+        command.session,
+        {
+          applicationId: command.applicationId,
+        },
+      )
       if (
         !(replay instanceof CompanyOperationError) &&
         replay !== null &&

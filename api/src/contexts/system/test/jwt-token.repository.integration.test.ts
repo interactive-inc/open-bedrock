@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { signJwtToken } from "@system/infrastructure/auth/sign-jwt-token.repository"
-import { verifyJwtToken } from "@system/infrastructure/auth/verify-jwt-token.repository"
+import { signJwtToken } from "@system/lib/auth/sign-jwt-token"
+import { verifyJwtToken } from "@system/lib/auth/verify-jwt-token"
 
 describe("JWT token functions", () => {
   test("HS256で署名したpayloadを同じsecretだけで検証する", async () => {

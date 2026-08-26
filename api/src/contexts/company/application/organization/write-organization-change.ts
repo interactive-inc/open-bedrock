@@ -6,14 +6,18 @@ import {
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import { validateCompanyOrganizationChange } from "@/contexts/company/domain/policies/company-organization.policy"
 import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
-import type { CompanyResourceRepository } from "@/contexts/company/infrastructure/core/company-resource.repository"
+import type { CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+
+type Context = Readonly<{
+  actor: CompanyActorValue
+  repository: CompanyResourceRepository
+}>
 
 /** 組織snapshot全体の不変条件を検証してから変更を永続化する。 */
 export class WriteOrganizationChange {
-  constructor(
-    private readonly actor: CompanyActorValue,
-    private readonly repository: CompanyResourceRepository,
-  ) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async execute(
     change: Omit<CompanyResourceChangeProps, "actorAccountId">,
@@ -27,21 +31,21 @@ export class WriteOrganizationChange {
     const organizationId = change.resources[0]?.organizationId ?? ""
     const command = CompanyResourceChangeEntity.create({
       ...change,
-      actorAccountId: this.actor.accountId,
+      actorAccountId: this.c.actor.accountId,
     })
     if (command instanceof CompanyResourceValidationError) {
       return { kind: "invalid", error: command }
     }
     if (
-      !this.actor.canAccessOrganization(organizationId) ||
-      !this.actor.hasCapability("company:write")
+      !this.c.actor.canAccessOrganization(organizationId) ||
+      !this.c.actor.hasCapability("company:write")
     ) {
       return { kind: "forbidden" }
     }
 
     let current
     try {
-      current = await this.repository.read({ organizationId, types: organizationResourceTypes })
+      current = await this.c.repository.read({ organizationId, types: organizationResourceTypes })
     } catch (cause) {
       return { kind: "unavailable", cause }
     }
@@ -53,7 +57,7 @@ export class WriteOrganizationChange {
     if (organizationError !== null) return { kind: "invalid", error: organizationError }
 
     try {
-      return await this.repository.write(command)
+      return await this.c.repository.write(command)
     } catch (cause) {
       return { kind: "unavailable", cause }
     }

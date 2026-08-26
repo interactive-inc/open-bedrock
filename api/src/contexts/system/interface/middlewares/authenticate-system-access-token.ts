@@ -2,10 +2,10 @@ import { SystemInvalidSessionError, SystemSessionUnavailableError } from "@syste
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-access-token-secret.value"
-import { AccessTokenService } from "@system/infrastructure/auth/access-token-service.repository"
-import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/infrastructure/auth/system-access-token-profile.repository"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
-import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization.repository"
+import { AccessTokenService } from "@system/lib/auth/access-token-service"
+import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/lib/auth/system-access-token-profile"
+import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
+import { SystemD1AuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-authorization.adapter"
 import { readBearerAuthorization } from "@system/interface/lib/authorization/bearer-authorization"
 
 /** access tokenと現在のAccount / IAM状態を検証してSystem主体だけを注入する。 */
@@ -53,7 +53,7 @@ export const authenticateSystemAccessToken = systemFactory.createMiddleware(
       throw new SystemInvalidSessionError()
     }
 
-    const accountAuthorization = await new SystemD1AuthorizationRepository({
+    const accountAuthorization = await new SystemD1AuthorizationAdapter({
       env: { DB: context.env.DB },
     }).resolveForAccount({ accountId: accountId.data, resource: null, at: now })
     if (accountAuthorization instanceof Error) {

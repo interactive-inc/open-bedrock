@@ -12,13 +12,16 @@ const actor = CompanyActorValue.restore({
 
 test("writeOrganizationChangeはsnapshot readの例外をunavailableへ閉じて書き込まない", async () => {
   let writeCount = 0
-  const writeOrganizationChange = new WriteOrganizationChange(actor, {
-    read: async () => {
-      throw new Error("read unavailable")
-    },
-    write: async () => {
-      writeCount += 1
-      return { kind: "applied", organizationRevision: 1, replayed: false }
+  const writeOrganizationChange = new WriteOrganizationChange({
+    actor,
+    repository: {
+      read: async () => {
+        throw new Error("read unavailable")
+      },
+      write: async () => {
+        writeCount += 1
+        return { kind: "applied", organizationRevision: 1, replayed: false }
+      },
     },
   })
   const result = await writeOrganizationChange.execute({

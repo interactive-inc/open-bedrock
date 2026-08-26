@@ -3,7 +3,7 @@ import {
   type SystemPasswordHasher,
 } from "@system/application/iam/bootstrap-system-root"
 import { wrapSystemD1TestDatabase } from "@system/test/wrap-system-d1-test-database.test-support"
-import { SystemRootBootstrapRepositoryD1 } from "@system/infrastructure/iam/system-root-bootstrap.repository"
+import { D1SystemRootBootstrapAdapter } from "@system/infrastructure/adapters/iam/d1-system-root-bootstrap.adapter"
 import { Database } from "bun:sqlite"
 import { afterEach, describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
@@ -23,13 +23,13 @@ afterEach(() => {
 function createFixture(): {
   application: BootstrapSystemRoot
   database: Database
-  repository: SystemRootBootstrapRepositoryD1
+  repository: D1SystemRootBootstrapAdapter
 } {
   const database = new Database(":memory:")
   databases.push(database)
   database.run("PRAGMA foreign_keys = ON")
   database.exec(schema)
-  const repository = new SystemRootBootstrapRepositoryD1({
+  const repository = new D1SystemRootBootstrapAdapter({
     env: { DB: wrapSystemD1TestDatabase(database) },
   })
   const passwordHasher: SystemPasswordHasher = {
@@ -255,9 +255,9 @@ describe("System root bootstrap", () => {
     const first = createFixture()
     first.database.exec(`
       INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
-      VALUES ('company-root-role', 'company:root', 'managed', 'Company root', 0, 0);
+      VALUES ('example-root-role', 'example:root', 'managed', 'Example root', 0, 0);
       INSERT INTO system_iam_role_permissions (role_id, permission_key)
-      VALUES ('company-root-role', 'system:admin');
+      VALUES ('example-root-role', 'system:admin');
     `)
     const reused = await first.application.execute({
       email: "root@example.com",
@@ -272,7 +272,7 @@ describe("System root bootstrap", () => {
            WHERE id = (SELECT root_binding_id FROM system_bootstrap_state)`,
         )
         .get(),
-    ).toEqual({ role_id: "company-root-role" })
+    ).toEqual({ role_id: "example-root-role" })
 
     const second = createFixture()
     second.database.exec(`
@@ -303,7 +303,7 @@ describe("System root bootstrap", () => {
         return passwordHash
       },
     }
-    const repository: Pick<SystemRootBootstrapRepositoryD1, "bootstrap"> = {
+    const repository: Pick<D1SystemRootBootstrapAdapter, "bootstrap"> = {
       bootstrap: async () => {
         repositoryCalls += 1
         return new Error("must not be called")

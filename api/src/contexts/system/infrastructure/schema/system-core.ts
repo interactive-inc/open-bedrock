@@ -22,6 +22,7 @@ export const systemAccounts = sqliteTable(
     id: text("id").primaryKey().$type<AccountId>(),
     status: text("status").notNull().$type<AccountStatus>(),
     tokenVersion: integer("token_version").notNull().default(0),
+    closedAt: integer("closed_at", { mode: "timestamp_ms" }),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
   },
@@ -29,6 +30,10 @@ export const systemAccounts = sqliteTable(
     check("system_accounts_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
     check("system_accounts_status", sql`${table.status} IN ('active', 'suspended', 'locked')`),
     check("system_accounts_token_version", sql`${table.tokenVersion} >= 0`),
+    check(
+      "system_accounts_closed_chronology",
+      sql`${table.closedAt} IS NULL OR ${table.closedAt} >= ${table.createdAt}`,
+    ),
     check("system_accounts_chronology", sql`${table.updatedAt} >= ${table.createdAt}`),
   ],
 )
@@ -86,6 +91,7 @@ export const systemIdentityProfiles = sqliteTable(
       .references(() => systemIdentityBindings.id, { onDelete: "cascade" }),
     email: text("email"),
     emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
+    canReceiveEmail: integer("can_receive_email", { mode: "boolean" }).notNull().default(true),
     lastUsedAt: integer("last_used_at", { mode: "timestamp_ms" }),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
   },
@@ -394,6 +400,8 @@ export const systemIamRoles = sqliteTable(
     id: text("id").primaryKey(),
     key: text("key").notNull(),
     kind: text("kind", { enum: ["managed", "custom"] }).notNull(),
+    /** null はglobal、値ありはそのresource typeへだけ割当可能。 */
+    resourceType: text("resource_type"),
     name: text("name").notNull(),
     description: text("description"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
@@ -404,6 +412,10 @@ export const systemIamRoles = sqliteTable(
     check("system_iam_roles_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
     check("system_iam_roles_key_length", sql`length(${table.key}) BETWEEN 3 AND 100`),
     check("system_iam_roles_kind", sql`${table.kind} IN ('managed', 'custom')`),
+    check(
+      "system_iam_roles_resource_type_length",
+      sql`${table.resourceType} IS NULL OR length(${table.resourceType}) BETWEEN 3 AND 100`,
+    ),
     check("system_iam_roles_name_length", sql`length(${table.name}) BETWEEN 1 AND 100`),
     check(
       "system_iam_roles_description_length",
@@ -480,6 +492,40 @@ export const systemRoleBindings = sqliteTable(
 
 export type SystemRoleBindingRow = InferSelectModel<typeof systemRoleBindings>
 
+/** Accountの作成権限を一度だけ委譲するportableなSystem招待。業務payloadは下流contextが衛星化する。 */
+export const systemAccountInvitations = sqliteTable(
+  "system_account_invitations",
+  {
+    id: text("id").primaryKey(),
+    token: text("token").notNull(),
+    email: text("subject"),
+    roleId: text("role_id")
+      .notNull()
+      .references(() => systemIamRoles.id, { onDelete: "restrict" }),
+    usedBy: text("accepted_by_account_id").references(() => systemAccounts.id, {
+      onDelete: "restrict",
+    }),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("system_account_invitations_token_uniq").on(table.token),
+    index("system_account_invitations_role_idx").on(table.roleId, table.createdAt),
+    index("system_account_invitations_subject_idx").on(table.email, table.createdAt),
+    check("system_account_invitations_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
+    check(
+      "system_account_invitations_chronology",
+      sql`${table.updatedAt} >= ${table.createdAt}
+        AND ${table.expiresAt} >= ${table.createdAt}
+        AND (${table.revokedAt} IS NULL OR ${table.revokedAt} >= ${table.createdAt})`,
+    ),
+  ],
+)
+
+export type SystemAccountInvitationRow = InferSelectModel<typeof systemAccountInvitations>
+
 /** 受信者と既読状態を持たないimmutableなplain-text notification message。 */
 export const systemNotificationMessages = sqliteTable(
   "system_notification_messages",
@@ -488,12 +534,19 @@ export const systemNotificationMessages = sqliteTable(
     kind: text("kind").notNull(),
     title: text("title").notNull(),
     body: text("body"),
+    actionUrl: text("action_url"),
+    priority: text("priority", { enum: ["low", "normal", "high", "critical"] })
+      .notNull()
+      .default("normal"),
+    dedupeKey: text("dedupe_key"),
     sourceType: text("source_type"),
     sourceId: text("source_id"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   },
   (table) => [
     index("system_notification_messages_source_idx").on(table.sourceType, table.sourceId),
+    index("system_notification_messages_priority_idx").on(table.priority, table.createdAt),
+    uniqueIndex("system_notification_messages_dedupe_key_uniq").on(table.dedupeKey),
     check("system_notification_messages_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
     check("system_notification_messages_kind_length", sql`length(${table.kind}) BETWEEN 3 AND 100`),
     check(
@@ -503,6 +556,14 @@ export const systemNotificationMessages = sqliteTable(
     check(
       "system_notification_messages_body_length",
       sql`${table.body} IS NULL OR length(${table.body}) BETWEEN 1 AND 10000`,
+    ),
+    check(
+      "system_notification_messages_action_url_length",
+      sql`${table.actionUrl} IS NULL OR length(${table.actionUrl}) BETWEEN 1 AND 2048`,
+    ),
+    check(
+      "system_notification_messages_priority",
+      sql`${table.priority} IN ('low', 'normal', 'high', 'critical')`,
     ),
     check(
       "system_notification_messages_source_pair",
@@ -669,6 +730,7 @@ export const systemCoreSchema = {
   systemRoleBindings,
   systemNotificationMessages,
   systemNotificationDeliveries,
+  systemAccountInvitations,
   systemBatchJobs,
   systemAuditEvents,
   systemBootstrapState,

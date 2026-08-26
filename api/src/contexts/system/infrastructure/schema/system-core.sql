@@ -7,6 +7,8 @@ CREATE TABLE system_accounts (
     CHECK (status IN ('active', 'suspended', 'locked')),
   token_version INTEGER NOT NULL DEFAULT 0
     CHECK (token_version >= 0),
+  closed_at INTEGER
+    CHECK (closed_at IS NULL OR closed_at >= created_at),
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
     CHECK (updated_at >= created_at)
@@ -23,6 +25,25 @@ WHEN
   OR (
     NEW.status IS NOT OLD.status
     AND NEW.token_version IS NOT OLD.token_version + 1
+  )
+  OR (
+    OLD.closed_at IS NULL
+    AND NEW.closed_at IS NOT NULL
+    AND (
+      NEW.status IS NOT 'suspended'
+      OR NEW.token_version IS NOT OLD.token_version + 1
+      OR NEW.updated_at IS NOT NEW.closed_at
+      OR NEW.closed_at < OLD.updated_at
+    )
+  )
+  OR (
+    OLD.closed_at IS NOT NULL
+    AND (
+      NEW.status IS NOT OLD.status
+      OR NEW.token_version IS NOT OLD.token_version
+      OR NEW.updated_at IS NOT OLD.updated_at
+      OR NEW.closed_at IS NOT OLD.closed_at
+    )
   )
 BEGIN
   SELECT RAISE(ABORT, 'account security state is not monotonic');
@@ -71,6 +92,17 @@ BEGIN
   SELECT RAISE(ABORT, 'identity lifecycle is not monotonic');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
+CREATE TRIGGER system_identity_bindings_closed_account_guard
+BEFORE INSERT ON system_identity_bindings
+WHEN EXISTS (
+  SELECT 1 FROM system_accounts
+  WHERE id = NEW.account_id AND closed_at IS NOT NULL
+)
+BEGIN
+  SELECT RAISE(ABORT, 'closed account cannot receive an identity');
+END;
+
 CREATE TABLE system_identity_profiles (
   identity_id TEXT PRIMARY KEY NOT NULL
     REFERENCES system_identity_bindings(id) ON DELETE CASCADE,
@@ -78,6 +110,8 @@ CREATE TABLE system_identity_profiles (
     CHECK (email IS NULL OR length(email) BETWEEN 3 AND 320),
   email_verified INTEGER NOT NULL DEFAULT 0
     CHECK (email_verified IN (0, 1)),
+  can_receive_email INTEGER NOT NULL DEFAULT 1
+    CHECK (can_receive_email IN (0, 1)),
   last_used_at INTEGER,
   updated_at INTEGER NOT NULL
 );
@@ -249,6 +283,17 @@ BEGIN
   SELECT RAISE(ABORT, 'session lifecycle is not monotonic');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
+CREATE TRIGGER system_sessions_closed_account_guard
+BEFORE INSERT ON system_sessions
+WHEN EXISTS (
+  SELECT 1 FROM system_accounts
+  WHERE id = NEW.account_id AND closed_at IS NOT NULL
+)
+BEGIN
+  SELECT RAISE(ABORT, 'closed account cannot receive a session');
+END;
+
 CREATE TABLE system_identity_login_tokens (
   jti TEXT PRIMARY KEY NOT NULL
     CHECK (length(jti) BETWEEN 1 AND 512),
@@ -345,6 +390,8 @@ CREATE TABLE system_iam_roles (
     CHECK (length(key) BETWEEN 3 AND 100),
   kind TEXT NOT NULL
     CHECK (kind IN ('managed', 'custom')),
+  resource_type TEXT
+    CHECK (resource_type IS NULL OR length(resource_type) BETWEEN 3 AND 100),
   name TEXT NOT NULL
     CHECK (length(name) BETWEEN 1 AND 100),
   description TEXT
@@ -367,7 +414,7 @@ CREATE TABLE system_iam_role_permissions (
 
 /* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_iam_roles_immutable_identity
-BEFORE UPDATE OF id, key, kind, created_at ON system_iam_roles
+BEFORE UPDATE OF id, key, kind, resource_type, created_at ON system_iam_roles
 BEGIN
   SELECT RAISE(ABORT, 'IAM role identity is immutable');
 END;
@@ -423,6 +470,44 @@ BEGIN
   SELECT RAISE(ABORT, 'role binding lifecycle is not monotonic');
 END;
 
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
+CREATE TRIGGER system_role_bindings_closed_account_guard
+BEFORE INSERT ON system_role_bindings
+WHEN EXISTS (
+  SELECT 1 FROM system_accounts
+  WHERE id = NEW.account_id AND closed_at IS NOT NULL
+)
+BEGIN
+  SELECT RAISE(ABORT, 'closed account cannot receive a role binding');
+END;
+
+CREATE TABLE system_account_invitations (
+  id TEXT PRIMARY KEY NOT NULL
+    CHECK (length(id) BETWEEN 1 AND 255),
+  token TEXT NOT NULL,
+  subject TEXT,
+  role_id TEXT NOT NULL
+    REFERENCES system_iam_roles(id) ON DELETE RESTRICT,
+  accepted_by_account_id TEXT
+    REFERENCES system_accounts(id) ON DELETE RESTRICT,
+  expires_at INTEGER NOT NULL,
+  revoked_at INTEGER,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  CHECK (
+    updated_at >= created_at
+    AND expires_at >= created_at
+    AND (revoked_at IS NULL OR revoked_at >= created_at)
+  )
+);
+
+CREATE UNIQUE INDEX system_account_invitations_token_uniq
+  ON system_account_invitations (token);
+CREATE INDEX system_account_invitations_role_idx
+  ON system_account_invitations (role_id, created_at);
+CREATE INDEX system_account_invitations_subject_idx
+  ON system_account_invitations (subject, created_at);
+
 CREATE TABLE system_notification_messages (
   id TEXT PRIMARY KEY NOT NULL
     CHECK (length(id) BETWEEN 1 AND 255),
@@ -432,6 +517,11 @@ CREATE TABLE system_notification_messages (
     CHECK (length(title) BETWEEN 1 AND 200),
   body TEXT
     CHECK (body IS NULL OR length(body) BETWEEN 1 AND 10000),
+  action_url TEXT
+    CHECK (action_url IS NULL OR length(action_url) BETWEEN 1 AND 2048),
+  priority TEXT NOT NULL DEFAULT 'normal'
+    CHECK (priority IN ('low', 'normal', 'high', 'critical')),
+  dedupe_key TEXT,
   source_type TEXT,
   source_id TEXT,
   created_at INTEGER NOT NULL,
@@ -446,6 +536,10 @@ CREATE TABLE system_notification_messages (
 
 CREATE INDEX system_notification_messages_source_idx
   ON system_notification_messages (source_type, source_id);
+CREATE INDEX system_notification_messages_priority_idx
+  ON system_notification_messages (priority, created_at);
+CREATE UNIQUE INDEX system_notification_messages_dedupe_key_uniq
+  ON system_notification_messages (dedupe_key);
 
 /* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_notification_messages_prevent_update

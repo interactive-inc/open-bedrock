@@ -1,10 +1,14 @@
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
-import type { SystemWorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
+import type { SystemWorkflowWriter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
+type CancelSystemProcedureContext = SystemWorkflowWriter
+type Context = CancelSystemProcedureContext
 
 /** 提案本文と判断履歴を消さず、現在の未完了Caseだけを取り消す。 */
 export class CancelSystemProcedure {
-  constructor(private readonly writer: SystemWorkflowWriter) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(
     input: Readonly<{
@@ -21,6 +25,6 @@ export class CancelSystemProcedure {
       return new InvalidSystemWorkflowError("invalid_shape")
     }
 
-    return this.writer.cancel(input)
+    return this.c.cancel(input)
   }
 }

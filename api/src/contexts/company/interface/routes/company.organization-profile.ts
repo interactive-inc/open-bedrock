@@ -1,5 +1,5 @@
 import { UpdateOrganizationProfile } from "@/contexts/company/application/organization/update-organization-profile"
-import { OrganizationProfileRepositoryD1 } from "@/contexts/company/infrastructure/organization/organization-profile.repository"
+import { D1OrganizationProfileAdapter } from "@/contexts/company/infrastructure/adapters/organization/d1-organization-profile.adapter"
 import {
   CompanyAuthenticationRequiredError,
   CompanyDatabaseUnavailableError,
@@ -35,7 +35,7 @@ export const GET = factory.createHandlers(async (context) => {
   if (database === undefined) {
     throw new CompanyDatabaseUnavailableError()
   }
-  const result = await new OrganizationProfileRepositoryD1(database).find(actor.organizationIds[0])
+  const result = await new D1OrganizationProfileAdapter(database).find(actor.organizationIds[0])
   if (result instanceof Error) {
     throw new CompanyOrganizationProfileReadFailedError(result)
   }
@@ -71,11 +71,11 @@ export const PUT = factory.createHandlers(
     if (database === undefined) {
       throw new CompanyDatabaseUnavailableError()
     }
-    const updateOrganizationProfile = new UpdateOrganizationProfile(
+    const updateOrganizationProfile = new UpdateOrganizationProfile({
       actor,
-      actor.organizationIds[0],
-      new OrganizationProfileRepositoryD1(database),
-    )
+      organizationId: actor.organizationIds[0],
+      repository: new D1OrganizationProfileAdapter(database),
+    })
     const result = await updateOrganizationProfile.execute(context.req.valid("json"))
     if (result instanceof CompanyForbiddenError) {
       throw new CompanyWriteForbiddenError(result)

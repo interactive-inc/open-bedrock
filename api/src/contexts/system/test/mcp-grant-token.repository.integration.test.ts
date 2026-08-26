@@ -1,9 +1,9 @@
-import { createMcpGrantToken } from "@system/infrastructure/auth/create-mcp-grant-token.repository"
-import { verifyMcpGrantToken } from "@system/infrastructure/auth/verify-mcp-grant-token.repository"
+import { createMcpGrantToken } from "@system/lib/auth/create-mcp-grant-token"
+import { verifyMcpGrantToken } from "@system/lib/auth/verify-mcp-grant-token"
 import { describe, expect, test } from "bun:test"
-import { signJwtToken } from "@system/infrastructure/auth/sign-jwt-token.repository"
+import { signJwtToken } from "@system/lib/auth/sign-jwt-token"
 
-const SECRET = "test-jwt-secret"
+const SECRET = "test-jwt-secret-value"
 const GRANT_TOKEN_MAX_AGE_SECONDS = 120
 
 describe("mcp-grant-token", () => {
@@ -37,7 +37,12 @@ describe("mcp-grant-token", () => {
   })
 
   test("別の secret で署名されたトークンは拒否する", async () => {
-    const token = await createMcpGrantToken("user-1", 0, "challenge-abc", "another-secret")
+    const token = await createMcpGrantToken(
+      "user-1",
+      0,
+      "challenge-abc",
+      "another-test-secret-value",
+    )
 
     expect(await verifyMcpGrantToken(token, SECRET)).toBeInstanceOf(Error)
   })

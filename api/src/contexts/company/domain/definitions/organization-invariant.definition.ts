@@ -1,3 +1,5 @@
+import type { OrganizationInvariantViolationValue } from "@/contexts/company/domain/values/organization-invariant-violation.value"
+
 export const organizationInvariantCodes = [
   "invalid_snapshot",
   "invalid_period",
@@ -12,4 +14,3 @@ export const organizationInvariantCodes = [
 export type OrganizationInvariantCode = (typeof organizationInvariantCodes)[number]
 
 export type OrganizationInvariantViolation = OrganizationInvariantViolationValue
-import type { OrganizationInvariantViolationValue } from "@/contexts/company/domain/values/organization-invariant-violation.value"

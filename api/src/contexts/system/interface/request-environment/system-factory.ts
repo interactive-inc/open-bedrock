@@ -13,7 +13,7 @@ import type {
   SystemPasswordHashContext,
   SystemRequestAuditContext,
   SystemSessionConfigurationContext,
-} from "@system/infrastructure/configuration/system-context.repository"
+} from "@system/configuration/system-context"
 import { createFactory } from "hono/factory"
 
 type SystemInterfaceContext = SystemDatabaseContext &

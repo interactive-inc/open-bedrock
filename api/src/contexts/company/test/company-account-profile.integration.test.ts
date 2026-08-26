@@ -1,5 +1,5 @@
 import { UpdateCompanyAccountProfile } from "@/contexts/company/application/account-profile/update-company-account-profile"
-import { CompanyAccountProfileRepositoryD1 } from "@/contexts/company/infrastructure/account-profile/company-account-profile.repository"
+import { D1CompanyAccountProfileRepository } from "@/contexts/company/infrastructure/repositories/account-profile/d1-company-account-profile.repository"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { describe, expect, test } from "bun:test"
 
@@ -38,7 +38,7 @@ describe("Company Account Profile", () => {
         (organization_id, account_id, display_name, created_at, updated_at)
         VALUES ('organization:default', 'account-1', 'Before', 100, 100);
     `)
-    const repository = new CompanyAccountProfileRepositoryD1(database)
+    const repository = new D1CompanyAccountProfileRepository(database)
 
     const before = await repository.find("organization:default", "account-1")
     expect(before).not.toBeNull()
@@ -65,7 +65,7 @@ describe("Company Account Profile", () => {
 
   test("does not create a missing profile during update", async () => {
     const database = createCompanyD1TestDatabase(schemaSql)
-    const repository = new CompanyAccountProfileRepositoryD1(database)
+    const repository = new D1CompanyAccountProfileRepository(database)
 
     expect(
       await new UpdateCompanyAccountProfile(repository).execute(

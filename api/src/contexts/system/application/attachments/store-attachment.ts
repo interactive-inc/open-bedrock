@@ -1,14 +1,14 @@
-import { encryptAttachment } from "@system/infrastructure/attachments/encrypt-attachment.repository"
+import { encryptAttachment } from "@system/lib/attachments/encrypt-attachment"
 import { SystemAttachmentError } from "@system/domain/errors"
 import type { AttachmentBytes } from "@system/domain/definitions/attachments/attachment-bytes.definition"
 import { validateAttachmentContent } from "@system/domain/policies/attachment-content.policy"
-import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attachment-kek-registry.repository"
-import { AttachmentObjectStore } from "@system/infrastructure/attachments/attachment-object-store.repository"
-import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
+import { AttachmentKekRegistry } from "@system/lib/attachments/attachment-kek-registry"
+import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
+import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
 import type {
   SystemAttachmentStorageContext,
   SystemDatabaseContext,
-} from "@system/infrastructure/configuration/system-context.repository"
+} from "@system/configuration/system-context"
 
 export type StoreAttachmentCommand = Readonly<{
   ownerAccountId: string
@@ -29,22 +29,6 @@ export type StoredAttachment = Readonly<{
 
 type Context = SystemDatabaseContext & SystemAttachmentStorageContext
 
-function toViolationError(violation: string): Error {
-  if (violation === "byte_size_exceeded") {
-    return new SystemAttachmentError(
-      "payload_too_large",
-      "attachment_byte_size_exceeded",
-      "添付が上限サイズを超えています",
-    )
-  }
-
-  return new SystemAttachmentError(
-    "validation",
-    `attachment_${violation}`,
-    "添付を受け付けられません",
-  )
-}
-
 /**
  * 添付を暗号化して保管する。行を先に予約してから本体を書き、最後に pending へ進めるため、
  * 途中で失敗しても object storage 側に行の無い孤児が残らない。
@@ -54,6 +38,22 @@ export class StoreAttachment {
     Object.freeze(this)
   }
 
+  private static toViolationError(violation: string): Error {
+    if (violation === "byte_size_exceeded") {
+      return new SystemAttachmentError(
+        "payload_too_large",
+        "attachment_byte_size_exceeded",
+        "添付が上限サイズを超えています",
+      )
+    }
+
+    return new SystemAttachmentError(
+      "validation",
+      `attachment_${violation}`,
+      "添付を受け付けられません",
+    )
+  }
+
   async run(command: StoreAttachmentCommand): Promise<StoredAttachment | Error> {
     const violation = validateAttachmentContent({
       contentType: command.contentType,
@@ -61,7 +61,7 @@ export class StoreAttachment {
       fileName: command.fileName,
     })
 
-    if (violation !== null) return toViolationError(violation)
+    if (violation !== null) return StoreAttachment.toViolationError(violation)
 
     const registry = AttachmentKekRegistry.fromEnv(this.c.env.ATTACHMENT_KEKS)
 
@@ -73,7 +73,7 @@ export class StoreAttachment {
 
     const objectKey = `att/${id}`
 
-    const repository = new AttachmentRepository(this.c)
+    const repository = new AttachmentAdapter(this.c)
 
     const reserved = await repository.reserve({
       id,
@@ -92,7 +92,7 @@ export class StoreAttachment {
 
     if (reserved instanceof Error) return reserved
 
-    const stored = await new AttachmentObjectStore(this.c).put(objectKey, encrypted.ciphertext)
+    const stored = await new AttachmentObjectAdapter(this.c).put(objectKey, encrypted.ciphertext)
 
     if (stored instanceof Error) return stored
 
