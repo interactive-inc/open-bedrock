@@ -111,7 +111,12 @@ export function SidebarUserMenu(props: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <SettingsDialog locale={props.locale} open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsDialog
+        locale={props.locale}
+        phone={props.currentUser.phone}
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+      />
 
       <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
         <AlertDialogContent>

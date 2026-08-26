@@ -1108,7 +1108,8 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     group: "settings",
     icon: Settings,
     prefetch: null,
-    routes: [{ space: "my", label: "設定", href: "/my/settings", visibility: everyone }],
+    // 設定の入口はサイドバー下部のユーザーメニュー（設定モーダル）へ寄せたため、ここには出さない。
+    routes: [],
   },
 ]
 
