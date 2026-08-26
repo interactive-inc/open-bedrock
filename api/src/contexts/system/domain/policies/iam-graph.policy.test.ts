@@ -50,10 +50,10 @@ function requireGraph(
 
 describe("IamGraphPolicy permission evaluation", () => {
   test("global bindingと完全一致resource bindingをliveに評価する", () => {
-    const reader = requireRole("reader", ["care:read"])
+    const reader = requireRole("reader", ["example:read"])
     const global = requireBinding("global", "account-1", reader.id)
     const scoped = requireBinding("scoped", "account-2", reader.id, {
-      type: "company:facility",
+      type: "example:resource",
       id: "facility-1",
     })
     const graph = requireGraph([reader], [global, scoped])
@@ -61,24 +61,24 @@ describe("IamGraphPolicy permission evaluation", () => {
     expect(
       graph.getPermissionDecision({
         accountId: "account-1",
-        permissionKey: "care:read",
-        resource: { type: "company:facility", id: "facility-2" },
+        permissionKey: "example:read",
+        resource: { type: "example:resource", id: "facility-2" },
         at: NOW,
       }),
     ).toBe("allowed")
     expect(
       graph.getPermissionDecision({
         accountId: "account-2",
-        permissionKey: "care:read",
-        resource: { type: "company:facility", id: "facility-1" },
+        permissionKey: "example:read",
+        resource: { type: "example:resource", id: "facility-1" },
         at: NOW,
       }),
     ).toBe("allowed")
     expect(
       graph.getPermissionDecision({
         accountId: "account-2",
-        permissionKey: "care:read",
-        resource: { type: "company:facility", id: "facility-2" },
+        permissionKey: "example:read",
+        resource: { type: "example:resource", id: "facility-2" },
         at: NOW,
       }),
     ).toBe("denied")
@@ -88,7 +88,7 @@ describe("IamGraphPolicy permission evaluation", () => {
     const root = requireRole("root", ["system:admin"])
     const global = requireBinding("root-binding", "account-1", root.id)
     const scoped = requireBinding("scoped-root", "account-2", root.id, {
-      type: "company:facility",
+      type: "example:resource",
       id: "facility-1",
     })
     const graph = requireGraph([root], [global, scoped])
@@ -105,7 +105,7 @@ describe("IamGraphPolicy permission evaluation", () => {
       graph.getPermissionDecision({
         accountId: "account-2",
         permissionKey: "future:operate",
-        resource: { type: "company:facility", id: "facility-1" },
+        resource: { type: "example:resource", id: "facility-1" },
         at: NOW,
       }),
     ).toBe("denied")
@@ -113,7 +113,7 @@ describe("IamGraphPolicy permission evaluation", () => {
       graph.getPermissionDecision({
         accountId: "account-2",
         permissionKey: "system:admin",
-        resource: { type: "company:facility", id: "facility-1" },
+        resource: { type: "example:resource", id: "facility-1" },
         at: NOW,
       }),
     ).toBe("denied")
@@ -188,7 +188,7 @@ describe("IamGraphPolicy integrity and last-root", () => {
     const first = requireBinding("root-1", "account-1", root.id)
     const second = requireBinding("root-2", "account-2", root.id)
     const scoped = requireBinding("root-scoped", "account-3", root.id, {
-      type: "company:facility",
+      type: "example:resource",
       id: "facility-1",
     })
     const graph = requireGraph([root], [first, second, scoped])

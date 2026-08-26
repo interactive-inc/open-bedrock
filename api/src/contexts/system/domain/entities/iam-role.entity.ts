@@ -12,6 +12,7 @@ const propsSchema = z
     id: iamRoleIdSchema,
     key: iamRoleKeySchema,
     kind: z.enum(["managed", "custom"]),
+    resourceType: z.string().min(3).max(100).nullable().default(null),
     name: z.string().min(1).max(100),
     description: z.string().min(1).max(1000).nullable().default(null),
     permissionKeys: z.array(permissionKeySchema).max(500),
@@ -34,6 +35,7 @@ export class IamRoleEntity {
   readonly id: IamRoleId
   readonly key: string
   readonly kind: "managed" | "custom"
+  readonly resourceType: string | null
   readonly name: string
   readonly description: string | null
   readonly permissionKeys: ReadonlyArray<string>
@@ -44,6 +46,7 @@ export class IamRoleEntity {
     this.id = props.id
     this.key = props.key
     this.kind = props.kind
+    this.resourceType = props.resourceType
     this.name = props.name
     this.description = props.description
     this.permissionKeys = Object.freeze([...props.permissionKeys])
@@ -79,6 +82,10 @@ export class IamRoleEntity {
 
   hasPermission(permissionKey: string): boolean {
     return this.permissionKeys.includes(permissionKey)
+  }
+
+  acceptsBindingResource(resourceType: string | null): boolean {
+    return this.resourceType === resourceType
   }
 
   replacePermissions(
@@ -134,6 +141,7 @@ export class IamRoleEntity {
       id: this.id,
       key: this.key,
       kind: this.kind,
+      resourceType: this.resourceType,
       name: this.name,
       description: this.description,
       permissionKeys: [...this.permissionKeys],

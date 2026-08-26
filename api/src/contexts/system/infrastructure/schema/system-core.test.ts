@@ -37,7 +37,7 @@ describe("canonical System core schema", () => {
       comment.includes("DDL-only test harnesses skip compound triggers"),
     )
 
-    expect(triggerMarkers).toHaveLength(17)
+    expect(triggerMarkers).toHaveLength(20)
     expect(comments.filter((comment) => comment.includes(";"))).toEqual([])
   })
 
@@ -75,6 +75,7 @@ describe("canonical System core schema", () => {
       .sort((left, right) => left.name.localeCompare(right.name))
 
     expect(declaredTables.map(({ name }) => name)).toEqual([
+      "system_account_invitations",
       "system_accounts",
       "system_audit_events",
       "system_authentication_attempts",
@@ -325,13 +326,13 @@ describe("canonical System core schema", () => {
       database.run(
         `INSERT INTO system_notification_messages
            (id, kind, title, source_type, source_id, created_at)
-         VALUES ('bad-message', 'system:test', 'Bad', 'care:event', NULL, 100)`,
+         VALUES ('bad-message', 'system:test', 'Bad', 'example:event', NULL, 100)`,
       ),
     ).toThrow()
     database.run(
       `INSERT INTO system_notification_messages
          (id, kind, title, body, source_type, source_id, created_at)
-       VALUES ('message-1', 'system:test', 'Title', 'Body', 'care:event', 'event-1', 100)`,
+       VALUES ('message-1', 'system:test', 'Title', 'Body', 'example:event', 'event-1', 100)`,
     )
     expect(() =>
       database.run(

@@ -1,5 +1,5 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
+import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
 import type { SystemSessionAuditContext } from "@system/domain/definitions/audit/system-session-audit-context.definition"
 import type {
   SystemAccessTokenIssuer,
@@ -9,7 +9,7 @@ import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { SessionId } from "@system/domain/schemas/auth/session-id.schema"
 import { SessionRotationValue } from "@system/domain/values/auth/session-rotation.value"
 import { SessionEntity } from "@system/domain/entities/session.entity"
-import type { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
+import type { SystemSessionRepository } from "@system/infrastructure/repositories/auth/system-session.repository"
 
 export type SystemAuditEventAppender = Readonly<{
   append: (event: SystemAuditEventEntity) => Promise<void | Error>
@@ -44,29 +44,31 @@ export type RotateSystemSessionResult =
       expiresAt: Date
     }>
   | Readonly<{ kind: "rejected"; reason: "reused" | "invalid" }>
+type RotateSystemSessionContext = Props
+type Context = RotateSystemSessionContext
 
 /** raw tokenを即時hash化し、rotation・reuse検知・family失効を共通契約で実行する。 */
 export class RotateSystemSession {
-  constructor(private readonly props: Props) {
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
   async execute(command: RotateSystemSessionCommand): Promise<RotateSystemSessionResult | Error> {
     const nowEpochMilliseconds = command.now.getTime()
-    const expiresAtEpochMilliseconds = nowEpochMilliseconds + this.props.sessionTtlMilliseconds
+    const expiresAtEpochMilliseconds = nowEpochMilliseconds + this.c.sessionTtlMilliseconds
 
     if (
       !Number.isSafeInteger(nowEpochMilliseconds) ||
-      !Number.isSafeInteger(this.props.sessionTtlMilliseconds) ||
-      this.props.sessionTtlMilliseconds <= 0 ||
+      !Number.isSafeInteger(this.c.sessionTtlMilliseconds) ||
+      this.c.sessionTtlMilliseconds <= 0 ||
       !Number.isSafeInteger(expiresAtEpochMilliseconds)
     ) {
       return new Error("System SessionEntity rotation time is invalid")
     }
 
-    const tokenHash = await this.props.materialService.hashRawToken(command.rawToken)
+    const tokenHash = await this.c.materialService.hashRawToken(command.rawToken)
     if (tokenHash instanceof Error) return tokenHash
-    const current = await this.props.sessionRepository.findByTokenHash(tokenHash)
+    const current = await this.c.sessionRepository.findByTokenHash(tokenHash)
     if (current instanceof Error) return current
     if (current === null) return this.rejectUnknown(command)
 
@@ -77,7 +79,7 @@ export class RotateSystemSession {
     if (useRejection !== null) return this.rejectKnown(current, "invalid", command)
 
     const accountSession = await SystemAccountRepository.resolveSession({
-      accountRepository: this.props.accountRepository,
+      accountRepository: this.c.accountRepository,
       accountId: current.accountId,
       sessionTokenVersion: current.tokenVersion,
     })
@@ -86,11 +88,11 @@ export class RotateSystemSession {
       return this.rejectKnown(current, "invalid", command)
     }
 
-    const sessionId = this.props.materialService.generateSessionId()
+    const sessionId = this.c.materialService.generateSessionId()
     if (sessionId instanceof Error) return sessionId
-    const rawToken = this.props.materialService.generateRawToken()
+    const rawToken = this.c.materialService.generateRawToken()
     if (rawToken instanceof Error) return rawToken
-    const successorTokenHash = await this.props.materialService.hashRawToken(rawToken)
+    const successorTokenHash = await this.c.materialService.hashRawToken(rawToken)
     if (successorTokenHash instanceof Error) return successorTokenHash
 
     const expiresAt = new Date(expiresAtEpochMilliseconds)
@@ -115,14 +117,14 @@ export class RotateSystemSession {
     )
     if (audits instanceof Error) return audits
 
-    const accessToken = await this.props.accessTokenIssuer.issue({
+    const accessToken = await this.c.accessTokenIssuer.issue({
       accountId: successor.accountId,
       tokenVersion: successor.tokenVersion,
       now: command.now,
     })
     if (accessToken instanceof Error) return accessToken
 
-    const decision = await this.props.sessionRepository.rotateWithAudit(rotation, audits)
+    const decision = await this.c.sessionRepository.rotateWithAudit(rotation, audits)
     if (decision instanceof Error) return decision
     if (decision !== "rotated") {
       return Object.freeze({ kind: "rejected" as const, reason: decision })
@@ -152,7 +154,7 @@ export class RotateSystemSession {
       context: command.auditContext,
     })
     if (audit instanceof Error) return audit
-    const appendError = await this.props.auditAppender.append(audit)
+    const appendError = await this.c.auditAppender.append(audit)
 
     return appendError instanceof Error
       ? appendError
@@ -174,7 +176,7 @@ export class RotateSystemSession {
       context: command.auditContext,
     })
     if (audit instanceof Error) return audit
-    const revocationError = await this.props.sessionRepository.revokeFamilyWithAudit({
+    const revocationError = await this.c.sessionRepository.revokeFamilyWithAudit({
       familyId: current.familyId,
       revokedAt: command.now,
       audit,

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { getOidcPublicKeys } from "@system/infrastructure/identity/get-oidc-public-keys.repository"
-import { parseOidcSigningKeys } from "@system/infrastructure/identity/parse-oidc-signing-keys.repository"
+import { getOidcPublicKeys } from "@system/lib/identity/get-oidc-public-keys"
+import { parseOidcSigningKeys } from "@system/lib/identity/parse-oidc-signing-keys"
 
 const coordinate = "A".repeat(43)
 

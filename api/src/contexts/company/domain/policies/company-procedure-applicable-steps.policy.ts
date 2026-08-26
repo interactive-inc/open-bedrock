@@ -2,15 +2,16 @@ import type {
   ApplicationWorkflow,
   ApplicationWorkflowStep,
 } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type WorkflowApplicant = {
-  /** 社員コード。外部プロビジョニングで作られた申請者は持たない（null）。条件照合では null は不一致になる。 */
-  code: string | null
-  id: number
-  dept_id: number | null
-  dept_name: string | null
-  position: string | null
-  status: string
+  employeeId: EmployeeId
+  employeeCode: string | null
+  employmentStatus: string | null
+  organizationUnitId: string | null
+  organizationUnitCode: string | null
+  organizationUnitName: string | null
+  positionTitle: string | null
 }
 
 /**

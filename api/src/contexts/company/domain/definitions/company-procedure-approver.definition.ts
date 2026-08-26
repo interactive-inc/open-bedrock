@@ -1,8 +1,9 @@
 import type { WorkflowApproverSelector } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type WorkflowAccount = Readonly<{
-  employeeId: number
+  employeeId: EmployeeId
   accountId: AccountId
 }>
 
@@ -13,7 +14,7 @@ export type WorkflowApproverProvenance = Readonly<{
 }>
 
 export type WorkflowApproverMatch = Readonly<{
-  employeeId: number
+  employeeId: EmployeeId
   accountId: AccountId
   provenance: WorkflowApproverProvenance
 }>

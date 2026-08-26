@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
-import { POST as POST_ORGANIZATION_CHANGE } from "@/contexts/company/interface/routes/company.v1.organization-changes"
-import { GET, POST } from "@/contexts/company/interface/routes/company.v1.people"
+import { POST as POST_ORGANIZATION_CHANGE } from "@/contexts/company/interface/routes/company.organization-changes"
+import { GET, POST } from "@/contexts/company/interface/routes/company.people"
 import {
   GET as GET_ORGANIZATION_PROFILE,
   PUT as PUT_ORGANIZATION_PROFILE,
@@ -40,9 +40,9 @@ function createClient(database: D1Database, currentActor: CompanyActorValue = ac
 
       return context.json({ code: error.code, detail: error.detail }, error.status)
     })
-    .get("/company/v1/people", ...GET)
-    .post("/company/v1/people", ...POST)
-    .post("/company/v1/organization-changes", ...POST_ORGANIZATION_CHANGE)
+    .get("/company/people", ...GET)
+    .post("/company/people", ...POST)
+    .post("/company/organization-changes", ...POST_ORGANIZATION_CHANGE)
     .get("/company/organization-profile", ...GET_ORGANIZATION_PROFILE)
     .put("/company/organization-profile", ...PUT_ORGANIZATION_PROFILE)
 
@@ -117,7 +117,12 @@ describe("canonical Company API", () => {
     await seedOrganization(database)
     const client = createClient(
       database,
-      CompanyActorValue.restore({ ...actor, capabilities: ["company:read"] }),
+      CompanyActorValue.restore({
+        accountId: actor.accountId,
+        employeeId: actor.employeeId,
+        organizationIds: actor.organizationIds,
+        capabilities: ["company:read"],
+      }),
     )
     const response = await client.company["organization-profile"].$put({
       json: { name: "Example Corporation", representativeName: "Alex Example" },
@@ -134,15 +139,15 @@ describe("canonical Company API", () => {
       json: { reason: "initial registration", resources: [person] },
     }
 
-    const created = await client.company.v1.people.$post(request)
+    const created = await client.company.people.$post(request)
     expect(created.status).toBe(201)
     expect(created.headers.get("etag")).toBe('"1"')
 
-    const replayed = await client.company.v1.people.$post(request)
+    const replayed = await client.company.people.$post(request)
     expect(replayed.status).toBe(200)
     expect(await replayed.json()).toMatchObject({ replayed: true, organizationRevision: 1 })
 
-    const read = await client.company.v1.people.$get({ header: readHeaders, query: {} })
+    const read = await client.company.people.$get({ header: readHeaders, query: {} })
     expect(read.status).toBe(200)
     expect(await read.json()).toMatchObject({
       organizationRevision: 1,
@@ -153,11 +158,11 @@ describe("canonical Company API", () => {
   test("同じidempotency keyの別commandを409へ閉じる", async () => {
     const client = createClient(createCompanyD1TestDatabase(companySql))
     const header = writeHeaders("command:1", 0)
-    await client.company.v1.people.$post({
+    await client.company.people.$post({
       header,
       json: { reason: "first", resources: [person] },
     })
-    const conflict = await client.company.v1.people.$post({
+    const conflict = await client.company.people.$post({
       header,
       json: {
         reason: "different",
@@ -171,7 +176,7 @@ describe("canonical Company API", () => {
 
   test("People endpointは別resource型をschema境界で拒否する", async () => {
     const client = createClient(createCompanyD1TestDatabase(companySql))
-    const response = await client.company.v1.people.$post({
+    const response = await client.company.people.$post({
       header: writeHeaders("command:wrong-resource", 0),
       json: {
         reason: "wrong endpoint",
@@ -192,10 +197,10 @@ describe("canonical Company API", () => {
   test("同じorganization revisionに固定して訂正・将来取消をas_ofで解決する", async () => {
     const client = createClient(createCompanyD1TestDatabase(companySql))
     type PersonResource = Parameters<
-      typeof client.company.v1.people.$post
+      typeof client.company.people.$post
     >[0]["json"]["resources"][number]
     const write = (commandId: string, expectedRevision: number, resource: PersonResource) =>
-      client.company.v1.people.$post({
+      client.company.people.$post({
         header: writeHeaders(commandId, expectedRevision),
         json: { reason: commandId, resources: [resource] },
       })
@@ -222,7 +227,7 @@ describe("canonical Company API", () => {
       ).status,
     ).toBe(201)
 
-    const beforeRename = await client.company.v1.people.$get({
+    const beforeRename = await client.company.people.$get({
       header: readHeaders,
       query: { as_of: "2026-03-01" },
     })
@@ -232,7 +237,7 @@ describe("canonical Company API", () => {
       resources: [{ revision: 1, attributes: { officialName: "Test Person" } }],
     })
 
-    const afterRename = await client.company.v1.people.$get({
+    const afterRename = await client.company.people.$get({
       header: readHeaders,
       query: { effective_on: "2026-07-01" },
     })
@@ -242,7 +247,7 @@ describe("canonical Company API", () => {
       resources: [{ revision: 2, attributes: { officialName: "Renamed Person" } }],
     })
 
-    const afterVoid = await client.company.v1.people.$get({
+    const afterVoid = await client.company.people.$get({
       header: readHeaders,
       query: { as_of: "2026-10-01" },
     })
@@ -283,7 +288,7 @@ describe("canonical Company API", () => {
       },
     })
 
-    const response = await client.company.v1["organization-changes"].$post({
+    const response = await client.company["organization-changes"].$post({
       header: writeHeaders("personnel-action:cycle", 0),
       json: {
         reason: "invalid management cycle",
@@ -301,12 +306,12 @@ describe("canonical Company API", () => {
 
   test("hc request contractは不正なbody型をコンパイル時に拒否する", () => {
     const client = createClient(createCompanyD1TestDatabase(companySql))
-    void ((input: Parameters<typeof client.company.v1.people.$post>[0]) => input)({
+    void ((input: Parameters<typeof client.company.people.$post>[0]) => input)({
       header: writeHeaders("command:invalid", 0),
       // @ts-expect-error reason must be a string
       json: { reason: 1, resources: [person] },
     })
-    void ((input: Parameters<typeof client.company.v1.people.$post>[0]) => input)({
+    void ((input: Parameters<typeof client.company.people.$post>[0]) => input)({
       header: writeHeaders("command:wrong-resource", 0),
       json: {
         reason: "wrong endpoint",
@@ -328,6 +333,6 @@ describe("canonical Company API", () => {
         },
       },
     )
-    expect(client.company.v1.people.$url()).toBeInstanceOf(URL)
+    expect(client.company.people.$url()).toBeInstanceOf(URL)
   })
 })

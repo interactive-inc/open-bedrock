@@ -1,5 +1,5 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
+import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
 import type { SystemSessionAuditContext } from "@system/domain/definitions/audit/system-session-audit-context.definition"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { AccountSessionRejection } from "@system/domain/policies/account-session.policy"
@@ -7,7 +7,7 @@ import type { SessionFamilyId } from "@system/domain/schemas/auth/session-family
 import type { SessionId } from "@system/domain/schemas/auth/session-id.schema"
 import type { SessionTokenHash } from "@system/domain/schemas/auth/session-token-hash.schema"
 import { SessionEntity } from "@system/domain/entities/session.entity"
-import type { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
+import type { SystemSessionRepository } from "@system/infrastructure/repositories/auth/system-session.repository"
 
 export type SystemSessionMaterial = Readonly<{
   generateSessionId: () => SessionId | Error
@@ -51,28 +51,30 @@ export type IssueSystemSessionResult =
       kind: "rejected"
       reason: AccountSessionRejection | "account_not_found"
     }>
+type IssueSystemSessionContext = Props
+type Context = IssueSystemSessionContext
 
 /** canonical Accountを正本に、opaque SessionEntityと監査を同じ永続化境界で発行する。 */
 export class IssueSystemSession {
-  constructor(private readonly props: Props) {
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
   async execute(command: IssueSystemSessionCommand): Promise<IssueSystemSessionResult | Error> {
     const nowEpochMilliseconds = command.now.getTime()
-    const expiresAtEpochMilliseconds = nowEpochMilliseconds + this.props.sessionTtlMilliseconds
+    const expiresAtEpochMilliseconds = nowEpochMilliseconds + this.c.sessionTtlMilliseconds
 
     if (
       !Number.isSafeInteger(nowEpochMilliseconds) ||
-      !Number.isSafeInteger(this.props.sessionTtlMilliseconds) ||
-      this.props.sessionTtlMilliseconds <= 0 ||
+      !Number.isSafeInteger(this.c.sessionTtlMilliseconds) ||
+      this.c.sessionTtlMilliseconds <= 0 ||
       !Number.isSafeInteger(expiresAtEpochMilliseconds)
     ) {
       return new Error("System SessionEntity issuance time is invalid")
     }
 
     const accountSession = await SystemAccountRepository.resolveSession({
-      accountRepository: this.props.accountRepository,
+      accountRepository: this.c.accountRepository,
       accountId: command.accountId,
       sessionTokenVersion: command.tokenVersion,
     })
@@ -82,13 +84,13 @@ export class IssueSystemSession {
       return Object.freeze({ kind: "rejected" as const, reason: accountSession.reason })
     }
 
-    const sessionId = this.props.materialService.generateSessionId()
+    const sessionId = this.c.materialService.generateSessionId()
     if (sessionId instanceof Error) return sessionId
-    const familyId = this.props.materialService.generateFamilyId()
+    const familyId = this.c.materialService.generateFamilyId()
     if (familyId instanceof Error) return familyId
-    const rawToken = this.props.materialService.generateRawToken()
+    const rawToken = this.c.materialService.generateRawToken()
     if (rawToken instanceof Error) return rawToken
-    const tokenHash = await this.props.materialService.hashRawToken(rawToken)
+    const tokenHash = await this.c.materialService.hashRawToken(rawToken)
     if (tokenHash instanceof Error) return tokenHash
 
     const expiresAt = new Date(expiresAtEpochMilliseconds)
@@ -116,14 +118,14 @@ export class IssueSystemSession {
     })
     if (audit instanceof Error) return audit
 
-    const accessToken = await this.props.accessTokenIssuer.issue({
+    const accessToken = await this.c.accessTokenIssuer.issue({
       accountId: session.accountId,
       tokenVersion: session.tokenVersion,
       now: command.now,
     })
     if (accessToken instanceof Error) return accessToken
 
-    const creationError = await this.props.sessionRepository.createWithAudit(session, audit)
+    const creationError = await this.c.sessionRepository.createWithAudit(session, audit)
     if (creationError instanceof Error) return creationError
 
     return Object.freeze({

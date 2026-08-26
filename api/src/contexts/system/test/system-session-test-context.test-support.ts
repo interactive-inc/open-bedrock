@@ -1,4 +1,4 @@
-import type { SystemD1Context } from "@system/infrastructure/configuration/system-context.repository"
+import type { SystemD1Context } from "@system/configuration/system-context"
 import { wrapSystemD1TestDatabase } from "@system/test/wrap-system-d1-test-database.test-support"
 import { Database } from "bun:sqlite"
 
@@ -9,8 +9,10 @@ const schema = `
     id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 255),
     status TEXT NOT NULL CHECK (status IN ('active', 'suspended', 'locked')),
     token_version INTEGER NOT NULL DEFAULT 0 CHECK (token_version >= 0),
+    closed_at INTEGER,
     created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL CHECK (updated_at >= created_at)
+    updated_at INTEGER NOT NULL CHECK (updated_at >= created_at),
+    CHECK (closed_at IS NULL OR closed_at >= created_at)
   );
 
   CREATE TABLE system_identity_bindings (
@@ -31,6 +33,7 @@ const schema = `
       REFERENCES system_identity_bindings(id) ON DELETE CASCADE,
     email TEXT,
     email_verified INTEGER NOT NULL DEFAULT 0,
+    can_receive_email INTEGER NOT NULL DEFAULT 1,
     last_used_at INTEGER,
     updated_at INTEGER NOT NULL
   );
@@ -60,6 +63,7 @@ const schema = `
     id TEXT PRIMARY KEY NOT NULL,
     key TEXT NOT NULL UNIQUE,
     kind TEXT NOT NULL,
+    resource_type TEXT,
     name TEXT NOT NULL,
     description TEXT,
     created_at INTEGER NOT NULL,

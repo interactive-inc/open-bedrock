@@ -7,12 +7,10 @@ import { zIdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-subject.schema"
 import { roleBindingIdSchema } from "@system/domain/schemas/iam/role-binding.schema"
 import type {
-  SystemRootBootstrapRepositoryD1,
-  SystemRootBootstrapRepositoryResult,
-} from "@system/infrastructure/iam/system-root-bootstrap.repository"
+  D1SystemRootBootstrapAdapter,
+  SystemRootBootstrapAdapterResult,
+} from "@system/infrastructure/adapters/iam/d1-system-root-bootstrap.adapter"
 import { z } from "zod"
-
-const bootstrapEmailSchema = EmailValue.schema.pipe(z.string().max(254)).pipe(identitySubjectSchema)
 
 export type SystemPasswordHasher = Readonly<{
   hash: (password: string) => Promise<string | Error>
@@ -20,7 +18,7 @@ export type SystemPasswordHasher = Readonly<{
 
 type Props = Readonly<{
   passwordHasher: SystemPasswordHasher
-  repository: Pick<SystemRootBootstrapRepositoryD1, "bootstrap">
+  repository: Pick<D1SystemRootBootstrapAdapter, "bootstrap">
 }>
 
 export type BootstrapSystemRootCommand = Readonly<{
@@ -30,15 +28,21 @@ export type BootstrapSystemRootCommand = Readonly<{
 }>
 
 export type BootstrapSystemRootResult =
-  | SystemRootBootstrapRepositoryResult
+  | SystemRootBootstrapAdapterResult
   | Readonly<{
       kind: "invalid_input"
       reason: "invalid_email" | "invalid_time" | InvalidSystemPasswordReason
     }>
+type BootstrapSystemRootContext = Props
+type Context = BootstrapSystemRootContext
 
 /** AccountEntity・Identity・credential・root binding・監査をCompanyなしで初期化する。 */
 export class BootstrapSystemRoot {
-  constructor(private readonly props: Props) {
+  private static readonly emailSchema = EmailValue.schema
+    .pipe(z.string().max(254))
+    .pipe(identitySubjectSchema)
+
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
@@ -47,7 +51,7 @@ export class BootstrapSystemRoot {
       return Object.freeze({ kind: "invalid_input" as const, reason: "invalid_time" as const })
     }
 
-    const email = bootstrapEmailSchema.safeParse(command.email)
+    const email = BootstrapSystemRoot.emailSchema.safeParse(command.email)
     if (!email.success) {
       return Object.freeze({ kind: "invalid_input" as const, reason: "invalid_email" as const })
     }
@@ -66,7 +70,7 @@ export class BootstrapSystemRoot {
 
     let passwordHash: string | Error
     try {
-      passwordHash = await this.props.passwordHasher.hash(password.toString())
+      passwordHash = await this.c.passwordHasher.hash(password.toString())
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to hash System password")
     }
@@ -87,7 +91,7 @@ export class BootstrapSystemRoot {
     })
     if (auditEvent instanceof Error) return auditEvent
 
-    return this.props.repository.bootstrap({
+    return this.c.repository.bootstrap({
       accountId: accountId.data,
       identityId: identityId.data,
       identitySubject: email.data,

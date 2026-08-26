@@ -1,7 +1,7 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import type { SystemSessionAuditContext } from "@system/domain/definitions/audit/system-session-audit-context.definition"
 import type { SystemSessionMaterial } from "@system/application/auth/issue-system-session"
-import type { SystemSessionRepository } from "@system/infrastructure/auth/system-session.repository"
+import type { SystemSessionRepository } from "@system/infrastructure/repositories/auth/system-session.repository"
 
 type Props = Readonly<{
   sessionRepository: Pick<SystemSessionRepository, "findByTokenHash" | "revokeFamilyWithAudit">
@@ -15,10 +15,12 @@ export type RevokeSystemSessionCommand = Readonly<{
 }>
 
 export type RevokeSystemSessionResult = Readonly<{ kind: "completed" }>
+type RevokeSystemSessionContext = Props
+type Context = RevokeSystemSessionContext
 
 /** tokenの実在を外部へ漏らさず、既知Session familyだけを監査付きで冪等失効する。 */
 export class RevokeSystemSession {
-  constructor(private readonly props: Props) {
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
@@ -27,9 +29,9 @@ export class RevokeSystemSession {
       return new Error("System Session revocation time is invalid")
     }
 
-    const tokenHash = await this.props.materialService.hashRawToken(command.rawToken)
+    const tokenHash = await this.c.materialService.hashRawToken(command.rawToken)
     if (tokenHash instanceof Error) return tokenHash
-    const session = await this.props.sessionRepository.findByTokenHash(tokenHash)
+    const session = await this.c.sessionRepository.findByTokenHash(tokenHash)
     if (session instanceof Error) return session
     if (session === null || session.revokedAt !== null) return RevokeSystemSession.completed()
 
@@ -44,7 +46,7 @@ export class RevokeSystemSession {
     })
     if (audit instanceof Error) return audit
 
-    const revocationError = await this.props.sessionRepository.revokeFamilyWithAudit({
+    const revocationError = await this.c.sessionRepository.revokeFamilyWithAudit({
       familyId: session.familyId,
       revokedAt: command.now,
       audit,

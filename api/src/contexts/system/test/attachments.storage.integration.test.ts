@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
 import { StoreAttachment } from "@system/application/attachments/store-attachment"
-import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
+import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
 import { systemAttachmentSchema } from "@system/infrastructure/schema/system-attachment"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { createSystemAttachmentTestDatabase } from "@system/test/create-system-attachment-test-database.test-support"
@@ -48,7 +48,7 @@ describe("添付の保管と取り出し", () => {
 
     expect(stored.byteSize).toBe(plaintext.byteLength)
 
-    const row = await new AttachmentRepository(context).findById(stored.id)
+    const row = await new AttachmentAdapter(context).findById(stored.id)
 
     if (row instanceof Error || row === null) throw new Error("行が無い")
 

@@ -6,7 +6,7 @@ import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core
  * 役職の期間付き履歴は人事発令が正で、割当履歴テーブルは持たない）
  */
 export const positions = sqliteTable(
-  "position_definitions",
+  "company_position_definitions",
   {
     id: integer("id").primaryKey(),
     code: text("code").notNull(),
@@ -16,7 +16,7 @@ export const positions = sqliteTable(
     createdAt: text("created_at").notNull(),
   },
   // 役職コードは全社で一意（同一コードの二重登録を防ぐ）。
-  (table) => [uniqueIndex("uq_positions_code").on(table.code)],
+  (table) => [uniqueIndex("uq_company_position_definitions_code").on(table.code)],
 )
 
 export type PositionRow = InferSelectModel<typeof positions>

@@ -68,6 +68,17 @@ describe("AccountEntity", () => {
     expect(suspended.lock(CHANGED_AT)).toBe(suspended)
   })
 
+  test("閉鎖済みAccountEntityを通常の状態遷移から再開しない", () => {
+    const closed = requireAccount(
+      accountProps({ status: "suspended", closedAt: UPDATED_AT, updatedAt: UPDATED_AT }),
+    )
+
+    expect(closed.closedAt).toEqual(UPDATED_AT)
+    expect(closed.activate(CHANGED_AT)).toEqual(
+      expect.objectContaining({ reason: "account_closed" }),
+    )
+  })
+
   test("lock・管理停止・復旧はいずれも既存Sessionを失効する", () => {
     const active = requireAccount(accountProps())
     const locked = active.lock(CHANGED_AT)
@@ -104,6 +115,14 @@ describe("AccountEntity", () => {
     [accountProps({ tokenVersion: -1 }), "invalid_shape"],
     [accountProps({ tokenVersion: 1.5 }), "invalid_shape"],
     [accountProps({ tokenVersion: Number.MAX_SAFE_INTEGER + 1 }), "invalid_shape"],
+    [accountProps({ status: "active", closedAt: UPDATED_AT }), "invalid_closed_state"],
+    [
+      accountProps({
+        status: "suspended",
+        closedAt: new Date(CREATED_AT.getTime() - 1),
+      }),
+      "invalid_closed_state",
+    ],
     [accountProps({ updatedAt: new Date(CREATED_AT.getTime() - 1) }), "update_before_creation"],
   ] as const)("不正なshapeとlifecycleをfail closedで拒否する", (input, reason) => {
     const account = AccountEntity.create(input)

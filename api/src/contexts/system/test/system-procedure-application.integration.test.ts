@@ -3,7 +3,7 @@ import { PublishSystemProcedure } from "@system/application/workflow/publish-sys
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
+import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
 import { readFileSync } from "node:fs"
 
 const schema = [

@@ -4,7 +4,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { StoreAttachment } from "@system/application/attachments/store-attachment"
 import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
-import { POST } from "@system/interface/routes/system.v1.attachments.purge-unlinked"
+import { POST } from "@system/interface/routes/system.attachments.purge-unlinked"
 import { systemAttachmentSchema } from "@system/infrastructure/schema/system-attachment"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { createSystemAttachmentTestDatabase } from "@system/test/create-system-attachment-test-database.test-support"
@@ -71,7 +71,7 @@ async function createFixture(): Promise<Fixture> {
       context.set("database", database)
       await next()
     })
-    .post("/system/v1/attachments/purge-unlinked", ...POST)
+    .post("/system/attachments/purge-unlinked", ...POST)
 
   const applications = createSystemSessionApplications({
     context: { env: { DB: db } },
@@ -133,7 +133,7 @@ async function responseJson(response: Response): Promise<unknown> {
   return response.json()
 }
 
-describe("POST /system/v1/attachments/purge-unlinked", () => {
+describe("POST /system/attachments/purge-unlinked", () => {
   test("system:admin は期限切れの未紐づけ添付を掃除できる", async () => {
     const fixture = await createFixture()
 
@@ -143,7 +143,7 @@ describe("POST /system/v1/attachments/purge-unlinked", () => {
 
     const token = await fixture.tokenOf("account-admin")
 
-    const response = await fixture.request("/system/v1/attachments/purge-unlinked", {
+    const response = await fixture.request("/system/attachments/purge-unlinked", {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
     })
@@ -160,7 +160,7 @@ describe("POST /system/v1/attachments/purge-unlinked", () => {
 
     const token = await fixture.tokenOf("account-member")
 
-    const response = await fixture.request("/system/v1/attachments/purge-unlinked", {
+    const response = await fixture.request("/system/attachments/purge-unlinked", {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
     })
@@ -174,7 +174,7 @@ describe("POST /system/v1/attachments/purge-unlinked", () => {
 
     await fixture.storePending()
 
-    const response = await fixture.request("/system/v1/attachments/purge-unlinked", {
+    const response = await fixture.request("/system/attachments/purge-unlinked", {
       method: "POST",
     })
 

@@ -1,7 +1,8 @@
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type WorkflowStepCandidateSnapshot = Readonly<{
-  employeeId: number
+  employeeId: EmployeeId
   accountId: AccountId
   source: "primary" | "escalation"
   selectorsJson: string

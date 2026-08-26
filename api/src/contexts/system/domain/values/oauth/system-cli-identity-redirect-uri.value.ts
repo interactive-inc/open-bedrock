@@ -27,7 +27,7 @@ export class SystemCliIdentityRedirectUriValue {
       }
 
       return new SystemCliIdentityRedirectUriValue(
-        new URL("/system/v1/cli-authorization-callback", origin.origin).toString(),
+        new URL("/system/cli-authorization-callback", origin.origin).toString(),
       )
     } catch {
       return new InvalidSystemCliIdentityRedirectUriError()

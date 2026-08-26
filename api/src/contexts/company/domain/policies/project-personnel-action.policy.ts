@@ -24,6 +24,8 @@ import {
   CompanyConflictError,
   CompanyValidationError,
 } from "@/contexts/company/domain/errors"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 
 export type PersonnelActionProjection = {
   schedule: LifecycleSchedule
@@ -39,13 +41,13 @@ export type LifecycleDepartmentReference = {
 }
 
 export type LifecycleEmployeeReference = {
-  id: number
+  id: EmployeeId
   code: string
 }
 
 export type PersonnelActionCommand = {
   actionId: string
-  employeeId: number
+  employeeId: EmployeeId
   recordedAt: number
   input: PersonnelActionInput
   correction?: {
@@ -132,7 +134,7 @@ function department(
 function employeeId(
   context: ProjectionContext,
   code: string | null,
-): number | null | CompanyOperationError {
+): EmployeeId | null | CompanyOperationError {
   if (code === null) {
     return null
   }
@@ -142,7 +144,7 @@ function employeeId(
   return reference?.id ?? new CompanyConflictError("直属上司が見つかりません", "manager_not_active")
 }
 
-function employeeCode(context: ProjectionContext, id: number | null): string | null {
+function employeeCode(context: ProjectionContext, id: EmployeeId | null): string | null {
   if (id === null) {
     return null
   }
@@ -179,8 +181,10 @@ function assignmentAt(
 }
 
 function addEmployment(context: ProjectionContext, startsOn: string): EmploymentPeriod {
+  const periodId = `employment:${newPeriodId(context, "employment")}`
   const employment: EmploymentPeriod = {
-    periodId: newPeriodId(context, "employment"),
+    periodId,
+    employmentId: restoreWorkforceId("employment", periodId),
     revision: 1,
     employeeId: context.command.employeeId,
     startsOn,
@@ -202,7 +206,7 @@ function addStatus(
   const period: EmployeeStatusPeriod = {
     periodId: newPeriodId(context, "status"),
     revision: 1,
-    employmentPeriodId: employment.periodId,
+    employmentPeriodId: employment.employmentId,
     employeeId: context.command.employeeId,
     status,
     startsOn,
@@ -223,13 +227,13 @@ function addAssignment(
     departmentCode: string
     assignmentType: "primary" | "concurrent"
     positionTitle: string | null
-    managerEmployeeId: number | null
+    managerEmployeeId: EmployeeId | null
   },
 ): OrgAssignmentPeriod {
   const period: OrgAssignmentPeriod = {
     periodId: newPeriodId(context, "assignment"),
     revision: 1,
-    employmentPeriodId: props.employment.periodId,
+    employmentPeriodId: props.employment.employmentId,
     employeeId: context.command.employeeId,
     departmentCode: props.departmentCode,
     assignmentType: props.assignmentType,
@@ -495,6 +499,7 @@ function projectResponsibility(
     const period: OrgResponsibilityPeriod = {
       periodId: newPeriodId(context, "responsibility"),
       revision: 1,
+      employmentId: employment.employmentId,
       departmentCode: input.departmentCode,
       responsibilityType: "department_manager",
       employeeId: context.command.employeeId,
@@ -549,7 +554,7 @@ function projectRetirement(
 
   for (const status of context.schedule.statuses) {
     if (
-      status.employmentPeriodId === employment.periodId &&
+      status.employmentPeriodId === employment.employmentId &&
       (status.endsOn === null || status.endsOn > endsOn)
     ) {
       closePeriod(context, "status", status, endsOn)
@@ -558,7 +563,7 @@ function projectRetirement(
 
   for (const assignment of context.schedule.assignments) {
     if (
-      assignment.employmentPeriodId === employment.periodId &&
+      assignment.employmentPeriodId === employment.employmentId &&
       (assignment.endsOn === null || assignment.endsOn > endsOn)
     ) {
       closePeriod(context, "assignment", assignment, endsOn)

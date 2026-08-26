@@ -11,7 +11,7 @@ import { proposalIdSchema } from "@system/domain/schemas/workflow/proposal-id.sc
 import { systemCaseIdSchema } from "@system/domain/schemas/workflow/system-case.schema"
 import { proposalDigestSchema } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
-import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
+import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { readFileSync } from "node:fs"
 
 const schema = [
@@ -23,7 +23,7 @@ const evidenceDigest = proposalDigestSchema.parse("b".repeat(64))
 
 async function createFixture(): Promise<{
   database: D1Database
-  writer: SystemD1WorkflowWriter
+  writer: SystemD1WorkflowAdapter
 }> {
   const database = createSystemD1TestDatabase(schema)
   for (const accountId of ["creator", "reviewer-1", "reviewer-2", "final-reviewer", "inactive"]) {
@@ -54,7 +54,7 @@ async function createFixture(): Promise<{
 
   return {
     database,
-    writer: new SystemD1WorkflowWriter({ env: { DB: database } }),
+    writer: new SystemD1WorkflowAdapter({ env: { DB: database } }),
   }
 }
 
@@ -118,9 +118,12 @@ describe("System workflow application", () => {
     const at = new Date(200)
     const proposalId = proposalIdSchema.parse("proposal-1")
     const systemCaseId = systemCaseIdSchema.parse("case-1")
-    const started = await new StartSystemProcedure(fixture.writer, {
-      createProposalId: () => proposalId,
-      createSystemCaseId: () => systemCaseId,
+    const started = await new StartSystemProcedure({
+      writer: fixture.writer,
+      deps: {
+        createProposalId: () => proposalId,
+        createSystemCaseId: () => systemCaseId,
+      },
     }).run({
       seriesId: "series-1",
       version: 1,
@@ -215,7 +218,7 @@ describe("System workflow application", () => {
   test("停止Accountの候補と判断を原子的に拒否する", async () => {
     const fixture = await createFixture()
     const at = new Date(200)
-    const invalidStart = await new StartSystemProcedure(fixture.writer).run({
+    const invalidStart = await new StartSystemProcedure({ writer: fixture.writer }).run({
       seriesId: "series-inactive",
       version: 1,
       procedureKey: "change",
@@ -244,7 +247,7 @@ describe("System workflow application", () => {
 
   test("修正再提出は旧Caseを閉じ、同じ公開番号の新しい提案版を作る", async () => {
     const fixture = await createFixture()
-    const start = new StartSystemProcedure(fixture.writer)
+    const start = new StartSystemProcedure({ writer: fixture.writer })
     const first = await start.run({
       seriesId: "series-revision",
       version: 1,
@@ -301,7 +304,7 @@ describe("System workflow application", () => {
 
   test("取下げは提案を削除せず未完了TaskとCaseを閉じる", async () => {
     const fixture = await createFixture()
-    const started = await new StartSystemProcedure(fixture.writer).run({
+    const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
       seriesId: "series-cancel",
       version: 1,
       procedureKey: "change",
@@ -344,7 +347,7 @@ describe("System workflow application", () => {
   test("否定判断を証拠と同時に確定し、後続Taskを開かない", async () => {
     const fixture = await createFixture()
     const at = new Date(200)
-    const started = await new StartSystemProcedure(fixture.writer).run({
+    const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
       seriesId: "series-reject",
       version: 1,
       procedureKey: "change",

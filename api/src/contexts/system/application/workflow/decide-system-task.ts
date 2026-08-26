@@ -2,7 +2,7 @@ import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type {
   SystemWorkflowDecisionResult,
   SystemWorkflowWriter,
-} from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
+} from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import type { SystemDecisionTaskBundle } from "@system/domain/definitions/workflow/system-decision-task-bundle.definition"
 import { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
@@ -22,10 +22,14 @@ export type DecideSystemTaskCommand = Readonly<{
   decidedAt: Date
   nextTask: SystemDecisionTaskBundle | null
 }>
+type DecideSystemTaskContext = SystemWorkflowWriter
+type Context = DecideSystemTaskContext
 
 /** 固定済みdigestへの人間判断を追記し、TaskとCaseを単調に進める。 */
 export class DecideSystemTask {
-  constructor(private readonly writer: SystemWorkflowWriter) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(
     command: DecideSystemTaskCommand,
@@ -50,7 +54,7 @@ export class DecideSystemTask {
 
     if (attestation instanceof InvalidSystemWorkflowError) return attestation
 
-    return this.writer.decide({
+    return this.c.decide({
       attestation,
       decidedAt: command.decidedAt,
       nextTask: command.nextTask,

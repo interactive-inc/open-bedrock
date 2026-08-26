@@ -11,6 +11,7 @@ const propsSchema = z
     id: zAccountId,
     status: accountStatusSchema,
     tokenVersion: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+    closedAt: z.date().nullable().default(null),
     createdAt: z.date(),
     updatedAt: z.date(),
   })
@@ -25,6 +26,7 @@ export class AccountEntity {
   readonly id: AccountId
   readonly status: AccountStatus
   readonly tokenVersion: number
+  readonly #closedAtEpochMilliseconds: number | null
   readonly #createdAtEpochMilliseconds: number
   readonly #updatedAtEpochMilliseconds: number
 
@@ -32,6 +34,7 @@ export class AccountEntity {
     this.id = props.id
     this.status = props.status
     this.tokenVersion = props.tokenVersion
+    this.#closedAtEpochMilliseconds = props.closedAt?.getTime() ?? null
     this.#createdAtEpochMilliseconds = props.createdAt.getTime()
     this.#updatedAtEpochMilliseconds = props.updatedAt.getTime()
     Object.freeze(this)
@@ -46,12 +49,26 @@ export class AccountEntity {
     if (parsed.data.updatedAt.getTime() < parsed.data.createdAt.getTime()) {
       return new InvalidAccountError("update_before_creation")
     }
+    if (
+      parsed.data.closedAt !== null &&
+      (parsed.data.status !== "suspended" ||
+        parsed.data.closedAt.getTime() < parsed.data.createdAt.getTime() ||
+        parsed.data.closedAt.getTime() !== parsed.data.updatedAt.getTime())
+    ) {
+      return new InvalidAccountError("invalid_closed_state")
+    }
 
     return new AccountEntity(parsed.data)
   }
 
   get createdAt(): Date {
     return new Date(this.#createdAtEpochMilliseconds)
+  }
+
+  get closedAt(): Date | null {
+    return this.#closedAtEpochMilliseconds === null
+      ? null
+      : new Date(this.#closedAtEpochMilliseconds)
   }
 
   get updatedAt(): Date {
@@ -105,6 +122,7 @@ export class AccountEntity {
   }
 
   private getTransitionTimeError(at: Date): InvalidAccountError | null {
+    if (this.#closedAtEpochMilliseconds !== null) return new InvalidAccountError("account_closed")
     if (!Number.isFinite(at.getTime())) return new InvalidAccountError("invalid_shape")
     if (at.getTime() < this.#updatedAtEpochMilliseconds) {
       return new InvalidAccountError("transition_before_last_update")
@@ -118,6 +136,7 @@ export class AccountEntity {
       id: this.id,
       status: this.status,
       tokenVersion: this.tokenVersion,
+      closedAt: this.closedAt,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     }

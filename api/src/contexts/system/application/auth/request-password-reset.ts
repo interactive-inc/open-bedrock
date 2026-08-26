@@ -1,9 +1,9 @@
 import { PasswordResetRequestApplicationError } from "@/contexts/system/application/errors"
-import { LoginRateLimitService } from "@/contexts/system/infrastructure/auth/login-rate-limit.service.repository"
-import { PasswordResetEmailGateway } from "@/contexts/system/infrastructure/auth/password-reset-email.gateway.repository"
-import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
-import { generateOpaqueToken } from "@system/infrastructure/auth/generate-opaque-token.repository"
-import { createSystemPasswordResetChallenge } from "@system/infrastructure/auth/create-system-password-reset-challenge.repository"
+import { LoginRateLimitAdapter } from "@/contexts/system/infrastructure/adapters/auth/login-rate-limit.adapter"
+import { PasswordResetEmailAdapter } from "@/contexts/system/infrastructure/adapters/auth/password-reset-email.adapter"
+import { hashPasswordResetToken } from "@system/lib/auth/hash-password-reset-token"
+import { generateOpaqueToken } from "@system/lib/auth/generate-opaque-token"
+import { CreateSystemPasswordResetChallengeAdapter } from "@system/infrastructure/adapters/auth/create-system-password-reset-challenge.adapter"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import type {
   SystemClockContext,
@@ -11,7 +11,7 @@ import type {
   SystemDatabaseContext,
   SystemEmailContext,
   SystemRequestAuditContext,
-} from "@system/infrastructure/configuration/system-context.repository"
+} from "@system/configuration/system-context"
 type Props = Readonly<{
   email: string
   origin: string
@@ -21,23 +21,24 @@ type Props = Readonly<{
     email: string
   }> | null
 }>
+type Context = SystemDatabaseContext &
+  SystemD1Context &
+  SystemClockContext &
+  SystemEmailContext &
+  SystemRequestAuditContext
 
 export class RequestPasswordReset {
   static readonly featureId = "00450024"
 
   private readonly tokenLifetimeMilliseconds = 60 * 60 * 1000
 
-  constructor(
-    private readonly c: SystemDatabaseContext &
-      SystemD1Context &
-      SystemClockContext &
-      SystemEmailContext &
-      SystemRequestAuditContext,
-  ) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async accept(email: string, clientIp: string | null): Promise<boolean> {
-    const rateLimitKey = LoginRateLimitService.loginKey(clientIp, email)
-    const rateLimit = new LoginRateLimitService(this.c)
+    const rateLimitKey = LoginRateLimitAdapter.loginKey(clientIp, email)
+    const rateLimit = new LoginRateLimitAdapter(this.c)
 
     if (await rateLimit.isLimited({ key: rateLimitKey })) {
       return false
@@ -63,7 +64,9 @@ export class RequestPasswordReset {
     })
     if (metadataJson instanceof Error) return new PasswordResetRequestApplicationError(metadataJson)
 
-    const writeResult = await createSystemPasswordResetChallenge(this.c, {
+    const writeResult = await new CreateSystemPasswordResetChallengeAdapter(
+      this.c,
+    ).createSystemPasswordResetChallenge({
       actorAccountId: null,
       id: crypto.randomUUID(),
       tokenHash,
@@ -75,7 +78,7 @@ export class RequestPasswordReset {
     })
     if (writeResult instanceof Error) return new PasswordResetRequestApplicationError(writeResult)
 
-    const emailResult = await new PasswordResetEmailGateway(this.c).send({
+    const emailResult = await new PasswordResetEmailAdapter(this.c).send({
       to: props.recipient.email,
       origin: props.origin,
       token: rawToken,
