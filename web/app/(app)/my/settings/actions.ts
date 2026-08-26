@@ -59,7 +59,9 @@ export async function updatePhoneAction(
     return { ok: false, error: updated.message }
   }
 
-  revalidatePath("/my/settings")
+  // 電話番号は app-shell（layout）が渡す me から設定モーダルへ流れるので、
+  // ページ単位ではなく layout を revalidate しないと保存後も古い値が残る。
+  revalidatePath("/", "layout")
 
   return { ok: true, error: null }
 }

@@ -81,16 +81,14 @@ export function AppShell(props: Props) {
 
         <SidebarFooter className="border-t border-border/70 bg-muted/60">
           <div className="flex items-center gap-1">
-            <Link
-              href="/my/settings"
-              className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-md px-2 py-1 hover:bg-sidebar-accent"
-            >
+            {/* 設定の入口は隣のユーザーメニューに寄せたので、氏名はリンクにしない。 */}
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5 px-2 py-1">
               <span className="truncate text-sm font-medium">{props.currentUser.name}</span>
 
               <span className="truncate text-xs text-muted-foreground">
                 {props.currentUser.role_keys.join(", ") || props.currentUser.role}
               </span>
-            </Link>
+            </div>
 
             <SidebarUserMenu
               currentUser={props.currentUser}
