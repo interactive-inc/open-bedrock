@@ -94,7 +94,11 @@ async function request(path: string, token: string | null, method?: string): Pro
 
 describe("POST /review-cycles/:cycleId/disclose", () => {
   test("admin discloses all forms in the cycle", async () => {
-    const response = await request("/review-cycles/1/disclose", await adminToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/1/disclose",
+      await adminToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(200)
 
@@ -111,19 +115,27 @@ describe("POST /review-cycles/:cycleId/disclose", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/review-cycles/1/disclose", await memberToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/1/disclose",
+      await memberToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 when the cycle does not exist", async () => {
-    const response = await request("/review-cycles/999/disclose", await adminToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/999/disclose",
+      await adminToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/review-cycles/1/disclose", null, "POST")
+    const response = await request("/performance-review/review-cycles/1/disclose", null, "POST")
 
     expect(response.status).toBe(401)
   })

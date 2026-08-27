@@ -1,4 +1,4 @@
-import { GovernancePublicationService } from "@/contexts/governance/application/governance-publication-service"
+import { SubmitGovernanceReview } from "@/contexts/governance/application/submit-governance-review"
 import { prepareGovernanceAudit } from "@/api/http/audit/prepare-governance-audit"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -15,10 +15,10 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const code = parseGovernanceCode(c.req.param("code"))
   const version = parseGovernanceVersion(c.req.param("version"))
   if (code === null || version === null) throw new NotFoundError("governance version not found")
-  const result = await new GovernancePublicationService({
+  const result = await new SubmitGovernanceReview({
     context: c,
     prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
-  }).submitReview({ session, code, version })
+  }).execute({ session, code, version })
   if (result instanceof ApplicationError) throw toHttpException(result)
   if (result instanceof Error) throw result
   return c.json(result, 200)

@@ -28,7 +28,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.assets.$post({
+    const response = await client["asset"]["assets"].$post({
       json: {
         code: query.code,
         name: query.name,

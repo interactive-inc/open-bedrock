@@ -128,7 +128,7 @@ async function request(
 
 describe("GET /stocktakes", () => {
   test("lists sessions with counts", async () => {
-    const response = await request("/stocktakes", await memberToken())
+    const response = await request("/asset/stocktakes", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -147,7 +147,7 @@ describe("GET /stocktakes", () => {
   })
 
   test("filters by status", async () => {
-    const response = await request("/stocktakes?status=open", await memberToken())
+    const response = await request("/asset/stocktakes?status=open", await memberToken())
 
     const body = await response.json()
 
@@ -164,7 +164,7 @@ describe("GET /stocktakes", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/stocktakes", null)
+    const response = await request("/asset/stocktakes", null)
 
     expect(response.status).toBe(401)
   })
@@ -172,7 +172,7 @@ describe("GET /stocktakes", () => {
 
 describe("POST /stocktakes", () => {
   test("privileged role starts a session and expands items over non-disposed assets", async () => {
-    const response = await request("/stocktakes", await adminToken(), "POST", {
+    const response = await request("/asset/stocktakes", await adminToken(), "POST", {
       name: "臨時 棚卸し",
       target_date: "2026-07-08",
     })
@@ -193,7 +193,7 @@ describe("POST /stocktakes", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/stocktakes", await memberToken(), "POST", {
+    const response = await request("/asset/stocktakes", await memberToken(), "POST", {
       name: "臨時 棚卸し",
       target_date: "2026-07-08",
     })
@@ -202,7 +202,7 @@ describe("POST /stocktakes", () => {
   })
 
   test("returns 400 when target_date is malformed", async () => {
-    const response = await request("/stocktakes", await adminToken(), "POST", {
+    const response = await request("/asset/stocktakes", await adminToken(), "POST", {
       name: "臨時 棚卸し",
       target_date: "2026/07/08",
     })
@@ -213,7 +213,7 @@ describe("POST /stocktakes", () => {
 
 describe("GET /stocktakes/:id", () => {
   test("returns detail with items", async () => {
-    const response = await request(`/stocktakes/${OPEN_ID}`, await memberToken())
+    const response = await request(`/asset/stocktakes/${OPEN_ID}`, await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -229,7 +229,7 @@ describe("GET /stocktakes/:id", () => {
 
   test("returns 404 for an unknown id", async () => {
     const response = await request(
-      "/stocktakes/ffffffff-ffff-4fff-8fff-ffffffffffff",
+      "/asset/stocktakes/ffffffff-ffff-4fff-8fff-ffffffffffff",
       await memberToken(),
     )
 
@@ -246,7 +246,7 @@ describe("POST /stocktakes/:id/assets/:code/check", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/stocktakes/${OPEN_ID}/assets/A0002/check`,
+      path: `/asset/stocktakes/${OPEN_ID}/assets/A0002/check`,
       token,
       method: "POST",
       body: { location_note: "倉庫B" },
@@ -257,7 +257,7 @@ describe("POST /stocktakes/:id/assets/:code/check", () => {
     const detail = await requestWithContext({
       db,
       jwtSecret,
-      path: `/stocktakes/${OPEN_ID}`,
+      path: `/asset/stocktakes/${OPEN_ID}`,
       token,
     })
 
@@ -275,7 +275,7 @@ describe("POST /stocktakes/:id/assets/:code/check", () => {
 
   test("returns 409 when the session is closed", async () => {
     const response = await request(
-      `/stocktakes/${CLOSED_ID}/assets/A0001/check`,
+      `/asset/stocktakes/${CLOSED_ID}/assets/A0001/check`,
       await adminToken(),
       "POST",
       {},
@@ -286,7 +286,7 @@ describe("POST /stocktakes/:id/assets/:code/check", () => {
 
   test("returns 404 for an asset not in the session", async () => {
     const response = await request(
-      `/stocktakes/${OPEN_ID}/assets/A9999/check`,
+      `/asset/stocktakes/${OPEN_ID}/assets/A9999/check`,
       await adminToken(),
       "POST",
       {},
@@ -297,7 +297,7 @@ describe("POST /stocktakes/:id/assets/:code/check", () => {
 
   test("member is forbidden", async () => {
     const response = await request(
-      `/stocktakes/${OPEN_ID}/assets/A0002/check`,
+      `/asset/stocktakes/${OPEN_ID}/assets/A0002/check`,
       await memberToken(),
       "POST",
       {},
@@ -309,7 +309,12 @@ describe("POST /stocktakes/:id/assets/:code/check", () => {
 
 describe("POST /stocktakes/:id/close", () => {
   test("closes an open session", async () => {
-    const response = await request(`/stocktakes/${OPEN_ID}/close`, await adminToken(), "POST", {})
+    const response = await request(
+      `/asset/stocktakes/${OPEN_ID}/close`,
+      await adminToken(),
+      "POST",
+      {},
+    )
 
     expect(response.status).toBe(200)
 
@@ -324,13 +329,23 @@ describe("POST /stocktakes/:id/close", () => {
   })
 
   test("returns 409 when already closed", async () => {
-    const response = await request(`/stocktakes/${CLOSED_ID}/close`, await adminToken(), "POST", {})
+    const response = await request(
+      `/asset/stocktakes/${CLOSED_ID}/close`,
+      await adminToken(),
+      "POST",
+      {},
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("member is forbidden", async () => {
-    const response = await request(`/stocktakes/${OPEN_ID}/close`, await memberToken(), "POST", {})
+    const response = await request(
+      `/asset/stocktakes/${OPEN_ID}/close`,
+      await memberToken(),
+      "POST",
+      {},
+    )
 
     expect(response.status).toBe(403)
   })

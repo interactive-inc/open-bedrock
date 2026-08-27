@@ -88,7 +88,7 @@ async function request(props: RequestProps): Promise<Response> {
 describe("POST /shift-assignments/:id/publish", () => {
   test("privileged role publishes a draft assignment and returns 200", async () => {
     const response = await request({
-      path: "/shift-assignments/2/publish",
+      path: "/shift/shift-assignments/2/publish",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -106,7 +106,7 @@ describe("POST /shift-assignments/:id/publish", () => {
 
   test("returns 409 when already published", async () => {
     const response = await request({
-      path: "/shift-assignments/1/publish",
+      path: "/shift/shift-assignments/1/publish",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -116,7 +116,7 @@ describe("POST /shift-assignments/:id/publish", () => {
 
   test("returns 404 for a missing assignment", async () => {
     const response = await request({
-      path: "/shift-assignments/9999/publish",
+      path: "/shift/shift-assignments/9999/publish",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -126,7 +126,7 @@ describe("POST /shift-assignments/:id/publish", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift-assignments/2/publish",
+      path: "/shift/shift-assignments/2/publish",
       token: await tokenFor(5),
       method: "POST",
     })
@@ -136,7 +136,7 @@ describe("POST /shift-assignments/:id/publish", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/shift-assignments/2/publish",
+      path: "/shift/shift-assignments/2/publish",
       token: null,
       method: "POST",
     })

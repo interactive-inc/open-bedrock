@@ -1,12 +1,10 @@
 import { FetchError } from "@/components/fetch-error"
 import { notFound } from "next/navigation"
-import { EmployeeArchiveButton } from "@/app/(app)/organization/employees/_components/employee-archive-button"
 import { EmployeeEditForm } from "@/app/(app)/organization/employees/_components/employee-edit-form"
 import { EmployeeStatusBadge } from "@/app/(app)/organization/employees/_components/employee-status-badge"
 import { DetailField } from "@/components/detail-field"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getEmployeeByCode } from "@/lib/api/get-employee-by-code"
-import { canArchiveEmployee } from "@/lib/employee/can-archive-employee"
 import { canUpdateEmployee } from "@/lib/employee/can-update-employee"
 import { getEmployeeLifecycleState } from "@/lib/api/get-employee-lifecycle-state"
 import { getEmployeeLifecycleEvents } from "@/lib/api/get-employee-lifecycle-events"
@@ -20,13 +18,12 @@ import { getPositionList } from "@/lib/api/get-position-list"
 type Props = {
   code: string
   permissions: ReadonlyArray<string>
-  currentUserCode: string | null
 }
 
 /**
  * code 指定で従業員を取得し、詳細カードを描画する非同期 RSC。
  * 該当なしは notFound、取得失敗はエラーメッセージ。
- * permissions と現在のライフサイクル状態に応じて、編集・人事発令・アーカイブ導線を出す。
+ * permissions と現在のライフサイクル状態に応じて、編集・人事発令導線を出す。
  */
 export async function EmployeeDetail(props: Props) {
   const [employee, lifecycleState, lifecycleEvents, lifecycleRequests, positions] =
@@ -48,12 +45,6 @@ export async function EmployeeDetail(props: Props) {
 
   const showEdit = canUpdateEmployee(props.permissions)
 
-  const showArchive =
-    !(lifecycleState instanceof Error) &&
-    lifecycleState.status === "retired" &&
-    !lifecycleState.archived &&
-    canArchiveEmployee(props.permissions) &&
-    employee.code !== props.currentUserCode
   const canRequestLifecycle = props.permissions.includes("employee:lifecycle:request")
   const canApplyLifecycle = props.permissions.includes("employee:lifecycle:apply")
   const showPersonnelAction =
@@ -70,7 +61,7 @@ export async function EmployeeDetail(props: Props) {
               <EmployeeStatusBadge status={employee.status} />
             </CardTitle>
 
-            {showEdit || showArchive || showPersonnelAction ? (
+            {showEdit || showPersonnelAction ? (
               <div className="flex flex-wrap items-center gap-2">
                 {showPersonnelAction && !(lifecycleState instanceof Error) ? (
                   <PersonnelActionForm
@@ -84,8 +75,6 @@ export async function EmployeeDetail(props: Props) {
                 ) : null}
 
                 {showEdit ? <EmployeeEditForm code={employee.code} name={employee.name} /> : null}
-
-                {showArchive ? <EmployeeArchiveButton code={employee.code} /> : null}
               </div>
             ) : null}
           </div>
@@ -100,8 +89,6 @@ export async function EmployeeDetail(props: Props) {
             <DetailField label="役職">{employee.position ?? "-"}</DetailField>
 
             <DetailField label="メール">{employee.email}</DetailField>
-
-            <DetailField label="ロール">{employee.role}</DetailField>
           </dl>
         </CardContent>
       </Card>

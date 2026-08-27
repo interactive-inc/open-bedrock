@@ -19,7 +19,10 @@ export async function downloadExpenseAttachment(
   }
 
   return fetch(
-    new URL(`/expenses/${expenseId}/attachments/${encodeURIComponent(attachmentId)}`, baseUrl),
+    new URL(
+      `/expense/expenses/${expenseId}/attachments/${encodeURIComponent(attachmentId)}`,
+      baseUrl,
+    ),
     { headers },
   )
 }

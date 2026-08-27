@@ -5,7 +5,7 @@ import type { NotificationCreateRequest } from "@/lib/api/types/notification-typ
 export async function createNotification(request: NotificationCreateRequest) {
   const client = await createClient()
 
-  const response = await client.notifications.$post({ json: request })
+  const response = await client["company"]["notifications"].$post({ json: request })
 
   if (response.status >= 400) {
     return new Error("failed to create notification")

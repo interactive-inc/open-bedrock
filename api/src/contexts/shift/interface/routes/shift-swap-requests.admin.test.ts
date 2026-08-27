@@ -89,7 +89,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /shift-swap-requests/admin", () => {
   test("returns 200 with all swap requests for admin", async () => {
-    const response = await request("/shift-swap-requests/admin", await tokenFor(1))
+    const response = await request("/shift/shift-swap-requests/admin", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -108,25 +108,28 @@ describe("GET /shift-swap-requests/admin", () => {
   })
 
   test("returns 403 for manager", async () => {
-    const response = await request("/shift-swap-requests/admin", await tokenFor(4))
+    const response = await request("/shift/shift-swap-requests/admin", await tokenFor(4))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 403 for member", async () => {
-    const response = await request("/shift-swap-requests/admin", await tokenFor(5))
+    const response = await request("/shift/shift-swap-requests/admin", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/shift-swap-requests/admin", null)
+    const response = await request("/shift/shift-swap-requests/admin", null)
 
     expect(response.status).toBe(401)
   })
 
   test("filters by status", async () => {
-    const response = await request("/shift-swap-requests/admin?status=pending", await tokenFor(1))
+    const response = await request(
+      "/shift/shift-swap-requests/admin?status=pending",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
 
@@ -140,7 +143,10 @@ describe("GET /shift-swap-requests/admin", () => {
   })
 
   test("filters by requester_id", async () => {
-    const response = await request("/shift-swap-requests/admin?requester_id=5", await tokenFor(1))
+    const response = await request(
+      "/shift/shift-swap-requests/admin?requester_id=5",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
 
@@ -157,7 +163,7 @@ describe("GET /shift-swap-requests/admin", () => {
 
   test("filters by date range", async () => {
     const response = await request(
-      "/shift-swap-requests/admin?from=2026-06-01&to=2026-06-01",
+      "/shift/shift-swap-requests/admin?from=2026-06-01&to=2026-06-01",
       await tokenFor(1),
     )
 

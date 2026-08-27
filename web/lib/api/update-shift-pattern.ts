@@ -17,7 +17,7 @@ export async function updateShiftPattern(
 ): Promise<ShiftPatternResponse | Error> {
   const client = await createClient()
 
-  const response = await client["shift-patterns"][":id"].$put({
+  const response = await client["shift"]["shift-patterns"][":id"].$put({
     param: { id: String(id) },
     json: request,
   })

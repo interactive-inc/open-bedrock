@@ -22,7 +22,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["health-checkups"][":id"].complete.$post({
+    const response = await client["health-checkup"]["health-checkups"][":id"].complete.$post({
       param: { id: id },
       json: { conducted_on: query.conducted },
     })

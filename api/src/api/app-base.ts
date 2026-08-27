@@ -16,6 +16,7 @@ import {
   CompanyActorValue,
   type CompanyCapability,
 } from "@/contexts/company/domain/values/company-actor.value"
+import type { CompanyPermissionKey } from "@/contexts/company/domain/catalogs/iam/company-permission-key.catalog"
 import { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import { SystemIdentityUnavailableError } from "@system/interface/errors"
@@ -100,7 +101,7 @@ const systemAuthorizationMiddleware = factory.createMiddleware(async (c, next) =
 const globalBodyLimit = bodyLimit({ maxSize: 1_000_000 })
 
 const globalBodyLimitExceptAuditExport = factory.createMiddleware(async (c, next) => {
-  if (c.req.path === "/audit-event-exports") {
+  if (c.req.path === "/company/audit-event-exports") {
     await next()
     return
   }
@@ -113,6 +114,7 @@ const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
   if (session === null) throw new HTTPException(401, { message: "authentication required" })
 
   const capabilities: CompanyCapability[] = []
+  const permissions: CompanyPermissionKey[] = []
   if (
     session.hasPermission("system:admin") ||
     session.hasPermission("employee:read") ||
@@ -130,6 +132,42 @@ const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
   }
   if (session.hasPermission("system:admin")) capabilities.push("company:admin")
 
+  if (session.hasPermission("system:admin") || session.hasPermission("org:manage")) {
+    permissions.push("org:read", "org:write", "master:org:write")
+  } else if (session.hasPermission("employee:read")) {
+    permissions.push("org:read")
+  }
+  if (session.hasPermission("system:admin") || session.hasPermission("employee:read")) {
+    permissions.push("employee:read")
+  }
+  if (session.hasPermission("system:admin") || session.hasPermission("employee:attributes:read")) {
+    permissions.push("employee:attributes:read")
+  }
+  if (
+    session.hasPermission("system:admin") ||
+    session.hasPermission("employee:create") ||
+    session.hasPermission("employee:update") ||
+    session.hasPermission("employee:lifecycle:apply")
+  ) {
+    permissions.push("employee:write")
+  }
+  if (session.hasPermission("system:admin") || session.hasPermission("employee:update")) {
+    permissions.push("employee:write:basic")
+  }
+  if (
+    session.hasPermission("system:admin") ||
+    session.hasPermission("grade:manage") ||
+    session.hasPermission("employee_event:manage")
+  ) {
+    permissions.push("employee:write:attributes")
+  }
+  if (
+    !permissions.includes("master:org:write") &&
+    (session.hasPermission("position:manage") || session.hasPermission("grade:manage"))
+  ) {
+    permissions.push("master:org:write")
+  }
+
   c.set(
     "companyActor",
     CompanyActorValue.restore({
@@ -137,6 +175,7 @@ const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
       employeeId: session.employeeId === null ? null : String(session.employeeId),
       organizationIds: ["organization:default"],
       capabilities,
+      permissions,
     }),
   )
   await next()

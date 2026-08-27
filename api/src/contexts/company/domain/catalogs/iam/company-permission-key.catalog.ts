@@ -9,3 +9,5 @@ export const COMPANY_PERMISSION_KEYS = [
   "employee:write:basic",
   "employee:write:attributes",
 ] as const
+
+export type CompanyPermissionKey = (typeof COMPANY_PERMISSION_KEYS)[number]

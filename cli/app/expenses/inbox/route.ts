@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.expenses.inbox.$get()
+    const response = await client["expense"]["expenses"].inbox.$get()
 
     const rows = await response.json()
 

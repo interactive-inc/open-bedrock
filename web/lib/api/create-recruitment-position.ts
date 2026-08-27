@@ -9,7 +9,7 @@ export async function createRecruitmentPosition(request: {
 }) {
   const client = await createClient()
 
-  const response = await client["job-openings"].$post({ json: request })
+  const response = await client["recruitment"]["job-openings"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "募集の登録に失敗しました" })

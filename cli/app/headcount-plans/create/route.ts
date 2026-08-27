@@ -32,7 +32,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["headcount-plans"].$post({
+    const response = await client["headcount-plan"]["headcount-plans"].$post({
       json: {
         fiscal_year: fiscalYear,
         planned_count: plannedCount,

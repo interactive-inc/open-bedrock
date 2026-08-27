@@ -79,10 +79,15 @@ async function request(
 
 describe("POST /review-cycles", () => {
   test("admin creates a cycle in draft status and returns 201", async () => {
-    const response = await request("/review-cycles", await adminToken(), "POST", {
-      title: "2026 H2",
-      period: "2026-H2",
-    })
+    const response = await request(
+      "/performance-review/review-cycles",
+      await adminToken(),
+      "POST",
+      {
+        title: "2026 H2",
+        period: "2026-H2",
+      },
+    )
 
     expect(response.status).toBe(201)
 
@@ -97,24 +102,34 @@ describe("POST /review-cycles", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/review-cycles", await memberToken(), "POST", {
-      title: "x",
-      period: "2026-H2",
-    })
+    const response = await request(
+      "/performance-review/review-cycles",
+      await memberToken(),
+      "POST",
+      {
+        title: "x",
+        period: "2026-H2",
+      },
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 400 when title is missing", async () => {
-    const response = await request("/review-cycles", await adminToken(), "POST", {
-      period: "2026-H2",
-    })
+    const response = await request(
+      "/performance-review/review-cycles",
+      await adminToken(),
+      "POST",
+      {
+        period: "2026-H2",
+      },
+    )
 
     expect(response.status).toBe(400)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/review-cycles", null, "POST", {
+    const response = await request("/performance-review/review-cycles", null, "POST", {
       title: "x",
       period: "2026-H2",
     })

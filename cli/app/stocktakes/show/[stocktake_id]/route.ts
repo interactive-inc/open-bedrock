@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.stocktakes[":id"].$get({
+    const response = await client["asset"]["stocktakes"][":id"].$get({
       param: { id: stocktakeId },
     })
 

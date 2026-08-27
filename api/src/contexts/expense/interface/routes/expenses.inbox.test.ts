@@ -120,7 +120,7 @@ const expenseInboxListResponseSchema = z.object({
 
 describe("GET /expenses/inbox", () => {
   test("returns 200 with joined applicant names for a manager", async () => {
-    const response = await request({ path: "/expenses/inbox", token: await tokenFor(2) })
+    const response = await request({ path: "/expense/expenses/inbox", token: await tokenFor(2) })
 
     expect(response.status).toBe(200)
 
@@ -139,13 +139,13 @@ describe("GET /expenses/inbox", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request({ path: "/expenses/inbox", token: await tokenFor(5) })
+    const response = await request({ path: "/expense/expenses/inbox", token: await tokenFor(5) })
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/expenses/inbox", token: null })
+    const response = await request({ path: "/expense/expenses/inbox", token: null })
 
     expect(response.status).toBe(401)
   })

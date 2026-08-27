@@ -15,7 +15,7 @@ export async function updateLeaveRequest(
 ): Promise<LeaveRequestDetailResponse | Error> {
   const client = await createClient()
 
-  const response = await client["leave-requests"][":id"].$put({
+  const response = await client["leave"]["leave-requests"][":id"].$put({
     param: { id: String(id) },
     json: request,
   })

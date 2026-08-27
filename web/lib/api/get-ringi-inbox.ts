@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getRingiInbox() {
   const client = await createClient()
 
-  const response = await client["ringi-requests"].inbox.$get()
+  const response = await client["ringi"]["ringi-requests"].inbox.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load ringi inbox")

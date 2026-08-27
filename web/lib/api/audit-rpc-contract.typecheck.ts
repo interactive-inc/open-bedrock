@@ -38,16 +38,21 @@ type ExpectedAuditExportInput = {
   }
 }
 
-type AuditListInput = InferRequestType<ApiClient["audit-events"]["$get"]>
-type AuditExportInput = InferRequestType<ApiClient["audit-event-exports"]["$post"]>
+type AuditListInput = InferRequestType<ApiClient["company"]["audit-events"]["$get"]>
+type AuditExportInput = InferRequestType<ApiClient["company"]["audit-event-exports"]["$post"]>
 
 export type AuditRpcContract = [
   Assert<Equal<AuditListInput, ExpectedAuditListInput>>,
   Assert<
-    Equal<InferRequestType<ApiClient["audit-events"][":eventId"]["$get"]>, ExpectedAuditDetailInput>
+    Equal<
+      InferRequestType<ApiClient["company"]["audit-events"][":eventId"]["$get"]>,
+      ExpectedAuditDetailInput
+    >
   >,
   Assert<Equal<AuditExportInput, ExpectedAuditExportInput>>,
-  Assert<Equal<InferResponseType<ApiClient["audit-event-exports"]["$post"], 200>, string>>,
+  Assert<
+    Equal<InferResponseType<ApiClient["company"]["audit-event-exports"]["$post"], 200>, string>
+  >,
   Assert<Equal<{} extends AuditListInput ? true : false, true>>,
   Assert<Equal<{ query: { limit: number } } extends AuditListInput ? true : false, false>>,
   Assert<Equal<{ json: {} } extends AuditExportInput ? true : false, false>>,

@@ -15,7 +15,7 @@ export type ResignationUpdateRequest = {
 /** GET /resignations/me と /resignations/:id のレスポンス要素。api は snake_case で返す。 */
 export type ResignationResponse = {
   id: string
-  employee_id: number
+  employee_id: string
   resignation_date: string
   last_working_date: string | null
   reason: string | null

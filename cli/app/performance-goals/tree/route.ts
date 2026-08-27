@@ -14,7 +14,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["performance-goals"].tree.$get({
+    const response = await client["performance-review"]["performance-goals"].tree.$get({
       query: { period: query.period },
     })
 

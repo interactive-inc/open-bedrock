@@ -35,11 +35,11 @@ const app = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
-  .get("/rooms", ...roomsRoute.GET)
-  .post("/rooms", ...roomsRoute.POST)
-  .get("/rooms/:id", ...roomDetailRoute.GET)
-  .put("/rooms/:id", ...roomDetailRoute.PUT)
-  .delete("/rooms/:id", ...roomDetailRoute.DELETE)
+  .get("/room/rooms", ...roomsRoute.GET)
+  .post("/room/rooms", ...roomsRoute.POST)
+  .get("/room/rooms/:id", ...roomDetailRoute.GET)
+  .put("/room/rooms/:id", ...roomDetailRoute.PUT)
+  .delete("/room/rooms/:id", ...roomDetailRoute.DELETE)
 
 const roomResponseSchema = z.object({
   id: z.number(),
@@ -143,7 +143,7 @@ async function request(props: {
 
 describe("GET /rooms", () => {
   test("returns all rooms for any signed-in member", async () => {
-    const response = await request({ path: "/rooms", token: await memberToken() })
+    const response = await request({ path: "/room/rooms", token: await memberToken() })
 
     expect(response.status).toBe(200)
 
@@ -159,13 +159,13 @@ describe("GET /rooms", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/rooms", token: null })
+    const response = await request({ path: "/room/rooms", token: null })
 
     expect(response.status).toBe(401)
   })
 
   test("?limit=1 returns only 1 room when seed has 5", async () => {
-    const response = await request({ path: "/rooms?limit=1", token: await memberToken() })
+    const response = await request({ path: "/room/rooms?limit=1", token: await memberToken() })
 
     expect(response.status).toBe(200)
 
@@ -183,7 +183,7 @@ describe("GET /rooms", () => {
 
 describe("GET /rooms/:id", () => {
   test("returns a single room", async () => {
-    const response = await request({ path: "/rooms/1", token: await memberToken() })
+    const response = await request({ path: "/room/rooms/1", token: await memberToken() })
 
     expect(response.status).toBe(200)
 
@@ -197,13 +197,13 @@ describe("GET /rooms/:id", () => {
   })
 
   test("returns 404 for an unknown room", async () => {
-    const response = await request({ path: "/rooms/9999", token: await memberToken() })
+    const response = await request({ path: "/room/rooms/9999", token: await memberToken() })
 
     expect(response.status).toBe(404)
   })
 
   test("returns 400 for a non-numeric id", async () => {
-    const response = await request({ path: "/rooms/abc", token: await memberToken() })
+    const response = await request({ path: "/room/rooms/abc", token: await memberToken() })
 
     expect(response.status).toBe(400)
   })
@@ -212,7 +212,7 @@ describe("GET /rooms/:id", () => {
 describe("POST /rooms", () => {
   test("creates a room for an admin and assigns an id", async () => {
     const response = await request({
-      path: "/rooms",
+      path: "/room/rooms",
       token: await adminToken(),
       method: "POST",
       body: { name: "New Project Room", capacity: 12, location: "6F" },
@@ -233,7 +233,7 @@ describe("POST /rooms", () => {
 
   test("accepts a null location", async () => {
     const response = await request({
-      path: "/rooms",
+      path: "/room/rooms",
       token: await adminToken(),
       method: "POST",
       body: { name: "Remote Room", capacity: 4, location: null },
@@ -252,7 +252,7 @@ describe("POST /rooms", () => {
 
   test("returns 403 for a non-privileged member", async () => {
     const response = await request({
-      path: "/rooms",
+      path: "/room/rooms",
       token: await memberToken(),
       method: "POST",
       body: { name: "New Project Room", capacity: 12, location: "6F" },
@@ -263,7 +263,7 @@ describe("POST /rooms", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/rooms",
+      path: "/room/rooms",
       token: null,
       method: "POST",
       body: { name: "New Project Room", capacity: 12, location: "6F" },
@@ -276,7 +276,7 @@ describe("POST /rooms", () => {
 describe("PUT /rooms/:id", () => {
   test("updates a room for an admin", async () => {
     const response = await request({
-      path: "/rooms/1",
+      path: "/room/rooms/1",
       token: await adminToken(),
       method: "PUT",
       body: { name: "Large Meeting Room A (renovated)", capacity: 24, location: "5F" },
@@ -296,7 +296,7 @@ describe("PUT /rooms/:id", () => {
 
   test("returns 403 for a non-privileged member", async () => {
     const response = await request({
-      path: "/rooms/1",
+      path: "/room/rooms/1",
       token: await memberToken(),
       method: "PUT",
       body: { name: "Hacked Room", capacity: 1, location: null },
@@ -307,7 +307,7 @@ describe("PUT /rooms/:id", () => {
 
   test("returns 404 for an unknown room", async () => {
     const response = await request({
-      path: "/rooms/9999",
+      path: "/room/rooms/9999",
       token: await adminToken(),
       method: "PUT",
       body: { name: "Ghost Room", capacity: 5, location: null },
@@ -320,7 +320,7 @@ describe("PUT /rooms/:id", () => {
 describe("DELETE /rooms/:id", () => {
   test("deletes a room for an admin and returns 204", async () => {
     const response = await request({
-      path: "/rooms/1",
+      path: "/room/rooms/1",
       token: await adminToken(),
       method: "DELETE",
     })
@@ -330,7 +330,7 @@ describe("DELETE /rooms/:id", () => {
 
   test("returns 403 for a non-privileged member", async () => {
     const response = await request({
-      path: "/rooms/1",
+      path: "/room/rooms/1",
       token: await memberToken(),
       method: "DELETE",
     })
@@ -340,7 +340,7 @@ describe("DELETE /rooms/:id", () => {
 
   test("returns 404 for an unknown room", async () => {
     const response = await request({
-      path: "/rooms/9999",
+      path: "/room/rooms/9999",
       token: await adminToken(),
       method: "DELETE",
     })
@@ -349,7 +349,7 @@ describe("DELETE /rooms/:id", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/rooms/1", token: null, method: "DELETE" })
+    const response = await request({ path: "/room/rooms/1", token: null, method: "DELETE" })
 
     expect(response.status).toBe(401)
   })
@@ -366,7 +366,7 @@ describe("DELETE /rooms/:id", () => {
     expect(before?.cnt).toBe(2)
 
     const response = await app.request(
-      "/rooms/1",
+      "/room/rooms/1",
       {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },

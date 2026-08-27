@@ -20,7 +20,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["onboarding-templates"].$get({
+    const response = await client["onboarding"]["onboarding-templates"].$get({
       query: { kind: query.kind },
     })
 

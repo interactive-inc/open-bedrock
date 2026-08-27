@@ -112,7 +112,7 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href="/inbox/applications" />}
+              render={<Link href="/company/inbox/applications" />}
             >
               承認 inbox
             </Button>
@@ -232,18 +232,8 @@ function toStatus(value: string | null): ApplicationStatus | null {
   return null
 }
 
-function toApplicantId(raw: string | null): number | null {
-  if (raw === null) {
-    return null
-  }
-
-  const parsed = Number(raw)
-
-  if (Number.isInteger(parsed) === false || parsed <= 0) {
-    return null
-  }
-
-  return parsed
+function toApplicantId(raw: string | null): string | null {
+  return raw === null || raw.length > 128 ? null : raw
 }
 
 function toSort(raw: string | null): ApplicationAdminSort {

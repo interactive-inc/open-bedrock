@@ -86,7 +86,7 @@ async function request(props: {
 describe("GET /shift-swap-requests/me", () => {
   test("returns only the requester's own requests", async () => {
     const response = await request({
-      path: "/shift-swap-requests/me",
+      path: "/shift/shift-swap-requests/me",
       token: await tokenFor(5),
     })
 
@@ -105,7 +105,7 @@ describe("GET /shift-swap-requests/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/shift-swap-requests/me", token: null })
+    const response = await request({ path: "/shift/shift-swap-requests/me", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -114,7 +114,7 @@ describe("GET /shift-swap-requests/me", () => {
 describe("GET /shift-swap-requests/:id", () => {
   test("the requester can read their own request", async () => {
     const response = await request({
-      path: "/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/1",
       token: await tokenFor(5),
     })
 
@@ -131,7 +131,7 @@ describe("GET /shift-swap-requests/:id", () => {
 
   test("an approver can read another person's request", async () => {
     const response = await request({
-      path: "/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/1",
       token: await tokenFor(1),
     })
 
@@ -140,7 +140,7 @@ describe("GET /shift-swap-requests/:id", () => {
 
   test("returns 403 for a non-requester non-approver", async () => {
     const response = await request({
-      path: "/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/1",
       token: await tokenFor(10),
     })
 
@@ -149,7 +149,7 @@ describe("GET /shift-swap-requests/:id", () => {
 
   test("returns 404 for an unknown request", async () => {
     const response = await request({
-      path: "/shift-swap-requests/9999",
+      path: "/shift/shift-swap-requests/9999",
       token: await tokenFor(5),
     })
 
@@ -160,7 +160,7 @@ describe("GET /shift-swap-requests/:id", () => {
 describe("DELETE /shift-swap-requests/:id", () => {
   test("the requester cancels their pending request and returns 204", async () => {
     const response = await request({
-      path: "/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/1",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -170,7 +170,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
 
   test("returns 403 when cancelling another person's request", async () => {
     const response = await request({
-      path: "/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/1",
       token: await tokenFor(4),
       method: "DELETE",
     })
@@ -180,7 +180,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
 
   test("returns 409 when cancelling an approved request", async () => {
     const response = await request({
-      path: "/shift-swap-requests/2",
+      path: "/shift/shift-swap-requests/2",
       token: await tokenFor(4),
       method: "DELETE",
     })
@@ -190,7 +190,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
 
   test("returns 404 for an unknown request", async () => {
     const response = await request({
-      path: "/shift-swap-requests/9999",
+      path: "/shift/shift-swap-requests/9999",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -200,7 +200,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/1",
       token: null,
       method: "DELETE",
     })

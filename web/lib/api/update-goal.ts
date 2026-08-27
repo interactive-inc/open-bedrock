@@ -12,7 +12,7 @@ export async function updateGoal(
 ): Promise<GoalResponse | Error> {
   const client = await createClient()
 
-  const response = await client["performance-goals"][":goalId"].$put({
+  const response = await client["performance-review"]["performance-goals"][":goalId"].$put({
     param: { goalId: String(goalId) },
     json: request,
   })

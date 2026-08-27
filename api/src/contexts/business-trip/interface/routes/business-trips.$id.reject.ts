@@ -1,4 +1,4 @@
-import { AdvanceBusinessTrip } from "@/contexts/business-trip/application/advance-business-trip"
+import { RejectBusinessTrip } from "@/contexts/business-trip/application/reject-business-trip"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -16,10 +16,9 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const updated = await new AdvanceBusinessTrip(c).run({
+  const updated = await new RejectBusinessTrip(c).execute({
     session: session,
     businessTripId: validateUuidParam(c.req.param("id"), "business trip"),
-    action: "reject",
   })
 
   if (updated instanceof ApplicationError) {

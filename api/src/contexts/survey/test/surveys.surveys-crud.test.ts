@@ -45,11 +45,11 @@ const testApp = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
-  .get("/surveys/:surveyId/summary", ...surveySummaryRoute.GET)
-  .post("/surveys/:surveyId/responses", ...surveyResponseCreateRoute.POST)
-  .post("/surveys", ...surveyCreateRoute.POST)
-  .put("/surveys/:surveyId", ...surveyDetailRoute.PUT)
-  .delete("/surveys/:surveyId", ...surveyDetailRoute.DELETE)
+  .get("/survey/surveys/:surveyId/summary", ...surveySummaryRoute.GET)
+  .post("/survey/surveys/:surveyId/responses", ...surveyResponseCreateRoute.POST)
+  .post("/survey/surveys", ...surveyCreateRoute.POST)
+  .put("/survey/surveys/:surveyId", ...surveyDetailRoute.PUT)
+  .delete("/survey/surveys/:surveyId", ...surveyDetailRoute.DELETE)
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
@@ -148,7 +148,7 @@ async function request(props: {
 describe("POST /surveys", () => {
   test("creates a survey and returns 201 with a generated id", async () => {
     const response = await request({
-      path: "/surveys",
+      path: "/survey/surveys",
       token: await adminToken(),
       method: "POST",
       body: {
@@ -173,7 +173,7 @@ describe("POST /surveys", () => {
 
   test("returns 403 for a non-admin", async () => {
     const response = await request({
-      path: "/surveys",
+      path: "/survey/surveys",
       token: await memberToken(),
       method: "POST",
       body: { title: "X", status: "open", questions_json: [] },
@@ -184,7 +184,7 @@ describe("POST /surveys", () => {
 
   test("returns 400 when title is missing", async () => {
     const response = await request({
-      path: "/surveys",
+      path: "/survey/surveys",
       token: await adminToken(),
       method: "POST",
       body: { status: "open", questions_json: [] },
@@ -195,7 +195,7 @@ describe("POST /surveys", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/surveys",
+      path: "/survey/surveys",
       token: null,
       method: "POST",
       body: { title: "X", status: "open", questions_json: [] },
@@ -208,7 +208,7 @@ describe("POST /surveys", () => {
 describe("PUT /surveys/:surveyId", () => {
   test("updates a survey without responses and returns 200", async () => {
     const response = await request({
-      path: "/surveys/2",
+      path: "/survey/surveys/2",
       token: await adminToken(),
       method: "PUT",
       body: {
@@ -233,7 +233,7 @@ describe("PUT /surveys/:surveyId", () => {
 
   test("returns 409 when changing questions on a survey with responses", async () => {
     const response = await request({
-      path: "/surveys/1",
+      path: "/survey/surveys/1",
       token: await adminToken(),
       method: "PUT",
       body: {
@@ -248,7 +248,7 @@ describe("PUT /surveys/:surveyId", () => {
 
   test("allows changing questions on a survey without responses", async () => {
     const response = await request({
-      path: "/surveys/2",
+      path: "/survey/surveys/2",
       token: await adminToken(),
       method: "PUT",
       body: {
@@ -263,7 +263,7 @@ describe("PUT /surveys/:surveyId", () => {
 
   test("returns 403 for a non-admin", async () => {
     const response = await request({
-      path: "/surveys/1",
+      path: "/survey/surveys/1",
       token: await memberToken(),
       method: "PUT",
       body: { title: "X", status: "open", questions_json: [] },
@@ -274,7 +274,7 @@ describe("PUT /surveys/:surveyId", () => {
 
   test("returns 404 for an unknown survey", async () => {
     const response = await request({
-      path: "/surveys/9999",
+      path: "/survey/surveys/9999",
       token: await adminToken(),
       method: "PUT",
       body: { title: "X", status: "open", questions_json: [] },
@@ -285,7 +285,7 @@ describe("PUT /surveys/:surveyId", () => {
 
   test("returns 400 when status is invalid", async () => {
     const response = await request({
-      path: "/surveys/1",
+      path: "/survey/surveys/1",
       token: await adminToken(),
       method: "PUT",
       body: { title: "X", status: "paused", questions_json: [] },
@@ -297,7 +297,7 @@ describe("PUT /surveys/:surveyId", () => {
   // #910: closed → open の再開は禁止し、409 を返す。
   test("returns 409 when reopening a closed survey", async () => {
     const response = await request({
-      path: "/surveys/3",
+      path: "/survey/surveys/3",
       token: await adminToken(),
       method: "PUT",
       body: {
@@ -314,7 +314,7 @@ describe("PUT /surveys/:surveyId", () => {
 describe("DELETE /surveys/:surveyId", () => {
   test("deletes a closed survey and returns 204", async () => {
     const response = await request({
-      path: "/surveys/3",
+      path: "/survey/surveys/3",
       token: await adminToken(),
       method: "DELETE",
     })
@@ -324,7 +324,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
   test("returns 409 when deleting an open survey", async () => {
     const response = await request({
-      path: "/surveys/1",
+      path: "/survey/surveys/1",
       token: await adminToken(),
       method: "DELETE",
     })
@@ -334,7 +334,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
   test("returns 403 for a non-admin", async () => {
     const response = await request({
-      path: "/surveys/1",
+      path: "/survey/surveys/1",
       token: await memberToken(),
       method: "DELETE",
     })
@@ -344,7 +344,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
   test("returns 404 for an unknown survey", async () => {
     const response = await request({
-      path: "/surveys/9999",
+      path: "/survey/surveys/9999",
       token: await adminToken(),
       method: "DELETE",
     })
@@ -354,7 +354,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/surveys/1",
+      path: "/survey/surveys/1",
       token: null,
       method: "DELETE",
     })
@@ -379,7 +379,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
     // Survey 1 has 3 seed responses. Confirm they exist via summary.
     const summaryBefore = await testApp.request(
-      "/surveys/1/summary",
+      "/survey/surveys/1/summary",
       { method: "GET", headers: { Authorization: `Bearer ${token}` } },
       bindings,
     )
@@ -392,7 +392,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
     // Delete the now-closed survey.
     const deleteRes = await testApp.request(
-      "/surveys/1",
+      "/survey/surveys/1",
       { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
       bindings,
     )
@@ -401,7 +401,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
     // Summary should now 404 because the survey is gone.
     const summaryAfter = await testApp.request(
-      "/surveys/1/summary",
+      "/survey/surveys/1/summary",
       { method: "GET", headers: { Authorization: `Bearer ${token}` } },
       bindings,
     )

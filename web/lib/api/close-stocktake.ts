@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function closeStocktake(id: string) {
   const client = await createClient()
 
-  const response = await client.stocktakes[":id"].close.$post({ param: { id } })
+  const response = await client["asset"]["stocktakes"][":id"].close.$post({ param: { id } })
 
   if (response.status >= 400) {
     return toResponseError(response, {

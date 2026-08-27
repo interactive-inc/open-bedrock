@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function openReviewCycle(cycleId: number) {
   const client = await createClient()
 
-  const response = await client["review-cycles"][":cycleId"].open.$post({
+  const response = await client["performance-review"]["review-cycles"][":cycleId"].open.$post({
     param: { cycleId: String(cycleId) },
   })
 

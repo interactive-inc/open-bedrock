@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["onboarding-tasks"][":id"].uncomplete.$post({
+    const response = await client["onboarding"]["onboarding-tasks"][":id"].uncomplete.$post({
       param: { id: taskId },
     })
 

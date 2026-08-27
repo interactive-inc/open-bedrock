@@ -13,7 +13,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["career-sheets"].me.$delete()
+    const response = await client["career"]["career-sheets"].me.$delete()
 
     if (response.status !== 204) {
       throw new UsageError("キャリアシートの削除に失敗しました")

@@ -22,8 +22,8 @@ export default factory.createHandlers(
 
     const response =
       query.inbox === undefined
-        ? await client["thanks-redemptions"].me.$get()
-        : await client["thanks-redemptions"].inbox.$get()
+        ? await client["thanks"]["thanks-redemptions"].me.$get()
+        : await client["thanks"]["thanks-redemptions"].inbox.$get()
 
     return c.json(await response.json())
   },

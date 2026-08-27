@@ -35,7 +35,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["thanks-rewards"].$post({
+    const response = await client["thanks"]["thanks-rewards"].$post({
       json: { name: query.name, point_cost: cost, stock },
     })
 

@@ -43,7 +43,7 @@ async function createCommendation(db: D1Database): Promise<number> {
   const response = await requestWithContext({
     db,
     jwtSecret,
-    path: "/commendations",
+    path: "/commendation/commendations",
     token: await tokenFor(1),
     method: "POST",
     body: {
@@ -70,7 +70,7 @@ describe("commendations", () => {
     const list = await requestWithContext({
       db,
       jwtSecret,
-      path: "/commendations",
+      path: "/commendation/commendations",
       token: await tokenFor(5),
     })
 
@@ -91,7 +91,7 @@ describe("commendations", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/commendations?employee_id=9",
+      path: "/commendation/commendations?employee_id=9",
       token: await tokenFor(5),
     })
 
@@ -104,7 +104,7 @@ describe("commendations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/commendations",
+      path: "/commendation/commendations",
       token: await tokenFor(5),
       method: "POST",
       body: { employee_id: "5", title: "x", reason: "y", awarded_on: "2026-06-01" },
@@ -121,7 +121,7 @@ describe("commendations", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/commendations/${id}`,
+      path: `/commendation/commendations/${id}`,
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -137,7 +137,7 @@ describe("commendations", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/commendations/${id}`,
+      path: `/commendation/commendations/${id}`,
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -149,7 +149,7 @@ describe("commendations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/commendations",
+      path: "/commendation/commendations",
       token: null,
     })
 

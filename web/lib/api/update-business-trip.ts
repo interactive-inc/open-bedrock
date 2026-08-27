@@ -12,7 +12,7 @@ export async function updateBusinessTrip(
 ): Promise<BusinessTripResponse | Error> {
   const client = await createClient()
 
-  const response = await client["business-trips"][":id"].$put({
+  const response = await client["business-trip"]["business-trips"][":id"].$put({
     param: { id },
     json: request,
   })

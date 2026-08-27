@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function archiveRegulation(code: string) {
   const client = await createClient()
 
-  const response = await client.regulations[":code"].archive.$post({
+  const response = await client["regulation"]["regulations"][":code"].archive.$post({
     param: { code: code },
   })
 

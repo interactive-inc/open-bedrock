@@ -84,7 +84,7 @@ async function getRequest(path: string, token: string | null): Promise<Response>
 describe("GET /rooms/availability", () => {
   test("returns 200 with the nested room shape the CLI table expects", async () => {
     const response = await getRequest(
-      "/rooms/availability?start_at=2026-05-29T01:30:00Z&end_at=2026-05-29T02:30:00Z&capacity=0",
+      "/room/rooms/availability?start_at=2026-05-29T01:30:00Z&end_at=2026-05-29T02:30:00Z&capacity=0",
       await managerToken(),
     )
 
@@ -116,7 +116,7 @@ describe("GET /rooms/availability", () => {
 
   test("filters rooms by minimum capacity", async () => {
     const response = await getRequest(
-      "/rooms/availability?start_at=2026-05-29T01:30:00Z&end_at=2026-05-29T02:30:00Z&capacity=10",
+      "/room/rooms/availability?start_at=2026-05-29T01:30:00Z&end_at=2026-05-29T02:30:00Z&capacity=10",
       await managerToken(),
     )
 
@@ -135,7 +135,7 @@ describe("GET /rooms/availability", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await getRequest(
-      "/rooms/availability?start_at=2026-05-29T01:30:00Z&end_at=2026-05-29T02:30:00Z&capacity=0",
+      "/room/rooms/availability?start_at=2026-05-29T01:30:00Z&end_at=2026-05-29T02:30:00Z&capacity=0",
       null,
     )
 
@@ -144,7 +144,7 @@ describe("GET /rooms/availability", () => {
 
   test("returns 400 when start_at is missing", async () => {
     const response = await getRequest(
-      "/rooms/availability?end_at=2026-05-29T02:30:00Z",
+      "/room/rooms/availability?end_at=2026-05-29T02:30:00Z",
       await managerToken(),
     )
 
@@ -153,7 +153,7 @@ describe("GET /rooms/availability", () => {
 
   test("?limit=1 returns only 1 room when seed has 5 matching capacity=0", async () => {
     const response = await getRequest(
-      "/rooms/availability?start_at=2026-05-29T01:30:00Z&end_at=2026-05-29T02:30:00Z&capacity=0&limit=1",
+      "/room/rooms/availability?start_at=2026-05-29T01:30:00Z&end_at=2026-05-29T02:30:00Z&capacity=0&limit=1",
       await managerToken(),
     )
 
@@ -216,7 +216,7 @@ describe("GET /rooms/availability", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/rooms/availability?start_at=2026-06-01T09:15:00Z&end_at=2026-06-01T10:15:00Z&capacity=0",
+      path: "/room/rooms/availability?start_at=2026-06-01T09:15:00Z&end_at=2026-06-01T10:15:00Z&capacity=0",
       token,
     })
 
@@ -301,7 +301,7 @@ describe("GET /rooms/availability", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/rooms/availability?start_at=2026-06-02T10:00:00Z&end_at=2026-06-02T11:30:00Z&capacity=0",
+      path: "/room/rooms/availability?start_at=2026-06-02T10:00:00Z&end_at=2026-06-02T11:30:00Z&capacity=0",
       token,
     })
 

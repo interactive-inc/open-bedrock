@@ -104,7 +104,7 @@ async function request(
 
 describe("POST /assets", () => {
   test("privileged role creates an asset and returns 201", async () => {
-    const response = await request("/assets", await adminToken(), "POST", {
+    const response = await request("/asset/assets", await adminToken(), "POST", {
       code: "A0099",
       name: "New Laptop",
       kind: "pc",
@@ -123,7 +123,7 @@ describe("POST /assets", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/assets", await memberToken(), "POST", {
+    const response = await request("/asset/assets", await memberToken(), "POST", {
       code: "A0099",
       name: "New Laptop",
       kind: "pc",
@@ -133,7 +133,7 @@ describe("POST /assets", () => {
   })
 
   test("duplicate code returns 409", async () => {
-    const response = await request("/assets", await adminToken(), "POST", {
+    const response = await request("/asset/assets", await adminToken(), "POST", {
       code: "A0001",
       name: "Duplicate",
       kind: "pc",
@@ -143,7 +143,7 @@ describe("POST /assets", () => {
   })
 
   test("returns 400 for an invalid kind", async () => {
-    const response = await request("/assets", await adminToken(), "POST", {
+    const response = await request("/asset/assets", await adminToken(), "POST", {
       code: "A0098",
       name: "X",
       kind: "bogus",
@@ -153,7 +153,7 @@ describe("POST /assets", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/assets", null, "POST", {
+    const response = await request("/asset/assets", null, "POST", {
       code: "A0097",
       name: "X",
       kind: "pc",

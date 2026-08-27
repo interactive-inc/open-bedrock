@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getMeetingList(query: { limit: number; offset: number }) {
   const client = await createClient()
 
-  const response = await client.meetings.$get({
+  const response = await client["meeting"]["meetings"].$get({
     query: {
       limit: String(query.limit),
       offset: String(query.offset),

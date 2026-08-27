@@ -9,7 +9,7 @@ import type { AttendanceSearchQuery } from "@/lib/api/types/attendance-types"
 export async function getAttendanceList(query: AttendanceSearchQuery) {
   const client = await createClient()
 
-  const response = await client["attendance-records"].$get({
+  const response = await client["attendance"]["attendance-records"].$get({
     query: {
       employee_id: query.employeeId ?? undefined,
       from: query.from ?? undefined,

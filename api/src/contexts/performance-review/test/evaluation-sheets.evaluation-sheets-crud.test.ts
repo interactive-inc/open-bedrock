@@ -94,7 +94,7 @@ async function createSheet(
   const response = await requestWithContext({
     db,
     jwtSecret,
-    path: "/evaluation-sheets",
+    path: "/performance-review/evaluation-sheets",
     token,
     method: "POST",
     body,
@@ -122,7 +122,7 @@ describe("GET /evaluation-sheets", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token,
       method: "GET",
     })
@@ -146,7 +146,7 @@ describe("GET /evaluation-sheets", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token,
       method: "GET",
     })
@@ -168,7 +168,7 @@ describe("GET /evaluation-sheets/me", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets/me",
+      path: "/performance-review/evaluation-sheets/me",
       token,
       method: "GET",
     })
@@ -196,7 +196,7 @@ describe("GET /evaluation-sheets/me", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets/me?period=2026-H1",
+      path: "/performance-review/evaluation-sheets/me?period=2026-H1",
       token,
       method: "GET",
     })
@@ -220,7 +220,7 @@ async function seedGoals(db: D1Database, sheetId: number): Promise<void> {
   const res = await requestWithContext({
     db,
     jwtSecret,
-    path: "/performance-goals",
+    path: "/performance-review/performance-goals",
     token,
     method: "POST",
     body: { period: "2026-H1", title: "Goal", weight: 100, evaluation_sheet_id: sheetId },
@@ -244,7 +244,7 @@ describe("POST /evaluation-sheets/:sheetId/transition", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet.id}/transition`,
+      path: `/performance-review/evaluation-sheets/${sheet.id}/transition`,
       token,
       method: "POST",
       body: {
@@ -274,7 +274,7 @@ describe("POST /evaluation-sheets/:sheetId/transition", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet.id}/transition`,
+      path: `/performance-review/evaluation-sheets/${sheet.id}/transition`,
       token,
       method: "POST",
       body: {
@@ -296,7 +296,7 @@ describe("POST /evaluation-sheets/:sheetId/transition", () => {
     const submitRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet.id}/transition`,
+      path: `/performance-review/evaluation-sheets/${sheet.id}/transition`,
       token: ownerTk,
       method: "POST",
       body: {
@@ -314,7 +314,7 @@ describe("POST /evaluation-sheets/:sheetId/transition", () => {
     const approveRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet.id}/transition`,
+      path: `/performance-review/evaluation-sheets/${sheet.id}/transition`,
       token: adminTk,
       method: "POST",
       body: {
@@ -346,7 +346,7 @@ describe("POST /evaluation-sheets/:sheetId/transition", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet.id}/transition`,
+      path: `/performance-review/evaluation-sheets/${sheet.id}/transition`,
       token: otherToken,
       method: "POST",
       body: {
@@ -373,7 +373,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet.id}/evaluators`,
+      path: `/performance-review/evaluation-sheets/${sheet.id}/evaluators`,
       token,
       method: "PUT",
       body: {
@@ -403,7 +403,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet.id}/evaluators`,
+      path: `/performance-review/evaluation-sheets/${sheet.id}/evaluators`,
       token,
       method: "PUT",
       body: {
@@ -425,7 +425,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet.id}/evaluators`,
+      path: `/performance-review/evaluation-sheets/${sheet.id}/evaluators`,
       token,
       method: "PUT",
       body: {
@@ -446,7 +446,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet.id}/evaluators`,
+      path: `/performance-review/evaluation-sheets/${sheet.id}/evaluators`,
       token,
       method: "PUT",
       body: {
@@ -468,7 +468,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet.id}/evaluators`,
+      path: `/performance-review/evaluation-sheets/${sheet.id}/evaluators`,
       token,
       method: "PUT",
       body: {
@@ -489,7 +489,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet.id}/evaluators`,
+      path: `/performance-review/evaluation-sheets/${sheet.id}/evaluators`,
       token,
       method: "PUT",
       body: {

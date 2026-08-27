@@ -5,7 +5,7 @@ import type { ShiftPatternResponse } from "@/lib/api/types/shift-types"
 export async function getShiftPatterns(): Promise<Array<ShiftPatternResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["shift-patterns"].$get()
+  const response = await client["shift"]["shift-patterns"].$get()
 
   if (response.status >= 400) {
     return new Error("failed to load shift patterns")

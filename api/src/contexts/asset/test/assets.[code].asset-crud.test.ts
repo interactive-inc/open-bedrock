@@ -43,8 +43,8 @@ const localApp = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
-  .put("/assets/:code", ...PUT)
-  .delete("/assets/:code", ...DELETE)
+  .put("/asset/assets/:code", ...PUT)
+  .delete("/asset/assets/:code", ...DELETE)
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
@@ -135,7 +135,7 @@ async function request(
 
 describe("PUT /assets/:code", () => {
   test("privileged role updates asset details and returns 200", async () => {
-    const response = await request("/assets/A0003", await adminToken(), "PUT", {
+    const response = await request("/asset/assets/A0003", await adminToken(), "PUT", {
       name: "Updated Notebook",
       kind: "monitor",
       serial: "SN-NEW",
@@ -157,7 +157,7 @@ describe("PUT /assets/:code", () => {
   })
 
   test("returns 403 for a non-privileged role", async () => {
-    const response = await request("/assets/A0003", await memberToken(), "PUT", {
+    const response = await request("/asset/assets/A0003", await memberToken(), "PUT", {
       name: "Hijacked",
       kind: "pc",
     })
@@ -166,7 +166,7 @@ describe("PUT /assets/:code", () => {
   })
 
   test("returns 404 for a missing asset", async () => {
-    const response = await request("/assets/A9999", await adminToken(), "PUT", {
+    const response = await request("/asset/assets/A9999", await adminToken(), "PUT", {
       name: "Ghost",
       kind: "pc",
     })
@@ -177,25 +177,25 @@ describe("PUT /assets/:code", () => {
 
 describe("DELETE /assets/:code", () => {
   test("privileged role deletes an in_stock asset and returns 204", async () => {
-    const response = await request("/assets/A0003", await adminToken(), "DELETE")
+    const response = await request("/asset/assets/A0003", await adminToken(), "DELETE")
 
     expect(response.status).toBe(204)
   })
 
   test("returns 409 when the asset is currently lent", async () => {
-    const response = await request("/assets/A0001", await adminToken(), "DELETE")
+    const response = await request("/asset/assets/A0001", await adminToken(), "DELETE")
 
     expect(response.status).toBe(409)
   })
 
   test("returns 403 for a non-privileged role", async () => {
-    const response = await request("/assets/A0003", await memberToken(), "DELETE")
+    const response = await request("/asset/assets/A0003", await memberToken(), "DELETE")
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for a missing asset", async () => {
-    const response = await request("/assets/A9999", await adminToken(), "DELETE")
+    const response = await request("/asset/assets/A9999", await adminToken(), "DELETE")
 
     expect(response.status).toBe(404)
   })

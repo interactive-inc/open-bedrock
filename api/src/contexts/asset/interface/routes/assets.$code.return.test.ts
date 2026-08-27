@@ -104,7 +104,7 @@ async function request(
 
 describe("POST /assets/:code/return", () => {
   test("privileged role returns a lent asset and returns 200", async () => {
-    const response = await request("/assets/A0001/return", await adminToken(), "POST")
+    const response = await request("/asset/assets/A0001/return", await adminToken(), "POST")
 
     expect(response.status).toBe(200)
 
@@ -119,25 +119,25 @@ describe("POST /assets/:code/return", () => {
   })
 
   test("returns 409 when the asset is not lent", async () => {
-    const response = await request("/assets/A0003/return", await adminToken(), "POST")
+    const response = await request("/asset/assets/A0003/return", await adminToken(), "POST")
 
     expect(response.status).toBe(409)
   })
 
   test("returns 404 for a missing asset", async () => {
-    const response = await request("/assets/A9999/return", await adminToken(), "POST")
+    const response = await request("/asset/assets/A9999/return", await adminToken(), "POST")
 
     expect(response.status).toBe(404)
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/assets/A0001/return", await memberToken(), "POST")
+    const response = await request("/asset/assets/A0001/return", await memberToken(), "POST")
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/assets/A0001/return", null, "POST")
+    const response = await request("/asset/assets/A0001/return", null, "POST")
 
     expect(response.status).toBe(401)
   })

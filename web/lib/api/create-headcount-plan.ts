@@ -10,7 +10,7 @@ export async function createHeadcountPlan(request: {
 }) {
   const client = await createClient()
 
-  const response = await client["headcount-plans"].$post({ json: request })
+  const response = await client["headcount-plan"]["headcount-plans"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

@@ -66,7 +66,7 @@ describe("POST /life-events/:id/reject", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/life-events/${seedId}/reject`,
+      path: `/life-event/life-events/${seedId}/reject`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -86,7 +86,7 @@ describe("POST /life-events/:id/reject", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/life-events/${seedId}/reject`,
+      path: `/life-event/life-events/${seedId}/reject`,
       token: await tokenFor(5),
       method: "POST",
     })
@@ -100,7 +100,7 @@ describe("POST /life-events/:id/reject", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: `/life-events/${seedId}/reject`,
+      path: `/life-event/life-events/${seedId}/reject`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -110,7 +110,7 @@ describe("POST /life-events/:id/reject", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: `/life-events/${seedId}/reject`,
+      path: `/life-event/life-events/${seedId}/reject`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -122,7 +122,7 @@ describe("POST /life-events/:id/reject", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/life-events/${seedId}/reject`,
+      path: `/life-event/life-events/${seedId}/reject`,
       token: null,
       method: "POST",
     })

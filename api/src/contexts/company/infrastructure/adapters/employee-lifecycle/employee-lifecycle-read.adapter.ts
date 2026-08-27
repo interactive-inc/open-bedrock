@@ -2,10 +2,17 @@ import type { LifecycleEmployeeStatus } from "@/contexts/company/domain/definiti
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { CompanyOperationError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import type {
+  EmploymentId,
+  OrganizationUnitId,
+  WorkforcePeriodId,
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 
 export type LifecycleAssignmentState = {
-  periodId: string
-  employmentPeriodId: string
+  periodId: WorkforcePeriodId
+  employmentPeriodId: EmploymentId
+  organizationUnitId: OrganizationUnitId
   departmentCode: string
   departmentName: string
   assignmentType: "primary" | "concurrent"
@@ -16,15 +23,24 @@ export type LifecycleAssignmentState = {
   endsOn: string | null
 }
 
+export type LifecycleResponsibilityState = {
+  periodId: WorkforcePeriodId
+  employmentPeriodId: EmploymentId
+  organizationUnitId: OrganizationUnitId
+  departmentCode: string
+  startsOn: string
+  endsOn: string | null
+}
+
 export type EmployeeLifecycleState = {
   employeeId: EmployeeId
   employeeCode: string
   asOf: string
   status: LifecycleEmployeeStatus
-  archived: boolean
-  employmentPeriodId: string | null
+  employmentPeriodId: EmploymentId | null
   primaryAssignment: LifecycleAssignmentState | null
   concurrentAssignments: ReadonlyArray<LifecycleAssignmentState>
+  responsibilities: ReadonlyArray<LifecycleResponsibilityState>
   responsibilityDepartmentCodes: ReadonlyArray<string>
   employeeRevision: number
   organizationRevision: number
@@ -33,7 +49,6 @@ export type EmployeeLifecycleState = {
 type EmployeeRow = {
   id: EmployeeId
   code: string
-  archived_at: number | null
   employee_revision: number
   organization_revision: number
 }
@@ -51,7 +66,8 @@ type StatusRow = EmploymentRow & {
 }
 
 type AssignmentRow = EmploymentRow & {
-  employment_period_id: string
+  employment_period_id: EmploymentId
+  organization_unit_id: OrganizationUnitId
   department_code: string
   department_name: string
   assignment_type: "primary" | "concurrent"
@@ -60,8 +76,14 @@ type AssignmentRow = EmploymentRow & {
   manager_employee_code: string | null
 }
 
-type ResponsibilityRow = EmploymentRow & {
+type ResponsibilityRow = {
+  period_id: WorkforcePeriodId
+  employment_period_id: EmploymentId
+  employee_id: EmployeeId
+  organization_unit_id: OrganizationUnitId
   department_code: string
+  starts_on: string
+  ends_on: string | null
 }
 
 function contains(row: { starts_on: string; ends_on: string | null }, asOf: string): boolean {
@@ -90,7 +112,7 @@ export class EmployeeLifecycleReadAdapter {
       const [employeeRows, employmentRows, statusRows, assignmentRows, responsibilityRows] =
         await Promise.all([
           this.c.env.DB.prepare(
-            `SELECT employee.id, employee.employee_code AS code, NULL AS archived_at,
+            `SELECT employee.id, employee.employee_code AS code,
                       COALESCE(revision.revision, 0) AS employee_revision,
                       COALESCE((SELECT revision FROM company_organization_lifecycle_states WHERE id = 1), 0)
                         AS organization_revision
@@ -130,7 +152,7 @@ export class EmployeeLifecycleReadAdapter {
             .all<StatusRow>(),
           this.c.env.DB.prepare(
             `SELECT current.period_id, current.employment_id AS employment_period_id,
-                      current.employee_id,
+                      current.employee_id, current.organization_unit_id,
                       (
                         SELECT unit.code
                         FROM company_organization_unit_period_versions AS unit
@@ -181,7 +203,8 @@ export class EmployeeLifecycleReadAdapter {
             .bind(...ids)
             .all<AssignmentRow>(),
           this.c.env.DB.prepare(
-            `SELECT current.period_id, current.employee_id,
+            `SELECT current.period_id, current.employment_id AS employment_period_id,
+                      current.employee_id, current.organization_unit_id,
                       (
                         SELECT unit.code
                         FROM company_organization_unit_period_versions AS unit
@@ -237,8 +260,9 @@ export class EmployeeLifecycleReadAdapter {
               contains(row, asOf),
           )
           .map((row) => ({
-            periodId: row.period_id,
-            employmentPeriodId: row.employment_period_id,
+            periodId: restoreWorkforceId("period", row.period_id),
+            employmentPeriodId: restoreWorkforceId("employment", row.employment_period_id),
+            organizationUnitId: restoreWorkforceId("organization_unit", row.organization_unit_id),
             departmentCode: row.department_code,
             departmentName: row.department_name,
             assignmentType: row.assignment_type,
@@ -259,13 +283,26 @@ export class EmployeeLifecycleReadAdapter {
           employeeCode: employee.code,
           asOf,
           status,
-          archived: employee.archived_at !== null,
-          employmentPeriodId: employment?.period_id ?? null,
+          employmentPeriodId:
+            employment === undefined
+              ? null
+              : restoreWorkforceId("employment", employment.period_id),
           primaryAssignment:
             assignments.find((assignment) => assignment.assignmentType === "primary") ?? null,
           concurrentAssignments: assignments.filter(
             (assignment) => assignment.assignmentType === "concurrent",
           ),
+          responsibilities: responsibilityRows.results
+            .filter((row) => row.employee_id === employee.id && contains(row, asOf))
+            .map((row) => ({
+              periodId: restoreWorkforceId("period", row.period_id),
+              employmentPeriodId: restoreWorkforceId("employment", row.employment_period_id),
+              organizationUnitId: restoreWorkforceId("organization_unit", row.organization_unit_id),
+              departmentCode: row.department_code,
+              startsOn: row.starts_on,
+              endsOn: row.ends_on,
+            }))
+            .sort((left, right) => left.periodId.localeCompare(right.periodId)),
           responsibilityDepartmentCodes: responsibilityRows.results
             .filter((row) => row.employee_id === employee.id && contains(row, asOf))
             .map((row) => row.department_code)

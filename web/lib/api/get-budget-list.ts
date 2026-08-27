@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 
 export type BudgetListFilter = {
-  departmentId: number | null
+  organizationUnitId: string | null
   fiscalPeriod: string | null
 }
 
@@ -9,9 +9,9 @@ export type BudgetListFilter = {
 export async function getBudgetList(filter: BudgetListFilter) {
   const client = await createClient()
 
-  const response = await client["department-budgets"].$get({
+  const response = await client["expense"]["department-budgets"].$get({
     query: {
-      department_id: filter.departmentId !== null ? String(filter.departmentId) : undefined,
+      organization_unit_id: filter.organizationUnitId ?? undefined,
       fiscal_period: filter.fiscalPeriod ?? undefined,
     },
   })

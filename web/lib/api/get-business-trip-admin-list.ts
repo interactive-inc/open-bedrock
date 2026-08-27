@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 
 export type BusinessTripAdminFilter = {
   status: string | null
-  employeeId: number | null
+  employeeId: string | null
 }
 
 type Params = {
@@ -17,7 +17,7 @@ export async function getBusinessTripAdminList(
 ) {
   const client = await createClient()
 
-  const response = await client["business-trips"].admin.$get({
+  const response = await client["business-trip"]["business-trips"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       employee_id: filter.employeeId !== null ? String(filter.employeeId) : undefined,

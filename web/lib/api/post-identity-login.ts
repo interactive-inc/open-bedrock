@@ -7,14 +7,14 @@ const identityLoginResponseSchema = z.object({
 })
 
 /**
- * POST /system/v1/identity-sessions。外部 identity provider が発行した短命トークンを
+ * POST /system/identity-sessions。外部 identity provider が発行した短命トークンを
  * サーバーサイドで交換し、アクセストークンを取得する。未認証フローで呼ばれる。
  * 拒否理由はアカウントの存在を外部へ漏らさないSystem APIの一律401へ従う。
  */
 export async function postIdentityLogin(body: { token: string }) {
   const client = await createClient()
 
-  const response = await client.system.v1["identity-sessions"].$post({ json: body })
+  const response = await client.system["identity-sessions"].$post({ json: body })
 
   if (response.status >= 400) {
     return new Error("failed to login")

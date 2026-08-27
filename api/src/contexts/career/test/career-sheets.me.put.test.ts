@@ -82,7 +82,7 @@ async function request(props: {
 describe("PUT /career-sheets/me", () => {
   test("returns 200 with the upserted sheet", async () => {
     const response = await request({
-      path: "/career-sheets/me",
+      path: "/career/career-sheets/me",
       token: await tokenForEmployee(1),
       method: "PUT",
       body: { goals_text: "Aim to become a PdM", strengths_text: "Requirements definition" },
@@ -104,7 +104,7 @@ describe("PUT /career-sheets/me", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/career-sheets/me",
+      path: "/career/career-sheets/me",
       token: null,
       method: "PUT",
       body: { goals_text: "x" },
@@ -115,7 +115,7 @@ describe("PUT /career-sheets/me", () => {
 
   test("returns 400 when the body is the wrong shape", async () => {
     const response = await request({
-      path: "/career-sheets/me",
+      path: "/career/career-sheets/me",
       token: await tokenForEmployee(1),
       method: "PUT",
       body: { goals_text: 123 },

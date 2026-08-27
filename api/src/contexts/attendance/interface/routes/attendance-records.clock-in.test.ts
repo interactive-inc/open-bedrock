@@ -94,7 +94,7 @@ describe("POST /attendance-records/clock-in", () => {
     const response = await send({
       db: await createTestDb(),
       method: "POST",
-      path: "/attendance-records/clock-in",
+      path: "/attendance/attendance-records/clock-in",
       token: await tokenFor(10),
       now: "2026-05-29T09:00:00Z",
       body: { note: "morning" },
@@ -119,7 +119,7 @@ describe("POST /attendance-records/clock-in", () => {
     const response = await send({
       db: await createTestDb(),
       method: "POST",
-      path: "/attendance-records/clock-in",
+      path: "/attendance/attendance-records/clock-in",
       token: await tokenFor(9),
       now: "2026-05-29T09:00:00Z",
       body: {},
@@ -132,7 +132,7 @@ describe("POST /attendance-records/clock-in", () => {
     const response = await send({
       db: await createTestDb(),
       method: "POST",
-      path: "/attendance-records/clock-in",
+      path: "/attendance/attendance-records/clock-in",
       token: null,
       now: "2026-05-29T09:00:00Z",
       body: {},

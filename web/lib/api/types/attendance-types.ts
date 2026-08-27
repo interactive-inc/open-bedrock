@@ -7,7 +7,7 @@
  */
 export type AttendanceRecord = {
   id: number
-  employee_id: number
+  employee_id: string
   work_date: string
   clock_in_at: string | null
   clock_out_at: string | null
@@ -20,7 +20,7 @@ export type AttendanceRecord = {
  * レスポンスは snake_case なので型もそれに合わせる。
  */
 export type AttendanceSummary = {
-  employee_id: number
+  employee_id: string
   month: string
   work_days: number
   total_work_minutes: number
@@ -28,7 +28,7 @@ export type AttendanceSummary = {
 
 /** GET /attendance-records /attendance/me のクエリ。null のキーは送信されない。 */
 export type AttendanceSearchQuery = {
-  employeeId: number | null
+  employeeId: string | null
   from: string | null
   to: string | null
 }

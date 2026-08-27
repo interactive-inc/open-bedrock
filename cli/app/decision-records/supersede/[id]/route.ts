@@ -33,7 +33,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["decision-records"][":id"].supersede.$post({
+    const response = await client["meeting"]["decision-records"][":id"].supersede.$post({
       param: { id },
       json: { superseded_by_id: supersededById },
     })

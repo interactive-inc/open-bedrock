@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function approveLeaveRequest(id: number, comment: string | null) {
   const client = await createClient()
 
-  const response = await client["leave-requests"][":id"].approve.$post({
+  const response = await client["leave"]["leave-requests"][":id"].approve.$post({
     param: { id: String(id) },
     json: { comment: comment },
   })

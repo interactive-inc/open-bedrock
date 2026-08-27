@@ -6,11 +6,11 @@ import type { EmployeeCertificationResponse } from "@/lib/api/types/certificatio
  * employee_id 省略時は本人分。失敗時は Error を返す。
  */
 export async function listEmployeeCertifications(props: {
-  employeeId?: number
+  employeeId?: string
 }): Promise<ReadonlyArray<EmployeeCertificationResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["employee-certifications"].$get({
+  const response = await client["certification"]["employee-certifications"].$get({
     query: {
       employee_id: props.employeeId !== undefined ? String(props.employeeId) : undefined,
     },

@@ -101,7 +101,7 @@ async function LeaveInboxTable(props: { offset: number; pageSize: number; sort: 
               <TableHead>申請者</TableHead>
               <TableHead>種別</TableHead>
               <SortableTableHead
-                pathname="/inbox/leaves"
+                pathname="/company/inbox/leaves"
                 currentSort={props.sort}
                 ascValue="start_date_asc"
                 descValue="start_date_desc"
@@ -150,7 +150,7 @@ async function LeaveInboxTable(props: { offset: number; pageSize: number; sort: 
       </div>
 
       <TablePagination
-        pathname="/inbox/leaves"
+        pathname="/company/inbox/leaves"
         total={result.total}
         limit={props.pageSize}
         offset={props.offset}

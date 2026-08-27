@@ -91,7 +91,7 @@ async function request(props: {
 
 describe("GET /surveys", () => {
   test("returns 200 with open surveys carrying questions_json", async () => {
-    const response = await request({ path: "/surveys", token: await memberToken() })
+    const response = await request({ path: "/survey/surveys", token: await memberToken() })
 
     expect(response.status).toBe(200)
 
@@ -112,7 +112,7 @@ describe("GET /surveys", () => {
   })
 
   test("returns only 1 survey when limit=1", async () => {
-    const response = await request({ path: "/surveys?limit=1", token: await memberToken() })
+    const response = await request({ path: "/survey/surveys?limit=1", token: await memberToken() })
 
     expect(response.status).toBe(200)
 
@@ -129,7 +129,7 @@ describe("GET /surveys", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/surveys", token: null })
+    const response = await request({ path: "/survey/surveys", token: null })
 
     expect(response.status).toBe(401)
   })

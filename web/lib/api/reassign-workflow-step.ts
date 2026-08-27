@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
 export type ReassignWorkflowStepRequest = {
-  candidate_employee_ids: ReadonlyArray<number>
+  candidate_employee_ids: ReadonlyArray<string>
   required_approvals?: number
   reason: string
 }
@@ -13,7 +13,9 @@ export async function reassignWorkflowStep(
   request: ReassignWorkflowStepRequest,
 ) {
   const client = await createClient()
-  const response = await client["application-requests"][":id"]["reassign-workflow-step"].$post({
+  const response = await client["company"]["application-requests"][":id"][
+    "reassign-workflow-step"
+  ].$post({
     param: { id: String(applicationId) },
     json: {
       candidate_employee_ids: [...request.candidate_employee_ids],

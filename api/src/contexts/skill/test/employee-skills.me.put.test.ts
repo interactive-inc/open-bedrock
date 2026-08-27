@@ -93,7 +93,7 @@ async function request(props: {
 describe("PUT /employee-skills/me", () => {
   test("returns 200 and the joined upserted skill", async () => {
     const response = await request({
-      path: "/employee-skills/me",
+      path: "/skill/employee-skills/me",
       token: await memberToken(),
       method: "PUT",
       body: { skill_code: "react", level: 4, years: 3 },
@@ -117,7 +117,7 @@ describe("PUT /employee-skills/me", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/employee-skills/me",
+      path: "/skill/employee-skills/me",
       token: null,
       method: "PUT",
       body: { skill_code: "react", level: 4 },
@@ -128,7 +128,7 @@ describe("PUT /employee-skills/me", () => {
 
   test("returns 400 when the body is invalid", async () => {
     const response = await request({
-      path: "/employee-skills/me",
+      path: "/skill/employee-skills/me",
       token: await memberToken(),
       method: "PUT",
       body: { skill_code: "react" },
@@ -139,7 +139,7 @@ describe("PUT /employee-skills/me", () => {
 
   test("returns 404 when the skill code does not exist", async () => {
     const response = await request({
-      path: "/employee-skills/me",
+      path: "/skill/employee-skills/me",
       token: await memberToken(),
       method: "PUT",
       body: { skill_code: "missing", level: 4 },

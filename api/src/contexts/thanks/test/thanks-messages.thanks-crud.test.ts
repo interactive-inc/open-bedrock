@@ -92,7 +92,7 @@ describe("POST /thanks-messages", () => {
 
     const response = await request({
       db,
-      path: "/thanks-messages",
+      path: "/thanks/thanks-messages",
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E005", message: "助けてくれてありがとう" },
@@ -117,7 +117,7 @@ describe("POST /thanks-messages", () => {
 
     const response = await request({
       db,
-      path: "/thanks-messages",
+      path: "/thanks/thanks-messages",
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E004", message: "自分にありがとう" },
@@ -131,7 +131,7 @@ describe("POST /thanks-messages", () => {
 
     const response = await request({
       db,
-      path: "/thanks-messages",
+      path: "/thanks/thanks-messages",
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E999", message: "ありがとう" },
@@ -145,7 +145,7 @@ describe("POST /thanks-messages", () => {
 
     const response = await request({
       db,
-      path: "/thanks-messages",
+      path: "/thanks/thanks-messages",
       token: null,
       method: "POST",
       body: { recipient_employee_code: "E005", message: "ありがとう" },
@@ -159,7 +159,7 @@ describe("POST /thanks-messages", () => {
 
     const response = await request({
       db,
-      path: "/thanks-messages",
+      path: "/thanks/thanks-messages",
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E005", message: "あ".repeat(1001) },
@@ -173,7 +173,7 @@ describe("POST /thanks-messages", () => {
 
     const response = await request({
       db,
-      path: "/thanks-messages",
+      path: "/thanks/thanks-messages",
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E005", message: "   " },
@@ -187,7 +187,7 @@ describe("POST /thanks-messages", () => {
 
     const sent = await request({
       db,
-      path: "/thanks-messages",
+      path: "/thanks/thanks-messages",
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E005", message: "サポートに感謝します" },
@@ -248,7 +248,7 @@ describe("GET /thanks-messages", () => {
 
     await request({
       db,
-      path: "/thanks-messages",
+      path: "/thanks/thanks-messages",
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E005", message: "1件目" },
@@ -256,13 +256,17 @@ describe("GET /thanks-messages", () => {
 
     await request({
       db,
-      path: "/thanks-messages",
+      path: "/thanks/thanks-messages",
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E005", message: "2件目" },
     })
 
-    const response = await request({ db, path: "/thanks-messages", token: await recipientToken() })
+    const response = await request({
+      db,
+      path: "/thanks/thanks-messages",
+      token: await recipientToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -284,7 +288,7 @@ describe("GET /thanks-messages", () => {
     for (const message of ["1件目", "2件目", "3件目"]) {
       await request({
         db,
-        path: "/thanks-messages",
+        path: "/thanks/thanks-messages",
         token: await senderToken(),
         method: "POST",
         body: { recipient_employee_code: "E005", message },
@@ -294,7 +298,7 @@ describe("GET /thanks-messages", () => {
     // 新着順は 3件目 → 2件目 → 1件目。offset=1, limit=1 で 2件目だけが返る。
     const response = await request({
       db,
-      path: "/thanks-messages?limit=1&offset=1",
+      path: "/thanks/thanks-messages?limit=1&offset=1",
       token: await recipientToken(),
     })
 
@@ -317,7 +321,7 @@ describe("GET /thanks-messages", () => {
     for (const message of ["1件目", "2件目", "3件目"]) {
       await request({
         db,
-        path: "/thanks-messages",
+        path: "/thanks/thanks-messages",
         token: await senderToken(),
         method: "POST",
         body: { recipient_employee_code: "E005", message },
@@ -326,7 +330,7 @@ describe("GET /thanks-messages", () => {
 
     const response = await request({
       db,
-      path: "/thanks-messages?limit=0",
+      path: "/thanks/thanks-messages?limit=0",
       token: await recipientToken(),
     })
 
@@ -350,7 +354,7 @@ describe("GET /thanks-messages", () => {
     for (const message of ["古い", "新しい"]) {
       await request({
         db,
-        path: "/thanks-messages",
+        path: "/thanks/thanks-messages",
         token: await senderToken(),
         method: "POST",
         body: { recipient_employee_code: "E005", message },
@@ -360,7 +364,7 @@ describe("GET /thanks-messages", () => {
 
     const response = await request({
       db,
-      path: "/thanks-messages",
+      path: "/thanks/thanks-messages",
       token: await recipientToken(),
       now: "2026-01-01T00:00:00.000Z",
     })
@@ -384,7 +388,7 @@ describe("GET /thanks-messages", () => {
   test("returns 401 without a bearer token", async () => {
     const db = await createTestDb()
 
-    const response = await request({ db, path: "/thanks-messages", token: null })
+    const response = await request({ db, path: "/thanks/thanks-messages", token: null })
 
     expect(response.status).toBe(401)
   })

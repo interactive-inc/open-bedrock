@@ -1,4 +1,5 @@
-import { GovernancePublicationService } from "@/contexts/governance/application/governance-publication-service"
+import { ApproveGovernanceReview } from "@/contexts/governance/application/approve-governance-review"
+import { RejectGovernanceReview } from "@/contexts/governance/application/reject-governance-review"
 import { prepareGovernanceAudit } from "@/api/http/audit/prepare-governance-audit"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -9,6 +10,8 @@ import { parseGovernanceVersion } from "@/api/http/utils/parse-governance-versio
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+
+type GovernanceAuditProps = Omit<Parameters<typeof prepareGovernanceAudit>[0], "c">
 
 const request = z.strictObject({
   org_role_code: z.string().min(2).max(120),
@@ -24,18 +27,29 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
   const version = parseGovernanceVersion(c.req.param("version"))
   if (code === null || version === null) throw new NotFoundError("governance version not found")
   const body = c.req.valid("json")
-  const result = await new GovernancePublicationService({
+  const applicationContext = {
     context: c,
-    prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
-  }).decideReview({
+    prepareAudit: (audit: GovernanceAuditProps) => prepareGovernanceAudit({ c, ...audit }),
+  }
+  const input = {
     session,
     code,
     version,
     orgRoleCode: body.org_role_code,
-    decision: body.decision,
     comment: body.comment ?? null,
-  })
+  }
+
+  if (body.decision === "approved") {
+    const result = await new ApproveGovernanceReview(applicationContext).execute(input)
+    if (result instanceof ApplicationError) throw toHttpException(result)
+    if (result instanceof Error) throw result
+
+    return c.json(result, 200)
+  }
+
+  const result = await new RejectGovernanceReview(applicationContext).execute(input)
   if (result instanceof ApplicationError) throw toHttpException(result)
   if (result instanceof Error) throw result
+
   return c.json(result, 200)
 })

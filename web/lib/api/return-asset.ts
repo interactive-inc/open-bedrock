@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function returnAsset(code: string) {
   const client = await createClient()
 
-  const response = await client.assets[":code"].return.$post({
+  const response = await client["asset"]["assets"][":code"].return.$post({
     param: { code },
   })
 

@@ -28,7 +28,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["onboarding-templates"][":code"].$put({
+    const response = await client["onboarding"]["onboarding-templates"][":code"].$put({
       param: { code: query.code },
       json: {
         name: query.name,

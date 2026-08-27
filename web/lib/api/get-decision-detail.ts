@@ -5,7 +5,7 @@ import { ApiResponseError } from "@/lib/api/api-response-error"
 export async function getDecisionDetail(id: number) {
   const client = await createClient()
 
-  const response = await client["decision-records"][":id"].$get({
+  const response = await client["meeting"]["decision-records"][":id"].$get({
     param: { id: String(id) },
   })
 

@@ -12,7 +12,7 @@ export async function updateCertificateRequest(
 ): Promise<CertificateRequestResponse | Error> {
   const client = await createClient()
 
-  const response = await client["certificate-requests"][":id"].$put({
+  const response = await client["certificate-request"]["certificate-requests"][":id"].$put({
     param: { id },
     json: request,
   })

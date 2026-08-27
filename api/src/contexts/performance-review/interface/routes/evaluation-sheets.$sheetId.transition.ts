@@ -1,7 +1,16 @@
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
-import { TransitionEvaluationSheet } from "@/contexts/performance-review/application/evaluation-sheet/transition-evaluation-sheet"
+import { ApproveEvaluationSheet } from "@/contexts/performance-review/application/evaluation-sheet/approve-evaluation-sheet"
+import { ArchiveEvaluationSheet } from "@/contexts/performance-review/application/evaluation-sheet/archive-evaluation-sheet"
+import { CompleteEvaluationSheetPrimaryEvaluation } from "@/contexts/performance-review/application/evaluation-sheet/complete-evaluation-sheet-primary-evaluation"
+import { CompleteEvaluationSheetSelfEvaluation } from "@/contexts/performance-review/application/evaluation-sheet/complete-evaluation-sheet-self-evaluation"
+import { FinalizeEvaluationSheet } from "@/contexts/performance-review/application/evaluation-sheet/finalize-evaluation-sheet"
+import { RejectEvaluationSheet } from "@/contexts/performance-review/application/evaluation-sheet/reject-evaluation-sheet"
+import { ReopenEvaluationSheet } from "@/contexts/performance-review/application/evaluation-sheet/reopen-evaluation-sheet"
+import { ReturnEvaluationSheetToDraft } from "@/contexts/performance-review/application/evaluation-sheet/return-evaluation-sheet-to-draft"
+import { StartEvaluationSheetSelfEvaluation } from "@/contexts/performance-review/application/evaluation-sheet/start-evaluation-sheet-self-evaluation"
+import { SubmitEvaluationSheet } from "@/contexts/performance-review/application/evaluation-sheet/submit-evaluation-sheet"
 import { evaluationSheetStatusSchema } from "@/contexts/performance-review/domain/entities/evaluation-sheet.entity"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -110,14 +119,37 @@ export const POST = factory.createHandlers(
       throw new ForbiddenError()
     }
 
-    const sheet = await new TransitionEvaluationSheet(c).run({
+    const command = {
       sheetId,
-      targetStatus,
       actorEmployeeId: session.employeeId,
       expectedRevision: json.expected_revision,
       note: json.note ?? null,
       now: c.env.NOW ?? new Date().toISOString(),
-    })
+    }
+    let sheet
+    if (targetStatus === "pending_approval") {
+      sheet = await new SubmitEvaluationSheet(c).execute(command)
+    } else if (targetStatus === "approved") {
+      sheet = await new ApproveEvaluationSheet(c).execute(command)
+    } else if (targetStatus === "rejected") {
+      sheet = await new RejectEvaluationSheet(c).execute(command)
+    } else if (targetStatus === "draft") {
+      sheet = await new ReturnEvaluationSheetToDraft(c).execute(command)
+    } else if (targetStatus === "self_eval") {
+      sheet = await new StartEvaluationSheetSelfEvaluation(c).execute(command)
+    } else if (targetStatus === "primary_eval") {
+      sheet = await new CompleteEvaluationSheetSelfEvaluation(c).execute(command)
+    } else if (targetStatus === "secondary_eval") {
+      sheet = await new CompleteEvaluationSheetPrimaryEvaluation(c).execute(command)
+    } else if (targetStatus === "finalized") {
+      sheet = await new FinalizeEvaluationSheet(c).execute(command)
+    } else if (targetStatus === "reopened") {
+      sheet = await new ReopenEvaluationSheet(c).execute(command)
+    } else if (targetStatus === "archived") {
+      sheet = await new ArchiveEvaluationSheet(c).execute(command)
+    } else {
+      throw new Error("unreachable evaluation sheet status")
+    }
 
     if (sheet instanceof ApplicationError) {
       throw toHttpException(sheet)

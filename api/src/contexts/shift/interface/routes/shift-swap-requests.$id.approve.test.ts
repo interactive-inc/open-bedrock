@@ -317,7 +317,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
     const db = await createTestDb()
 
     const response = await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: await tokenFor(1),
       method: "POST",
       db,
@@ -353,7 +353,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
     const db = await createTestDb()
 
     await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: await tokenFor(1),
       method: "POST",
       db,
@@ -385,7 +385,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("returns 409 when neither requester nor target has an assignment", async () => {
     const response = await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: await tokenFor(1),
       method: "POST",
       db: await createTestDbWithoutAssignments(),
@@ -396,7 +396,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("returns 409 when only requester has an assignment (target missing)", async () => {
     const response = await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: await tokenFor(1),
       method: "POST",
       db: await createTestDbWithPartialAssignment(),
@@ -407,7 +407,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("returns 409 when already approved", async () => {
     const response = await request({
-      path: "/shift-swap-requests/2/approve",
+      path: "/shift/shift-swap-requests/2/approve",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -417,7 +417,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("returns 404 for a missing swap request", async () => {
     const response = await request({
-      path: "/shift-swap-requests/9999/approve",
+      path: "/shift/shift-swap-requests/9999/approve",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -428,7 +428,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
   test("requester with manager role cannot self-approve (forbidden)", async () => {
     // swap request id=1 の申請者は employee 5。manager ロールでも当事者は承認できない。
     const response = await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: await tokenFor(5),
       method: "POST",
     })
@@ -439,7 +439,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
   test("target with manager role cannot self-approve (forbidden)", async () => {
     // swap request id=1 の交代相手は employee 4。manager ロールでも当事者は承認できない。
     const response = await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: await tokenFor(4),
       method: "POST",
     })
@@ -450,7 +450,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
   test("third-party manager can approve (not a party to the swap)", async () => {
     // swap request id=1 の当事者は employee 5 と 4。第三者 manager (employee 1) は従来どおり承認できる。
     const response = await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -460,7 +460,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: await tokenFor(5),
       method: "POST",
     })
@@ -470,7 +470,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: null,
       method: "POST",
     })
@@ -488,7 +488,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
     // --- 1. 正規の承認で pattern_id を入れ替える ---
     const firstResponse = await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: await tokenFor(1),
       method: "POST",
       db,
@@ -538,7 +538,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
     const db = await createTestDbWithNullPatternIds()
 
     const response = await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: await tokenFor(1),
       method: "POST",
       db,
@@ -570,7 +570,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
     const db = await createTestDbWithRequesterNullPatternId()
 
     const response = await request({
-      path: "/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/1/approve",
       token: await tokenFor(1),
       method: "POST",
       db,

@@ -151,7 +151,10 @@ async function request(
 
 describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
   test("admin reads aggregated results and returns 200", async () => {
-    const response = await request("/review-cycles/2/results/E005", await adminToken())
+    const response = await request(
+      "/performance-review/review-cycles/2/results/E005",
+      await adminToken(),
+    )
 
     expect(response.status).toBe(200)
 
@@ -170,7 +173,10 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
   })
 
   test("member can read own results after the cycle is closed", async () => {
-    const response = await request("/review-cycles/2/results/E005", await memberToken())
+    const response = await request(
+      "/performance-review/review-cycles/2/results/E005",
+      await memberToken(),
+    )
 
     expect(response.status).toBe(200)
 
@@ -181,7 +187,10 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
   })
 
   test("saved reviewer receives only their own submitted form after the reporting line changes", async () => {
-    const response = await request("/review-cycles/2/results/E005", await memberToken(4))
+    const response = await request(
+      "/performance-review/review-cycles/2/results/E005",
+      await memberToken(4),
+    )
 
     expect(response.status).toBe(200)
 
@@ -204,7 +213,10 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
   })
 
   test("saved peer reviewer cannot see another saved reviewer's form or aggregate", async () => {
-    const response = await request("/review-cycles/2/results/E005", await memberToken(10))
+    const response = await request(
+      "/performance-review/review-cycles/2/results/E005",
+      await memberToken(10),
+    )
 
     expect(response.status).toBe(200)
 
@@ -221,31 +233,43 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
   })
 
   test("saved reviewer with no submitted form cannot read the result", async () => {
-    const response = await request("/review-cycles/2/results/E005", await memberToken(2))
+    const response = await request(
+      "/performance-review/review-cycles/2/results/E005",
+      await memberToken(2),
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("new current manager cannot read historical results they did not review", async () => {
-    const response = await request("/review-cycles/2/results/E005", await memberToken(6))
+    const response = await request(
+      "/performance-review/review-cycles/2/results/E005",
+      await memberToken(6),
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("unrelated member cannot read another employee results", async () => {
-    const response = await request("/review-cycles/2/results/E005", await memberToken(3))
+    const response = await request(
+      "/performance-review/review-cycles/2/results/E005",
+      await memberToken(3),
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 when the employee code is unknown", async () => {
-    const response = await request("/review-cycles/2/results/E999", await adminToken())
+    const response = await request(
+      "/performance-review/review-cycles/2/results/E999",
+      await adminToken(),
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/review-cycles/2/results/E005", null)
+    const response = await request("/performance-review/review-cycles/2/results/E005", null)
 
     expect(response.status).toBe(401)
   })

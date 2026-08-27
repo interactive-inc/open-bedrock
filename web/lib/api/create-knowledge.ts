@@ -6,7 +6,7 @@ import type { KnowledgeCreateRequest } from "@/lib/api/types/knowledge-types"
 export async function createKnowledge(request: KnowledgeCreateRequest) {
   const client = await createClient()
 
-  const response = await client["knowledge-articles"].$post({ json: request })
+  const response = await client["knowledge"]["knowledge-articles"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

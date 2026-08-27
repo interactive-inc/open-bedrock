@@ -6,7 +6,7 @@ import type { RentalReservationCreateRequest } from "@/lib/api/types/rental-type
 export async function createRentalReservation(request: RentalReservationCreateRequest) {
   const client = await createClient()
 
-  const response = await client["rental-reservations"].$post({ json: request })
+  const response = await client["rental"]["rental-reservations"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

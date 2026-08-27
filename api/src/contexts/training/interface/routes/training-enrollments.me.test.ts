@@ -100,7 +100,7 @@ async function request(
 
 describe("GET /training-enrollments/me", () => {
   test("returns the caller's enrollments", async () => {
-    const response = await request("/training-enrollments/me", await tokenFor(5))
+    const response = await request("/training/training-enrollments/me", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -113,7 +113,7 @@ describe("GET /training-enrollments/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/training-enrollments/me", null)
+    const response = await request("/training/training-enrollments/me", null)
 
     expect(response.status).toBe(401)
   })

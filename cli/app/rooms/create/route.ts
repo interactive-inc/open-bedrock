@@ -30,7 +30,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.rooms.$post({
+    const response = await client["room"]["rooms"].$post({
       json: { name: query.name, capacity: capacity, location: query.location ?? null },
     })
 

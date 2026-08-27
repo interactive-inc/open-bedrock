@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function deleteApplicationTemplate(code: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["application-templates"][":code"].$delete({
+  const response = await client["company"]["application-templates"][":code"].$delete({
     param: { code: code },
   })
 

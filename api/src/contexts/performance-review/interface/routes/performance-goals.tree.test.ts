@@ -160,7 +160,7 @@ describe("GET /performance-goals/tree", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals/tree?period=2026-H1",
+      path: "/performance-review/performance-goals/tree?period=2026-H1",
       token: await tokenFor(1),
     })
 
@@ -195,7 +195,7 @@ describe("GET /performance-goals/tree", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals/tree?period=2026-H1",
+      path: "/performance-review/performance-goals/tree?period=2026-H1",
       token: await tokenFor(5),
     })
 
@@ -227,7 +227,7 @@ describe("GET /performance-goals/tree", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals/tree",
+      path: "/performance-review/performance-goals/tree",
       token: null,
     })
 

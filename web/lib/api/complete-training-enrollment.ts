@@ -8,7 +8,7 @@ export async function completeTrainingEnrollment(
 ): Promise<TrainingEnrollmentResponse | Error> {
   const client = await createClient()
 
-  const response = await client["training-enrollments"][":id"].complete.$post({
+  const response = await client["training"]["training-enrollments"][":id"].complete.$post({
     param: { id: String(enrollmentId) },
     json: {},
   })

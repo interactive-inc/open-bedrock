@@ -8,7 +8,7 @@ import type { SkillSearchQuery } from "@/lib/api/types/skill-types"
 export async function getSkillList(query: SkillSearchQuery) {
   const client = await createClient()
 
-  const response = await client["skill-definitions"].$get({
+  const response = await client["skill"]["skill-definitions"].$get({
     query: { q: query.q ?? undefined, category: query.category ?? undefined },
   })
 

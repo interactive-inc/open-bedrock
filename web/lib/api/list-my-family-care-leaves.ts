@@ -7,7 +7,7 @@ export async function listMyFamilyCareLeaves(): Promise<
 > {
   const client = await createClient()
 
-  const response = await client["family-care-leaves"].me.$get()
+  const response = await client["family-care-leave"]["family-care-leaves"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load family care leaves")

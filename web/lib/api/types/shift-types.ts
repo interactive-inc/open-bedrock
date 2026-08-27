@@ -9,7 +9,7 @@ export type ShiftSwapStatus = string
  */
 export type ShiftAssignmentResponse = {
   id: number | null
-  employee_id: number
+  employee_id: string
   pattern_id: number | null
   date: string
   note: string | null
@@ -23,7 +23,7 @@ export type ShiftAssignmentResponse = {
  */
 export type MyShiftAssignmentResponse = {
   id: number
-  employee_id: number
+  employee_id: string
   pattern_id: number | null
   pattern_name: string | null
   pattern_start_time: string | null
@@ -54,8 +54,8 @@ export type ShiftPatternResponse = {
  */
 export type ShiftSwapRequestResponse = {
   id: number | null
-  requester_employee_id: number
-  target_employee_id: number
+  requester_employee_id: string
+  target_employee_id: string
   date: string
   note: string | null
   status: string
@@ -69,8 +69,8 @@ export type ShiftSwapRequestResponse = {
  */
 export type MyShiftSwapRequestResponse = {
   id: number
-  requester_employee_id: number
-  target_employee_id: number
+  requester_employee_id: string
+  target_employee_id: string
   target_employee_name: string | null
   date: string
   note: string | null

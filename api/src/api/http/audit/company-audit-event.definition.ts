@@ -1,13 +1,10 @@
 import type { RequestAuditContext } from "@/env"
 import {
-  auditClientNameSchema,
   auditOutcomeSchema,
-  auditRequestContextSchema,
   createCompanyAuditRecord,
 } from "@/api/http/audit/company-audit-record.definition"
 import type {
   AuditJsonValue,
-  AuditClientName,
   AuditOutcome,
   CompanyAuditDetail,
   CompanyAuditRecord,
@@ -18,9 +15,6 @@ import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-i
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
-
-export { auditClientNameSchema, auditOutcomeSchema, auditRequestContextSchema }
-export type { AuditClientName, AuditOutcome }
 
 export const auditActionSchema = z.enum([
   "auth.session.login_succeeded",

@@ -6,7 +6,7 @@ import type { RegulationRegisterRequest } from "@/lib/api/types/regulation-types
 export async function registerRegulation(request: RegulationRegisterRequest) {
   const client = await createClient()
 
-  const response = await client.regulations.$post({ json: request })
+  const response = await client["regulation"]["regulations"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

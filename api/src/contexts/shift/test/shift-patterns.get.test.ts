@@ -84,7 +84,7 @@ async function request(props: RequestProps): Promise<Response> {
 
 describe("GET /shift-patterns", () => {
   test("returns 200 with all patterns", async () => {
-    const response = await request({ path: "/shift-patterns", token: await tokenFor(4) })
+    const response = await request({ path: "/shift/shift-patterns", token: await tokenFor(4) })
 
     expect(response.status).toBe(200)
 
@@ -100,7 +100,7 @@ describe("GET /shift-patterns", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/shift-patterns", token: null })
+    const response = await request({ path: "/shift/shift-patterns", token: null })
 
     expect(response.status).toBe(401)
   })

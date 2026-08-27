@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.batch.$get({ query: {} })
+    const response = await client.system["batch-jobs"].$get({ query: {} })
 
     const rows = await response.json()
 

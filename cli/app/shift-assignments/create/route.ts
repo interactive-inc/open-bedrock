@@ -28,7 +28,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["shift-assignments"].$post({
+    const response = await client["shift"]["shift-assignments"].$post({
       json: {
         employee_code: query["employee-code"],
         date: query.date,

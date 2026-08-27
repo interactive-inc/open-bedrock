@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function deletePosition(positionId: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["position-definitions"][":id"].$delete({
+  const response = await client.company["position-definitions"][":id"].$delete({
     param: { id: String(positionId) },
   })
 

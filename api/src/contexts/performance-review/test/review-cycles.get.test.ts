@@ -73,7 +73,7 @@ async function request(
 
 describe("GET /review-cycles", () => {
   test("returns 200 with all cycles", async () => {
-    const response = await request("/review-cycles", await adminToken())
+    const response = await request("/performance-review/review-cycles", await adminToken())
 
     expect(response.status).toBe(200)
 
@@ -89,7 +89,7 @@ describe("GET /review-cycles", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/review-cycles", null)
+    const response = await request("/performance-review/review-cycles", null)
 
     expect(response.status).toBe(401)
   })

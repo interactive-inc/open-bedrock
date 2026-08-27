@@ -26,7 +26,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["one-on-ones"][":id"].$put({
+    const response = await client["one-on-one"]["one-on-ones"][":id"].$put({
       param: { id: query.id },
       json: {
         topics: query.topics ?? null,

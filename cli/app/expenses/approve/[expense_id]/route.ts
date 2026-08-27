@@ -22,7 +22,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.expenses[":id"].approve.$post({
+    const response = await client["expense"]["expenses"][":id"].approve.$post({
       param: { id: expenseId },
       json: { comment: comment ?? null },
     })

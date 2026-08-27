@@ -5,7 +5,7 @@ import type { PartnerSearchQuery } from "@/lib/api/types/partner-types"
 export async function getPartnerList(query: PartnerSearchQuery) {
   const client = await createClient()
 
-  const response = await client.partners.$get({
+  const response = await client["partner"]["partners"].$get({
     query: { q: query.q ?? undefined, status: query.status ?? undefined },
   })
 

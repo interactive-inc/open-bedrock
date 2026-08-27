@@ -27,7 +27,7 @@ export async function createLicenseAction(
     category: toCategory(formData.get("category")),
     seats: toInteger(formData.get("seats")),
     renewal_deadline: toText(formData.get("renewal_deadline")),
-    owner_employee_id: toInteger(formData.get("owner_employee_id")),
+    owner_employee_id: toText(formData.get("owner_employee_id")),
     note: toText(formData.get("note")),
   })
 

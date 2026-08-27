@@ -37,7 +37,7 @@ describe("getAuditEvents", () => {
     }
     const json = vi.fn().mockResolvedValue(page)
     const get = vi.fn().mockResolvedValue({ ok: true, status: 200, json })
-    mocks.createClient.mockResolvedValue({ "audit-events": { $get: get } })
+    mocks.createClient.mockResolvedValue({ company: { "audit-events": { $get: get } } })
     const query = { action: "custom.action", limit: "25", cursor: "opaque" }
 
     await expect(getAuditEvents(query)).resolves.toEqual(page)
@@ -49,7 +49,7 @@ describe("getAuditEvents", () => {
     const response = { ok: false, status: 403, json: vi.fn() }
     const expected = new ApiResponseError(403, "safe", "audit_read_forbidden")
     const get = vi.fn().mockResolvedValue(response)
-    mocks.createClient.mockResolvedValue({ "audit-events": { $get: get } })
+    mocks.createClient.mockResolvedValue({ company: { "audit-events": { $get: get } } })
     mocks.toApiResponseError.mockResolvedValue(expected)
 
     await expect(getAuditEvents({ limit: "50" })).resolves.toBe(expected)

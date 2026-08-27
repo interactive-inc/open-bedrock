@@ -25,13 +25,13 @@ export type OrgReportingLineNode = {
   depth: number
 }
 
-/** /org/departments の要素と /org/departments/:code の詳細。api の OrgDepartment に対応。 */
+/** /company/organization-units の要素。 */
 export type OrgDepartmentResponse = {
+  id: string
   code: string
-  department_id: number
+  name: string
   parent_code: string | null
   manager_employee_code: string | null
-  order: number
 }
 
 /**
@@ -41,10 +41,8 @@ export type OrgDepartmentResponse = {
  */
 export type OrgDepartmentCreateRequest = {
   code: string
-  department_id: number
+  name: string
   parent_code?: string | null
-  manager_employee_code?: string | null
-  order: number
 }
 
 /**
@@ -53,7 +51,6 @@ export type OrgDepartmentCreateRequest = {
  * のため省略可・null 可（departments/[code]/route.ts）。
  */
 export type OrgDepartmentUpdateRequest = {
+  name: string
   parent_code?: string | null
-  manager_employee_code?: string | null
-  order: number
 }

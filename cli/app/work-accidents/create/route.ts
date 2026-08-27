@@ -1,7 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -30,14 +29,11 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["work-accidents"].$post({
+    const response = await client["work-accident"]["work-accidents"].$post({
       json: {
         occurred_on: query.occurred,
         summary: query.summary,
-        employee_id:
-          query["employee-id"] !== undefined
-            ? toFiniteNumber(query["employee-id"], "--employee-id")
-            : null,
+        employee_id: query["employee-id"] ?? null,
         location: query.location ?? null,
         severity: query.severity ?? null,
       },

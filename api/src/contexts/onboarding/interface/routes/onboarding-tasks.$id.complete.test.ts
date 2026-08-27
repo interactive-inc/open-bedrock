@@ -141,7 +141,7 @@ async function request(props: {
 describe("POST /onboarding-tasks/:id/complete", () => {
   test("owner completes a task and gets 200 with done status", async () => {
     const response = await request({
-      path: "/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/200/complete",
       token: await token(5),
       method: "POST",
     })
@@ -166,7 +166,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
     await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/200/complete",
       token: ownerToken,
       method: "POST",
     })
@@ -174,7 +174,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
     await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding-tasks/201/complete",
+      path: "/onboarding/onboarding-tasks/201/complete",
       token: ownerToken,
       method: "POST",
     })
@@ -182,7 +182,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
     const showResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding-assignments/employees/E005",
+      path: "/onboarding/onboarding-assignments/employees/E005",
       token: await token(1),
     })
 
@@ -199,7 +199,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
 
   test("a non-owner member is forbidden", async () => {
     const response = await request({
-      path: "/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/200/complete",
       token: await token(6),
       method: "POST",
     })
@@ -209,7 +209,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
 
   test("returns 404 for an unknown task", async () => {
     const response = await request({
-      path: "/onboarding-tasks/9999/complete",
+      path: "/onboarding/onboarding-tasks/9999/complete",
       token: await token(1),
       method: "POST",
     })
@@ -219,7 +219,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
 
   test("returns 404 for a non-integer task id", async () => {
     const response = await request({
-      path: "/onboarding-tasks/abc/complete",
+      path: "/onboarding/onboarding-tasks/abc/complete",
       token: await token(1),
       method: "POST",
     })
@@ -229,7 +229,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/200/complete",
       token: null,
       method: "POST",
     })
@@ -248,7 +248,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/200/complete",
       token: ownerToken,
       method: "POST",
     })
@@ -260,7 +260,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/200/complete",
       token: ownerToken,
       method: "POST",
     })

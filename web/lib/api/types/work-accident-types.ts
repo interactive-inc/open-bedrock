@@ -2,7 +2,7 @@
 export type WorkAccidentResponse = {
   id: number
   occurred_on: string
-  employee_id: number | null
+  employee_id: string | null
   location: string | null
   summary: string
   severity: string | null
@@ -13,7 +13,7 @@ export type WorkAccidentResponse = {
 /** POST /work-accidents のリクエストボディ。 */
 export type WorkAccidentCreateRequest = {
   occurred_on: string
-  employee_id: number | null
+  employee_id: string | null
   location: string | null
   summary: string
   severity: "minor" | "serious" | null

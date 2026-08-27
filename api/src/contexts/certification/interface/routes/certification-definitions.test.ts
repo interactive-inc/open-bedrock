@@ -54,7 +54,10 @@ async function request(props: {
 
 describe("GET /certification-definitions", () => {
   test("returns 200 for any authenticated member", async () => {
-    const response = await request({ path: "/certification-definitions", token: await tokenFor(5) })
+    const response = await request({
+      path: "/certification/certification-definitions",
+      token: await tokenFor(5),
+    })
 
     expect(response.status).toBe(200)
 
@@ -70,7 +73,10 @@ describe("GET /certification-definitions", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/certification-definitions", token: null })
+    const response = await request({
+      path: "/certification/certification-definitions",
+      token: null,
+    })
 
     expect(response.status).toBe(401)
   })
@@ -79,7 +85,7 @@ describe("GET /certification-definitions", () => {
 describe("POST /certification-definitions", () => {
   test("creates a certification for a manager (certification:manage)", async () => {
     const response = await request({
-      path: "/certification-definitions",
+      path: "/certification/certification-definitions",
       token: await tokenFor(1),
       method: "POST",
       body: { code: "AP", name: "応用情報技術者", issuer: "IPA" },
@@ -98,7 +104,7 @@ describe("POST /certification-definitions", () => {
 
   test("returns 403 for a member without certification:manage", async () => {
     const response = await request({
-      path: "/certification-definitions",
+      path: "/certification/certification-definitions",
       token: await tokenFor(5),
       method: "POST",
       body: { code: "AP", name: "応用情報技術者" },
@@ -109,7 +115,7 @@ describe("POST /certification-definitions", () => {
 
   test("returns 409 on duplicate code", async () => {
     const response = await request({
-      path: "/certification-definitions",
+      path: "/certification/certification-definitions",
       token: await tokenFor(1),
       method: "POST",
       body: { code: "FE", name: "基本情報技術者" },

@@ -141,7 +141,7 @@ const pendingSwapRequestSchema = z.object({
 describe("GET /shift-swap-requests", () => {
   test("an approver gets only pending requests with employee codes", async () => {
     const response = await request({
-      path: "/shift-swap-requests",
+      path: "/shift/shift-swap-requests",
       token: await tokenFor(1),
     })
 
@@ -165,7 +165,7 @@ describe("GET /shift-swap-requests", () => {
 
   test("returns 403 for a non-approver role", async () => {
     const response = await request({
-      path: "/shift-swap-requests",
+      path: "/shift/shift-swap-requests",
       token: await tokenFor(5),
     })
 
@@ -174,7 +174,7 @@ describe("GET /shift-swap-requests", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/shift-swap-requests",
+      path: "/shift/shift-swap-requests",
       token: null,
     })
 
@@ -186,7 +186,7 @@ describe("POST /shift-swap-requests", () => {
   test("any authenticated user files a swap request and returns 201", async () => {
     // 2026-06-10 はシードに pending が存在しないため新規作成できる
     const response = await request({
-      path: "/shift-swap-requests",
+      path: "/shift/shift-swap-requests",
       token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E004", date: "2026-06-10", note: "Medical appointment" },
@@ -208,7 +208,7 @@ describe("POST /shift-swap-requests", () => {
   test("returns 409 when a pending swap request already exists for the same requester, target, and date", async () => {
     // シード id=1 が requester=5, target=4, date=2026-06-01, status=pending で存在する
     const response = await request({
-      path: "/shift-swap-requests",
+      path: "/shift/shift-swap-requests",
       token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E004", date: "2026-06-01" },
@@ -221,7 +221,7 @@ describe("POST /shift-swap-requests", () => {
     // 2026-06-11 は emp5（申請者）のみ公開済み割当を持ち、emp4（相手）は割当なし。
     // 承認時に必ず 409 になるため、作成時点で拒否する。
     const response = await request({
-      path: "/shift-swap-requests",
+      path: "/shift/shift-swap-requests",
       token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E004", date: "2026-06-11" },
@@ -233,7 +233,7 @@ describe("POST /shift-swap-requests", () => {
   test("returns 409 when the requester has no published assignment on the date", async () => {
     // 2026-06-20 はどちらも割当を持たない。申請者側の未割当で拒否される。
     const response = await request({
-      path: "/shift-swap-requests",
+      path: "/shift/shift-swap-requests",
       token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E004", date: "2026-06-20" },
@@ -244,7 +244,7 @@ describe("POST /shift-swap-requests", () => {
 
   test("returns 404 for an unknown target_employee_code", async () => {
     const response = await request({
-      path: "/shift-swap-requests",
+      path: "/shift/shift-swap-requests",
       token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E999", date: "2026-06-01" },
@@ -255,7 +255,7 @@ describe("POST /shift-swap-requests", () => {
 
   test("returns 400 when date is missing", async () => {
     const response = await request({
-      path: "/shift-swap-requests",
+      path: "/shift/shift-swap-requests",
       token: await tokenFor(5),
       method: "POST",
       body: { target_employee_code: "E004" },
@@ -266,7 +266,7 @@ describe("POST /shift-swap-requests", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/shift-swap-requests",
+      path: "/shift/shift-swap-requests",
       token: null,
       method: "POST",
       body: { target_employee_code: "E004", date: "2026-06-01" },

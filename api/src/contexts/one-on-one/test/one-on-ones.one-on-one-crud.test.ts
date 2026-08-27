@@ -99,7 +99,10 @@ async function request(props: {
 
 describe("GET /one-on-ones/me", () => {
   test("returns the participant's history in snake_case shape", async () => {
-    const response = await request({ path: "/one-on-ones/me", token: await managerToken() })
+    const response = await request({
+      path: "/one-on-one/one-on-ones/me",
+      token: await managerToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -115,7 +118,7 @@ describe("GET /one-on-ones/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/one-on-ones/me", token: null })
+    const response = await request({ path: "/one-on-one/one-on-ones/me", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -124,7 +127,7 @@ describe("GET /one-on-ones/me", () => {
 describe("GET /one-on-ones/:id", () => {
   test("returns the one-on-one for the recording manager", async () => {
     const response = await request({
-      path: `/one-on-ones/${ownOneOnOneId}`,
+      path: `/one-on-one/one-on-ones/${ownOneOnOneId}`,
       token: await managerToken(),
     })
 
@@ -141,7 +144,7 @@ describe("GET /one-on-ones/:id", () => {
 
   test("returns the one-on-one for its member participant", async () => {
     const response = await request({
-      path: `/one-on-ones/${ownOneOnOneId}`,
+      path: `/one-on-one/one-on-ones/${ownOneOnOneId}`,
       token: await memberToken(),
     })
 
@@ -150,7 +153,7 @@ describe("GET /one-on-ones/:id", () => {
 
   test("returns 403 for a non-participant", async () => {
     const response = await request({
-      path: `/one-on-ones/${othersOneOnOneId}`,
+      path: `/one-on-one/one-on-ones/${othersOneOnOneId}`,
       token: await managerToken(),
     })
 
@@ -159,7 +162,7 @@ describe("GET /one-on-ones/:id", () => {
 
   test("returns 404 for an unknown one-on-one", async () => {
     const response = await request({
-      path: `/one-on-ones/${unknownId}`,
+      path: `/one-on-one/one-on-ones/${unknownId}`,
       token: await managerToken(),
     })
 
@@ -170,7 +173,7 @@ describe("GET /one-on-ones/:id", () => {
 describe("PUT /one-on-ones/:id", () => {
   test("updates the record content for the recording manager", async () => {
     const response = await request({
-      path: `/one-on-ones/${ownOneOnOneId}`,
+      path: `/one-on-one/one-on-ones/${ownOneOnOneId}`,
       token: await managerToken(),
       method: "PUT",
       body: {
@@ -195,7 +198,7 @@ describe("PUT /one-on-ones/:id", () => {
 
   test("returns 403 when a member tries to edit the record", async () => {
     const response = await request({
-      path: `/one-on-ones/${ownOneOnOneId}`,
+      path: `/one-on-one/one-on-ones/${ownOneOnOneId}`,
       token: await memberToken(),
       method: "PUT",
       body: { topics: "hijack" },
@@ -206,7 +209,7 @@ describe("PUT /one-on-ones/:id", () => {
 
   test("returns 404 for an unknown one-on-one", async () => {
     const response = await request({
-      path: `/one-on-ones/${unknownId}`,
+      path: `/one-on-one/one-on-ones/${unknownId}`,
       token: await managerToken(),
       method: "PUT",
       body: { topics: "x" },
@@ -217,7 +220,7 @@ describe("PUT /one-on-ones/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: `/one-on-ones/${ownOneOnOneId}`,
+      path: `/one-on-one/one-on-ones/${ownOneOnOneId}`,
       token: null,
       method: "PUT",
       body: { topics: "x" },
@@ -230,7 +233,7 @@ describe("PUT /one-on-ones/:id", () => {
 describe("DELETE /one-on-ones/:id", () => {
   test("deletes the record for the recording manager and returns 204", async () => {
     const response = await request({
-      path: `/one-on-ones/${ownOneOnOneId}`,
+      path: `/one-on-one/one-on-ones/${ownOneOnOneId}`,
       token: await managerToken(),
       method: "DELETE",
     })
@@ -240,7 +243,7 @@ describe("DELETE /one-on-ones/:id", () => {
 
   test("returns 403 when a member tries to delete the record", async () => {
     const response = await request({
-      path: `/one-on-ones/${ownOneOnOneId}`,
+      path: `/one-on-one/one-on-ones/${ownOneOnOneId}`,
       token: await memberToken(),
       method: "DELETE",
     })
@@ -250,7 +253,7 @@ describe("DELETE /one-on-ones/:id", () => {
 
   test("returns 404 for an unknown one-on-one", async () => {
     const response = await request({
-      path: `/one-on-ones/${unknownId}`,
+      path: `/one-on-one/one-on-ones/${unknownId}`,
       token: await managerToken(),
       method: "DELETE",
     })
@@ -260,7 +263,7 @@ describe("DELETE /one-on-ones/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: `/one-on-ones/${ownOneOnOneId}`,
+      path: `/one-on-one/one-on-ones/${ownOneOnOneId}`,
       token: null,
       method: "DELETE",
     })

@@ -15,7 +15,7 @@ export async function createCommendationAction(
   previousState: CommendationActionState,
   formData: FormData,
 ): Promise<CommendationActionState> {
-  const employeeId = toPositiveInt(formData.get("employee_id"))
+  const employeeId = toText(formData.get("employee_id"))
 
   const title = toText(formData.get("title"))
 

@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.system.v1.notifications[":id"].$get({
+    const response = await client.system.notifications[":id"].$get({
       param: { id: query.id },
     })
     if (response.status !== 200) throw new UsageError("通知の取得に失敗しました")

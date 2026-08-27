@@ -87,7 +87,7 @@ async function sendThanks(props: {
 }): Promise<Response> {
   return request({
     db: props.db,
-    path: "/thanks-messages",
+    path: "/thanks/thanks-messages",
     token: props.token,
     method: "POST",
     body: {
@@ -106,7 +106,7 @@ async function createReward(props: {
 }): Promise<number> {
   const response = await request({
     db: props.db,
-    path: "/thanks-rewards",
+    path: "/thanks/thanks-rewards",
     token: await adminToken(),
     method: "POST",
     body: { name: "景品", point_cost: props.pointCost, stock: props.stock ?? null },
@@ -125,7 +125,7 @@ describe("budget", () => {
 
     const response = await request({
       db,
-      path: "/thanks-point-budgets/me",
+      path: "/thanks/thanks-point-budgets/me",
       token: await senderToken(),
     })
 
@@ -159,7 +159,7 @@ describe("budget", () => {
 
     const response = await request({
       db,
-      path: "/thanks-point-budgets/me",
+      path: "/thanks/thanks-point-budgets/me",
       token: await senderToken(),
     })
 
@@ -182,7 +182,7 @@ describe("budget", () => {
 
     const response = await request({
       db,
-      path: "/thanks-point-budgets/me",
+      path: "/thanks/thanks-point-budgets/me",
       token: await senderToken(),
       now: "2026-02-01T00:00:00.000Z",
     })
@@ -218,7 +218,7 @@ describe("budget and balance are separate concepts", () => {
 
     const budget = await request({
       db,
-      path: "/thanks-point-budgets/me",
+      path: "/thanks/thanks-point-budgets/me",
       token: senderTokenValue,
     })
 
@@ -232,7 +232,7 @@ describe("budget and balance are separate concepts", () => {
     // 送った側の受領残高は 0 のまま。送付は原資を減らすだけで残高を動かさない。
     const balance = await request({
       db,
-      path: "/thanks-point-balances/me",
+      path: "/thanks/thanks-point-balances/me",
       token: senderTokenValue,
     })
 
@@ -250,7 +250,7 @@ describe("budget and balance are separate concepts", () => {
 
     const balance = await request({
       db,
-      path: "/thanks-point-balances/me",
+      path: "/thanks/thanks-point-balances/me",
       token: recipientTokenValue,
     })
 
@@ -261,7 +261,7 @@ describe("budget and balance are separate concepts", () => {
     // 受け取っても当月に送れる枠は既定の 400 のまま。受領は原資を増やさない。
     const budget = await request({
       db,
-      path: "/thanks-point-budgets/me",
+      path: "/thanks/thanks-point-budgets/me",
       token: recipientTokenValue,
     })
 
@@ -298,7 +298,7 @@ describe("budget and balance are separate concepts", () => {
     // 当月。原資は満額に戻る。
     const budget = await request({
       db,
-      path: "/thanks-point-budgets/me",
+      path: "/thanks/thanks-point-budgets/me",
       token: recipientTokenValue,
       now: "2026-02-01T00:00:00.000Z",
     })
@@ -313,7 +313,7 @@ describe("budget and balance are separate concepts", () => {
     // 受領残高は月をまたいでも累積したまま（リセットされない）。
     const balance = await request({
       db,
-      path: "/thanks-point-balances/me",
+      path: "/thanks/thanks-point-balances/me",
       token: recipientTokenValue,
       now: "2026-02-01T00:00:00.000Z",
     })
@@ -328,7 +328,7 @@ describe("budget and balance are separate concepts", () => {
 
     const response = await request({
       db,
-      path: "/thanks-point-budgets/me/balance",
+      path: "/thanks/thanks-point-budgets/me/balance",
       token: await recipientToken(),
     })
 
@@ -344,7 +344,7 @@ describe("balance", () => {
 
     const response = await request({
       db,
-      path: "/thanks-point-balances/me",
+      path: "/thanks/thanks-point-balances/me",
       token: await recipientToken(),
     })
 
@@ -360,7 +360,7 @@ describe("balance", () => {
 
     const response = await request({
       db,
-      path: "/thanks-point-balances/me",
+      path: "/thanks/thanks-point-balances/me",
       token: await recipientToken(),
     })
 
@@ -378,7 +378,7 @@ describe("balance", () => {
 
     const requested = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -389,7 +389,7 @@ describe("balance", () => {
     // pending 状態でも残高は差し引かれている。
     const balance = await request({
       db,
-      path: "/thanks-point-balances/me",
+      path: "/thanks/thanks-point-balances/me",
       token: await recipientToken(),
     })
 
@@ -405,7 +405,7 @@ describe("rewards", () => {
 
     const created = await request({
       db,
-      path: "/thanks-rewards",
+      path: "/thanks/thanks-rewards",
       token: await adminToken(),
       method: "POST",
       body: { name: "図書カード", point_cost: 50, stock: 10 },
@@ -413,7 +413,7 @@ describe("rewards", () => {
 
     expect(created.status).toBe(201)
 
-    const list = await request({ db, path: "/thanks-rewards", token: await senderToken() })
+    const list = await request({ db, path: "/thanks/thanks-rewards", token: await senderToken() })
 
     const parsed = z
       .object({
@@ -431,7 +431,7 @@ describe("rewards", () => {
 
     const response = await request({
       db,
-      path: "/thanks-rewards",
+      path: "/thanks/thanks-rewards",
       token: await senderToken(),
       method: "POST",
       body: { name: "景品", point_cost: 50, stock: null },
@@ -445,7 +445,7 @@ describe("rewards", () => {
 
     const response = await request({
       db,
-      path: "/thanks-rewards",
+      path: "/thanks/thanks-rewards",
       token: await adminToken(),
       method: "POST",
       body: { name: "景品", point_cost: 0, stock: null },
@@ -460,7 +460,7 @@ describe("rewards", () => {
     // Create two rewards.
     await request({
       db,
-      path: "/thanks-rewards",
+      path: "/thanks/thanks-rewards",
       token: await adminToken(),
       method: "POST",
       body: { name: "図書カード", point_cost: 50, stock: null },
@@ -468,13 +468,17 @@ describe("rewards", () => {
 
     await request({
       db,
-      path: "/thanks-rewards",
+      path: "/thanks/thanks-rewards",
       token: await adminToken(),
       method: "POST",
       body: { name: "クオカード", point_cost: 100, stock: null },
     })
 
-    const list = await request({ db, path: "/thanks-rewards?limit=1", token: await senderToken() })
+    const list = await request({
+      db,
+      path: "/thanks/thanks-rewards?limit=1",
+      token: await senderToken(),
+    })
 
     expect(list.status).toBe(200)
 
@@ -496,7 +500,7 @@ describe("redemption", () => {
 
     const requested = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -508,7 +512,7 @@ describe("redemption", () => {
 
     const approved = await request({
       db,
-      path: `/thanks-redemptions/${redemptionId}/approve`,
+      path: `/thanks/thanks-redemptions/${redemptionId}/approve`,
       token: await adminToken(),
       method: "POST",
     })
@@ -517,7 +521,7 @@ describe("redemption", () => {
 
     const balance = await request({
       db,
-      path: "/thanks-point-balances/me",
+      path: "/thanks/thanks-point-balances/me",
       token: await recipientToken(),
     })
 
@@ -535,7 +539,7 @@ describe("redemption", () => {
 
     const response = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -553,7 +557,7 @@ describe("redemption", () => {
 
     const requested = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -563,7 +567,7 @@ describe("redemption", () => {
 
     const first = await request({
       db,
-      path: `/thanks-redemptions/${redemptionId}/approve`,
+      path: `/thanks/thanks-redemptions/${redemptionId}/approve`,
       token: await adminToken(),
       method: "POST",
     })
@@ -572,7 +576,7 @@ describe("redemption", () => {
 
     const second = await request({
       db,
-      path: `/thanks-redemptions/${redemptionId}/approve`,
+      path: `/thanks/thanks-redemptions/${redemptionId}/approve`,
       token: await adminToken(),
       method: "POST",
     })
@@ -589,7 +593,7 @@ describe("redemption", () => {
 
     const first = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -600,7 +604,7 @@ describe("redemption", () => {
     // pending が既に存在するため 2 件目は 409 で弾かれる。
     const second = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -618,7 +622,7 @@ describe("redemption", () => {
 
     const first = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -631,7 +635,7 @@ describe("redemption", () => {
     // 1 件目を承認して pending を解消する。
     const approved = await request({
       db,
-      path: `/thanks-redemptions/${firstId}/approve`,
+      path: `/thanks/thanks-redemptions/${firstId}/approve`,
       token: await adminToken(),
       method: "POST",
     })
@@ -641,7 +645,7 @@ describe("redemption", () => {
     // pending が無くなったので 2 件目を申請できる。
     const second = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -659,7 +663,7 @@ describe("redemption", () => {
 
     const requested = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -669,7 +673,7 @@ describe("redemption", () => {
 
     const rejected = await request({
       db,
-      path: `/thanks-redemptions/${redemptionId}/reject`,
+      path: `/thanks/thanks-redemptions/${redemptionId}/reject`,
       token: await adminToken(),
       method: "POST",
     })
@@ -678,7 +682,7 @@ describe("redemption", () => {
 
     const balance = await request({
       db,
-      path: "/thanks-point-balances/me",
+      path: "/thanks/thanks-point-balances/me",
       token: await recipientToken(),
     })
 
@@ -696,7 +700,7 @@ describe("redemption", () => {
 
     const requested = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -706,7 +710,7 @@ describe("redemption", () => {
 
     const response = await request({
       db,
-      path: `/thanks-redemptions/${redemptionId}/approve`,
+      path: `/thanks/thanks-redemptions/${redemptionId}/approve`,
       token: await senderToken(),
       method: "POST",
     })
@@ -725,7 +729,7 @@ describe("redemption", () => {
     // admin 自身が交換申請を出す。
     const requested = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await adminToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -738,7 +742,7 @@ describe("redemption", () => {
     // admin 本人が承認しようとすると 403 で弾かれる。
     const response = await request({
       db,
-      path: `/thanks-redemptions/${redemptionId}/approve`,
+      path: `/thanks/thanks-redemptions/${redemptionId}/approve`,
       token: await adminToken(),
       method: "POST",
     })
@@ -757,7 +761,7 @@ describe("redemption", () => {
     // admin 自身が交換申請を出す。
     const requested = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await adminToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -770,7 +774,7 @@ describe("redemption", () => {
     // 却下も決裁行為。admin 本人が却下しようとすると 403 で弾かれる。
     const response = await request({
       db,
-      path: `/thanks-redemptions/${redemptionId}/reject`,
+      path: `/thanks/thanks-redemptions/${redemptionId}/reject`,
       token: await adminToken(),
       method: "POST",
     })
@@ -783,7 +787,7 @@ describe("redemption", () => {
 
     const response = await request({
       db,
-      path: "/thanks-redemptions/0/approve",
+      path: "/thanks/thanks-redemptions/0/approve",
       token: await adminToken(),
       method: "POST",
     })
@@ -806,7 +810,7 @@ describe("redemption pagination", () => {
   }): Promise<void> {
     const requested = await request({
       db: props.db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: props.recipientTokenValue,
       method: "POST",
       body: { reward_id: props.rewardId },
@@ -816,7 +820,7 @@ describe("redemption pagination", () => {
 
     await request({
       db: props.db,
-      path: `/thanks-redemptions/${id}/reject`,
+      path: `/thanks/thanks-redemptions/${id}/reject`,
       token: await adminToken(),
       method: "POST",
     })
@@ -837,7 +841,7 @@ describe("redemption pagination", () => {
 
     const page1 = await request({
       db,
-      path: "/thanks-redemptions/me?limit=2",
+      path: "/thanks/thanks-redemptions/me?limit=2",
       token: recipientTokenValue,
     })
 
@@ -849,7 +853,7 @@ describe("redemption pagination", () => {
 
     const page2 = await request({
       db,
-      path: "/thanks-redemptions/me?limit=2&offset=2",
+      path: "/thanks/thanks-redemptions/me?limit=2&offset=2",
       token: recipientTokenValue,
     })
 
@@ -874,7 +878,7 @@ describe("redemption pagination", () => {
     // 異なる社員がそれぞれ pending を 1 件ずつ持つ（合計 2 件）。
     await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -882,7 +886,7 @@ describe("redemption pagination", () => {
 
     await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await otherRecipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -890,7 +894,7 @@ describe("redemption pagination", () => {
 
     const page1 = await request({
       db,
-      path: "/thanks-redemptions/inbox?limit=1",
+      path: "/thanks/thanks-redemptions/inbox?limit=1",
       token: await adminToken(),
     })
 
@@ -902,7 +906,7 @@ describe("redemption pagination", () => {
 
     const page2 = await request({
       db,
-      path: "/thanks-redemptions/inbox?limit=1&offset=1",
+      path: "/thanks/thanks-redemptions/inbox?limit=1&offset=1",
       token: await adminToken(),
     })
 
@@ -929,7 +933,7 @@ describe("atomicity", () => {
     const requestOnce = () =>
       request({
         db,
-        path: "/thanks-redemptions",
+        path: "/thanks/thanks-redemptions",
         token: recipientTokenValue,
         method: "POST",
         body: { reward_id: rewardId },
@@ -953,7 +957,7 @@ describe("atomicity", () => {
     const sendOnce = () =>
       request({
         db,
-        path: "/thanks-messages",
+        path: "/thanks/thanks-messages",
         token: senderTokenValue,
         method: "POST",
         body: { recipient_employee_code: "E005", message: "ありがとう", points: 300 },
@@ -967,7 +971,11 @@ describe("atomicity", () => {
 
     expect(statuses).toEqual([201, 400])
 
-    const budget = await request({ db, path: "/thanks-point-budgets/me", token: senderTokenValue })
+    const budget = await request({
+      db,
+      path: "/thanks/thanks-point-budgets/me",
+      token: senderTokenValue,
+    })
 
     const parsed = z
       .object({ remaining_points: z.number(), consumed_points: z.number() })
@@ -991,7 +999,7 @@ describe("atomicity", () => {
     const requestFor = async (token: string) => {
       const requested = await request({
         db,
-        path: "/thanks-redemptions",
+        path: "/thanks/thanks-redemptions",
         token,
         method: "POST",
         body: { reward_id: rewardId },
@@ -1011,7 +1019,7 @@ describe("atomicity", () => {
     const approve = (id: number) =>
       request({
         db,
-        path: `/thanks-redemptions/${id}/approve`,
+        path: `/thanks/thanks-redemptions/${id}/approve`,
         token: adminTokenValue,
         method: "POST",
       })
@@ -1047,7 +1055,7 @@ describe("atomicity", () => {
     // API 経由で 60pt の pending を 1 件作成。
     const requested = await request({
       db,
-      path: "/thanks-redemptions",
+      path: "/thanks/thanks-redemptions",
       token: await recipientToken(),
       method: "POST",
       body: { reward_id: rewardId },
@@ -1079,7 +1087,7 @@ describe("atomicity", () => {
     // 60pt の承認は残高不足で弾かれるべき。
     const approved = await request({
       db,
-      path: `/thanks-redemptions/${secondRow?.id}/approve`,
+      path: `/thanks/thanks-redemptions/${secondRow?.id}/approve`,
       token: await adminToken(),
       method: "POST",
     })

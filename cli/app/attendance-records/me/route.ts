@@ -21,7 +21,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["attendance-records"].me.$get({
+    const response = await client["attendance"]["attendance-records"].me.$get({
       query: { from: query.from, to: query.to },
     })
 

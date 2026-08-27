@@ -9,7 +9,7 @@ import type { HealthCheckupCreateRequest } from "@/lib/api/types/health-checkup-
 export async function createHealthCheckup(request: HealthCheckupCreateRequest) {
   const client = await createClient()
 
-  const response = await client["health-checkups"].$post({ json: request })
+  const response = await client["health-checkup"]["health-checkups"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

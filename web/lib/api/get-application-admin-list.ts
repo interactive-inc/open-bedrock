@@ -5,7 +5,7 @@ export type ApplicationAdminSort = "created_at_desc" | "created_at_asc"
 
 export type ApplicationAdminFilter = {
   status: ApplicationStatus | null
-  applicantId: number | null
+  applicantId: string | null
   templateCode: string | null
   from: string | null
   to: string | null
@@ -24,7 +24,7 @@ type Params = {
 export async function getApplicationAdminList(filter: ApplicationAdminFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client["application-requests"].admin.$get({
+  const response = await client["company"]["application-requests"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       applicant_id: filter.applicantId !== null ? String(filter.applicantId) : undefined,

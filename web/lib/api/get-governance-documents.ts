@@ -3,7 +3,7 @@ import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
 export async function getGovernanceDocuments(query?: { q?: string; kind?: string }) {
   const client = await createClient()
-  const response = await client["governance-documents"].$get({
+  const response = await client["governance"]["governance-documents"].$get({
     query: { q: query?.q, kind: query?.kind },
   })
   if (response.status >= 400) {

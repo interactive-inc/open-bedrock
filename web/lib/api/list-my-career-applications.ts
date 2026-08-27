@@ -7,7 +7,7 @@ export async function listMyCareerApplications(): Promise<
 > {
   const client = await createClient()
 
-  const response = await client["career-applications"].me.$get()
+  const response = await client["career"]["career-applications"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load career applications")

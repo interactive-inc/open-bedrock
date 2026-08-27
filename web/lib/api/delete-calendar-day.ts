@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function deleteCalendarDay(id: number) {
   const client = await createClient()
 
-  const response = await client["company-calendar-days"][":id"].$delete({
+  const response = await client["company-calendar"]["company-calendar-days"][":id"].$delete({
     param: { id: String(id) },
   })
 

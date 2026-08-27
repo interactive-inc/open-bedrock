@@ -21,9 +21,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["department-budgets"].$get({
+    const response = await client["expense"]["department-budgets"].$get({
       query: {
-        department_id: query["department-id"],
+        organization_unit_id: query["department-id"],
         fiscal_period: query["fiscal-period"],
       },
     })

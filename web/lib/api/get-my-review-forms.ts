@@ -5,7 +5,7 @@ import type { ReviewFormResponse } from "@/lib/api/types/review-types"
 export async function getMyReviewForms(): Promise<Array<ReviewFormResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["review-forms"].me.$get()
+  const response = await client["performance-review"]["review-forms"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load my review forms")

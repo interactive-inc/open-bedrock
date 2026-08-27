@@ -9,7 +9,7 @@ import type { PositionCreateRequest } from "@/lib/api/types/position-types"
 export async function createPosition(request: PositionCreateRequest) {
   const client = await createClient()
 
-  const response = await client["position-definitions"].$post({ json: request })
+  const response = await client.company["position-definitions"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

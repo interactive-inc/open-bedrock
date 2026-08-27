@@ -5,7 +5,7 @@ export type ExpenseAdminSort = "created_at_desc" | "created_at_asc" | "amount_de
 
 export type ExpenseAdminFilter = {
   status: ExpenseStatus | null
-  applicantId: number | null
+  applicantId: string | null
   category: ExpenseCategory | null
   from: string | null
   to: string | null
@@ -21,7 +21,7 @@ type Params = {
 export async function getExpenseAdminList(filter: ExpenseAdminFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client.expenses.admin.$get({
+  const response = await client["expense"]["expenses"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       applicant_id: filter.applicantId !== null ? String(filter.applicantId) : undefined,

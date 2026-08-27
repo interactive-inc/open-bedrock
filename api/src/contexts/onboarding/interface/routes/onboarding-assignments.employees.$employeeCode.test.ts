@@ -139,7 +139,7 @@ async function request(props: {
 describe("GET /onboarding-assignments/employees/:code", () => {
   test("a privileged role sees the employee assignments with tasks", async () => {
     const response = await request({
-      path: "/onboarding-assignments/employees/E005",
+      path: "/onboarding/onboarding-assignments/employees/E005",
       token: await token(1),
     })
 
@@ -160,7 +160,7 @@ describe("GET /onboarding-assignments/employees/:code", () => {
 
   test("a member is forbidden", async () => {
     const response = await request({
-      path: "/onboarding-assignments/employees/E005",
+      path: "/onboarding/onboarding-assignments/employees/E005",
       token: await token(6),
     })
 
@@ -169,7 +169,7 @@ describe("GET /onboarding-assignments/employees/:code", () => {
 
   test("returns 404 for an unknown employee", async () => {
     const response = await request({
-      path: "/onboarding-assignments/employees/E999",
+      path: "/onboarding/onboarding-assignments/employees/E999",
       token: await token(1),
     })
 
@@ -178,7 +178,7 @@ describe("GET /onboarding-assignments/employees/:code", () => {
 
   test("limit=1 returns at most one assignment", async () => {
     const response = await request({
-      path: "/onboarding-assignments/employees/E005?limit=1",
+      path: "/onboarding/onboarding-assignments/employees/E005?limit=1",
       token: await token(1),
     })
 
@@ -193,7 +193,7 @@ describe("GET /onboarding-assignments/employees/:code", () => {
 
   test("offset beyond the assignment count returns an empty list", async () => {
     const response = await request({
-      path: "/onboarding-assignments/employees/E005?offset=1",
+      path: "/onboarding/onboarding-assignments/employees/E005?offset=1",
       token: await token(1),
     })
 
@@ -207,7 +207,10 @@ describe("GET /onboarding-assignments/employees/:code", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/onboarding-assignments/employees/E005", token: null })
+    const response = await request({
+      path: "/onboarding/onboarding-assignments/employees/E005",
+      token: null,
+    })
 
     expect(response.status).toBe(401)
   })

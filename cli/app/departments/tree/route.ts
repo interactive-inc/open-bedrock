@@ -13,7 +13,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.departments.tree.$get()
+    const response = await client.company["organization-tree"].$get()
 
     const nodes = await response.json()
 

@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.regulations[":code"].$get({
+    const response = await client["regulation"]["regulations"][":code"].$get({
       param: { code: regulationCode },
     })
 

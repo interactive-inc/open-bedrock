@@ -9,7 +9,7 @@ import type { UpdateSurveyRequest } from "@/lib/api/types/survey-types"
 export async function updateSurvey(id: number, request: UpdateSurveyRequest) {
   const client = await createClient()
 
-  const response = await client.surveys[":surveyId"].$put({
+  const response = await client["survey"]["surveys"][":surveyId"].$put({
     param: { surveyId: String(id) },
     json: {
       title: request.title,

@@ -8,7 +8,7 @@ import type { ThanksCreateRequest } from "@/lib/api/types/thanks-types"
 export async function sendThanks(request: ThanksCreateRequest) {
   const client = await createClient()
 
-  const response = await client["thanks-messages"].$post({ json: request })
+  const response = await client["thanks"]["thanks-messages"].$post({ json: request })
 
   if (response.status >= 400) {
     return new Error("failed to send thanks")

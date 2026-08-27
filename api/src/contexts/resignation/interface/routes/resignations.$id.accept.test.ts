@@ -66,7 +66,7 @@ describe("POST /resignations/:id/accept", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/resignations/${seedId}/accept`,
+      path: `/resignation/resignations/${seedId}/accept`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -86,7 +86,7 @@ describe("POST /resignations/:id/accept", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/resignations/${seedId}/accept`,
+      path: `/resignation/resignations/${seedId}/accept`,
       token: await tokenFor(5),
       method: "POST",
     })
@@ -100,7 +100,7 @@ describe("POST /resignations/:id/accept", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: `/resignations/${seedId}/accept`,
+      path: `/resignation/resignations/${seedId}/accept`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -110,7 +110,7 @@ describe("POST /resignations/:id/accept", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: `/resignations/${seedId}/accept`,
+      path: `/resignation/resignations/${seedId}/accept`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -122,7 +122,7 @@ describe("POST /resignations/:id/accept", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/resignations/${seedId}/accept`,
+      path: `/resignation/resignations/${seedId}/accept`,
       token: null,
       method: "POST",
     })

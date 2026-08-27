@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    await client.assets[":code"].return.$post({
+    await client["asset"]["assets"][":code"].return.$post({
       param: { code: assetCode },
     })
 

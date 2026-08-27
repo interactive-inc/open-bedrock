@@ -8,7 +8,7 @@ import type { GoalSearchQuery } from "@/lib/api/types/goal-types"
 export async function getGoalList(query: GoalSearchQuery) {
   const client = await createClient()
 
-  const response = await client["performance-goals"].$get({
+  const response = await client["performance-review"]["performance-goals"].$get({
     query: {
       period: query.period ?? undefined,
       employee_id: query.employeeId === null ? undefined : String(query.employeeId),

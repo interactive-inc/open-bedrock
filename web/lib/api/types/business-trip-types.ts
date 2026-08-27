@@ -19,7 +19,7 @@ export type BusinessTripUpdateRequest = {
 /** GET /business-trips/me と /business-trips/:id のレスポンス要素。api は snake_case で返す。 */
 export type BusinessTripResponse = {
   id: string
-  traveler_id: number
+  traveler_id: string
   destination: string
   start_date: string
   end_date: string

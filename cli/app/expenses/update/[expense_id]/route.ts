@@ -41,7 +41,7 @@ export default factory.createHandlers(
 
     // 4xx/5xx は createClient の fetch ラッパーが ApiError として throw するため、
     // ここでの response.ok チェックは不要（到達時は必ず成功）。
-    const response = await client.expenses[":id"].$put({
+    const response = await client["expense"]["expenses"][":id"].$put({
       param: { id: expenseId },
       json: {
         category,

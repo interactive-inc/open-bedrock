@@ -112,7 +112,7 @@ async function request(props: RequestProps): Promise<Response> {
 describe("GET /department-budgets", () => {
   test("returns budgets with department name for a budget:manage role", async () => {
     const response = await request({
-      path: "/department-budgets",
+      path: "/expense/department-budgets",
       token: await tokenFor(1),
     })
 
@@ -130,7 +130,7 @@ describe("GET /department-budgets", () => {
 
   test("filters by fiscal_period and organization_unit_id", async () => {
     const response = await request({
-      path: "/department-budgets?organization_unit_id=department%3AD003&fiscal_period=2026",
+      path: "/expense/department-budgets?organization_unit_id=department%3AD003&fiscal_period=2026",
       token: await tokenFor(1),
     })
 
@@ -148,7 +148,7 @@ describe("GET /department-budgets", () => {
 
   test("returns 403 without budget:manage", async () => {
     const response = await request({
-      path: "/department-budgets",
+      path: "/expense/department-budgets",
       token: await tokenFor(2),
     })
 
@@ -156,7 +156,7 @@ describe("GET /department-budgets", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/department-budgets", token: null })
+    const response = await request({ path: "/expense/department-budgets", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -165,7 +165,7 @@ describe("GET /department-budgets", () => {
 describe("POST /department-budgets", () => {
   test("returns 201 with the created budget", async () => {
     const response = await request({
-      path: "/department-budgets",
+      path: "/expense/department-budgets",
       token: await tokenFor(1),
       method: "POST",
       body: {
@@ -194,7 +194,7 @@ describe("POST /department-budgets", () => {
 
   test("returns 404 when the department does not exist", async () => {
     const response = await request({
-      path: "/department-budgets",
+      path: "/expense/department-budgets",
       token: await tokenFor(1),
       method: "POST",
       body: {
@@ -212,7 +212,7 @@ describe("POST /department-budgets", () => {
 
   test("returns 400 when period_end precedes period_start", async () => {
     const response = await request({
-      path: "/department-budgets",
+      path: "/expense/department-budgets",
       token: await tokenFor(1),
       method: "POST",
       body: {
@@ -230,7 +230,7 @@ describe("POST /department-budgets", () => {
 
   test("returns 400 when amount is not positive", async () => {
     const response = await request({
-      path: "/department-budgets",
+      path: "/expense/department-budgets",
       token: await tokenFor(1),
       method: "POST",
       body: {
@@ -248,7 +248,7 @@ describe("POST /department-budgets", () => {
 
   test("returns 403 without budget:manage", async () => {
     const response = await request({
-      path: "/department-budgets",
+      path: "/expense/department-budgets",
       token: await tokenFor(2),
       method: "POST",
       body: {

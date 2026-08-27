@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function updateApplication(id: number, payload: unknown) {
   const client = await createClient()
 
-  const response = await client["application-requests"][":id"].$put({
+  const response = await client["company"]["application-requests"][":id"].$put({
     param: { id: String(id) },
     json: { payload: payload },
   })

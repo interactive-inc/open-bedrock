@@ -1,4 +1,4 @@
-import { AdvanceCertificateRequest } from "@/contexts/certificate-request/application/advance-certificate-request"
+import { IssueCertificateRequest } from "@/contexts/certificate-request/application/issue-certificate-request"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -16,10 +16,9 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const updated = await new AdvanceCertificateRequest(c).run({
+  const updated = await new IssueCertificateRequest(c).execute({
     session: session,
     certificateRequestId: validateUuidParam(c.req.param("id"), "certificate request"),
-    action: "issue",
   })
 
   if (updated instanceof ApplicationError) {

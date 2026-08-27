@@ -84,7 +84,7 @@ const knowledgeListResponseSchema = z.object({
 
 describe("GET /knowledge-articles", () => {
   test("returns 200 with all articles in CLI search shape", async () => {
-    const response = await request("/knowledge-articles", await memberToken())
+    const response = await request("/knowledge/knowledge-articles", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -105,7 +105,10 @@ describe("GET /knowledge-articles", () => {
   })
 
   test("filters by category query", async () => {
-    const response = await request("/knowledge-articles?category=経理", await memberToken())
+    const response = await request(
+      "/knowledge/knowledge-articles?category=経理",
+      await memberToken(),
+    )
 
     expect(response.status).toBe(200)
 
@@ -121,7 +124,10 @@ describe("GET /knowledge-articles", () => {
   })
 
   test("filters by keyword query", async () => {
-    const response = await request("/knowledge-articles?q=リモートワーク", await memberToken())
+    const response = await request(
+      "/knowledge/knowledge-articles?q=リモートワーク",
+      await memberToken(),
+    )
 
     expect(response.status).toBe(200)
 
@@ -137,7 +143,7 @@ describe("GET /knowledge-articles", () => {
   })
 
   test("treats % as a literal so it cannot match every article", async () => {
-    const response = await request("/knowledge-articles?q=%25", await memberToken())
+    const response = await request("/knowledge/knowledge-articles?q=%25", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -152,7 +158,7 @@ describe("GET /knowledge-articles", () => {
   })
 
   test("applies limit and returns at most that many articles", async () => {
-    const response = await request("/knowledge-articles?limit=2", await memberToken())
+    const response = await request("/knowledge/knowledge-articles?limit=2", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -167,7 +173,7 @@ describe("GET /knowledge-articles", () => {
   })
 
   test("clamps limit above MAX to MAX_LIST_LIMIT and still returns 200", async () => {
-    const response = await request("/knowledge-articles?limit=9999", await memberToken())
+    const response = await request("/knowledge/knowledge-articles?limit=9999", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -177,7 +183,7 @@ describe("GET /knowledge-articles", () => {
   })
 
   test("falls back to DEFAULT_LIST_LIMIT on a mixed string limit and returns 200", async () => {
-    const response = await request("/knowledge-articles?limit=50abc", await memberToken())
+    const response = await request("/knowledge/knowledge-articles?limit=50abc", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -192,7 +198,10 @@ describe("GET /knowledge-articles", () => {
   })
 
   test("applies a huge offset exceeding 32-bit int and returns 200 with empty result", async () => {
-    const response = await request("/knowledge-articles?offset=9999999999999", await memberToken())
+    const response = await request(
+      "/knowledge/knowledge-articles?offset=9999999999999",
+      await memberToken(),
+    )
 
     expect(response.status).toBe(200)
 
@@ -207,7 +216,7 @@ describe("GET /knowledge-articles", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/knowledge-articles", null)
+    const response = await request("/knowledge/knowledge-articles", null)
 
     expect(response.status).toBe(401)
   })
@@ -222,7 +231,7 @@ describe("POST /knowledge-articles", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/knowledge-articles",
+      path: "/knowledge/knowledge-articles",
       token: await memberToken(),
       method: "POST",
       body: { title: "New Article", category: "Policy", body_md: "hello body" },

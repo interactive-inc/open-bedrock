@@ -4,7 +4,7 @@ export type EmployeeEventKind = "join" | "transfer" | "leave_of_absence" | "retu
 /** GET /employee-events のレスポンス要素。api は snake_case で返す。 */
 export type EmployeeEventResponse = {
   id: number
-  employee_id: number
+  employee_id: string
   kind: string
   effective_date: string
   from_department_code: string | null
@@ -21,7 +21,7 @@ export type EmployeeEventSearchQuery = {
 
 /** POST /employee-events のリクエストボディ。対象は employee_id / employee_code のどちらか一方で指定する。 */
 export type EmployeeEventCreateRequest = {
-  employee_id?: number
+  employee_id?: string
   employee_code?: string
   kind: EmployeeEventKind
   effective_date: string

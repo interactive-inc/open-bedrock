@@ -10,7 +10,9 @@ type Props = {
 export async function getReviewResults(props: Props): Promise<ReviewResultResponse | Error> {
   const client = await createClient()
 
-  const response = await client["review-cycles"][":cycleId"].results[":employeeCode"].$get({
+  const response = await client["performance-review"]["review-cycles"][":cycleId"].results[
+    ":employeeCode"
+  ].$get({
     param: { cycleId: String(props.cycleId), employeeCode: props.employeeCode },
   })
 

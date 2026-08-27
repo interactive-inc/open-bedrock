@@ -17,7 +17,7 @@ export type FamilyCareLeaveUpdateRequest = {
 /** GET /family-care-leaves/me と /family-care-leaves/:id のレスポンス要素。api は snake_case で返す。 */
 export type FamilyCareLeaveResponse = {
   id: string
-  employee_id: number
+  employee_id: string
   leave_kind: string
   start_date: string
   end_date: string

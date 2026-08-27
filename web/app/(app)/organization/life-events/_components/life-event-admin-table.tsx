@@ -15,7 +15,7 @@ import { statusLabel } from "@/lib/status-label"
 
 type Row = {
   id: string
-  employee_id: number
+  employee_id: string
   event_type: string
   event_date: string
   detail: string | null

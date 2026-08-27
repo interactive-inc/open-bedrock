@@ -101,7 +101,7 @@ async function request(props: {
 describe("GET /career-applications/me", () => {
   test("returns only the viewer's applications", async () => {
     const response = await request({
-      path: "/career-applications/me",
+      path: "/career/career-applications/me",
       token: await tokenForEmployee(6),
     })
 
@@ -120,7 +120,7 @@ describe("GET /career-applications/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/career-applications/me", token: null })
+    const response = await request({ path: "/career/career-applications/me", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -129,7 +129,7 @@ describe("GET /career-applications/me", () => {
 describe("GET /career-applications/:id", () => {
   test("returns the application for its applicant", async () => {
     const response = await request({
-      path: `/career-applications/${appliedApplicationId}`,
+      path: `/career/career-applications/${appliedApplicationId}`,
       token: await tokenForEmployee(6),
     })
 
@@ -146,7 +146,7 @@ describe("GET /career-applications/:id", () => {
 
   test("returns 403 for another person's application", async () => {
     const response = await request({
-      path: `/career-applications/${appliedApplicationId}`,
+      path: `/career/career-applications/${appliedApplicationId}`,
       token: await tokenForEmployee(2),
     })
 
@@ -155,7 +155,7 @@ describe("GET /career-applications/:id", () => {
 
   test("returns 404 for an unknown application", async () => {
     const response = await request({
-      path: "/career-applications/9999",
+      path: "/career/career-applications/9999",
       token: await tokenForEmployee(6),
     })
 
@@ -164,7 +164,7 @@ describe("GET /career-applications/:id", () => {
 
   test("returns 400 when the application id is not a positive integer", async () => {
     const response = await request({
-      path: "/career-applications/abc",
+      path: "/career/career-applications/abc",
       token: await tokenForEmployee(6),
     })
 
@@ -175,7 +175,7 @@ describe("GET /career-applications/:id", () => {
 describe("PUT /career-applications/:id", () => {
   test("updates the message of the viewer's pending application", async () => {
     const response = await request({
-      path: `/career-applications/${appliedApplicationId}`,
+      path: `/career/career-applications/${appliedApplicationId}`,
       token: await tokenForEmployee(6),
       method: "PUT",
       body: { message: "Updated motivation" },
@@ -194,7 +194,7 @@ describe("PUT /career-applications/:id", () => {
 
   test("returns 403 when updating another person's application", async () => {
     const response = await request({
-      path: `/career-applications/${appliedApplicationId}`,
+      path: `/career/career-applications/${appliedApplicationId}`,
       token: await tokenForEmployee(2),
       method: "PUT",
       body: { message: "Hijack" },
@@ -205,7 +205,7 @@ describe("PUT /career-applications/:id", () => {
 
   test("returns 409 when updating a decided application", async () => {
     const response = await request({
-      path: `/career-applications/${decidedApplicationId}`,
+      path: `/career/career-applications/${decidedApplicationId}`,
       token: await tokenForEmployee(15),
       method: "PUT",
       body: { message: "Too late" },
@@ -216,7 +216,7 @@ describe("PUT /career-applications/:id", () => {
 
   test("returns 404 for an unknown application", async () => {
     const response = await request({
-      path: "/career-applications/9999",
+      path: "/career/career-applications/9999",
       token: await tokenForEmployee(6),
       method: "PUT",
       body: { message: "ghost" },
@@ -229,7 +229,7 @@ describe("PUT /career-applications/:id", () => {
 describe("DELETE /career-applications/:id", () => {
   test("withdraws the viewer's pending application and returns 204", async () => {
     const response = await request({
-      path: `/career-applications/${appliedApplicationId}`,
+      path: `/career/career-applications/${appliedApplicationId}`,
       token: await tokenForEmployee(6),
       method: "DELETE",
     })
@@ -239,7 +239,7 @@ describe("DELETE /career-applications/:id", () => {
 
   test("returns 403 when withdrawing another person's application", async () => {
     const response = await request({
-      path: `/career-applications/${appliedApplicationId}`,
+      path: `/career/career-applications/${appliedApplicationId}`,
       token: await tokenForEmployee(2),
       method: "DELETE",
     })
@@ -249,7 +249,7 @@ describe("DELETE /career-applications/:id", () => {
 
   test("returns 409 when withdrawing a decided application", async () => {
     const response = await request({
-      path: `/career-applications/${decidedApplicationId}`,
+      path: `/career/career-applications/${decidedApplicationId}`,
       token: await tokenForEmployee(15),
       method: "DELETE",
     })
@@ -259,7 +259,7 @@ describe("DELETE /career-applications/:id", () => {
 
   test("returns 404 for an unknown application", async () => {
     const response = await request({
-      path: "/career-applications/9999",
+      path: "/career/career-applications/9999",
       token: await tokenForEmployee(6),
       method: "DELETE",
     })
@@ -269,7 +269,7 @@ describe("DELETE /career-applications/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: `/career-applications/${appliedApplicationId}`,
+      path: `/career/career-applications/${appliedApplicationId}`,
       token: null,
       method: "DELETE",
     })

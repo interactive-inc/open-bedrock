@@ -11,7 +11,7 @@ export async function createShiftAssignment(
 ): Promise<ShiftAssignmentResponse | Error> {
   const client = await createClient()
 
-  const response = await client["shift-assignments"].$post({
+  const response = await client["shift"]["shift-assignments"].$post({
     json: {
       employee_code: request.employee_code,
       pattern_code: request.pattern_code,

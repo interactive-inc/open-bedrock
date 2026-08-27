@@ -5,7 +5,9 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function deleteCommendation(id: number) {
   const client = await createClient()
 
-  const response = await client.commendations[":id"].$delete({ param: { id: String(id) } })
+  const response = await client["commendation"]["commendations"][":id"].$delete({
+    param: { id: String(id) },
+  })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "表彰の削除に失敗しました" })

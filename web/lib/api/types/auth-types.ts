@@ -18,7 +18,7 @@ export type RefreshResponse = {
 }
 
 export type MeResponse = {
-  id: number
+  id: string
   code: string | null
   name: string
   email: string

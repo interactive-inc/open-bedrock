@@ -36,11 +36,11 @@ const app = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
-  .post("/business-trips", ...createRoute.POST)
-  .get("/business-trips/me", ...meRoute.GET)
-  .get("/business-trips/:id", ...detailRoute.GET)
-  .put("/business-trips/:id", ...detailRoute.PUT)
-  .delete("/business-trips/:id", ...detailRoute.DELETE)
+  .post("/business-trip/business-trips", ...createRoute.POST)
+  .get("/business-trip/business-trips/me", ...meRoute.GET)
+  .get("/business-trip/business-trips/:id", ...detailRoute.GET)
+  .put("/business-trip/business-trips/:id", ...detailRoute.PUT)
+  .delete("/business-trip/business-trips/:id", ...detailRoute.DELETE)
 
 const businessTripResponseSchema = z.object({
   id: z.string(),
@@ -140,7 +140,7 @@ async function request(props: {
 describe("POST /business-trips", () => {
   test("creates a business trip with status requested", async () => {
     const response = await request({
-      path: "/business-trips",
+      path: "/business-trip/business-trips",
       token: await travelerToken(),
       method: "POST",
       body: {
@@ -167,7 +167,7 @@ describe("POST /business-trips", () => {
 
   test("creates a business trip with null estimated_cost", async () => {
     const response = await request({
-      path: "/business-trips",
+      path: "/business-trip/business-trips",
       token: await travelerToken(),
       method: "POST",
       body: {
@@ -191,7 +191,7 @@ describe("POST /business-trips", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/business-trips",
+      path: "/business-trip/business-trips",
       token: null,
       method: "POST",
       body: {
@@ -208,7 +208,10 @@ describe("POST /business-trips", () => {
 
 describe("GET /business-trips/me", () => {
   test("returns only the viewer's business trips", async () => {
-    const response = await request({ path: "/business-trips/me", token: await travelerToken() })
+    const response = await request({
+      path: "/business-trip/business-trips/me",
+      token: await travelerToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -239,7 +242,7 @@ describe("GET /business-trips/me", () => {
     }
 
     const created = await app.request(
-      "/business-trips",
+      "/business-trip/business-trips",
       {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
@@ -257,7 +260,7 @@ describe("GET /business-trips/me", () => {
     expect(created.status).toBe(201)
 
     const limited = await app.request(
-      "/business-trips/me?limit=1",
+      "/business-trip/business-trips/me?limit=1",
       { headers: { Authorization: `Bearer ${token}` } },
       bindings,
     )
@@ -269,7 +272,7 @@ describe("GET /business-trips/me", () => {
     expect(limitedRows.data.length).toBe(1)
 
     const skipped = await app.request(
-      "/business-trips/me?offset=1",
+      "/business-trip/business-trips/me?offset=1",
       { headers: { Authorization: `Bearer ${token}` } },
       bindings,
     )
@@ -282,7 +285,7 @@ describe("GET /business-trips/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/business-trips/me", token: null })
+    const response = await request({ path: "/business-trip/business-trips/me", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -291,7 +294,7 @@ describe("GET /business-trips/me", () => {
 describe("GET /business-trips/:id", () => {
   test("returns the business trip for its traveler", async () => {
     const response = await request({
-      path: `/business-trips/${ownBusinessTripId}`,
+      path: `/business-trip/business-trips/${ownBusinessTripId}`,
       token: await travelerToken(),
     })
 
@@ -308,7 +311,7 @@ describe("GET /business-trips/:id", () => {
 
   test("returns 403 for another person's business trip", async () => {
     const response = await request({
-      path: `/business-trips/${othersBusinessTripId}`,
+      path: `/business-trip/business-trips/${othersBusinessTripId}`,
       token: await travelerToken(),
     })
 
@@ -317,7 +320,7 @@ describe("GET /business-trips/:id", () => {
 
   test("returns 404 for an unknown business trip", async () => {
     const response = await request({
-      path: "/business-trips/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/business-trip/business-trips/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await travelerToken(),
     })
 
@@ -328,7 +331,7 @@ describe("GET /business-trips/:id", () => {
 describe("PUT /business-trips/:id", () => {
   test("updates the details of the viewer's business trip", async () => {
     const response = await request({
-      path: `/business-trips/${ownBusinessTripId}`,
+      path: `/business-trip/business-trips/${ownBusinessTripId}`,
       token: await travelerToken(),
       method: "PUT",
       body: {
@@ -354,7 +357,7 @@ describe("PUT /business-trips/:id", () => {
 
   test("returns 403 when updating another person's business trip", async () => {
     const response = await request({
-      path: `/business-trips/${othersBusinessTripId}`,
+      path: `/business-trip/business-trips/${othersBusinessTripId}`,
       token: await travelerToken(),
       method: "PUT",
       body: {
@@ -371,7 +374,7 @@ describe("PUT /business-trips/:id", () => {
 
   test("returns 404 for an unknown business trip", async () => {
     const response = await request({
-      path: "/business-trips/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/business-trip/business-trips/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await travelerToken(),
       method: "PUT",
       body: {
@@ -390,7 +393,7 @@ describe("PUT /business-trips/:id", () => {
 describe("DELETE /business-trips/:id", () => {
   test("cancels the viewer's business trip and returns 204", async () => {
     const response = await request({
-      path: `/business-trips/${ownBusinessTripId}`,
+      path: `/business-trip/business-trips/${ownBusinessTripId}`,
       token: await travelerToken(),
       method: "DELETE",
     })
@@ -400,7 +403,7 @@ describe("DELETE /business-trips/:id", () => {
 
   test("returns 403 when cancelling another person's business trip", async () => {
     const response = await request({
-      path: `/business-trips/${othersBusinessTripId}`,
+      path: `/business-trip/business-trips/${othersBusinessTripId}`,
       token: await travelerToken(),
       method: "DELETE",
     })
@@ -410,7 +413,7 @@ describe("DELETE /business-trips/:id", () => {
 
   test("returns 404 for an unknown business trip", async () => {
     const response = await request({
-      path: "/business-trips/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/business-trip/business-trips/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await travelerToken(),
       method: "DELETE",
     })
@@ -420,7 +423,7 @@ describe("DELETE /business-trips/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: `/business-trips/${ownBusinessTripId}`,
+      path: `/business-trip/business-trips/${ownBusinessTripId}`,
       token: null,
       method: "DELETE",
     })

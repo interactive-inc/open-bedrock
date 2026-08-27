@@ -38,7 +38,7 @@ export async function reassignWorkflowStepAction(
   if (candidateEmployeeIds === null) {
     return {
       ok: false,
-      error: "候補従業員 ID は正の整数をカンマ区切りで 1〜20 件入力してください",
+      error: "候補従業員 ID はカンマ区切りで 1〜20 件入力してください",
     }
   }
 
@@ -73,7 +73,7 @@ export async function reassignWorkflowStepAction(
 
   revalidatePath("/organization/workflow-repairs")
   revalidatePath(`/organization/applications/${applicationId}`)
-  revalidatePath("/inbox/applications")
+  revalidatePath("/company/inbox/applications")
 
   return { ok: true, error: null }
 }

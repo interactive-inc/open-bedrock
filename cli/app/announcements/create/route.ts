@@ -24,7 +24,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.announcements.$post({
+    const response = await client["announcement"]["announcements"].$post({
       json: { title: query.title, body_md: query.body },
     })
 

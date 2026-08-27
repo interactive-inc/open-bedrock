@@ -15,7 +15,7 @@ export async function updateTrainingCourse(
 ): Promise<TrainingCourseResponse | Error> {
   const client = await createClient()
 
-  const response = await client["training-courses"][":code"].$put({
+  const response = await client["training"]["training-courses"][":code"].$put({
     param: { code: code },
     json: {
       title: request.title,

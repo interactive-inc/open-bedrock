@@ -24,13 +24,13 @@ export type ThanksRewardResponse = {
 /** GET /thanks-redemptions/me の各要素（自分の交換申請）。 */
 export type ThanksRedemptionResponse = {
   id: number | null
-  employee_id: number
+  employee_id: string
   reward_id: number
   point_cost: number
   status: "pending" | "rejected" | "fulfilled"
   created_at: string
   decided_at: string | null
-  decider_id: number | null
+  decider_id: string | null
 }
 
 export type ThanksRedemptionInboxResponse = ThanksRedemptionResponse & {

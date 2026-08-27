@@ -21,7 +21,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.system.v1.notifications.$get({
+    const response = await client.system.notifications.$get({
       query: { read: query.unread ? "false" : undefined },
     })
     if (response.status !== 200) throw new UsageError("通知一覧の取得に失敗しました")

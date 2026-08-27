@@ -95,7 +95,7 @@ async function request(
 
 describe("GET /review-forms/me", () => {
   test("returns only the caller's forms", async () => {
-    const response = await request("/review-forms/me", await managerToken())
+    const response = await request("/performance-review/review-forms/me", await managerToken())
 
     expect(response.status).toBe(200)
 
@@ -114,7 +114,7 @@ describe("GET /review-forms/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/review-forms/me", null)
+    const response = await request("/performance-review/review-forms/me", null)
 
     expect(response.status).toBe(401)
   })

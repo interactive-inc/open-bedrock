@@ -67,7 +67,7 @@ describe("POST /certificate-requests/:id/issue", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/certificate-requests/${seedId}/issue`,
+      path: `/certificate-request/certificate-requests/${seedId}/issue`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -87,7 +87,7 @@ describe("POST /certificate-requests/:id/issue", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/certificate-requests/${seedId}/issue`,
+      path: `/certificate-request/certificate-requests/${seedId}/issue`,
       token: await tokenFor(5),
       method: "POST",
     })
@@ -101,7 +101,7 @@ describe("POST /certificate-requests/:id/issue", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: `/certificate-requests/${seedId}/issue`,
+      path: `/certificate-request/certificate-requests/${seedId}/issue`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -111,7 +111,7 @@ describe("POST /certificate-requests/:id/issue", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: `/certificate-requests/${seedId}/issue`,
+      path: `/certificate-request/certificate-requests/${seedId}/issue`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -123,7 +123,7 @@ describe("POST /certificate-requests/:id/issue", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/certificate-requests/99999999-0000-0000-0000-000000000000/issue",
+      path: "/certificate-request/certificate-requests/99999999-0000-0000-0000-000000000000/issue",
       token: await tokenFor(99),
       method: "POST",
     })
@@ -135,7 +135,7 @@ describe("POST /certificate-requests/:id/issue", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/certificate-requests/${seedId}/issue`,
+      path: `/certificate-request/certificate-requests/${seedId}/issue`,
       token: null,
       method: "POST",
     })

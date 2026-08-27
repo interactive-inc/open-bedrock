@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["rental-reservations"][":id"].lend.$post({
+    const response = await client["rental"]["rental-reservations"][":id"].lend.$post({
       param: { id: query.id },
     })
 

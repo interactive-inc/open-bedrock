@@ -26,7 +26,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["certification-definitions"].$post({
+    const response = await client["certification"]["certification-definitions"].$post({
       json: {
         code: query.code,
         name: query.name,

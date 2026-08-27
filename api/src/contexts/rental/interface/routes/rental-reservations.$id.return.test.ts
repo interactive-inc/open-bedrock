@@ -66,7 +66,7 @@ async function lend(db: D1Database): Promise<Response> {
   return requestWithContext({
     db,
     jwtSecret,
-    path: `/rental-reservations/${seedId}/lend`,
+    path: `/rental/rental-reservations/${seedId}/lend`,
     token: await tokenFor(99),
     method: "POST",
   })
@@ -81,7 +81,7 @@ describe("POST /rental-reservations/:id/return", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/rental-reservations/${seedId}/return`,
+      path: `/rental/rental-reservations/${seedId}/return`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -105,7 +105,7 @@ describe("POST /rental-reservations/:id/return", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/rental-reservations/${seedId}/return`,
+      path: `/rental/rental-reservations/${seedId}/return`,
       token: await tokenFor(5),
       method: "POST",
     })
@@ -117,7 +117,7 @@ describe("POST /rental-reservations/:id/return", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/rental-reservations/${seedId}/return`,
+      path: `/rental/rental-reservations/${seedId}/return`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -129,7 +129,7 @@ describe("POST /rental-reservations/:id/return", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/rental-reservations/${seedId}/return`,
+      path: `/rental/rental-reservations/${seedId}/return`,
       token: null,
       method: "POST",
     })

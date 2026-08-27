@@ -98,7 +98,7 @@ async function getRequest(path: string, token: string | null): Promise<Response>
 
 describe("GET /rooms/reservations/me", () => {
   test("returns the caller's reservations", async () => {
-    const response = await getRequest("/rooms/reservations/me", await managerToken())
+    const response = await getRequest("/room/rooms/reservations/me", await managerToken())
 
     expect(response.status).toBe(200)
 
@@ -114,7 +114,7 @@ describe("GET /rooms/reservations/me", () => {
   })
 
   test("applies limit=1 and returns only 1 item", async () => {
-    const response = await getRequest("/rooms/reservations/me?limit=1", await managerToken())
+    const response = await getRequest("/room/rooms/reservations/me?limit=1", await managerToken())
 
     expect(response.status).toBe(200)
 
@@ -133,7 +133,7 @@ describe("GET /rooms/reservations/me", () => {
 
   test("applies offset to skip items", async () => {
     const response = await getRequest(
-      "/rooms/reservations/me?limit=1&offset=1",
+      "/room/rooms/reservations/me?limit=1&offset=1",
       await managerToken(),
     )
 
@@ -152,7 +152,7 @@ describe("GET /rooms/reservations/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await getRequest("/rooms/reservations/me", null)
+    const response = await getRequest("/room/rooms/reservations/me", null)
 
     expect(response.status).toBe(401)
   })

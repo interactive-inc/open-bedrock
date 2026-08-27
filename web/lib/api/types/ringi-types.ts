@@ -3,7 +3,7 @@ export type RingiStatus = "pending" | "approved" | "rejected"
 /** GET /ringi-requests/me の各要素（自分の起案一覧）。 */
 export type RingiMineResponse = {
   id: number
-  approver_id: number
+  approver_id: string
   approver_name: string
   title: string
   amount: number
@@ -15,7 +15,7 @@ export type RingiMineResponse = {
 /** GET /ringi-requests/inbox の各要素（承認待ち一覧）。 */
 export type RingiInboxResponse = {
   id: number
-  applicant_id: number
+  applicant_id: string
   applicant_name: string
   title: string
   amount: number
@@ -27,10 +27,10 @@ export type RingiInboxResponse = {
 /** GET /ringi-requests/admin の各要素（全社横断の稟議一覧）。 */
 export type RingiAdminResponse = {
   id: number
-  applicant_id: number
+  applicant_id: string
   applicant_name: string
   applicant_dept_name: string | null
-  approver_id: number
+  approver_id: string
   approver_name: string
   title: string
   amount: number
@@ -46,7 +46,7 @@ export type RingiDecisionResponse = {
 
 /** POST /ringi-requests のリクエスト body。 */
 export type RingiSubmitRequest = {
-  approver_id: number
+  approver_id: string
   title: string
   amount: number
   reason: string

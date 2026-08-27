@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function lendAsset(code: string, employeeCode: string) {
   const client = await createClient()
 
-  const response = await client.assets[":code"].lend.$post({
+  const response = await client["asset"]["assets"][":code"].lend.$post({
     param: { code },
     json: { employee_code: employeeCode },
   })

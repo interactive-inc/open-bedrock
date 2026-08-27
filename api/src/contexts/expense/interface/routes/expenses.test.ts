@@ -111,7 +111,7 @@ async function request(props: RequestProps): Promise<Response> {
 describe("POST /expenses", () => {
   test("returns 201 with a pending expense from the token employee", async () => {
     const response = await request({
-      path: "/expenses",
+      path: "/expense/expenses",
       token: await tokenFor(5),
       method: "POST",
       body: { category: "transport", amount: 1500, spent_at: "2026-05-25" },
@@ -133,7 +133,7 @@ describe("POST /expenses", () => {
 
   test("returns 400 when amount is not positive", async () => {
     const response = await request({
-      path: "/expenses",
+      path: "/expense/expenses",
       token: await tokenFor(5),
       method: "POST",
       body: { category: "transport", amount: 0, spent_at: "2026-05-25" },
@@ -144,7 +144,7 @@ describe("POST /expenses", () => {
 
   test("returns 400 when amount is not an integer", async () => {
     const response = await request({
-      path: "/expenses",
+      path: "/expense/expenses",
       token: await tokenFor(5),
       method: "POST",
       body: { category: "transport", amount: 1.005, spent_at: "2026-05-25" },
@@ -155,7 +155,7 @@ describe("POST /expenses", () => {
 
   test("returns 400 when amount exceeds the safe integer range", async () => {
     const response = await request({
-      path: "/expenses",
+      path: "/expense/expenses",
       token: await tokenFor(5),
       method: "POST",
       body: { category: "transport", amount: Number.MAX_SAFE_INTEGER + 2, spent_at: "2026-05-25" },
@@ -166,7 +166,7 @@ describe("POST /expenses", () => {
 
   test("returns 400 when category is invalid", async () => {
     const response = await request({
-      path: "/expenses",
+      path: "/expense/expenses",
       token: await tokenFor(5),
       method: "POST",
       body: { category: "travel", amount: 100, spent_at: "2026-05-25" },
@@ -177,7 +177,7 @@ describe("POST /expenses", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/expenses",
+      path: "/expense/expenses",
       token: null,
       method: "POST",
       body: { category: "transport", amount: 100, spent_at: "2026-05-25" },

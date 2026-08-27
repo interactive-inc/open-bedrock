@@ -85,7 +85,7 @@ async function BudgetDetailView(props: ViewProps) {
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
             <DetailField label="部署">
-              {budget.department_name ?? `#${budget.department_id}`}
+              {budget.organization_unit_name ?? budget.organization_unit_id}
             </DetailField>
 
             <DetailField label="会計期間">{budget.fiscal_period}</DetailField>

@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.resignations[":id"].reject.$post({
+    const response = await client["resignation"]["resignations"][":id"].reject.$post({
       param: { id: query.id },
     })
 

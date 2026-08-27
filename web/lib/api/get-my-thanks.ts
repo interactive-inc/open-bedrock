@@ -26,7 +26,7 @@ export async function getMyThanks(props?: {
     query.offset = String(props.offset)
   }
 
-  const response = await client["thanks-messages"].me.$get({ query })
+  const response = await client["thanks"]["thanks-messages"].me.$get({ query })
 
   if (response.status >= 400) {
     return new Error("failed to load my thanks")

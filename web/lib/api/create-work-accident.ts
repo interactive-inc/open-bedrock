@@ -6,7 +6,7 @@ import type { WorkAccidentCreateRequest } from "@/lib/api/types/work-accident-ty
 export async function createWorkAccident(request: WorkAccidentCreateRequest) {
   const client = await createClient()
 
-  const response = await client["work-accidents"].$post({ json: request })
+  const response = await client["work-accident"]["work-accidents"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

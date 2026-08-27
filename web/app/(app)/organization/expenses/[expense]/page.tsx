@@ -52,7 +52,7 @@ export default async function ExpenseDetailPage(props: Props) {
 type ViewProps = {
   id: string
   canDecide: boolean
-  viewerEmployeeId: number | null
+  viewerEmployeeId: string | null
 }
 
 /** /expenses/:id を認証付きで取得して詳細カードと意思決定フォームを描画する非同期 RSC。 */

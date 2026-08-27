@@ -6,7 +6,7 @@ import type { BudgetCreateRequest } from "@/lib/api/types/budget-types"
 export async function createBudget(request: BudgetCreateRequest) {
   const client = await createClient()
 
-  const response = await client["department-budgets"].$post({ json: request })
+  const response = await client["expense"]["department-budgets"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "予算の登録に失敗しました" })

@@ -9,7 +9,7 @@ import type { PositionUpdateRequest } from "@/lib/api/types/position-types"
 export async function updatePosition(positionId: number, request: PositionUpdateRequest) {
   const client = await createClient()
 
-  const response = await client["position-definitions"][":id"].$put({
+  const response = await client.company["position-definitions"][":id"].$put({
     param: { id: String(positionId) },
     json: request,
   })

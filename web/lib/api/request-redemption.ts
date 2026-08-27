@@ -11,7 +11,9 @@ export async function requestRedemption(
 ): Promise<ThanksRedemptionResponse | Error> {
   const client = await createClient()
 
-  const response = await client["thanks-redemptions"].$post({ json: { reward_id: rewardId } })
+  const response = await client["thanks"]["thanks-redemptions"].$post({
+    json: { reward_id: rewardId },
+  })
 
   if (response.status >= 400) {
     return toResponseError(response, {

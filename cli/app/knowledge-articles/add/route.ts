@@ -27,7 +27,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["knowledge-articles"].$post({
+    const response = await client["knowledge"]["knowledge-articles"].$post({
       json: {
         title: query.title,
         category: query.category,

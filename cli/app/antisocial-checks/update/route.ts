@@ -27,7 +27,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["antisocial-checks"][":id"].$put({
+    const response = await client["antisocial-check"]["antisocial-checks"][":id"].$put({
       param: { id: query.id },
       json: {
         partner_name: query.partner,

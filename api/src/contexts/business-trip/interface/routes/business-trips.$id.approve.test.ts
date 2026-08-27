@@ -68,7 +68,7 @@ describe("POST /business-trips/:id/approve", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/business-trips/${seedId}/approve`,
+      path: `/business-trip/business-trips/${seedId}/approve`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -88,7 +88,7 @@ describe("POST /business-trips/:id/approve", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/business-trips/${seedId}/approve`,
+      path: `/business-trip/business-trips/${seedId}/approve`,
       token: await tokenFor(5),
       method: "POST",
     })
@@ -102,7 +102,7 @@ describe("POST /business-trips/:id/approve", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: `/business-trips/${seedId}/approve`,
+      path: `/business-trip/business-trips/${seedId}/approve`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -112,7 +112,7 @@ describe("POST /business-trips/:id/approve", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: `/business-trips/${seedId}/approve`,
+      path: `/business-trip/business-trips/${seedId}/approve`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -124,7 +124,7 @@ describe("POST /business-trips/:id/approve", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/business-trips/${seedId}/approve`,
+      path: `/business-trip/business-trips/${seedId}/approve`,
       token: null,
       method: "POST",
     })

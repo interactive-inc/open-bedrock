@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function deleteSurvey(id: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.surveys[":surveyId"].$delete({
+  const response = await client["survey"]["surveys"][":surveyId"].$delete({
     param: { surveyId: String(id) },
   })
 

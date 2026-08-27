@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.me.$get()
+    const response = await client.company["current-profile"].$get()
 
     const me = await response.json()
 

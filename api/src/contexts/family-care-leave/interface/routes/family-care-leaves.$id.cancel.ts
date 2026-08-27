@@ -1,4 +1,4 @@
-import { AdvanceFamilyCareLeave } from "@/contexts/family-care-leave/application/advance-family-care-leave"
+import { CancelFamilyCareLeave } from "@/contexts/family-care-leave/application/cancel-family-care-leave"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -16,10 +16,9 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const updated = await new AdvanceFamilyCareLeave(c).run({
+  const updated = await new CancelFamilyCareLeave(c).execute({
     session: session,
     familyCareLeaveId: validateUuidParam(c.req.param("id"), "family care leave"),
-    action: "cancel",
   })
 
   if (updated instanceof ApplicationError) {

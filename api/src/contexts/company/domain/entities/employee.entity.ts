@@ -49,4 +49,22 @@ export class EmployeeEntity {
 
     return new EmployeeEntity(props)
   }
+
+  withOfficialName(officialName: string): EmployeeEntity | InvalidEmployeeError {
+    return EmployeeEntity.restore({ ...this.toProps(), officialName })
+  }
+
+  withPhone(phone: string | null): EmployeeEntity | InvalidEmployeeError {
+    return EmployeeEntity.restore({ ...this.toProps(), phone })
+  }
+
+  toProps(): EmployeeProps {
+    return {
+      id: this.id,
+      officialName: this.officialName,
+      employeeCode: this.employeeCode,
+      email: this.email,
+      phone: this.phone,
+    }
+  }
 }

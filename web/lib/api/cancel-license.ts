@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function cancelLicense(id: number) {
   const client = await createClient()
 
-  const response = await client["software-licenses"][":id"].cancel.$post({
+  const response = await client["software-license"]["software-licenses"][":id"].cancel.$post({
     param: { id: String(id) },
   })
 

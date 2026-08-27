@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function deleteShiftPattern(id: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["shift-patterns"][":id"].$delete({
+  const response = await client["shift"]["shift-patterns"][":id"].$delete({
     param: { id: String(id) },
   })
 

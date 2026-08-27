@@ -419,7 +419,7 @@ export async function approveShiftSwapRequestAction(
     return { ok: false, error: approved.message }
   }
 
-  revalidatePath("/inbox/shift-swaps")
+  revalidatePath("/company/inbox/shift-swaps")
   revalidatePath("/my/shifts")
   revalidatePath("/organization/shift-assignments")
 

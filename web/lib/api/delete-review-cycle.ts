@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function deleteReviewCycle(cycleId: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["review-cycles"][":cycleId"].$delete({
+  const response = await client["performance-review"]["review-cycles"][":cycleId"].$delete({
     param: { cycleId: String(cycleId) },
   })
 

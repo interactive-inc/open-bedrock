@@ -7,7 +7,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function deleteMySkill(skillCode: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["employee-skills"].me[":skillCode"].$delete({
+  const response = await client["skill"]["employee-skills"].me[":skillCode"].$delete({
     param: { skillCode: skillCode },
   })
 

@@ -7,7 +7,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getDepartmentLeaveRequests(departmentCode: string) {
   const client = await createClient()
 
-  const response = await client["leave-requests"].$get({
+  const response = await client["leave"]["leave-requests"].$get({
     query: {
       scope: "department",
       department_code: departmentCode,

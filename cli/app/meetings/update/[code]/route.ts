@@ -30,7 +30,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.meetings[":code"].$put({
+    const response = await client["meeting"]["meetings"][":code"].$put({
       param: { code },
       json: {
         name: query.name,

@@ -345,16 +345,22 @@ export async function createReviewFormsBulkAction(
     return { ok: false, error: "サイクル ID が不正です" }
   }
 
-  const subjectEmployeeId = toPositiveIntId(formData.get("subject_employee_id"))
+  const subjectEmployeeId = toRequiredText(formData.get("subject_employee_id"), {
+    label: "被評価者 ID",
+    max: 128,
+  })
 
-  if (subjectEmployeeId === null) {
-    return { ok: false, error: "被評価者 ID が不正です" }
+  if (subjectEmployeeId instanceof Error) {
+    return { ok: false, error: subjectEmployeeId.message }
   }
 
-  const reviewerEmployeeId = toPositiveIntId(formData.get("reviewer_employee_id"))
+  const reviewerEmployeeId = toRequiredText(formData.get("reviewer_employee_id"), {
+    label: "評価者 ID",
+    max: 128,
+  })
 
-  if (reviewerEmployeeId === null) {
-    return { ok: false, error: "評価者 ID が不正です" }
+  if (reviewerEmployeeId instanceof Error) {
+    return { ok: false, error: reviewerEmployeeId.message }
   }
 
   const reviewerType = toReviewerType(formData.get("reviewer_type"))

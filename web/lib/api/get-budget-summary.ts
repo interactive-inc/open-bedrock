@@ -7,7 +7,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getBudgetSummary(fiscalPeriod: string) {
   const client = await createClient()
 
-  const response = await client["department-budgets"].summary.$get({
+  const response = await client["expense"]["department-budgets"].summary.$get({
     query: { fiscal_period: fiscalPeriod },
   })
 

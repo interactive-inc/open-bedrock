@@ -6,7 +6,7 @@ import type { SubmitSurveyResponseRequest } from "@/lib/api/types/survey-types"
 export async function submitSurveyResponse(surveyId: number, body: SubmitSurveyResponseRequest) {
   const client = await createClient()
 
-  const response = await client.surveys[":surveyId"].responses.$post({
+  const response = await client["survey"]["surveys"][":surveyId"].responses.$post({
     param: { surveyId: String(surveyId) },
     json: body,
   })

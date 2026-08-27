@@ -6,7 +6,9 @@ import type { CertificateRequestCreateRequest } from "@/lib/api/types/certificat
 export async function createCertificateRequest(request: CertificateRequestCreateRequest) {
   const client = await createClient()
 
-  const response = await client["certificate-requests"].$post({ json: request })
+  const response = await client["certificate-request"]["certificate-requests"].$post({
+    json: request,
+  })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "証明書発行依頼の作成に失敗しました" })

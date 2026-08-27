@@ -10,7 +10,7 @@ export async function assignGovernanceOrgRole(input: {
   sourceDocumentCode: string | null
 }) {
   const client = await createClient()
-  const response = await client["governance-org-roles"][":code"].assignments.$post({
+  const response = await client["governance"]["governance-org-roles"][":code"].assignments.$post({
     param: { code: input.orgRoleCode },
     json: {
       employee_code: input.employeeCode,

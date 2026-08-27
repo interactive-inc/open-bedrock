@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function cancelRentalReservation(id: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["rental-reservations"][":id"].$delete({
+  const response = await client["rental"]["rental-reservations"][":id"].$delete({
     param: { id },
   })
 

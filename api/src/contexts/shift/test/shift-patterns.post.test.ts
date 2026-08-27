@@ -85,7 +85,7 @@ async function request(props: RequestProps): Promise<Response> {
 describe("POST /shift-patterns", () => {
   test("privileged role creates a pattern and returns 201", async () => {
     const response = await request({
-      path: "/shift-patterns",
+      path: "/shift/shift-patterns",
       token: await tokenFor(1),
       method: "POST",
       body: {
@@ -111,7 +111,7 @@ describe("POST /shift-patterns", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift-patterns",
+      path: "/shift/shift-patterns",
       token: await tokenFor(5),
       method: "POST",
       body: { code: "SPLIT", name: "Split", start_time: "06:00", end_time: "20:00" },
@@ -122,7 +122,7 @@ describe("POST /shift-patterns", () => {
 
   test("duplicate code returns 409", async () => {
     const response = await request({
-      path: "/shift-patterns",
+      path: "/shift/shift-patterns",
       token: await tokenFor(1),
       method: "POST",
       body: { code: "EARLY", name: "Duplicate", start_time: "07:00", end_time: "16:00" },
@@ -133,7 +133,7 @@ describe("POST /shift-patterns", () => {
 
   test("returns 400 when code is missing", async () => {
     const response = await request({
-      path: "/shift-patterns",
+      path: "/shift/shift-patterns",
       token: await tokenFor(1),
       method: "POST",
       body: { name: "Split", start_time: "06:00", end_time: "20:00" },
@@ -144,7 +144,7 @@ describe("POST /shift-patterns", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/shift-patterns",
+      path: "/shift/shift-patterns",
       token: null,
       method: "POST",
       body: { code: "SPLIT", name: "Split", start_time: "06:00", end_time: "20:00" },

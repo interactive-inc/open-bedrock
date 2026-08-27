@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function deleteAsset(code: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.assets[":code"].$delete({ param: { code } })
+  const response = await client["asset"]["assets"][":code"].$delete({ param: { code } })
 
   if (response.status >= 400) {
     return toResponseError(response, {

@@ -38,7 +38,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["employee-skills"].me.$put({ json })
+    const response = await client["skill"]["employee-skills"].me.$put({ json })
 
     return c.json(await response.json())
   },

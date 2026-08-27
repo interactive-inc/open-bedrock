@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getAccounts() {
   const client = await createClient()
 
-  const response = await client.system.v1.accounts.$get()
+  const response = await client.system.accounts.$get()
 
   if (response.status !== 200) {
     return new Error("failed to load accounts")
@@ -13,7 +13,7 @@ export async function getAccounts() {
   const body = await response.json()
   const roleBindingResponses = await Promise.all(
     body.accounts.map((account) =>
-      client.system.v1.accounts[":accountId"]["role-bindings"].$get({
+      client.system.accounts[":accountId"]["role-bindings"].$get({
         param: { accountId: account.id },
       }),
     ),

@@ -10,7 +10,7 @@ export async function getKnowledgeList(
 ) {
   const client = await createClient()
 
-  const response = await client["knowledge-articles"].$get({
+  const response = await client["knowledge"]["knowledge-articles"].$get({
     query: {
       q: query.q ?? undefined,
       category: query.category ?? undefined,

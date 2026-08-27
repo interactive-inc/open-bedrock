@@ -63,8 +63,8 @@ export default async function AdminShiftSwapsPage(props: { searchParams: SearchP
 
   const filter: ShiftSwapAdminFilter = {
     status: status,
-    requesterId: toPositiveInt(requesterIdRaw),
-    targetId: toPositiveInt(targetIdRaw),
+    requesterId: toEmployeeId(requesterIdRaw),
+    targetId: toEmployeeId(targetIdRaw),
     from: from,
     to: to,
   }
@@ -177,18 +177,8 @@ function toSingleValue(value: string | Array<string> | undefined): string | null
   return value
 }
 
-function toPositiveInt(raw: string | null): number | null {
-  if (raw === null) {
-    return null
-  }
-
-  const parsed = Number(raw)
-
-  if (Number.isInteger(parsed) === false || parsed <= 0) {
-    return null
-  }
-
-  return parsed
+function toEmployeeId(raw: string | null): string | null {
+  return raw === null || raw.length > 128 ? null : raw
 }
 
 function toSort(raw: string | null): ShiftSwapAdminSort {

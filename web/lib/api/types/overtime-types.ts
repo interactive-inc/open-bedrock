@@ -3,7 +3,7 @@ export type OvertimeScope = "reports" | "all"
 
 /** 従業員ごとの時間外の参考集計。overtime_minutes は 1 日 8 時間×営業日を超えた分（法定判定ではない）。 */
 export type OvertimeSummaryEntry = {
-  employee_id: number
+  employee_id: string
   work_days: number
   total_work_minutes: number
   overtime_minutes: number

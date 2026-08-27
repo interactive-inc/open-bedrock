@@ -2,7 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { CompanyNotificationKind } from "@/api/http/notifications/notification-kind.definition"
 import type { Context } from "@/env"
 import { ResolveAccountEmployeeLink } from "@/contexts/company/lib/workforce/resolve-account-employee-link"
-import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { AccountEmployeeLinkReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/account-employee-link-read.adapter"
 import { SystemAccountEligibilityAdapter } from "@/api/http/accounts/system-account-eligibility.adapter"
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"

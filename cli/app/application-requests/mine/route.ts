@@ -21,7 +21,7 @@ export default factory.createHandlers(json(), async (c) => {
 
   const client = await createClient()
 
-  const response = await client["application-requests"].$get({
+  const response = await client["company"]["application-requests"].$get({
     query: { status: query.status },
   })
 

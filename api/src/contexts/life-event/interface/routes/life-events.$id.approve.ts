@@ -1,4 +1,4 @@
-import { AdvanceLifeEvent } from "@/contexts/life-event/application/advance-life-event"
+import { ApproveLifeEvent } from "@/contexts/life-event/application/approve-life-event"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -16,10 +16,9 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const updated = await new AdvanceLifeEvent(c).run({
+  const updated = await new ApproveLifeEvent(c).execute({
     session: session,
     lifeEventId: validateUuidParam(c.req.param("id"), "life event"),
-    action: "approve",
   })
 
   if (updated instanceof ApplicationError) {

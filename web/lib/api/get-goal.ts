@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getGoal(id: number) {
   const client = await createClient()
 
-  const response = await client["performance-goals"][":goalId"].$get({
+  const response = await client["performance-review"]["performance-goals"][":goalId"].$get({
     param: { goalId: String(id) },
   })
 

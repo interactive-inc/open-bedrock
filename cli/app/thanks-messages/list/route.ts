@@ -21,7 +21,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["thanks-messages"].$get({
+    const response = await client["thanks"]["thanks-messages"].$get({
       query: { limit: query.limit, offset: query.offset },
     })
 

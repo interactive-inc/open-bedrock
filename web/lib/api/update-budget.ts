@@ -9,7 +9,7 @@ export async function updateBudget(
 ): Promise<BudgetMutatedResponse | Error> {
   const client = await createClient()
 
-  const response = await client["department-budgets"][":id"].$patch({
+  const response = await client["expense"]["department-budgets"][":id"].$patch({
     param: { id: String(id) },
     json: request,
   })

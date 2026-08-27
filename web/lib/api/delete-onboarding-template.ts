@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function deleteOnboardingTemplate(code: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["onboarding-templates"][":code"].$delete({
+  const response = await client["onboarding"]["onboarding-templates"][":code"].$delete({
     param: { code: code },
   })
 

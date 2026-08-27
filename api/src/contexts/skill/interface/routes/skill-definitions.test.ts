@@ -89,7 +89,7 @@ async function request(props: {
 
 describe("GET /skill-definitions", () => {
   test("returns 200 with a bare array of skills", async () => {
-    const response = await request({ path: "/skill-definitions", token: await memberToken() })
+    const response = await request({ path: "/skill/skill-definitions", token: await memberToken() })
 
     expect(response.status).toBe(200)
 
@@ -106,7 +106,7 @@ describe("GET /skill-definitions", () => {
 
   test("filters by q keyword", async () => {
     const response = await request({
-      path: "/skill-definitions?q=react",
+      path: "/skill/skill-definitions?q=react",
       token: await memberToken(),
     })
 
@@ -125,7 +125,10 @@ describe("GET /skill-definitions", () => {
   })
 
   test("treats % as a literal so it cannot match every skill", async () => {
-    const response = await request({ path: "/skill-definitions?q=%25", token: await memberToken() })
+    const response = await request({
+      path: "/skill/skill-definitions?q=%25",
+      token: await memberToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -141,7 +144,10 @@ describe("GET /skill-definitions", () => {
   })
 
   test("treats _ as a literal so it matches only codes containing an underscore", async () => {
-    const response = await request({ path: "/skill-definitions?q=_", token: await memberToken() })
+    const response = await request({
+      path: "/skill/skill-definitions?q=_",
+      token: await memberToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -159,7 +165,7 @@ describe("GET /skill-definitions", () => {
 
   test("returns only 1 skill when limit=1", async () => {
     const response = await request({
-      path: "/skill-definitions?limit=1",
+      path: "/skill/skill-definitions?limit=1",
       token: await memberToken(),
     })
 
@@ -177,7 +183,7 @@ describe("GET /skill-definitions", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/skill-definitions", token: null })
+    const response = await request({ path: "/skill/skill-definitions", token: null })
 
     expect(response.status).toBe(401)
   })

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getRecruitmentPositionList(query: { status?: "open" | "closed" }) {
   const client = await createClient()
 
-  const response = await client["job-openings"].$get({
+  const response = await client["recruitment"]["job-openings"].$get({
     query: { status: query.status ?? undefined },
   })
 

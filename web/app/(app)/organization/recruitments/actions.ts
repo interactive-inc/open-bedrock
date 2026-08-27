@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { advanceRecruitmentCandidate } from "@/lib/api/advance-recruitment-candidate"
-import type { CandidateStage } from "@/lib/api/advance-recruitment-candidate"
+import type { CandidateNextStage } from "@/lib/api/advance-recruitment-candidate"
 import { createRecruitmentCandidate } from "@/lib/api/create-recruitment-candidate"
 import { createRecruitmentPosition } from "@/lib/api/create-recruitment-position"
 
@@ -12,8 +12,7 @@ export type RecruitmentActionState = {
   error: string | null
 }
 
-const STAGES: ReadonlyArray<CandidateStage> = [
-  "applied",
+const STAGES: ReadonlyArray<CandidateNextStage> = [
   "screening",
   "interview",
   "offer",
@@ -130,7 +129,7 @@ function toPositiveInt(value: FormDataEntryValue | null): number | null {
 }
 
 /** FormData 値を許容ステージへ。未知値は null。 */
-function toStage(value: FormDataEntryValue | null): CandidateStage | null {
+function toStage(value: FormDataEntryValue | null): CandidateNextStage | null {
   if (typeof value !== "string") {
     return null
   }

@@ -136,7 +136,7 @@ async function request(props: {
 describe("GET /onboarding-templates", () => {
   test("returns 200 with the template response shape", async () => {
     const response = await request({
-      path: "/onboarding-templates",
+      path: "/onboarding/onboarding-templates",
       token: await token(1),
     })
 
@@ -163,7 +163,7 @@ describe("GET /onboarding-templates", () => {
 
   test("filters templates by kind", async () => {
     const response = await request({
-      path: "/onboarding-templates?kind=leave",
+      path: "/onboarding/onboarding-templates?kind=leave",
       token: await token(1),
     })
 
@@ -183,7 +183,7 @@ describe("GET /onboarding-templates", () => {
 
   test("returns 400 for an invalid kind", async () => {
     const response = await request({
-      path: "/onboarding-templates?kind=bogus",
+      path: "/onboarding/onboarding-templates?kind=bogus",
       token: await token(1),
     })
 
@@ -192,7 +192,7 @@ describe("GET /onboarding-templates", () => {
 
   test("returns only 1 template when limit=1 and task_count reflects that template", async () => {
     const response = await request({
-      path: "/onboarding-templates?limit=1",
+      path: "/onboarding/onboarding-templates?limit=1",
       token: await token(1),
     })
 
@@ -216,14 +216,14 @@ describe("GET /onboarding-templates", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/onboarding-templates", token: null })
+    const response = await request({ path: "/onboarding/onboarding-templates", token: null })
 
     expect(response.status).toBe(401)
   })
 
   test("returns 403 for a member without onboarding:manage", async () => {
     const response = await request({
-      path: "/onboarding-templates",
+      path: "/onboarding/onboarding-templates",
       token: await token(5),
     })
 
@@ -232,7 +232,7 @@ describe("GET /onboarding-templates", () => {
 
   test("returns 200 for a manager with onboarding:manage", async () => {
     const response = await request({
-      path: "/onboarding-templates",
+      path: "/onboarding/onboarding-templates",
       token: await token(4),
     })
 
@@ -240,10 +240,10 @@ describe("GET /onboarding-templates", () => {
   })
 })
 
-describe("/onboarding-templates/:code/lifecycle-binding", () => {
+describe("/onboarding/onboarding-templates/:code/lifecycle-binding", () => {
   test("sets and removes a supported lifecycle binding", async () => {
     const updated = await request({
-      path: "/onboarding-templates/common_leave/lifecycle-binding",
+      path: "/onboarding/onboarding-templates/common_leave/lifecycle-binding",
       token: await token(1),
       method: "PUT",
       body: { effect_type: "retired" },
@@ -255,7 +255,7 @@ describe("/onboarding-templates/:code/lifecycle-binding", () => {
     })
 
     const removed = await request({
-      path: "/onboarding-templates/engineer_join/lifecycle-binding",
+      path: "/onboarding/onboarding-templates/engineer_join/lifecycle-binding",
       token: await token(1),
       method: "DELETE",
     })
@@ -264,7 +264,7 @@ describe("/onboarding-templates/:code/lifecycle-binding", () => {
 
   test("rejects unsupported kinds and callers without management permission", async () => {
     const unsupported = await request({
-      path: "/onboarding-templates/common_leave/lifecycle-binding",
+      path: "/onboarding/onboarding-templates/common_leave/lifecycle-binding",
       token: await token(1),
       method: "PUT",
       body: { effect_type: "hire" },
@@ -272,7 +272,7 @@ describe("/onboarding-templates/:code/lifecycle-binding", () => {
     expect(unsupported.status).toBe(400)
 
     const forbidden = await request({
-      path: "/onboarding-templates/engineer_join/lifecycle-binding",
+      path: "/onboarding/onboarding-templates/engineer_join/lifecycle-binding",
       token: await token(5),
       method: "DELETE",
     })

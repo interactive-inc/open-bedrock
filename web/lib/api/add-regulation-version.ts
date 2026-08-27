@@ -6,7 +6,7 @@ import type { RegulationVersionRequest } from "@/lib/api/types/regulation-types"
 export async function addRegulationVersion(code: string, request: RegulationVersionRequest) {
   const client = await createClient()
 
-  const response = await client.regulations[":code"].versions.$post({
+  const response = await client["regulation"]["regulations"][":code"].versions.$post({
     param: { code: code },
     json: request,
   })

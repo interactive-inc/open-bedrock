@@ -49,15 +49,12 @@ export function BudgetCreateForm() {
     <form action={formAction}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="budget-department-id">部署 ID</FieldLabel>
+          <FieldLabel htmlFor="budget-organization-unit-id">組織単位 ID</FieldLabel>
 
           <Input
-            id="budget-department-id"
-            name="department_id"
-            type="number"
-            min={1}
-            step={1}
-            placeholder="3"
+            id="budget-organization-unit-id"
+            name="organization_unit_id"
+            placeholder="department:D003"
             required
           />
         </Field>

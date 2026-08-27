@@ -98,7 +98,7 @@ async function request(
 
 describe("GET /assets/lent/me", () => {
   test("returns assets currently held by the caller", async () => {
-    const response = await request("/assets/lent/me", await memberToken())
+    const response = await request("/asset/assets/lent/me", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -115,7 +115,7 @@ describe("GET /assets/lent/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/assets/lent/me", null)
+    const response = await request("/asset/assets/lent/me", null)
 
     expect(response.status).toBe(401)
   })

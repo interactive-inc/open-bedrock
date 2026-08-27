@@ -23,7 +23,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.resignations.admin.$get({
+    const response = await client["resignation"]["resignations"].admin.$get({
       query: {
         employee_id: query.employee_id,
         status: query.status,

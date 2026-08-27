@@ -8,7 +8,7 @@ import type { ContractSearchQuery } from "@/lib/api/types/contract-types"
 export async function getContractList(query: ContractSearchQuery) {
   const client = await createClient()
 
-  const response = await client["partner-contracts"].$get({
+  const response = await client["partner"]["partner-contracts"].$get({
     query: {
       partner_id: query.partnerId === null ? undefined : String(query.partnerId),
       order: query.order ?? undefined,

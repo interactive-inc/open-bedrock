@@ -9,7 +9,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getReviewPeriods(): Promise<string[] | Error> {
   const client = await createClient()
 
-  const response = await client["review-cycles"].periods.$get()
+  const response = await client["performance-review"]["review-cycles"].periods.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load review periods")

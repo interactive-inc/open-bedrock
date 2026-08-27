@@ -27,7 +27,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["certificate-requests"][":id"].$put({
+    const response = await client["certificate-request"]["certificate-requests"][":id"].$put({
       param: { id: query.id },
       json: {
         certificate_type: query.type,

@@ -106,7 +106,7 @@ async function request(props: {
 describe("GET /leave-balances/me", () => {
   test("returns 200 with the balance rows for the current fiscal year", async () => {
     const response = await request({
-      path: "/leave-balances/me",
+      path: "/leave/leave-balances/me",
       token: await tokenFor(5),
     })
 
@@ -127,7 +127,7 @@ describe("GET /leave-balances/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/leave-balances/me", token: null })
+    const response = await request({ path: "/leave/leave-balances/me", token: null })
 
     expect(response.status).toBe(401)
   })

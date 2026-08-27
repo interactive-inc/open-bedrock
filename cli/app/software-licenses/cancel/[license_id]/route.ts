@@ -20,7 +20,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["software-licenses"][":id"].cancel.$post({
+    const response = await client["software-license"]["software-licenses"][":id"].cancel.$post({
       param: { id: licenseId },
     })
 

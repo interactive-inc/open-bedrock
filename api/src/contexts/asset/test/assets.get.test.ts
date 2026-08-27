@@ -104,7 +104,7 @@ async function request(
 
 describe("GET /assets", () => {
   test("asset:manage holder reads sensitive fields for every asset", async () => {
-    const response = await request("/assets", await tokenFor(1))
+    const response = await request("/asset/assets", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -125,7 +125,7 @@ describe("GET /assets", () => {
   })
 
   test("current holder reads sensitive fields only for their own held asset", async () => {
-    const response = await request("/assets", await memberToken())
+    const response = await request("/asset/assets", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -151,7 +151,7 @@ describe("GET /assets", () => {
   })
 
   test("unrelated member receives only catalog fields", async () => {
-    const response = await request("/assets", await tokenFor(6))
+    const response = await request("/asset/assets", await tokenFor(6))
 
     expect(response.status).toBe(200)
 
@@ -172,7 +172,7 @@ describe("GET /assets", () => {
   })
 
   test("filters by kind", async () => {
-    const response = await request("/assets?kind=pc", await memberToken())
+    const response = await request("/asset/assets?kind=pc", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -189,7 +189,7 @@ describe("GET /assets", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/assets", null)
+    const response = await request("/asset/assets", null)
 
     expect(response.status).toBe(401)
   })

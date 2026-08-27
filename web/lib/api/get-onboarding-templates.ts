@@ -5,7 +5,7 @@ import type { OnboardingKind } from "@/lib/api/types/onboarding-types"
 export async function getOnboardingTemplates(kind: OnboardingKind | null) {
   const client = await createClient()
 
-  const response = await client["onboarding-templates"].$get({
+  const response = await client["onboarding"]["onboarding-templates"].$get({
     query: { kind: kind ?? undefined },
   })
 

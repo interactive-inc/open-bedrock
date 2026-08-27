@@ -94,7 +94,7 @@ describe("GET /decision-records", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/decision-records",
+      path: "/meeting/decision-records",
       token: await memberToken(),
     })
 
@@ -113,7 +113,7 @@ describe("GET /decision-records", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/decision-records",
+      path: "/meeting/decision-records",
       token: null,
     })
 
@@ -126,7 +126,7 @@ describe("POST /decision-records", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/decision-records",
+      path: "/meeting/decision-records",
       token: await adminToken(),
       method: "POST",
       body: {
@@ -153,7 +153,7 @@ describe("POST /decision-records", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/decision-records",
+      path: "/meeting/decision-records",
       token: await memberToken(),
       method: "POST",
       body: {
@@ -174,7 +174,7 @@ describe("GET /decision-records/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/decision-records/1",
+      path: "/meeting/decision-records/1",
       token: await memberToken(),
     })
 
@@ -193,7 +193,7 @@ describe("GET /decision-records/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/decision-records/9999",
+      path: "/meeting/decision-records/9999",
       token: await memberToken(),
     })
 
@@ -206,7 +206,7 @@ describe("PUT /decision-records/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/decision-records/1",
+      path: "/meeting/decision-records/1",
       token: await adminToken(),
       method: "PUT",
       body: {
@@ -235,7 +235,7 @@ describe("POST /decision-records/:id/supersede", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/decision-records/1/supersede",
+      path: "/meeting/decision-records/1/supersede",
       token: await adminToken(),
       method: "POST",
       body: { superseded_by_id: 2 },
@@ -259,7 +259,7 @@ describe("POST /decision-records/:id/supersede", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: "/decision-records/1/supersede",
+      path: "/meeting/decision-records/1/supersede",
       token: await adminToken(),
       method: "POST",
       body: { superseded_by_id: 2 },
@@ -270,7 +270,7 @@ describe("POST /decision-records/:id/supersede", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: "/decision-records/1/supersede",
+      path: "/meeting/decision-records/1/supersede",
       token: await adminToken(),
       method: "POST",
       body: { superseded_by_id: 2 },
@@ -283,7 +283,7 @@ describe("POST /decision-records/:id/supersede", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/decision-records/1/supersede",
+      path: "/meeting/decision-records/1/supersede",
       token: await memberToken(),
       method: "POST",
       body: { superseded_by_id: 2 },

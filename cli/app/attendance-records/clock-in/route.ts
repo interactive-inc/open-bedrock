@@ -22,7 +22,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["attendance-records"]["clock-in"].$post({ json })
+    const response = await client["attendance"]["attendance-records"]["clock-in"].$post({ json })
 
     return c.json(await response.json())
   },

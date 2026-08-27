@@ -47,13 +47,11 @@ export function OrgDepartmentManagerList(props: Props) {
             <TableRow>
               <TableHead>コード</TableHead>
 
-              <TableHead>マスタ ID</TableHead>
+              <TableHead>部署名</TableHead>
 
               <TableHead>親</TableHead>
 
               <TableHead>責任者</TableHead>
-
-              <TableHead>表示順</TableHead>
 
               <TableHead className="text-right">操作</TableHead>
             </TableRow>
@@ -64,13 +62,11 @@ export function OrgDepartmentManagerList(props: Props) {
               <TableRow key={department.code}>
                 <TableCell className="font-medium">{department.code}</TableCell>
 
-                <TableCell>{department.department_id}</TableCell>
+                <TableCell>{department.name}</TableCell>
 
                 <TableCell>{department.parent_code ?? "-"}</TableCell>
 
                 <TableCell>{department.manager_employee_code ?? "-"}</TableCell>
-
-                <TableCell>{department.order}</TableCell>
 
                 <TableCell>
                   <TableRowActions>
@@ -88,7 +84,7 @@ export function OrgDepartmentManagerList(props: Props) {
   )
 }
 
-/** 部署ノード変更フォームを Dialog で開く。親・責任者・表示順を編集して送信する。 */
+/** 組織単位変更フォームを Dialog で開く。名称と親を編集して送信する。 */
 function UpdateDepartmentDialog(props: { department: OrgDepartmentResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -122,13 +118,19 @@ function UpdateDepartmentDialog(props: { department: OrgDepartmentResponse }) {
         <DialogHeader>
           <DialogTitle>部署を変更</DialogTitle>
 
-          <DialogDescription>親・責任者・表示順を変更します。</DialogDescription>
+          <DialogDescription>部署名と親部署を変更します。</DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="code" value={props.department.code} />
 
           <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="update_name">部署名</FieldLabel>
+
+              <Input id="update_name" name="name" defaultValue={props.department.name} />
+            </Field>
+
             <Field>
               <FieldLabel htmlFor="update_parent_code">親コード</FieldLabel>
 
@@ -137,28 +139,6 @@ function UpdateDepartmentDialog(props: { department: OrgDepartmentResponse }) {
                 name="parent_code"
                 defaultValue={props.department.parent_code ?? ""}
                 placeholder="任意"
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="update_manager">責任者の従業員コード</FieldLabel>
-
-              <Input
-                id="update_manager"
-                name="manager_employee_code"
-                defaultValue={props.department.manager_employee_code ?? ""}
-                placeholder="任意"
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="update_order">表示順</FieldLabel>
-
-              <Input
-                id="update_order"
-                name="order"
-                type="number"
-                defaultValue={props.department.order}
               />
             </Field>
           </FieldGroup>

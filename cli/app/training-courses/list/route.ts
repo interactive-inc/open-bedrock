@@ -21,7 +21,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["training-courses"].$get({
+    const response = await client["training"]["training-courses"].$get({
       query: { category: query.category, status: query.status },
     })
 

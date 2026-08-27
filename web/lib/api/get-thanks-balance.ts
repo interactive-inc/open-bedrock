@@ -9,7 +9,7 @@ import type { ThanksBalanceResponse } from "@/lib/api/types/thanks-points-types"
 export async function getThanksBalance(): Promise<ThanksBalanceResponse | Error> {
   const client = await createClient()
 
-  const response = await client["thanks-point-balances"].me.$get()
+  const response = await client["thanks"]["thanks-point-balances"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load thanks balance")

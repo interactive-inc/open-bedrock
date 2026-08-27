@@ -110,7 +110,7 @@ const expenseMineListResponseSchema = z.object({
 
 describe("GET /expenses/me", () => {
   test("returns 200 with only the token employee's expenses", async () => {
-    const response = await request({ path: "/expenses/me", token: await tokenFor(5) })
+    const response = await request({ path: "/expense/expenses/me", token: await tokenFor(5) })
 
     expect(response.status).toBe(200)
 
@@ -126,7 +126,7 @@ describe("GET /expenses/me", () => {
 
   test("filters by status", async () => {
     const response = await request({
-      path: "/expenses/me?status=approved",
+      path: "/expense/expenses/me?status=approved",
       token: await tokenFor(5),
     })
 
@@ -144,7 +144,7 @@ describe("GET /expenses/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/expenses/me", token: null })
+    const response = await request({ path: "/expense/expenses/me", token: null })
 
     expect(response.status).toBe(401)
   })

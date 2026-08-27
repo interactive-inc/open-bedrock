@@ -94,9 +94,9 @@ async function BudgetSummaryTable(props: TableProps) {
 
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.department_id}>
+            <TableRow key={row.organization_unit_id}>
               <TableCell className="font-medium">
-                {row.department_name ?? `#${row.department_id}`}
+                {row.organization_unit_name ?? row.organization_unit_id}
               </TableCell>
 
               <TableCell className="tabular-nums">

@@ -21,7 +21,7 @@ export async function createReviewCycle(request: ReviewCycleCreateRequest) {
           policy: request.policy,
         }
 
-  const response = await client["review-cycles"].$post({ json })
+  const response = await client["performance-review"]["review-cycles"].$post({ json })
 
   if (response.status >= 400) {
     return toResponseError(response, {

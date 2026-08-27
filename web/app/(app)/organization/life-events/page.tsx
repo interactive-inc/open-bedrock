@@ -137,16 +137,6 @@ function toSingleValue(value: string | Array<string> | undefined): string | null
   return value
 }
 
-function toEmployeeId(raw: string | null): number | null {
-  if (raw === null) {
-    return null
-  }
-
-  const parsed = Number(raw)
-
-  if (Number.isInteger(parsed) === false || parsed <= 0) {
-    return null
-  }
-
-  return parsed
+function toEmployeeId(raw: string | null): string | null {
+  return raw === null || raw.length > 128 ? null : raw
 }

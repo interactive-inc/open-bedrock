@@ -6,7 +6,7 @@ import type { PartnerCreateRequest } from "@/lib/api/types/partner-types"
 export async function createPartner(request: PartnerCreateRequest) {
   const client = await createClient()
 
-  const response = await client.partners.$post({ json: request })
+  const response = await client["partner"]["partners"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

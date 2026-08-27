@@ -9,7 +9,7 @@ type Params = {
 export async function listMyApplications(params: Params = {}) {
   const client = await createClient()
 
-  const response = await client["application-requests"].me.$get({
+  const response = await client["company"]["application-requests"].me.$get({
     query: {
       limit: params.limit !== undefined ? String(params.limit) : undefined,
       offset: params.offset !== undefined ? String(params.offset) : undefined,

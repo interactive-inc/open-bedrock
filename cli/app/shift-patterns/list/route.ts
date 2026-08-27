@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["shift-patterns"].$get()
+    const response = await client["shift"]["shift-patterns"].$get()
 
     const rows = await response.json()
 

@@ -140,7 +140,7 @@ describe("POST /leave-requests/:id/approve", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave-requests/1/approve",
+      path: "/leave/leave-requests/1/approve",
       token: managerToken,
       method: "POST",
       body: { comment: "approved" },
@@ -166,7 +166,7 @@ describe("POST /leave-requests/:id/approve", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave-balances/me",
+      path: "/leave/leave-balances/me",
       token: ownerToken,
     })
 
@@ -188,7 +188,7 @@ describe("POST /leave-requests/:id/approve", () => {
         db,
         jwtSecret,
         now: fiscalNow,
-        path: "/leave-requests/1/approve",
+        path: "/leave/leave-requests/1/approve",
         token: managerToken,
         method: "POST",
         body: { comment: "approved" },
@@ -207,7 +207,7 @@ describe("POST /leave-requests/:id/approve", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave-balances/me",
+      path: "/leave/leave-balances/me",
       token: await tokenFor(5),
     })
 
@@ -237,7 +237,7 @@ describe("POST /leave-requests/:id/approve", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave-requests/1/approve",
+      path: "/leave/leave-requests/1/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "approved" },
@@ -282,7 +282,7 @@ describe("POST /leave-requests/:id/approve", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave-requests/1/approve",
+      path: "/leave/leave-requests/1/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "approved" },
@@ -315,7 +315,7 @@ describe("POST /leave-requests/:id/approve", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave-requests/100/approve",
+      path: "/leave/leave-requests/100/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "approved" },
@@ -341,7 +341,7 @@ describe("POST /leave-requests/:id/approve", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/leave-requests/1/approve",
+      path: "/leave/leave-requests/1/approve",
       token: await tokenFor(5),
       method: "POST",
       body: { comment: null },
@@ -352,7 +352,7 @@ describe("POST /leave-requests/:id/approve", () => {
 
   test("returns 404 when the request does not exist", async () => {
     const response = await request({
-      path: "/leave-requests/9999/approve",
+      path: "/leave/leave-requests/9999/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: null },
@@ -363,7 +363,7 @@ describe("POST /leave-requests/:id/approve", () => {
 
   test("returns 404 for an invalid id", async () => {
     const response = await request({
-      path: "/leave-requests/abc/approve",
+      path: "/leave/leave-requests/abc/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: null },
@@ -374,7 +374,7 @@ describe("POST /leave-requests/:id/approve", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/leave-requests/1/approve",
+      path: "/leave/leave-requests/1/approve",
       token: null,
       method: "POST",
       body: { comment: null },

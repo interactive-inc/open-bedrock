@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getCalendar(year: string | null) {
   const client = await createClient()
 
-  const response = await client["company-calendar-days"].$get({
+  const response = await client["company-calendar"]["company-calendar-days"].$get({
     query: { year: year ?? undefined },
   })
 

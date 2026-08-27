@@ -15,7 +15,7 @@ export async function updateRentalReservation(
 ): Promise<RentalReservationResponse | Error> {
   const client = await createClient()
 
-  const response = await client["rental-reservations"][":id"].$put({
+  const response = await client["rental"]["rental-reservations"][":id"].$put({
     param: { id },
     json: request,
   })

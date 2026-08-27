@@ -8,7 +8,7 @@ export async function getLicenseList(query: {
 }) {
   const client = await createClient()
 
-  const response = await client["software-licenses"].$get({
+  const response = await client["software-license"]["software-licenses"].$get({
     query: {
       status: query.status,
       limit: String(query.limit),

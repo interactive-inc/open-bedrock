@@ -6,7 +6,7 @@ import type { ContractCreateRequest } from "@/lib/api/types/contract-types"
 export async function createContract(request: ContractCreateRequest) {
   const client = await createClient()
 
-  const response = await client["partner-contracts"].$post({ json: request })
+  const response = await client["partner"]["partner-contracts"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

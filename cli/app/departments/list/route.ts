@@ -14,7 +14,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.departments.$get()
+    const response = await client.company["organization-units"].$get()
 
     const departments = await response.json()
 

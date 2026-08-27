@@ -12,7 +12,7 @@ export type MeetingCreateRequest = {
 export async function createMeeting(request: MeetingCreateRequest) {
   const client = await createClient()
 
-  const response = await client.meetings.$post({ json: request })
+  const response = await client["meeting"]["meetings"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

@@ -20,7 +20,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["document-ledger-entries"].$get({
+    const response = await client["document"]["document-ledger-entries"].$get({
       query: { category: query.category },
     })
 

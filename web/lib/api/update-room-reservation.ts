@@ -15,7 +15,7 @@ export async function updateRoomReservation(
 ): Promise<RoomReservationResponse | Error> {
   const client = await createClient()
 
-  const response = await client.rooms.reservations[":id"].$put({
+  const response = await client["room"]["rooms"].reservations[":id"].$put({
     param: { id },
     json: request,
   })

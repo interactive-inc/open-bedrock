@@ -15,10 +15,12 @@ describe("employee lifecycle API clients", () => {
       .fn()
       .mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(events) })
     mocks.createClient.mockResolvedValue({
-      employees: {
-        ":code": {
-          "lifecycle-state": { $get: stateGet },
-          "lifecycle-events": { $get: eventsGet },
+      company: {
+        "employee-lifecycle": {
+          ":code": {
+            state: { $get: stateGet },
+            events: { $get: eventsGet },
+          },
         },
       },
     })

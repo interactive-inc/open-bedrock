@@ -16,7 +16,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.system.v1.roles.$get()
+    const response = await client.system.roles.$get()
     if (response.status !== 200) throw new UsageError("ロール一覧の取得に失敗しました")
 
     const body = await response.json()

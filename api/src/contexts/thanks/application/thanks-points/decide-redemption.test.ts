@@ -1,7 +1,8 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
-import { DecideRedemption } from "@/contexts/thanks/application/thanks-points/decide-redemption"
+import { ApproveRedemption } from "@/contexts/thanks/application/thanks-points/approve-redemption"
+import { RejectRedemption } from "@/contexts/thanks/application/thanks-points/reject-redemption"
 import { ForbiddenError } from "@/lib/errors"
 import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
 import { createTestContext } from "@tests/api/support/create-test-context"
@@ -33,7 +34,7 @@ async function seedPendingRedemption(
   return created
 }
 
-describe("DecideRedemption", () => {
+describe("ApproveRedemption / RejectRedemption", () => {
   test("returns forbidden for a member role", async () => {
     const { context } = await createTestContext()
 
@@ -41,11 +42,10 @@ describe("DecideRedemption", () => {
 
     const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
 
-    const result = await new DecideRedemption(context).run({
+    const result = await new ApproveRedemption(context).execute({
       session: makeTestSession("member"),
       redemptionId: redemption.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
-      action: "approve",
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
 
@@ -59,11 +59,10 @@ describe("DecideRedemption", () => {
 
     const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
 
-    const result = await new DecideRedemption(context).run({
+    const result = await new RejectRedemption(context).execute({
       session: makeTestSession("root"),
       redemptionId: redemption.id ?? 0,
       deciderId: toWorkforceEmployeeId(5),
-      action: "reject",
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
 
@@ -77,11 +76,10 @@ describe("DecideRedemption", () => {
 
     const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
 
-    const result = await new DecideRedemption(context).run({
+    const result = await new RejectRedemption(context).execute({
       session: makeTestSession("root"),
       redemptionId: redemption.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
-      action: "reject",
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
 
@@ -103,11 +101,10 @@ describe("DecideRedemption", () => {
 
     const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
 
-    const result = await new DecideRedemption(context).run({
+    const result = await new RejectRedemption(context).execute({
       session: makeTestSession("hr"),
       redemptionId: redemption.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
-      action: "reject",
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
 

@@ -6,7 +6,7 @@ export type RedemptionStatus = "pending" | "rejected" | "fulfilled"
 
 export type RedemptionAdminFilter = {
   status: RedemptionStatus | null
-  employeeId: number | null
+  employeeId: string | null
   rewardId: number | null
   from: string | null
   to: string | null
@@ -25,7 +25,7 @@ type Params = {
 export async function getRedemptionAdminList(filter: RedemptionAdminFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client["thanks-redemptions"].admin.$get({
+  const response = await client["thanks"]["thanks-redemptions"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       employee_id: filter.employeeId !== null ? String(filter.employeeId) : undefined,

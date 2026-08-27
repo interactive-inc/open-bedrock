@@ -102,6 +102,286 @@ export const companyRouteManifest = [
   },
   {
     method: "GET",
+    path: "/company/employee-directory",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employee-directory",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/employee-directory/:code",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employee-directory.$code",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "PUT",
+    path: "/company/employee-directory/:code",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employee-directory.$code",
+      exportName: "PUT",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/employee-lifecycle/:code/state",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employee-lifecycle.$code.state",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/employee-lifecycle/:code/events",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employee-lifecycle.$code.events",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "PUT",
+    path: "/company/my-profile",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.my-profile",
+      exportName: "PUT",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/my-direct-reports",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.my-direct-reports",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/my-organization-units",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.my-organization-units",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/employee-events",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employee-events",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/employee-events",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employee-events",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/employee-grades",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employee-grades",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/employee-grades",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employee-grades",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/grade-definitions",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.grade-definitions",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/grade-definitions",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.grade-definitions",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "PUT",
+    path: "/company/grade-definitions/:id",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.grade-definitions.$id",
+      exportName: "PUT",
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/company/grade-definitions/:id",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.grade-definitions.$id",
+      exportName: "DELETE",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/position-definitions",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.position-definitions",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/position-definitions",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.position-definitions",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "PUT",
+    path: "/company/position-definitions/:id",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.position-definitions.$id",
+      exportName: "PUT",
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/company/position-definitions/:id",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.position-definitions.$id",
+      exportName: "DELETE",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/organization-units",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.organization-units",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/organization-units",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.organization-units",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/organization-units/:code",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.organization-units.$code",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "PUT",
+    path: "/company/organization-units/:code",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.organization-units.$code",
+      exportName: "PUT",
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/company/organization-units/:code",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.organization-units.$code",
+      exportName: "DELETE",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/organization-units/:code/members",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.organization-units.$code.members",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/organization-tree",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.organization-tree",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/reporting-lines/:employeeCode",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.reporting-lines.$employeeCode",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
     path: "/company/employments",
     phase: "authenticated",
     handler: {
@@ -197,6 +477,16 @@ export const companyRouteManifest = [
     handler: {
       kind: "module",
       module: "@/contexts/company/interface/routes/company.personnel-actions",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/personnel-action-executions",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.personnel-action-executions",
       exportName: "POST",
     },
   },

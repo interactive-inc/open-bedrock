@@ -29,13 +29,13 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["position-definitions"][":id"].$put({
+    const response = await client.company["position-definitions"][":id"].$put({
       param: { id: query.id },
       json: {
         code: query.code,
         name: query.name,
         rank: toFiniteNumber(query.rank, "--rank"),
-        description: query.description ?? null,
+        description: query.description,
       },
     })
 

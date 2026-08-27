@@ -15,7 +15,7 @@ export async function updateShiftAssignment(
 ): Promise<ShiftAssignmentResponse | Error> {
   const client = await createClient()
 
-  const response = await client["shift-assignments"][":id"].$put({
+  const response = await client["shift"]["shift-assignments"][":id"].$put({
     param: { id: String(id) },
     json: request,
   })

@@ -73,7 +73,11 @@ export default async function AdminRingiPage(props: { searchParams: SearchParams
         description="全社の稟議を横断で確認します。承認は各稟議の承認受信箱から行います。"
         breadcrumbs={[{ label: "稟議", href: "/my/ringis" }, { label: "稟議管理" }]}
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/inbox/ringis" />}>
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/company/inbox/ringis" />}
+          >
             承認受信箱
           </Button>
         }
@@ -152,18 +156,8 @@ function toStatus(value: string | null): RingiStatus | null {
   return null
 }
 
-function toApplicantId(raw: string | null): number | null {
-  if (raw === null) {
-    return null
-  }
-
-  const parsed = Number(raw)
-
-  if (Number.isInteger(parsed) === false || parsed <= 0) {
-    return null
-  }
-
-  return parsed
+function toApplicantId(raw: string | null): string | null {
+  return raw === null || raw.length > 128 ? null : raw
 }
 
 function toSort(raw: string | null): RingiAdminSort {

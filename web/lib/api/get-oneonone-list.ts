@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getOneOnOneList(props: { limit: number; offset: number }) {
   const client = await createClient()
 
-  const response = await client["one-on-ones"].$get({
+  const response = await client["one-on-one"]["one-on-ones"].$get({
     query: { limit: String(props.limit), offset: String(props.offset) },
   })
 

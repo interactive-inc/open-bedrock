@@ -247,6 +247,17 @@ export class SystemAuditUnavailableError extends SystemHTTPException {
   }
 }
 
+export class SystemBatchUnavailableError extends SystemHTTPException {
+  constructor(cause?: unknown) {
+    super({
+      status: 503,
+      code: "batch_unavailable",
+      detail: "batch job history is unavailable",
+      cause,
+    })
+  }
+}
+
 export class SystemAuthenticationRateLimitedError extends SystemHTTPException {
   constructor() {
     super({ status: 429, code: "authentication_rate_limited", detail: "too many requests" })

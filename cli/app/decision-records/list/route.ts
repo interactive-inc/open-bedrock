@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["decision-records"].$get({ query: {} })
+    const response = await client["meeting"]["decision-records"].$get({ query: {} })
 
     return c.json(await response.json())
   },

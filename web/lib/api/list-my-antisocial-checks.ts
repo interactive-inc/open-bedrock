@@ -7,7 +7,7 @@ export async function listMyAntisocialChecks(): Promise<
 > {
   const client = await createClient()
 
-  const response = await client["antisocial-checks"].me.$get()
+  const response = await client["antisocial-check"]["antisocial-checks"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load antisocial checks")

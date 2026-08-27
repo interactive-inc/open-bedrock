@@ -78,7 +78,7 @@ describe("GET /company-calendar-days", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar-days?year=2026",
+      path: "/company-calendar/company-calendar-days?year=2026",
       token: await tokenFor(5),
     })
 
@@ -100,7 +100,7 @@ describe("GET /company-calendar-days", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar-days?year=20xx",
+      path: "/company-calendar/company-calendar-days?year=20xx",
       token: await tokenFor(5),
     })
 
@@ -111,7 +111,7 @@ describe("GET /company-calendar-days", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar-days?year=2026",
+      path: "/company-calendar/company-calendar-days?year=2026",
       token: null,
     })
 
@@ -124,7 +124,7 @@ describe("POST /company-calendar-days", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar-days",
+      path: "/company-calendar/company-calendar-days",
       token: await tokenFor(1),
       method: "POST",
       body: { calendar_date: "2026-05-05", kind: "holiday", name: "こどもの日" },
@@ -146,7 +146,7 @@ describe("POST /company-calendar-days", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar-days",
+      path: "/company-calendar/company-calendar-days",
       token: await tokenFor(5),
       method: "POST",
       body: { calendar_date: "2026-05-05", kind: "holiday", name: null },
@@ -159,7 +159,7 @@ describe("POST /company-calendar-days", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar-days",
+      path: "/company-calendar/company-calendar-days",
       token: await tokenFor(1),
       method: "POST",
       body: { calendar_date: "2026-01-01", kind: "holiday", name: "重複" },
@@ -172,7 +172,7 @@ describe("POST /company-calendar-days", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar-days",
+      path: "/company-calendar/company-calendar-days",
       token: await tokenFor(1),
       method: "POST",
       body: { calendar_date: "2026-05-05", kind: "weekend", name: null },
@@ -187,7 +187,7 @@ describe("DELETE /company-calendar-days/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar-days/1",
+      path: "/company-calendar/company-calendar-days/1",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -199,7 +199,7 @@ describe("DELETE /company-calendar-days/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar-days/1",
+      path: "/company-calendar/company-calendar-days/1",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -211,7 +211,7 @@ describe("DELETE /company-calendar-days/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar-days/999",
+      path: "/company-calendar/company-calendar-days/999",
       token: await tokenFor(1),
       method: "DELETE",
     })

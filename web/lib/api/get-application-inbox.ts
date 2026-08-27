@@ -12,7 +12,7 @@ type Params = {
 export async function getApplicationInbox(params: Params = {}) {
   const client = await createClient()
 
-  const response = await client["application-requests"].inbox.$get({
+  const response = await client["company"]["application-requests"].inbox.$get({
     query: {
       limit: params.limit !== undefined ? String(params.limit) : undefined,
       offset: params.offset !== undefined ? String(params.offset) : undefined,

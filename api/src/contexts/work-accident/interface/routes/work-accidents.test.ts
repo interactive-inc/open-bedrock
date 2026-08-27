@@ -72,7 +72,10 @@ async function request(props: {
 
 describe("GET /work-accidents", () => {
   test("returns 200 with all accidents for admin (work_accident:read:all)", async () => {
-    const response = await request({ path: "/work-accidents", token: await tokenFor(1) })
+    const response = await request({
+      path: "/work-accident/work-accidents",
+      token: await tokenFor(1),
+    })
 
     expect(response.status).toBe(200)
 
@@ -86,20 +89,23 @@ describe("GET /work-accidents", () => {
   })
 
   test("returns 403 for a member (no self-view concept)", async () => {
-    const response = await request({ path: "/work-accidents", token: await tokenFor(5) })
+    const response = await request({
+      path: "/work-accident/work-accidents",
+      token: await tokenFor(5),
+    })
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/work-accidents", token: null })
+    const response = await request({ path: "/work-accident/work-accidents", token: null })
 
     expect(response.status).toBe(401)
   })
 
   test("filters by status", async () => {
     const response = await request({
-      path: "/work-accidents?status=reported",
+      path: "/work-accident/work-accidents?status=reported",
       token: await tokenFor(1),
     })
 
@@ -119,7 +125,7 @@ describe("GET /work-accidents", () => {
 describe("POST /work-accidents", () => {
   test("creates an accident for admin (work_accident:manage)", async () => {
     const response = await request({
-      path: "/work-accidents",
+      path: "/work-accident/work-accidents",
       token: await tokenFor(1),
       method: "POST",
       body: { occurred_on: "2026-05-01", summary: "作業中の切創", severity: "minor" },
@@ -141,7 +147,7 @@ describe("POST /work-accidents", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/work-accidents",
+      path: "/work-accident/work-accidents",
       token: await tokenFor(5),
       method: "POST",
       body: { occurred_on: "2026-05-01", summary: "作業中の切創" },
@@ -154,7 +160,7 @@ describe("POST /work-accidents", () => {
 describe("POST /work-accidents/:id/close", () => {
   test("closes a reported accident for admin", async () => {
     const response = await request({
-      path: "/work-accidents/1/close",
+      path: "/work-accident/work-accidents/1/close",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -172,7 +178,7 @@ describe("POST /work-accidents/:id/close", () => {
 
   test("returns 409 when already closed", async () => {
     const response = await request({
-      path: "/work-accidents/2/close",
+      path: "/work-accident/work-accidents/2/close",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -182,7 +188,7 @@ describe("POST /work-accidents/:id/close", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/work-accidents/1/close",
+      path: "/work-accident/work-accidents/1/close",
       token: await tokenFor(5),
       method: "POST",
     })

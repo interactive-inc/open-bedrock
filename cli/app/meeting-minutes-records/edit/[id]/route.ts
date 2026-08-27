@@ -34,7 +34,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["meeting-minutes-records"][":id"].$put({
+    const response = await client["meeting"]["meeting-minutes-records"][":id"].$put({
       param: { id },
       json: {
         held_on: heldOn,

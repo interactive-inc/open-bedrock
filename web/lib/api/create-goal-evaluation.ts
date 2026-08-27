@@ -4,7 +4,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 
 /** api の zValidator が宣言する json 入力型をそのまま使う（手動型と二重管理しない）。 */
 type GoalEvaluationCreateRequest = Parameters<
-  ApiClient["performance-goals"][":goalId"]["evaluations"]["$post"]
+  ApiClient["performance-review"]["performance-goals"][":goalId"]["evaluations"]["$post"]
 >[0]["json"]
 
 type Props = {
@@ -20,7 +20,9 @@ type Props = {
 export async function createGoalEvaluation(props: Props) {
   const client = await createClient()
 
-  const response = await client["performance-goals"][":goalId"].evaluations.$post({
+  const response = await client["performance-review"]["performance-goals"][
+    ":goalId"
+  ].evaluations.$post({
     param: { goalId: String(props.goalId) },
     json: props.request,
   })

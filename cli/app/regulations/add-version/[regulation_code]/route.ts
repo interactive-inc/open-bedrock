@@ -32,7 +32,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.regulations[":code"].versions.$post({
+    const response = await client["regulation"]["regulations"][":code"].versions.$post({
       param: { code: regulationCode },
       json: {
         body_md: query.body,

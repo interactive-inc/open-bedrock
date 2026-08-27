@@ -79,7 +79,11 @@ async function request(
 
 describe("POST /review-cycles/:cycleId/open and /close", () => {
   test("admin opens the draft cycle and returns 200", async () => {
-    const response = await request("/review-cycles/3/open", await adminToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/3/open",
+      await adminToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(200)
 
@@ -93,31 +97,51 @@ describe("POST /review-cycles/:cycleId/open and /close", () => {
   })
 
   test("close returns 404 for a missing cycle", async () => {
-    const response = await request("/review-cycles/9999/close", await adminToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/9999/close",
+      await adminToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("member opening a cycle is forbidden", async () => {
-    const response = await request("/review-cycles/1/open", await memberToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/1/open",
+      await memberToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("closed cycle cannot be opened (409)", async () => {
-    const response = await request("/review-cycles/2/open", await adminToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/2/open",
+      await adminToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("already open cycle cannot be opened again (409)", async () => {
-    const response = await request("/review-cycles/1/open", await adminToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/1/open",
+      await adminToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("draft cycle cannot be closed directly (409)", async () => {
-    const response = await request("/review-cycles/3/close", await adminToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/3/close",
+      await adminToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(409)
   })

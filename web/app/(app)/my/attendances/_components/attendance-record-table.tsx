@@ -14,7 +14,7 @@ import {
 /** api の実レスポンス（snake_case）と同形の表示用レコード型。 */
 type AttendanceRecord = {
   id: number
-  employee_id: number
+  employee_id: string
   work_date: string
   clock_in_at: string | null
   clock_out_at: string | null

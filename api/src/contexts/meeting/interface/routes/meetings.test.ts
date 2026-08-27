@@ -80,7 +80,7 @@ describe("GET /meetings", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings",
+      path: "/meeting/meetings",
       token: await memberToken(),
     })
 
@@ -100,7 +100,7 @@ describe("GET /meetings", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings",
+      path: "/meeting/meetings",
       token: null,
     })
 
@@ -113,7 +113,7 @@ describe("POST /meetings", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings",
+      path: "/meeting/meetings",
       token: await adminToken(),
       method: "POST",
       body: { code: "leadership", name: "経営会議", cadence: "週次" },
@@ -135,7 +135,7 @@ describe("POST /meetings", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings",
+      path: "/meeting/meetings",
       token: await memberToken(),
       method: "POST",
       body: { code: "leadership", name: "経営会議", cadence: null },
@@ -148,7 +148,7 @@ describe("POST /meetings", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings",
+      path: "/meeting/meetings",
       token: await adminToken(),
       method: "POST",
       body: { code: "board", name: "重複", cadence: null },

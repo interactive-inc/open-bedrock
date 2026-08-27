@@ -30,9 +30,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["employee-certifications"].$post({
+    const response = await client["certification"]["employee-certifications"].$post({
       json: {
-        employee_id: toFiniteNumber(query["employee-id"], "--employee-id"),
+        employee_id: query["employee-id"],
         certification_id: toFiniteNumber(query["certification-id"], "--certification-id"),
         acquired_on: query.acquired,
         expires_on: query.expires ?? null,

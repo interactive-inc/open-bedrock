@@ -1,4 +1,4 @@
-import { ManageGovernanceOrgRole } from "@/contexts/governance/application/manage-governance-org-role"
+import { AssignGovernanceOrgRole } from "@/contexts/governance/application/assign-governance-org-role"
 import { prepareGovernanceAudit } from "@/api/http/audit/prepare-governance-audit"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -24,10 +24,10 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
   const code = parseGovernanceCode(c.req.param("code"))
   if (code === null) throw new NotFoundError("governance organization role not found")
   const body = c.req.valid("json")
-  const result = await new ManageGovernanceOrgRole({
+  const result = await new AssignGovernanceOrgRole({
     context: c,
     prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
-  }).assign({
+  }).execute({
     session,
     orgRoleCode: code,
     employeeCode: body.employee_code,

@@ -6,8 +6,12 @@ export async function decideThanksRedemption(id: number, decision: "approve" | "
 
   const response =
     decision === "approve"
-      ? await client["thanks-redemptions"][":id"].approve.$post({ param: { id: String(id) } })
-      : await client["thanks-redemptions"][":id"].reject.$post({ param: { id: String(id) } })
+      ? await client["thanks"]["thanks-redemptions"][":id"].approve.$post({
+          param: { id: String(id) },
+        })
+      : await client["thanks"]["thanks-redemptions"][":id"].reject.$post({
+          param: { id: String(id) },
+        })
 
   if (response.status >= 400) {
     return toResponseError(response, {

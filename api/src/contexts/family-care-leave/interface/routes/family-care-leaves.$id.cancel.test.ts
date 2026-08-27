@@ -67,7 +67,7 @@ describe("POST /family-care-leaves/:id/cancel", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/family-care-leaves/${seedId}/cancel`,
+      path: `/family-care-leave/family-care-leaves/${seedId}/cancel`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -87,7 +87,7 @@ describe("POST /family-care-leaves/:id/cancel", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/family-care-leaves/${seedId}/cancel`,
+      path: `/family-care-leave/family-care-leaves/${seedId}/cancel`,
       token: await tokenFor(5),
       method: "POST",
     })
@@ -101,7 +101,7 @@ describe("POST /family-care-leaves/:id/cancel", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: `/family-care-leaves/${seedId}/cancel`,
+      path: `/family-care-leave/family-care-leaves/${seedId}/cancel`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -111,7 +111,7 @@ describe("POST /family-care-leaves/:id/cancel", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: `/family-care-leaves/${seedId}/cancel`,
+      path: `/family-care-leave/family-care-leaves/${seedId}/cancel`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -123,7 +123,7 @@ describe("POST /family-care-leaves/:id/cancel", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/family-care-leaves/${seedId}/cancel`,
+      path: `/family-care-leave/family-care-leaves/${seedId}/cancel`,
       token: null,
       method: "POST",
     })

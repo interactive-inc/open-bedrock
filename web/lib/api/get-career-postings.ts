@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getCareerPostings() {
   const client = await createClient()
 
-  const response = await client["career-postings"].$get()
+  const response = await client["career"]["career-postings"].$get()
 
   if (response.status >= 400) {
     return new Error("failed to load career postings")

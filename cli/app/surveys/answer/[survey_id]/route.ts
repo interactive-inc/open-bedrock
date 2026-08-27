@@ -29,7 +29,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.surveys[":surveyId"].responses.$post({
+    const response = await client["survey"]["surveys"][":surveyId"].responses.$post({
       param: { surveyId: surveyId },
       json: { answers_json: parsed.data },
     })

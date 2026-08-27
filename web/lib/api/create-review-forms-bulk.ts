@@ -6,10 +6,12 @@ import type { ReviewFormBulkItem } from "@/lib/api/types/review-types"
 export async function createReviewFormsBulk(cycleId: number, forms: Array<ReviewFormBulkItem>) {
   const client = await createClient()
 
-  const response = await client["review-cycles"][":cycleId"].forms.bulk.$post({
-    param: { cycleId: String(cycleId) },
-    json: { forms },
-  })
+  const response = await client["performance-review"]["review-cycles"][":cycleId"].forms.bulk.$post(
+    {
+      param: { cycleId: String(cycleId) },
+      json: { forms },
+    },
+  )
 
   if (response.status >= 400) {
     return toResponseError(response, {

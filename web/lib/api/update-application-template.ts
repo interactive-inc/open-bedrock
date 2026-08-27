@@ -15,7 +15,7 @@ export async function updateApplicationTemplate(
 ): Promise<ApplicationTemplateResponse | Error> {
   const client = await createClient()
 
-  const response = await client["application-templates"][":code"].$put({
+  const response = await client["company"]["application-templates"][":code"].$put({
     param: { code: code },
     json: {
       name: request.name,

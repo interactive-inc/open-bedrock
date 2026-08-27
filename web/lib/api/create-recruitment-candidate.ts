@@ -11,7 +11,7 @@ export async function createRecruitmentCandidate(request: {
 }) {
   const client = await createClient()
 
-  const response = await client["job-openings"][":jobOpeningId"].candidates.$post({
+  const response = await client["recruitment"]["job-openings"][":jobOpeningId"].candidates.$post({
     param: { jobOpeningId: String(request.positionId) },
     json: {
       name: request.name,

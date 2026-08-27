@@ -8,7 +8,7 @@ import type { ThanksRewardResponse } from "@/lib/api/types/thanks-points-types"
 export async function getThanksRewards(): Promise<Array<ThanksRewardResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["thanks-rewards"].$get()
+  const response = await client["thanks"]["thanks-rewards"].$get()
 
   if (response.status >= 400) {
     return new Error("failed to load thanks rewards")

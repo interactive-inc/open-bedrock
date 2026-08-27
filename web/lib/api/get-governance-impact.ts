@@ -3,7 +3,7 @@ import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
 export async function getGovernanceImpact() {
   const client = await createClient()
-  const response = await client["governance-documents"].impact.$get()
+  const response = await client["governance"]["governance-documents"].impact.$get()
   if (response.status >= 400) {
     return toApiResponseError(response, "規程と組織の整合性検査に失敗しました")
   }

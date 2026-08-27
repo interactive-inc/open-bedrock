@@ -118,7 +118,7 @@ describe("GET /department-budgets/:id", () => {
   test("aggregates approved expenses of the department within the period", async () => {
     // dept 3(Engineering)は seed-expenses の approved 経費(id:2, 3300)のみが消化に入る。
     const response = await request({
-      path: "/department-budgets/1",
+      path: "/expense/department-budgets/1",
       token: await tokenFor(1),
     })
 
@@ -139,7 +139,7 @@ describe("GET /department-budgets/:id", () => {
   test("returns zero consumption when no approved expenses match", async () => {
     // dept 4(Sales)の seed-expenses は id:3 のみで status は pending → 消化 0。
     const response = await request({
-      path: "/department-budgets/2",
+      path: "/expense/department-budgets/2",
       token: await tokenFor(1),
     })
 
@@ -157,7 +157,7 @@ describe("GET /department-budgets/:id", () => {
 
   test("returns 404 for a missing budget", async () => {
     const response = await request({
-      path: "/department-budgets/999",
+      path: "/expense/department-budgets/999",
       token: await tokenFor(1),
     })
 
@@ -166,7 +166,7 @@ describe("GET /department-budgets/:id", () => {
 
   test("returns 403 without budget:manage", async () => {
     const response = await request({
-      path: "/department-budgets/1",
+      path: "/expense/department-budgets/1",
       token: await tokenFor(2),
     })
 
@@ -177,7 +177,7 @@ describe("GET /department-budgets/:id", () => {
 describe("PATCH /department-budgets/:id", () => {
   test("updates amount, name and note", async () => {
     const response = await request({
-      path: "/department-budgets/1",
+      path: "/expense/department-budgets/1",
       token: await tokenFor(1),
       method: "PATCH",
       body: { amount: 1200000, name: "Engineering FY2026 (revised)", note: "raised" },
@@ -195,7 +195,7 @@ describe("PATCH /department-budgets/:id", () => {
 
   test("returns 404 for a missing budget", async () => {
     const response = await request({
-      path: "/department-budgets/999",
+      path: "/expense/department-budgets/999",
       token: await tokenFor(1),
       method: "PATCH",
       body: { amount: 1, name: "x" },
@@ -206,7 +206,7 @@ describe("PATCH /department-budgets/:id", () => {
 
   test("returns 403 without budget:manage", async () => {
     const response = await request({
-      path: "/department-budgets/1",
+      path: "/expense/department-budgets/1",
       token: await tokenFor(2),
       method: "PATCH",
       body: { amount: 1, name: "x" },
@@ -219,7 +219,7 @@ describe("PATCH /department-budgets/:id", () => {
 describe("DELETE /department-budgets/:id", () => {
   test("returns 204 and removes the budget", async () => {
     const response = await request({
-      path: "/department-budgets/1",
+      path: "/expense/department-budgets/1",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -229,7 +229,7 @@ describe("DELETE /department-budgets/:id", () => {
 
   test("returns 404 for a missing budget", async () => {
     const response = await request({
-      path: "/department-budgets/999",
+      path: "/expense/department-budgets/999",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -239,7 +239,7 @@ describe("DELETE /department-budgets/:id", () => {
 
   test("returns 403 without budget:manage", async () => {
     const response = await request({
-      path: "/department-budgets/1",
+      path: "/expense/department-budgets/1",
       token: await tokenFor(2),
       method: "DELETE",
     })

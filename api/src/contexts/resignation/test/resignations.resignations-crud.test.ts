@@ -36,11 +36,11 @@ const app = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
-  .post("/resignations", ...createRoute.POST)
-  .get("/resignations/me", ...meRoute.GET)
-  .get("/resignations/:id", ...detailRoute.GET)
-  .put("/resignations/:id", ...detailRoute.PUT)
-  .delete("/resignations/:id", ...detailRoute.DELETE)
+  .post("/resignation/resignations", ...createRoute.POST)
+  .get("/resignation/resignations/me", ...meRoute.GET)
+  .get("/resignation/resignations/:id", ...detailRoute.GET)
+  .put("/resignation/resignations/:id", ...detailRoute.PUT)
+  .delete("/resignation/resignations/:id", ...detailRoute.DELETE)
 
 const resignationResponseSchema = z.object({
   id: z.string(),
@@ -143,7 +143,7 @@ async function request(props: {
 describe("POST /resignations", () => {
   test("creates a resignation with status requested", async () => {
     const response = await request({
-      path: "/resignations",
+      path: "/resignation/resignations",
       token: await noPendingToken(),
       method: "POST",
       body: {
@@ -168,7 +168,7 @@ describe("POST /resignations", () => {
 
   test("creates a resignation with null optional fields", async () => {
     const response = await request({
-      path: "/resignations",
+      path: "/resignation/resignations",
       token: await noPendingToken(),
       method: "POST",
       body: {
@@ -190,7 +190,7 @@ describe("POST /resignations", () => {
 
   test("returns 409 when the employee already has a pending resignation", async () => {
     const response = await request({
-      path: "/resignations",
+      path: "/resignation/resignations",
       token: await applicantToken(),
       method: "POST",
       body: {
@@ -204,7 +204,7 @@ describe("POST /resignations", () => {
 
   test("returns 400 when resignation_date is in the past", async () => {
     const response = await request({
-      path: "/resignations",
+      path: "/resignation/resignations",
       token: await noPendingToken(),
       method: "POST",
       body: {
@@ -218,7 +218,7 @@ describe("POST /resignations", () => {
 
   test("accepts resignation_date equal to today", async () => {
     const response = await request({
-      path: "/resignations",
+      path: "/resignation/resignations",
       token: await noPendingToken(),
       method: "POST",
       body: {
@@ -231,7 +231,7 @@ describe("POST /resignations", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/resignations",
+      path: "/resignation/resignations",
       token: null,
       method: "POST",
       body: {
@@ -245,7 +245,10 @@ describe("POST /resignations", () => {
 
 describe("GET /resignations/me", () => {
   test("returns only the viewer's resignations", async () => {
-    const response = await request({ path: "/resignations/me", token: await applicantToken() })
+    const response = await request({
+      path: "/resignation/resignations/me",
+      token: await applicantToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -263,7 +266,7 @@ describe("GET /resignations/me", () => {
 
   test("applies limit and offset to the listing", async () => {
     const limited = await request({
-      path: "/resignations/me?limit=1",
+      path: "/resignation/resignations/me?limit=1",
       token: await applicantToken(),
     })
 
@@ -274,7 +277,7 @@ describe("GET /resignations/me", () => {
     expect(limitedRows.data.length).toBe(1)
 
     const skipped = await request({
-      path: "/resignations/me?offset=1",
+      path: "/resignation/resignations/me?offset=1",
       token: await applicantToken(),
     })
 
@@ -286,7 +289,7 @@ describe("GET /resignations/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/resignations/me", token: null })
+    const response = await request({ path: "/resignation/resignations/me", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -295,7 +298,7 @@ describe("GET /resignations/me", () => {
 describe("GET /resignations/:id", () => {
   test("returns the resignation for its applicant", async () => {
     const response = await request({
-      path: `/resignations/${ownResignationId}`,
+      path: `/resignation/resignations/${ownResignationId}`,
       token: await applicantToken(),
     })
 
@@ -312,7 +315,7 @@ describe("GET /resignations/:id", () => {
 
   test("returns 403 for another person's resignation", async () => {
     const response = await request({
-      path: `/resignations/${othersResignationId}`,
+      path: `/resignation/resignations/${othersResignationId}`,
       token: await applicantToken(),
     })
 
@@ -321,7 +324,7 @@ describe("GET /resignations/:id", () => {
 
   test("returns 404 for an unknown resignation", async () => {
     const response = await request({
-      path: "/resignations/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/resignation/resignations/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await applicantToken(),
     })
 
@@ -332,7 +335,7 @@ describe("GET /resignations/:id", () => {
 describe("PUT /resignations/:id", () => {
   test("updates the details of the viewer's resignation", async () => {
     const response = await request({
-      path: `/resignations/${ownResignationId}`,
+      path: `/resignation/resignations/${ownResignationId}`,
       token: await applicantToken(),
       method: "PUT",
       body: {
@@ -356,7 +359,7 @@ describe("PUT /resignations/:id", () => {
 
   test("returns 403 when updating another person's resignation", async () => {
     const response = await request({
-      path: `/resignations/${othersResignationId}`,
+      path: `/resignation/resignations/${othersResignationId}`,
       token: await applicantToken(),
       method: "PUT",
       body: {
@@ -371,7 +374,7 @@ describe("PUT /resignations/:id", () => {
 
   test("returns 404 for an unknown resignation", async () => {
     const response = await request({
-      path: "/resignations/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/resignation/resignations/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await applicantToken(),
       method: "PUT",
       body: {
@@ -386,7 +389,7 @@ describe("PUT /resignations/:id", () => {
 
   test("returns 400 when updating resignation_date to a past date", async () => {
     const response = await request({
-      path: `/resignations/${ownResignationId}`,
+      path: `/resignation/resignations/${ownResignationId}`,
       token: await applicantToken(),
       method: "PUT",
       body: {
@@ -403,7 +406,7 @@ describe("PUT /resignations/:id", () => {
 describe("DELETE /resignations/:id", () => {
   test("cancels the viewer's resignation and returns 204", async () => {
     const response = await request({
-      path: `/resignations/${ownResignationId}`,
+      path: `/resignation/resignations/${ownResignationId}`,
       token: await applicantToken(),
       method: "DELETE",
     })
@@ -413,7 +416,7 @@ describe("DELETE /resignations/:id", () => {
 
   test("returns 403 when cancelling another person's resignation", async () => {
     const response = await request({
-      path: `/resignations/${othersResignationId}`,
+      path: `/resignation/resignations/${othersResignationId}`,
       token: await applicantToken(),
       method: "DELETE",
     })
@@ -423,7 +426,7 @@ describe("DELETE /resignations/:id", () => {
 
   test("returns 404 for an unknown resignation", async () => {
     const response = await request({
-      path: "/resignations/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/resignation/resignations/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await applicantToken(),
       method: "DELETE",
     })
@@ -433,7 +436,7 @@ describe("DELETE /resignations/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: `/resignations/${ownResignationId}`,
+      path: `/resignation/resignations/${ownResignationId}`,
       token: null,
       method: "DELETE",
     })

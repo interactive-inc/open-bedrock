@@ -4,35 +4,38 @@
 
 import { hc } from "hono/client"
 import { appBase, createRouteApp } from "@/api/app-base"
-import * as applicationRequestsRoute from "@/api/routes/application-requests"
-import * as applicationRequestsIdRoute from "@/api/routes/application-requests.$id"
-import * as applicationRequestsIdApproveRoute from "@/api/routes/application-requests.$id.approve"
-import * as applicationRequestsIdReassignWorkflowStepRoute from "@/api/routes/application-requests.$id.reassign-workflow-step"
-import * as applicationRequestsIdRejectRoute from "@/api/routes/application-requests.$id.reject"
-import * as applicationRequestsIdResubmitRoute from "@/api/routes/application-requests.$id.resubmit"
-import * as applicationRequestsAdminRoute from "@/api/routes/application-requests.admin"
-import * as applicationRequestsInboxRoute from "@/api/routes/application-requests.inbox"
-import * as applicationRequestsMeRoute from "@/api/routes/application-requests.me"
-import * as applicationRequestsWorkflowRepairsRoute from "@/api/routes/application-requests.workflow-repairs"
-import * as applicationTemplatesRoute from "@/api/routes/application-templates"
-import * as applicationTemplatesCodeRoute from "@/api/routes/application-templates.$code"
-import * as applicationTemplatesCodeWorkflowRoute from "@/api/routes/application-templates.$code.workflow"
-import * as approvalDelegationsRoute from "@/api/routes/approval-delegations"
-import * as approvalDelegationsIdRoute from "@/api/routes/approval-delegations.$id"
-import * as attendanceRecordsOvertimeSummaryRoute from "@/api/routes/attendance-records.overtime-summary"
-import * as auditEventExportsRoute from "@/api/routes/audit-event-exports"
-import * as auditEventsRoute from "@/api/routes/audit-events"
-import * as auditEventsEventIdRoute from "@/api/routes/audit-events.$eventId"
-import * as dashboardRoute from "@/api/routes/dashboard"
-import * as dashboardManagementRoute from "@/api/routes/dashboard.management"
-import * as directoryAccountsRoute from "@/api/routes/directory.accounts"
-import * as featuresRoute from "@/api/routes/features"
-import * as governanceDocumentsImpactRoute from "@/api/routes/governance-documents.impact"
-import * as governanceDocumentsSyncRoute from "@/api/routes/governance-documents.sync"
-import * as inboxCountsRoute from "@/api/routes/inbox.counts"
-import * as notificationsRoute from "@/api/routes/notifications"
-import * as permissionDefinitionsRoute from "@/api/routes/permission-definitions"
-import * as provisioningIdentitiesRoute from "@/api/routes/provisioning.identities"
+import * as attendanceAttendanceRecordsOvertimeSummaryRoute from "@/api/routes/attendance.attendance-records.overtime-summary"
+import * as companyAccountDirectoryRoute from "@/api/routes/company.account-directory"
+import * as companyApplicationRequestsRoute from "@/api/routes/company.application-requests"
+import * as companyApplicationRequestsIdRoute from "@/api/routes/company.application-requests.$id"
+import * as companyApplicationRequestsIdApproveRoute from "@/api/routes/company.application-requests.$id.approve"
+import * as companyApplicationRequestsIdReassignWorkflowStepRoute from "@/api/routes/company.application-requests.$id.reassign-workflow-step"
+import * as companyApplicationRequestsIdRejectRoute from "@/api/routes/company.application-requests.$id.reject"
+import * as companyApplicationRequestsIdResubmitRoute from "@/api/routes/company.application-requests.$id.resubmit"
+import * as companyApplicationRequestsAdminRoute from "@/api/routes/company.application-requests.admin"
+import * as companyApplicationRequestsInboxRoute from "@/api/routes/company.application-requests.inbox"
+import * as companyApplicationRequestsMeRoute from "@/api/routes/company.application-requests.me"
+import * as companyApplicationRequestsWorkflowRepairsRoute from "@/api/routes/company.application-requests.workflow-repairs"
+import * as companyApplicationTemplatesRoute from "@/api/routes/company.application-templates"
+import * as companyApplicationTemplatesCodeRoute from "@/api/routes/company.application-templates.$code"
+import * as companyApplicationTemplatesCodeWorkflowRoute from "@/api/routes/company.application-templates.$code.workflow"
+import * as companyApprovalDelegationsRoute from "@/api/routes/company.approval-delegations"
+import * as companyApprovalDelegationsIdRoute from "@/api/routes/company.approval-delegations.$id"
+import * as companyAuditEventExportsRoute from "@/api/routes/company.audit-event-exports"
+import * as companyAuditEventsRoute from "@/api/routes/company.audit-events"
+import * as companyAuditEventsEventIdRoute from "@/api/routes/company.audit-events.$eventId"
+import * as companyCurrentProfileRoute from "@/api/routes/company.current-profile"
+import * as companyDashboardRoute from "@/api/routes/company.dashboard"
+import * as companyDashboardManagementRoute from "@/api/routes/company.dashboard.management"
+import * as companyEmployeeRegistrationsRoute from "@/api/routes/company.employee-registrations"
+import * as companyFeaturesRoute from "@/api/routes/company.features"
+import * as companyInboxCountsRoute from "@/api/routes/company.inbox.counts"
+import * as companyNotificationsRoute from "@/api/routes/company.notifications"
+import * as companyPersonnelActionRequestsRoute from "@/api/routes/company.personnel-action-requests"
+import * as governanceGovernanceDocumentsImpactRoute from "@/api/routes/governance.governance-documents.impact"
+import * as governanceGovernanceDocumentsSyncRoute from "@/api/routes/governance.governance-documents.sync"
+import * as systemPermissionDefinitionsRoute from "@/api/routes/system.permission-definitions"
+import * as systemProvisioningIdentitiesRoute from "@/api/routes/system.provisioning.identities"
 import * as announcementsRoute from "@/contexts/announcement/interface/routes/announcements"
 import * as announcementsIdRoute from "@/contexts/announcement/interface/routes/announcements.$id"
 import * as announcementsIdArchiveRoute from "@/contexts/announcement/interface/routes/announcements.$id.archive"
@@ -87,14 +90,33 @@ import * as companyAccountEmployeeLinksRoute from "@/contexts/company/interface/
 import * as companyBootstrapRoute from "@/contexts/company/interface/routes/company.bootstrap"
 import * as companyCapabilitiesRoute from "@/contexts/company/interface/routes/company.capabilities"
 import * as companyDefinitionsRoute from "@/contexts/company/interface/routes/company.definitions"
+import * as companyEmployeeDirectoryRoute from "@/contexts/company/interface/routes/company.employee-directory"
+import * as companyEmployeeDirectoryCodeRoute from "@/contexts/company/interface/routes/company.employee-directory.$code"
+import * as companyEmployeeEventsRoute from "@/contexts/company/interface/routes/company.employee-events"
+import * as companyEmployeeGradesRoute from "@/contexts/company/interface/routes/company.employee-grades"
+import * as companyEmployeeLifecycleCodeEventsRoute from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.events"
+import * as companyEmployeeLifecycleCodeStateRoute from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.state"
 import * as companyEmployeesRoute from "@/contexts/company/interface/routes/company.employees"
 import * as companyEmploymentsRoute from "@/contexts/company/interface/routes/company.employments"
+import * as companyGradeDefinitionsRoute from "@/contexts/company/interface/routes/company.grade-definitions"
+import * as companyGradeDefinitionsIdRoute from "@/contexts/company/interface/routes/company.grade-definitions.$id"
+import * as companyMyDirectReportsRoute from "@/contexts/company/interface/routes/company.my-direct-reports"
+import * as companyMyOrganizationUnitsRoute from "@/contexts/company/interface/routes/company.my-organization-units"
+import * as companyMyProfileRoute from "@/contexts/company/interface/routes/company.my-profile"
 import * as companyOrganizationChangesRoute from "@/contexts/company/interface/routes/company.organization-changes"
 import * as companyOrganizationProfileRoute from "@/contexts/company/interface/routes/company.organization-profile"
 import * as companyOrganizationSnapshotsRoute from "@/contexts/company/interface/routes/company.organization-snapshots"
+import * as companyOrganizationTreeRoute from "@/contexts/company/interface/routes/company.organization-tree"
+import * as companyOrganizationUnitsRoute from "@/contexts/company/interface/routes/company.organization-units"
+import * as companyOrganizationUnitsCodeRoute from "@/contexts/company/interface/routes/company.organization-units.$code"
+import * as companyOrganizationUnitsCodeMembersRoute from "@/contexts/company/interface/routes/company.organization-units.$code.members"
 import * as companyPeopleRoute from "@/contexts/company/interface/routes/company.people"
+import * as companyPersonnelActionExecutionsRoute from "@/contexts/company/interface/routes/company.personnel-action-executions"
 import * as companyPersonnelActionsRoute from "@/contexts/company/interface/routes/company.personnel-actions"
+import * as companyPositionDefinitionsRoute from "@/contexts/company/interface/routes/company.position-definitions"
+import * as companyPositionDefinitionsIdRoute from "@/contexts/company/interface/routes/company.position-definitions.$id"
 import * as companyProfileRoute from "@/contexts/company/interface/routes/company.profile"
+import * as companyReportingLinesEmployeeCodeRoute from "@/contexts/company/interface/routes/company.reporting-lines.$employeeCode"
 import * as salaryRevisionsRoute from "@/contexts/compensation-change/interface/routes/salary-revisions"
 import * as disciplinaryActionsRoute from "@/contexts/disciplinary-action/interface/routes/disciplinary-actions"
 import * as documentLedgerEntriesRoute from "@/contexts/document/interface/routes/document-ledger-entries"
@@ -289,6 +311,7 @@ import * as systemAttachmentsPurgeUnlinkedRoute from "@system/interface/routes/s
 import * as systemAuditEventsRoute from "@system/interface/routes/system.audit-events"
 import * as systemAuditEventsEventIdRoute from "@system/interface/routes/system.audit-events.$eventId"
 import * as systemAuthPasswordResetRoute from "@system/interface/routes/system.auth.password.reset"
+import * as systemBatchJobsRoute from "@system/interface/routes/system.batch-jobs"
 import * as systemBootstrapRoute from "@system/interface/routes/system.bootstrap"
 import * as systemBrowserLoginCodesRoute from "@system/interface/routes/system.browser-login-codes"
 import * as systemBrowserSessionsRoute from "@system/interface/routes/system.browser-sessions"
@@ -309,491 +332,600 @@ import * as systemRolesRoleIdRoute from "@system/interface/routes/system.roles.$
 import * as systemSessionsRoute from "@system/interface/routes/system.sessions"
 
 const routePart0 = createRouteApp()
-  .get("/announcements", ...announcementsRoute.GET)
-  .post("/announcements", ...announcementsRoute.POST)
-  .get("/announcements/:id", ...announcementsIdRoute.GET)
-  .put("/announcements/:id", ...announcementsIdRoute.PUT)
-  .post("/announcements/:id/archive", ...announcementsIdArchiveRoute.POST)
-  .post("/announcements/:id/publish", ...announcementsIdPublishRoute.POST)
-  .post("/antisocial-checks", ...antisocialChecksRoute.POST)
-  .get("/antisocial-checks/admin", ...antisocialChecksAdminRoute.GET)
-  .get("/antisocial-checks/me", ...antisocialChecksMeRoute.GET)
-  .get("/antisocial-checks/:id", ...antisocialChecksIdRoute.GET)
-  .put("/antisocial-checks/:id", ...antisocialChecksIdRoute.PUT)
-  .delete("/antisocial-checks/:id", ...antisocialChecksIdRoute.DELETE)
+  .get("/announcement/announcements", ...announcementsRoute.GET)
+  .post("/announcement/announcements", ...announcementsRoute.POST)
+  .get("/announcement/announcements/:id", ...announcementsIdRoute.GET)
+  .put("/announcement/announcements/:id", ...announcementsIdRoute.PUT)
+  .post("/announcement/announcements/:id/archive", ...announcementsIdArchiveRoute.POST)
+  .post("/announcement/announcements/:id/publish", ...announcementsIdPublishRoute.POST)
+  .post("/antisocial-check/antisocial-checks", ...antisocialChecksRoute.POST)
+  .get("/antisocial-check/antisocial-checks/admin", ...antisocialChecksAdminRoute.GET)
+  .get("/antisocial-check/antisocial-checks/me", ...antisocialChecksMeRoute.GET)
+  .get("/antisocial-check/antisocial-checks/:id", ...antisocialChecksIdRoute.GET)
+  .put("/antisocial-check/antisocial-checks/:id", ...antisocialChecksIdRoute.PUT)
+  .delete("/antisocial-check/antisocial-checks/:id", ...antisocialChecksIdRoute.DELETE)
+  .get("/asset/assets", ...assetsRoute.GET)
+  .post("/asset/assets", ...assetsRoute.POST)
+  .get("/asset/assets/holdings", ...assetsHoldingsRoute.GET)
+  .get("/asset/assets/lent/me", ...assetsLentMeRoute.GET)
+  .get("/asset/assets/:code", ...assetsCodeRoute.GET)
+  .put("/asset/assets/:code", ...assetsCodeRoute.PUT)
+  .delete("/asset/assets/:code", ...assetsCodeRoute.DELETE)
+  .post("/asset/assets/:code/dispose", ...assetsCodeDisposeRoute.POST)
+  .post("/asset/assets/:code/lend", ...assetsCodeLendRoute.POST)
+  .post("/asset/assets/:code/return", ...assetsCodeReturnRoute.POST)
+  .get("/asset/stocktakes", ...stocktakesRoute.GET)
+  .post("/asset/stocktakes", ...stocktakesRoute.POST)
+  .get("/asset/stocktakes/:id", ...stocktakesIdRoute.GET)
+  .post("/asset/stocktakes/:id/assets/:code/check", ...stocktakesIdAssetsCodeCheckRoute.POST)
+  .post("/asset/stocktakes/:id/close", ...stocktakesIdCloseRoute.POST)
+  .get("/attendance/attendance-records", ...attendanceRecordsRoute.GET)
+  .post("/attendance/attendance-records/clock-in", ...attendanceRecordsClockInRoute.POST)
+  .post("/attendance/attendance-records/clock-out", ...attendanceRecordsClockOutRoute.POST)
+  .get("/attendance/attendance-records/me", ...attendanceRecordsMeRoute.GET)
+  .get("/attendance/attendance-records/me/summary", ...attendanceRecordsMeSummaryRoute.GET)
+  .get(
+    "/attendance/attendance-records/overtime-summary",
+    ...attendanceAttendanceRecordsOvertimeSummaryRoute.GET,
+  )
+  .post("/business-trip/business-trips", ...businessTripsRoute.POST)
+  .get("/business-trip/business-trips/admin", ...businessTripsAdminRoute.GET)
+  .get("/business-trip/business-trips/me", ...businessTripsMeRoute.GET)
+  .get("/business-trip/business-trips/:id", ...businessTripsIdRoute.GET)
+  .put("/business-trip/business-trips/:id", ...businessTripsIdRoute.PUT)
+  .delete("/business-trip/business-trips/:id", ...businessTripsIdRoute.DELETE)
+  .post("/business-trip/business-trips/:id/approve", ...businessTripsIdApproveRoute.POST)
+  .post("/business-trip/business-trips/:id/reject", ...businessTripsIdRejectRoute.POST)
+  .get("/career/career-applications/me", ...careerApplicationsMeRoute.GET)
+  .get("/career/career-applications/:id", ...careerApplicationsIdRoute.GET)
+  .put("/career/career-applications/:id", ...careerApplicationsIdRoute.PUT)
+  .delete("/career/career-applications/:id", ...careerApplicationsIdRoute.DELETE)
+  .get("/career/career-postings", ...careerPostingsRoute.GET)
+  .post("/career/career-postings", ...careerPostingsRoute.POST)
+  .get("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.GET)
 
-const routePart1 = createRouteApp().get("/application-requests", ...applicationRequestsRoute.GET)
+const routePart1 = createRouteApp()
+  .put("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.PUT)
+  .delete("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.DELETE)
+  .post("/career/career-postings/:postingId/apply", ...careerPostingsPostingIdApplyRoute.POST)
+  .get("/career/career-sheets/me", ...careerSheetsMeRoute.GET)
+  .put("/career/career-sheets/me", ...careerSheetsMeRoute.PUT)
+  .delete("/career/career-sheets/me", ...careerSheetsMeRoute.DELETE)
+  .post("/certificate-request/certificate-requests", ...certificateRequestsRoute.POST)
+  .get("/certificate-request/certificate-requests/admin", ...certificateRequestsAdminRoute.GET)
+  .get("/certificate-request/certificate-requests/me", ...certificateRequestsMeRoute.GET)
+  .get("/certificate-request/certificate-requests/:id", ...certificateRequestsIdRoute.GET)
+  .put("/certificate-request/certificate-requests/:id", ...certificateRequestsIdRoute.PUT)
+  .delete("/certificate-request/certificate-requests/:id", ...certificateRequestsIdRoute.DELETE)
+  .post(
+    "/certificate-request/certificate-requests/:id/issue",
+    ...certificateRequestsIdIssueRoute.POST,
+  )
+  .post(
+    "/certificate-request/certificate-requests/:id/reject",
+    ...certificateRequestsIdRejectRoute.POST,
+  )
+  .get("/certification/certification-definitions", ...certificationDefinitionsRoute.GET)
+  .post("/certification/certification-definitions", ...certificationDefinitionsRoute.POST)
+  .put("/certification/certification-definitions/:id", ...certificationDefinitionsIdRoute.PUT)
+  .get("/certification/employee-certifications", ...employeeCertificationsRoute.GET)
+  .post("/certification/employee-certifications", ...employeeCertificationsRoute.POST)
+  .delete("/certification/employee-certifications/:id", ...employeeCertificationsIdRoute.DELETE)
+  .get("/commendation/commendations", ...commendationsRoute.GET)
+  .post("/commendation/commendations", ...commendationsRoute.POST)
+  .delete("/commendation/commendations/:id", ...commendationsIdRoute.DELETE)
+  .get("/company/account-directory", ...companyAccountDirectoryRoute.GET)
+  .get("/company/account-employee-links", ...companyAccountEmployeeLinksRoute.GET)
+  .post("/company/account-employee-links", ...companyAccountEmployeeLinksRoute.POST)
 
-const routePart2 = createRouteApp().post("/application-requests", ...applicationRequestsRoute.POST)
+const routePart2 = createRouteApp().get(
+  "/company/application-requests",
+  ...companyApplicationRequestsRoute.GET,
+)
 
-const routePart3 = createRouteApp().get(
-  "/application-requests/admin",
-  ...applicationRequestsAdminRoute.GET,
+const routePart3 = createRouteApp().post(
+  "/company/application-requests",
+  ...companyApplicationRequestsRoute.POST,
 )
 
 const routePart4 = createRouteApp().get(
-  "/application-requests/inbox",
-  ...applicationRequestsInboxRoute.GET,
+  "/company/application-requests/admin",
+  ...companyApplicationRequestsAdminRoute.GET,
 )
 
 const routePart5 = createRouteApp().get(
-  "/application-requests/me",
-  ...applicationRequestsMeRoute.GET,
+  "/company/application-requests/inbox",
+  ...companyApplicationRequestsInboxRoute.GET,
 )
 
 const routePart6 = createRouteApp().get(
-  "/application-requests/workflow-repairs",
-  ...applicationRequestsWorkflowRepairsRoute.GET,
+  "/company/application-requests/me",
+  ...companyApplicationRequestsMeRoute.GET,
 )
 
 const routePart7 = createRouteApp().get(
-  "/application-requests/:id",
-  ...applicationRequestsIdRoute.GET,
+  "/company/application-requests/workflow-repairs",
+  ...companyApplicationRequestsWorkflowRepairsRoute.GET,
 )
 
-const routePart8 = createRouteApp().put(
-  "/application-requests/:id",
-  ...applicationRequestsIdRoute.PUT,
+const routePart8 = createRouteApp().get(
+  "/company/application-requests/:id",
+  ...companyApplicationRequestsIdRoute.GET,
 )
 
-const routePart9 = createRouteApp().delete(
-  "/application-requests/:id",
-  ...applicationRequestsIdRoute.DELETE,
+const routePart9 = createRouteApp().put(
+  "/company/application-requests/:id",
+  ...companyApplicationRequestsIdRoute.PUT,
 )
 
-const routePart10 = createRouteApp().post(
-  "/application-requests/:id/approve",
-  ...applicationRequestsIdApproveRoute.POST,
+const routePart10 = createRouteApp().delete(
+  "/company/application-requests/:id",
+  ...companyApplicationRequestsIdRoute.DELETE,
 )
 
 const routePart11 = createRouteApp().post(
-  "/application-requests/:id/reassign-workflow-step",
-  ...applicationRequestsIdReassignWorkflowStepRoute.POST,
+  "/company/application-requests/:id/approve",
+  ...companyApplicationRequestsIdApproveRoute.POST,
 )
 
 const routePart12 = createRouteApp().post(
-  "/application-requests/:id/reject",
-  ...applicationRequestsIdRejectRoute.POST,
+  "/company/application-requests/:id/reassign-workflow-step",
+  ...companyApplicationRequestsIdReassignWorkflowStepRoute.POST,
 )
 
 const routePart13 = createRouteApp().post(
-  "/application-requests/:id/resubmit",
-  ...applicationRequestsIdResubmitRoute.POST,
+  "/company/application-requests/:id/reject",
+  ...companyApplicationRequestsIdRejectRoute.POST,
 )
 
-const routePart14 = createRouteApp().get("/application-templates", ...applicationTemplatesRoute.GET)
-
-const routePart15 = createRouteApp().post(
-  "/application-templates",
-  ...applicationTemplatesRoute.POST,
+const routePart14 = createRouteApp().post(
+  "/company/application-requests/:id/resubmit",
+  ...companyApplicationRequestsIdResubmitRoute.POST,
 )
 
-const routePart16 = createRouteApp().get(
-  "/application-templates/:code",
-  ...applicationTemplatesCodeRoute.GET,
+const routePart15 = createRouteApp().get(
+  "/company/application-templates",
+  ...companyApplicationTemplatesRoute.GET,
 )
 
-const routePart17 = createRouteApp().put(
-  "/application-templates/:code",
-  ...applicationTemplatesCodeRoute.PUT,
+const routePart16 = createRouteApp().post(
+  "/company/application-templates",
+  ...companyApplicationTemplatesRoute.POST,
 )
 
-const routePart18 = createRouteApp().delete(
-  "/application-templates/:code",
-  ...applicationTemplatesCodeRoute.DELETE,
+const routePart17 = createRouteApp().get(
+  "/company/application-templates/:code",
+  ...companyApplicationTemplatesCodeRoute.GET,
 )
 
-const routePart19 = createRouteApp().get(
-  "/application-templates/:code/workflow",
-  ...applicationTemplatesCodeWorkflowRoute.GET,
+const routePart18 = createRouteApp().put(
+  "/company/application-templates/:code",
+  ...companyApplicationTemplatesCodeRoute.PUT,
 )
 
-const routePart20 = createRouteApp().put(
-  "/application-templates/:code/workflow",
-  ...applicationTemplatesCodeWorkflowRoute.PUT,
+const routePart19 = createRouteApp().delete(
+  "/company/application-templates/:code",
+  ...companyApplicationTemplatesCodeRoute.DELETE,
 )
 
-const routePart21 = createRouteApp().get("/approval-delegations", ...approvalDelegationsRoute.GET)
-
-const routePart22 = createRouteApp().post("/approval-delegations", ...approvalDelegationsRoute.POST)
-
-const routePart23 = createRouteApp().delete(
-  "/approval-delegations/:id",
-  ...approvalDelegationsIdRoute.DELETE,
+const routePart20 = createRouteApp().get(
+  "/company/application-templates/:code/workflow",
+  ...companyApplicationTemplatesCodeWorkflowRoute.GET,
 )
 
-const routePart24 = createRouteApp()
-  .get("/assets", ...assetsRoute.GET)
-  .post("/assets", ...assetsRoute.POST)
-  .get("/assets/holdings", ...assetsHoldingsRoute.GET)
-  .get("/assets/lent/me", ...assetsLentMeRoute.GET)
-  .get("/assets/:code", ...assetsCodeRoute.GET)
-  .put("/assets/:code", ...assetsCodeRoute.PUT)
-  .delete("/assets/:code", ...assetsCodeRoute.DELETE)
-  .post("/assets/:code/dispose", ...assetsCodeDisposeRoute.POST)
-  .post("/assets/:code/lend", ...assetsCodeLendRoute.POST)
-  .post("/assets/:code/return", ...assetsCodeReturnRoute.POST)
-  .get("/attendance-records", ...attendanceRecordsRoute.GET)
-  .post("/attendance-records/clock-in", ...attendanceRecordsClockInRoute.POST)
-  .post("/attendance-records/clock-out", ...attendanceRecordsClockOutRoute.POST)
-  .get("/attendance-records/me", ...attendanceRecordsMeRoute.GET)
-  .get("/attendance-records/me/summary", ...attendanceRecordsMeSummaryRoute.GET)
-  .get("/attendance-records/overtime-summary", ...attendanceRecordsOvertimeSummaryRoute.GET)
-  .post("/audit-event-exports", ...auditEventExportsRoute.POST)
-  .get("/audit-events", ...auditEventsRoute.GET)
-  .get("/audit-events/:eventId", ...auditEventsEventIdRoute.GET)
-  .post("/business-trips", ...businessTripsRoute.POST)
-  .get("/business-trips/admin", ...businessTripsAdminRoute.GET)
-  .get("/business-trips/me", ...businessTripsMeRoute.GET)
-  .get("/business-trips/:id", ...businessTripsIdRoute.GET)
-  .put("/business-trips/:id", ...businessTripsIdRoute.PUT)
-  .delete("/business-trips/:id", ...businessTripsIdRoute.DELETE)
-  .post("/business-trips/:id/approve", ...businessTripsIdApproveRoute.POST)
-  .post("/business-trips/:id/reject", ...businessTripsIdRejectRoute.POST)
-  .get("/career-applications/me", ...careerApplicationsMeRoute.GET)
-  .get("/career-applications/:id", ...careerApplicationsIdRoute.GET)
-  .put("/career-applications/:id", ...careerApplicationsIdRoute.PUT)
-  .delete("/career-applications/:id", ...careerApplicationsIdRoute.DELETE)
-  .get("/career-postings", ...careerPostingsRoute.GET)
-  .post("/career-postings", ...careerPostingsRoute.POST)
-  .get("/career-postings/:postingId", ...careerPostingsPostingIdRoute.GET)
-  .put("/career-postings/:postingId", ...careerPostingsPostingIdRoute.PUT)
-  .delete("/career-postings/:postingId", ...careerPostingsPostingIdRoute.DELETE)
-  .post("/career-postings/:postingId/apply", ...careerPostingsPostingIdApplyRoute.POST)
-  .get("/career-sheets/me", ...careerSheetsMeRoute.GET)
-  .put("/career-sheets/me", ...careerSheetsMeRoute.PUT)
-  .delete("/career-sheets/me", ...careerSheetsMeRoute.DELETE)
-  .post("/certificate-requests", ...certificateRequestsRoute.POST)
-  .get("/certificate-requests/admin", ...certificateRequestsAdminRoute.GET)
-  .get("/certificate-requests/me", ...certificateRequestsMeRoute.GET)
-  .get("/certificate-requests/:id", ...certificateRequestsIdRoute.GET)
-  .put("/certificate-requests/:id", ...certificateRequestsIdRoute.PUT)
-  .delete("/certificate-requests/:id", ...certificateRequestsIdRoute.DELETE)
-  .post("/certificate-requests/:id/issue", ...certificateRequestsIdIssueRoute.POST)
-  .post("/certificate-requests/:id/reject", ...certificateRequestsIdRejectRoute.POST)
+const routePart21 = createRouteApp().put(
+  "/company/application-templates/:code/workflow",
+  ...companyApplicationTemplatesCodeWorkflowRoute.PUT,
+)
+
+const routePart22 = createRouteApp().get(
+  "/company/approval-delegations",
+  ...companyApprovalDelegationsRoute.GET,
+)
+
+const routePart23 = createRouteApp().post(
+  "/company/approval-delegations",
+  ...companyApprovalDelegationsRoute.POST,
+)
+
+const routePart24 = createRouteApp().delete(
+  "/company/approval-delegations/:id",
+  ...companyApprovalDelegationsIdRoute.DELETE,
+)
 
 const routePart25 = createRouteApp()
-  .get("/certification-definitions", ...certificationDefinitionsRoute.GET)
-  .post("/certification-definitions", ...certificationDefinitionsRoute.POST)
-  .put("/certification-definitions/:id", ...certificationDefinitionsIdRoute.PUT)
-  .get("/commendations", ...commendationsRoute.GET)
-  .post("/commendations", ...commendationsRoute.POST)
-  .delete("/commendations/:id", ...commendationsIdRoute.DELETE)
-  .get("/company/account-employee-links", ...companyAccountEmployeeLinksRoute.GET)
-  .post("/company/account-employee-links", ...companyAccountEmployeeLinksRoute.POST)
+  .post("/company/audit-event-exports", ...companyAuditEventExportsRoute.POST)
+  .get("/company/audit-events", ...companyAuditEventsRoute.GET)
+  .get("/company/audit-events/:eventId", ...companyAuditEventsEventIdRoute.GET)
   .post("/company/bootstrap", ...companyBootstrapRoute.POST)
   .get("/company/capabilities", ...companyCapabilitiesRoute.GET)
+  .get("/company/current-profile", ...companyCurrentProfileRoute.GET)
+  .get("/company/dashboard", ...companyDashboardRoute.GET)
+  .get("/company/dashboard/management", ...companyDashboardManagementRoute.GET)
   .get("/company/definitions", ...companyDefinitionsRoute.GET)
   .post("/company/definitions", ...companyDefinitionsRoute.POST)
+  .get("/company/employee-directory", ...companyEmployeeDirectoryRoute.GET)
+  .get("/company/employee-directory/:code", ...companyEmployeeDirectoryCodeRoute.GET)
+  .put("/company/employee-directory/:code", ...companyEmployeeDirectoryCodeRoute.PUT)
+  .get("/company/employee-events", ...companyEmployeeEventsRoute.GET)
+  .post("/company/employee-events", ...companyEmployeeEventsRoute.POST)
+  .get("/company/employee-grades", ...companyEmployeeGradesRoute.GET)
+  .post("/company/employee-grades", ...companyEmployeeGradesRoute.POST)
+  .get("/company/employee-lifecycle/:code/events", ...companyEmployeeLifecycleCodeEventsRoute.GET)
+  .get("/company/employee-lifecycle/:code/state", ...companyEmployeeLifecycleCodeStateRoute.GET)
+  .post("/company/employee-registrations", ...companyEmployeeRegistrationsRoute.POST)
   .get("/company/employees", ...companyEmployeesRoute.GET)
   .post("/company/employees", ...companyEmployeesRoute.POST)
   .get("/company/employments", ...companyEmploymentsRoute.GET)
   .post("/company/employments", ...companyEmploymentsRoute.POST)
+  .get("/company/features", ...companyFeaturesRoute.GET)
+  .get("/company/grade-definitions", ...companyGradeDefinitionsRoute.GET)
+  .post("/company/grade-definitions", ...companyGradeDefinitionsRoute.POST)
+  .put("/company/grade-definitions/:id", ...companyGradeDefinitionsIdRoute.PUT)
+  .delete("/company/grade-definitions/:id", ...companyGradeDefinitionsIdRoute.DELETE)
+  .get("/company/inbox/counts", ...companyInboxCountsRoute.GET)
+  .get("/company/my-direct-reports", ...companyMyDirectReportsRoute.GET)
+  .get("/company/my-organization-units", ...companyMyOrganizationUnitsRoute.GET)
+  .put("/company/my-profile", ...companyMyProfileRoute.PUT)
+  .post("/company/notifications", ...companyNotificationsRoute.POST)
   .post("/company/organization-changes", ...companyOrganizationChangesRoute.POST)
   .get("/company/organization-profile", ...companyOrganizationProfileRoute.GET)
   .put("/company/organization-profile", ...companyOrganizationProfileRoute.PUT)
   .get("/company/organization-snapshots", ...companyOrganizationSnapshotsRoute.GET)
+  .get("/company/organization-tree", ...companyOrganizationTreeRoute.GET)
+  .get("/company/organization-units", ...companyOrganizationUnitsRoute.GET)
+  .post("/company/organization-units", ...companyOrganizationUnitsRoute.POST)
+  .get("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.GET)
+  .put("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.PUT)
+  .delete("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.DELETE)
+  .get("/company/organization-units/:code/members", ...companyOrganizationUnitsCodeMembersRoute.GET)
   .get("/company/people", ...companyPeopleRoute.GET)
   .post("/company/people", ...companyPeopleRoute.POST)
+  .post("/company/personnel-action-executions", ...companyPersonnelActionExecutionsRoute.POST)
+
+const routePart26 = createRouteApp().get(
+  "/company/personnel-action-requests",
+  ...companyPersonnelActionRequestsRoute.GET,
+)
+
+const routePart27 = createRouteApp().post(
+  "/company/personnel-action-requests",
+  ...companyPersonnelActionRequestsRoute.POST,
+)
+
+const routePart28 = createRouteApp()
   .get("/company/personnel-actions", ...companyPersonnelActionsRoute.GET)
   .post("/company/personnel-actions", ...companyPersonnelActionsRoute.POST)
+  .get("/company/position-definitions", ...companyPositionDefinitionsRoute.GET)
+  .post("/company/position-definitions", ...companyPositionDefinitionsRoute.POST)
+  .put("/company/position-definitions/:id", ...companyPositionDefinitionsIdRoute.PUT)
+  .delete("/company/position-definitions/:id", ...companyPositionDefinitionsIdRoute.DELETE)
   .get("/company/profile", ...companyProfileRoute.GET)
   .post("/company/profile", ...companyProfileRoute.POST)
-  .get("/company-calendar-days", ...companyCalendarDaysRoute.GET)
-  .post("/company-calendar-days", ...companyCalendarDaysRoute.POST)
-  .delete("/company-calendar-days/:id", ...companyCalendarDaysIdRoute.DELETE)
-  .get("/dashboard", ...dashboardRoute.GET)
-  .get("/dashboard/management", ...dashboardManagementRoute.GET)
-  .get("/decision-records", ...decisionRecordsRoute.GET)
-  .post("/decision-records", ...decisionRecordsRoute.POST)
-  .get("/decision-records/:id", ...decisionRecordsIdRoute.GET)
-  .put("/decision-records/:id", ...decisionRecordsIdRoute.PUT)
-  .post("/decision-records/:id/supersede", ...decisionRecordsIdSupersedeRoute.POST)
-  .get("/department-budgets", ...departmentBudgetsRoute.GET)
-  .post("/department-budgets", ...departmentBudgetsRoute.POST)
-  .get("/department-budgets/summary", ...departmentBudgetsSummaryRoute.GET)
-  .get("/department-budgets/:id", ...departmentBudgetsIdRoute.GET)
-  .patch("/department-budgets/:id", ...departmentBudgetsIdRoute.PATCH)
-  .delete("/department-budgets/:id", ...departmentBudgetsIdRoute.DELETE)
-  .get("/directory/accounts", ...directoryAccountsRoute.GET)
-  .get("/disciplinary-actions", ...disciplinaryActionsRoute.GET)
-  .post("/disciplinary-actions", ...disciplinaryActionsRoute.POST)
-  .get("/document-ledger-entries", ...documentLedgerEntriesRoute.GET)
-  .post("/document-ledger-entries", ...documentLedgerEntriesRoute.POST)
-  .put("/document-ledger-entries/:id", ...documentLedgerEntriesIdRoute.PUT)
+  .get("/company/reporting-lines/:employeeCode", ...companyReportingLinesEmployeeCodeRoute.GET)
+  .get("/company-calendar/company-calendar-days", ...companyCalendarDaysRoute.GET)
+  .post("/company-calendar/company-calendar-days", ...companyCalendarDaysRoute.POST)
+  .delete("/company-calendar/company-calendar-days/:id", ...companyCalendarDaysIdRoute.DELETE)
+  .get("/compensation-change/salary-revisions", ...salaryRevisionsRoute.GET)
+  .post("/compensation-change/salary-revisions", ...salaryRevisionsRoute.POST)
+  .get("/disciplinary-action/disciplinary-actions", ...disciplinaryActionsRoute.GET)
+  .post("/disciplinary-action/disciplinary-actions", ...disciplinaryActionsRoute.POST)
+  .get("/document/document-ledger-entries", ...documentLedgerEntriesRoute.GET)
+  .post("/document/document-ledger-entries", ...documentLedgerEntriesRoute.POST)
+  .put("/document/document-ledger-entries/:id", ...documentLedgerEntriesIdRoute.PUT)
+  .get("/expense/department-budgets", ...departmentBudgetsRoute.GET)
+  .post("/expense/department-budgets", ...departmentBudgetsRoute.POST)
+  .get("/expense/department-budgets/summary", ...departmentBudgetsSummaryRoute.GET)
+  .get("/expense/department-budgets/:id", ...departmentBudgetsIdRoute.GET)
+  .patch("/expense/department-budgets/:id", ...departmentBudgetsIdRoute.PATCH)
+  .delete("/expense/department-budgets/:id", ...departmentBudgetsIdRoute.DELETE)
+  .post("/expense/expenses", ...expensesRoute.POST)
+  .get("/expense/expenses/admin", ...expensesAdminRoute.GET)
+  .get("/expense/expenses/inbox", ...expensesInboxRoute.GET)
+  .get("/expense/expenses/me", ...expensesMeRoute.GET)
+  .get("/expense/expenses/:id", ...expensesIdRoute.GET)
+  .put("/expense/expenses/:id", ...expensesIdRoute.PUT)
+  .delete("/expense/expenses/:id", ...expensesIdRoute.DELETE)
+  .post("/expense/expenses/:id/approve", ...expensesIdApproveRoute.POST)
+  .get(
+    "/expense/expenses/:id/attachments/:attachmentId",
+    ...expensesIdAttachmentsAttachmentIdRoute.GET,
+  )
+  .post("/expense/expenses/:id/reject", ...expensesIdRejectRoute.POST)
+  .post("/family-care-leave/family-care-leaves", ...familyCareLeavesRoute.POST)
+  .get("/family-care-leave/family-care-leaves/admin", ...familyCareLeavesAdminRoute.GET)
+  .get("/family-care-leave/family-care-leaves/me", ...familyCareLeavesMeRoute.GET)
+  .get("/family-care-leave/family-care-leaves/:id", ...familyCareLeavesIdRoute.GET)
+  .put("/family-care-leave/family-care-leaves/:id", ...familyCareLeavesIdRoute.PUT)
+  .delete("/family-care-leave/family-care-leaves/:id", ...familyCareLeavesIdRoute.DELETE)
+  .post("/family-care-leave/family-care-leaves/:id/approve", ...familyCareLeavesIdApproveRoute.POST)
+  .post("/family-care-leave/family-care-leaves/:id/cancel", ...familyCareLeavesIdCancelRoute.POST)
+  .get("/governance/governance-capabilities", ...governanceCapabilitiesRoute.GET)
+  .get("/governance/governance-documents", ...governanceDocumentsRoute.GET)
+  .get("/governance/governance-documents/impact", ...governanceGovernanceDocumentsImpactRoute.GET)
+  .post("/governance/governance-documents/sync", ...governanceGovernanceDocumentsSyncRoute.POST)
+  .get("/governance/governance-documents/:code", ...governanceDocumentsCodeRoute.GET)
 
-const routePart26 = createRouteApp()
-  .get("/employee-certifications", ...employeeCertificationsRoute.GET)
-  .post("/employee-certifications", ...employeeCertificationsRoute.POST)
-  .delete("/employee-certifications/:id", ...employeeCertificationsIdRoute.DELETE)
-  .get("/employee-skills/me", ...employeeSkillsMeRoute.GET)
-  .put("/employee-skills/me", ...employeeSkillsMeRoute.PUT)
-  .get("/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.GET)
-  .delete("/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.DELETE)
-  .get("/employee-work-styles", ...employeeWorkStylesRoute.GET)
-  .post("/employee-work-styles", ...employeeWorkStylesRoute.POST)
-  .get("/evaluation-sheets", ...evaluationSheetsRoute.GET)
-  .post("/evaluation-sheets", ...evaluationSheetsRoute.POST)
-  .get("/evaluation-sheets/me", ...evaluationSheetsMeRoute.GET)
-  .get("/evaluation-sheets/:sheetId", ...evaluationSheetsSheetIdRoute.GET)
-  .put("/evaluation-sheets/:sheetId/evaluators", ...evaluationSheetsSheetIdEvaluatorsRoute.PUT)
-  .post("/evaluation-sheets/:sheetId/transition", ...evaluationSheetsSheetIdTransitionRoute.POST)
-  .get("/evaluation-templates", ...evaluationTemplatesRoute.GET)
-  .post("/evaluation-templates", ...evaluationTemplatesRoute.POST)
-  .get("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.GET)
-  .put("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PUT)
-  .patch("/evaluation-templates/:templateId", ...evaluationTemplatesTemplateIdRoute.PATCH)
-  .post("/expenses", ...expensesRoute.POST)
-  .get("/expenses/admin", ...expensesAdminRoute.GET)
-  .get("/expenses/inbox", ...expensesInboxRoute.GET)
-  .get("/expenses/me", ...expensesMeRoute.GET)
-  .get("/expenses/:id", ...expensesIdRoute.GET)
-  .put("/expenses/:id", ...expensesIdRoute.PUT)
-  .delete("/expenses/:id", ...expensesIdRoute.DELETE)
-  .post("/expenses/:id/approve", ...expensesIdApproveRoute.POST)
-  .get("/expenses/:id/attachments/:attachmentId", ...expensesIdAttachmentsAttachmentIdRoute.GET)
-  .post("/expenses/:id/reject", ...expensesIdRejectRoute.POST)
-  .post("/family-care-leaves", ...familyCareLeavesRoute.POST)
-  .get("/family-care-leaves/admin", ...familyCareLeavesAdminRoute.GET)
-  .get("/family-care-leaves/me", ...familyCareLeavesMeRoute.GET)
-  .get("/family-care-leaves/:id", ...familyCareLeavesIdRoute.GET)
-  .put("/family-care-leaves/:id", ...familyCareLeavesIdRoute.PUT)
-  .delete("/family-care-leaves/:id", ...familyCareLeavesIdRoute.DELETE)
-  .post("/family-care-leaves/:id/approve", ...familyCareLeavesIdApproveRoute.POST)
-  .post("/family-care-leaves/:id/cancel", ...familyCareLeavesIdCancelRoute.POST)
-  .get("/features", ...featuresRoute.GET)
-  .get("/governance-capabilities", ...governanceCapabilitiesRoute.GET)
-  .get("/governance-documents", ...governanceDocumentsRoute.GET)
-  .get("/governance-documents/impact", ...governanceDocumentsImpactRoute.GET)
-  .post("/governance-documents/sync", ...governanceDocumentsSyncRoute.POST)
-  .get("/governance-documents/:code", ...governanceDocumentsCodeRoute.GET)
-  .post("/governance-documents/:code/acknowledge", ...governanceDocumentsCodeAcknowledgeRoute.POST)
+const routePart29 = createRouteApp()
   .post(
-    "/governance-documents/:code/versions/:version/publish",
+    "/governance/governance-documents/:code/acknowledge",
+    ...governanceDocumentsCodeAcknowledgeRoute.POST,
+  )
+  .post(
+    "/governance/governance-documents/:code/versions/:version/publish",
     ...governanceDocumentsCodeVersionsVersionPublishRoute.POST,
   )
   .post(
-    "/governance-documents/:code/versions/:version/review",
+    "/governance/governance-documents/:code/versions/:version/review",
     ...governanceDocumentsCodeVersionsVersionReviewRoute.POST,
   )
   .post(
-    "/governance-documents/:code/versions/:version/submit-review",
+    "/governance/governance-documents/:code/versions/:version/submit-review",
     ...governanceDocumentsCodeVersionsVersionSubmitReviewRoute.POST,
   )
+  .get("/governance/governance-org-roles", ...governanceOrgRolesRoute.GET)
+  .delete(
+    "/governance/governance-org-roles/assignments/:id",
+    ...governanceOrgRolesAssignmentsIdRoute.DELETE,
+  )
+  .post(
+    "/governance/governance-org-roles/:code/assignments",
+    ...governanceOrgRolesCodeAssignmentsRoute.POST,
+  )
+  .get("/headcount-plan/headcount-plans", ...headcountPlansRoute.GET)
+  .post("/headcount-plan/headcount-plans", ...headcountPlansRoute.POST)
+  .put("/headcount-plan/headcount-plans/:id", ...headcountPlansIdRoute.PUT)
+  .get("/health-checkup/health-checkups", ...healthCheckupsRoute.GET)
+  .post("/health-checkup/health-checkups", ...healthCheckupsRoute.POST)
+  .post("/health-checkup/health-checkups/:id/complete", ...healthCheckupsIdCompleteRoute.POST)
+  .get("/it-incident/it-incidents", ...itIncidentsRoute.GET)
+  .post("/it-incident/it-incidents", ...itIncidentsRoute.POST)
+  .post("/it-incident/it-incidents/:id/resolve", ...itIncidentsIdResolveRoute.POST)
+  .get("/knowledge/knowledge-articles", ...knowledgeArticlesRoute.GET)
+  .post("/knowledge/knowledge-articles", ...knowledgeArticlesRoute.POST)
+  .get("/knowledge/knowledge-articles/:id", ...knowledgeArticlesIdRoute.GET)
+  .put("/knowledge/knowledge-articles/:id", ...knowledgeArticlesIdRoute.PUT)
+  .delete("/knowledge/knowledge-articles/:id", ...knowledgeArticlesIdRoute.DELETE)
+  .get("/leave/leave-balances", ...leaveBalancesRoute.GET)
+  .get("/leave/leave-balances/me", ...leaveBalancesMeRoute.GET)
+  .get("/leave/leave-requests", ...leaveRequestsRoute.GET)
+  .post("/leave/leave-requests", ...leaveRequestsRoute.POST)
+  .get("/leave/leave-requests/admin", ...leaveRequestsAdminRoute.GET)
+  .get("/leave/leave-requests/inbox", ...leaveRequestsInboxRoute.GET)
+  .get("/leave/leave-requests/me", ...leaveRequestsMeRoute.GET)
+  .get("/leave/leave-requests/:id", ...leaveRequestsIdRoute.GET)
+  .put("/leave/leave-requests/:id", ...leaveRequestsIdRoute.PUT)
+  .delete("/leave/leave-requests/:id", ...leaveRequestsIdRoute.DELETE)
+  .post("/leave/leave-requests/:id/approve", ...leaveRequestsIdApproveRoute.POST)
+  .post("/leave/leave-requests/:id/reject", ...leaveRequestsIdRejectRoute.POST)
+  .post("/life-event/life-events", ...lifeEventsRoute.POST)
+  .get("/life-event/life-events/admin", ...lifeEventsAdminRoute.GET)
+  .get("/life-event/life-events/me", ...lifeEventsMeRoute.GET)
+  .get("/life-event/life-events/:id", ...lifeEventsIdRoute.GET)
+  .put("/life-event/life-events/:id", ...lifeEventsIdRoute.PUT)
+  .delete("/life-event/life-events/:id", ...lifeEventsIdRoute.DELETE)
+  .post("/life-event/life-events/:id/approve", ...lifeEventsIdApproveRoute.POST)
+  .post("/life-event/life-events/:id/reject", ...lifeEventsIdRejectRoute.POST)
+  .get("/meeting/decision-records", ...decisionRecordsRoute.GET)
+  .post("/meeting/decision-records", ...decisionRecordsRoute.POST)
+  .get("/meeting/decision-records/:id", ...decisionRecordsIdRoute.GET)
+  .put("/meeting/decision-records/:id", ...decisionRecordsIdRoute.PUT)
+  .post("/meeting/decision-records/:id/supersede", ...decisionRecordsIdSupersedeRoute.POST)
+  .get("/meeting/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.GET)
+  .put("/meeting/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.PUT)
 
-const routePart27 = createRouteApp()
-  .get("/governance-org-roles", ...governanceOrgRolesRoute.GET)
-  .delete("/governance-org-roles/assignments/:id", ...governanceOrgRolesAssignmentsIdRoute.DELETE)
-  .post("/governance-org-roles/:code/assignments", ...governanceOrgRolesCodeAssignmentsRoute.POST)
-  .get("/headcount-plans", ...headcountPlansRoute.GET)
-  .post("/headcount-plans", ...headcountPlansRoute.POST)
-  .put("/headcount-plans/:id", ...headcountPlansIdRoute.PUT)
-  .get("/health-checkups", ...healthCheckupsRoute.GET)
-  .post("/health-checkups", ...healthCheckupsRoute.POST)
-  .post("/health-checkups/:id/complete", ...healthCheckupsIdCompleteRoute.POST)
-  .get("/inbox/counts", ...inboxCountsRoute.GET)
-  .get("/it-incidents", ...itIncidentsRoute.GET)
-  .post("/it-incidents", ...itIncidentsRoute.POST)
-  .post("/it-incidents/:id/resolve", ...itIncidentsIdResolveRoute.POST)
-  .get("/job-openings", ...jobOpeningsRoute.GET)
-  .post("/job-openings", ...jobOpeningsRoute.POST)
-  .get("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.GET)
-  .put("/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.PUT)
-  .get("/job-openings/:jobOpeningId/candidates", ...jobOpeningsJobOpeningIdCandidatesRoute.GET)
-  .post("/job-openings/:jobOpeningId/candidates", ...jobOpeningsJobOpeningIdCandidatesRoute.POST)
-  .get("/knowledge-articles", ...knowledgeArticlesRoute.GET)
-  .post("/knowledge-articles", ...knowledgeArticlesRoute.POST)
-  .get("/knowledge-articles/:id", ...knowledgeArticlesIdRoute.GET)
-  .put("/knowledge-articles/:id", ...knowledgeArticlesIdRoute.PUT)
-  .delete("/knowledge-articles/:id", ...knowledgeArticlesIdRoute.DELETE)
-  .get("/leave-balances", ...leaveBalancesRoute.GET)
-  .get("/leave-balances/me", ...leaveBalancesMeRoute.GET)
-  .get("/leave-requests", ...leaveRequestsRoute.GET)
-  .post("/leave-requests", ...leaveRequestsRoute.POST)
-  .get("/leave-requests/admin", ...leaveRequestsAdminRoute.GET)
-  .get("/leave-requests/inbox", ...leaveRequestsInboxRoute.GET)
-  .get("/leave-requests/me", ...leaveRequestsMeRoute.GET)
-  .get("/leave-requests/:id", ...leaveRequestsIdRoute.GET)
-  .put("/leave-requests/:id", ...leaveRequestsIdRoute.PUT)
-  .delete("/leave-requests/:id", ...leaveRequestsIdRoute.DELETE)
-  .post("/leave-requests/:id/approve", ...leaveRequestsIdApproveRoute.POST)
-  .post("/leave-requests/:id/reject", ...leaveRequestsIdRejectRoute.POST)
-  .post("/life-events", ...lifeEventsRoute.POST)
-  .get("/life-events/admin", ...lifeEventsAdminRoute.GET)
-  .get("/life-events/me", ...lifeEventsMeRoute.GET)
-  .get("/life-events/:id", ...lifeEventsIdRoute.GET)
-  .put("/life-events/:id", ...lifeEventsIdRoute.PUT)
-  .delete("/life-events/:id", ...lifeEventsIdRoute.DELETE)
-  .post("/life-events/:id/approve", ...lifeEventsIdApproveRoute.POST)
-  .post("/life-events/:id/reject", ...lifeEventsIdRejectRoute.POST)
-  .get("/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.GET)
-  .put("/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.PUT)
-  .get("/meetings", ...meetingsRoute.GET)
-  .post("/meetings", ...meetingsRoute.POST)
-
-const routePart28 = createRouteApp()
-  .get("/meetings/:code", ...meetingsCodeRoute.GET)
-  .put("/meetings/:code", ...meetingsCodeRoute.PUT)
-  .post("/meetings/:code/archive", ...meetingsCodeArchiveRoute.POST)
-  .get("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.GET)
-  .post("/meetings/:code/minutes", ...meetingsCodeMinutesRoute.POST)
-  .post("/notifications", ...notificationsRoute.POST)
-  .post("/onboarding-assignments", ...onboardingAssignmentsRoute.POST)
+const routePart30 = createRouteApp()
+  .get("/meeting/meetings", ...meetingsRoute.GET)
+  .post("/meeting/meetings", ...meetingsRoute.POST)
+  .get("/meeting/meetings/:code", ...meetingsCodeRoute.GET)
+  .put("/meeting/meetings/:code", ...meetingsCodeRoute.PUT)
+  .post("/meeting/meetings/:code/archive", ...meetingsCodeArchiveRoute.POST)
+  .get("/meeting/meetings/:code/minutes", ...meetingsCodeMinutesRoute.GET)
+  .post("/meeting/meetings/:code/minutes", ...meetingsCodeMinutesRoute.POST)
+  .post("/onboarding/onboarding-assignments", ...onboardingAssignmentsRoute.POST)
   .get(
-    "/onboarding-assignments/employees/:employeeCode",
+    "/onboarding/onboarding-assignments/employees/:employeeCode",
     ...onboardingAssignmentsEmployeesEmployeeCodeRoute.GET,
   )
-  .get("/onboarding-assignments/me", ...onboardingAssignmentsMeRoute.GET)
-  .get("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.GET)
-  .put("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.PUT)
-  .delete("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.DELETE)
-  .post("/onboarding-tasks/:id/complete", ...onboardingTasksIdCompleteRoute.POST)
-  .post("/onboarding-tasks/:id/uncomplete", ...onboardingTasksIdUncompleteRoute.POST)
-  .get("/onboarding-templates", ...onboardingTemplatesRoute.GET)
-  .post("/onboarding-templates", ...onboardingTemplatesRoute.POST)
-  .get("/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.GET)
-  .put("/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.PUT)
-  .delete("/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.DELETE)
+  .get("/onboarding/onboarding-assignments/me", ...onboardingAssignmentsMeRoute.GET)
+  .get("/onboarding/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.GET)
+  .put("/onboarding/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.PUT)
+  .delete("/onboarding/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.DELETE)
+  .post("/onboarding/onboarding-tasks/:id/complete", ...onboardingTasksIdCompleteRoute.POST)
+  .post("/onboarding/onboarding-tasks/:id/uncomplete", ...onboardingTasksIdUncompleteRoute.POST)
+  .get("/onboarding/onboarding-templates", ...onboardingTemplatesRoute.GET)
+  .post("/onboarding/onboarding-templates", ...onboardingTemplatesRoute.POST)
+  .get("/onboarding/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.GET)
+  .put("/onboarding/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.PUT)
+  .delete("/onboarding/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.DELETE)
   .put(
-    "/onboarding-templates/:code/lifecycle-binding",
+    "/onboarding/onboarding-templates/:code/lifecycle-binding",
     ...onboardingTemplatesCodeLifecycleBindingRoute.PUT,
   )
   .delete(
-    "/onboarding-templates/:code/lifecycle-binding",
+    "/onboarding/onboarding-templates/:code/lifecycle-binding",
     ...onboardingTemplatesCodeLifecycleBindingRoute.DELETE,
   )
-  .get("/one-on-ones", ...oneOnOnesRoute.GET)
-  .post("/one-on-ones", ...oneOnOnesRoute.POST)
-  .get("/one-on-ones/me", ...oneOnOnesMeRoute.GET)
-  .get("/one-on-ones/:id", ...oneOnOnesIdRoute.GET)
-  .put("/one-on-ones/:id", ...oneOnOnesIdRoute.PUT)
-  .delete("/one-on-ones/:id", ...oneOnOnesIdRoute.DELETE)
-  .get("/partner-contracts", ...partnerContractsRoute.GET)
-  .post("/partner-contracts", ...partnerContractsRoute.POST)
-  .put("/partner-contracts/:id", ...partnerContractsIdRoute.PUT)
-  .get("/partners", ...partnersRoute.GET)
-  .post("/partners", ...partnersRoute.POST)
-  .get("/partners/:code", ...partnersCodeRoute.GET)
-  .put("/partners/:id", ...partnersIdRoute.PUT)
-  .post("/partners/:id/archive", ...partnersIdArchiveRoute.POST)
-  .get("/performance-goals", ...performanceGoalsRoute.GET)
-  .post("/performance-goals", ...performanceGoalsRoute.POST)
-  .get("/performance-goals/me", ...performanceGoalsMeRoute.GET)
-  .get("/performance-goals/tree", ...performanceGoalsTreeRoute.GET)
-  .get("/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.GET)
-  .put("/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.PUT)
-  .delete("/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.DELETE)
-  .get("/performance-goals/:goalId/evaluations", ...performanceGoalsGoalIdEvaluationsRoute.GET)
-  .post("/performance-goals/:goalId/evaluations", ...performanceGoalsGoalIdEvaluationsRoute.POST)
-  .get("/permission-definitions", ...permissionDefinitionsRoute.GET)
-  .post("/provisioning/identities", ...provisioningIdentitiesRoute.POST)
-  .put("/recruitment-candidates/:id", ...recruitmentCandidatesIdRoute.PUT)
-  .post("/recruitment-candidates/:id/advance", ...recruitmentCandidatesIdAdvanceRoute.POST)
-
-const routePart29 = createRouteApp()
-  .get("/regulations", ...regulationsRoute.GET)
-  .post("/regulations", ...regulationsRoute.POST)
-  .get("/regulations/:code", ...regulationsCodeRoute.GET)
-  .post("/regulations/:code/archive", ...regulationsCodeArchiveRoute.POST)
-  .post("/regulations/:code/versions", ...regulationsCodeVersionsRoute.POST)
-  .post("/rental-reservations", ...rentalReservationsRoute.POST)
-  .get("/rental-reservations/admin", ...rentalReservationsAdminRoute.GET)
-  .get("/rental-reservations/me", ...rentalReservationsMeRoute.GET)
-  .get("/rental-reservations/:id", ...rentalReservationsIdRoute.GET)
-  .put("/rental-reservations/:id", ...rentalReservationsIdRoute.PUT)
-  .delete("/rental-reservations/:id", ...rentalReservationsIdRoute.DELETE)
-  .post("/rental-reservations/:id/lend", ...rentalReservationsIdLendRoute.POST)
-  .post("/rental-reservations/:id/return", ...rentalReservationsIdReturnRoute.POST)
-  .post("/resignations", ...resignationsRoute.POST)
-  .get("/resignations/admin", ...resignationsAdminRoute.GET)
-  .get("/resignations/me", ...resignationsMeRoute.GET)
-  .get("/resignations/:id", ...resignationsIdRoute.GET)
-  .put("/resignations/:id", ...resignationsIdRoute.PUT)
-  .delete("/resignations/:id", ...resignationsIdRoute.DELETE)
-  .post("/resignations/:id/accept", ...resignationsIdAcceptRoute.POST)
-  .post("/resignations/:id/reject", ...resignationsIdRejectRoute.POST)
-  .get("/review-cycles", ...reviewCyclesRoute.GET)
-  .post("/review-cycles", ...reviewCyclesRoute.POST)
-  .get("/review-cycles/periods", ...reviewCyclesPeriodsRoute.GET)
-  .put("/review-cycles/:cycleId", ...reviewCyclesCycleIdRoute.PUT)
-  .delete("/review-cycles/:cycleId", ...reviewCyclesCycleIdRoute.DELETE)
-  .post("/review-cycles/:cycleId/close", ...reviewCyclesCycleIdCloseRoute.POST)
-  .post("/review-cycles/:cycleId/disclose", ...reviewCyclesCycleIdDiscloseRoute.POST)
-  .post("/review-cycles/:cycleId/forms/bulk", ...reviewCyclesCycleIdFormsBulkRoute.POST)
-  .post("/review-cycles/:cycleId/open", ...reviewCyclesCycleIdOpenRoute.POST)
-  .get("/review-cycles/:cycleId/policy", ...reviewCyclesCycleIdPolicyRoute.GET)
-  .put("/review-cycles/:cycleId/policy", ...reviewCyclesCycleIdPolicyRoute.PUT)
-  .get(
-    "/review-cycles/:cycleId/results/:employeeCode",
-    ...reviewCyclesCycleIdResultsEmployeeCodeRoute.GET,
+  .get("/one-on-one/one-on-ones", ...oneOnOnesRoute.GET)
+  .post("/one-on-one/one-on-ones", ...oneOnOnesRoute.POST)
+  .get("/one-on-one/one-on-ones/me", ...oneOnOnesMeRoute.GET)
+  .get("/one-on-one/one-on-ones/:id", ...oneOnOnesIdRoute.GET)
+  .put("/one-on-one/one-on-ones/:id", ...oneOnOnesIdRoute.PUT)
+  .delete("/one-on-one/one-on-ones/:id", ...oneOnOnesIdRoute.DELETE)
+  .get("/partner/partner-contracts", ...partnerContractsRoute.GET)
+  .post("/partner/partner-contracts", ...partnerContractsRoute.POST)
+  .put("/partner/partner-contracts/:id", ...partnerContractsIdRoute.PUT)
+  .get("/partner/partners", ...partnersRoute.GET)
+  .post("/partner/partners", ...partnersRoute.POST)
+  .get("/partner/partners/:code", ...partnersCodeRoute.GET)
+  .put("/partner/partners/:id", ...partnersIdRoute.PUT)
+  .post("/partner/partners/:id/archive", ...partnersIdArchiveRoute.POST)
+  .get("/performance-review/evaluation-sheets", ...evaluationSheetsRoute.GET)
+  .post("/performance-review/evaluation-sheets", ...evaluationSheetsRoute.POST)
+  .get("/performance-review/evaluation-sheets/me", ...evaluationSheetsMeRoute.GET)
+  .get("/performance-review/evaluation-sheets/:sheetId", ...evaluationSheetsSheetIdRoute.GET)
+  .put(
+    "/performance-review/evaluation-sheets/:sheetId/evaluators",
+    ...evaluationSheetsSheetIdEvaluatorsRoute.PUT,
   )
-  .get("/review-forms", ...reviewFormsRoute.GET)
-  .get("/review-forms/me", ...reviewFormsMeRoute.GET)
-  .post("/review-forms/:formId/submit", ...reviewFormsFormIdSubmitRoute.POST)
-  .post("/ringi-requests", ...ringiRequestsRoute.POST)
-  .get("/ringi-requests/admin", ...ringiRequestsAdminRoute.GET)
-  .get("/ringi-requests/inbox", ...ringiRequestsInboxRoute.GET)
-  .get("/ringi-requests/me", ...ringiRequestsMeRoute.GET)
-  .post("/ringi-requests/:id/approve", ...ringiRequestsIdApproveRoute.POST)
-  .post("/ringi-requests/:id/reject", ...ringiRequestsIdRejectRoute.POST)
-  .get("/rooms", ...roomsRoute.GET)
-  .post("/rooms", ...roomsRoute.POST)
-  .get("/rooms/availability", ...roomsAvailabilityRoute.GET)
-  .post("/rooms/reservations", ...roomsReservationsRoute.POST)
-  .get("/rooms/reservations/me", ...roomsReservationsMeRoute.GET)
-  .get("/rooms/reservations/:id", ...roomsReservationsIdRoute.GET)
-
-const routePart30 = createRouteApp()
-  .put("/rooms/reservations/:id", ...roomsReservationsIdRoute.PUT)
-  .delete("/rooms/reservations/:id", ...roomsReservationsIdRoute.DELETE)
-  .get("/rooms/:id", ...roomsIdRoute.GET)
-  .put("/rooms/:id", ...roomsIdRoute.PUT)
-  .delete("/rooms/:id", ...roomsIdRoute.DELETE)
-  .get("/salary-revisions", ...salaryRevisionsRoute.GET)
-  .post("/salary-revisions", ...salaryRevisionsRoute.POST)
-  .get("/shift-assignments", ...shiftAssignmentsRoute.GET)
-  .post("/shift-assignments", ...shiftAssignmentsRoute.POST)
-  .get("/shift-assignments/me", ...shiftAssignmentsMeRoute.GET)
-  .get("/shift-assignments/:id", ...shiftAssignmentsIdRoute.GET)
-  .put("/shift-assignments/:id", ...shiftAssignmentsIdRoute.PUT)
-  .delete("/shift-assignments/:id", ...shiftAssignmentsIdRoute.DELETE)
-  .post("/shift-assignments/:id/publish", ...shiftAssignmentsIdPublishRoute.POST)
-  .get("/shift-patterns", ...shiftPatternsRoute.GET)
-  .post("/shift-patterns", ...shiftPatternsRoute.POST)
-  .get("/shift-patterns/:id", ...shiftPatternsIdRoute.GET)
-  .put("/shift-patterns/:id", ...shiftPatternsIdRoute.PUT)
-  .delete("/shift-patterns/:id", ...shiftPatternsIdRoute.DELETE)
-  .get("/shift-swap-requests", ...shiftSwapRequestsRoute.GET)
-  .post("/shift-swap-requests", ...shiftSwapRequestsRoute.POST)
-  .get("/shift-swap-requests/admin", ...shiftSwapRequestsAdminRoute.GET)
-  .get("/shift-swap-requests/me", ...shiftSwapRequestsMeRoute.GET)
-  .get("/shift-swap-requests/:id", ...shiftSwapRequestsIdRoute.GET)
-  .delete("/shift-swap-requests/:id", ...shiftSwapRequestsIdRoute.DELETE)
-  .post("/shift-swap-requests/:id/approve", ...shiftSwapRequestsIdApproveRoute.POST)
-  .get("/skill-definitions", ...skillDefinitionsRoute.GET)
-  .get("/software-licenses", ...softwareLicensesRoute.GET)
-  .post("/software-licenses", ...softwareLicensesRoute.POST)
-  .put("/software-licenses/:id", ...softwareLicensesIdRoute.PUT)
-  .post("/software-licenses/:id/cancel", ...softwareLicensesIdCancelRoute.POST)
-  .get("/stocktakes", ...stocktakesRoute.GET)
-  .post("/stocktakes", ...stocktakesRoute.POST)
-  .get("/stocktakes/:id", ...stocktakesIdRoute.GET)
-  .post("/stocktakes/:id/assets/:code/check", ...stocktakesIdAssetsCodeCheckRoute.POST)
-  .post("/stocktakes/:id/close", ...stocktakesIdCloseRoute.POST)
-  .get("/surveys", ...surveysRoute.GET)
-  .post("/surveys", ...surveysRoute.POST)
-  .get("/surveys/responses/me", ...surveysResponsesMeRoute.GET)
-  .get("/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.GET)
-  .put("/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.PUT)
-  .delete("/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.DELETE)
-  .get("/surveys/:surveyId", ...surveysSurveyIdRoute.GET)
-  .put("/surveys/:surveyId", ...surveysSurveyIdRoute.PUT)
-  .delete("/surveys/:surveyId", ...surveysSurveyIdRoute.DELETE)
-  .post("/surveys/:surveyId/responses", ...surveysSurveyIdResponsesRoute.POST)
-  .get("/surveys/:surveyId/summary", ...surveysSurveyIdSummaryRoute.GET)
-  .get("/system/accounts", ...systemAccountsRoute.GET)
+  .post(
+    "/performance-review/evaluation-sheets/:sheetId/transition",
+    ...evaluationSheetsSheetIdTransitionRoute.POST,
+  )
+  .get("/performance-review/evaluation-templates", ...evaluationTemplatesRoute.GET)
+  .post("/performance-review/evaluation-templates", ...evaluationTemplatesRoute.POST)
+  .get(
+    "/performance-review/evaluation-templates/:templateId",
+    ...evaluationTemplatesTemplateIdRoute.GET,
+  )
+  .put(
+    "/performance-review/evaluation-templates/:templateId",
+    ...evaluationTemplatesTemplateIdRoute.PUT,
+  )
+  .patch(
+    "/performance-review/evaluation-templates/:templateId",
+    ...evaluationTemplatesTemplateIdRoute.PATCH,
+  )
+  .get("/performance-review/performance-goals", ...performanceGoalsRoute.GET)
 
 const routePart31 = createRouteApp()
+  .post("/performance-review/performance-goals", ...performanceGoalsRoute.POST)
+  .get("/performance-review/performance-goals/me", ...performanceGoalsMeRoute.GET)
+  .get("/performance-review/performance-goals/tree", ...performanceGoalsTreeRoute.GET)
+  .get("/performance-review/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.GET)
+  .put("/performance-review/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.PUT)
+  .delete("/performance-review/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.DELETE)
+  .get(
+    "/performance-review/performance-goals/:goalId/evaluations",
+    ...performanceGoalsGoalIdEvaluationsRoute.GET,
+  )
+  .post(
+    "/performance-review/performance-goals/:goalId/evaluations",
+    ...performanceGoalsGoalIdEvaluationsRoute.POST,
+  )
+  .get("/performance-review/review-cycles", ...reviewCyclesRoute.GET)
+  .post("/performance-review/review-cycles", ...reviewCyclesRoute.POST)
+  .get("/performance-review/review-cycles/periods", ...reviewCyclesPeriodsRoute.GET)
+  .put("/performance-review/review-cycles/:cycleId", ...reviewCyclesCycleIdRoute.PUT)
+  .delete("/performance-review/review-cycles/:cycleId", ...reviewCyclesCycleIdRoute.DELETE)
+  .post("/performance-review/review-cycles/:cycleId/close", ...reviewCyclesCycleIdCloseRoute.POST)
+  .post(
+    "/performance-review/review-cycles/:cycleId/disclose",
+    ...reviewCyclesCycleIdDiscloseRoute.POST,
+  )
+  .post(
+    "/performance-review/review-cycles/:cycleId/forms/bulk",
+    ...reviewCyclesCycleIdFormsBulkRoute.POST,
+  )
+  .post("/performance-review/review-cycles/:cycleId/open", ...reviewCyclesCycleIdOpenRoute.POST)
+  .get("/performance-review/review-cycles/:cycleId/policy", ...reviewCyclesCycleIdPolicyRoute.GET)
+  .put("/performance-review/review-cycles/:cycleId/policy", ...reviewCyclesCycleIdPolicyRoute.PUT)
+  .get(
+    "/performance-review/review-cycles/:cycleId/results/:employeeCode",
+    ...reviewCyclesCycleIdResultsEmployeeCodeRoute.GET,
+  )
+  .get("/performance-review/review-forms", ...reviewFormsRoute.GET)
+  .get("/performance-review/review-forms/me", ...reviewFormsMeRoute.GET)
+  .post("/performance-review/review-forms/:formId/submit", ...reviewFormsFormIdSubmitRoute.POST)
+  .get("/recruitment/job-openings", ...jobOpeningsRoute.GET)
+  .post("/recruitment/job-openings", ...jobOpeningsRoute.POST)
+  .get("/recruitment/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.GET)
+  .put("/recruitment/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.PUT)
+  .get(
+    "/recruitment/job-openings/:jobOpeningId/candidates",
+    ...jobOpeningsJobOpeningIdCandidatesRoute.GET,
+  )
+  .post(
+    "/recruitment/job-openings/:jobOpeningId/candidates",
+    ...jobOpeningsJobOpeningIdCandidatesRoute.POST,
+  )
+  .put("/recruitment/recruitment-candidates/:id", ...recruitmentCandidatesIdRoute.PUT)
+  .post(
+    "/recruitment/recruitment-candidates/:id/advance",
+    ...recruitmentCandidatesIdAdvanceRoute.POST,
+  )
+  .get("/regulation/regulations", ...regulationsRoute.GET)
+  .post("/regulation/regulations", ...regulationsRoute.POST)
+  .get("/regulation/regulations/:code", ...regulationsCodeRoute.GET)
+  .post("/regulation/regulations/:code/archive", ...regulationsCodeArchiveRoute.POST)
+  .post("/regulation/regulations/:code/versions", ...regulationsCodeVersionsRoute.POST)
+  .post("/rental/rental-reservations", ...rentalReservationsRoute.POST)
+  .get("/rental/rental-reservations/admin", ...rentalReservationsAdminRoute.GET)
+  .get("/rental/rental-reservations/me", ...rentalReservationsMeRoute.GET)
+  .get("/rental/rental-reservations/:id", ...rentalReservationsIdRoute.GET)
+  .put("/rental/rental-reservations/:id", ...rentalReservationsIdRoute.PUT)
+  .delete("/rental/rental-reservations/:id", ...rentalReservationsIdRoute.DELETE)
+  .post("/rental/rental-reservations/:id/lend", ...rentalReservationsIdLendRoute.POST)
+  .post("/rental/rental-reservations/:id/return", ...rentalReservationsIdReturnRoute.POST)
+  .post("/resignation/resignations", ...resignationsRoute.POST)
+  .get("/resignation/resignations/admin", ...resignationsAdminRoute.GET)
+  .get("/resignation/resignations/me", ...resignationsMeRoute.GET)
+  .get("/resignation/resignations/:id", ...resignationsIdRoute.GET)
+
+const routePart32 = createRouteApp()
+  .put("/resignation/resignations/:id", ...resignationsIdRoute.PUT)
+  .delete("/resignation/resignations/:id", ...resignationsIdRoute.DELETE)
+  .post("/resignation/resignations/:id/accept", ...resignationsIdAcceptRoute.POST)
+  .post("/resignation/resignations/:id/reject", ...resignationsIdRejectRoute.POST)
+  .post("/ringi/ringi-requests", ...ringiRequestsRoute.POST)
+  .get("/ringi/ringi-requests/admin", ...ringiRequestsAdminRoute.GET)
+  .get("/ringi/ringi-requests/inbox", ...ringiRequestsInboxRoute.GET)
+  .get("/ringi/ringi-requests/me", ...ringiRequestsMeRoute.GET)
+  .post("/ringi/ringi-requests/:id/approve", ...ringiRequestsIdApproveRoute.POST)
+  .post("/ringi/ringi-requests/:id/reject", ...ringiRequestsIdRejectRoute.POST)
+  .get("/room/rooms", ...roomsRoute.GET)
+  .post("/room/rooms", ...roomsRoute.POST)
+  .get("/room/rooms/availability", ...roomsAvailabilityRoute.GET)
+  .post("/room/rooms/reservations", ...roomsReservationsRoute.POST)
+  .get("/room/rooms/reservations/me", ...roomsReservationsMeRoute.GET)
+  .get("/room/rooms/reservations/:id", ...roomsReservationsIdRoute.GET)
+  .put("/room/rooms/reservations/:id", ...roomsReservationsIdRoute.PUT)
+  .delete("/room/rooms/reservations/:id", ...roomsReservationsIdRoute.DELETE)
+  .get("/room/rooms/:id", ...roomsIdRoute.GET)
+  .put("/room/rooms/:id", ...roomsIdRoute.PUT)
+  .delete("/room/rooms/:id", ...roomsIdRoute.DELETE)
+  .get("/shift/shift-assignments", ...shiftAssignmentsRoute.GET)
+  .post("/shift/shift-assignments", ...shiftAssignmentsRoute.POST)
+  .get("/shift/shift-assignments/me", ...shiftAssignmentsMeRoute.GET)
+  .get("/shift/shift-assignments/:id", ...shiftAssignmentsIdRoute.GET)
+  .put("/shift/shift-assignments/:id", ...shiftAssignmentsIdRoute.PUT)
+  .delete("/shift/shift-assignments/:id", ...shiftAssignmentsIdRoute.DELETE)
+  .post("/shift/shift-assignments/:id/publish", ...shiftAssignmentsIdPublishRoute.POST)
+  .get("/shift/shift-patterns", ...shiftPatternsRoute.GET)
+  .post("/shift/shift-patterns", ...shiftPatternsRoute.POST)
+  .get("/shift/shift-patterns/:id", ...shiftPatternsIdRoute.GET)
+  .put("/shift/shift-patterns/:id", ...shiftPatternsIdRoute.PUT)
+  .delete("/shift/shift-patterns/:id", ...shiftPatternsIdRoute.DELETE)
+  .get("/shift/shift-swap-requests", ...shiftSwapRequestsRoute.GET)
+  .post("/shift/shift-swap-requests", ...shiftSwapRequestsRoute.POST)
+  .get("/shift/shift-swap-requests/admin", ...shiftSwapRequestsAdminRoute.GET)
+  .get("/shift/shift-swap-requests/me", ...shiftSwapRequestsMeRoute.GET)
+  .get("/shift/shift-swap-requests/:id", ...shiftSwapRequestsIdRoute.GET)
+  .delete("/shift/shift-swap-requests/:id", ...shiftSwapRequestsIdRoute.DELETE)
+  .post("/shift/shift-swap-requests/:id/approve", ...shiftSwapRequestsIdApproveRoute.POST)
+  .get("/skill/employee-skills/me", ...employeeSkillsMeRoute.GET)
+  .put("/skill/employee-skills/me", ...employeeSkillsMeRoute.PUT)
+  .get("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.GET)
+  .delete("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.DELETE)
+  .get("/skill/skill-definitions", ...skillDefinitionsRoute.GET)
+  .get("/software-license/software-licenses", ...softwareLicensesRoute.GET)
+  .post("/software-license/software-licenses", ...softwareLicensesRoute.POST)
+  .put("/software-license/software-licenses/:id", ...softwareLicensesIdRoute.PUT)
+
+const routePart33 = createRouteApp()
+  .post("/software-license/software-licenses/:id/cancel", ...softwareLicensesIdCancelRoute.POST)
+  .get("/survey/surveys", ...surveysRoute.GET)
+  .post("/survey/surveys", ...surveysRoute.POST)
+  .get("/survey/surveys/responses/me", ...surveysResponsesMeRoute.GET)
+  .get("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.GET)
+  .put("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.PUT)
+  .delete("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.DELETE)
+  .get("/survey/surveys/:surveyId", ...surveysSurveyIdRoute.GET)
+  .put("/survey/surveys/:surveyId", ...surveysSurveyIdRoute.PUT)
+  .delete("/survey/surveys/:surveyId", ...surveysSurveyIdRoute.DELETE)
+  .post("/survey/surveys/:surveyId/responses", ...surveysSurveyIdResponsesRoute.POST)
+  .get("/survey/surveys/:surveyId/summary", ...surveysSurveyIdSummaryRoute.GET)
+  .get("/system/accounts", ...systemAccountsRoute.GET)
   .post("/system/accounts", ...systemAccountsRoute.POST)
   .get("/system/accounts/:accountId", ...systemAccountsAccountIdRoute.GET)
   .patch("/system/accounts/:accountId", ...systemAccountsAccountIdRoute.PATCH)
@@ -827,6 +959,7 @@ const routePart31 = createRouteApp()
   .get("/system/audit-events/:eventId", ...systemAuditEventsEventIdRoute.GET)
   .post("/system/auth/password/reset", ...systemAuthPasswordResetRoute.POST)
   .patch("/system/auth/password/reset", ...systemAuthPasswordResetRoute.PATCH)
+  .get("/system/batch-jobs", ...systemBatchJobsRoute.GET)
   .post("/system/bootstrap", ...systemBootstrapRoute.POST)
   .post("/system/browser-login-codes", ...systemBrowserLoginCodesRoute.POST)
   .post("/system/browser-sessions", ...systemBrowserSessionsRoute.POST)
@@ -843,9 +976,13 @@ const routePart31 = createRouteApp()
   .patch("/system/notifications/:id", ...systemNotificationsIdRoute.PATCH)
   .delete("/system/notifications/:id", ...systemNotificationsIdRoute.DELETE)
   .post("/system/oauth/authorizations", ...systemOauthAuthorizationsRoute.POST)
+
+const routePart34 = createRouteApp()
   .post("/system/oauth/mcp-grants", ...systemOauthMcpGrantsRoute.POST)
   .post("/system/oauth/token", ...systemOauthTokenRoute.POST)
   .get("/system/oauth/userinfo", ...systemOauthUserinfoRoute.GET)
+  .get("/system/permission-definitions", ...systemPermissionDefinitionsRoute.GET)
+  .post("/system/provisioning/identities", ...systemProvisioningIdentitiesRoute.POST)
   .get("/system/roles", ...systemRolesRoute.GET)
   .post("/system/roles", ...systemRolesRoute.POST)
   .get("/system/roles/:roleId", ...systemRolesRoleIdRoute.GET)
@@ -855,37 +992,37 @@ const routePart31 = createRouteApp()
   .post("/system/sessions", ...systemSessionsRoute.POST)
   .patch("/system/sessions", ...systemSessionsRoute.PATCH)
   .delete("/system/sessions", ...systemSessionsRoute.DELETE)
-  .get("/thanks-messages", ...thanksMessagesRoute.GET)
-  .post("/thanks-messages", ...thanksMessagesRoute.POST)
-
-const routePart32 = createRouteApp()
-  .get("/thanks-messages/me", ...thanksMessagesMeRoute.GET)
-  .get("/thanks-point-balances/me", ...thanksPointBalancesMeRoute.GET)
-  .get("/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
-  .post("/thanks-redemptions", ...thanksRedemptionsRoute.POST)
-  .get("/thanks-redemptions/admin", ...thanksRedemptionsAdminRoute.GET)
-  .get("/thanks-redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)
-  .get("/thanks-redemptions/me", ...thanksRedemptionsMeRoute.GET)
-  .post("/thanks-redemptions/:id/approve", ...thanksRedemptionsIdApproveRoute.POST)
-  .post("/thanks-redemptions/:id/reject", ...thanksRedemptionsIdRejectRoute.POST)
-  .get("/thanks-rewards", ...thanksRewardsRoute.GET)
-  .post("/thanks-rewards", ...thanksRewardsRoute.POST)
-  .patch("/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)
-  .get("/training-courses", ...trainingCoursesRoute.GET)
-  .post("/training-courses", ...trainingCoursesRoute.POST)
-  .get("/training-courses/:code", ...trainingCoursesCodeRoute.GET)
-  .put("/training-courses/:code", ...trainingCoursesCodeRoute.PUT)
-  .delete("/training-courses/:code", ...trainingCoursesCodeRoute.DELETE)
-  .get("/training-enrollments", ...trainingEnrollmentsRoute.GET)
-  .post("/training-enrollments", ...trainingEnrollmentsRoute.POST)
-  .get("/training-enrollments/me", ...trainingEnrollmentsMeRoute.GET)
-  .get("/training-enrollments/:id", ...trainingEnrollmentsIdRoute.GET)
-  .put("/training-enrollments/:id", ...trainingEnrollmentsIdRoute.PUT)
-  .delete("/training-enrollments/:id", ...trainingEnrollmentsIdRoute.DELETE)
-  .post("/training-enrollments/:id/complete", ...trainingEnrollmentsIdCompleteRoute.POST)
-  .get("/work-accidents", ...workAccidentsRoute.GET)
-  .post("/work-accidents", ...workAccidentsRoute.POST)
-  .post("/work-accidents/:id/close", ...workAccidentsIdCloseRoute.POST)
+  .get("/thanks/thanks-messages", ...thanksMessagesRoute.GET)
+  .post("/thanks/thanks-messages", ...thanksMessagesRoute.POST)
+  .get("/thanks/thanks-messages/me", ...thanksMessagesMeRoute.GET)
+  .get("/thanks/thanks-point-balances/me", ...thanksPointBalancesMeRoute.GET)
+  .get("/thanks/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
+  .post("/thanks/thanks-redemptions", ...thanksRedemptionsRoute.POST)
+  .get("/thanks/thanks-redemptions/admin", ...thanksRedemptionsAdminRoute.GET)
+  .get("/thanks/thanks-redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)
+  .get("/thanks/thanks-redemptions/me", ...thanksRedemptionsMeRoute.GET)
+  .post("/thanks/thanks-redemptions/:id/approve", ...thanksRedemptionsIdApproveRoute.POST)
+  .post("/thanks/thanks-redemptions/:id/reject", ...thanksRedemptionsIdRejectRoute.POST)
+  .get("/thanks/thanks-rewards", ...thanksRewardsRoute.GET)
+  .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
+  .patch("/thanks/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)
+  .get("/training/training-courses", ...trainingCoursesRoute.GET)
+  .post("/training/training-courses", ...trainingCoursesRoute.POST)
+  .get("/training/training-courses/:code", ...trainingCoursesCodeRoute.GET)
+  .put("/training/training-courses/:code", ...trainingCoursesCodeRoute.PUT)
+  .delete("/training/training-courses/:code", ...trainingCoursesCodeRoute.DELETE)
+  .get("/training/training-enrollments", ...trainingEnrollmentsRoute.GET)
+  .post("/training/training-enrollments", ...trainingEnrollmentsRoute.POST)
+  .get("/training/training-enrollments/me", ...trainingEnrollmentsMeRoute.GET)
+  .get("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.GET)
+  .put("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.PUT)
+  .delete("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.DELETE)
+  .post("/training/training-enrollments/:id/complete", ...trainingEnrollmentsIdCompleteRoute.POST)
+  .get("/work-accident/work-accidents", ...workAccidentsRoute.GET)
+  .post("/work-accident/work-accidents", ...workAccidentsRoute.POST)
+  .post("/work-accident/work-accidents/:id/close", ...workAccidentsIdCloseRoute.POST)
+  .get("/work-style/employee-work-styles", ...employeeWorkStylesRoute.GET)
+  .post("/work-style/employee-work-styles", ...employeeWorkStylesRoute.POST)
 
 export const app = appBase
   .route("/", routePart0)
@@ -921,6 +1058,8 @@ export const app = appBase
   .route("/", routePart30)
   .route("/", routePart31)
   .route("/", routePart32)
+  .route("/", routePart33)
+  .route("/", routePart34)
 
 export type AppType = typeof app
 
@@ -962,6 +1101,8 @@ type ApiClientPart29 = ReturnType<typeof hc<typeof routePart29>>
 type ApiClientPart30 = ReturnType<typeof hc<typeof routePart30>>
 type ApiClientPart31 = ReturnType<typeof hc<typeof routePart31>>
 type ApiClientPart32 = ReturnType<typeof hc<typeof routePart32>>
+type ApiClientPart33 = ReturnType<typeof hc<typeof routePart33>>
+type ApiClientPart34 = ReturnType<typeof hc<typeof routePart34>>
 export type ApiClient = ApiClientPart0 &
   ApiClientPart1 &
   ApiClientPart2 &
@@ -994,4 +1135,6 @@ export type ApiClient = ApiClientPart0 &
   ApiClientPart29 &
   ApiClientPart30 &
   ApiClientPart31 &
-  ApiClientPart32
+  ApiClientPart32 &
+  ApiClientPart33 &
+  ApiClientPart34

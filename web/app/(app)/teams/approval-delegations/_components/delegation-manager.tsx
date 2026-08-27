@@ -15,8 +15,8 @@ import { formatDateTime } from "@/lib/format-date-time"
 
 type Delegation = {
   id: number
-  delegator: { id: number; code: string | null; name: string } | null
-  delegate: { id: number; code: string | null; name: string } | null
+  delegator: { id: string; code: string | null; name: string } | null
+  delegate: { id: string; code: string | null; name: string } | null
   template_code: string | null
   starts_at: string
   ends_at: string

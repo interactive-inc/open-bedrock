@@ -36,11 +36,11 @@ const app = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
-  .post("/certificate-requests", ...createRoute.POST)
-  .get("/certificate-requests/me", ...meRoute.GET)
-  .get("/certificate-requests/:id", ...detailRoute.GET)
-  .put("/certificate-requests/:id", ...detailRoute.PUT)
-  .delete("/certificate-requests/:id", ...detailRoute.DELETE)
+  .post("/certificate-request/certificate-requests", ...createRoute.POST)
+  .get("/certificate-request/certificate-requests/me", ...meRoute.GET)
+  .get("/certificate-request/certificate-requests/:id", ...detailRoute.GET)
+  .put("/certificate-request/certificate-requests/:id", ...detailRoute.PUT)
+  .delete("/certificate-request/certificate-requests/:id", ...detailRoute.DELETE)
 
 const certificateRequestResponseSchema = z.object({
   id: z.string(),
@@ -138,7 +138,7 @@ async function request(props: {
 describe("POST /certificate-requests", () => {
   test("creates a certificate request with status requested", async () => {
     const response = await request({
-      path: "/certificate-requests",
+      path: "/certificate-request/certificate-requests",
       token: await requesterToken(),
       method: "POST",
       body: {
@@ -164,7 +164,7 @@ describe("POST /certificate-requests", () => {
 
   test("creates a certificate request with null optional fields", async () => {
     const response = await request({
-      path: "/certificate-requests",
+      path: "/certificate-request/certificate-requests",
       token: await requesterToken(),
       method: "POST",
       body: {
@@ -188,7 +188,7 @@ describe("POST /certificate-requests", () => {
   test("rejects a non-ISO or impossible needed_by with 400", async () => {
     for (const neededBy of ["whenever", "2026/08/01", "2026-02-30"]) {
       const response = await request({
-        path: "/certificate-requests",
+        path: "/certificate-request/certificate-requests",
         token: await requesterToken(),
         method: "POST",
         body: {
@@ -203,7 +203,7 @@ describe("POST /certificate-requests", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/certificate-requests",
+      path: "/certificate-request/certificate-requests",
       token: null,
       method: "POST",
       body: {
@@ -218,7 +218,7 @@ describe("POST /certificate-requests", () => {
 describe("GET /certificate-requests/me", () => {
   test("returns only the viewer's certificate requests", async () => {
     const response = await request({
-      path: "/certificate-requests/me",
+      path: "/certificate-request/certificate-requests/me",
       token: await requesterToken(),
     })
 
@@ -237,7 +237,10 @@ describe("GET /certificate-requests/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/certificate-requests/me", token: null })
+    const response = await request({
+      path: "/certificate-request/certificate-requests/me",
+      token: null,
+    })
 
     expect(response.status).toBe(401)
   })
@@ -246,7 +249,7 @@ describe("GET /certificate-requests/me", () => {
 describe("GET /certificate-requests/:id", () => {
   test("returns the certificate request for its requester", async () => {
     const response = await request({
-      path: `/certificate-requests/${ownCertificateRequestId}`,
+      path: `/certificate-request/certificate-requests/${ownCertificateRequestId}`,
       token: await requesterToken(),
     })
 
@@ -263,7 +266,7 @@ describe("GET /certificate-requests/:id", () => {
 
   test("returns 403 for another person's certificate request", async () => {
     const response = await request({
-      path: `/certificate-requests/${othersCertificateRequestId}`,
+      path: `/certificate-request/certificate-requests/${othersCertificateRequestId}`,
       token: await requesterToken(),
     })
 
@@ -272,7 +275,7 @@ describe("GET /certificate-requests/:id", () => {
 
   test("returns 404 for an unknown certificate request", async () => {
     const response = await request({
-      path: "/certificate-requests/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/certificate-request/certificate-requests/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await requesterToken(),
     })
 
@@ -283,7 +286,7 @@ describe("GET /certificate-requests/:id", () => {
 describe("PUT /certificate-requests/:id", () => {
   test("updates the details of the viewer's certificate request", async () => {
     const response = await request({
-      path: `/certificate-requests/${ownCertificateRequestId}`,
+      path: `/certificate-request/certificate-requests/${ownCertificateRequestId}`,
       token: await requesterToken(),
       method: "PUT",
       body: {
@@ -308,7 +311,7 @@ describe("PUT /certificate-requests/:id", () => {
 
   test("returns 403 when updating another person's certificate request", async () => {
     const response = await request({
-      path: `/certificate-requests/${othersCertificateRequestId}`,
+      path: `/certificate-request/certificate-requests/${othersCertificateRequestId}`,
       token: await requesterToken(),
       method: "PUT",
       body: {
@@ -324,7 +327,7 @@ describe("PUT /certificate-requests/:id", () => {
 
   test("returns 404 for an unknown certificate request", async () => {
     const response = await request({
-      path: "/certificate-requests/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/certificate-request/certificate-requests/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await requesterToken(),
       method: "PUT",
       body: {
@@ -342,7 +345,7 @@ describe("PUT /certificate-requests/:id", () => {
 describe("DELETE /certificate-requests/:id", () => {
   test("cancels the viewer's certificate request and returns 204", async () => {
     const response = await request({
-      path: `/certificate-requests/${ownCertificateRequestId}`,
+      path: `/certificate-request/certificate-requests/${ownCertificateRequestId}`,
       token: await requesterToken(),
       method: "DELETE",
     })
@@ -352,7 +355,7 @@ describe("DELETE /certificate-requests/:id", () => {
 
   test("returns 403 when cancelling another person's certificate request", async () => {
     const response = await request({
-      path: `/certificate-requests/${othersCertificateRequestId}`,
+      path: `/certificate-request/certificate-requests/${othersCertificateRequestId}`,
       token: await requesterToken(),
       method: "DELETE",
     })
@@ -362,7 +365,7 @@ describe("DELETE /certificate-requests/:id", () => {
 
   test("returns 404 for an unknown certificate request", async () => {
     const response = await request({
-      path: "/certificate-requests/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/certificate-request/certificate-requests/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await requesterToken(),
       method: "DELETE",
     })
@@ -372,7 +375,7 @@ describe("DELETE /certificate-requests/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: `/certificate-requests/${ownCertificateRequestId}`,
+      path: `/certificate-request/certificate-requests/${ownCertificateRequestId}`,
       token: null,
       method: "DELETE",
     })

@@ -31,9 +31,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["health-checkups"].$post({
+    const response = await client["health-checkup"]["health-checkups"].$post({
       json: {
-        employee_id: toFiniteNumber(query["employee-id"], "--employee-id"),
+        employee_id: query["employee-id"],
         fiscal_year: toFiniteNumber(query["fiscal-year"], "--fiscal-year"),
         checkup_kind: query.kind,
         status: query.status,

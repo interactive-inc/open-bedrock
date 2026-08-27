@@ -128,7 +128,7 @@ async function request(
 
 describe("GET /regulations", () => {
   test("any authenticated user sees the list with latest version metadata", async () => {
-    const response = await request("/regulations", await tokenFor(5))
+    const response = await request("/regulation/regulations", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -147,7 +147,7 @@ describe("GET /regulations", () => {
   })
 
   test("filters by status", async () => {
-    const response = await request("/regulations?status=archived", await tokenFor(5))
+    const response = await request("/regulation/regulations?status=archived", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -162,7 +162,7 @@ describe("GET /regulations", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/regulations", null)
+    const response = await request("/regulation/regulations", null)
 
     expect(response.status).toBe(401)
   })
@@ -170,7 +170,7 @@ describe("GET /regulations", () => {
 
 describe("GET /regulations/:code", () => {
   test("returns latest version and full version list", async () => {
-    const response = await request("/regulations/REG-001", await tokenFor(5))
+    const response = await request("/regulation/regulations/REG-001", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -187,7 +187,7 @@ describe("GET /regulations/:code", () => {
   })
 
   test("returns 404 for unknown code", async () => {
-    const response = await request("/regulations/NOPE", await tokenFor(5))
+    const response = await request("/regulation/regulations/NOPE", await tokenFor(5))
 
     expect(response.status).toBe(404)
   })
@@ -195,7 +195,7 @@ describe("GET /regulations/:code", () => {
 
 describe("POST /regulations", () => {
   test("admin creates a regulation with an initial version", async () => {
-    const response = await request("/regulations", await tokenFor(1), "POST", {
+    const response = await request("/regulation/regulations", await tokenFor(1), "POST", {
       code: "REG-100",
       title: "New Policy",
       body_md: "the policy body",
@@ -215,7 +215,7 @@ describe("POST /regulations", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/regulations", await tokenFor(5), "POST", {
+    const response = await request("/regulation/regulations", await tokenFor(5), "POST", {
       code: "REG-101",
       title: "Blocked",
       body_md: "no",
@@ -226,7 +226,7 @@ describe("POST /regulations", () => {
   })
 
   test("duplicate code conflicts", async () => {
-    const response = await request("/regulations", await tokenFor(1), "POST", {
+    const response = await request("/regulation/regulations", await tokenFor(1), "POST", {
       code: "REG-001",
       title: "Dup",
       body_md: "dup",
@@ -239,11 +239,16 @@ describe("POST /regulations", () => {
 
 describe("POST /regulations/:code/versions", () => {
   test("admin adds the next version", async () => {
-    const response = await request("/regulations/REG-002/versions", await tokenFor(1), "POST", {
-      body_md: "revised travel rules",
-      effective_on: "2026-10-01",
-      note: "annual update",
-    })
+    const response = await request(
+      "/regulation/regulations/REG-002/versions",
+      await tokenFor(1),
+      "POST",
+      {
+        body_md: "revised travel rules",
+        effective_on: "2026-10-01",
+        note: "annual update",
+      },
+    )
 
     expect(response.status).toBe(201)
 
@@ -258,10 +263,15 @@ describe("POST /regulations/:code/versions", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/regulations/REG-002/versions", await tokenFor(5), "POST", {
-      body_md: "x",
-      effective_on: "2026-10-01",
-    })
+    const response = await request(
+      "/regulation/regulations/REG-002/versions",
+      await tokenFor(5),
+      "POST",
+      {
+        body_md: "x",
+        effective_on: "2026-10-01",
+      },
+    )
 
     expect(response.status).toBe(403)
   })
@@ -269,7 +279,11 @@ describe("POST /regulations/:code/versions", () => {
 
 describe("POST /regulations/:code/archive", () => {
   test("admin archives a regulation", async () => {
-    const response = await request("/regulations/REG-001/archive", await tokenFor(1), "POST")
+    const response = await request(
+      "/regulation/regulations/REG-001/archive",
+      await tokenFor(1),
+      "POST",
+    )
 
     expect(response.status).toBe(200)
 

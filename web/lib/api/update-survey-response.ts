@@ -12,7 +12,7 @@ export async function updateSurveyResponse(
 ): Promise<SurveyResponseItem | Error> {
   const client = await createClient()
 
-  const response = await client.surveys.responses[":responseId"].$put({
+  const response = await client["survey"]["surveys"].responses[":responseId"].$put({
     param: { responseId: String(id) },
     json: request,
   })

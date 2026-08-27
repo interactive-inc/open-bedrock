@@ -82,7 +82,10 @@ async function request(props: {
 
 describe("GET /career-postings", () => {
   test("returns 200 with open postings in snake_case table shape", async () => {
-    const response = await request({ path: "/career-postings", token: await tokenForEmployee(1) })
+    const response = await request({
+      path: "/career/career-postings",
+      token: await tokenForEmployee(1),
+    })
 
     expect(response.status).toBe(200)
 
@@ -109,7 +112,7 @@ describe("GET /career-postings", () => {
 
   test("returns only 1 posting when limit=1", async () => {
     const response = await request({
-      path: "/career-postings?limit=1",
+      path: "/career/career-postings?limit=1",
       token: await tokenForEmployee(1),
     })
 
@@ -128,7 +131,7 @@ describe("GET /career-postings", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/career-postings", token: null })
+    const response = await request({ path: "/career/career-postings", token: null })
 
     expect(response.status).toBe(401)
   })

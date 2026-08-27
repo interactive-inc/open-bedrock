@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.system.v1.notifications[":id"].$patch({
+    const response = await client.system.notifications[":id"].$patch({
       param: { id: notificationId },
       json: { read: true },
     })

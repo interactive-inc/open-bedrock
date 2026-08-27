@@ -442,7 +442,7 @@ export type AppProvisioningSummary = z.infer<typeof zAppProvisioningSummary>
 
 /** 認証済み本人の社員情報（GET /me）。 */
 export const zAppAuthMe = z.object({
-  id: z.number(),
+  id: zEmployeeId,
   // 外部プロビジョニングで作られた本人は社員コードを持たない（code=null）。GET /me は本人の code を
   // そのまま返すため nullable。
   code: z.string().nullable(),

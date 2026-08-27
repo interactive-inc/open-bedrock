@@ -11,7 +11,7 @@ export function EmployeeLifecycleSummary(props: { state: EmployeeLifecycleState 
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-3">
           現在の人事状態
-          <EmployeeStatusBadge status={props.state.archived ? "archived" : props.state.status} />
+          <EmployeeStatusBadge status={props.state.status} />
         </CardTitle>
         <CardDescription>
           {formatLifecycleDate(props.state.as_of)}時点の確定済み情報

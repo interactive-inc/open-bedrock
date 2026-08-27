@@ -21,7 +21,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["attendance-records"]["overtime-summary"].$get({
+    const response = await client["attendance"]["attendance-records"]["overtime-summary"].$get({
       query: { month: query.month, scope: query.scope },
     })
 

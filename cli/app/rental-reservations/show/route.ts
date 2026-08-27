@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["rental-reservations"][":id"].$get({
+    const response = await client["rental"]["rental-reservations"][":id"].$get({
       param: { id: query.id },
     })
 

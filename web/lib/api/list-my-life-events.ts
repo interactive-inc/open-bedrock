@@ -5,7 +5,7 @@ import type { LifeEventResponse } from "@/lib/api/types/life-event-types"
 export async function listMyLifeEvents(): Promise<ReadonlyArray<LifeEventResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["life-events"].me.$get()
+  const response = await client["life-event"]["life-events"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load life events")

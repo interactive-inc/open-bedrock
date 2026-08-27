@@ -22,9 +22,9 @@ export default factory.createHandlers(
     if (query.help) return c.text(help)
     if (!query.cycle_id) throw new UsageError("--cycle-id が必要です")
     const client = (await createClient()) as unknown as {
-      "review-cycles": { ":cycle_id": { policy: PolicyEndpoint } }
+      "performance-review": { "review-cycles": { ":cycle_id": { policy: PolicyEndpoint } } }
     }
-    const endpoint = client["review-cycles"][":cycle_id"].policy
+    const endpoint = client["performance-review"]["review-cycles"][":cycle_id"].policy
     if (query.definition === undefined)
       return c.json(await (await endpoint.$get({ param: { cycle_id: query.cycle_id } })).json())
     let definition: unknown

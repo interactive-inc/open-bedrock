@@ -5,7 +5,7 @@ import type { BusinessTripResponse } from "@/lib/api/types/business-trip-types"
 export async function listMyBusinessTrips(): Promise<ReadonlyArray<BusinessTripResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["business-trips"].me.$get()
+  const response = await client["business-trip"]["business-trips"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load business trips")

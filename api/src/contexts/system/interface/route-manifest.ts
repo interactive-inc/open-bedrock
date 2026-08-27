@@ -201,6 +201,16 @@ export const systemRouteManifest = [
     },
   },
   {
+    method: "GET",
+    path: "/system/batch-jobs",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.batch-jobs",
+      exportName: "GET",
+    },
+  },
+  {
     method: "POST",
     path: "/system/attachments/purge-unlinked",
     phase: "public",

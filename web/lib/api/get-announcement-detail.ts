@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getAnnouncementDetail(id: number) {
   const client = await createClient()
 
-  const response = await client.announcements[":id"].$get({
+  const response = await client["announcement"]["announcements"][":id"].$get({
     param: { id: String(id) },
   })
 

@@ -49,7 +49,11 @@ export default async function MyRingiPage() {
               </Button>
             ) : null}
 
-            <Button variant="outline" nativeButton={false} render={<Link href="/inbox/ringis" />}>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/company/inbox/ringis" />}
+            >
               <Inbox />
               承認受信箱
             </Button>

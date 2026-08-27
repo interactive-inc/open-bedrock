@@ -305,7 +305,7 @@ export type PersonnelActionPersistenceProps = {
   businessDate: string
   employeeCodes: ReadonlyMap<EmployeeId, string>
   revisions: { employeeRevision: number; organizationRevision: number }
-  prospectiveEmployee?: { code: string; name: string }
+  prospectiveEmployee?: { code: string; name: string; email?: string | null }
 }
 
 function preparePersistenceStatements(
@@ -359,13 +359,14 @@ function preparePersistenceStatements(
         .prepare(
           `INSERT INTO company_employees
              (id, official_name, employee_code, email, phone, created_at, updated_at)
-           VALUES (?1, ?2, ?3, NULL, NULL, ?4, ?4)
+           VALUES (?1, ?2, ?3, ?4, NULL, ?5, ?5)
            RETURNING id`,
         )
         .bind(
           props.action.employeeId,
           props.prospectiveEmployee.name,
           props.prospectiveEmployee.code,
+          props.prospectiveEmployee.email ?? null,
           props.action.recordedAt * 1_000,
         ),
       new AbortWhenPreviousStatementChangedNoRowsAdapter(

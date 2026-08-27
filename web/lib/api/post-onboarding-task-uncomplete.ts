@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function postOnboardingTaskUncomplete(taskId: number) {
   const client = await createClient()
 
-  const response = await client["onboarding-tasks"][":id"].uncomplete.$post({
+  const response = await client["onboarding"]["onboarding-tasks"][":id"].uncomplete.$post({
     param: { id: String(taskId) },
   })
 

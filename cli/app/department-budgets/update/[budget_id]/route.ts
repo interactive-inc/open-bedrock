@@ -35,7 +35,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["department-budgets"][":id"].$patch({
+    const response = await client["expense"]["department-budgets"][":id"].$patch({
       param: { id: budgetId },
       json: {
         amount: toFiniteNumber(amount, "--amount"),

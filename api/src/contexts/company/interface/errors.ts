@@ -92,6 +92,36 @@ export class CompanyBodyInvalidError extends CompanyHTTPException {
   }
 }
 
+export class CompanyApplicationConflictError extends CompanyHTTPException {
+  constructor(code: string, detail: string) {
+    super({ status: 409, code, detail })
+  }
+}
+
+export class CompanyApplicationForbiddenError extends CompanyHTTPException {
+  constructor(code: string, detail: string) {
+    super({ status: 403, code, detail })
+  }
+}
+
+export class CompanyApplicationNotFoundError extends CompanyHTTPException {
+  constructor(code: string, detail: string) {
+    super({ status: 404, code, detail })
+  }
+}
+
+export class CompanyApplicationUnavailableError extends CompanyHTTPException {
+  constructor(code: string, detail: string, cause: unknown) {
+    super({ status: 503, code, detail, cause })
+  }
+}
+
+export class CompanyApplicationValidationError extends CompanyHTTPException {
+  constructor(code: string, detail: string) {
+    super({ status: 422, code, detail })
+  }
+}
+
 export class CompanyBootstrapConflictError extends CompanyHTTPException {
   constructor(code: "already_initialized" | "company_bootstrap_conflict") {
     super({
@@ -157,6 +187,26 @@ export class CompanyEffectiveDateQueryConflictError extends CompanyHTTPException
   }
 }
 
+export class CompanyEmployeeIdentityRequiredError extends CompanyHTTPException {
+  constructor() {
+    super({
+      status: 403,
+      code: "forbidden",
+      detail: "An employee identity is required",
+    })
+  }
+}
+
+export class CompanyEmployeeNotFoundError extends CompanyHTTPException {
+  constructor() {
+    super({
+      status: 404,
+      code: "employee_not_found",
+      detail: "Employee was not found",
+    })
+  }
+}
+
 export class CompanyHeadersInvalidError extends CompanyHTTPException {
   constructor(cause: unknown) {
     super({
@@ -171,6 +221,16 @@ export class CompanyHeadersInvalidError extends CompanyHTTPException {
 export class CompanyInvariantValidationError extends CompanyHTTPException {
   constructor(code: string, cause?: unknown) {
     super({ status: 422, code, detail: "Company invariant validation failed", cause })
+  }
+}
+
+export class CompanyIdempotencyKeyRequiredError extends CompanyHTTPException {
+  constructor() {
+    super({
+      status: 400,
+      code: "idempotency_key_required",
+      detail: "Idempotency-Key is required",
+    })
   }
 }
 
@@ -227,6 +287,16 @@ export class CompanyOrganizationProfileWriteFailedError extends CompanyHTTPExcep
   }
 }
 
+export class CompanyOrganizationUnitNotFoundError extends CompanyHTTPException {
+  constructor() {
+    super({
+      status: 404,
+      code: "organization_unit_not_found",
+      detail: "Organization unit was not found",
+    })
+  }
+}
+
 export class CompanyQueryInvalidError extends CompanyHTTPException {
   constructor(cause: unknown) {
     super({
@@ -255,6 +325,16 @@ export class CompanyReadUnavailableError extends CompanyHTTPException {
       code: "company_read_unavailable",
       detail: "Company data could not be read",
       cause,
+    })
+  }
+}
+
+export class CompanyReportingLineNotFoundError extends CompanyHTTPException {
+  constructor() {
+    super({
+      status: 404,
+      code: "reporting_line_not_found",
+      detail: "Reporting line was not found",
     })
   }
 }

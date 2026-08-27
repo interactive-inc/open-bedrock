@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.assets.holdings.$get({ query: {} })
+    const response = await client["asset"]["assets"].holdings.$get({ query: {} })
 
     return c.json(await response.json())
   },

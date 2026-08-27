@@ -103,7 +103,7 @@ async function request(props: RequestProps): Promise<Response> {
 describe("GET /shift-assignments/me", () => {
   test("returns the caller's own assignments", async () => {
     const response = await request({
-      path: "/shift-assignments/me",
+      path: "/shift/shift-assignments/me",
       token: await tokenFor(5),
     })
 
@@ -131,7 +131,7 @@ describe("GET /shift-assignments/me", () => {
 
   test("filters own assignments by date range", async () => {
     const response = await request({
-      path: "/shift-assignments/me?from=2026-06-01&to=2026-06-01",
+      path: "/shift/shift-assignments/me?from=2026-06-01&to=2026-06-01",
       token: await tokenFor(5),
     })
 
@@ -151,7 +151,7 @@ describe("GET /shift-assignments/me", () => {
   test("excludes draft assignments (publishedAt is null)", async () => {
     // 2026-06-02 にはシード id=2 があるが publishedAt=null なので返らない
     const response = await request({
-      path: "/shift-assignments/me?from=2026-06-02&to=2026-06-02",
+      path: "/shift/shift-assignments/me?from=2026-06-02&to=2026-06-02",
       token: await tokenFor(5),
     })
 
@@ -167,7 +167,7 @@ describe("GET /shift-assignments/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/shift-assignments/me", token: null })
+    const response = await request({ path: "/shift/shift-assignments/me", token: null })
 
     expect(response.status).toBe(401)
   })

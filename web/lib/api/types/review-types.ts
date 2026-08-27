@@ -41,8 +41,8 @@ export type ReviewCycleUpdateRequest = {
 export type ReviewFormResponse = {
   id: number
   cycle_id: number
-  subject_employee_id: number
-  reviewer_employee_id: number
+  subject_employee_id: string
+  reviewer_employee_id: string | null
   reviewer_type: string
   answers: ReadonlyArray<unknown>
   score: number | null
@@ -52,8 +52,8 @@ export type ReviewFormResponse = {
 
 /** POST /review-cycles/:cycle_id/forms/bulk のリクエスト各要素（被評価者と評価者種別の組）。 */
 export type ReviewFormBulkItem = {
-  subject_employee_id: number
-  reviewer_employee_id: number
+  subject_employee_id: string
+  reviewer_employee_id: string
   reviewer_type: "self" | "manager" | "peer" | "subordinate"
 }
 
@@ -68,9 +68,14 @@ export type ReviewFormSubmitRequest = {
 /** GET /review-cycles/:cycle_id/results/:employee_code のレスポンス（集計済みの評価結果）。 */
 export type ReviewResultResponse = {
   cycle_id: number
-  subject_employee_id: number
+  subject_employee_id: string
   form_count: number
   submitted_count: number
   average_score: number | null
+  reviewer_type_summary: ReadonlyArray<{
+    reviewer_type: string
+    form_count: number
+    submitted_count: number
+  }>
   forms: ReadonlyArray<ReviewFormResponse>
 }

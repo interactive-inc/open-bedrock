@@ -12,7 +12,7 @@ export async function createReward(request: {
 }): Promise<ThanksRewardResponse | Error> {
   const client = await createClient()
 
-  const response = await client["thanks-rewards"].$post({
+  const response = await client["thanks"]["thanks-rewards"].$post({
     json: { name: request.name, point_cost: request.point_cost, stock: request.stock },
   })
 

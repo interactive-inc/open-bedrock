@@ -107,7 +107,7 @@ async function request(props: RequestProps): Promise<Response> {
 describe("POST /expenses/:id/reject", () => {
   test("returns 200 and flips status to rejected", async () => {
     const response = await request({
-      path: "/expenses/1/reject",
+      path: "/expense/expenses/1/reject",
       token: await tokenFor(2),
       method: "POST",
       body: { comment: "missing receipt" },
@@ -126,7 +126,7 @@ describe("POST /expenses/:id/reject", () => {
 
   test("returns 400 when comment is empty", async () => {
     const response = await request({
-      path: "/expenses/1/reject",
+      path: "/expense/expenses/1/reject",
       token: await tokenFor(2),
       method: "POST",
       body: { comment: "" },
@@ -137,7 +137,7 @@ describe("POST /expenses/:id/reject", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/expenses/1/reject",
+      path: "/expense/expenses/1/reject",
       token: await tokenFor(5),
       method: "POST",
       body: { comment: "rejected" },
@@ -148,7 +148,7 @@ describe("POST /expenses/:id/reject", () => {
 
   test("returns 404 for an unknown id", async () => {
     const response = await request({
-      path: "/expenses/9999/reject",
+      path: "/expense/expenses/9999/reject",
       token: await tokenFor(2),
       method: "POST",
       body: { comment: "rejected" },
@@ -159,7 +159,7 @@ describe("POST /expenses/:id/reject", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/expenses/1/reject",
+      path: "/expense/expenses/1/reject",
       token: null,
       method: "POST",
       body: { comment: "rejected" },

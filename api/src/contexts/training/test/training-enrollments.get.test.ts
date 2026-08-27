@@ -100,7 +100,10 @@ async function request(
 
 describe("GET /training-enrollments", () => {
   test("a privileged role views another's status by employee_code", async () => {
-    const response = await request("/training-enrollments?employee_code=E005", await tokenFor(1))
+    const response = await request(
+      "/training/training-enrollments?employee_code=E005",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
 
@@ -113,25 +116,37 @@ describe("GET /training-enrollments", () => {
   })
 
   test("a member targeting another employee is forbidden", async () => {
-    const response = await request("/training-enrollments?employee_code=E004", await tokenFor(5))
+    const response = await request(
+      "/training/training-enrollments?employee_code=E004",
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for an unknown employee_code", async () => {
-    const response = await request("/training-enrollments?employee_code=E999", await tokenFor(1))
+    const response = await request(
+      "/training/training-enrollments?employee_code=E999",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("returns 404 for an unknown employee_id", async () => {
-    const response = await request("/training-enrollments?employee_id=9999", await tokenFor(1))
+    const response = await request(
+      "/training/training-enrollments?employee_id=9999",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("a privileged role views another's status by employee_id", async () => {
-    const response = await request("/training-enrollments?employee_id=5", await tokenFor(1))
+    const response = await request(
+      "/training/training-enrollments?employee_id=5",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
 
@@ -144,7 +159,7 @@ describe("GET /training-enrollments", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/training-enrollments", null)
+    const response = await request("/training/training-enrollments", null)
 
     expect(response.status).toBe(401)
   })

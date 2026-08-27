@@ -9,7 +9,10 @@ import type { PartnerUpdateRequest } from "@/lib/api/types/partner-types"
 export async function updatePartner(id: number, request: PartnerUpdateRequest) {
   const client = await createClient()
 
-  const response = await client.partners[":id"].$put({ param: { id: String(id) }, json: request })
+  const response = await client["partner"]["partners"][":id"].$put({
+    param: { id: String(id) },
+    json: request,
+  })
 
   if (response.status >= 400) {
     return toResponseError(response, {

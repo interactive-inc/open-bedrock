@@ -117,7 +117,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/200/complete",
       token: ownerToken,
       method: "POST",
     })
@@ -125,7 +125,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding-tasks/200/uncomplete",
+      path: "/onboarding/onboarding-tasks/200/uncomplete",
       token: ownerToken,
       method: "POST",
     })
@@ -146,7 +146,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/onboarding-tasks/200/uncomplete",
+      path: "/onboarding/onboarding-tasks/200/uncomplete",
       token: await token(6),
       method: "POST",
     })
@@ -158,7 +158,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/onboarding-tasks/9999/uncomplete",
+      path: "/onboarding/onboarding-tasks/9999/uncomplete",
       token: await token(1),
       method: "POST",
     })
@@ -170,7 +170,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/onboarding-tasks/abc/uncomplete",
+      path: "/onboarding/onboarding-tasks/abc/uncomplete",
       token: await token(1),
       method: "POST",
     })
@@ -182,7 +182,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/onboarding-tasks/200/uncomplete",
+      path: "/onboarding/onboarding-tasks/200/uncomplete",
       token: null,
       method: "POST",
     })
@@ -201,7 +201,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/200/complete",
       token: ownerToken,
       method: "POST",
     })
@@ -210,7 +210,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding-tasks/200/uncomplete",
+      path: "/onboarding/onboarding-tasks/200/uncomplete",
       token: ownerToken,
       method: "POST",
     })
@@ -222,7 +222,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding-tasks/200/uncomplete",
+      path: "/onboarding/onboarding-tasks/200/uncomplete",
       token: ownerToken,
       method: "POST",
     })

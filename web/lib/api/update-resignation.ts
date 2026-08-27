@@ -12,7 +12,7 @@ export async function updateResignation(
 ): Promise<ResignationResponse | Error> {
   const client = await createClient()
 
-  const response = await client.resignations[":id"].$put({
+  const response = await client["resignation"]["resignations"][":id"].$put({
     param: { id },
     json: request,
   })

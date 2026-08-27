@@ -37,12 +37,12 @@ const app = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
-  .post("/antisocial-checks", ...createRoute.POST)
-  .get("/antisocial-checks/me", ...meRoute.GET)
-  .get("/antisocial-checks/admin", ...adminRoute.GET)
-  .get("/antisocial-checks/:id", ...detailRoute.GET)
-  .put("/antisocial-checks/:id", ...detailRoute.PUT)
-  .delete("/antisocial-checks/:id", ...detailRoute.DELETE)
+  .post("/antisocial-check/antisocial-checks", ...createRoute.POST)
+  .get("/antisocial-check/antisocial-checks/me", ...meRoute.GET)
+  .get("/antisocial-check/antisocial-checks/admin", ...adminRoute.GET)
+  .get("/antisocial-check/antisocial-checks/:id", ...detailRoute.GET)
+  .put("/antisocial-check/antisocial-checks/:id", ...detailRoute.PUT)
+  .delete("/antisocial-check/antisocial-checks/:id", ...detailRoute.DELETE)
 
 const antisocialCheckResponseSchema = z.object({
   id: z.string(),
@@ -146,7 +146,7 @@ async function request(props: {
 describe("POST /antisocial-checks", () => {
   test("creates an antisocial check with status requested", async () => {
     const response = await request({
-      path: "/antisocial-checks",
+      path: "/antisocial-check/antisocial-checks",
       token: await requesterToken(),
       method: "POST",
       body: {
@@ -171,7 +171,7 @@ describe("POST /antisocial-checks", () => {
 
   test("creates an antisocial check with null optional fields", async () => {
     const response = await request({
-      path: "/antisocial-checks",
+      path: "/antisocial-check/antisocial-checks",
       token: await requesterToken(),
       method: "POST",
       body: {
@@ -193,7 +193,7 @@ describe("POST /antisocial-checks", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/antisocial-checks",
+      path: "/antisocial-check/antisocial-checks",
       token: null,
       method: "POST",
       body: {
@@ -207,7 +207,10 @@ describe("POST /antisocial-checks", () => {
 
 describe("GET /antisocial-checks/me", () => {
   test("returns only the viewer's antisocial checks", async () => {
-    const response = await request({ path: "/antisocial-checks/me", token: await requesterToken() })
+    const response = await request({
+      path: "/antisocial-check/antisocial-checks/me",
+      token: await requesterToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -224,7 +227,7 @@ describe("GET /antisocial-checks/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/antisocial-checks/me", token: null })
+    const response = await request({ path: "/antisocial-check/antisocial-checks/me", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -233,7 +236,7 @@ describe("GET /antisocial-checks/me", () => {
 describe("GET /antisocial-checks/admin", () => {
   test("returns other employees' checks and excludes the manager's own request", async () => {
     const response = await request({
-      path: "/antisocial-checks/admin",
+      path: "/antisocial-check/antisocial-checks/admin",
       token: await requesterToken(),
     })
 
@@ -258,7 +261,7 @@ describe("GET /antisocial-checks/admin", () => {
 
   test("returns 403 for a member without management permission", async () => {
     const response = await request({
-      path: "/antisocial-checks/admin",
+      path: "/antisocial-check/antisocial-checks/admin",
       token: await memberToken(),
     })
 
@@ -269,7 +272,7 @@ describe("GET /antisocial-checks/admin", () => {
 describe("GET /antisocial-checks/:id", () => {
   test("returns the antisocial check for its requester", async () => {
     const response = await request({
-      path: `/antisocial-checks/${ownAntisocialCheckId}`,
+      path: `/antisocial-check/antisocial-checks/${ownAntisocialCheckId}`,
       token: await requesterToken(),
     })
 
@@ -286,7 +289,7 @@ describe("GET /antisocial-checks/:id", () => {
 
   test("allows a manager to read another person's antisocial check", async () => {
     const response = await request({
-      path: `/antisocial-checks/${othersAntisocialCheckId}`,
+      path: `/antisocial-check/antisocial-checks/${othersAntisocialCheckId}`,
       token: await requesterToken(),
     })
 
@@ -295,7 +298,7 @@ describe("GET /antisocial-checks/:id", () => {
 
   test("returns 404 for an unknown antisocial check", async () => {
     const response = await request({
-      path: "/antisocial-checks/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/antisocial-check/antisocial-checks/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await requesterToken(),
     })
 
@@ -306,7 +309,7 @@ describe("GET /antisocial-checks/:id", () => {
 describe("PUT /antisocial-checks/:id", () => {
   test("updates the details but not the result of the viewer's antisocial check", async () => {
     const response = await request({
-      path: `/antisocial-checks/${ownAntisocialCheckId}`,
+      path: `/antisocial-check/antisocial-checks/${ownAntisocialCheckId}`,
       token: await requesterToken(),
       method: "PUT",
       body: {
@@ -331,7 +334,7 @@ describe("PUT /antisocial-checks/:id", () => {
 
   test("allows a manager to complete another person's antisocial check", async () => {
     const response = await request({
-      path: `/antisocial-checks/${othersAntisocialCheckId}`,
+      path: `/antisocial-check/antisocial-checks/${othersAntisocialCheckId}`,
       token: await requesterToken(),
       method: "PUT",
       body: {
@@ -356,7 +359,7 @@ describe("PUT /antisocial-checks/:id", () => {
 
   test("returns 403 when a manager decides their own antisocial check", async () => {
     const response = await request({
-      path: `/antisocial-checks/${ownAntisocialCheckId}`,
+      path: `/antisocial-check/antisocial-checks/${ownAntisocialCheckId}`,
       token: await requesterToken(),
       method: "PUT",
       body: {
@@ -372,7 +375,7 @@ describe("PUT /antisocial-checks/:id", () => {
 
   test("returns 403 when updating another person's antisocial check", async () => {
     const response = await request({
-      path: `/antisocial-checks/${othersAntisocialCheckId}`,
+      path: `/antisocial-check/antisocial-checks/${othersAntisocialCheckId}`,
       token: await requesterToken(),
       method: "PUT",
       body: {
@@ -388,7 +391,7 @@ describe("PUT /antisocial-checks/:id", () => {
 
   test("returns 404 for an unknown antisocial check", async () => {
     const response = await request({
-      path: "/antisocial-checks/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/antisocial-check/antisocial-checks/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await requesterToken(),
       method: "PUT",
       body: {
@@ -406,7 +409,7 @@ describe("PUT /antisocial-checks/:id", () => {
 describe("DELETE /antisocial-checks/:id", () => {
   test("cancels the viewer's antisocial check and returns 204", async () => {
     const response = await request({
-      path: `/antisocial-checks/${ownAntisocialCheckId}`,
+      path: `/antisocial-check/antisocial-checks/${ownAntisocialCheckId}`,
       token: await requesterToken(),
       method: "DELETE",
     })
@@ -416,7 +419,7 @@ describe("DELETE /antisocial-checks/:id", () => {
 
   test("returns 403 when cancelling another person's antisocial check", async () => {
     const response = await request({
-      path: `/antisocial-checks/${othersAntisocialCheckId}`,
+      path: `/antisocial-check/antisocial-checks/${othersAntisocialCheckId}`,
       token: await requesterToken(),
       method: "DELETE",
     })
@@ -426,7 +429,7 @@ describe("DELETE /antisocial-checks/:id", () => {
 
   test("returns 404 for an unknown antisocial check", async () => {
     const response = await request({
-      path: "/antisocial-checks/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/antisocial-check/antisocial-checks/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await requesterToken(),
       method: "DELETE",
     })
@@ -436,7 +439,7 @@ describe("DELETE /antisocial-checks/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: `/antisocial-checks/${ownAntisocialCheckId}`,
+      path: `/antisocial-check/antisocial-checks/${ownAntisocialCheckId}`,
       token: null,
       method: "DELETE",
     })

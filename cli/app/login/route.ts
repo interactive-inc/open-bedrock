@@ -38,7 +38,7 @@ export default factory.createHandlers(
 
     // createClient の fetch ラッパーが 4xx/5xx を ApiError として throw するため、
     // ここに来た時点で response は必ず成功。手動の ok チェックは不要。
-    const response = await client.system.v1.sessions.$post({
+    const response = await client.system.sessions.$post({
       json: { subject: query.email, password: query.password },
     })
 
@@ -69,7 +69,7 @@ async function fetchName(baseUrl: string, accessToken: string): Promise<string> 
   try {
     const client = await createClient(baseUrl)
 
-    const response = await client.me.$get(
+    const response = await client.company["current-profile"].$get(
       {},
       { headers: { Authorization: `Bearer ${accessToken}` } },
     )

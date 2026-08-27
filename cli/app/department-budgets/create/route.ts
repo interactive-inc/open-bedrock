@@ -45,9 +45,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["department-budgets"].$post({
+    const response = await client["expense"]["department-budgets"].$post({
       json: {
-        department_id: toFiniteNumber(departmentId, "--department-id"),
+        organization_unit_id: departmentId,
         fiscal_period: fiscalPeriod,
         period_start: periodStart,
         period_end: periodEnd,

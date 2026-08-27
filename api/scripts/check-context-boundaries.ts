@@ -82,6 +82,44 @@ export function inspectCompanyAreaPath(file: string): ContextBoundaryViolation[]
     : [{ file, reason: `Company ${layer} の許可領域ではありません: ${area}` }]
 }
 
+/** Company各層の許可領域を実ディレクトリと完全一致させる。 */
+export function inspectCompanyAreaManifest(
+  layer: ContextLayer,
+  actualAreas: ReadonlyArray<string>,
+): ContextBoundaryViolation[] {
+  const declaredAreas = ownershipManifest.companyAreasByLayer[layer]
+  const canonicalDeclaredAreas = [...new Set(declaredAreas)].toSorted()
+  const canonicalActualAreas = [...new Set(actualAreas)].toSorted()
+  const violations: ContextBoundaryViolation[] = []
+
+  if (declaredAreas.some((area, index) => area !== canonicalDeclaredAreas[index])) {
+    violations.push({
+      file: "context-ownership.json",
+      reason: `Company ${layer} の許可領域は重複なくpath昇順で宣言してください`,
+    })
+  }
+
+  for (const area of canonicalActualAreas) {
+    if (!canonicalDeclaredAreas.includes(area)) {
+      violations.push({
+        file: "context-ownership.json",
+        reason: `Company ${layer} の実領域が未宣言です: ${area}`,
+      })
+    }
+  }
+
+  for (const area of canonicalDeclaredAreas) {
+    if (!canonicalActualAreas.includes(area)) {
+      violations.push({
+        file: "context-ownership.json",
+        reason: `Company ${layer} に存在しない許可領域です: ${area}`,
+      })
+    }
+  }
+
+  return violations
+}
+
 /** 単一context routeをmanifestで宣言した所有者の下へ固定する。 */
 export function inspectRouteOwnershipPath(file: string): ContextBoundaryViolation[] {
   const normalized = file.replaceAll("\\", "/")
@@ -127,6 +165,15 @@ function hasFlatRoutePrefix(directory: string, routePrefix: string): boolean {
 export function inspectOwnershipManifest(): ContextBoundaryViolation[] {
   const violations: ContextBoundaryViolation[] = []
   const owners = new Set(Object.values(ownershipManifest.businessAreaOwners))
+
+  for (const layer of CONTEXT_LAYERS) {
+    const layerRoot = resolve(CONTEXTS_ROOT, "company", layer)
+    const actualAreas = readdirSync(layerRoot, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+
+    violations.push(...inspectCompanyAreaManifest(layer, actualAreas))
+  }
 
   for (const owner of owners) {
     if (!existsSync(resolve(CONTEXTS_ROOT, owner))) {

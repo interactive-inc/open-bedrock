@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getOrgTree() {
   const client = await createClient()
 
-  const response = await client.departments.tree.$get()
+  const response = await client.company["organization-tree"].$get()
 
   if (response.status >= 400) {
     return new Error("failed to load org tree")

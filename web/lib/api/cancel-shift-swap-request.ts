@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function cancelShiftSwapRequest(id: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["shift-swap-requests"][":id"].$delete({
+  const response = await client["shift"]["shift-swap-requests"][":id"].$delete({
     param: { id: String(id) },
   })
 

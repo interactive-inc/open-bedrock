@@ -228,7 +228,7 @@ describe("inspectSystemSource", () => {
       [
         'import { Session } from "@system/domain/auth/session"',
         'import { SharedId } from "@/lib/identity/id"',
-        'import { contextUsers } from "@/contexts/system/infrastructure/schema/system"',
+        'import { contextUsers } from "@/contexts/system/infrastructure/schema/system-core"',
         'import { contextAccounts } from "@/contexts/system/infrastructure/schema/system-core"',
         'import { z } from "zod"',
       ].join("\n"),

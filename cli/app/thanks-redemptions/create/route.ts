@@ -29,7 +29,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["thanks-redemptions"].$post({
+    const response = await client["thanks"]["thanks-redemptions"].$post({
       json: { reward_id: rewardId },
     })
 

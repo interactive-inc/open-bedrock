@@ -2,13 +2,13 @@ import { createClient } from "@/lib/api/hc-client"
 import type { LoginRequest } from "@/lib/api/types/auth-types"
 
 /**
- * POST /system/v1/sessions をメール・パスワードで呼び、アクセストークンを取得する。
+ * POST /system/sessions をメール・パスワードで呼び、アクセストークンを取得する。
  * 未認証フロー（session なし）でも createClient のトークンは null となり動作する。
  */
 export async function postLogin(body: LoginRequest) {
   const client = await createClient()
 
-  const response = await client.system.v1.sessions.$post({
+  const response = await client.system.sessions.$post({
     json: { subject: body.email, password: body.password },
   })
 

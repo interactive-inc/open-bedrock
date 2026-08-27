@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.surveys[":surveyId"].summary.$get({
+    const response = await client["survey"]["surveys"][":surveyId"].summary.$get({
       param: { surveyId: surveyId },
     })
 

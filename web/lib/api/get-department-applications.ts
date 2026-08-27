@@ -7,7 +7,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getDepartmentApplications(departmentCode: string) {
   const client = await createClient()
 
-  const response = await client["application-requests"].$get({
+  const response = await client["company"]["application-requests"].$get({
     query: {
       scope: "department",
       department_code: departmentCode,

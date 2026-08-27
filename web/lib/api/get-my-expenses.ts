@@ -6,7 +6,7 @@ type ExpenseStatus = "pending" | "approved" | "rejected" | "settled"
 export async function getMyExpenses(status: ExpenseStatus | null) {
   const client = await createClient()
 
-  const response = await client.expenses.me.$get({
+  const response = await client["expense"]["expenses"].me.$get({
     query: { status: status ?? undefined },
   })
 

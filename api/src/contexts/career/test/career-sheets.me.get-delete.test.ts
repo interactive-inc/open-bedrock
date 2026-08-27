@@ -79,7 +79,10 @@ async function request(props: {
 
 describe("GET /career-sheets/me", () => {
   test("returns 200 with the sheet in snake_case shape", async () => {
-    const response = await request({ path: "/career-sheets/me", token: await tokenForEmployee(5) })
+    const response = await request({
+      path: "/career/career-sheets/me",
+      token: await tokenForEmployee(5),
+    })
 
     expect(response.status).toBe(200)
 
@@ -95,7 +98,10 @@ describe("GET /career-sheets/me", () => {
   })
 
   test("returns 200 with an empty sheet when none registered", async () => {
-    const response = await request({ path: "/career-sheets/me", token: await tokenForEmployee(1) })
+    const response = await request({
+      path: "/career/career-sheets/me",
+      token: await tokenForEmployee(1),
+    })
 
     expect(response.status).toBe(200)
 
@@ -112,7 +118,7 @@ describe("GET /career-sheets/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/career-sheets/me", token: null })
+    const response = await request({ path: "/career/career-sheets/me", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -121,7 +127,7 @@ describe("GET /career-sheets/me", () => {
 describe("DELETE /career-sheets/me", () => {
   test("deletes the sheet and returns 204", async () => {
     const response = await request({
-      path: "/career-sheets/me",
+      path: "/career/career-sheets/me",
       token: await tokenForEmployee(5),
       method: "DELETE",
     })
@@ -131,7 +137,7 @@ describe("DELETE /career-sheets/me", () => {
 
   test("returns 204 even when no sheet is registered", async () => {
     const response = await request({
-      path: "/career-sheets/me",
+      path: "/career/career-sheets/me",
       token: await tokenForEmployee(1),
       method: "DELETE",
     })
@@ -140,7 +146,11 @@ describe("DELETE /career-sheets/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/career-sheets/me", token: null, method: "DELETE" })
+    const response = await request({
+      path: "/career/career-sheets/me",
+      token: null,
+      method: "DELETE",
+    })
 
     expect(response.status).toBe(401)
   })

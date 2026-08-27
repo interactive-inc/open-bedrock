@@ -4,12 +4,12 @@ import type {
   AuditEventDetail,
   AuditEventRecord,
   AuditEventSummary,
-  AuditOutcome,
 } from "@/api/http/audit/company-audit-event.definition"
 import {
   auditClientNameSchema,
   auditOutcomeSchema,
-} from "@/api/http/audit/company-audit-event.definition"
+} from "@/api/http/audit/company-audit-record.definition"
+import type { AuditOutcome } from "@/api/http/audit/company-audit-record.definition"
 import type { Context } from "@/env"
 import { AuditCursor } from "@/lib/audit/audit-cursor"
 import type { AuditCursorAnchor, AuditCursorPosition } from "@/lib/audit/audit-cursor"

@@ -8,17 +8,17 @@ type Params = {
 }
 
 /**
- * GET /employees を session トークン付きで呼び、絞り込み済みの従業員一覧を返す。
+ * GET /company/employee-directory を session トークン付きで呼び、絞り込み済みの従業員一覧を返す。
  * 絞り込み条件 q / dept / status は null のとき送信されない。
  * api は snake_case を返すため、この関数内で camelCase の EmployeeListItem に変換する。
  */
 export async function getEmployeeList(filter: EmployeeSearchFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client.employees.$get({
+  const response = await client.company["employee-directory"].$get({
     query: {
       q: filter.q ?? undefined,
-      dept: filter.dept ?? undefined,
+      organization_unit: filter.dept ?? undefined,
       status: filter.status ?? undefined,
       limit: params.limit !== undefined ? String(params.limit) : undefined,
       offset: params.offset !== undefined ? String(params.offset) : undefined,
@@ -41,7 +41,7 @@ export async function getEmployeeList(filter: EmployeeSearchFilter, params: Para
 function toEmployeeListItem(raw: {
   code: string | null
   name: string
-  dept_name: string | null
+  organization_unit_name: string | null
   position: string | null
   email: string
   status: string
@@ -49,7 +49,7 @@ function toEmployeeListItem(raw: {
   return {
     code: raw.code,
     name: raw.name,
-    deptName: raw.dept_name,
+    deptName: raw.organization_unit_name,
     position: raw.position,
     email: raw.email,
     status: raw.status,

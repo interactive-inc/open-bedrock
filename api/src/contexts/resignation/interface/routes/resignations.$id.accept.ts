@@ -1,4 +1,4 @@
-import { AdvanceResignation } from "@/contexts/resignation/application/advance-resignation"
+import { AcceptResignation } from "@/contexts/resignation/application/accept-resignation"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -16,10 +16,9 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const updated = await new AdvanceResignation(c).run({
+  const updated = await new AcceptResignation(c).execute({
     session: session,
     resignationId: validateUuidParam(c.req.param("id"), "resignation"),
-    action: "accept",
   })
 
   if (updated instanceof ApplicationError) {

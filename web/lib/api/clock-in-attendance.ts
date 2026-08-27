@@ -10,7 +10,7 @@ import type { AttendanceClockRequest } from "@/lib/api/types/attendance-types"
 export async function clockInAttendance(request: AttendanceClockRequest) {
   const client = await createClient()
 
-  const response = await client["attendance-records"]["clock-in"].$post({
+  const response = await client["attendance"]["attendance-records"]["clock-in"].$post({
     json: { note: request.note ?? undefined },
   })
 

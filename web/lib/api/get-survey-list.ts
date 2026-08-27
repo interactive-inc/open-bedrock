@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getSurveyList() {
   const client = await createClient()
 
-  const response = await client.surveys.$get()
+  const response = await client["survey"]["surveys"].$get()
 
   if (response.status >= 400) {
     return new Error("failed to load surveys")

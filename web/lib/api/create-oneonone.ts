@@ -10,7 +10,7 @@ import type { OneOnOneCreateRequest } from "@/lib/api/types/oneonone-types"
 export async function createOneOnOne(request: OneOnOneCreateRequest) {
   const client = await createClient()
 
-  const response = await client["one-on-ones"].$post({ json: request })
+  const response = await client["one-on-one"]["one-on-ones"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

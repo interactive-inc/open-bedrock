@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function startStocktake(name: string, targetDate: string) {
   const client = await createClient()
 
-  const response = await client.stocktakes.$post({
+  const response = await client["asset"]["stocktakes"].$post({
     json: { name, target_date: targetDate },
   })
 

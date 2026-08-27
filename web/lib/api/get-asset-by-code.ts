@@ -5,7 +5,7 @@ import { ApiResponseError } from "@/lib/api/api-response-error"
 export async function getAssetByCode(code: string) {
   const client = await createClient()
 
-  const response = await client.assets[":code"].$get({ param: { code } })
+  const response = await client["asset"]["assets"][":code"].$get({ param: { code } })
 
   if (response.status >= 400) {
     return new ApiResponseError(response.status, "failed to load asset")

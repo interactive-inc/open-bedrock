@@ -4,11 +4,11 @@ import type { WorkAccidentResponse } from "@/lib/api/types/work-accident-types"
 /** GET /work-accidents?status=&employee_id=。労災・事故の発生記録一覧を取得する。失敗時は Error を返す。 */
 export async function listWorkAccidents(props: {
   status?: string
-  employeeId?: number
+  employeeId?: string
 }): Promise<ReadonlyArray<WorkAccidentResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["work-accidents"].$get({
+  const response = await client["work-accident"]["work-accidents"].$get({
     query: {
       status: props.status,
       employee_id: props.employeeId !== undefined ? String(props.employeeId) : undefined,

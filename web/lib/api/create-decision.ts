@@ -13,7 +13,7 @@ export type DecisionCreateRequest = {
 export async function createDecision(request: DecisionCreateRequest) {
   const client = await createClient()
 
-  const response = await client["decision-records"].$post({ json: request })
+  const response = await client["meeting"]["decision-records"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

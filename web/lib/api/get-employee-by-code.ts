@@ -8,9 +8,8 @@ import type { EmployeeDetailItem } from "@/lib/api/types/employee-list-item"
 export async function getEmployeeByCode(code: string): Promise<EmployeeDetailItem | null | Error> {
   const client = await createClient()
 
-  const response = await client.employees[":code"].$get({
+  const response = await client.company["employee-directory"][":code"].$get({
     param: { code: code },
-    query: {},
   })
 
   const status: number = response.status
@@ -32,6 +31,5 @@ export async function getEmployeeByCode(code: string): Promise<EmployeeDetailIte
     position: employee.position,
     email: employee.email,
     status: employee.status,
-    role: employee.role,
   }
 }

@@ -120,7 +120,7 @@ async function InboxTable(props: { offset: number; pageSize: number; sort: Appli
               <TableHead>申請者</TableHead>
               <TableHead>ステータス</TableHead>
               <SortableTableHead
-                pathname="/inbox/applications"
+                pathname="/company/inbox/applications"
                 currentSort={props.sort}
                 ascValue="created_at_asc"
                 descValue="created_at_desc"
@@ -165,7 +165,7 @@ async function InboxTable(props: { offset: number; pageSize: number; sort: Appli
       </div>
 
       <TablePagination
-        pathname="/inbox/applications"
+        pathname="/company/inbox/applications"
         total={result.total}
         limit={props.pageSize}
         offset={props.offset}

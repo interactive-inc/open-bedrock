@@ -9,7 +9,7 @@ import type { CreateSurveyRequest } from "@/lib/api/types/survey-types"
 export async function createSurvey(request: CreateSurveyRequest) {
   const client = await createClient()
 
-  const response = await client.surveys.$post({
+  const response = await client["survey"]["surveys"].$post({
     json: {
       title: request.title,
       status: request.status,

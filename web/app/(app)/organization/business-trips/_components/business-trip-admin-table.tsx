@@ -14,7 +14,7 @@ import { statusLabel } from "@/lib/status-label"
 
 type Row = {
   id: string
-  traveler_id: number
+  traveler_id: string
   destination: string
   start_date: string
   end_date: string

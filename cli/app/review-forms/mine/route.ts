@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["review-forms"].me.$get()
+    const response = await client["performance-review"]["review-forms"].me.$get()
 
     const rows = await response.json()
 

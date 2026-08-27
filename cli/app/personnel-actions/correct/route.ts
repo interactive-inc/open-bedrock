@@ -5,7 +5,7 @@ import { readJsonObjectFile } from "@/lib/input/read-json-file"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-export const help = `bedrock personnel-actions correct --action-id <id> --payload <json-file> --reason <text> --idempotency-key <key>`
+export const help = `bedrock personnel-actions correct --action-id <id> --payload <json-file> --reason <text> --employee-revision <n> --idempotency-key <key> [--organization-revision <n>]`
 
 export default factory.createHandlers(
   zValidator(
@@ -15,23 +15,41 @@ export default factory.createHandlers(
       "action-id": z.string().uuid().optional(),
       payload: z.string().optional(),
       reason: z.string().min(1).max(2000).optional(),
+      "employee-revision": z.coerce.number().int().nonnegative().optional(),
+      "organization-revision": z.coerce.number().int().nonnegative().optional(),
       "idempotency-key": z.string().min(1).max(200).optional(),
     }),
   ),
   async (c) => {
     const input = c.req.valid("json")
     if (input.help) return c.text(help)
-    if (!input["action-id"] || !input.payload || !input.reason || !input["idempotency-key"]) {
-      throw new UsageError("--action-id, --payload, --reason, --idempotency-key が必要です")
+    if (
+      !input["action-id"] ||
+      !input.payload ||
+      !input.reason ||
+      input["employee-revision"] === undefined ||
+      !input["idempotency-key"]
+    ) {
+      throw new UsageError(
+        "--action-id, --payload, --reason, --employee-revision, --idempotency-key が必要です",
+      )
     }
     const file = await readJsonObjectFile(input.payload)
     const client = await createClient()
-    const endpoint = client["personnel-actions"][":id"].correct.$post
+    const endpoint = client.company["personnel-action-executions"].$post
     type RequestJson = Parameters<typeof endpoint>[0]["json"]
     const response = await endpoint(
       {
-        param: { id: input["action-id"] },
-        json: { ...file, reason: input.reason } as RequestJson,
+        json: {
+          action: {
+            ...file,
+            kind: "corrected",
+            correctsActionId: input["action-id"],
+            reason: input.reason,
+          },
+          expected_employee_revision: input["employee-revision"],
+          expected_organization_revision: input["organization-revision"] ?? null,
+        } as RequestJson,
       },
       { headers: { "Idempotency-Key": input["idempotency-key"] } },
     )

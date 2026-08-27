@@ -5,7 +5,9 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function resolveItIncident(id: number) {
   const client = await createClient()
 
-  const response = await client["it-incidents"][":id"].resolve.$post({ param: { id: String(id) } })
+  const response = await client["it-incident"]["it-incidents"][":id"].resolve.$post({
+    param: { id: String(id) },
+  })
 
   if (response.status >= 400) {
     return toResponseError(response, {

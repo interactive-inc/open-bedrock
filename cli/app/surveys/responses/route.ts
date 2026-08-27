@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.surveys.responses.me.$get()
+    const response = await client["survey"]["surveys"].responses.me.$get()
 
     const responses = await response.json()
 

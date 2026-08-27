@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function deleteCareerPosting(postingId: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["career-postings"][":postingId"].$delete({
+  const response = await client["career"]["career-postings"][":postingId"].$delete({
     param: { postingId: String(postingId) },
   })
 

@@ -10,7 +10,7 @@ export async function getOnboardingTemplate(
 ): Promise<OnboardingTemplateDetail | Error> {
   const client = await createClient()
 
-  const response = await client["onboarding-templates"][":code"].$get({
+  const response = await client["onboarding"]["onboarding-templates"][":code"].$get({
     param: { code: code },
   })
 

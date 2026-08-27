@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getGradeList() {
   const client = await createClient()
 
-  const response = await client["grade-definitions"].$get()
+  const response = await client.company["grade-definitions"].$get()
 
   if (response.status >= 400) {
     return new Error("failed to load grades")

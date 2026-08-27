@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getRecruitmentCandidateList(positionId: number) {
   const client = await createClient()
 
-  const response = await client["job-openings"][":jobOpeningId"].candidates.$get({
+  const response = await client["recruitment"]["job-openings"][":jobOpeningId"].candidates.$get({
     param: { jobOpeningId: String(positionId) },
   })
 

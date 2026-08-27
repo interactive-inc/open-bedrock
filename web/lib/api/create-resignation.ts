@@ -6,7 +6,7 @@ import type { ResignationCreateRequest } from "@/lib/api/types/resignation-types
 export async function createResignation(request: ResignationCreateRequest) {
   const client = await createClient()
 
-  const response = await client.resignations.$post({ json: request })
+  const response = await client["resignation"]["resignations"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

@@ -25,7 +25,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["onboarding-assignments"][":id"].$put({
+    const response = await client["onboarding"]["onboarding-assignments"][":id"].$put({
       param: { id: assignmentId },
       json: { assigned_at: query["assigned-at"] },
     })

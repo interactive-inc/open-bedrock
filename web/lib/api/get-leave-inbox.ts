@@ -19,7 +19,7 @@ type Params = {
 export async function getLeaveInbox(params: Params = {}) {
   const client = await createClient()
 
-  const response = await client["leave-requests"].inbox.$get({
+  const response = await client["leave"]["leave-requests"].inbox.$get({
     query: {
       limit: params.limit !== undefined ? String(params.limit) : undefined,
       offset: params.offset !== undefined ? String(params.offset) : undefined,

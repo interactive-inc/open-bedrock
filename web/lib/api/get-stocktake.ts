@@ -5,7 +5,7 @@ import { ApiResponseError } from "@/lib/api/api-response-error"
 export async function getStocktake(id: string) {
   const client = await createClient()
 
-  const response = await client.stocktakes[":id"].$get({ param: { id } })
+  const response = await client["asset"]["stocktakes"][":id"].$get({ param: { id } })
 
   if (response.status >= 400) {
     return new ApiResponseError(response.status, "failed to load stocktake")

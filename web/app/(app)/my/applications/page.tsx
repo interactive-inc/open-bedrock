@@ -50,7 +50,7 @@ export default async function MyApplicationsPage(props: { searchParams: SearchPa
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href="/inbox/applications" />}
+              render={<Link href="/company/inbox/applications" />}
             >
               承認 inbox
             </Button>

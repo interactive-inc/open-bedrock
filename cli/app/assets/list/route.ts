@@ -21,7 +21,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.assets.$get({
+    const response = await client["asset"]["assets"].$get({
       query: { kind: query.kind, status: query.status },
     })
 

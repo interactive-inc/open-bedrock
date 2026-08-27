@@ -9,7 +9,7 @@ import type { GradeUpdateRequest } from "@/lib/api/types/grade-types"
 export async function updateGrade(gradeId: number, request: GradeUpdateRequest) {
   const client = await createClient()
 
-  const response = await client["grade-definitions"][":id"].$put({
+  const response = await client.company["grade-definitions"][":id"].$put({
     param: { id: String(gradeId) },
     json: request,
   })

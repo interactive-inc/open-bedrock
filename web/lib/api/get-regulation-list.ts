@@ -5,7 +5,7 @@ import type { RegulationStatus } from "@/lib/api/types/regulation-types"
 export async function getRegulationList(query: { status: RegulationStatus | null }) {
   const client = await createClient()
 
-  const response = await client.regulations.$get({
+  const response = await client["regulation"]["regulations"].$get({
     query: { status: query.status ?? undefined },
   })
 

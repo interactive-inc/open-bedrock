@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.assets.lent.me.$get()
+    const response = await client["asset"]["assets"].lent.me.$get()
 
     const rows = await response.json()
 

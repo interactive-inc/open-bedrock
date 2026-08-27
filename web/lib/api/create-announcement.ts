@@ -6,7 +6,7 @@ import type { AnnouncementCreateRequest } from "@/lib/api/types/announcement-typ
 export async function createAnnouncement(request: AnnouncementCreateRequest) {
   const client = await createClient()
 
-  const response = await client.announcements.$post({ json: request })
+  const response = await client["announcement"]["announcements"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "アナウンスの作成に失敗しました" })

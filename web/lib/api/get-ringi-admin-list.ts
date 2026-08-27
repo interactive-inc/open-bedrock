@@ -5,7 +5,7 @@ export type RingiAdminSort = "created_at_desc" | "created_at_asc" | "amount_desc
 
 export type RingiAdminFilter = {
   status: RingiStatus | null
-  applicantId: number | null
+  applicantId: string | null
 }
 
 type Params = {
@@ -18,7 +18,7 @@ type Params = {
 export async function getRingiAdminList(filter: RingiAdminFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client["ringi-requests"].admin.$get({
+  const response = await client["ringi"]["ringi-requests"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       applicant_id: filter.applicantId !== null ? String(filter.applicantId) : undefined,

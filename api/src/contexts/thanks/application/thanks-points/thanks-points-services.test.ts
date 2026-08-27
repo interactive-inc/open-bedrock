@@ -3,7 +3,8 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
 import { CreateReward } from "@/contexts/thanks/application/thanks-points/create-reward"
-import { DecideRedemption } from "@/contexts/thanks/application/thanks-points/decide-redemption"
+import { ApproveRedemption } from "@/contexts/thanks/application/thanks-points/approve-redemption"
+import { RejectRedemption } from "@/contexts/thanks/application/thanks-points/reject-redemption"
 import { RequestRedemption } from "@/contexts/thanks/application/thanks-points/request-redemption"
 import { UpdateReward } from "@/contexts/thanks/application/thanks-points/update-reward"
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
@@ -286,7 +287,7 @@ describe("RequestRedemption", () => {
   })
 })
 
-describe("DecideRedemption", () => {
+describe("ApproveRedemption / RejectRedemption", () => {
   test("approves a pending redemption and decrements stock", async () => {
     const { context } = await createTestContext()
 
@@ -304,11 +305,10 @@ describe("DecideRedemption", () => {
       throw new Error("expected ThanksRedemption")
     }
 
-    const result = await new DecideRedemption(context).run({
+    const result = await new ApproveRedemption(context).execute({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
-      action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
@@ -356,21 +356,19 @@ describe("DecideRedemption", () => {
       throw new Error("expected second ThanksRedemption")
     }
 
-    const first = await new DecideRedemption(context).run({
+    const first = await new ApproveRedemption(context).execute({
       session: makeTestSession("root"),
       redemptionId: firstPending.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
-      action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
     expect(first).toBeInstanceOf(ThanksRedemption)
 
-    const second = await new DecideRedemption(context).run({
+    const second = await new ApproveRedemption(context).execute({
       session: makeTestSession("root"),
       redemptionId: secondPending.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
-      action: "approve",
       decidedAt: "2026-02-02T00:01:00.000Z",
     })
 
@@ -406,11 +404,10 @@ describe("DecideRedemption", () => {
       throw new Error("expected ThanksRedemption")
     }
 
-    const result = await new DecideRedemption(context).run({
+    const result = await new RejectRedemption(context).execute({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
-      action: "reject",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
@@ -438,11 +435,10 @@ describe("DecideRedemption", () => {
       throw new Error("expected ThanksRedemption")
     }
 
-    const result = await new DecideRedemption(context).run({
+    const result = await new ApproveRedemption(context).execute({
       session: makeTestSession("root", 5),
       redemptionId: pending.id ?? 0,
       deciderId: toWorkforceEmployeeId(5),
-      action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
@@ -452,11 +448,10 @@ describe("DecideRedemption", () => {
   test("returns redemption_not_found for unknown id", async () => {
     const { context } = await createTestContext()
 
-    const result = await new DecideRedemption(context).run({
+    const result = await new ApproveRedemption(context).execute({
       session: makeTestSession("root"),
       redemptionId: 9999,
       deciderId: toWorkforceEmployeeId(2),
-      action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
@@ -480,21 +475,19 @@ describe("DecideRedemption", () => {
       throw new Error("expected ThanksRedemption")
     }
 
-    const first = await new DecideRedemption(context).run({
+    const first = await new ApproveRedemption(context).execute({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
-      action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
     expect(first).toBeInstanceOf(ThanksRedemption)
 
-    const second = await new DecideRedemption(context).run({
+    const second = await new RejectRedemption(context).execute({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
-      action: "reject",
       decidedAt: "2026-02-03T00:00:00.000Z",
     })
 
@@ -532,11 +525,10 @@ describe("DecideRedemption", () => {
       deciderId: toWorkforceEmployeeId(2),
     })
 
-    const result = await new DecideRedemption(context).run({
+    const result = await new ApproveRedemption(context).execute({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
-      action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 

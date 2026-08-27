@@ -37,7 +37,7 @@ describe("getAuditEvent", () => {
     const json = vi.fn().mockResolvedValue(detail)
     const get = vi.fn().mockResolvedValue({ ok: true, status: 200, json })
     mocks.createClient.mockResolvedValue({
-      "audit-events": { ":eventId": { $get: get } },
+      company: { "audit-events": { ":eventId": { $get: get } } },
     })
 
     await expect(getAuditEvent("12345678-1234-4abc-8def-1234567890ab")).resolves.toEqual(detail)
@@ -52,7 +52,7 @@ describe("getAuditEvent", () => {
     const expected = new ApiResponseError(404, "safe", "audit_event_not_found")
     const get = vi.fn().mockResolvedValue(response)
     mocks.createClient.mockResolvedValue({
-      "audit-events": { ":eventId": { $get: get } },
+      company: { "audit-events": { ":eventId": { $get: get } } },
     })
     mocks.toApiResponseError.mockResolvedValue(expected)
 

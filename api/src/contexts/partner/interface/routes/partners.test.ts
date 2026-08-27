@@ -84,7 +84,7 @@ async function request(
 
 describe("GET /partners", () => {
   test("returns 200 with all partners for any authenticated user", async () => {
-    const response = await request("/partners", await tokenFor(5))
+    const response = await request("/partner/partners", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -98,7 +98,7 @@ describe("GET /partners", () => {
   })
 
   test("filters by status", async () => {
-    const response = await request("/partners?status=archived", await tokenFor(5))
+    const response = await request("/partner/partners?status=archived", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -113,7 +113,7 @@ describe("GET /partners", () => {
   })
 
   test("filters by keyword", async () => {
-    const response = await request("/partners?q=商事", await tokenFor(5))
+    const response = await request("/partner/partners?q=商事", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -128,7 +128,7 @@ describe("GET /partners", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/partners", null)
+    const response = await request("/partner/partners", null)
 
     expect(response.status).toBe(401)
   })
@@ -136,7 +136,7 @@ describe("GET /partners", () => {
 
 describe("GET /partners/:code", () => {
   test("returns 200 with the partner", async () => {
-    const response = await request("/partners/P0001", await tokenFor(5))
+    const response = await request("/partner/partners/P0001", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -150,7 +150,7 @@ describe("GET /partners/:code", () => {
   })
 
   test("returns 404 for unknown code", async () => {
-    const response = await request("/partners/NOPE", await tokenFor(5))
+    const response = await request("/partner/partners/NOPE", await tokenFor(5))
 
     expect(response.status).toBe(404)
   })
@@ -158,7 +158,7 @@ describe("GET /partners/:code", () => {
 
 describe("POST /partners", () => {
   test("creates a partner as admin", async () => {
-    const response = await request("/partners", await tokenFor(1), "POST", {
+    const response = await request("/partner/partners", await tokenFor(1), "POST", {
       code: "P9001",
       name: "New Partner",
       category: "customer",
@@ -177,7 +177,7 @@ describe("POST /partners", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/partners", await tokenFor(5), "POST", {
+    const response = await request("/partner/partners", await tokenFor(5), "POST", {
       code: "P9002",
       name: "Blocked Partner",
     })
@@ -186,7 +186,7 @@ describe("POST /partners", () => {
   })
 
   test("returns 409 for a duplicate code", async () => {
-    const response = await request("/partners", await tokenFor(1), "POST", {
+    const response = await request("/partner/partners", await tokenFor(1), "POST", {
       code: "P0001",
       name: "Duplicate",
     })
@@ -197,7 +197,7 @@ describe("POST /partners", () => {
 
 describe("PUT /partners/:id", () => {
   test("updates a partner as admin", async () => {
-    const response = await request("/partners/1", await tokenFor(1), "PUT", {
+    const response = await request("/partner/partners/1", await tokenFor(1), "PUT", {
       name: "Renamed Acme",
       category: "supplier",
     })
@@ -214,7 +214,7 @@ describe("PUT /partners/:id", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/partners/1", await tokenFor(5), "PUT", {
+    const response = await request("/partner/partners/1", await tokenFor(5), "PUT", {
       name: "Hijacked",
     })
 
@@ -224,19 +224,19 @@ describe("PUT /partners/:id", () => {
 
 describe("POST /partners/:id/archive", () => {
   test("archives a partner as admin", async () => {
-    const response = await request("/partners/1/archive", await tokenFor(1), "POST")
+    const response = await request("/partner/partners/1/archive", await tokenFor(1), "POST")
 
     expect(response.status).toBe(204)
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/partners/1/archive", await tokenFor(5), "POST")
+    const response = await request("/partner/partners/1/archive", await tokenFor(5), "POST")
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for unknown id", async () => {
-    const response = await request("/partners/9999/archive", await tokenFor(1), "POST")
+    const response = await request("/partner/partners/9999/archive", await tokenFor(1), "POST")
 
     expect(response.status).toBe(404)
   })

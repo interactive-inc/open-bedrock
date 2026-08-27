@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getDocumentList(query: { category: string | null }) {
   const client = await createClient()
 
-  const response = await client["document-ledger-entries"].$get({
+  const response = await client["document"]["document-ledger-entries"].$get({
     query: { category: query.category ?? undefined },
   })
 

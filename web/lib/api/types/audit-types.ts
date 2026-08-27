@@ -6,7 +6,7 @@ export type AuditEventSummary = {
   event_id: string
   request_id: string
   actor_account_id: string | null
-  actor_employee_id: number | null
+  actor_employee_id: string | null
   action: string
   target_type: string | null
   target_id: string | null

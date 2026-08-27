@@ -9,7 +9,7 @@ import type { EmployeeGradeCreateRequest } from "@/lib/api/types/grade-types"
 export async function createEmployeeGrade(request: EmployeeGradeCreateRequest) {
   const client = await createClient()
 
-  const response = await client["employee-grades"].$post({ json: request })
+  const response = await client.company["employee-grades"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

@@ -6,7 +6,7 @@ import type { TrainingCourseResponse } from "@/lib/api/types/training-types"
 export async function getTrainingCourse(code: string): Promise<TrainingCourseResponse | Error> {
   const client = await createClient()
 
-  const response = await client["training-courses"][":code"].$get({
+  const response = await client["training"]["training-courses"][":code"].$get({
     param: { code: code },
   })
 

@@ -27,7 +27,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["it-incidents"].$post({
+    const response = await client["it-incident"]["it-incidents"].$post({
       json: {
         occurred_at: query["occurred-at"],
         title: query.title,

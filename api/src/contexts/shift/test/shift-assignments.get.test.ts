@@ -86,7 +86,7 @@ async function request(props: RequestProps): Promise<Response> {
 describe("GET /shift-assignments", () => {
   test("privileged role lists department shifts by dept_code", async () => {
     const response = await request({
-      path: "/shift-assignments?dept_code=D003",
+      path: "/shift/shift-assignments?dept_code=D003",
       token: await tokenFor(1),
     })
 
@@ -105,7 +105,7 @@ describe("GET /shift-assignments", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift-assignments",
+      path: "/shift/shift-assignments",
       token: await tokenFor(5),
     })
 
@@ -113,7 +113,7 @@ describe("GET /shift-assignments", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/shift-assignments", token: null })
+    const response = await request({ path: "/shift/shift-assignments", token: null })
 
     expect(response.status).toBe(401)
   })

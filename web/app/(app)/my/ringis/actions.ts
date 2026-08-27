@@ -5,6 +5,7 @@ import { approveRingi } from "@/lib/api/approve-ringi"
 import { rejectRingi } from "@/lib/api/reject-ringi"
 import { submitRingi } from "@/lib/api/submit-ringi"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toRequiredText } from "@/lib/form/to-required-text"
 
 export type RingiSubmitFormState = {
   ok: boolean
@@ -21,10 +22,13 @@ export async function submitRingiAction(
   previousState: RingiSubmitFormState,
   formData: FormData,
 ): Promise<RingiSubmitFormState> {
-  const approverId = toPositiveIntId(formData.get("approver_id"))
+  const approverId = toRequiredText(formData.get("approver_id"), {
+    label: "承認者",
+    max: 128,
+  })
 
-  if (approverId === null) {
-    return { ok: false, error: "承認者を正しく指定してください" }
+  if (approverId instanceof Error) {
+    return { ok: false, error: approverId.message }
   }
 
   const titleValue = formData.get("title")
@@ -64,7 +68,7 @@ export async function submitRingiAction(
 
   revalidatePath("/my/ringis")
 
-  revalidatePath("/inbox/ringis")
+  revalidatePath("/company/inbox/ringis")
 
   return { ok: true, error: null }
 }
@@ -93,7 +97,7 @@ export async function approveRingiAction(
     return { ok: false, error: decided.message }
   }
 
-  revalidatePath("/inbox/ringis")
+  revalidatePath("/company/inbox/ringis")
 
   revalidatePath("/my/ringis")
 
@@ -124,7 +128,7 @@ export async function rejectRingiAction(
     return { ok: false, error: decided.message }
   }
 
-  revalidatePath("/inbox/ringis")
+  revalidatePath("/company/inbox/ringis")
 
   revalidatePath("/my/ringis")
 

@@ -114,7 +114,7 @@ async function request(props: {
 describe("GET /leave-requests/inbox", () => {
   test("returns pending requests with applicant name for a manager", async () => {
     const response = await request({
-      path: "/leave-requests/inbox",
+      path: "/leave/leave-requests/inbox",
       token: await tokenFor(4),
     })
 
@@ -135,7 +135,7 @@ describe("GET /leave-requests/inbox", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/leave-requests/inbox",
+      path: "/leave/leave-requests/inbox",
       token: await tokenFor(5),
     })
 
@@ -143,7 +143,7 @@ describe("GET /leave-requests/inbox", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/leave-requests/inbox", token: null })
+    const response = await request({ path: "/leave/leave-requests/inbox", token: null })
 
     expect(response.status).toBe(401)
   })

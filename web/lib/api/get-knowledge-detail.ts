@@ -5,7 +5,7 @@ import { ApiResponseError } from "@/lib/api/api-response-error"
 export async function getKnowledgeDetail(id: number) {
   const client = await createClient()
 
-  const response = await client["knowledge-articles"][":id"].$get({
+  const response = await client["knowledge"]["knowledge-articles"][":id"].$get({
     param: { id: String(id) },
   })
 

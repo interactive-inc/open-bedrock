@@ -25,7 +25,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.stocktakes.$post({
+    const response = await client["asset"]["stocktakes"].$post({
       json: { name: query.name, target_date: query["target-date"] },
     })
 

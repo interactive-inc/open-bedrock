@@ -9,7 +9,7 @@ export type RentalReservationCreateRequest = {
 /** GET /rental-reservations/me と /rentals/:id のレスポンス要素。api は snake_case で返す。 */
 export type RentalReservationResponse = {
   id: string
-  requester_id: number
+  requester_id: string
   item_name: string
   start_date: string
   end_date: string

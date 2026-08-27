@@ -1,4 +1,4 @@
-import { SetReviewCycleStatus } from "@/contexts/performance-review/application/review/set-review-cycle-status"
+import { CloseReviewCycle } from "@/contexts/performance-review/application/review/close-review-cycle"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppReviewCycle } from "@/lib/app-schemas"
@@ -18,10 +18,9 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
 
   const cycleId = validateIntParam(c.req.param("cycleId"), "review cycle")
 
-  const updated = await new SetReviewCycleStatus(c).run({
+  const updated = await new CloseReviewCycle(c).execute({
     session: session,
     cycleId,
-    status: "closed",
   })
 
   if (updated instanceof ApplicationError) {

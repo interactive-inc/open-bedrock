@@ -100,7 +100,7 @@ async function request(props: {
 describe("POST /surveys/:surveyId/responses", () => {
   test("returns 201 with the created snake_case response", async () => {
     const response = await request({
-      path: "/surveys/2/responses",
+      path: "/survey/surveys/2/responses",
       token: await memberToken(),
       method: "POST",
       body: { answers_json: { q1: 4, q2: "1 day/week" } },
@@ -121,7 +121,7 @@ describe("POST /surveys/:surveyId/responses", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/surveys/2/responses",
+      path: "/survey/surveys/2/responses",
       token: null,
       method: "POST",
       body: { answers_json: { q1: 4 } },
@@ -132,7 +132,7 @@ describe("POST /surveys/:surveyId/responses", () => {
 
   test("returns 400 when answers_json is missing", async () => {
     const response = await request({
-      path: "/surveys/2/responses",
+      path: "/survey/surveys/2/responses",
       token: await memberToken(),
       method: "POST",
       body: {},
@@ -143,7 +143,7 @@ describe("POST /surveys/:surveyId/responses", () => {
 
   test("returns 404 when the survey does not exist", async () => {
     const response = await request({
-      path: "/surveys/9999/responses",
+      path: "/survey/surveys/9999/responses",
       token: await memberToken(),
       method: "POST",
       body: { answers_json: { q1: 4 } },
@@ -154,7 +154,7 @@ describe("POST /surveys/:surveyId/responses", () => {
 
   test("returns 409 when the survey is not open", async () => {
     const response = await request({
-      path: "/surveys/3/responses",
+      path: "/survey/surveys/3/responses",
       token: await memberToken(),
       method: "POST",
       body: { answers_json: { q1: 4 } },
@@ -165,7 +165,7 @@ describe("POST /surveys/:surveyId/responses", () => {
 
   test("returns 409 when the respondent already submitted", async () => {
     const response = await request({
-      path: "/surveys/1/responses",
+      path: "/survey/surveys/1/responses",
       token: await repeaterToken(),
       method: "POST",
       body: { answers_json: { q1: 4 } },

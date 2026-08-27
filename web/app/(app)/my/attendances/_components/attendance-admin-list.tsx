@@ -14,10 +14,8 @@ type Props = {
  * 権限不足は api が 403 を返すため、その場合はエラーメッセージにフォールバックする。
  */
 export async function AttendanceAdminList(props: Props) {
-  const employeeId = props.employeeId !== null ? Number(props.employeeId) : null
-
   const records = await getAttendanceList({
-    employeeId: employeeId !== null && Number.isInteger(employeeId) ? employeeId : null,
+    employeeId: props.employeeId,
     from: props.from,
     to: props.to,
   })

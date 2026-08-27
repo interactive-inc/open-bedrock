@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.dashboard.$get()
+    const response = await client["company"]["dashboard"].$get()
 
     const summary = await response.json()
 

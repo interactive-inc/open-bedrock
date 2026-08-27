@@ -45,14 +45,14 @@ export default factory.createHandlers(
     const client = await createClient(baseUrl)
 
     try {
-      await client.system.v1.bootstrap.$post({
+      await client.system.bootstrap.$post({
         json: { token, email: query.email, password: query.password },
       })
     } catch (error) {
       if (!(error instanceof ApiError) || error.status !== 409) throw error
     }
 
-    const sessionResponse = await client.system.v1.sessions.$post({
+    const sessionResponse = await client.system.sessions.$post({
       json: { subject: query.email, password: query.password },
     })
     const session = z
@@ -65,7 +65,7 @@ export default factory.createHandlers(
 
     let employeeId: number | null = null
     try {
-      const companyResponse = await client.company.v1.bootstrap.$post(
+      const companyResponse = await client.company.bootstrap.$post(
         { json: { name: query.name, code: query.code } },
         { headers: { Authorization: `Bearer ${session.access_token}` } },
       )

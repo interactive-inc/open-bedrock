@@ -102,7 +102,10 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /review-forms?subject_employee_id=", () => {
   test("admin sees all forms including hidden ones", async () => {
-    const response = await request("/review-forms?subject_employee_id=5", await adminToken())
+    const response = await request(
+      "/performance-review/review-forms?subject_employee_id=5",
+      await adminToken(),
+    )
 
     expect(response.status).toBe(200)
 
@@ -119,7 +122,10 @@ describe("GET /review-forms?subject_employee_id=", () => {
   })
 
   test("subject only sees disclosed forms", async () => {
-    const response = await request("/review-forms?subject_employee_id=5", await subjectToken())
+    const response = await request(
+      "/performance-review/review-forms?subject_employee_id=5",
+      await subjectToken(),
+    )
 
     expect(response.status).toBe(200)
 
@@ -140,19 +146,22 @@ describe("GET /review-forms?subject_employee_id=", () => {
   })
 
   test("another employee is forbidden", async () => {
-    const response = await request("/review-forms?subject_employee_id=5", await otherToken())
+    const response = await request(
+      "/performance-review/review-forms?subject_employee_id=5",
+      await otherToken(),
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 400 without subject_employee_id", async () => {
-    const response = await request("/review-forms", await adminToken())
+    const response = await request("/performance-review/review-forms", await adminToken())
 
     expect(response.status).toBe(400)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/review-forms?subject_employee_id=5", null)
+    const response = await request("/performance-review/review-forms?subject_employee_id=5", null)
 
     expect(response.status).toBe(401)
   })

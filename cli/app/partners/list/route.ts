@@ -21,7 +21,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.partners.$get({
+    const response = await client["partner"]["partners"].$get({
       query: { q: query.q, status: query.status },
     })
 

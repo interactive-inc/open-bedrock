@@ -102,7 +102,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: await tokenFor(5),
     })
 
@@ -126,7 +126,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals?period=2025-H2",
+      path: "/performance-review/performance-goals?period=2025-H2",
       token: await tokenFor(9),
     })
 
@@ -148,7 +148,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals?employee_id=5",
+      path: "/performance-review/performance-goals?employee_id=5",
       token: await tokenFor(1),
     })
 
@@ -172,7 +172,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals?employee_id=9",
+      path: "/performance-review/performance-goals?employee_id=9",
       token: await tokenFor(5),
     })
 
@@ -183,7 +183,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals?employee_id=5",
+      path: "/performance-review/performance-goals?employee_id=5",
       token: await tokenFor(4),
     })
 
@@ -206,7 +206,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals?employee_id=9",
+      path: "/performance-review/performance-goals?employee_id=9",
       token: await tokenFor(4),
     })
 
@@ -217,7 +217,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: null,
     })
 
@@ -228,7 +228,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: "not-a-real-token",
     })
 
@@ -359,7 +359,7 @@ describe("GET /performance-goals?scope=reports", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/performance-goals?scope=reports",
+      path: "/performance-review/performance-goals?scope=reports",
       token: await tokenFor(2),
     })
 
@@ -386,7 +386,7 @@ describe("GET /performance-goals?scope=reports", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/performance-goals?scope=reports",
+      path: "/performance-review/performance-goals?scope=reports",
       token: await tokenFor(22),
     })
 
@@ -408,7 +408,7 @@ describe("GET /performance-goals?scope=reports", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/performance-goals?scope=reports",
+      path: "/performance-review/performance-goals?scope=reports",
       token: await tokenFor(20),
     })
 
@@ -467,7 +467,7 @@ describe("GET /performance-goals?scope=department", () => {
     const response = await requestWithContext({
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
-      path: "/performance-goals?scope=department&department_code=D001",
+      path: "/performance-review/performance-goals?scope=department&department_code=D001",
       token: await tokenFor(23),
     })
 
@@ -498,7 +498,7 @@ describe("GET /performance-goals?scope=department", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals?scope=department&department_code=D001",
+      path: "/performance-review/performance-goals?scope=department&department_code=D001",
       token: await tokenFor(20),
     })
 
@@ -523,7 +523,7 @@ describe("GET /performance-goals?scope=department", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals?scope=department&department_code=D002",
+      path: "/performance-review/performance-goals?scope=department&department_code=D002",
       token: await tokenFor(20),
     })
 
@@ -534,7 +534,7 @@ describe("GET /performance-goals?scope=department", () => {
     const response = await requestWithContext({
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
-      path: "/performance-goals?scope=department&department_code=D001",
+      path: "/performance-review/performance-goals?scope=department&department_code=D001",
       token: await tokenFor(20),
     })
 
@@ -545,7 +545,7 @@ describe("GET /performance-goals?scope=department", () => {
     const response = await requestWithContext({
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
-      path: "/performance-goals?scope=department",
+      path: "/performance-review/performance-goals?scope=department",
       token: await tokenFor(23),
     })
 

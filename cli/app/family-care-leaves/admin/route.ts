@@ -23,7 +23,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["family-care-leaves"].admin.$get({
+    const response = await client["family-care-leave"]["family-care-leaves"].admin.$get({
       query: {
         employee_id: query.employee_id,
         status: query.status,

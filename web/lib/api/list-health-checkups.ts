@@ -7,11 +7,11 @@ import type { HealthCheckupResponse } from "@/lib/api/types/health-checkup-types
  */
 export async function listHealthCheckups(props: {
   fiscalYear?: number
-  employeeId?: number
+  employeeId?: string
 }): Promise<ReadonlyArray<HealthCheckupResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["health-checkups"].$get({
+  const response = await client["health-checkup"]["health-checkups"].$get({
     query: {
       fiscal_year: props.fiscalYear !== undefined ? String(props.fiscalYear) : undefined,
       employee_id: props.employeeId !== undefined ? String(props.employeeId) : undefined,

@@ -8,7 +8,7 @@ import type { RoomAvailabilitySearch } from "@/lib/api/types/room-types"
 export async function getRoomAvailability(search: RoomAvailabilitySearch) {
   const client = await createClient()
 
-  const response = await client.rooms.availability.$get({
+  const response = await client["room"]["rooms"].availability.$get({
     query: {
       start_at: search.startAt ?? undefined,
       end_at: search.endAt ?? undefined,
