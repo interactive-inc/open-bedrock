@@ -9,12 +9,6 @@ import { validateOrganizationUnitOverlaps } from "@/contexts/company/domain/poli
 import { validateOrganizationUnitParents } from "@/contexts/company/domain/policies/validate-organization-unit-parents.policy"
 import { validateOrganizationUnitPeriods } from "@/contexts/company/domain/policies/validate-organization-unit-periods.policy"
 
-export type {
-  OrganizationInvariantCode,
-  OrganizationInvariantViolation,
-} from "@/contexts/company/domain/definitions/organization-invariant.definition"
-export { organizationInvariantCodes } from "@/contexts/company/domain/definitions/organization-invariant.definition"
-
 /** OrgUnitの最新revision projectionを全期間についてfail closedで検証する。 */
 export function validateOrganizationUnitSnapshot(
   snapshot: OrganizationUnitSnapshot,

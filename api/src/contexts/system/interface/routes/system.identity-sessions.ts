@@ -5,7 +5,6 @@ import {
 /** /system/identity-sessions */
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { IssueSystemIdentitySession } from "@system/application/auth/issue-system-identity-session"
-import { IssueSystemSession } from "@system/application/auth/issue-system-session"
 import { SystemIdentityLoginAuditAdapter } from "@system/infrastructure/adapters/audit/system-identity-login-audit.adapter"
 import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
 import { RecordSystemIdentityLoginTokenAdapter } from "@system/infrastructure/adapters/auth/record-system-identity-login-token.adapter"
@@ -15,6 +14,7 @@ import { SystemSessionRepository } from "@system/infrastructure/repositories/aut
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { SystemIdentityTokenVerifier } from "@system/lib/auth/system-identity-token-verifier"
 import { SystemSessionMaterialService } from "@system/lib/auth/system-session-material-service"
+import { SystemSessionIssuanceAdapter } from "@system/infrastructure/adapters/auth/system-session-issuance.adapter"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -47,7 +47,7 @@ export const POST = systemFactory.createHandlers(
       identityLoginRepository: new SystemIdentityLoginAdapter({
         env: { DB: context.env.DB },
       }),
-      sessionIssuer: new IssueSystemSession({
+      sessionIssuer: new SystemSessionIssuanceAdapter({
         accountRepository: new SystemAccountRepository({ database: context.env.DB }),
         sessionRepository: new SystemSessionRepository({
           context: { env: { DB: context.env.DB } },

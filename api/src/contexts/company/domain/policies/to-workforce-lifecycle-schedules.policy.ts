@@ -10,10 +10,7 @@ import type {
   LifecycleSchedule,
 } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 import { normalizeLifecycleSchedule } from "@/contexts/company/domain/definitions/normalize-lifecycle-schedule.definition"
-import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
-
-export { toWorkforceEmployeeId, toWorkforceOrganizationUnitId }
 
 function periodVersion(period: LifecyclePeriodBase): WorkforcePeriodVersion {
   return {

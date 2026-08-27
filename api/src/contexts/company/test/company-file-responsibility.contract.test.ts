@@ -4,11 +4,88 @@ import { readFileSync } from "node:fs"
 import ts from "typescript"
 
 const contextDirectory = new URL("..", import.meta.url)
+const contextsDirectory = new URL("../../", import.meta.url)
 const productionFiles = [...new Glob("**/*.ts").scanSync({ cwd: contextDirectory.pathname })]
   .filter((file) => !file.endsWith(".test.ts") && !file.startsWith("test/"))
   .sort()
 
 describe("Company file responsibility contract", () => {
+  test("全contextのApplicationを一ユースケース一クラスに保つ", () => {
+    const files = [
+      ...new Glob("*/application/**/*.ts").scanSync({ cwd: contextsDirectory.pathname }),
+    ].filter(
+      (file) =>
+        !file.endsWith(".test.ts") &&
+        !file.endsWith("/errors.ts") &&
+        !file.endsWith("/application-error.ts"),
+    )
+    const violations = files.flatMap((file) => {
+      const source = readFileSync(new URL(file, contextsDirectory), "utf8")
+      const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true)
+      const declarations = sourceFile.statements.flatMap((statement) => {
+        if (
+          !ts.isClassDeclaration(statement) ||
+          statement.name === undefined ||
+          statement.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) !==
+            true
+        ) {
+          return []
+        }
+
+        const operations = statement.members.filter(
+          (member): member is ts.MethodDeclaration =>
+            ts.isMethodDeclaration(member) &&
+            member.modifiers?.some(
+              (modifier) =>
+                modifier.kind === ts.SyntaxKind.PrivateKeyword ||
+                modifier.kind === ts.SyntaxKind.ProtectedKeyword ||
+                modifier.kind === ts.SyntaxKind.StaticKeyword,
+            ) !== true,
+        )
+        const ambiguous =
+          /^(?:Write|Save|Upsert|Manage|Process|Handle|Advance|Decide|Transition)/.test(
+            statement.name.text,
+          )
+
+        return [
+          ...(operations.length > 1
+            ? [`${file}: ${statement.name.text} has ${operations.length} public operations`]
+            : []),
+          ...(ambiguous ? [`${file}: ambiguous class ${statement.name.text}`] : []),
+        ]
+      })
+      const applicationImports = sourceFile.statements.flatMap((statement) => {
+        if (
+          !ts.isImportDeclaration(statement) ||
+          !ts.isStringLiteralLike(statement.moduleSpecifier)
+        ) {
+          return []
+        }
+        const imported = statement.moduleSpecifier.text
+        return imported.includes("/application/") && !imported.endsWith("/errors")
+          ? [`${file}: Application import ${imported}`]
+          : []
+      })
+
+      return [...declarations, ...applicationImports]
+    })
+
+    expect(violations).toEqual([])
+  })
+
+  test("全contextのrouteでユースケース選択に三項演算子を使わない", () => {
+    const routeFiles = [
+      ...new Glob("*/interface/routes/**/*.ts").scanSync({ cwd: contextsDirectory.pathname }),
+    ].filter((file) => !file.endsWith(".test.ts"))
+    const violations = routeFiles.filter((file) =>
+      /\?\s*new\s+(?:Create|Update|Delete|Approve|Reject|Return|Submit|Publish|Activate|Archive|Hire|Open|Close)/.test(
+        readFileSync(new URL(file, contextsDirectory), "utf8"),
+      ),
+    )
+
+    expect(violations).toEqual([])
+  })
+
   test("Infrastructureのproduction実装をrepositoriesとadaptersへ分離する", () => {
     const violations = productionFiles.filter(
       (file) =>
@@ -22,21 +99,116 @@ describe("Company file responsibility contract", () => {
     expect(violations).toEqual([])
   })
 
-  test("ApplicationはDomain modelを経由するwrite classだけにする", () => {
+  test("Applicationは操作を明示した一ユースケース一クラスにする", () => {
     const violations = productionFiles
       .filter((file) => file.startsWith("application/"))
       .flatMap((file) => {
         const source = readFileSync(new URL(file, contextDirectory), "utf8")
         return [
-          ...(!/(?:^|\/)(?:create|update|delete|write|apply|assign|publish|issue|reorder|submit|confirm|complete|reopen|toggle|mark|provision|register|import|upsert)-/.test(
+          ...(!/(?:^|\/)(?:apply|change|complete|correct|create|delete|end|hire|initialize|rehire|retire|return|start|transfer|update)-/.test(
             file,
           )
-            ? [`${file}: read/query application operation`]
+            ? [`${file}: concrete operation is not named`]
             : []),
-          ...(!source.includes("export class ") ? [`${file}: write operation is not a class`] : []),
+          ...(source.match(/export class /g)?.length === 1
+            ? []
+            : [`${file}: use case must have exactly one exported class`]),
+          ...(/export class (?:Write|Save|Upsert|Manage|Process|Handle|Advance|Decide|Transition)\w*/.test(
+            source,
+          )
+            ? [`${file}: ambiguous use case class name`]
+            : []),
           ...(!source.includes("/domain/") ? [`${file}: Domain model is not used`] : []),
         ]
       })
+
+    expect(violations).toEqual([])
+  })
+
+  test("Applicationは別のApplicationを呼ばず公開操作を一つだけ持つ", () => {
+    const violations = productionFiles
+      .filter((file) => file.startsWith("application/"))
+      .flatMap((file) => {
+        const source = readFileSync(new URL(file, contextDirectory), "utf8")
+        const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true)
+        const classes = sourceFile.statements.filter(
+          (statement): statement is ts.ClassDeclaration =>
+            ts.isClassDeclaration(statement) &&
+            statement.modifiers?.some(
+              (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+            ) === true,
+        )
+        const operations = classes.flatMap((classDeclaration) =>
+          classDeclaration.members.filter(
+            (member): member is ts.MethodDeclaration =>
+              ts.isMethodDeclaration(member) &&
+              member.modifiers?.some(
+                (modifier) =>
+                  modifier.kind === ts.SyntaxKind.PrivateKeyword ||
+                  modifier.kind === ts.SyntaxKind.ProtectedKeyword ||
+                  modifier.kind === ts.SyntaxKind.StaticKeyword,
+              ) !== true,
+          ),
+        )
+        const applicationImports = sourceFile.statements.filter(
+          (statement): statement is ts.ImportDeclaration =>
+            ts.isImportDeclaration(statement) &&
+            ts.isStringLiteralLike(statement.moduleSpecifier) &&
+            statement.moduleSpecifier.text.includes("/application/") &&
+            !statement.moduleSpecifier.text.endsWith("/application/errors"),
+        )
+        const selectsByKind = operations.some((operation) => {
+          let found = false
+          const visit = (node: ts.Node): void => {
+            if (
+              ts.isPropertyAccessExpression(node) &&
+              node.name.text === "kind" &&
+              node.expression.getText(sourceFile).includes("input")
+            ) {
+              found = true
+            }
+            ts.forEachChild(node, visit)
+          }
+          visit(operation)
+          return found
+        })
+
+        return [
+          ...(operations.length === 1
+            ? []
+            : [`${file}: public operation count is ${operations.length}`]),
+          ...applicationImports.map(
+            (statement) =>
+              `${file}: Application import ${statement.moduleSpecifier.getText(sourceFile)}`,
+          ),
+          ...(selectsByKind ? [`${file}: public operation selects behavior by input.kind`] : []),
+        ]
+      })
+
+    expect(violations).toEqual([])
+  })
+
+  test("Company resource routeは作成・更新・削除を別クラスからifで選ぶ", () => {
+    const operations = [
+      ["account-employee-links", "AccountEmployeeLinks"],
+      ["definitions", "CompanyDefinitions"],
+      ["employees", "Employees"],
+      ["employments", "Employments"],
+      ["people", "People"],
+      ["personnel-actions", "PersonnelActions"],
+      ["profile", "CompanyProfile"],
+    ] as const
+    const violations = operations.flatMap(([route, subject]) => {
+      const file = `interface/routes/company.${route}.ts`
+      const source = readFileSync(new URL(file, contextDirectory), "utf8")
+      return [
+        ...(!source.includes(`new Create${subject}`) ? [`${file}: Create${subject}`] : []),
+        ...(!source.includes(`new Update${subject}`) ? [`${file}: Update${subject}`] : []),
+        ...(!source.includes(`new Delete${subject}`) ? [`${file}: Delete${subject}`] : []),
+        ...(!source.includes("if (") ? [`${file}: explicit if is required`] : []),
+        ...(source.includes("? new ") ? [`${file}: ternary use case selection`] : []),
+      ]
+    })
 
     expect(violations).toEqual([])
   })

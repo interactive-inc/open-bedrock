@@ -1,4 +1,5 @@
-import { RequestPasswordReset } from "@/contexts/system/application/auth/request-password-reset"
+import { AcceptPasswordResetRequest } from "@system/application/auth/accept-password-reset-request"
+import { CreatePasswordResetChallenge } from "@system/application/auth/create-password-reset-challenge"
 import { ResetPassword } from "@/contexts/system/application/auth/reset-password"
 import { PasswordResetRequestApplicationError } from "@system/application/errors"
 import { EmailValue } from "@/contexts/system/domain/values/identity/email.value"
@@ -22,9 +23,11 @@ export const POST = systemFactory.createHandlers(
   ),
   async (c) => {
     const body = c.req.valid("json")
-    const action = new RequestPasswordReset(c)
     const clientIp = c.req.header("CF-Connecting-IP") ?? c.req.header("X-Forwarded-For") ?? null
-    const accepted = await action.accept(body.email, clientIp)
+    const accepted = await new AcceptPasswordResetRequest(c).execute({
+      email: body.email,
+      clientIp,
+    })
     const recipient = accepted
       ? await new FindSystemPasswordResetRecipientAdapter(c).findSystemPasswordResetRecipient(
           body.email,
@@ -35,8 +38,7 @@ export const POST = systemFactory.createHandlers(
       throw new SystemApplicationError(error)
     }
 
-    const requestOutcome = await action.execute({
-      email: body.email,
+    const requestOutcome = await new CreatePasswordResetChallenge(c).execute({
       origin: new URL(c.req.url).origin,
       recipient,
     })

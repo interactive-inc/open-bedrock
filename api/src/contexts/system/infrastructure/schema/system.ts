@@ -1,6 +1,0 @@
-export * from "@system/infrastructure/schema/system-attachment"
-export * from "@system/infrastructure/schema/system-core"
-export * from "@system/infrastructure/schema/system-procedure"
-export * from "@system/infrastructure/schema/system-procedure-delegation"
-export * from "@system/infrastructure/schema/system-relations"
-export * from "@system/infrastructure/schema/system-workflow"

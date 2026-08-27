@@ -1,73 +1,550 @@
-export type {
-  HTTPErrorBodyInput,
-  HTTPErrorBody,
-  OIDCHTTPExceptionCode,
-} from "@system/interface/errors.shared"
-export { OIDCHTTPException } from "@system/interface/errors/oidchttp-exception.error"
-export { OIDCInvalidGrantError } from "@system/interface/errors/oidc-invalid-grant-error.error"
-export { OIDCInvalidRequestError } from "@system/interface/errors/oidc-invalid-request-error.error"
-export { OIDCInvalidScopeError } from "@system/interface/errors/oidc-invalid-scope-error.error"
-export { OIDCInvalidTokenError } from "@system/interface/errors/oidc-invalid-token-error.error"
-export { OIDCMetadataNotFoundError } from "@system/interface/errors/oidc-metadata-not-found-error.error"
-export { OIDCMethodNotAllowedError } from "@system/interface/errors/oidc-method-not-allowed-error.error"
-export { OIDCTemporarilyUnavailableError } from "@system/interface/errors/oidc-temporarily-unavailable-error.error"
-export { SystemAccountConflictError } from "@system/interface/errors/system-account-conflict-error.error"
-export { SystemAccountNotFoundError } from "@system/interface/errors/system-account-not-found-error.error"
-export { SystemAccountUnavailableError } from "@system/interface/errors/system-account-unavailable-error.error"
-export { SystemAlreadyInitializedError } from "@system/interface/errors/system-already-initialized-error.error"
-export { SystemApplicationError } from "@system/interface/errors/system-application-error.error"
-export { SystemAttachmentFileRequiredError } from "@system/interface/errors/system-attachment-file-required-error.error"
-export { SystemAttachmentInternalError } from "@system/interface/errors/system-attachment-internal-error.error"
-export { SystemAttachmentNotFoundError } from "@system/interface/errors/system-attachment-not-found-error.error"
-export { SystemAttachmentNotPendingError } from "@system/interface/errors/system-attachment-not-pending-error.error"
-export { SystemAttachmentPurgeUnavailableError } from "@system/interface/errors/system-attachment-purge-unavailable-error.error"
-export { SystemAttachmentReadError } from "@system/interface/errors/system-attachment-read-error.error"
-export { SystemAttachmentUnavailableError } from "@system/interface/errors/system-attachment-unavailable-error.error"
-export { SystemAttachmentValidationError } from "@system/interface/errors/system-attachment-validation-error.error"
-export { SystemAuditEventNotFoundError } from "@system/interface/errors/system-audit-event-not-found-error.error"
-export { SystemAuditUnavailableError } from "@system/interface/errors/system-audit-unavailable-error.error"
-export { SystemAuthenticationRateLimitedError } from "@system/interface/errors/system-authentication-rate-limited-error.error"
-export { SystemAuthenticationRequiredError } from "@system/interface/errors/system-authentication-required-error.error"
-export { SystemBootstrapCredentialInvalidError } from "@system/interface/errors/system-bootstrap-credential-invalid-error.error"
-export { SystemBootstrapInputInvalidError } from "@system/interface/errors/system-bootstrap-input-invalid-error.error"
-export { SystemBootstrapUnavailableError } from "@system/interface/errors/system-bootstrap-unavailable-error.error"
-export { SystemBrowserLoginCodeUnavailableError } from "@system/interface/errors/system-browser-login-code-unavailable-error.error"
-export { SystemCLIAuthorizationInvalidError } from "@system/interface/errors/system-cli-authorization-invalid-error.error"
-export { SystemCLICodeInvalidError } from "@system/interface/errors/system-cli-code-invalid-error.error"
-export { SystemCLILoginUnavailableError } from "@system/interface/errors/system-cli-login-unavailable-error.error"
-export { SystemCredentialsInvalidError } from "@system/interface/errors/system-credentials-invalid-error.error"
-export { SystemForbiddenError } from "@system/interface/errors/system-forbidden-error.error"
-export { SystemHTTPException } from "@system/interface/errors/system-http-exception.error"
-export { SystemIAMUnavailableError } from "@system/interface/errors/system-iam-unavailable-error.error"
-export { SystemIdentityConflictError } from "@system/interface/errors/system-identity-conflict-error.error"
-export { SystemIdentityInvalidError } from "@system/interface/errors/system-identity-invalid-error.error"
-export { SystemIdentityLoginDeniedError } from "@system/interface/errors/system-identity-login-denied-error.error"
-export { SystemIdentityLoginUnavailableError } from "@system/interface/errors/system-identity-login-unavailable-error.error"
-export { SystemIdentityNotFoundError } from "@system/interface/errors/system-identity-not-found-error.error"
-export { SystemIdentityUnavailableError } from "@system/interface/errors/system-identity-unavailable-error.error"
-export { SystemInternalServerError } from "@system/interface/errors/system-internal-server-error.error"
-export { SystemInvalidSessionError } from "@system/interface/errors/system-invalid-session-error.error"
-export { SystemLastActiveIdentityError } from "@system/interface/errors/system-last-active-identity-error.error"
-export { SystemLastRootAccountError } from "@system/interface/errors/system-last-root-account-error.error"
-export { SystemLastRootBindingError } from "@system/interface/errors/system-last-root-binding-error.error"
-export { SystemLastRootIdentityError } from "@system/interface/errors/system-last-root-identity-error.error"
-export { SystemLoginCodeInvalidError } from "@system/interface/errors/system-login-code-invalid-error.error"
-export { SystemManagedRoleImmutableError } from "@system/interface/errors/system-managed-role-immutable-error.error"
-export { SystemNotFoundError } from "@system/interface/errors/system-not-found-error.error"
-export { SystemNotificationInvalidError } from "@system/interface/errors/system-notification-invalid-error.error"
-export { SystemNotificationNotFoundError } from "@system/interface/errors/system-notification-not-found-error.error"
-export { SystemNotificationRecipientNotFoundError } from "@system/interface/errors/system-notification-recipient-not-found-error.error"
-export { SystemNotificationTransitionInvalidError } from "@system/interface/errors/system-notification-transition-invalid-error.error"
-export { SystemNotificationUnavailableError } from "@system/interface/errors/system-notification-unavailable-error.error"
-export { SystemPasswordCredentialNotFoundError } from "@system/interface/errors/system-password-credential-not-found-error.error"
-export { SystemPasswordInvalidError } from "@system/interface/errors/system-password-invalid-error.error"
-export { SystemPasswordUnavailableError } from "@system/interface/errors/system-password-unavailable-error.error"
-export { SystemRoleBindingConflictError } from "@system/interface/errors/system-role-binding-conflict-error.error"
-export { SystemRoleBindingInvalidError } from "@system/interface/errors/system-role-binding-invalid-error.error"
-export { SystemRoleBindingNotFoundError } from "@system/interface/errors/system-role-binding-not-found-error.error"
-export { SystemRoleConflictError } from "@system/interface/errors/system-role-conflict-error.error"
-export { SystemRoleInUseError } from "@system/interface/errors/system-role-in-use-error.error"
-export { SystemRoleInvalidError } from "@system/interface/errors/system-role-invalid-error.error"
-export { SystemRoleNotFoundError } from "@system/interface/errors/system-role-not-found-error.error"
-export { SystemSelfAssignmentForbiddenError } from "@system/interface/errors/system-self-assignment-forbidden-error.error"
-export { SystemSessionUnavailableError } from "@system/interface/errors/system-session-unavailable-error.error"
+import { HTTPException } from "hono/http-exception"
+
+export type HTTPErrorBodyInput = Readonly<
+  { error: string; message?: string } & Record<string, unknown>
+>
+
+export type HTTPErrorBody = Readonly<{ error: string; message: string } & Record<string, unknown>>
+
+export type SystemHTTPExceptionStatus =
+  | 400
+  | 401
+  | 403
+  | 404
+  | 405
+  | 409
+  | 413
+  | 415
+  | 422
+  | 423
+  | 429
+  | 500
+  | 502
+  | 503
+
+export type SystemHTTPExceptionProps = Readonly<{
+  status: SystemHTTPExceptionStatus
+  code: string
+  detail: string
+  metadata?: Readonly<Record<string, unknown>>
+  cause?: unknown
+}>
+
+export type SystemApplicationFailure = Readonly<{
+  status: SystemHTTPExceptionStatus
+  body: Readonly<{ error: string; message: string } & Record<string, unknown>>
+}>
+
+export type OIDCHTTPExceptionCode =
+  | "invalid_grant"
+  | "invalid_request"
+  | "invalid_scope"
+  | "invalid_token"
+  | "method_not_allowed"
+  | "not_found"
+  | "temporarily_unavailable"
+
+/** SystemのHTTP境界で検出した失敗。JSONへの変換はAPIのonErrorだけが行う。 */
+export class SystemHTTPException extends HTTPException {
+  readonly code: string
+  readonly detail: string
+  readonly metadata: Readonly<Record<string, unknown>>
+
+  constructor(props: SystemHTTPExceptionProps) {
+    super(props.status, {
+      message: props.detail,
+      ...(props.cause === undefined ? {} : { cause: props.cause }),
+    })
+    this.name = new.target.name
+    this.code = props.code
+    this.detail = props.detail
+    this.metadata = props.metadata ?? {}
+  }
+}
+
+export abstract class OIDCHTTPException extends SystemHTTPException {
+  readonly allow: string | null
+  readonly authenticate: string | null
+
+  constructor(props: {
+    code: OIDCHTTPExceptionCode
+    status?: 400 | 401 | 404 | 405 | 503
+    allow?: string
+    authenticate?: string
+    cause?: unknown
+  }) {
+    super({
+      status: props.status ?? 400,
+      code: props.code,
+      detail: props.code,
+      ...(props.cause === undefined ? {} : { cause: props.cause }),
+    })
+    this.allow = props.allow ?? null
+    this.authenticate = props.authenticate ?? null
+  }
+}
+
+export class OIDCInvalidGrantError extends OIDCHTTPException {
+  constructor(cause?: unknown) {
+    super({ code: "invalid_grant", cause })
+  }
+}
+
+export class OIDCInvalidRequestError extends OIDCHTTPException {
+  constructor(cause?: unknown) {
+    super({ code: "invalid_request", cause })
+  }
+}
+
+export class OIDCInvalidScopeError extends OIDCHTTPException {
+  constructor(cause?: unknown) {
+    super({ code: "invalid_scope", cause })
+  }
+}
+
+export class OIDCInvalidTokenError extends OIDCHTTPException {
+  constructor(cause?: unknown) {
+    super({
+      code: "invalid_token",
+      status: 401,
+      authenticate: 'Bearer error="invalid_token"',
+      cause,
+    })
+  }
+}
+
+export class OIDCMetadataNotFoundError extends OIDCHTTPException {
+  constructor(cause?: unknown) {
+    super({ code: "not_found", status: 404, cause })
+  }
+}
+
+export class OIDCMethodNotAllowedError extends OIDCHTTPException {
+  constructor() {
+    super({ code: "method_not_allowed", status: 405, allow: "GET, HEAD" })
+  }
+}
+
+export class OIDCTemporarilyUnavailableError extends OIDCHTTPException {
+  constructor(cause?: unknown) {
+    super({ code: "temporarily_unavailable", status: 503, cause })
+  }
+}
+
+export class SystemAccountConflictError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "account_conflict", detail: "account conflict" })
+  }
+}
+
+export class SystemAccountNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "account_not_found", detail: "account not found" })
+  }
+}
+
+export class SystemAccountUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({ status: 503, code: "account_unavailable", detail: "account service unavailable" })
+  }
+}
+
+export class SystemAlreadyInitializedError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "already_initialized", detail: "already initialized" })
+  }
+}
+
+export class SystemApplicationError extends SystemHTTPException {
+  constructor(error: SystemApplicationFailure) {
+    const { error: code, message: detail, ...metadata } = error.body
+    super({
+      status: error.status,
+      code,
+      detail,
+      metadata,
+      cause: error,
+    })
+  }
+}
+
+export class SystemAttachmentFileRequiredError extends SystemHTTPException {
+  constructor() {
+    super({ status: 400, code: "attachment_file_required", detail: "file field is required" })
+  }
+}
+
+export class SystemAttachmentInternalError extends SystemHTTPException {
+  constructor(props: { code: string; detail: string; cause?: unknown }) {
+    super({ status: 500, ...props })
+  }
+}
+
+export class SystemAttachmentNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "attachment_not_found", detail: "attachment not found" })
+  }
+}
+
+export class SystemAttachmentNotPendingError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 404,
+      code: "attachment_not_pending",
+      detail: "attachment is linked to a record",
+    })
+  }
+}
+
+export class SystemAttachmentPurgeUnavailableError extends SystemHTTPException {
+  constructor(cause?: unknown) {
+    super({
+      status: 503,
+      code: "attachment_purge_unavailable",
+      detail: "attachment purge unavailable",
+      cause,
+    })
+  }
+}
+
+export class SystemAttachmentReadError extends SystemHTTPException {
+  constructor(props: { code: string; detail: string; unavailable?: boolean; cause?: unknown }) {
+    super({ status: props.unavailable === true ? 503 : 404, ...props })
+  }
+}
+
+export class SystemAttachmentUnavailableError extends SystemHTTPException {
+  constructor(props: { code?: string; detail?: string; cause?: unknown } = {}) {
+    super({
+      status: 503,
+      code: props.code ?? "attachment_unavailable",
+      detail: props.detail ?? "attachment service unavailable",
+      cause: props.cause,
+    })
+  }
+}
+
+export class SystemAttachmentValidationError extends SystemHTTPException {
+  constructor(props: { code: string; detail: string; payloadTooLarge?: boolean; cause?: unknown }) {
+    super({
+      status: props.payloadTooLarge === true ? 413 : 400,
+      code: props.code,
+      detail: props.detail,
+      cause: props.cause,
+    })
+  }
+}
+
+export class SystemAuditEventNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "audit_event_not_found", detail: "audit event not found" })
+  }
+}
+
+export class SystemAuditUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({ status: 503, code: "audit_unavailable", detail: "audit service unavailable" })
+  }
+}
+
+export class SystemAuthenticationRateLimitedError extends SystemHTTPException {
+  constructor() {
+    super({ status: 429, code: "authentication_rate_limited", detail: "too many requests" })
+  }
+}
+
+export class SystemAuthenticationRequiredError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 401,
+      code: "authentication_required",
+      detail: "authentication required",
+    })
+  }
+}
+
+export class SystemBootstrapCredentialInvalidError extends SystemHTTPException {
+  constructor() {
+    super({ status: 401, code: "invalid_credential", detail: "invalid bootstrap credential" })
+  }
+}
+
+export class SystemBootstrapInputInvalidError extends SystemHTTPException {
+  constructor(code: string) {
+    super({ status: 400, code, detail: "invalid bootstrap input" })
+  }
+}
+
+export class SystemBootstrapUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({ status: 503, code: "bootstrap_unavailable", detail: "bootstrap service unavailable" })
+  }
+}
+
+export class SystemBrowserLoginCodeUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 503,
+      code: "browser_login_code_unavailable",
+      detail: "browser login is unavailable",
+    })
+  }
+}
+
+export class SystemCLIAuthorizationInvalidError extends SystemHTTPException {
+  constructor() {
+    super({ status: 401, code: "invalid_cli_authorization", detail: "invalid CLI authorization" })
+  }
+}
+
+export class SystemCLICodeInvalidError extends SystemHTTPException {
+  constructor() {
+    super({ status: 401, code: "invalid_cli_code", detail: "invalid CLI code" })
+  }
+}
+
+export class SystemCLILoginUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({ status: 503, code: "cli_login_unavailable", detail: "CLI login is unavailable" })
+  }
+}
+
+export class SystemCredentialsInvalidError extends SystemHTTPException {
+  constructor() {
+    super({ status: 401, code: "invalid_credentials", detail: "invalid credentials" })
+  }
+}
+
+export class SystemForbiddenError extends SystemHTTPException {
+  constructor() {
+    super({ status: 403, code: "forbidden", detail: "forbidden" })
+  }
+}
+
+export class SystemIAMUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({ status: 503, code: "iam_unavailable", detail: "IAM service unavailable" })
+  }
+}
+
+export class SystemIdentityConflictError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "identity_conflict", detail: "identity conflict" })
+  }
+}
+
+export class SystemIdentityInvalidError extends SystemHTTPException {
+  constructor() {
+    super({ status: 400, code: "invalid_identity", detail: "invalid identity" })
+  }
+}
+
+export class SystemIdentityLoginDeniedError extends SystemHTTPException {
+  constructor() {
+    super({ status: 401, code: "identity_login_denied", detail: "identity login denied" })
+  }
+}
+
+export class SystemIdentityLoginUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 503,
+      code: "identity_login_unavailable",
+      detail: "identity login is unavailable",
+    })
+  }
+}
+
+export class SystemIdentityNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "identity_not_found", detail: "identity not found" })
+  }
+}
+
+export class SystemIdentityUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({ status: 503, code: "identity_unavailable", detail: "identity service unavailable" })
+  }
+}
+
+export class SystemInternalServerError extends SystemHTTPException {
+  constructor(cause: unknown) {
+    super({
+      status: 500,
+      code: "internal_server_error",
+      detail: "処理に失敗しました。",
+      cause,
+    })
+  }
+}
+
+export class SystemInvalidSessionError extends SystemHTTPException {
+  constructor() {
+    super({ status: 401, code: "invalid_session", detail: "invalid session" })
+  }
+}
+
+export class SystemLastActiveIdentityError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "last_active_identity", detail: "last active identity" })
+  }
+}
+
+export class SystemLastRootAccountError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "last_root", detail: "last root account" })
+  }
+}
+
+export class SystemLastRootBindingError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "last_root", detail: "last root binding" })
+  }
+}
+
+export class SystemLastRootIdentityError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "last_root", detail: "last root identity" })
+  }
+}
+
+export class SystemLoginCodeInvalidError extends SystemHTTPException {
+  constructor() {
+    super({ status: 401, code: "invalid_login_code", detail: "invalid or expired code" })
+  }
+}
+
+export class SystemManagedRoleImmutableError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "managed_role", detail: "managed role is immutable" })
+  }
+}
+
+export class SystemNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "not_found", detail: "not found" })
+  }
+}
+
+export class SystemNotificationInvalidError extends SystemHTTPException {
+  constructor() {
+    super({ status: 400, code: "invalid_notification", detail: "invalid notification" })
+  }
+}
+
+export class SystemNotificationNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "notification_not_found", detail: "notification not found" })
+  }
+}
+
+export class SystemNotificationRecipientNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 404,
+      code: "notification_recipient_not_found",
+      detail: "notification recipient not found",
+    })
+  }
+}
+
+export class SystemNotificationTransitionInvalidError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 409,
+      code: "invalid_notification_transition",
+      detail: "invalid notification transition",
+    })
+  }
+}
+
+export class SystemNotificationUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 503,
+      code: "notification_unavailable",
+      detail: "notification service unavailable",
+    })
+  }
+}
+
+export class SystemPasswordCredentialNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 404,
+      code: "password_credential_not_found",
+      detail: "password credential not found",
+    })
+  }
+}
+
+export class SystemPasswordInvalidError extends SystemHTTPException {
+  constructor() {
+    super({ status: 400, code: "invalid_password", detail: "invalid password" })
+  }
+}
+
+export class SystemPasswordUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({ status: 503, code: "password_unavailable", detail: "password service unavailable" })
+  }
+}
+
+export class SystemRoleBindingConflictError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "role_binding_conflict", detail: "role binding conflict" })
+  }
+}
+
+export class SystemRoleBindingInvalidError extends SystemHTTPException {
+  constructor() {
+    super({ status: 400, code: "invalid_role_binding", detail: "invalid role binding" })
+  }
+}
+
+export class SystemRoleBindingNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "role_binding_not_found", detail: "role binding not found" })
+  }
+}
+
+export class SystemRoleConflictError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "role_conflict", detail: "role conflict" })
+  }
+}
+
+export class SystemRoleInUseError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "role_in_use", detail: "role is in use" })
+  }
+}
+
+export class SystemRoleInvalidError extends SystemHTTPException {
+  constructor() {
+    super({ status: 400, code: "invalid_role", detail: "invalid role" })
+  }
+}
+
+export class SystemRoleNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "role_not_found", detail: "role not found" })
+  }
+}
+
+export class SystemSelfAssignmentForbiddenError extends SystemHTTPException {
+  constructor() {
+    super({ status: 403, code: "self_assignment", detail: "self assignment is forbidden" })
+  }
+}
+
+export class SystemSessionUnavailableError extends SystemHTTPException {
+  constructor(cause?: unknown) {
+    super({
+      status: 503,
+      code: "session_unavailable",
+      detail: "session service unavailable",
+      ...(cause === undefined ? {} : { cause }),
+    })
+  }
+}

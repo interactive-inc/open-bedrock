@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { CancelSystemProcedure } from "@system/application/workflow/cancel-system-procedure"
-import { DecideSystemTask } from "@system/application/workflow/decide-system-task"
+import { ApproveSystemTask } from "@system/application/workflow/approve-system-task"
+import { RejectSystemTask } from "@system/application/workflow/reject-system-task"
 import type { SystemDecisionTaskBundle } from "@system/domain/definitions/workflow/system-decision-task-bundle.definition"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -149,14 +150,13 @@ describe("System workflow application", () => {
     expect(started.proposal.id).toBe(proposalId)
     expect(started.workflowCase.id).toBe(systemCaseId)
     const next = nextTask(started.workflowCase.id, started.proposal.digest, new Date(220))
-    const first = await new DecideSystemTask(fixture.writer).run({
+    const first = await new ApproveSystemTask(fixture.writer).execute({
       caseId: started.workflowCase.id,
       taskKey: "review",
       round: 1,
       actorAccountId: zAccountId.parse("reviewer-1"),
       representedAccountId: zAccountId.parse("reviewer-1"),
       delegationId: null,
-      action: "approve",
       proposalDigest: started.proposal.digest,
       comment: null,
       decidedAt: new Date(210),
@@ -172,14 +172,13 @@ describe("System workflow application", () => {
         .first<number>("count"),
     ).toBe(0)
 
-    const second = await new DecideSystemTask(fixture.writer).run({
+    const second = await new ApproveSystemTask(fixture.writer).execute({
       caseId: started.workflowCase.id,
       taskKey: "review",
       round: 1,
       actorAccountId: zAccountId.parse("reviewer-2"),
       representedAccountId: zAccountId.parse("reviewer-2"),
       delegationId: null,
-      action: "approve",
       proposalDigest: started.proposal.digest,
       comment: "reviewed",
       decidedAt: new Date(220),
@@ -195,14 +194,13 @@ describe("System workflow application", () => {
         .first<number>("count"),
     ).toBe(1)
 
-    const final = await new DecideSystemTask(fixture.writer).run({
+    const final = await new ApproveSystemTask(fixture.writer).execute({
       caseId: started.workflowCase.id,
       taskKey: "final-review",
       round: 1,
       actorAccountId: zAccountId.parse("final-reviewer"),
       representedAccountId: zAccountId.parse("final-reviewer"),
       delegationId: null,
-      action: "approve",
       proposalDigest: started.proposal.digest,
       comment: null,
       decidedAt: new Date(230),
@@ -367,14 +365,13 @@ describe("System workflow application", () => {
     })
     if (started instanceof Error) throw started
 
-    const rejected = await new DecideSystemTask(fixture.writer).run({
+    const rejected = await new RejectSystemTask(fixture.writer).execute({
       caseId: started.workflowCase.id,
       taskKey: "review",
       round: 1,
       actorAccountId: zAccountId.parse("reviewer-1"),
       representedAccountId: zAccountId.parse("reviewer-1"),
       delegationId: null,
-      action: "reject",
       proposalDigest: started.proposal.digest,
       comment: "unsafe",
       decidedAt: new Date(210),

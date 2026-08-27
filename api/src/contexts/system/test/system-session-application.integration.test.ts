@@ -1,8 +1,8 @@
-import {
-  IssueSystemSession,
-  type SystemAccessTokenIssuer,
-  type SystemSessionMaterial,
-} from "@system/application/auth/issue-system-session"
+import { IssueSystemSession } from "@system/application/auth/issue-system-session"
+import type {
+  SystemAccessTokenIssuer,
+  SystemSessionMaterial,
+} from "@system/domain/definitions/auth/system-session-issuance.definition"
 import { RevokeSystemSession } from "@system/application/auth/revoke-system-session"
 import { RotateSystemSession } from "@system/application/auth/rotate-system-session"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"

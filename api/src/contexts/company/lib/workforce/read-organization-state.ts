@@ -1,18 +1,11 @@
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type {
-  OrganizationRevisionReadResult,
   OrganizationUnitReadPort,
   OrganizationUnitSnapshotReadResult,
 } from "@/contexts/company/domain/definitions/organization-change.definition"
-import type { OrganizationInvariantViolation } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
+import { type OrganizationInvariantViolation } from "@/contexts/company/domain/definitions/organization-invariant.definition"
 import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
 import type { OrganizationUnitSnapshot } from "@/contexts/company/domain/definitions/organization-unit.definition"
-
-export type {
-  OrganizationRevisionReadResult,
-  OrganizationUnitReadPort,
-  OrganizationUnitSnapshotReadResult,
-}
 
 export type ReadOrganizationStateResult =
   | Readonly<{ kind: "found"; snapshot: OrganizationUnitSnapshot }>

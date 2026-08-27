@@ -1,9 +1,7 @@
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
-import type { OrganizationUnitReadPort } from "@/contexts/company/lib/workforce/read-organization-state"
-import {
-  type OrganizationInvariantViolation,
-  validateOrganizationUnitSnapshot,
-} from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
+import { type OrganizationUnitReadPort } from "@/contexts/company/domain/definitions/organization-change.definition"
+import { type OrganizationInvariantViolation } from "@/contexts/company/domain/definitions/organization-invariant.definition"
+import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
 import {
   resolveWorkforceStateAt,
   type WorkforceStateAt,

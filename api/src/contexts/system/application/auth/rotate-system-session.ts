@@ -4,7 +4,7 @@ import type { SystemSessionAuditContext } from "@system/domain/definitions/audit
 import type {
   SystemAccessTokenIssuer,
   SystemSessionMaterial,
-} from "@system/application/auth/issue-system-session"
+} from "@system/domain/definitions/auth/system-session-issuance.definition"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { SessionId } from "@system/domain/schemas/auth/session-id.schema"
 import { SessionRotationValue } from "@system/domain/values/auth/session-rotation.value"
@@ -47,7 +47,7 @@ export type RotateSystemSessionResult =
 type RotateSystemSessionContext = Props
 type Context = RotateSystemSessionContext
 
-/** raw tokenを即時hash化し、rotation・reuse検知・family失効を共通契約で実行する。 */
+/** システムセッションをローテーションする。 */
 export class RotateSystemSession {
   constructor(private readonly c: Context) {
     Object.freeze(this)

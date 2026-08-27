@@ -1,5 +1,7 @@
 /** /company/employments */
-import { WriteCompanyResources } from "@/contexts/company/application/core/write-company-resources"
+import { CreateEmployments } from "@/contexts/company/application/employments/create-employments"
+import { DeleteEmployments } from "@/contexts/company/application/employments/delete-employments"
+import { UpdateEmployments } from "@/contexts/company/application/employments/update-employments"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
@@ -211,11 +213,28 @@ export const POST = factory.createHandlers(
         attributes: resource.attributes as CompanyJsonObject,
       })),
     }
-    const writeCompanyResources = new WriteCompanyResources({
+    const applicationContext = {
       actor,
       repository: new D1CompanyResourceRepository(database),
-    })
-    const result = await writeCompanyResources.execute(change)
+    }
+    let operation: CreateEmployments | UpdateEmployments | DeleteEmployments | null = null
+    if (
+      body.resources.every((resource) => resource.revision === 1 && resource.state === "active")
+    ) {
+      operation = new CreateEmployments(applicationContext)
+    } else if (
+      body.resources.every((resource) => resource.revision > 1 && resource.state === "active")
+    ) {
+      operation = new UpdateEmployments(applicationContext)
+    } else if (
+      body.resources.every((resource) => resource.revision > 1 && resource.state === "void")
+    ) {
+      operation = new DeleteEmployments(applicationContext)
+    } else {
+      throw new CompanyInvariantValidationError("invalid_change")
+    }
+
+    const result = await operation.execute(change)
 
     if (result.kind === "forbidden") {
       throw new CompanyAccessDeniedError()

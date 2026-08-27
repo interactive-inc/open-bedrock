@@ -1,4 +1,4 @@
-import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
+import { PersonnelActionCompletionPreparationAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-completion-preparation.adapter"
 import { FindPersonnelActionRequestAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/find-personnel-action-request.adapter"
 import { ResolveActiveSystemAccountIdAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/resolve-active-system-account-id.adapter"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
@@ -15,7 +15,7 @@ import { proposalDigestSchema } from "@system/domain/schemas/workflow/system-cas
 import { systemCaseIdSchema } from "@system/domain/schemas/workflow/system-case.schema"
 type Context = CompanyContext
 
-/** 承認済みSystem提案を、digestを保った一回限りのCompany人事発令へ反映する。 */
+/** 承認済みの人事変更申請を実行する。 */
 export class CompleteApprovedPersonnelActionRequest {
   private static readonly operationKey = "company.personnel-action.apply"
 
@@ -48,7 +48,7 @@ export class CompleteApprovedPersonnelActionRequest {
     }
     if (request.appliedActionId !== null) return { actionId: request.appliedActionId }
 
-    const prepared = await new ApplyPersonnelAction(this.c).prepareApplicationCompletion({
+    const prepared = await new PersonnelActionCompletionPreparationAdapter(this.c).prepare({
       session: command.session,
       employeeId: request.targetEmployeeId,
       input: request.action,

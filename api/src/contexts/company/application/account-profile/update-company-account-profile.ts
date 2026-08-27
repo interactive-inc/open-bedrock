@@ -3,7 +3,7 @@ import type { CompanyAccountProfileRepository } from "@/contexts/company/infrast
 type UpdateCompanyAccountProfileContext = CompanyAccountProfileRepository
 type Context = UpdateCompanyAccountProfileContext
 
-/** 既存プロフィールだけを更新し、存在しないAccountの暗黙作成を許さない。 */
+/** 会社アカウントのプロフィールを更新する。 */
 export class UpdateCompanyAccountProfile {
   constructor(private readonly c: Context) {
     Object.freeze(this)

@@ -8,7 +8,7 @@ import type {
   OrganizationalAuthorityCriterion,
   OrganizationalAuthorityEvidence,
 } from "@/contexts/company/domain/definitions/organizational-authority.definition"
-import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"

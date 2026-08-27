@@ -1,5 +1,7 @@
 /** /company/people */
-import { WriteCompanyResources } from "@/contexts/company/application/core/write-company-resources"
+import { CreatePeople } from "@/contexts/company/application/people/create-people"
+import { DeletePeople } from "@/contexts/company/application/people/delete-people"
+import { UpdatePeople } from "@/contexts/company/application/people/update-people"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
@@ -210,11 +212,28 @@ export const POST = factory.createHandlers(
         attributes: resource.attributes as CompanyJsonObject,
       })),
     }
-    const writeCompanyResources = new WriteCompanyResources({
+    const applicationContext = {
       actor,
       repository: new D1CompanyResourceRepository(database),
-    })
-    const result = await writeCompanyResources.execute(change)
+    }
+    let operation: CreatePeople | UpdatePeople | DeletePeople | null = null
+    if (
+      body.resources.every((resource) => resource.revision === 1 && resource.state === "active")
+    ) {
+      operation = new CreatePeople(applicationContext)
+    } else if (
+      body.resources.every((resource) => resource.revision > 1 && resource.state === "active")
+    ) {
+      operation = new UpdatePeople(applicationContext)
+    } else if (
+      body.resources.every((resource) => resource.revision > 1 && resource.state === "void")
+    ) {
+      operation = new DeletePeople(applicationContext)
+    } else {
+      throw new CompanyInvariantValidationError("invalid_change")
+    }
+
+    const result = await operation.execute(change)
 
     if (result.kind === "forbidden") {
       throw new CompanyAccessDeniedError()

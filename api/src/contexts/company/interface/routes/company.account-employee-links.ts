@@ -1,5 +1,7 @@
 /** /company/account-employee-links */
-import { WriteCompanyResources } from "@/contexts/company/application/core/write-company-resources"
+import { CreateAccountEmployeeLinks } from "@/contexts/company/application/account-employee-links/create-account-employee-links"
+import { DeleteAccountEmployeeLinks } from "@/contexts/company/application/account-employee-links/delete-account-employee-links"
+import { UpdateAccountEmployeeLinks } from "@/contexts/company/application/account-employee-links/update-account-employee-links"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
@@ -209,11 +211,32 @@ export const POST = factory.createHandlers(
         attributes: resource.attributes as CompanyJsonObject,
       })),
     }
-    const writeCompanyResources = new WriteCompanyResources({
+    const applicationContext = {
       actor,
       repository: new D1CompanyResourceRepository(database),
-    })
-    const result = await writeCompanyResources.execute(change)
+    }
+    let operation:
+      | CreateAccountEmployeeLinks
+      | UpdateAccountEmployeeLinks
+      | DeleteAccountEmployeeLinks
+      | null = null
+    if (
+      body.resources.every((resource) => resource.revision === 1 && resource.state === "active")
+    ) {
+      operation = new CreateAccountEmployeeLinks(applicationContext)
+    } else if (
+      body.resources.every((resource) => resource.revision > 1 && resource.state === "active")
+    ) {
+      operation = new UpdateAccountEmployeeLinks(applicationContext)
+    } else if (
+      body.resources.every((resource) => resource.revision > 1 && resource.state === "void")
+    ) {
+      operation = new DeleteAccountEmployeeLinks(applicationContext)
+    } else {
+      throw new CompanyInvariantValidationError("invalid_change")
+    }
+
+    const result = await operation.execute(change)
 
     if (result.kind === "forbidden") {
       throw new CompanyAccessDeniedError()
