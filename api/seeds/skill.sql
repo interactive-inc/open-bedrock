@@ -21,11 +21,8 @@ INSERT INTO employee_skills (employee_id, skill_code, level, years, note) VALUES
 (5, 'cloudflare', 4, 3, NULL),
 (6, 'typescript', 4, 4, NULL),
 (6, 'react', 4, 4, NULL),
-(7, 'nodejs', 3, 2, NULL),
-(8, 'ui_design', 5, 7, 'デザインシステムオーナー'),
 (4, 'project_mgmt', 5, 10, NULL),
 (10, 'sales', 4, 6, NULL),
-(14, 'customer_success', 4, 5, NULL),
+(15, 'customer_success', 4, 5, NULL),
 (3, 'recruiting', 3, 3, NULL),
-(17, 'accounting', 4, 9, NULL),
-(19, 'typescript', 3, 2, NULL);
+(17, 'accounting', 4, 9, NULL);

@@ -1,9 +1,9 @@
 -- position ドメインの seed（役職マスタ）。
--- migration position.sql 適用後の positions へ INSERT する。
+-- canonical Company position definitions へ INSERT する。
 -- 値は src/infrastructure/seed/seed-positions.ts と一致させる（テスト期待値と整合）。
--- name は seeds/employee.sql の employees.position と一致させ、発令・登録の code 参照で解決される先にする。
+-- name は organization seed の position_title と一致させる。
 
-INSERT INTO position_definitions (id, code, name, rank, description, created_at) VALUES
+INSERT INTO company_position_definitions (id, code, name, rank, description, created_at) VALUES
   (1, 'CTO', '最高技術責任者', 1, 'CTO（Chief Technology Officer）', '2026-01-01T00:00:00.000Z'),
   (2, 'HR_MANAGER', '人事マネージャー', 2, NULL, '2026-01-01T00:00:00.000Z'),
   (3, 'ENGINEERING_MANAGER', '開発マネージャー', 3, NULL, '2026-01-01T00:00:00.000Z'),
