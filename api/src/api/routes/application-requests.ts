@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import {
   submitSystemApplication,
   systemProposalQuery,
@@ -62,7 +63,7 @@ export const GET = factory.createHandlers(
       min: 0,
       max: MAX_LIST_OFFSET,
     })
-    let employeeIds: ReadonlyArray<number>
+    let employeeIds: ReadonlyArray<EmployeeId>
     if (query.scope === "department") {
       const departmentCode = query.department_code ?? null
       if (departmentCode === null) {

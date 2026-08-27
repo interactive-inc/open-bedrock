@@ -1,21 +1,24 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
 import { contextStorage } from "hono/context-storage"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 import { seedResignations } from "@/contexts/resignation/test/seed/seed-resignations.test-support"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { databaseMiddleware } from "@/api/database-middleware"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { factory } from "@/api/http/factory"
 import * as createRoute from "@/contexts/resignation/interface/routes/resignations"
 import * as detailRoute from "@/contexts/resignation/interface/routes/resignations.$id"
 import * as meRoute from "@/contexts/resignation/interface/routes/resignations.me"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 /**
  * app.ts は統合者が後で配線するため、ここでは同じミドルウェア連鎖の使い捨て app に
@@ -41,7 +44,7 @@ const app = factory
 
 const resignationResponseSchema = z.object({
   id: z.string(),
-  employee_id: z.number(),
+  employee_id: zEmployeeId,
   resignation_date: z.string(),
   last_working_date: z.string().nullable(),
   reason: z.string().nullable(),
@@ -58,15 +61,14 @@ const othersResignationId = "20000000-0000-0000-0000-000000000001"
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -94,14 +96,14 @@ async function createTestDb(): Promise<D1Database> {
 
 function applicantToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 4,
+    employeeId: toWorkforceEmployeeId(4),
   })
 }
 
 /** Employee 5 has no pending resignation in seed data. */
 function noPendingToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
   })
 }
 
@@ -159,7 +161,7 @@ describe("POST /resignations", () => {
 
     if (parsed.success) {
       expect(parsed.data.status).toBe("requested")
-      expect(parsed.data.employee_id).toBe(5)
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
       expect(parsed.data.last_working_date).toBe("2026-12-20")
     }
   })
@@ -255,7 +257,7 @@ describe("GET /resignations/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].employee_id).toBe(4)
+      expect(parsed.data.data[0].employee_id).toBe(toWorkforceEmployeeId(4))
     }
   })
 

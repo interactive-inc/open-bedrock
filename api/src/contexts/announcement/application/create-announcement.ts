@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import { Announcement } from "@/contexts/announcement/domain/entities/announcement.entity"
 import type { Context } from "@/env"
@@ -9,7 +10,7 @@ export type Command = {
   session: Session
   title: string
   bodyMd: string
-  authorEmployeeId: number
+  authorEmployeeId: EmployeeId
   createdAt: string
 }
 

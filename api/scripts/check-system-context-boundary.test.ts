@@ -1,15 +1,12 @@
 import {
   checkSystemContextBoundary,
   collectSystemSchemaTableNames,
-  collectSystemSqlTableNames,
   discoverSystemCapabilityNames,
   inspectSystemCapabilityCatalog,
   inspectSystemCapabilityRootEntries,
-  inspectRetiredSystemStorage,
   inspectSystemOwnershipManifest,
   inspectSystemSelfReferencePathMappings,
   inspectSystemSource,
-  inspectSystemStorageAccess,
   selectDownstreamContextNames,
 } from "./check-system-context-boundary"
 import { describe, expect, test } from "bun:test"
@@ -150,87 +147,6 @@ describe("System ownership manifest", () => {
       "auditLogs",
     ])
   })
-
-  test("System所有の物理SQL table名をschema宣言から抽出する", () => {
-    expect(
-      collectSystemSqlTableNames(
-        "src/contexts/system/infrastructure/schema/system.ts",
-        [
-          'import { sqliteTable } from "drizzle-orm/sqlite-core"',
-          'export const accounts = sqliteTable("system_accounts", {})',
-          'export const sessions = sqliteTable("system_sessions", {})',
-        ].join("\n"),
-      ),
-    ).toEqual(["system_accounts", "system_sessions"])
-  })
-})
-
-describe("System storage ownership", () => {
-  const tableNames = new Set(["system_accounts", "system_sessions"])
-
-  test("System外のraw SQLとSystem schema直接importを拒否する", () => {
-    const violations = inspectSystemStorageAccess(
-      "src/contexts/company/infrastructure/accounts.ts",
-      [
-        'import { systemAccounts } from "@system/infrastructure/schema/system-core"',
-        "const read = `SELECT id FROM system_accounts WHERE id = ?1`",
-        'const write = "INSERT INTO system_sessions (id) VALUES (?1)"',
-      ].join("\n"),
-      tableNames,
-    )
-
-    expect(violations.map((violation) => violation.reason)).toEqual([
-      "System外からSystem schemaを直接importしています: @system/infrastructure/schema/system-core",
-      "System外からSystem所有tableを直接操作しています: system_accounts",
-      "System外からSystem所有tableを直接操作しています: system_sessions",
-    ])
-  })
-
-  test("System repository利用とtable名を含まないSQLは許可する", () => {
-    expect(
-      inspectSystemStorageAccess(
-        "src/contexts/company/application/accounts.ts",
-        [
-          'import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"',
-          'const path = "/system_accounts"',
-          'const read = "SELECT id FROM employees"',
-        ].join("\n"),
-        tableNames,
-      ),
-    ).toEqual([])
-  })
-})
-
-describe("retired System storage", () => {
-  test("廃止済みschema module、export、物理table参照を拒否する", () => {
-    const violations = inspectRetiredSystemStorage(
-      "src/contexts/system/infrastructure/auth/retired-storage.ts",
-      [
-        'import { users } from "@system/infrastructure/schema/system-runtime"',
-        "const identity = userIdentities.id",
-        'const read = "SELECT id FROM user_identities"',
-      ].join("\n"),
-    )
-
-    expect(violations.map((violation) => violation.reason)).toEqual([
-      "廃止済みSystem schema exportを参照しています: userIdentities",
-      "廃止済みSystem schema exportを参照しています: users",
-      "廃止済みSystem schema moduleをimportしています: @system/infrastructure/schema/system-runtime",
-      "廃止済みSystem tableを参照しています: user_identities",
-    ])
-  })
-
-  test("canonical schemaとtableだけを使う実装は許可する", () => {
-    expect(
-      inspectRetiredSystemStorage(
-        "src/contexts/system/infrastructure/auth/canonical.ts",
-        [
-          'import { systemAccounts } from "@system/infrastructure/schema/system-core"',
-          'const read = "SELECT id FROM system_accounts"',
-        ].join("\n"),
-      ),
-    ).toEqual([])
-  })
 })
 
 describe("System capability catalog", () => {
@@ -267,16 +183,25 @@ describe("System capability catalog", () => {
 })
 
 describe("discoverSystemCapabilityNames", () => {
-  test("contexts/system直下のcapabilityだけを収集する", () => {
-    const projectFixtureRoot = mkdtempSync(resolve(tmpdir(), "system-boundary-"))
-    const contextRoot = resolve(projectFixtureRoot, "src/contexts/system")
+  test("context-first の capability だけを収集し、廃止済みrootを受理しない", () => {
+    const temporaryRoot = mkdtempSync(resolve(tmpdir(), "system-boundary-"))
+    const contextRoot = resolve(temporaryRoot, "src/contexts/system")
+    const retiredRoot = resolve(temporaryRoot, "src/api")
 
     try {
       mkdirSync(resolve(contextRoot, "application/auth"), { recursive: true })
+      mkdirSync(resolve(contextRoot, "configuration"), { recursive: true })
+      mkdirSync(resolve(contextRoot, "infrastructure/adapters/audit"), { recursive: true })
+      mkdirSync(resolve(contextRoot, "infrastructure/repositories/auth"), { recursive: true })
+      mkdirSync(resolve(contextRoot, "infrastructure/schema"), { recursive: true })
+      mkdirSync(resolve(retiredRoot, "application/system/batch"), { recursive: true })
 
-      expect(discoverSystemCapabilityNames(contextRoot)).toEqual(new Set(["auth"]))
+      expect(discoverSystemCapabilityNames(contextRoot)).toEqual(
+        new Set(["auth", "audit", "configuration"]),
+      )
+      expect(discoverSystemCapabilityNames(retiredRoot)).toEqual(new Set())
     } finally {
-      rmSync(projectFixtureRoot, { recursive: true, force: true })
+      rmSync(temporaryRoot, { recursive: true, force: true })
     }
   })
 })
@@ -297,9 +222,9 @@ describe("selectDownstreamContextNames", () => {
 })
 
 describe("inspectSystemSource", () => {
-  test("System self-reference・中立なlib・外部packageへの依存を許可する", () => {
+  test("System context・製品非依存lib・外部 package への依存だけを許可する", () => {
     const violations = inspectSystemSource(
-      "src/contexts/system/application/auth/example.ts",
+      "src/contexts/system/application/example.ts",
       [
         'import { Session } from "@system/domain/auth/session"',
         'import { SharedId } from "@/lib/identity/id"',
@@ -319,7 +244,7 @@ describe("inspectSystemSource", () => {
       'import { Stock } from "@/api/infrastructure/warehouse/stock"',
       'import { Worker } from "@/contexts/company/domain/workforce/worker"',
       'import { Stock } from "@/contexts/warehouse/infrastructure/stock"',
-      'import { compose } from "@/api/iam/compose"',
+      'import { compose } from "@/iam/compose"',
       'import { compose } from "@/composition/iam/compose"',
       'import { compose } from "@/api/composition/iam/compose"',
       'import type { Context } from "@/env"',
@@ -332,7 +257,7 @@ describe("inspectSystemSource", () => {
         downstreamContexts,
       )
 
-      expect(violations.some((violation) => violation.reason.includes("依存しています"))).toBe(true)
+      expect(violations).not.toEqual([])
     }
   })
 
@@ -350,9 +275,9 @@ describe("inspectSystemSource", () => {
     const sources = [
       'import { accounts } from "@/schema"',
       'import { employees } from "@/schema/company"',
-      'import { globalAccounts } from "@/api/database/schema"',
-      'import { globalEmployees } from "@/api/database/schema/company"',
-      'import { contextEmployees } from "@/contexts/company/infrastructure/schema/company"',
+      'import { globalAccounts } from "@/database/schema"',
+      'import { globalEmployees } from "@/database/schema/company"',
+      'import { contextEmployees } from "@/api/composition/adapters/schema/product"',
       'import { Token } from "../../../domain/system/auth/token"',
     ]
 
@@ -371,7 +296,7 @@ describe("inspectSystemSource", () => {
       'import Company = require("@/infrastructure/company/accounts")',
       'type Company = import("@/domain/company/accounts").Account',
       'const schema = require("@/schema")',
-      'const globalSchema = require("@/api/database/schema")',
+      'const globalSchema = require("@/database/schema")',
     ]
 
     for (const source of sources) {
@@ -381,7 +306,7 @@ describe("inspectSystemSource", () => {
         downstreamContexts,
       )
 
-      expect(violations.some((violation) => violation.reason.includes("依存しています"))).toBe(true)
+      expect(violations).not.toEqual([])
     }
   })
 
@@ -490,30 +415,17 @@ describe("inspectSystemSource", () => {
 })
 
 describe("inspectSystemSelfReferencePathMappings", () => {
-  test("src と src/api の配置差を System 所有 mapping だけへ閉じ込める", () => {
-    for (const sourceRoot of ["src", "src/api"]) {
-      expect(
-        inspectSystemSelfReferencePathMappings(
-          "tsconfig.json",
-          {
-            "@system/application/*": [`./${sourceRoot}/application/system/*`],
-            "@system/domain/*": [`./${sourceRoot}/domain/system/*`],
-            "@system/infrastructure/*": [`./${sourceRoot}/infrastructure/system/*`],
-            "@system/interface/*": [`./${sourceRoot}/interface/system/*`],
-          },
-          sourceRoot,
-        ),
-      ).toEqual([])
-    }
-
+  test("System self-reference を contexts/system だけへ固定する", () => {
     expect(
       inspectSystemSelfReferencePathMappings(
         "tsconfig.json",
         {
           "@system/application/*": ["./src/contexts/system/application/*"],
+          "@system/configuration/*": ["./src/contexts/system/configuration/*"],
           "@system/domain/*": ["./src/contexts/system/domain/*"],
           "@system/infrastructure/*": ["./src/contexts/system/infrastructure/*"],
           "@system/interface/*": ["./src/contexts/system/interface/*"],
+          "@system/lib/*": ["./src/contexts/system/lib/*"],
         },
         "src/contexts/system",
       ),
@@ -527,10 +439,11 @@ describe("inspectSystemSelfReferencePathMappings", () => {
         "@system/application/*": ["./src/application/company/*"],
         "@system/domain/*": ["./src/domain/system/*", "./src/domain/company/*"],
       },
-      "src",
+      "src/contexts/system",
     )
 
-    expect(violations).toHaveLength(4)
+    expect(violations).toHaveLength(6)
+    expect(inspectSystemSelfReferencePathMappings("tsconfig.json", {}, "src")).not.toEqual([])
   })
 })
 

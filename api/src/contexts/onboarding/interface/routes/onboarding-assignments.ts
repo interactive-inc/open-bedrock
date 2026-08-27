@@ -41,8 +41,8 @@ export const POST = factory.createHandlers(
 
     const responseBody = zAppOnboardingAssignment.parse({
       id: result.assignment.id,
-      employee_code: result.employee.code,
-      employee_name: result.employee.name,
+      employee_code: result.employee.employeeCode,
+      employee_name: result.employee.officialName,
       template_code: result.assignment.templateCode,
       template_name: result.template.name,
       kind: result.assignment.kind,

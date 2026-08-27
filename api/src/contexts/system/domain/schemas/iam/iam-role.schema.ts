@@ -7,5 +7,5 @@ export const iamRoleKeySchema = z
   .string()
   .min(3)
   .max(100)
-  .regex(/^[a-z][a-z0-9_-]*(?::[a-z][a-z0-9_-]*)+$/)
+  .regex(/^[a-z][a-z0-9_-]*(?::[a-z0-9][a-z0-9_-]*)+$/)
 export type IamRoleKey = z.infer<typeof iamRoleKeySchema>

@@ -1,4 +1,4 @@
-import { toReviewCycleStatus } from "@/contexts/performance-review/domain/values/review-cycle-status.value"
+import { toReviewCycleStatus } from "@/contexts/performance-review/domain/definitions/review-cycle-status.definition"
 import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import { toReviewResultView } from "@/contexts/performance-review/interface/http/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
@@ -35,7 +35,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const employeeRows = await c.var.database
     .select({ id: employees.id })
     .from(employees)
-    .where(eq(employees.code, validateCodeParam(c.req.param("employeeCode"), "employee")))
+    .where(eq(employees.employeeCode, validateCodeParam(c.req.param("employeeCode"), "employee")))
     .limit(1)
   const employeeRow = employeeRows.at(0)
   if (employeeRow === undefined) {
@@ -94,7 +94,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       id: form.id,
       cycle_id: form.cycleId,
       subject_employee_id: form.subjectEmployeeId,
-      reviewer_employee_id: isSelfView ? 0 : form.reviewerEmployeeId,
+      reviewer_employee_id: isSelfView ? null : form.reviewerEmployeeId,
       reviewer_type: form.reviewerType,
       answers: form.answers,
       score: form.score,

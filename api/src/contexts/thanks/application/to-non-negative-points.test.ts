@@ -1,4 +1,4 @@
-import { toNonNegativePoints } from "@/contexts/thanks/domain/values/non-negative-points.value"
+import { toNonNegativePoints } from "@/contexts/thanks/domain/policies/non-negative-points.policy"
 import { describe, expect, test } from "bun:test"
 
 describe("toNonNegativePoints", () => {

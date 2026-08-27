@@ -1,9 +1,11 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import { UpdateExpense } from "@/contexts/expense/application/update-expense"
 import { ExpenseRepository } from "@/contexts/expense/infrastructure/repositories/expense.repository"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 import type { Context } from "@/env"
 
@@ -12,7 +14,8 @@ async function seedPending(context: Context, employeeId: number): Promise<number
 
   const created = await repository.create(
     Expense.create({
-      employeeId: employeeId,
+      employeeId: toWorkforceEmployeeId(employeeId),
+      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
       category: "transport",
       amount: 1200,
       spentAt: "2026-01-01",
@@ -30,13 +33,13 @@ async function seedPending(context: Context, employeeId: number): Promise<number
 
 describe("UpdateExpense", () => {
   test("updates the pending expense for the owner", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const expenseId = await seedPending(context, 5)
 
     const result = await new UpdateExpense(context).run({
       expenseId: expenseId,
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       category: "supplies",
       amount: 4500,
       spentAt: "2026-02-02",
@@ -55,13 +58,13 @@ describe("UpdateExpense", () => {
   })
 
   test("rejects a non owner with not_owner", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const expenseId = await seedPending(context, 5)
 
     const result = await new UpdateExpense(context).run({
       expenseId: expenseId,
-      employeeId: 9,
+      employeeId: toWorkforceEmployeeId(9),
       category: "supplies",
       amount: 4500,
       spentAt: "2026-02-02",
@@ -72,11 +75,11 @@ describe("UpdateExpense", () => {
   })
 
   test("rejects an unknown id with expense_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const result = await new UpdateExpense(context).run({
       expenseId: 9999,
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       category: "supplies",
       amount: 4500,
       spentAt: "2026-02-02",
@@ -87,7 +90,7 @@ describe("UpdateExpense", () => {
   })
 
   test("rejects a non pending expense with not_editable", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const expenseId = await seedPending(context, 5)
 
@@ -103,7 +106,7 @@ describe("UpdateExpense", () => {
 
     const result = await new UpdateExpense(context).run({
       expenseId: expenseId,
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       category: "supplies",
       amount: 4500,
       spentAt: "2026-02-02",

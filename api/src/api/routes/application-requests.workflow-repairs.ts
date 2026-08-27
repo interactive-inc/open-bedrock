@@ -151,7 +151,7 @@ export const GET = factory.createHandlers(
       const reachable = target.candidateAccountIds
         .flatMap((accountId) => participantsByAccountId.get(accountId) ?? [])
         .filter(
-          (participant) => participant.status === "active" && participant.archivedAt === null,
+          (participant) => participant.status === "ACTIVE" || participant.status === "ON_LEAVE",
         ).length
       if (reachable >= target.requiredApprovals) continue
 

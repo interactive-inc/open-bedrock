@@ -1,6 +1,8 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedBusinessTrip = {
   id: string
-  travelerId: number
+  travelerId: EmployeeId
   destination: string
   startDate: string
   endDate: string
@@ -13,7 +15,7 @@ type SeedBusinessTrip = {
 export const seedBusinessTrips: ReadonlyArray<SeedBusinessTrip> = [
   {
     id: "10000000-0000-0000-0000-000000000001",
-    travelerId: 2,
+    travelerId: toWorkforceEmployeeId(2),
     destination: "大阪支社",
     startDate: "2026-06-10",
     endDate: "2026-06-12",
@@ -24,7 +26,7 @@ export const seedBusinessTrips: ReadonlyArray<SeedBusinessTrip> = [
   },
   {
     id: "10000000-0000-0000-0000-000000000002",
-    travelerId: 4,
+    travelerId: toWorkforceEmployeeId(4),
     destination: "札幌拠点",
     startDate: "2026-06-20",
     endDate: "2026-06-22",
@@ -35,7 +37,7 @@ export const seedBusinessTrips: ReadonlyArray<SeedBusinessTrip> = [
   },
   {
     id: "10000000-0000-0000-0000-000000000003",
-    travelerId: 9,
+    travelerId: toWorkforceEmployeeId(9),
     destination: "福岡オフィス",
     startDate: "2026-07-01",
     endDate: "2026-07-03",

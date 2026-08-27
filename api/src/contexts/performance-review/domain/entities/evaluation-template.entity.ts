@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { EvaluationTemplateRow } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { z } from "zod"
 
@@ -30,7 +32,7 @@ const zProps = z.object({
   period: z.string().min(1).max(100),
   items: z.array(evaluationTemplateItemSchema).min(1),
   status: evaluationTemplateStatusSchema,
-  createdBy: z.number(),
+  createdBy: zEmployeeId,
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -67,7 +69,7 @@ export class EvaluationTemplate implements Props {
     title: string
     period: string
     items: ReadonlyArray<EvaluationTemplateItem>
-    createdBy: number
+    createdBy: EmployeeId
     now: string
   }): EvaluationTemplate {
     return new EvaluationTemplate({

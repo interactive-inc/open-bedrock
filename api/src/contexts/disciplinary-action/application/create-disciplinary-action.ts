@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import { DisciplinaryAction } from "@/contexts/disciplinary-action/domain/entities/disciplinary-action.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
@@ -7,7 +8,7 @@ import { DisciplinaryActionRepository } from "@/contexts/disciplinary-action/inf
 
 export type Command = {
   session: Session
-  employeeId: number
+  employeeId: EmployeeId
   kind: string
   summary: string
   decidedOn: string

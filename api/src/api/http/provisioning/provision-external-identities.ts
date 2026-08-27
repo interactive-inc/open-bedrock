@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { createAuditEvent } from "@/api/http/audit/company-audit-event.definition"
 import type { AuditAction } from "@/api/http/audit/company-audit-event.definition"
 import type { Context } from "@/env"
@@ -173,7 +174,7 @@ export class ProvisionExternalIdentities {
   private async audit(
     action: AuditAction,
     accountId: AccountId | null,
-    employeeId: number | null,
+    employeeId: EmployeeId | null,
     now: Date,
   ): Promise<null | ApplicationError> {
     try {

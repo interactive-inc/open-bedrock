@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { ChangeEvaluators } from "@/contexts/performance-review/application/evaluation-sheet/change-evaluators"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -18,8 +19,8 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      primary_evaluator_id: z.number().int().positive(),
-      secondary_evaluator_id: z.number().int().positive().nullable().optional(),
+      primary_evaluator_id: zEmployeeId,
+      secondary_evaluator_id: zEmployeeId.nullable().optional(),
       expected_revision: z.number().int().positive(),
     }),
   ),

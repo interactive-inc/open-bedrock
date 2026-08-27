@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import { EmployeeWorkStyle } from "@/contexts/work-style/domain/entities/employee-work-style.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
@@ -8,7 +9,7 @@ import { EmployeeWorkStyleRepository } from "@/contexts/work-style/infrastructur
 
 export type Command = {
   session: Session
-  employeeId: number
+  employeeId: EmployeeId
   style: WorkStyle
   startsOn: string
   endsOn: string | null

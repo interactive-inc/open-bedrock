@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { GoalEvaluationRow } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { z } from "zod"
 
@@ -8,7 +10,7 @@ export type GoalEvaluationKind = z.infer<typeof goalEvaluationKindSchema>
 const zProps = z.object({
   id: z.number().nullable(),
   goalId: z.number(),
-  evaluatorId: z.number(),
+  evaluatorId: zEmployeeId,
   kind: goalEvaluationKindSchema,
   score: z.number().nullable(),
   comment: z.string().nullable(),
@@ -45,7 +47,7 @@ export class GoalEvaluation implements Props {
   /** 新規作成する評価を組み立てる。id は未採番。 */
   static create(props: {
     goalId: number
-    evaluatorId: number
+    evaluatorId: EmployeeId
     kind: GoalEvaluationKind
     score: number | null
     comment: string | null

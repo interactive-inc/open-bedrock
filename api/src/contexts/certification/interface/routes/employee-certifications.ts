@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { CreateEmployeeCertification } from "@/contexts/certification/application/create-employee-certification"
 import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/repositories/employee-certification.repository"
 import { factory } from "@/api/http/factory"
@@ -5,12 +6,7 @@ import { isoDate } from "@/lib/schemas"
 import { zAppEmployeeCertification, zAppEmployeeCertificationList } from "@/lib/app-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import {
-  BadRequestError,
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/lib/http/errors"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -21,7 +17,7 @@ import { z } from "zod"
  */
 export const GET = factory.createHandlers(
   verifyBearer,
-  zValidator("query", z.object({ employee_id: z.string().optional() })),
+  zValidator("query", z.object({ employee_id: zEmployeeId.optional() })),
   async (c) => {
     const session = c.var.session
 
@@ -31,14 +27,7 @@ export const GET = factory.createHandlers(
 
     const query = c.req.valid("query")
 
-    const requestedId =
-      query.employee_id !== undefined && query.employee_id !== ""
-        ? Number(query.employee_id)
-        : session.employeeId
-
-    if (Number.isInteger(requestedId) === false) {
-      throw new BadRequestError("invalid parameter")
-    }
+    const requestedId = query.employee_id ?? session.employeeId
 
     const isSelf = requestedId === session.employeeId
 
@@ -76,7 +65,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      employee_id: z.number().int().positive(),
+      employee_id: zEmployeeId,
       certification_id: z.number().int().positive(),
       acquired_on: isoDate,
       expires_on: isoDate.nullable().optional(),

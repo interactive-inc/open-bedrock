@@ -1,7 +1,7 @@
 import {
   reviewCycleStatusSchema,
   toReviewCycleStatus,
-} from "@/contexts/performance-review/domain/values/review-cycle-status.value"
+} from "@/contexts/performance-review/domain/definitions/review-cycle-status.definition"
 import type { ReviewCycleRow } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { z } from "zod"
 

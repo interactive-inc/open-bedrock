@@ -1,4 +1,5 @@
 import type { Session } from "@/lib/auth/session"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -9,7 +10,7 @@ import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/reposit
 export type Command = {
   session: Session
   redemptionId: number
-  deciderId: number
+  deciderId: EmployeeId
   action: "approve" | "reject"
   decidedAt: string
 }

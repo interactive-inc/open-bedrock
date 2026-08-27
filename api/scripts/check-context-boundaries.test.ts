@@ -5,20 +5,19 @@ import {
   classifyContextSource,
   inspectApiRootPath,
   inspectCompanyRootPath,
-  inspectBoundaryBaseline,
   inspectCompanyAreaPath,
   inspectContextSource,
   inspectContextTestDirectory,
   inspectDisallowedRuntimeRootPath,
   inspectLibSource,
   inspectRetiredContextPath,
+  inspectRetiredLayerFirstRootPath,
   inspectRouteOwnershipPath,
 } from "./check-context-boundaries"
-import { LIB_BOUNDARY_BASELINE } from "./lib-boundary-baseline"
 import { describe, expect, test } from "bun:test"
 
 describe("API root structure", () => {
-  test("HTTP compositionと横断testだけを許可する", () => {
+  test("HTTP compositionだけを許可し、横断testはtestsへ分離する", () => {
     expect(inspectApiRootPath("src/api/api-route-module.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/app-base.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/app.ts")).toEqual([])
@@ -26,15 +25,15 @@ describe("API root structure", () => {
     expect(inspectApiRootPath("src/api/route-module.registry.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/http/dashboard/get-dashboard.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/routes/inbox/counts/route.ts")).toEqual([])
-    expect(inspectApiRootPath("src/api/test/app.test.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/test/app.test.ts")).not.toEqual([])
     expect(inspectApiRootPath("src/api/system/auth/repository.ts")).not.toEqual([])
   })
 
   test("機能実装とDDD mini-treeの流入を拒否する", () => {
     expect(inspectApiRootPath("src/api/accounts/delete-account.ts")).not.toEqual([])
-    expect(inspectApiRootPath("src/api/test/domain/entity.ts")).toEqual([
+    expect(inspectApiRootPath("src/api/http/domain/entity.ts")).toEqual([
       {
-        file: "src/api/test/domain/entity.ts",
+        file: "src/api/http/domain/entity.ts",
         reason: "API rootにDDD layer domain を作らず、所有contextへ配置してください",
       },
     ])
@@ -73,34 +72,25 @@ test("Systemへ統合したrequest contextの再導入を拒否する", () => {
 })
 
 describe("context path classification", () => {
-  test("context-first と両製品の layer-first path を同じ所有情報へ正規化する", () => {
+  test("context-first path だけを所有情報へ分類する", () => {
     expect(classifyContextSource("src/contexts/system/domain/auth/account.ts")).toEqual({
       context: "system",
       layer: "domain",
     })
-    expect(classifyContextSource("src/api/application/company/accounts.ts")).toEqual({
-      context: "company",
-      layer: "application",
-    })
+    expect(classifyContextSource("src/api/application/company/accounts.ts")).toBeNull()
     expect(classifyContextSource("src/api/system/auth/account.ts")).toBeNull()
-    expect(classifyContextSource("src/infrastructure/care/repository.ts")).toEqual({
-      context: "care",
-      layer: "infrastructure",
-    })
+    expect(classifyContextSource("src/infrastructure/care/repository.ts")).toBeNull()
     expect(classifyContextSource("src/infrastructure/shared/parse-d1-row.ts")).toBeNull()
     expect(classifyContextSource("src/interface/routes/health/route.ts")).toBeNull()
     expect(classifyContextSource("src/api/app.ts")).toBeNull()
   })
 
-  test("context-first・layer-first・System self-referenceを分類する", () => {
+  test("context-first・System self-referenceだけを分類する", () => {
     expect(classifyContextModule("@/contexts/chat/interface/routes/messages")).toEqual({
       context: "chat",
       layer: "interface",
     })
-    expect(classifyContextModule("@/api/domain/company/organization")).toEqual({
-      context: "company",
-      layer: "domain",
-    })
+    expect(classifyContextModule("@/api/domain/company/organization")).toBeNull()
     expect(classifyContextModule("@system/application/auth/login")).toEqual({
       context: "system",
       layer: "application",
@@ -109,6 +99,12 @@ describe("context path classification", () => {
     expect(classifyContextModule("@/infrastructure/shared/parse-d1-row")).toBeNull()
     expect(classifyContextModule("@/interface/utils/factory")).toBeNull()
     expect(classifyContextModule("zod")).toBeNull()
+  })
+
+  test("撤去済みの layer-first root を拒否する", () => {
+    expect(inspectRetiredLayerFirstRootPath("src/domain/company")).not.toEqual([])
+    expect(inspectRetiredLayerFirstRootPath("src/api/infrastructure/care")).not.toEqual([])
+    expect(inspectRetiredLayerFirstRootPath("src/contexts/care/domain")).toEqual([])
   })
 })
 
@@ -227,6 +223,16 @@ describe("ownership manifest", () => {
       ),
     ).toEqual([])
     expect(
+      inspectCompanyAreaPath(
+        "src/contexts/company/infrastructure/adapters/organization/read-organization.adapter.ts",
+      ),
+    ).toEqual([])
+    expect(
+      inspectCompanyAreaPath(
+        "src/contexts/company/infrastructure/organization/read-organization.repository.ts",
+      ),
+    ).not.toEqual([])
+    expect(
       inspectCompanyAreaPath("src/contexts/company/domain/expense/expense.entity.ts"),
     ).not.toEqual([])
   })
@@ -273,40 +279,8 @@ describe("lib boundary", () => {
       expect(inspectLibSource("src/lib/example.ts", source)).not.toEqual([])
     }
   })
-
-  test("新規違反と解消済みbaselineを拒否する", () => {
-    const knownViolation = {
-      file: "src/lib/example.ts",
-      reason: "lib から所有者のある実装へ依存しています: @/contexts/company/domain/example",
-    }
-    const newViolation = {
-      file: "src/lib/new-example.ts",
-      reason: "lib から所有者のある実装へ依存しています: @/api/app",
-    }
-
-    expect(inspectBoundaryBaseline([knownViolation], [knownViolation])).toEqual([])
-    expect(inspectBoundaryBaseline([knownViolation, newViolation], [knownViolation])).toEqual([
-      newViolation,
-    ])
-    expect(inspectBoundaryBaseline([], [knownViolation])).toEqual([
-      {
-        file: knownViolation.file,
-        reason: `解消済みのlib境界baselineを削除してください: ${knownViolation.reason}`,
-      },
-    ])
-  })
 })
 
 test("現在のcontext・lib sourceに未管理の違反がない", async () => {
   expect(await checkContextBoundaries()).toEqual([])
-})
-
-test("既存lib違反baselineは完全一致かつ重複なしである", () => {
-  expect(LIB_BOUNDARY_BASELINE.length).toBe(0)
-
-  const keys = LIB_BOUNDARY_BASELINE.map((violation) =>
-    JSON.stringify([violation.file, violation.reason]),
-  )
-
-  expect(new Set(keys).size).toBe(keys.length)
 })

@@ -1,6 +1,6 @@
 import { canEvaluateGoalOf } from "@/contexts/performance-review/domain/policies/goal-evaluation-access.policy"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
-import { makeTestSession } from "@/api/test/support/make-test-session"
+import { makeTestSession } from "@tests/api/support/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 const report: EmployeeRelation = { isSelf: false, isReport: true, isSameDepartment: false }

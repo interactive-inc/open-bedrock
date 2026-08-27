@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import {
   ConflictError,
@@ -12,7 +13,7 @@ import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastr
 
 export type Command = {
   familyCareLeaveId: string
-  employeeId: number
+  employeeId: EmployeeId
   leaveKind: string
   startDate: string
   endDate: string

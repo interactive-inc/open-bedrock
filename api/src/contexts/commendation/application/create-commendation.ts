@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import { Commendation } from "@/contexts/commendation/domain/entities/commendation.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
@@ -7,7 +8,7 @@ import { CommendationRepository } from "@/contexts/commendation/infrastructure/r
 
 export type Command = {
   session: Session
-  employeeId: number
+  employeeId: EmployeeId
   title: string
   reason: string
   awardedOn: string

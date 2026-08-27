@@ -1,3 +1,6 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { expenseCategorySchema, expenseStatusSchema } from "@/lib/schemas"
 import type { ExpenseRow } from "@/contexts/expense/infrastructure/schema/expense"
 import { z } from "zod"
@@ -5,7 +8,8 @@ import { z } from "zod"
 /** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const expenseRowSchema = z.object({
   id: z.number(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
+  organizationUnitId: zOrganizationUnitId,
   category: z.enum(["transport", "supplies", "entertainment", "books", "other"]),
   amount: z.number(),
   spentAt: z.string(),
@@ -16,7 +20,8 @@ export const expenseRowSchema = z.object({
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
+  organizationUnitId: zOrganizationUnitId,
   category: expenseCategorySchema,
   amount: z.number(),
   spentAt: z.string(),
@@ -33,6 +38,8 @@ export class Expense implements Props {
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
+
+  readonly organizationUnitId!: Props["organizationUnitId"]
 
   readonly category!: Props["category"]
 
@@ -56,7 +63,8 @@ export class Expense implements Props {
 
   /** 新規作成する経費申請を組み立てる。id は未採番、初期状態は pending。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
+    organizationUnitId: Props["organizationUnitId"]
     category: Props["category"]
     amount: number
     spentAt: string
@@ -66,6 +74,7 @@ export class Expense implements Props {
     return new Expense({
       id: null,
       employeeId: props.employeeId,
+      organizationUnitId: props.organizationUnitId,
       category: props.category,
       amount: props.amount,
       spentAt: props.spentAt,
@@ -79,6 +88,7 @@ export class Expense implements Props {
     return new Expense({
       id: row.id,
       employeeId: row.employeeId,
+      organizationUnitId: row.organizationUnitId,
       category: row.category,
       amount: row.amount,
       spentAt: row.spentAt,

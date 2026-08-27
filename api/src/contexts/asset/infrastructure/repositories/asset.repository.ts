@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Asset, assetRowSchema } from "@/contexts/asset/domain/entities/asset.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
@@ -85,7 +86,7 @@ export class AssetRepository {
    */
   async lendFromStock(props: {
     assetCode: string
-    employeeId: number
+    employeeId: EmployeeId
     lentAt: string
   }): Promise<Asset | null | Error> {
     try {
@@ -265,7 +266,7 @@ export class AssetRepository {
   }
 
   /** 資産と貸出記録の削除を D1 batch でまとめる。lent のままなら全体を rollback して null。 */
-  async deleteIfNotLent(code: string): Promise<"deleted" | null | Error> {
+  async deleteIfNotLent(asset: Asset): Promise<"deleted" | null | Error> {
     try {
       try {
         await this.c.env.DB.batch([
@@ -275,14 +276,14 @@ export class AssetRepository {
             WHERE code = ?1
               AND status != 'lent'
             `,
-          ).bind(code),
+          ).bind(asset.code),
           abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
           this.c.env.DB.prepare(
             `
             DELETE FROM asset_lendings
             WHERE asset_code = ?1
             `,
-          ).bind(code),
+          ).bind(asset.code),
         ])
       } catch (error) {
         if (isAbortedByGuard(error)) {

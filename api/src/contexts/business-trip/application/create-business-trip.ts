@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
 import type { Context } from "@/env"
 import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
@@ -5,7 +6,7 @@ import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  travelerId: number
+  travelerId: EmployeeId
   destination: string
   startDate: string
   endDate: string

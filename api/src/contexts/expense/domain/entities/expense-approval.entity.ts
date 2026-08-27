@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { expenseApprovalActionSchema } from "@/lib/schemas"
 import type { ExpenseApprovalRow } from "@/contexts/expense/infrastructure/schema/expense"
 import { z } from "zod"
@@ -5,7 +7,7 @@ import { z } from "zod"
 const zProps = z.object({
   id: z.number().nullable(),
   expenseId: z.number(),
-  approverId: z.number(),
+  approverId: zEmployeeId,
   action: expenseApprovalActionSchema,
   comment: z.string().nullable(),
   createdAt: z.string(),
@@ -39,7 +41,7 @@ export class ExpenseApproval implements Props {
   /** 新規作成する承認記録を組み立てる。id は未採番。 */
   static create(props: {
     expenseId: number
-    approverId: number
+    approverId: EmployeeId
     action: Props["action"]
     comment: string | null
     createdAt: string

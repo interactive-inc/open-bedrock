@@ -11,6 +11,7 @@ import { zAppReviewResult } from "@/lib/app-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-form.repository"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 
 // @authorization permission - 権限キーで判定する
 /**
@@ -24,11 +25,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const subjectEmployeeId = Number(c.req.query("subject_employee_id") ?? "")
+  const parsedSubjectEmployeeId = zEmployeeId.safeParse(c.req.query("subject_employee_id"))
 
-  if (Number.isInteger(subjectEmployeeId) === false || subjectEmployeeId <= 0) {
+  if (!parsedSubjectEmployeeId.success) {
     throw new BadRequestError("subject_employee_id is required")
   }
+  const subjectEmployeeId = parsedSubjectEmployeeId.data
 
   const isAdministrator = session.hasPermission("review:administer")
 

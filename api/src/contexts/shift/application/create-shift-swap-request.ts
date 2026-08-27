@@ -1,13 +1,14 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ShiftSwapRequest } from "@/contexts/shift/domain/entities/shift-swap-request.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
 import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/repositories/shift-swap-request.repository"
 
 export type Input = {
-  requesterEmployeeId: number
+  requesterEmployeeId: EmployeeId
   targetEmployeeCode: string
   date: string
   note: string | null
@@ -22,7 +23,7 @@ export class CreateShiftSwapRequest {
   }
 
   async run(input: Input): Promise<ShiftSwapRequest | ApplicationError> {
-    const employeeRepository = new EmployeeRepository(this.c)
+    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c)
 
     const target = await employeeRepository.findByCode(input.targetEmployeeCode)
 

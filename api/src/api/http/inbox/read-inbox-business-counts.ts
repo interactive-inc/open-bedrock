@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { shiftSwapRequests } from "@/contexts/shift/infrastructure/schema/shift"
@@ -9,7 +10,7 @@ import { and, count, eq, ne } from "drizzle-orm"
 export async function readInboxBusinessCounts(
   context: Context,
   input: Readonly<{
-    employeeId: number
+    employeeId: EmployeeId
     canApproveExpenses: boolean
     canApproveLeaves: boolean
     canApproveShiftSwaps: boolean

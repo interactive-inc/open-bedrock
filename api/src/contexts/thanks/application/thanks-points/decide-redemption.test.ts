@@ -1,15 +1,17 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { DecideRedemption } from "@/contexts/thanks/application/thanks-points/decide-redemption"
 import { ForbiddenError } from "@/lib/errors"
 import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { makeTestSession } from "@/api/test/support/make-test-session"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { makeTestSession } from "@tests/api/support/make-test-session"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { describe, expect, test } from "bun:test"
 
 async function seedPendingRedemption(
   repository: ThanksRedemptionRepository,
-  employeeId: number,
+  employeeId: EmployeeId,
 ): Promise<ThanksRedemption> {
   const created = await repository.create(
     ThanksRedemption.create({
@@ -33,16 +35,16 @@ async function seedPendingRedemption(
 
 describe("DecideRedemption", () => {
   test("returns forbidden for a member role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ThanksRedemptionRepository(context)
 
-    const redemption = await seedPendingRedemption(repository, 5)
+    const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
 
     const result = await new DecideRedemption(context).run({
       session: makeTestSession("member"),
       redemptionId: redemption.id ?? 0,
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
       action: "approve",
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
@@ -51,16 +53,16 @@ describe("DecideRedemption", () => {
   })
 
   test("returns self_approval_forbidden when decider is the applicant", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ThanksRedemptionRepository(context)
 
-    const redemption = await seedPendingRedemption(repository, 5)
+    const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
 
     const result = await new DecideRedemption(context).run({
       session: makeTestSession("root"),
       redemptionId: redemption.id ?? 0,
-      deciderId: 5,
+      deciderId: toWorkforceEmployeeId(5),
       action: "reject",
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
@@ -69,16 +71,16 @@ describe("DecideRedemption", () => {
   })
 
   test("allows admin to reject a redemption", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ThanksRedemptionRepository(context)
 
-    const redemption = await seedPendingRedemption(repository, 5)
+    const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
 
     const result = await new DecideRedemption(context).run({
       session: makeTestSession("root"),
       redemptionId: redemption.id ?? 0,
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
       action: "reject",
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
@@ -95,16 +97,16 @@ describe("DecideRedemption", () => {
   })
 
   test("allows hr to reject a redemption", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ThanksRedemptionRepository(context)
 
-    const redemption = await seedPendingRedemption(repository, 5)
+    const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
 
     const result = await new DecideRedemption(context).run({
       session: makeTestSession("hr"),
       redemptionId: redemption.id ?? 0,
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
       action: "reject",
       decidedAt: "2026-06-02T00:00:00.000Z",
     })

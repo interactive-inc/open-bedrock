@@ -1,21 +1,27 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
 import { seedGoalEvaluations } from "@/contexts/performance-review/test/seed/seed-goal-evaluations.test-support"
 import { seedGoals } from "@/contexts/performance-review/test/seed/seed-goals.test-support"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
-import { seedOrgMemberships } from "@/api/test/support/company/seed-org-memberships.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { seedOrgMemberships } from "@tests/api/support/company/seed-org-memberships.test-support"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { initializeCompanyTestFixture } from "@tests/api/support/initialize-company-test-fixture"
+import {
+  initializeCompanyMembershipTestState,
+  initializeStandardCompanyTestState,
+} from "@tests/api/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const goalResponseSchema = z.object({
   id: z.number(),
-  employee_id: z.number(),
+  employee_id: zEmployeeId,
   period: z.string(),
   title: z.string(),
   kpi: z.string().nullable(),
@@ -28,15 +34,14 @@ const jwtSecret = "goal-list-route-test-secret"
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -44,13 +49,12 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
-  await seedD1(
+  await initializeCompanyMembershipTestState(
     db,
-    "org_memberships",
     seedOrgMemberships.map((membership) => ({
-      department_code: membership.departmentCode,
-      employee_code: membership.employeeCode,
-      manager_employee_code: membership.managerEmployeeCode,
+      departmentCode: membership.departmentCode,
+      employeeCode: membership.employeeCode,
+      managerEmployeeCode: membership.managerEmployeeCode,
     })),
   )
 
@@ -89,7 +93,7 @@ async function createTestDb(): Promise<D1Database> {
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -112,7 +116,9 @@ describe("GET /performance-goals", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(2)
-      expect(parsed.data.data.every((goal) => goal.employee_id === 5)).toBe(true)
+      expect(parsed.data.data.every((goal) => goal.employee_id === toWorkforceEmployeeId(5))).toBe(
+        true,
+      )
     }
   })
 
@@ -156,7 +162,9 @@ describe("GET /performance-goals", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(2)
-      expect(parsed.data.data.every((goal) => goal.employee_id === 5)).toBe(true)
+      expect(parsed.data.data.every((goal) => goal.employee_id === toWorkforceEmployeeId(5))).toBe(
+        true,
+      )
     }
   })
 
@@ -188,7 +196,9 @@ describe("GET /performance-goals", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data.every((goal) => goal.employee_id === 5)).toBe(true)
+      expect(parsed.data.data.every((goal) => goal.employee_id === toWorkforceEmployeeId(5))).toBe(
+        true,
+      )
     }
   })
 
@@ -276,15 +286,14 @@ const scopeEmployeeRows = [
 async function createScopeTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     scopeEmployeeRows.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.departmentId,
-      dept_name: "Dept",
+      deptId: employee.departmentId,
+      deptName: "Dept",
       position: "-",
       status: "active",
     })),
@@ -300,17 +309,10 @@ async function createScopeTestDb(): Promise<D1Database> {
     })),
   )
 
-  await seedD1(db, "org_memberships", [
-    { department_code: "D001", employee_code: "M002", manager_employee_code: null },
-    { department_code: "D001", employee_code: "R020", manager_employee_code: "M002" },
-    { department_code: "D001", employee_code: "R021", manager_employee_code: "M002" },
-    { department_code: "D002", employee_code: "S022", manager_employee_code: null },
-  ])
-
   await seedD1(db, "performance_goals", [
     {
       id: 100,
-      employee_id: 20,
+      employee_id: "20",
       period: "2025-H2",
       title: "A goal",
       kpi: null,
@@ -319,7 +321,7 @@ async function createScopeTestDb(): Promise<D1Database> {
     },
     {
       id: 101,
-      employee_id: 21,
+      employee_id: "21",
       period: "2025-H2",
       title: "B goal",
       kpi: null,
@@ -330,9 +332,22 @@ async function createScopeTestDb(): Promise<D1Database> {
 
   await initializeCompanyTestFixture({
     db,
+    employees: scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      deptId: employee.departmentId,
+      status: "active",
+    })),
     departments: [
       { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
       { id: 2, code: "D002", name: "Dept Two", managerEmployeeCode: "S022" },
+    ],
+    memberships: [
+      { departmentCode: "D001", employeeCode: "M002", managerEmployeeCode: null },
+      { departmentCode: "D001", employeeCode: "R020", managerEmployeeCode: "M002" },
+      { departmentCode: "D001", employeeCode: "R021", managerEmployeeCode: "M002" },
+      { departmentCode: "D002", employeeCode: "S022", managerEmployeeCode: null },
     ],
   })
 
@@ -359,9 +374,11 @@ describe("GET /performance-goals?scope=reports", () => {
     if (parsed.success) {
       expect(parsed.data.total).toBe(2)
 
-      const employeeIds = parsed.data.data.map((goal) => goal.employee_id).sort((a, b) => a - b)
+      const employeeIds = parsed.data.data
+        .map((goal) => goal.employee_id)
+        .sort((left, right) => left.localeCompare(right))
 
-      expect(employeeIds).toEqual([20, 21])
+      expect(employeeIds).toEqual([toWorkforceEmployeeId(20), toWorkforceEmployeeId(21)])
     }
   })
 
@@ -406,7 +423,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
   await seedD1(db, "performance_goals", [
     {
       id: 102,
-      employee_id: 22,
+      employee_id: "22",
       period: "2025-H2",
       title: "C goal",
       kpi: null,
@@ -465,9 +482,11 @@ describe("GET /performance-goals?scope=department", () => {
     if (parsed.success) {
       expect(parsed.data.total).toBe(2)
 
-      const employeeIds = parsed.data.data.map((goal) => goal.employee_id).sort((a, b) => a - b)
+      const employeeIds = parsed.data.data
+        .map((goal) => goal.employee_id)
+        .sort((left, right) => left.localeCompare(right))
 
-      expect(employeeIds).toEqual([20, 21])
+      expect(employeeIds).toEqual([toWorkforceEmployeeId(20), toWorkforceEmployeeId(21)])
     }
   })
 

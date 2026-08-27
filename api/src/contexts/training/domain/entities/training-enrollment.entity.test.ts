@@ -1,3 +1,4 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import { describe, expect, test } from "bun:test"
 
@@ -5,7 +6,7 @@ describe("TrainingEnrollment.create", () => {
   test("builds with null id, enrolled status, null completedAt and score", () => {
     const enrollment = TrainingEnrollment.create({
       courseId: 1,
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       dueDate: "2026-03-31",
     })
 
@@ -21,7 +22,7 @@ describe("TrainingEnrollment.complete", () => {
   test("returns new with completed status, completedAt, and score", () => {
     const enrollment = TrainingEnrollment.create({
       courseId: 1,
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       dueDate: "2026-03-31",
     })
 
@@ -37,7 +38,7 @@ describe("TrainingEnrollment.withRescheduled", () => {
   test("returns new with changed dueDate", () => {
     const enrollment = TrainingEnrollment.create({
       courseId: 1,
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       dueDate: "2026-03-31",
     })
 

@@ -1,10 +1,12 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { SurveyResponseRow } from "@/contexts/survey/infrastructure/schema/survey"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
   surveyId: z.number(),
-  respondentId: z.number(),
+  respondentId: zEmployeeId,
   answersJson: z.unknown(),
   submittedAt: z.string(),
 })
@@ -35,7 +37,7 @@ export class SurveyResponse implements Props {
   /** 新規提出する回答を組み立てる。id は未採番。 */
   static create(props: {
     surveyId: number
-    respondentId: number
+    respondentId: EmployeeId
     answersJson: unknown
     submittedAt: string
   }): SurveyResponse {

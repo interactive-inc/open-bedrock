@@ -1,11 +1,12 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import { DeleteAsset } from "@/contexts/asset/application/delete-asset"
 import { UpdateAsset } from "@/contexts/asset/application/update-asset"
 import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { makeTestSession } from "@/api/test/support/make-test-session"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { makeTestSession } from "@tests/api/support/make-test-session"
 import { describe, expect, test } from "bun:test"
 import type { Context } from "@/env"
 
@@ -34,7 +35,7 @@ async function seedLent(context: Context, code: string): Promise<void> {
 
   const lent = await repository.lendFromStock({
     assetCode: code,
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
     lentAt: "2026-01-01T00:00:00.000Z",
   })
 
@@ -45,7 +46,7 @@ async function seedLent(context: Context, code: string): Promise<void> {
 
 describe("UpdateAsset", () => {
   test("updates details for a privileged role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedInStock(context, "A1001")
 
@@ -68,7 +69,7 @@ describe("UpdateAsset", () => {
   })
 
   test("rejects a non privileged role with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedInStock(context, "A1002")
 
@@ -82,7 +83,7 @@ describe("UpdateAsset", () => {
   })
 
   test("rejects an unknown code with asset_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdateAsset(context).run({
       session: makeTestSession("root"),
@@ -96,7 +97,7 @@ describe("UpdateAsset", () => {
 
 describe("DeleteAsset", () => {
   test("deletes an in_stock asset for a privileged role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedInStock(context, "A1003")
 
@@ -115,7 +116,7 @@ describe("DeleteAsset", () => {
   })
 
   test("rejects a lent asset with asset_in_use", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedLent(context, "A1004")
 
@@ -128,7 +129,7 @@ describe("DeleteAsset", () => {
   })
 
   test("rejects a non privileged role with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedInStock(context, "A1005")
 
@@ -141,7 +142,7 @@ describe("DeleteAsset", () => {
   })
 
   test("rejects an unknown code with asset_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new DeleteAsset(context).run({
       session: makeTestSession("root"),

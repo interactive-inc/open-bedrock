@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { CreateDisciplinaryAction } from "@/contexts/disciplinary-action/application/create-disciplinary-action"
 import { factory } from "@/api/http/factory"
 import {
@@ -31,10 +32,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const employeeIdRaw = c.req.query("employee_id")
 
+  const parsedEmployeeId =
+    employeeIdRaw === undefined || employeeIdRaw === ""
+      ? null
+      : zEmployeeId.safeParse(employeeIdRaw)
   const employeeId =
-    employeeIdRaw === undefined || employeeIdRaw === "" ? null : Number(employeeIdRaw)
+    parsedEmployeeId === null || parsedEmployeeId.success ? (parsedEmployeeId?.data ?? null) : null
 
-  if (employeeId !== null && (Number.isInteger(employeeId) === false || employeeId <= 0)) {
+  if (parsedEmployeeId !== null && !parsedEmployeeId.success) {
     const responseBody = zAppDisciplinaryActionList.parse({ data: [], total: 0 })
 
     return c.json(responseBody, 200)
@@ -90,7 +95,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      employee_id: z.number().int().positive(),
+      employee_id: zEmployeeId,
       kind: z.string().min(1).max(200),
       summary: z.string().min(1).max(3_000),
       decided_on: isoDate,

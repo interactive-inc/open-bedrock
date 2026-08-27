@@ -58,7 +58,7 @@ export const GET = factory.createHandlers(
 
     const [rows, totalRows] = await Promise.all([
       c.var.database
-        .select({ ringi: ringiRequests, approverName: employees.name })
+        .select({ ringi: ringiRequests, approverName: employees.officialName })
         .from(ringiRequests)
         .leftJoin(employees, eq(employees.id, ringiRequests.approverId))
         .where(and(...conditions))

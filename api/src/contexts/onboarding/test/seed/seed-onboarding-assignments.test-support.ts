@@ -1,6 +1,8 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedOnboardingAssignment = {
   id: number
-  employeeId: number
+  employeeId: EmployeeId
   templateCode: string
   kind: "join" | "leave"
   status: "in_progress" | "completed"
@@ -10,7 +12,7 @@ type SeedOnboardingAssignment = {
 export const seedOnboardingAssignments: ReadonlyArray<SeedOnboardingAssignment> = [
   {
     id: 100,
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
     templateCode: "engineer_join",
     kind: "join",
     status: "in_progress",

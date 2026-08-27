@@ -35,7 +35,7 @@ export class DeleteCompanyCalendarDay {
       return new NotFoundError("calendar day not found", "calendar_day_not_found")
     }
 
-    const deleted = await repository.delete(command.id)
+    const deleted = await repository.delete(existing)
 
     if (deleted instanceof Error) {
       return new UnexpectedError("failed to delete calendar day", { cause: deleted })

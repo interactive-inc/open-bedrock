@@ -1,9 +1,9 @@
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 import { CancelOnboardingAssignment } from "@/contexts/onboarding/application/cancel-onboarding-assignment"
 import { UpdateOnboardingAssignment } from "@/contexts/onboarding/application/update-onboarding-assignment"
-import type { EmployeeDirectoryEntryValue } from "@/contexts/company/domain/values/employee-directory-entry.value"
+import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import type { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -16,11 +16,11 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 /** 割り当てをレスポンス用の snake_case に整形する。 */
-function toResponseBody(assignment: OnboardingAssignment, employee: EmployeeDirectoryEntryValue) {
+function toResponseBody(assignment: OnboardingAssignment, employee: CompanyEmployeeDirectoryEntry) {
   return zAppOnboardingAssignment.parse({
     id: assignment.id,
-    employee_code: employee.code,
-    employee_name: employee.name,
+    employee_code: employee.employeeCode,
+    employee_name: employee.officialName,
     template_code: assignment.templateCode,
     kind: assignment.kind,
     status: assignment.status,
@@ -72,7 +72,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       return new ForbiddenError("cannot view assignment", "forbidden")
     }
 
-    const employeeRepository = new EmployeeRepository(c)
+    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(c)
 
     const employee = await employeeRepository.findById(assignment.employeeId)
 

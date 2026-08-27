@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import type { Context } from "@/env"
 import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
@@ -6,7 +7,7 @@ import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   oneOnOneId: string
-  managerId: number
+  managerId: EmployeeId
   topics: string | null
   managerNote: string | null
   nextAction: string | null

@@ -28,39 +28,6 @@ export type OrganizationUnitSnapshot = Readonly<{
   units: ReadonlyArray<OrganizationUnitPeriod>
 }>
 
-function violation(
-  code: OrganizationInvariantViolation["code"],
-  message: string,
-): OrganizationInvariantViolation {
-  return Object.freeze({ code, message })
-}
-
-function isValidText(value: string, maxLength: number): boolean {
-  return value.length > 0 && value.length <= maxLength && value.trim() === value
-}
-
-function containsPeriod(outer: WorkforcePeriodVersion, inner: WorkforcePeriodVersion): boolean {
-  return (
-    outer.startsOn <= inner.startsOn &&
-    (outer.endsOn === null || (inner.endsOn !== null && inner.endsOn <= outer.endsOn))
-  )
-}
-
-function periodsOverlap(left: WorkforcePeriodVersion, right: WorkforcePeriodVersion): boolean {
-  return (
-    (right.endsOn === null || left.startsOn < right.endsOn) &&
-    (left.endsOn === null || right.startsOn < left.endsOn)
-  )
-}
-
-function containsDate(period: WorkforcePeriodVersion, date: CalendarDate): boolean {
-  return period.startsOn <= date && (period.endsOn === null || date < period.endsOn)
-}
-
-function freezePeriod(period: OrganizationUnitPeriod): OrganizationUnitPeriod {
-  return Object.freeze({ ...period })
-}
-
 /**
  * 組織単位の全有効期間を一つの整合した組織構造として扱う集約ルート。
  */
@@ -69,10 +36,51 @@ export class OrganizationStructureValue {
   readonly asOf: CalendarDate
   readonly units: ReadonlyArray<OrganizationUnitPeriod>
 
+  private static violation(
+    code: OrganizationInvariantViolation["code"],
+    message: string,
+  ): OrganizationInvariantViolation {
+    return Object.freeze({ code, message })
+  }
+
+  private static isValidText(value: string, maxLength: number): boolean {
+    return value.length > 0 && value.length <= maxLength && value.trim() === value
+  }
+
+  private static containsPeriod(
+    outer: WorkforcePeriodVersion,
+    inner: WorkforcePeriodVersion,
+  ): boolean {
+    return (
+      outer.startsOn <= inner.startsOn &&
+      (outer.endsOn === null || (inner.endsOn !== null && inner.endsOn <= outer.endsOn))
+    )
+  }
+
+  private static periodsOverlap(
+    left: WorkforcePeriodVersion,
+    right: WorkforcePeriodVersion,
+  ): boolean {
+    return (
+      (right.endsOn === null || left.startsOn < right.endsOn) &&
+      (left.endsOn === null || right.startsOn < left.endsOn)
+    )
+  }
+
+  private static containsDate(period: WorkforcePeriodVersion, date: CalendarDate): boolean {
+    return period.startsOn <= date && (period.endsOn === null || date < period.endsOn)
+  }
+
+  private static freezePeriod(period: OrganizationUnitPeriod): OrganizationUnitPeriod {
+    return Object.freeze({ ...period })
+  }
+
   private constructor(snapshot: OrganizationUnitSnapshot) {
     this.revision = snapshot.revision
     this.asOf = snapshot.asOf
-    this.units = Object.freeze(snapshot.units.map(freezePeriod))
+    this.units = Object.freeze(
+      snapshot.units.map((period) => OrganizationStructureValue.freezePeriod(period)),
+    )
     Object.freeze(this)
   }
 
@@ -84,7 +92,10 @@ export class OrganizationStructureValue {
       snapshot.revision < 0 ||
       !isCalendarDate(snapshot.asOf)
     ) {
-      return violation("invalid_snapshot", "organization snapshot is not canonical")
+      return OrganizationStructureValue.violation(
+        "invalid_snapshot",
+        "organization snapshot is not canonical",
+      )
     }
 
     const periodIds = new Set<string>()
@@ -97,14 +108,17 @@ export class OrganizationStructureValue {
         !isCalendarDate(period.startsOn) ||
         (period.endsOn !== null &&
           (!isCalendarDate(period.endsOn) || period.startsOn >= period.endsOn)) ||
-        !isValidText(period.code, 64) ||
-        !isValidText(period.officialName, 200) ||
+        !OrganizationStructureValue.isValidText(period.code, 64) ||
+        !OrganizationStructureValue.isValidText(period.officialName, 200) ||
         !organizationUnitKinds.includes(period.kind)
       ) {
-        return violation("invalid_period", "organization unit period is not canonical")
+        return OrganizationStructureValue.violation(
+          "invalid_period",
+          "organization unit period is not canonical",
+        )
       }
       if (periodIds.has(period.periodId)) {
-        return violation(
+        return OrganizationStructureValue.violation(
           "duplicate_period",
           "organization snapshot contains more than one latest period version",
         )
@@ -117,7 +131,10 @@ export class OrganizationStructureValue {
           : period.parentOrganizationUnitId !== null &&
             period.parentOrganizationUnitId !== period.organizationUnitId
       if (!parentIsValid) {
-        return violation("invalid_parent", "organization unit has an invalid parent")
+        return OrganizationStructureValue.violation(
+          "invalid_parent",
+          "organization unit has an invalid parent",
+        )
       }
     }
 
@@ -125,15 +142,24 @@ export class OrganizationStructureValue {
     const activePeriods = entity.activePeriods
     for (const [index, left] of activePeriods.entries()) {
       for (const right of activePeriods.slice(index + 1)) {
-        if (!periodsOverlap(left, right)) continue
+        if (!OrganizationStructureValue.periodsOverlap(left, right)) continue
         if (left.organizationUnitId === right.organizationUnitId) {
-          return violation("organization_unit_overlap", "organization unit periods overlap")
+          return OrganizationStructureValue.violation(
+            "organization_unit_overlap",
+            "organization unit periods overlap",
+          )
         }
         if (left.code === right.code) {
-          return violation("organization_code_overlap", "organization unit codes overlap")
+          return OrganizationStructureValue.violation(
+            "organization_code_overlap",
+            "organization unit codes overlap",
+          )
         }
         if (left.kind === "COMPANY" && right.kind === "COMPANY") {
-          return violation("organization_unit_overlap", "company root periods overlap")
+          return OrganizationStructureValue.violation(
+            "organization_unit_overlap",
+            "company root periods overlap",
+          )
         }
       }
     }
@@ -144,10 +170,10 @@ export class OrganizationStructureValue {
         !activePeriods.some(
           (candidate) =>
             candidate.organizationUnitId === child.parentOrganizationUnitId &&
-            containsPeriod(candidate, child),
+            OrganizationStructureValue.containsPeriod(candidate, child),
         )
       ) {
-        return violation(
+        return OrganizationStructureValue.violation(
           "parent_not_active",
           "parent organization unit is not active for the full child period",
         )
@@ -155,7 +181,10 @@ export class OrganizationStructureValue {
     }
 
     if (entity.boundaryDates.some((date) => entity.hasHierarchyCycleAt(date))) {
-      return violation("hierarchy_cycle", "organization hierarchy contains a cycle")
+      return OrganizationStructureValue.violation(
+        "hierarchy_cycle",
+        "organization hierarchy contains a cycle",
+      )
     }
 
     return entity
@@ -183,14 +212,19 @@ export class OrganizationStructureValue {
     period: WorkforcePeriodVersion,
   ): boolean {
     return this.activePeriods.some(
-      (unit) => unit.organizationUnitId === organizationUnitId && containsPeriod(unit, period),
+      (unit) =>
+        unit.organizationUnitId === organizationUnitId &&
+        OrganizationStructureValue.containsPeriod(unit, period),
     )
   }
 
   private hasHierarchyCycleAt(date: CalendarDate): boolean {
     const parents = new Map<OrganizationUnitId, OrganizationUnitId>()
     for (const period of this.activePeriods) {
-      if (containsDate(period, date) && period.parentOrganizationUnitId !== null) {
+      if (
+        OrganizationStructureValue.containsDate(period, date) &&
+        period.parentOrganizationUnitId !== null
+      ) {
         parents.set(period.organizationUnitId, period.parentOrganizationUnitId)
       }
     }

@@ -1,3 +1,4 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { CreateReviewCycle } from "@/contexts/performance-review/application/review/create-review-cycle"
 import { DeleteReviewCycle } from "@/contexts/performance-review/application/review/delete-review-cycle"
@@ -9,10 +10,10 @@ import { ReviewForm } from "@/contexts/performance-review/domain/entities/review
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { makeTestSession } from "@/api/test/support/make-test-session"
-import { initializeCompanyTestState } from "@/api/test/support/initialize-company-test-state"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { makeTestSession } from "@tests/api/support/make-test-session"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 async function seedCycle(context: Context, status: "draft" | "open" | "closed"): Promise<number> {
   const created = await new ReviewCycleRepository(context).create(
@@ -69,7 +70,7 @@ async function seedForm(
 
 describe("CreateReviewCycle", () => {
   test("creates a draft cycle with admin role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const created = await new CreateReviewCycle(context).run({
       session: makeTestSession("root"),
@@ -91,7 +92,7 @@ describe("CreateReviewCycle", () => {
   })
 
   test("creates a draft cycle with hr role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const created = await new CreateReviewCycle(context).run({
       session: makeTestSession("hr"),
@@ -104,7 +105,7 @@ describe("CreateReviewCycle", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateReviewCycle(context).run({
       session: makeTestSession("member"),
@@ -119,7 +120,7 @@ describe("CreateReviewCycle", () => {
 
 describe("DeleteReviewCycle", () => {
   test("deletes a draft cycle", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "draft")
 
@@ -136,7 +137,7 @@ describe("DeleteReviewCycle", () => {
   })
 
   test("returns not_deletable for an open cycle", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "open")
 
@@ -149,7 +150,7 @@ describe("DeleteReviewCycle", () => {
   })
 
   test("returns not_deletable for a closed cycle", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "closed")
 
@@ -162,7 +163,7 @@ describe("DeleteReviewCycle", () => {
   })
 
   test("returns cycle_not_found for a missing cycle", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new DeleteReviewCycle(context).run({
       session: makeTestSession("root"),
@@ -173,7 +174,7 @@ describe("DeleteReviewCycle", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "draft")
 
@@ -189,7 +190,7 @@ describe("DeleteReviewCycle", () => {
   // 前の DELETE が 0 行のとき malformed JSON エラーでバッチを中断し、
   // 後続の review_forms 削除を防ぐ（レースコンディション対策）。
   test("guard aborts batch when cycle was concurrently changed from draft", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "draft")
     await seedForm(context, cycleId, 5, "pending")
@@ -211,8 +212,8 @@ describe("DeleteReviewCycle", () => {
 
 describe("SetReviewCycleStatus", () => {
   test("transitions draft to open", async () => {
-    const { context, db } = createTestContext()
-    await initializeCompanyTestState(db)
+    const { context, db } = await createTestContext()
+    await initializeStandardCompanyTestState(db)
 
     const cycleId = await seedCycle(context, "draft")
 
@@ -232,7 +233,7 @@ describe("SetReviewCycleStatus", () => {
   })
 
   test("transitions open to closed", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "open")
 
@@ -252,7 +253,7 @@ describe("SetReviewCycleStatus", () => {
   })
 
   test("returns invalid_transition for draft to closed", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "draft")
 
@@ -266,7 +267,7 @@ describe("SetReviewCycleStatus", () => {
   })
 
   test("returns invalid_transition for closed to open", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "closed")
 
@@ -280,7 +281,7 @@ describe("SetReviewCycleStatus", () => {
   })
 
   test("returns cycle_not_found for a missing cycle", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new SetReviewCycleStatus(context).run({
       session: makeTestSession("root"),
@@ -292,7 +293,7 @@ describe("SetReviewCycleStatus", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new SetReviewCycleStatus(context).run({
       session: makeTestSession("member"),
@@ -306,7 +307,7 @@ describe("SetReviewCycleStatus", () => {
 
 describe("UpdateReviewCycle", () => {
   test("updates a draft cycle", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "draft")
 
@@ -330,7 +331,7 @@ describe("UpdateReviewCycle", () => {
   })
 
   test("updates an open cycle", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "open")
 
@@ -352,7 +353,7 @@ describe("UpdateReviewCycle", () => {
   })
 
   test("returns not_modifiable for a closed cycle", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "closed")
 
@@ -368,7 +369,7 @@ describe("UpdateReviewCycle", () => {
   })
 
   test("returns cycle_not_found for a missing cycle", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdateReviewCycle(context).run({
       session: makeTestSession("root"),
@@ -382,7 +383,7 @@ describe("UpdateReviewCycle", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdateReviewCycle(context).run({
       session: makeTestSession("member"),
@@ -398,13 +399,13 @@ describe("UpdateReviewCycle", () => {
 
 describe("SubmitReviewForm", () => {
   test("submits a pending form in an open cycle", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "open")
     const formId = await seedForm(context, cycleId, 5, "pending")
 
     const result = await new SubmitReviewForm(context).run({
-      viewerEmployeeId: 5,
+      viewerEmployeeId: toWorkforceEmployeeId(5),
       formId: formId,
       score: 80,
       answers: [{ q: 1, a: "good" }],
@@ -424,10 +425,10 @@ describe("SubmitReviewForm", () => {
   })
 
   test("returns form_not_found for a missing form", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new SubmitReviewForm(context).run({
-      viewerEmployeeId: 5,
+      viewerEmployeeId: toWorkforceEmployeeId(5),
       formId: 9999,
       score: null,
       answers: [],
@@ -439,13 +440,13 @@ describe("SubmitReviewForm", () => {
   })
 
   test("returns forbidden when viewer is not the assigned reviewer", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "open")
     const formId = await seedForm(context, cycleId, 5, "pending")
 
     const result = await new SubmitReviewForm(context).run({
-      viewerEmployeeId: 99,
+      viewerEmployeeId: toWorkforceEmployeeId(99),
       formId: formId,
       score: null,
       answers: [],
@@ -457,13 +458,13 @@ describe("SubmitReviewForm", () => {
   })
 
   test("returns already_submitted for an already submitted form", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "open")
     const formId = await seedForm(context, cycleId, 5, "submitted")
 
     const result = await new SubmitReviewForm(context).run({
-      viewerEmployeeId: 5,
+      viewerEmployeeId: toWorkforceEmployeeId(5),
       formId: formId,
       score: 90,
       answers: [],
@@ -475,13 +476,13 @@ describe("SubmitReviewForm", () => {
   })
 
   test("returns cycle_not_open when cycle is draft", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "draft")
     const formId = await seedForm(context, cycleId, 5, "pending")
 
     const result = await new SubmitReviewForm(context).run({
-      viewerEmployeeId: 5,
+      viewerEmployeeId: toWorkforceEmployeeId(5),
       formId: formId,
       score: null,
       answers: [],
@@ -493,13 +494,13 @@ describe("SubmitReviewForm", () => {
   })
 
   test("returns cycle_not_open when cycle is closed", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const cycleId = await seedCycle(context, "closed")
     const formId = await seedForm(context, cycleId, 5, "pending")
 
     const result = await new SubmitReviewForm(context).run({
-      viewerEmployeeId: 5,
+      viewerEmployeeId: toWorkforceEmployeeId(5),
       formId: formId,
       score: null,
       answers: [],

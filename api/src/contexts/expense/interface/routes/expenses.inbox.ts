@@ -11,7 +11,7 @@ import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { and, count, desc, eq, inArray, sql } from "drizzle-orm"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
-import { listManagedEmployeeIds } from "@/contexts/company/infrastructure/organization/list-managed-employee-ids.repository"
+import { ListManagedEmployeeIdsAdapter } from "@/contexts/company/infrastructure/adapters/organization/list-managed-employee-ids.adapter"
 
 // @authorization permission - 権限キーで判定する
 /** GET /expenses/inbox — 承認待ちの経費一覧（承認権限が必要） */
@@ -28,7 +28,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const managedEmployeeIds = session.hasPermission("org:manage")
     ? null
-    : await listManagedEmployeeIds(c, session.employeeId)
+    : await new ListManagedEmployeeIdsAdapter(c).listManagedEmployeeIds(session.employeeId)
 
   if (managedEmployeeIds instanceof Error) {
     throw new InternalError("failed to resolve organization scope")
@@ -57,7 +57,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const [rows, totalRows] = await Promise.all([
     c.var.database
-      .select({ expense: expenses, applicantName: employees.name })
+      .select({ expense: expenses, applicantName: employees.officialName })
       .from(expenses)
       .leftJoin(employees, eq(employees.id, expenses.employeeId))
       .where(pendingInScope)

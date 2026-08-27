@@ -1,24 +1,29 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import {
+  initializeCompanyMembershipTestState,
+  initializeStandardCompanyTestState,
+} from "@tests/api/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const jwtSecret = "evaluation-sheet-create-test-secret"
 
 const sheetSchema = z.object({
   id: z.number(),
-  employee_id: z.number(),
+  employee_id: zEmployeeId,
   template_id: z.number().nullable(),
   period: z.string(),
   status: z.string(),
-  primary_evaluator_id: z.number(),
-  secondary_evaluator_id: z.number().nullable(),
+  primary_evaluator_id: zEmployeeId,
+  secondary_evaluator_id: zEmployeeId.nullable(),
   revision: z.number(),
   submitted_at: z.string().nullable(),
   approved_at: z.string().nullable(),
@@ -30,15 +35,14 @@ const sheetSchema = z.object({
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -47,11 +51,11 @@ async function createTestDb(): Promise<D1Database> {
   await seedIamForEmployees(db)
 
   // migration sourceではemployee 5がemployee 1へreportする。
-  await seedD1(db, "org_memberships", [
+  await initializeCompanyMembershipTestState(db, [
     {
-      employee_code: seedEmployees[4].code, // employee 5
-      department_code: "D003",
-      manager_employee_code: seedEmployees[0].code, // employee 1
+      employeeCode: seedEmployees[4].code, // employee 5
+      departmentCode: "D003",
+      managerEmployeeCode: seedEmployees[0].code, // employee 1
     },
   ])
 
@@ -61,12 +65,12 @@ async function createTestDb(): Promise<D1Database> {
 }
 
 function hrToken(): Promise<string> {
-  return createTestToken(jwtSecret, { employeeId: 1 })
+  return createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) })
 }
 
 function memberToken(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -93,9 +97,9 @@ describe("POST /evaluation-sheets", () => {
     const response = await createSheet(
       db,
       {
-        employee_id: 5,
+        employee_id: "5",
         period: "2026-H1",
-        primary_evaluator_id: 1,
+        primary_evaluator_id: "1",
       },
       token,
     )
@@ -107,8 +111,8 @@ describe("POST /evaluation-sheets", () => {
     expect(body.success).toBe(true)
 
     if (body.success) {
-      expect(body.data.employee_id).toBe(5)
-      expect(body.data.primary_evaluator_id).toBe(1)
+      expect(body.data.employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(body.data.primary_evaluator_id).toBe(toWorkforceEmployeeId(1))
       expect(body.data.status).toBe("draft")
       expect(body.data.revision).toBe(1)
     }
@@ -121,7 +125,7 @@ describe("POST /evaluation-sheets", () => {
     const response = await createSheet(
       db,
       {
-        employee_id: 5,
+        employee_id: "5",
         period: "2026-H1",
       },
       token,
@@ -134,7 +138,7 @@ describe("POST /evaluation-sheets", () => {
     expect(body.success).toBe(true)
 
     if (body.success) {
-      expect(body.data.primary_evaluator_id).toBe(1)
+      expect(body.data.primary_evaluator_id).toBe(toWorkforceEmployeeId(1))
     }
   })
 
@@ -145,9 +149,9 @@ describe("POST /evaluation-sheets", () => {
     const first = await createSheet(
       db,
       {
-        employee_id: 5,
+        employee_id: "5",
         period: "2026-H1",
-        primary_evaluator_id: 1,
+        primary_evaluator_id: "1",
       },
       token,
     )
@@ -157,9 +161,9 @@ describe("POST /evaluation-sheets", () => {
     const second = await createSheet(
       db,
       {
-        employee_id: 5,
+        employee_id: "5",
         period: "2026-H1",
-        primary_evaluator_id: 1,
+        primary_evaluator_id: "1",
       },
       token,
     )
@@ -174,9 +178,9 @@ describe("POST /evaluation-sheets", () => {
     const response = await createSheet(
       db,
       {
-        employee_id: 5,
+        employee_id: "5",
         period: "2026-H1",
-        primary_evaluator_id: 5,
+        primary_evaluator_id: "5",
       },
       token,
     )
@@ -195,10 +199,10 @@ describe("POST /evaluation-sheets", () => {
     const response = await createSheet(
       db,
       {
-        employee_id: 5,
+        employee_id: "5",
         period: "2026-H1",
-        primary_evaluator_id: 1,
-        secondary_evaluator_id: 1,
+        primary_evaluator_id: "1",
+        secondary_evaluator_id: "1",
       },
       token,
     )
@@ -217,9 +221,9 @@ describe("POST /evaluation-sheets", () => {
     const response = await createSheet(
       db,
       {
-        employee_id: 5,
+        employee_id: "5",
         period: "2026-H1",
-        primary_evaluator_id: 1,
+        primary_evaluator_id: "1",
       },
       token,
     )

@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
 import type { Context } from "@/env"
 import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
@@ -5,7 +6,7 @@ import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  requesterId: number
+  requesterId: EmployeeId
   partnerName: string
   partnerAddress: string | null
   representativeName: string | null

@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { EmployeeWorkStyle } from "@/contexts/work-style/domain/entities/employee-work-style.entity"
 import type { Context } from "@/env"
 import { employeeWorkStyles } from "@/contexts/work-style/infrastructure/schema/work-style"
@@ -8,7 +9,7 @@ export class EmployeeWorkStyleRepository {
 
   /** 従業員の勤務形態を開始日の降順で返す。 */
   async findByEmployeeId(props: {
-    employeeId: number
+    employeeId: EmployeeId
     limit: number
     offset: number
   }): Promise<ReadonlyArray<EmployeeWorkStyle> | Error> {
@@ -27,7 +28,7 @@ export class EmployeeWorkStyleRepository {
     }
   }
 
-  async countByEmployeeId(employeeId: number): Promise<number | Error> {
+  async countByEmployeeId(employeeId: EmployeeId): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
         .select({ total: count() })

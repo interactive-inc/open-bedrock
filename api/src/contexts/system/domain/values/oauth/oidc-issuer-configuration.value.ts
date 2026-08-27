@@ -11,8 +11,63 @@ export class OidcIssuerConfigurationValue {
   readonly localProxyHostnames: ReadonlyArray<string>
   readonly localIssuerHostname: string | null
 
+  private static isCanonicalHostname(value: unknown): value is string {
+    return (
+      typeof value === "string" &&
+      value.length > 0 &&
+      value.length <= 253 &&
+      value === value.toLowerCase()
+    )
+  }
+
+  private static isOidcIssuerConfiguration(value: unknown): value is OidcIssuerConfiguration {
+    if (!OidcIssuerConfigurationValue.isPlainRecord(value)) return false
+    const issuersByHostname = value.issuersByHostname
+    const localProxyHostnames = value.localProxyHostnames
+    const localIssuerHostname = value.localIssuerHostname
+
+    return (
+      OidcIssuerConfigurationValue.isPlainRecord(issuersByHostname) &&
+      Array.isArray(localProxyHostnames) &&
+      localProxyHostnames.length <= 20 &&
+      localProxyHostnames.every((hostname) =>
+        OidcIssuerConfigurationValue.isCanonicalHostname(hostname),
+      ) &&
+      (localIssuerHostname === null ||
+        OidcIssuerConfigurationValue.isCanonicalHostname(localIssuerHostname))
+    )
+  }
+
+  private static isPlainRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return false
+    const prototype = Object.getPrototypeOf(value)
+    return prototype === Object.prototype || prototype === null
+  }
+
+  private static parseForwardedAuthority(value: string): URL | null {
+    if (value.trim() !== value || value.length === 0 || value.length > 253) return null
+
+    let parsed: URL
+    try {
+      parsed = new URL(`https://${value}`)
+    } catch {
+      return null
+    }
+
+    return parsed.username === "" &&
+      parsed.password === "" &&
+      parsed.port === "" &&
+      parsed.pathname === "/" &&
+      parsed.search === "" &&
+      parsed.hash === ""
+      ? parsed
+      : null
+  }
+
   constructor(configuration: OidcIssuerConfiguration) {
-    if (!isOidcIssuerConfiguration(configuration)) throw new InvalidOidcIssuerError()
+    if (!OidcIssuerConfigurationValue.isOidcIssuerConfiguration(configuration)) {
+      throw new InvalidOidcIssuerError()
+    }
     this.issuersByHostname = Object.freeze({ ...configuration.issuersByHostname })
     this.localProxyHostnames = Object.freeze([...configuration.localProxyHostnames])
     this.localIssuerHostname = configuration.localIssuerHostname
@@ -20,7 +75,9 @@ export class OidcIssuerConfigurationValue {
   }
 
   static create(value: unknown): OidcIssuerConfigurationValue | InvalidOidcIssuerError {
-    if (!isOidcIssuerConfiguration(value)) return new InvalidOidcIssuerError()
+    if (!OidcIssuerConfigurationValue.isOidcIssuerConfiguration(value)) {
+      return new InvalidOidcIssuerError()
+    }
     return new OidcIssuerConfigurationValue(value)
   }
 
@@ -58,7 +115,7 @@ export class OidcIssuerConfigurationValue {
       return new InvalidOidcIssuerError()
     }
 
-    const forwardedUrl = parseForwardedAuthority(props.forwardedHost)
+    const forwardedUrl = OidcIssuerConfigurationValue.parseForwardedAuthority(props.forwardedHost)
     if (forwardedUrl === null || forwardedUrl.hostname.toLowerCase() !== this.localIssuerHostname) {
       return new InvalidOidcIssuerError()
     }
@@ -96,54 +153,4 @@ export class OidcIssuerConfigurationValue {
       ? issuer
       : null
   }
-}
-
-function isCanonicalHostname(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    value.length > 0 &&
-    value.length <= 253 &&
-    value === value.toLowerCase()
-  )
-}
-
-function isOidcIssuerConfiguration(value: unknown): value is OidcIssuerConfiguration {
-  if (!isPlainRecord(value)) return false
-  const issuersByHostname = value.issuersByHostname
-  const localProxyHostnames = value.localProxyHostnames
-  const localIssuerHostname = value.localIssuerHostname
-
-  return (
-    isPlainRecord(issuersByHostname) &&
-    Array.isArray(localProxyHostnames) &&
-    localProxyHostnames.length <= 20 &&
-    localProxyHostnames.every(isCanonicalHostname) &&
-    (localIssuerHostname === null || isCanonicalHostname(localIssuerHostname))
-  )
-}
-
-function isPlainRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) return false
-  const prototype = Object.getPrototypeOf(value)
-  return prototype === Object.prototype || prototype === null
-}
-
-function parseForwardedAuthority(value: string): URL | null {
-  if (value.trim() !== value || value.length === 0 || value.length > 253) return null
-
-  let parsed: URL
-  try {
-    parsed = new URL(`https://${value}`)
-  } catch {
-    return null
-  }
-
-  return parsed.username === "" &&
-    parsed.password === "" &&
-    parsed.port === "" &&
-    parsed.pathname === "/" &&
-    parsed.search === "" &&
-    parsed.hash === ""
-    ? parsed
-    : null
 }

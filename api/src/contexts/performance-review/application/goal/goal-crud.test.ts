@@ -1,3 +1,4 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import { GoalEvaluation } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
@@ -7,11 +8,10 @@ import { DeleteGoal } from "@/contexts/performance-review/application/goal/delet
 import { CreateGoalEvaluation } from "@/contexts/performance-review/application/goal/create-goal-evaluation"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { makeTestSession } from "@/api/test/support/make-test-session"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { makeTestSession } from "@tests/api/support/make-test-session"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { initializeCompanyTestFixture } from "@tests/api/support/initialize-company-test-fixture"
 import type { Context } from "@/env"
 
 /** 目標の所有者(id=owner)を、上長(id=manager)のレポートライン配下にする最小の org を仕込む。 */
@@ -19,7 +19,7 @@ async function seedReportsTo(
   db: D1Database,
   props: { managerId: number; managerCode: string; ownerId: number; ownerCode: string },
 ): Promise<void> {
-  await seedD1(db, "employees", [
+  const employees = [
     {
       id: props.managerId,
       code: props.managerCode,
@@ -28,37 +28,39 @@ async function seedReportsTo(
       status: "active",
     },
     { id: props.ownerId, code: props.ownerCode, name: "Owner", dept_id: 1, status: "active" },
-  ])
-
-  await seedD1(db, "org_memberships", [
-    { department_code: "D001", employee_code: props.managerCode, manager_employee_code: null },
+  ] as const
+  const memberships = [
+    { departmentCode: "D001", employeeCode: props.managerCode, managerEmployeeCode: null },
     {
-      department_code: "D001",
-      employee_code: props.ownerCode,
-      manager_employee_code: props.managerCode,
+      departmentCode: "D001",
+      employeeCode: props.ownerCode,
+      managerEmployeeCode: props.managerCode,
     },
-  ])
+  ] as const
 
   await initializeCompanyTestFixture({
     db,
+    employees,
     departments: [{ id: 1, code: "D001", name: "Team", managerEmployeeCode: props.managerCode }],
+    memberships,
   })
 }
 
 async function seedIndependentEmployees(db: D1Database): Promise<void> {
-  await seedD1(db, "employees", [
+  const employees = [
     { id: 1, code: "E001", name: "Owner", dept_id: 1, status: "active" },
     { id: 2, code: "E002", name: "Viewer", dept_id: 1, status: "active" },
-  ])
+  ] as const
   await initializeCompanyTestFixture({
     db,
+    employees,
     departments: [{ id: 1, code: "D001", name: "Team" }],
   })
 }
 
 async function seedGoal(context: Context, employeeId: number): Promise<Goal> {
   const result = await new CreateGoal(context).run({
-    employeeId: employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
     period: "2026-H1",
     title: "Improve test coverage",
     kpi: null,
@@ -83,7 +85,7 @@ async function finalizeGoal(context: Context, goal: Goal): Promise<void> {
   await context.env.DB.prepare(
     `INSERT INTO goal_evaluations
        (goal_id, evaluator_id, kind, score, comment, created_at)
-     VALUES (?1, 999, 'final', 5, 'Good work', '2026-01-01T00:00:00.000Z')`,
+     VALUES (?1, '1', 'final', 5, 'Good work', '2026-01-01T00:00:00.000Z')`,
   )
     .bind(goal.id)
     .run()
@@ -91,10 +93,10 @@ async function finalizeGoal(context: Context, goal: Goal): Promise<void> {
 
 describe("CreateGoal", () => {
   test("creates a goal", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateGoal(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       period: "2026-H1",
       title: "Learn TypeScript",
       kpi: null,
@@ -112,10 +114,10 @@ describe("CreateGoal", () => {
   })
 
   test("creates a goal with KPI", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateGoal(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       period: "2026-H1",
       title: "Reduce bug count",
       kpi: "50% fewer critical bugs",
@@ -136,7 +138,7 @@ describe("GetGoal", () => {})
 
 describe("UpdateGoal", () => {
   test("updates for the owner", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const goal = await seedGoal(context, 1)
 
     if (goal.id === null) {
@@ -145,7 +147,7 @@ describe("UpdateGoal", () => {
 
     const result = await new UpdateGoal(context).run({
       goalId: goal.id,
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       period: "2026-H2",
       title: "Updated title",
       kpi: "New KPI",
@@ -163,7 +165,7 @@ describe("UpdateGoal", () => {
   })
 
   test("rejects non-owner with not_owner", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const goal = await seedGoal(context, 1)
 
     if (goal.id === null) {
@@ -172,7 +174,7 @@ describe("UpdateGoal", () => {
 
     const result = await new UpdateGoal(context).run({
       goalId: goal.id,
-      employeeId: 2,
+      employeeId: toWorkforceEmployeeId(2),
       period: "2026-H1",
       title: "Hijacked",
       kpi: null,
@@ -183,11 +185,11 @@ describe("UpdateGoal", () => {
   })
 
   test("rejects unknown id with goal_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdateGoal(context).run({
       goalId: 9999,
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       period: "2026-H1",
       title: "Missing",
       kpi: null,
@@ -198,7 +200,7 @@ describe("UpdateGoal", () => {
   })
 
   test("rejects finalized goal with goal_finalized", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const goal = await seedGoal(context, 1)
 
     await finalizeGoal(context, goal)
@@ -209,7 +211,7 @@ describe("UpdateGoal", () => {
 
     const result = await new UpdateGoal(context).run({
       goalId: goal.id,
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       period: "2026-H1",
       title: "Too late",
       kpi: null,
@@ -222,7 +224,7 @@ describe("UpdateGoal", () => {
 
 describe("DeleteGoal", () => {
   test("deletes for the owner", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const goal = await seedGoal(context, 1)
 
     if (goal.id === null) {
@@ -231,14 +233,14 @@ describe("DeleteGoal", () => {
 
     const result = await new DeleteGoal(context).run({
       goalId: goal.id,
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
     })
 
     expect(result).toEqual({ reason: "deleted" })
   })
 
   test("rejects non-owner with not_owner", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const goal = await seedGoal(context, 1)
 
     if (goal.id === null) {
@@ -247,25 +249,25 @@ describe("DeleteGoal", () => {
 
     const result = await new DeleteGoal(context).run({
       goalId: goal.id,
-      employeeId: 2,
+      employeeId: toWorkforceEmployeeId(2),
     })
 
     expectApplicationError(result, ForbiddenError, "not_owner")
   })
 
   test("rejects unknown id with goal_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new DeleteGoal(context).run({
       goalId: 9999,
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
     })
 
     expectApplicationError(result, NotFoundError, "goal_not_found")
   })
 
   test("rejects finalized goal with goal_finalized", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const goal = await seedGoal(context, 1)
 
     await finalizeGoal(context, goal)
@@ -276,7 +278,7 @@ describe("DeleteGoal", () => {
 
     const result = await new DeleteGoal(context).run({
       goalId: goal.id,
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
     })
 
     expectApplicationError(result, ConflictError, "goal_finalized")
@@ -289,7 +291,7 @@ describe("ListGoalEvaluations", () => {})
 
 describe("CreateGoalEvaluation", () => {
   test("creates a self evaluation for the owner", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const goal = await seedGoal(context, 1)
 
     if (goal.id === null) {
@@ -301,7 +303,7 @@ describe("CreateGoalEvaluation", () => {
       kind: "self",
       score: 4,
       comment: "I did well",
-      evaluatorId: 1,
+      evaluatorId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
@@ -317,7 +319,7 @@ describe("CreateGoalEvaluation", () => {
   })
 
   test("rejects self evaluation by non-owner with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const goal = await seedGoal(context, 1)
 
     if (goal.id === null) {
@@ -329,7 +331,7 @@ describe("CreateGoalEvaluation", () => {
       kind: "self",
       score: 3,
       comment: null,
-      evaluatorId: 2,
+      evaluatorId: toWorkforceEmployeeId(2),
       session: makeTestSession("member"),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
@@ -338,7 +340,7 @@ describe("CreateGoalEvaluation", () => {
   })
 
   test("creates a manager evaluation for the report's manager", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
     const goal = await seedGoal(context, 1)
 
     await seedReportsTo(db, { managerId: 2, managerCode: "E002", ownerId: 1, ownerCode: "E001" })
@@ -352,7 +354,7 @@ describe("CreateGoalEvaluation", () => {
       kind: "manager",
       score: 5,
       comment: "Excellent",
-      evaluatorId: 2,
+      evaluatorId: toWorkforceEmployeeId(2),
       session: makeTestSession("manager", 2),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
@@ -361,7 +363,7 @@ describe("CreateGoalEvaluation", () => {
   })
 
   test("rejects a manager evaluation for a non-report", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
     const goal = await seedGoal(context, 1)
     await seedIndependentEmployees(db)
 
@@ -374,7 +376,7 @@ describe("CreateGoalEvaluation", () => {
       kind: "manager",
       score: 5,
       comment: "Excellent",
-      evaluatorId: 2,
+      evaluatorId: toWorkforceEmployeeId(2),
       session: makeTestSession("manager", 2),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
@@ -383,7 +385,7 @@ describe("CreateGoalEvaluation", () => {
   })
 
   test("rejects manager evaluation by member with forbidden", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
     const goal = await seedGoal(context, 1)
     await seedIndependentEmployees(db)
 
@@ -396,7 +398,7 @@ describe("CreateGoalEvaluation", () => {
       kind: "manager",
       score: 3,
       comment: null,
-      evaluatorId: 2,
+      evaluatorId: toWorkforceEmployeeId(2),
       session: makeTestSession("member"),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
@@ -405,7 +407,7 @@ describe("CreateGoalEvaluation", () => {
   })
 
   test("rejects duplicate self evaluation with already_evaluated", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const goal = await seedGoal(context, 1)
 
     if (goal.id === null) {
@@ -417,7 +419,7 @@ describe("CreateGoalEvaluation", () => {
       kind: "self",
       score: 4,
       comment: null,
-      evaluatorId: 1,
+      evaluatorId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
@@ -427,7 +429,7 @@ describe("CreateGoalEvaluation", () => {
       kind: "self",
       score: 3,
       comment: null,
-      evaluatorId: 1,
+      evaluatorId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       createdAt: "2026-01-02T00:00:00.000Z",
     })
@@ -436,14 +438,14 @@ describe("CreateGoalEvaluation", () => {
   })
 
   test("rejects evaluation on non-existent goal with goal_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateGoalEvaluation(context).run({
       goalId: 9999,
       kind: "self",
       score: 3,
       comment: null,
-      evaluatorId: 1,
+      evaluatorId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       createdAt: "2026-01-01T00:00:00.000Z",
     })

@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
@@ -9,7 +10,7 @@ export const assets = sqliteTable("assets", {
   serial: text("serial"),
   purchasedOn: text("purchased_on"),
   status: text("status").notNull(),
-  holderEmployeeId: integer("holder_employee_id"),
+  holderEmployeeId: text("holder_employee_id").$type<EmployeeId>(),
   disposedOn: text("disposed_on"),
   disposalReason: text("disposal_reason"),
 })
@@ -20,7 +21,7 @@ export type AssetRow = InferSelectModel<typeof assets>
 export const assetLendings = sqliteTable("asset_lendings", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   assetCode: text("asset_code").notNull(),
-  employeeId: integer("employee_id").notNull(),
+  employeeId: text("employee_id").$type<EmployeeId>().notNull(),
   lentAt: text("lent_at").notNull(),
   returnedAt: text("returned_at"),
 })

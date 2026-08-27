@@ -9,8 +9,8 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { CreateReviewCycle } from "@/contexts/performance-review/application/review/create-review-cycle"
-import { zReviewCyclePolicy } from "@/contexts/performance-review/domain/values/review-cycle-policy.value"
-import { toReviewCycleStatus } from "@/contexts/performance-review/domain/values/review-cycle-status.value"
+import { zReviewCyclePolicy } from "@/contexts/performance-review/domain/definitions/review-cycle-policy.definition"
+import { toReviewCycleStatus } from "@/contexts/performance-review/domain/definitions/review-cycle-status.definition"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { zAppReviewCycle, zAppReviewCycleList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"

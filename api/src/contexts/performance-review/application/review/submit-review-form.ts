@@ -1,4 +1,5 @@
 import { canSubmitForm } from "@/contexts/performance-review/domain/policies/review-form-submission.policy"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -7,7 +8,7 @@ import { ReviewCycleRepository } from "@/contexts/performance-review/infrastruct
 import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-form.repository"
 
 export type Input = {
-  viewerEmployeeId: number
+  viewerEmployeeId: EmployeeId
   formId: number
   score: number | null
   answers: ReadonlyArray<unknown>

@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import type { AssetRow } from "@/contexts/asset/infrastructure/schema/asset"
 
@@ -8,7 +9,7 @@ type AssetResponse = {
   serial: string | null
   purchased_on: string | null
   status: string
-  holder_employee_id: number | null
+  holder_employee_id: EmployeeId | null
 }
 
 /**

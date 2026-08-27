@@ -1,9 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { ResignationRow } from "@/contexts/resignation/infrastructure/schema/resignation"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.string(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   resignationDate: z.string(),
   lastWorkingDate: z.string().nullable(),
   reason: z.string().nullable(),
@@ -40,7 +42,7 @@ export class Resignation implements Props {
 
   /** 新規退職申請を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     resignationDate: string
     lastWorkingDate: string | null
     reason: string | null

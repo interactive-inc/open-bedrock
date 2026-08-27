@@ -1,8 +1,8 @@
 {
   "version": 1,
   "files": {
-    "scripts/check-api-foundation.ts": "c522ab800201ff7857e118a40a234369ff8c2e6e45aeeac356300a43bb81e2e6",
+    "scripts/check-api-foundation.ts": "25b5e7a5d762c98e06b0da36cea0e34aff5094b946316d121ba1a7bcda83a599",
     "src/api/api-route-module.ts": "0b70a34f4f63ec8a94d5c412cf91618027e887aef5d8493e3d2a2fe10cdda06c",
-    "src/api/test/api-route-module.test.ts": "faaf5f610958e5ab26a13d955b45f5ebfd01ff10d23c770a659abee5ee038ed7"
+    "tests/api/api-route-module.test.ts": "faaf5f610958e5ab26a13d955b45f5ebfd01ff10d23c770a659abee5ee038ed7"
   }
 }

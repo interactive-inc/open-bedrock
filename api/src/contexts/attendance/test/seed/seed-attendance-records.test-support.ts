@@ -1,6 +1,8 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 export type SeedAttendanceRecord = {
   id: number
-  employeeId: number
+  employeeId: EmployeeId
   workDate: string
   clockInAt: string | null
   clockOutAt: string | null
@@ -17,7 +19,7 @@ export type SeedAttendanceRecord = {
 export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
   {
     id: 1,
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
     workDate: "2026-05-25",
     clockInAt: "2026-05-25T09:00:00Z",
     clockOutAt: "2026-05-25T18:00:00Z",
@@ -26,7 +28,7 @@ export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
   },
   {
     id: 2,
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
     workDate: "2026-05-26",
     clockInAt: "2026-05-26T09:00:00Z",
     clockOutAt: "2026-05-26T17:30:00Z",
@@ -35,7 +37,7 @@ export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
   },
   {
     id: 3,
-    employeeId: 9,
+    employeeId: toWorkforceEmployeeId(9),
     workDate: "2026-05-25",
     clockInAt: "2026-05-25T10:00:00Z",
     clockOutAt: "2026-05-25T18:00:00Z",
@@ -44,7 +46,7 @@ export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
   },
   {
     id: 4,
-    employeeId: 9,
+    employeeId: toWorkforceEmployeeId(9),
     workDate: "2026-05-29",
     clockInAt: "2026-05-29T09:15:00Z",
     clockOutAt: null,

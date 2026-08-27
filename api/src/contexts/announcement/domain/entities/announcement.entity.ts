@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { AnnouncementRow } from "@/contexts/announcement/infrastructure/schema/announcement"
 import { z } from "zod"
 
@@ -10,7 +12,7 @@ const zProps = z.object({
   title: z.string(),
   bodyMd: z.string(),
   publishedOn: z.string().nullable(),
-  authorEmployeeId: z.number(),
+  authorEmployeeId: zEmployeeId,
   status: announcementStatusSchema,
   createdAt: z.string(),
 })
@@ -45,7 +47,7 @@ export class Announcement implements Props {
   static create(props: {
     title: string
     bodyMd: string
-    authorEmployeeId: number
+    authorEmployeeId: EmployeeId
     createdAt: string
   }): Announcement {
     return new Announcement({

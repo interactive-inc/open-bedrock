@@ -1,13 +1,15 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { familyCareLeaves } from "@/contexts/family-care-leave/infrastructure/schema/family-care-leave"
 import { describe, expect, test } from "bun:test"
 
 describe("FamilyCareLeaveRepository", () => {
   /** 新規の休業申出ドメインを組み立てる。invalid_date_range は致命なので throw する。 */
   function buildLeave(props: {
-    employeeId: number
+    employeeId: EmployeeId
     startDate: string
     endDate: string
   }): FamilyCareLeave {
@@ -29,12 +31,16 @@ describe("FamilyCareLeaveRepository", () => {
 
   describe("create", () => {
     test("creates a leave when there is no overlap", async () => {
-      const { context } = createTestContext()
+      const { context } = await createTestContext()
 
       const repository = new FamilyCareLeaveRepository(context)
 
       const created = await repository.create(
-        buildLeave({ employeeId: 1, startDate: "2026-02-01", endDate: "2026-02-05" }),
+        buildLeave({
+          employeeId: toWorkforceEmployeeId(1),
+          startDate: "2026-02-01",
+          endDate: "2026-02-05",
+        }),
       )
 
       expect(created).toBeInstanceOf(FamilyCareLeave)
@@ -49,12 +55,16 @@ describe("FamilyCareLeaveRepository", () => {
     })
 
     test("returns null when an overlapping requested leave already exists for the same employee", async () => {
-      const { context } = createTestContext()
+      const { context } = await createTestContext()
 
       const repository = new FamilyCareLeaveRepository(context)
 
       const first = await repository.create(
-        buildLeave({ employeeId: 1, startDate: "2026-02-01", endDate: "2026-02-05" }),
+        buildLeave({
+          employeeId: toWorkforceEmployeeId(1),
+          startDate: "2026-02-01",
+          endDate: "2026-02-05",
+        }),
       )
 
       if (first instanceof Error || first === null) {
@@ -62,19 +72,27 @@ describe("FamilyCareLeaveRepository", () => {
       }
 
       const second = await repository.create(
-        buildLeave({ employeeId: 1, startDate: "2026-02-03", endDate: "2026-02-07" }),
+        buildLeave({
+          employeeId: toWorkforceEmployeeId(1),
+          startDate: "2026-02-03",
+          endDate: "2026-02-07",
+        }),
       )
 
       expect(second).toBeNull()
     })
 
     test("creates a leave for another employee even with the same period", async () => {
-      const { context } = createTestContext()
+      const { context } = await createTestContext()
 
       const repository = new FamilyCareLeaveRepository(context)
 
       const first = await repository.create(
-        buildLeave({ employeeId: 1, startDate: "2026-02-01", endDate: "2026-02-05" }),
+        buildLeave({
+          employeeId: toWorkforceEmployeeId(1),
+          startDate: "2026-02-01",
+          endDate: "2026-02-05",
+        }),
       )
 
       if (first instanceof Error || first === null) {
@@ -82,21 +100,25 @@ describe("FamilyCareLeaveRepository", () => {
       }
 
       const second = await repository.create(
-        buildLeave({ employeeId: 2, startDate: "2026-02-01", endDate: "2026-02-05" }),
+        buildLeave({
+          employeeId: toWorkforceEmployeeId(2),
+          startDate: "2026-02-01",
+          endDate: "2026-02-05",
+        }),
       )
 
       expect(second).toBeInstanceOf(FamilyCareLeave)
     })
 
     test("creates a leave when the only overlapping row is not in requested status", async () => {
-      const { context } = createTestContext()
+      const { context } = await createTestContext()
 
       const repository = new FamilyCareLeaveRepository(context)
 
       // status が requested 以外（approved）の行はドメインで作れないため直接挿入する。
       await context.var.database.insert(familyCareLeaves).values({
         id: "00000000-0000-0000-0000-0000000000aa",
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         leaveKind: "family_care",
         startDate: "2026-02-01",
         endDate: "2026-02-05",
@@ -106,19 +128,27 @@ describe("FamilyCareLeaveRepository", () => {
       })
 
       const created = await repository.create(
-        buildLeave({ employeeId: 1, startDate: "2026-02-03", endDate: "2026-02-07" }),
+        buildLeave({
+          employeeId: toWorkforceEmployeeId(1),
+          startDate: "2026-02-03",
+          endDate: "2026-02-07",
+        }),
       )
 
       expect(created).toBeInstanceOf(FamilyCareLeave)
     })
 
     test("treats a shared boundary date (existing end_date == new start_date) as an overlap", async () => {
-      const { context } = createTestContext()
+      const { context } = await createTestContext()
 
       const repository = new FamilyCareLeaveRepository(context)
 
       const first = await repository.create(
-        buildLeave({ employeeId: 1, startDate: "2026-02-01", endDate: "2026-02-03" }),
+        buildLeave({
+          employeeId: toWorkforceEmployeeId(1),
+          startDate: "2026-02-01",
+          endDate: "2026-02-03",
+        }),
       )
 
       if (first instanceof Error || first === null) {
@@ -126,7 +156,11 @@ describe("FamilyCareLeaveRepository", () => {
       }
 
       const second = await repository.create(
-        buildLeave({ employeeId: 1, startDate: "2026-02-03", endDate: "2026-02-05" }),
+        buildLeave({
+          employeeId: toWorkforceEmployeeId(1),
+          startDate: "2026-02-03",
+          endDate: "2026-02-05",
+        }),
       )
 
       expect(second).toBeNull()
@@ -135,16 +169,24 @@ describe("FamilyCareLeaveRepository", () => {
 
   describe("updateIfNoOverlap", () => {
     test("returns null when the new period overlaps another requested leave of the same employee", async () => {
-      const { context } = createTestContext()
+      const { context } = await createTestContext()
 
       const repository = new FamilyCareLeaveRepository(context)
 
       const a = await repository.create(
-        buildLeave({ employeeId: 1, startDate: "2026-02-01", endDate: "2026-02-05" }),
+        buildLeave({
+          employeeId: toWorkforceEmployeeId(1),
+          startDate: "2026-02-01",
+          endDate: "2026-02-05",
+        }),
       )
 
       const b = await repository.create(
-        buildLeave({ employeeId: 1, startDate: "2026-02-10", endDate: "2026-02-15" }),
+        buildLeave({
+          employeeId: toWorkforceEmployeeId(1),
+          startDate: "2026-02-10",
+          endDate: "2026-02-15",
+        }),
       )
 
       if (a instanceof Error || a === null || b instanceof Error || b === null) {
@@ -169,12 +211,16 @@ describe("FamilyCareLeaveRepository", () => {
     })
 
     test("succeeds when only the leave itself overlaps (self-exclusion)", async () => {
-      const { context } = createTestContext()
+      const { context } = await createTestContext()
 
       const repository = new FamilyCareLeaveRepository(context)
 
       const leave = await repository.create(
-        buildLeave({ employeeId: 1, startDate: "2026-02-01", endDate: "2026-02-05" }),
+        buildLeave({
+          employeeId: toWorkforceEmployeeId(1),
+          startDate: "2026-02-01",
+          endDate: "2026-02-05",
+        }),
       )
 
       if (leave instanceof Error || leave === null) {
@@ -214,14 +260,14 @@ describe("FamilyCareLeaveRepository", () => {
     })
 
     test("returns null when the target row is not in requested status", async () => {
-      const { context } = createTestContext()
+      const { context } = await createTestContext()
 
       const repository = new FamilyCareLeaveRepository(context)
 
       // status が requested 以外（approved）の行はドメインで作れないため直接挿入する。
       await context.var.database.insert(familyCareLeaves).values({
         id: "00000000-0000-0000-0000-0000000000bb",
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         leaveKind: "family_care",
         startDate: "2026-02-01",
         endDate: "2026-02-05",
@@ -232,7 +278,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const target = new FamilyCareLeave({
         id: "00000000-0000-0000-0000-0000000000bb",
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         leaveKind: "family_care",
         startDate: "2026-03-01",
         endDate: "2026-03-05",

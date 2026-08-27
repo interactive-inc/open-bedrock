@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
@@ -19,7 +20,7 @@ export const careerApplications = sqliteTable(
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     postingId: integer("posting_id").notNull(),
-    applicantId: integer("applicant_id").notNull(),
+    applicantId: text("applicant_id").$type<EmployeeId>().notNull(),
     message: text("message"),
     status: text("status").notNull(),
   },
@@ -33,7 +34,7 @@ export type CareerApplicationRow = InferSelectModel<typeof careerApplications>
 
 /** 社員ごとのキャリアシート（目標・強み）。employee_id が主キー。 */
 export const careerSheets = sqliteTable("career_sheets", {
-  employeeId: integer("employee_id").primaryKey(),
+  employeeId: text("employee_id").$type<EmployeeId>().primaryKey(),
   goalsText: text("goals_text"),
   strengthsText: text("strengths_text"),
   updatedAt: text("updated_at").notNull(),

@@ -1,7 +1,9 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedShiftSwapRequest = {
   id: number
-  requesterEmployeeId: number
-  targetEmployeeId: number
+  requesterEmployeeId: EmployeeId
+  targetEmployeeId: EmployeeId
   date: string
   note: string | null
   status: string
@@ -12,8 +14,8 @@ type SeedShiftSwapRequest = {
 export const seedShiftSwapRequests: ReadonlyArray<SeedShiftSwapRequest> = [
   {
     id: 1,
-    requesterEmployeeId: 5,
-    targetEmployeeId: 4,
+    requesterEmployeeId: toWorkforceEmployeeId(5),
+    targetEmployeeId: toWorkforceEmployeeId(4),
     date: "2026-06-01",
     note: "通院のため",
     status: "pending",
@@ -21,8 +23,8 @@ export const seedShiftSwapRequests: ReadonlyArray<SeedShiftSwapRequest> = [
   },
   {
     id: 2,
-    requesterEmployeeId: 4,
-    targetEmployeeId: 5,
+    requesterEmployeeId: toWorkforceEmployeeId(4),
+    targetEmployeeId: toWorkforceEmployeeId(5),
     date: "2026-06-03",
     note: null,
     status: "approved",

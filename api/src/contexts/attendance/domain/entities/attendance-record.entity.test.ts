@@ -1,10 +1,11 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("AttendanceRecord.create", () => {
   test("uses the clock-in date as work date for a daytime instant", () => {
     const record = AttendanceRecord.create({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       clockInAt: "2026-03-15T09:00:00.000Z",
       note: null,
     })
@@ -15,7 +16,7 @@ describe("AttendanceRecord.create", () => {
   test("resolves work date in JST so early-morning clock-in is not the previous day", () => {
     // UTC 2026-03-14T23:30 = JST 2026-03-15 08:30 の出勤。UTC 日付では前日になる。
     const record = AttendanceRecord.create({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       clockInAt: "2026-03-14T23:30:00.000Z",
       note: null,
     })
@@ -25,7 +26,7 @@ describe("AttendanceRecord.create", () => {
 
   test("resolves work date in JST at the day boundary (UTC 15:00 = JST 00:00)", () => {
     const record = AttendanceRecord.create({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       clockInAt: "2026-03-15T15:00:00.000Z",
       note: null,
     })

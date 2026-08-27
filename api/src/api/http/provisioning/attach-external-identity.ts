@@ -1,6 +1,6 @@
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { IdentityProvider } from "@system/domain/schemas/identity/identity-provider.schema"
-import { PrepareSystemIdentityAttachment } from "@system/infrastructure/identity/prepare-system-identity-attachment.repository"
+import { SystemIdentityAttachmentAdapter } from "@system/infrastructure/adapters/identity/system-identity-attachment.adapter"
 import type { Context } from "@/env"
 
 /** machine provisioningで既存System Accountへ外部Identityを追加する。 */
@@ -16,9 +16,9 @@ export class AttachExternalIdentity {
     email: string
     now: Date
   }): Promise<null | Error> {
-    const prepared = new PrepareSystemIdentityAttachment({ env: { DB: this.c.env.DB } }).prepare(
-      input,
-    )
+    const prepared = new SystemIdentityAttachmentAdapter({
+      env: { DB: this.c.env.DB },
+    }).prepare(input)
     if (prepared instanceof Error) return prepared
 
     try {

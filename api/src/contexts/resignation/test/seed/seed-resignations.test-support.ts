@@ -1,6 +1,8 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedResignation = {
   id: string
-  employeeId: number
+  employeeId: EmployeeId
   resignationDate: string
   lastWorkingDate: string | null
   reason: string | null
@@ -11,7 +13,7 @@ type SeedResignation = {
 export const seedResignations: ReadonlyArray<SeedResignation> = [
   {
     id: "20000000-0000-0000-0000-000000000001",
-    employeeId: 2,
+    employeeId: toWorkforceEmployeeId(2),
     resignationDate: "2026-09-30",
     lastWorkingDate: "2026-09-20",
     reason: "Career change",
@@ -20,7 +22,7 @@ export const seedResignations: ReadonlyArray<SeedResignation> = [
   },
   {
     id: "20000000-0000-0000-0000-000000000002",
-    employeeId: 4,
+    employeeId: toWorkforceEmployeeId(4),
     resignationDate: "2026-10-31",
     lastWorkingDate: null,
     reason: null,
@@ -29,7 +31,7 @@ export const seedResignations: ReadonlyArray<SeedResignation> = [
   },
   {
     id: "20000000-0000-0000-0000-000000000003",
-    employeeId: 9,
+    employeeId: toWorkforceEmployeeId(9),
     resignationDate: "2026-08-15",
     lastWorkingDate: "2026-08-08",
     reason: "Relocation",

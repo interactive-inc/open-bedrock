@@ -7,6 +7,7 @@ import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 
 // @authorization service - session を application service に渡して判定する
 export const POST = factory.createHandlers(
@@ -14,7 +15,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      candidate_employee_ids: z.array(z.number().int().positive()).min(1).max(20),
+      candidate_employee_ids: z.array(zEmployeeId).min(1).max(20),
       required_approvals: z.number().int().positive().max(20).optional(),
       reason: z.string().trim().min(1).max(1_000),
     }),

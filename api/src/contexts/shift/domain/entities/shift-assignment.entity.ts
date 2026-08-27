@@ -1,9 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { ShiftAssignmentRow } from "@/contexts/shift/infrastructure/schema/shift"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   patternId: z.number().nullable(),
   date: z.string(),
   note: z.string().nullable(),
@@ -41,7 +43,7 @@ export class ShiftAssignment implements Props {
 
   /** 新規作成する割当を組み立てる。id は未採番、未公開。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     patternId: number | null
     date: string
     note: string | null

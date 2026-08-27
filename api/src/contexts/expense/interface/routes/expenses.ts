@@ -1,4 +1,4 @@
-import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
+import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
 
 import { expenseAttachments } from "@/contexts/expense/infrastructure/schema/expense"
@@ -76,7 +76,7 @@ export const POST = factory.createHandlers(
           return new ValidationError("添付が重複しています", "attachment_duplicated")
         }
 
-        const repository = new AttachmentRepository(c)
+        const repository = new AttachmentAdapter(c)
 
         const rows = await repository.findManyByIds(linkCommand.attachmentIds)
 

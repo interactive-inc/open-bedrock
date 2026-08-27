@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { WorkAccidentRepository } from "@/contexts/work-accident/infrastructure/repositories/work-accident.repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -14,7 +15,7 @@ export class CreateWorkAccident {
 
   async run(props: {
     occurredOn: string
-    employeeId: number | null
+    employeeId: EmployeeId | null
     location: string | null
     summary: string
     severity: "minor" | "serious" | null

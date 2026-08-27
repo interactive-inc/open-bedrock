@@ -1,7 +1,7 @@
 import { DeleteSurvey } from "@/contexts/survey/application/delete-survey"
 import { UpdateSurvey } from "@/contexts/survey/application/update-survey"
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
-import { surveyQuestionSchema } from "@/contexts/survey/domain/values/survey-question.value"
+import { surveyQuestionSchema } from "@/contexts/survey/domain/definitions/survey-question.definition"
 import { factory } from "@/api/http/factory"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { verifyBearer } from "@/api/http/verify-bearer"

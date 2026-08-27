@@ -1,15 +1,16 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { CreateBusinessTrip } from "@/contexts/business-trip/application/create-business-trip"
 import { UpdateBusinessTrip } from "@/contexts/business-trip/application/update-business-trip"
 import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
 import type { Context } from "@/env"
 import { ForbiddenError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
 
 async function seedTrip(context: Context, travelerId: number): Promise<string> {
   const created = await new CreateBusinessTrip(context).run({
-    travelerId: travelerId,
+    travelerId: toWorkforceEmployeeId(travelerId),
     destination: "Osaka Branch",
     startDate: "2026-06-10",
     endDate: "2026-06-12",
@@ -27,10 +28,10 @@ async function seedTrip(context: Context, travelerId: number): Promise<string> {
 
 describe("CreateBusinessTrip", () => {
   test("creates a business trip with status requested", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const created = await new CreateBusinessTrip(context).run({
-      travelerId: 2,
+      travelerId: toWorkforceEmployeeId(2),
       destination: "Sapporo Site",
       startDate: "2026-06-20",
       endDate: "2026-06-22",
@@ -56,13 +57,13 @@ describe("ListMyBusinessTrips", () => {})
 
 describe("UpdateBusinessTrip", () => {
   test("updates the details for the traveler", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const tripId = await seedTrip(context, 5)
 
     const result = await new UpdateBusinessTrip(context).run({
       businessTripId: tripId,
-      travelerId: 5,
+      travelerId: toWorkforceEmployeeId(5),
       destination: "Fukuoka Office",
       startDate: "2026-07-01",
       endDate: "2026-07-03",
@@ -81,13 +82,13 @@ describe("UpdateBusinessTrip", () => {
   })
 
   test("rejects a non traveler with not_traveler", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const tripId = await seedTrip(context, 5)
 
     const result = await new UpdateBusinessTrip(context).run({
       businessTripId: tripId,
-      travelerId: 6,
+      travelerId: toWorkforceEmployeeId(6),
       destination: "Fukuoka Office",
       startDate: "2026-07-01",
       endDate: "2026-07-03",

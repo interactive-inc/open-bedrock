@@ -1,4 +1,4 @@
-import { zReviewCyclePolicy } from "@/contexts/performance-review/domain/values/review-cycle-policy.value"
+import { zReviewCyclePolicy } from "@/contexts/performance-review/domain/definitions/review-cycle-policy.definition"
 import { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
 import {
   ConflictError,

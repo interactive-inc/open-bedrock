@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { EvaluationSheetRow } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { z } from "zod"
 
@@ -32,12 +34,12 @@ const VALID_TRANSITIONS: Record<EvaluationSheetStatus, ReadonlyArray<EvaluationS
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   templateId: z.number().nullable(),
   period: z.string().min(1).max(100),
   status: evaluationSheetStatusSchema,
-  primaryEvaluatorId: z.number(),
-  secondaryEvaluatorId: z.number().nullable(),
+  primaryEvaluatorId: zEmployeeId,
+  secondaryEvaluatorId: zEmployeeId.nullable(),
   submittedAt: z.string().nullable(),
   approvedAt: z.string().nullable(),
   finalizedAt: z.string().nullable(),
@@ -85,11 +87,11 @@ export class EvaluationSheet implements Props {
   }
 
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     templateId: number | null
     period: string
-    primaryEvaluatorId: number
-    secondaryEvaluatorId: number | null
+    primaryEvaluatorId: EmployeeId
+    secondaryEvaluatorId: EmployeeId | null
     now: string
   }): EvaluationSheet {
     return new EvaluationSheet({
@@ -168,8 +170,8 @@ export class EvaluationSheet implements Props {
    * revision をインクリメントする。
    */
   withEvaluators(props: {
-    primaryEvaluatorId: number
-    secondaryEvaluatorId: number | null
+    primaryEvaluatorId: EmployeeId
+    secondaryEvaluatorId: EmployeeId | null
     now: string
   }): EvaluationSheet {
     return new EvaluationSheet({

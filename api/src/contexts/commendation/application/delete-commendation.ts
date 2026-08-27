@@ -26,9 +26,11 @@ export class DeleteCommendation {
     const repository = new CommendationRepository(this.c)
 
     const commendation: Commendation | null | Error = await repository.findById(command.id)
+
     if (commendation instanceof Error) {
       return new UnexpectedError("failed to find commendation", { cause: commendation })
     }
+
     if (commendation === null) {
       return new NotFoundError("commendation not found", "commendation_not_found")
     }

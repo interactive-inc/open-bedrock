@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { EmployeeCertification } from "@/contexts/certification/domain/entities/employee-certification.entity"
 import type { Context } from "@/env"
 import { employeeCertifications } from "@/contexts/certification/infrastructure/schema/certification"
@@ -8,7 +9,7 @@ export class EmployeeCertificationRepository {
 
   /** 従業員の資格保有記録を取得日の降順で返す。 */
   async findByEmployeeId(
-    employeeId: number,
+    employeeId: EmployeeId,
   ): Promise<ReadonlyArray<EmployeeCertification> | Error> {
     try {
       const rows = await this.c.var.database
@@ -44,7 +45,7 @@ export class EmployeeCertificationRepository {
    * 重複時は null を返す。それ以外の失敗は Error。
    */
   async create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     certificationId: number
     acquiredOn: string
     expiresOn: string | null
@@ -89,7 +90,7 @@ export class EmployeeCertificationRepository {
 
   /** 従業員 x 資格の保有記録が既に存在するか（重複チェック補助）。 */
   async existsForEmployeeCertification(props: {
-    employeeId: number
+    employeeId: EmployeeId
     certificationId: number
     acquiredOn: string
   }): Promise<boolean | Error> {

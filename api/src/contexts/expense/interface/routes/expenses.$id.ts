@@ -1,4 +1,4 @@
-import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
+import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
 import { ExpenseRepository } from "@/contexts/expense/infrastructure/repositories/expense.repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
@@ -10,7 +10,7 @@ import {
 } from "@/lib/errors"
 
 import { UpdateExpense } from "@/contexts/expense/application/update-expense"
-import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
+import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 import type { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -52,7 +52,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const expenseId = validateIntParam(c.req.param("id"), "expense")
 
   const rows = await c.var.database
-    .select({ expense: expenses, applicantName: employees.name })
+    .select({ expense: expenses, applicantName: employees.officialName })
     .from(expenses)
     .leftJoin(employees, eq(employees.id, expenses.employeeId))
     .where(eq(expenses.id, expenseId))
@@ -72,11 +72,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     }
 
     if (session.hasPermission("org:manage") === false) {
-      const organizationAuthority = await resolveOrganizationAuthority(
+      const organizationAuthority = await new ResolveOrganizationAuthorityAdapter(
         c,
-        session.employeeId,
-        row.expense.employeeId,
-      )
+      ).resolveOrganizationAuthority(session.employeeId, row.expense.employeeId)
 
       if (organizationAuthority instanceof Error) {
         throw new InternalError("failed to resolve organization scope")
@@ -99,7 +97,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const attachments = await (async () => {
     const attachmentIds = links.map((link) => link.attachmentId)
 
-    const rows = await new AttachmentRepository(c).findManyByIds(attachmentIds)
+    const rows = await new AttachmentAdapter(c).findManyByIds(attachmentIds)
 
     if (rows instanceof Error) return rows
 

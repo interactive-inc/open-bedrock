@@ -1,15 +1,15 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { StocktakeRepository } from "@/contexts/asset/infrastructure/repositories/stocktake/stocktake.repository"
-import type { Stocktake } from "@/contexts/asset/domain/entities/stocktake.entity"
 
 export type Command = {
   session: Session
   stocktakeId: string
   assetCode: string
-  checkerEmployeeId: number
+  checkerEmployeeId: EmployeeId
   locationNote: string | null
   now: string
 }
@@ -30,18 +30,8 @@ export class CheckStocktakeItem {
       return new ForbiddenError("cannot manage stocktakes", "forbidden")
     }
 
-    const stocktake: Stocktake | null | Error = await stocktakeRepository.findById(
-      command.stocktakeId,
-    )
-    if (stocktake instanceof Error) {
-      return new UnexpectedError("failed to find stocktake", { cause: stocktake })
-    }
-    if (stocktake === null) {
-      return new NotFoundError("stocktake item not found", "stocktake_item_not_found")
-    }
-
     const result = await stocktakeRepository.checkItem({
-      stocktake,
+      stocktakeId: command.stocktakeId,
       assetCode: command.assetCode,
       checkedAt: command.now,
       checkerEmployeeId: command.checkerEmployeeId,

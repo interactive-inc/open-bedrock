@@ -1,6 +1,8 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedSalaryRevision = {
   id: number
-  employeeId: number
+  employeeId: EmployeeId
   effectiveDate: string
   previousBaseSalary: number
   newBaseSalary: number
@@ -11,7 +13,7 @@ type SeedSalaryRevision = {
 export const seedSalaryRevisions: ReadonlyArray<SeedSalaryRevision> = [
   {
     id: 1,
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
     effectiveDate: "2025-04-01",
     previousBaseSalary: 280000,
     newBaseSalary: 300000,
@@ -20,7 +22,7 @@ export const seedSalaryRevisions: ReadonlyArray<SeedSalaryRevision> = [
   },
   {
     id: 2,
-    employeeId: 1,
+    employeeId: toWorkforceEmployeeId(1),
     effectiveDate: "2025-04-01",
     previousBaseSalary: 260000,
     newBaseSalary: 280000,

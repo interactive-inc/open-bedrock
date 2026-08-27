@@ -1,3 +1,5 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
 import { CreateReward } from "@/contexts/thanks/application/thanks-points/create-reward"
@@ -6,9 +8,9 @@ import { RequestRedemption } from "@/contexts/thanks/application/thanks-points/r
 import { UpdateReward } from "@/contexts/thanks/application/thanks-points/update-reward"
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { makeTestSession } from "@/api/test/support/make-test-session"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { makeTestSession } from "@tests/api/support/make-test-session"
 import {
   thanks,
   thanksRedemptions,
@@ -17,16 +19,16 @@ import {
 import { eq } from "drizzle-orm"
 import { describe, expect, test } from "bun:test"
 
-type TestContext = ReturnType<typeof createTestContext>["context"]
+type TestContext = Awaited<ReturnType<typeof createTestContext>>["context"]
 
 /** 受領残高を作る。 */
 async function seedBalance(
   context: TestContext,
-  recipientEmployeeId: number,
+  recipientEmployeeId: EmployeeId,
   points: number,
 ): Promise<void> {
   await context.var.database.insert(thanks).values({
-    senderEmployeeId: 99,
+    senderEmployeeId: toWorkforceEmployeeId(99),
     recipientEmployeeId,
     message: "テスト",
     points,
@@ -61,7 +63,7 @@ async function seedReward(
 
 describe("CreateReward", () => {
   test("creates a reward with valid inputs", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateReward(context).run({
       name: "図書カード 1000 円",
@@ -74,7 +76,7 @@ describe("CreateReward", () => {
   })
 
   test("returns invalid_reward for empty name", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateReward(context).run({
       name: "",
@@ -87,7 +89,7 @@ describe("CreateReward", () => {
   })
 
   test("returns invalid_reward for zero point cost", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateReward(context).run({
       name: "景品",
@@ -102,7 +104,7 @@ describe("CreateReward", () => {
 
 describe("UpdateReward", () => {
   test("updates an existing reward", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 5 })
 
@@ -124,7 +126,7 @@ describe("UpdateReward", () => {
   })
 
   test("returns reward_not_found for non-existent id", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdateReward(context).run({
       rewardId: 9999,
@@ -137,7 +139,7 @@ describe("UpdateReward", () => {
   })
 
   test("returns invalid_reward for invalid inputs", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 5 })
 
@@ -154,14 +156,14 @@ describe("UpdateReward", () => {
 
 describe("RequestRedemption", () => {
   test("creates a redemption when balance and stock are sufficient", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 100)
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 3 })
 
     const result = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -170,12 +172,12 @@ describe("RequestRedemption", () => {
   })
 
   test("returns reward_not_found for non-existent reward", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 100)
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
     const result = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId: 9999,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -184,14 +186,14 @@ describe("RequestRedemption", () => {
   })
 
   test("returns reward_inactive for inactive reward", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 100)
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 3, isActive: false })
 
     const result = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -200,14 +202,14 @@ describe("RequestRedemption", () => {
   })
 
   test("returns out_of_stock when stock is zero", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 100)
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 0 })
 
     const result = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -216,14 +218,14 @@ describe("RequestRedemption", () => {
   })
 
   test("returns insufficient_balance when balance is short", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 30)
+    await seedBalance(context, toWorkforceEmployeeId(5), 30)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 1 })
 
     const result = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -232,14 +234,14 @@ describe("RequestRedemption", () => {
   })
 
   test("returns pending_exists when a pending redemption already exists", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 200)
+    await seedBalance(context, toWorkforceEmployeeId(5), 200)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 5 })
 
     const first = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -247,7 +249,7 @@ describe("RequestRedemption", () => {
     expect(first).toBeInstanceOf(ThanksRedemption)
 
     const second = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-02T00:00:00.000Z",
     })
@@ -258,9 +260,9 @@ describe("RequestRedemption", () => {
   // #744: reward.isActive チェックが INSERT の WHERE に畳み込まれているかを検証する。
   // 事前チェック直後に報酬が無効化された場合のアトミック検知。
   test("rejects atomically when reward is deactivated between check and INSERT", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 100)
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
     // 報酬は active で作成するが、直後に DB 上で無効化する。
     // RequestRedemption の app 層チェックは isActive=true を見るが、
@@ -274,7 +276,7 @@ describe("RequestRedemption", () => {
       .where(eq(thanksRewards.id, rewardId))
 
     const result = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -286,14 +288,14 @@ describe("RequestRedemption", () => {
 
 describe("DecideRedemption", () => {
   test("approves a pending redemption and decrements stock", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 100)
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 3 })
 
     const pending = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -305,7 +307,7 @@ describe("DecideRedemption", () => {
     const result = await new DecideRedemption(context).run({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
       action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -327,21 +329,21 @@ describe("DecideRedemption", () => {
   })
 
   test("returns out_of_stock when stock is consumed between request and approve", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 100)
-    await seedBalance(context, 6, 100)
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
+    await seedBalance(context, toWorkforceEmployeeId(6), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 1 })
 
     const firstPending = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
 
     const secondPending = await new RequestRedemption(context).run({
-      employeeId: 6,
+      employeeId: toWorkforceEmployeeId(6),
       rewardId,
       createdAt: "2026-02-01T00:01:00.000Z",
     })
@@ -357,7 +359,7 @@ describe("DecideRedemption", () => {
     const first = await new DecideRedemption(context).run({
       session: makeTestSession("root"),
       redemptionId: firstPending.id ?? 0,
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
       action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -367,7 +369,7 @@ describe("DecideRedemption", () => {
     const second = await new DecideRedemption(context).run({
       session: makeTestSession("root"),
       redemptionId: secondPending.id ?? 0,
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
       action: "approve",
       decidedAt: "2026-02-02T00:01:00.000Z",
     })
@@ -388,14 +390,14 @@ describe("DecideRedemption", () => {
   })
 
   test("rejects a pending redemption", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 100)
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 3 })
 
     const pending = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -407,7 +409,7 @@ describe("DecideRedemption", () => {
     const result = await new DecideRedemption(context).run({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
       action: "reject",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -420,14 +422,14 @@ describe("DecideRedemption", () => {
   })
 
   test("returns self_approval_forbidden for self-decide", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 100)
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 3 })
 
     const pending = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -439,7 +441,7 @@ describe("DecideRedemption", () => {
     const result = await new DecideRedemption(context).run({
       session: makeTestSession("root", 5),
       redemptionId: pending.id ?? 0,
-      deciderId: 5,
+      deciderId: toWorkforceEmployeeId(5),
       action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -448,12 +450,12 @@ describe("DecideRedemption", () => {
   })
 
   test("returns redemption_not_found for unknown id", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new DecideRedemption(context).run({
       session: makeTestSession("root"),
       redemptionId: 9999,
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
       action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -462,14 +464,14 @@ describe("DecideRedemption", () => {
   })
 
   test("returns already_decided for a fulfilled redemption", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedBalance(context, 5, 100)
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 3 })
 
     const pending = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -481,7 +483,7 @@ describe("DecideRedemption", () => {
     const first = await new DecideRedemption(context).run({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
       action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -491,7 +493,7 @@ describe("DecideRedemption", () => {
     const second = await new DecideRedemption(context).run({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
       action: "reject",
       decidedAt: "2026-02-03T00:00:00.000Z",
     })
@@ -500,15 +502,15 @@ describe("DecideRedemption", () => {
   })
 
   test("returns insufficient_balance when balance is consumed between request and approve", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     // 残高 50 ぴったりで申請（申請の pending で 50 が引かれる）
-    await seedBalance(context, 5, 50)
+    await seedBalance(context, toWorkforceEmployeeId(5), 50)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 3 })
 
     const pending = await new RequestRedemption(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       createdAt: "2026-02-01T00:00:00.000Z",
     })
@@ -521,19 +523,19 @@ describe("DecideRedemption", () => {
     // しかし、別の fulfilled/pending を追加して残高を 0 にする。
     // 直接 DB に別の fulfilled 行を挿入して残高を食いつぶす
     await context.var.database.insert(thanksRedemptions).values({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       rewardId,
       pointCost: 50,
       status: "fulfilled",
       createdAt: "2026-01-15T00:00:00.000Z",
       decidedAt: "2026-01-16T00:00:00.000Z",
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
     })
 
     const result = await new DecideRedemption(context).run({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
-      deciderId: 2,
+      deciderId: toWorkforceEmployeeId(2),
       action: "approve",
       decidedAt: "2026-02-02T00:00:00.000Z",
     })

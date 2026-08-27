@@ -1,5 +1,5 @@
 import { ConflictError } from "@/lib/errors"
-import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
+import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 import {
   ForbiddenError,
   NotFoundError as ApplicationNotFoundError,
@@ -97,11 +97,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       }
 
       if (command.session.hasPermission("org:manage") === false) {
-        const organizationAuthority = await resolveOrganizationAuthority(
+        const organizationAuthority = await new ResolveOrganizationAuthorityAdapter(
           c,
-          command.employeeId,
-          leaveRequest.employeeId,
-        )
+        ).resolveOrganizationAuthority(command.employeeId, leaveRequest.employeeId)
 
         if (organizationAuthority instanceof Error) {
           return new UnexpectedError("failed to resolve organization authority", {

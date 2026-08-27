@@ -1,8 +1,10 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { EmployeeSkillRow } from "@/contexts/skill/infrastructure/schema/skill"
 import { z } from "zod"
 
 const zProps = z.object({
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   skillCode: z.string(),
   level: z.number().int().min(1).max(10),
   years: z.number().int().nonnegative().nullable(),
@@ -36,7 +38,7 @@ export class EmployeeSkill implements Props {
 
   /** 登録・更新するスキルを組み立てる。業務キーを含む全フィールドを受け取る。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     skillCode: string
     level: number
     years: number | null

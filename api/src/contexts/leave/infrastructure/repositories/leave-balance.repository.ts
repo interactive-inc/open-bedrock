@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LeaveBalance } from "@/contexts/leave/domain/entities/leave-balance.entity"
 import type { Context } from "@/env"
 import type { LeaveType } from "@/lib/schemas"
@@ -11,7 +12,7 @@ export class LeaveBalanceRepository {
   constructor(private readonly c: Context) {}
 
   async findByKey(props: {
-    employeeId: number
+    employeeId: EmployeeId
     fiscalYear: string
     leaveType: LeaveType
   }): Promise<LeaveBalance | null | Error> {
@@ -43,7 +44,7 @@ export class LeaveBalanceRepository {
    * 0 行更新は残数不足。
    */
   async consumeDays(props: {
-    employeeId: number
+    employeeId: EmployeeId
     leaveType: LeaveType
     fiscalYear: string
     days: number

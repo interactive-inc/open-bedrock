@@ -1,8 +1,9 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { Session } from "@/lib/auth/session"
 import { describe, expect, test } from "bun:test"
 import { canWriteDepartmentGoal } from "@/contexts/performance-review/interface/http/performance-goals/can-write-department-goal"
-import { makeTestSession } from "@/api/test/support/make-test-session"
-import { testAccountId } from "@/api/test/support/test-account-id"
+import { makeTestSession } from "@tests/api/support/make-test-session"
+import { testAccountId } from "@tests/api/support/test-account-id"
 
 /**
  * review:administer を持たず goal:evaluate:reports だけを持つマネージャー相当のセッション。
@@ -12,8 +13,8 @@ import { testAccountId } from "@/api/test/support/test-account-id"
 function reportsManagerSession(): Session {
   return new Session({
     accountId: testAccountId(1),
-    employeeId: 1,
-    employeeStatus: "active",
+    employeeId: toWorkforceEmployeeId(1),
+    employmentStatus: "ACTIVE",
     permissions: new Set<string>(["goal:evaluate:reports"]),
     roleKeys: ["custom"],
   })

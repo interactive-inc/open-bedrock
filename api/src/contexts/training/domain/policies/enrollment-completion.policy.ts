@@ -1,8 +1,8 @@
 import type { Session } from "@/lib/auth/session"
 
 export type Props = {
-  enrollmentEmployeeId: number
-  viewerEmployeeId: number
+  enrollmentEmployeeId: EmployeeId
+  viewerEmployeeId: EmployeeId
   session: Session
 }
 
@@ -14,3 +14,4 @@ export function canCompleteEnrollment(props: Props): boolean {
 
   return props.session.hasPermission("training:manage")
 }
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"

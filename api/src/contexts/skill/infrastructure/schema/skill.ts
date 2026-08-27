@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
@@ -14,7 +15,7 @@ export type SkillRow = InferSelectModel<typeof skills>
 export const employeeSkills = sqliteTable(
   "employee_skills",
   {
-    employeeId: integer("employee_id").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     skillCode: text("skill_code").notNull(),
     level: integer("level").notNull(),
     years: integer("years"),

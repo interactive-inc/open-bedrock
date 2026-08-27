@@ -1,6 +1,7 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
 import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 /** テスト用: career_postings に open な公募を挿入する。 */
@@ -12,7 +13,7 @@ async function seedOpenPosting(db: D1Database, postingId: number): Promise<void>
 
 describe("CareerApplicationRepository", () => {
   test("create then findByPostingAndApplicant round-trips the application", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
     await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
@@ -20,7 +21,7 @@ describe("CareerApplicationRepository", () => {
     const created = await repository.create(
       CareerApplication.create({
         postingId: 1,
-        applicantId: 2,
+        applicantId: toWorkforceEmployeeId(2),
         message: "応募します",
       }),
     )
@@ -31,7 +32,7 @@ describe("CareerApplicationRepository", () => {
       throw new Error("create failed")
     }
 
-    const found = await repository.findByPostingAndApplicant(1, 2)
+    const found = await repository.findByPostingAndApplicant(1, toWorkforceEmployeeId(2))
 
     expect(found).toBeInstanceOf(CareerApplication)
 
@@ -44,7 +45,7 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("create returns posting_closed when the posting is not open", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
     await db.exec(
       "INSERT INTO career_postings (id, title, status) VALUES (1, 'Closed Posting', 'closed')",
     )
@@ -52,7 +53,11 @@ describe("CareerApplicationRepository", () => {
     const repository = new CareerApplicationRepository(context)
 
     const result = await repository.create(
-      CareerApplication.create({ postingId: 1, applicantId: 2, message: null }),
+      CareerApplication.create({
+        postingId: 1,
+        applicantId: toWorkforceEmployeeId(2),
+        message: null,
+      }),
     )
 
     expect(result).not.toBeInstanceOf(Error)
@@ -66,22 +71,30 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("findByApplicantId returns the applicant's applications", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
     await seedOpenPosting(db, 1)
     await seedOpenPosting(db, 2)
 
     const repository = new CareerApplicationRepository(context)
 
     await repository.create(
-      CareerApplication.create({ postingId: 1, applicantId: 7, message: "a" }),
+      CareerApplication.create({
+        postingId: 1,
+        applicantId: toWorkforceEmployeeId(7),
+        message: "a",
+      }),
     )
 
     await repository.create(
-      CareerApplication.create({ postingId: 2, applicantId: 7, message: "b" }),
+      CareerApplication.create({
+        postingId: 2,
+        applicantId: toWorkforceEmployeeId(7),
+        message: "b",
+      }),
     )
 
     const applications = await repository.findByApplicantId({
-      applicantId: 7,
+      applicantId: toWorkforceEmployeeId(7),
       limit: 50,
       offset: 0,
     })
@@ -96,13 +109,17 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("update changes the message and findById round-trips it", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
     await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
     const created = await repository.create(
-      CareerApplication.create({ postingId: 1, applicantId: 8, message: "before" }),
+      CareerApplication.create({
+        postingId: 1,
+        applicantId: toWorkforceEmployeeId(8),
+        message: "before",
+      }),
     )
 
     if (created instanceof Error || "reason" in created || created.id === null) {
@@ -121,13 +138,17 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("update returns application_decided when status is not applied", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
     await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
     const created = await repository.create(
-      CareerApplication.create({ postingId: 1, applicantId: 8, message: "msg" }),
+      CareerApplication.create({
+        postingId: 1,
+        applicantId: toWorkforceEmployeeId(8),
+        message: "msg",
+      }),
     )
 
     if (created instanceof Error || "reason" in created || created.id === null) {
@@ -150,13 +171,17 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("delete removes the application", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
     await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
     const created = await repository.create(
-      CareerApplication.create({ postingId: 1, applicantId: 9, message: "x" }),
+      CareerApplication.create({
+        postingId: 1,
+        applicantId: toWorkforceEmployeeId(9),
+        message: "x",
+      }),
     )
 
     if (created instanceof Error || "reason" in created || created.id === null) {
@@ -171,13 +196,17 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("delete returns application_decided when status is not applied", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
     await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
     const created = await repository.create(
-      CareerApplication.create({ postingId: 1, applicantId: 9, message: "x" }),
+      CareerApplication.create({
+        postingId: 1,
+        applicantId: toWorkforceEmployeeId(9),
+        message: "x",
+      }),
     )
 
     if (created instanceof Error || "reason" in created || created.id === null) {

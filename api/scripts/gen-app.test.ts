@@ -38,12 +38,12 @@ describe("toUrl", () => {
   })
 
   test("名前付きファイルはファイル名を URL に含める", () => {
-    expect(toUrl("company/v1/account-employee-links.ts")).toBe("/company/v1/account-employee-links")
+    expect(toUrl("company/account-employee-links.ts")).toBe("/company/account-employee-links")
   })
 
   test("root直下のdot区切りrouteをURL階層へ展開する", () => {
-    expect(toUrl("company.v1.capabilities.ts")).toBe("/company/v1/capabilities")
-    expect(toUrl("system.v1.sessions.ts")).toBe("/system/v1/sessions")
+    expect(toUrl("company.capabilities.ts")).toBe("/company/capabilities")
+    expect(toUrl("system.sessions.ts")).toBe("/system/sessions")
   })
 })
 
@@ -210,16 +210,16 @@ describe("collectRegistrations", () => {
     const registrations = await collectRegistrations()
 
     expect(registrations).toContainEqual({
-      module: "@system/interface/routes/health",
-      url: "/health",
+      module: "@system/interface/routes/system.health",
+      url: "/system/health",
       method: "GET",
-      alias: "healthRoute",
+      alias: "systemHealthRoute",
     })
     expect(registrations).toContainEqual({
-      module: "@/contexts/company/interface/routes/company.v1.people",
-      url: "/company/v1/people",
+      module: "@/contexts/company/interface/routes/company.people",
+      url: "/company/people",
       method: "GET",
-      alias: "companyV1PeopleRoute",
+      alias: "companyPeopleRoute",
     })
   })
 

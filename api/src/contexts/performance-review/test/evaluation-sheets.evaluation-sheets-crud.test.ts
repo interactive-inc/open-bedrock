@@ -1,24 +1,29 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import {
+  initializeCompanyMembershipTestState,
+  initializeStandardCompanyTestState,
+} from "@tests/api/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const jwtSecret = "evaluation-sheets-crud-test-secret"
 
 const sheetSchema = z.object({
   id: z.number(),
-  employee_id: z.number(),
+  employee_id: zEmployeeId,
   template_id: z.number().nullable(),
   period: z.string(),
   status: z.string(),
-  primary_evaluator_id: z.number(),
-  secondary_evaluator_id: z.number().nullable(),
+  primary_evaluator_id: zEmployeeId,
+  secondary_evaluator_id: zEmployeeId.nullable(),
   revision: z.number(),
   submitted_at: z.string().nullable(),
   approved_at: z.string().nullable(),
@@ -35,15 +40,14 @@ const listSchema = z.object({
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -52,11 +56,11 @@ async function createTestDb(): Promise<D1Database> {
   await seedIamForEmployees(db)
 
   // Seed org_memberships for manager resolution (employee 5 reports to employee 1)
-  await seedD1(db, "org_memberships", [
+  await initializeCompanyMembershipTestState(db, [
     {
-      employee_code: seedEmployees[4].code, // employee 5 (E005)
-      department_code: "D003",
-      manager_employee_code: seedEmployees[0].code, // employee 1 (E001)
+      employeeCode: seedEmployees[4].code, // employee 5 (E005)
+      departmentCode: "D003",
+      managerEmployeeCode: seedEmployees[0].code, // employee 1 (E001)
     },
   ])
 
@@ -67,12 +71,12 @@ async function createTestDb(): Promise<D1Database> {
 
 /** root (employee 1) — has evaluation:administer */
 function adminToken(): Promise<string> {
-  return createTestToken(jwtSecret, { employeeId: 1 })
+  return createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) })
 }
 
 /** member (employee 5) — no evaluation:administer */
 function ownerToken(): Promise<string> {
-  return createTestToken(jwtSecret, { employeeId: 5 })
+  return createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(5) })
 }
 
 async function createSheet(
@@ -81,9 +85,9 @@ async function createSheet(
 ): Promise<{ id: number; revision: number }> {
   const token = await adminToken()
   const body = {
-    employee_id: 5,
+    employee_id: "5",
     period: "2026-H1",
-    primary_evaluator_id: 1,
+    primary_evaluator_id: "1",
     ...overrides,
   }
 
@@ -177,7 +181,7 @@ describe("GET /evaluation-sheets/me", () => {
 
     if (body.success) {
       expect(body.data.total).toBe(1)
-      expect(body.data.data[0].employee_id).toBe(5)
+      expect(body.data.data[0].employee_id).toBe(toWorkforceEmployeeId(5))
       expect(body.data.data[0].revision).toBeGreaterThanOrEqual(1)
     }
   })
@@ -336,7 +340,7 @@ describe("POST /evaluation-sheets/:sheetId/transition", () => {
 
     // Employee 6 is a member with no relation to the sheet
     const otherToken = await createTestToken(jwtSecret, {
-      employeeId: 6,
+      employeeId: toWorkforceEmployeeId(6),
     })
 
     const response = await requestWithContext({
@@ -373,7 +377,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: 4,
+        primary_evaluator_id: "4",
         expected_revision: sheet.revision,
       },
     })
@@ -385,7 +389,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
     expect(body.success).toBe(true)
 
     if (body.success) {
-      expect(body.data.primary_evaluator_id).toBe(4)
+      expect(body.data.primary_evaluator_id).toBe(toWorkforceEmployeeId(4))
       expect(body.data.revision).toBe(sheet.revision + 1)
     }
   })
@@ -403,7 +407,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: 4,
+        primary_evaluator_id: "4",
         expected_revision: sheet.revision + 999,
       },
     })
@@ -425,7 +429,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: 5,
+        primary_evaluator_id: "5",
         expected_revision: sheet.revision,
       },
     })
@@ -446,8 +450,8 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: 4,
-        secondary_evaluator_id: 4,
+        primary_evaluator_id: "4",
+        secondary_evaluator_id: "4",
         expected_revision: sheet.revision,
       },
     })
@@ -468,7 +472,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: 9999,
+        primary_evaluator_id: "9999",
         expected_revision: sheet.revision,
       },
     })
@@ -489,7 +493,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: 4,
+        primary_evaluator_id: "4",
         expected_revision: sheet.revision,
       },
     })

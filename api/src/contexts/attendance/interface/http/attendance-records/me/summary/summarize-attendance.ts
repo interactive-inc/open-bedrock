@@ -1,14 +1,15 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 
 export type AttendanceSummary = {
-  employeeId: number
+  employeeId: EmployeeId
   month: string
   workDays: number
   totalWorkMinutes: number
 }
 
 export type Props = {
-  employeeId: number
+  employeeId: EmployeeId
   month: string
   records: ReadonlyArray<AttendanceRecord>
 }

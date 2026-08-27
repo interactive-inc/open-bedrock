@@ -12,7 +12,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { z } from "zod"
-import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
 import {
   toApplicationCurrentStep,
@@ -28,7 +28,7 @@ export const GET = factory.createHandlers(
     "query",
     z.object({
       status: z.enum(["pending", "approved", "rejected"]).optional(),
-      applicant_id: z.string().optional(),
+      applicant_id: zEmployeeId.optional(),
       template_code: z.string().optional(),
       from: z.string().optional(),
       to: z.string().optional(),
@@ -55,15 +55,12 @@ export const GET = factory.createHandlers(
       max: MAX_LIST_OFFSET,
     })
     let creatorAccountIds = null
-    if (query.applicant_id !== undefined && query.applicant_id !== "") {
-      const applicantId = Number(query.applicant_id)
-      if (Number.isInteger(applicantId)) {
-        const resolved = await resolveSystemAccountIdsForEmployees(c, [applicantId])
-        if (resolved instanceof Error) {
-          throw new InternalError("failed to resolve application owner")
-        }
-        creatorAccountIds = resolved
+    if (query.applicant_id !== undefined) {
+      const resolved = await resolveSystemAccountIdsForEmployees(c, [query.applicant_id])
+      if (resolved instanceof Error) {
+        throw new InternalError("failed to resolve application owner")
       }
+      creatorAccountIds = resolved
     }
     const createdFrom = parseOptionalDate(query.from)
     const createdTo = parseOptionalDate(query.to)
@@ -94,30 +91,21 @@ export const GET = factory.createHandlers(
     const participantByAccount = new Map(
       participants.map((participant) => [participant.accountId, participant]),
     )
-    const departments = await loadCurrentEmployeeDepartmentNames(
-      c,
-      participants.map((participant) => participant.employeeId),
-    )
-    if (departments instanceof Error) {
-      throw new InternalError("failed to load current departments")
-    }
-
     return c.json(
       zAppApplicationAdminList.parse({
         data: result.proposals.map((proposal) => {
           const participant = participantByAccount.get(proposal.createdByAccountId)
-          const employeeId = participant?.employeeId ?? 0
+          if (participant === undefined) {
+            throw new InternalError("application owner is not linked to a Company employee")
+          }
           return {
             id: proposal.number,
             template_code: proposal.procedureKey,
             template_name: proposal.title,
             template_category: proposal.category,
-            applicant_id: employeeId,
-            applicant_name: participant?.employeeName ?? "",
-            applicant_dept_name:
-              departments.source === "lifecycle"
-                ? (departments.names.get(employeeId) ?? null)
-                : (participant?.departmentName ?? null),
+            applicant_id: participant.employeeId,
+            applicant_name: participant.employeeName,
+            applicant_dept_name: participant.departmentName,
             current_step: toApplicationCurrentStep(proposal),
             status: toApplicationStatus(proposal.status),
             created_at: proposal.createdAt.toISOString(),

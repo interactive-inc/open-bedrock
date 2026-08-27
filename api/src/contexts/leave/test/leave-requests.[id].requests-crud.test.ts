@@ -1,24 +1,30 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
 import { contextStorage } from "hono/context-storage"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedLeaveRequests } from "@/contexts/leave/test/seed/seed-leave-requests.test-support"
 import * as leaveRequestDetailRoute from "@/contexts/leave/interface/routes/leave-requests.$id"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
 import { databaseMiddleware } from "@/api/database-middleware"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import {
+  initializeCompanyMembershipTestState,
+  initializeStandardCompanyTestState,
+} from "@tests/api/support/initialize-standard-company-test-state"
 import type { Bindings } from "@/env"
 import { factory } from "@/api/http/factory"
 import { z } from "zod"
 
 const leaveRequestResponseSchema = z.object({
   id: z.number(),
-  employee_id: z.number(),
+  employee_id: zEmployeeId,
   leave_type: z.string(),
   start_date: z.string(),
   end_date: z.string(),
@@ -50,15 +56,14 @@ const testApp = factory
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -66,8 +71,8 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
-  await seedD1(db, "org_memberships", [
-    { department_code: "D003", employee_code: "E005", manager_employee_code: "E004" },
+  await initializeCompanyMembershipTestState(db, [
+    { departmentCode: "D003", employeeCode: "E005", managerEmployeeCode: "E004" },
   ])
 
   await seedD1(
@@ -91,7 +96,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "leave_balances", [
     {
-      employee_id: 5,
+      employee_id: "5",
       fiscal_year: "2026",
       leave_type: "annual",
       granted_days: 20,
@@ -99,7 +104,7 @@ async function createTestDb(): Promise<D1Database> {
       remaining_days: 20,
     },
     {
-      employee_id: 5,
+      employee_id: "5",
       fiscal_year: "2026",
       leave_type: "special",
       granted_days: 5,
@@ -115,7 +120,7 @@ async function createTestDb(): Promise<D1Database> {
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -169,7 +174,7 @@ describe("GET /leave-requests/:id", () => {
 
     if (parsed.success) {
       expect(parsed.data.id).toBe(1)
-      expect(parsed.data.employee_id).toBe(5)
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
     }
   })
 
@@ -213,7 +218,7 @@ describe("GET /leave-requests/:id", () => {
 
     if (parsed.success) {
       expect(parsed.data.id).toBe(1)
-      expect(parsed.data.employee_id).toBe(5)
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
     }
   })
 
@@ -266,7 +271,7 @@ describe("GET /leave-requests/:id", () => {
 
     if (parsed.success) {
       expect(parsed.data.id).toBe(1)
-      expect(parsed.data.employee_id).toBe(5)
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
     }
   })
 
@@ -347,7 +352,7 @@ describe("PUT /leave-requests/:id", () => {
     await seedD1(db, "leave_requests", [
       {
         id: 100,
-        employee_id: 5,
+        employee_id: "5",
         leave_type: "annual",
         start_date: "2026-07-01",
         end_date: "2026-07-03",

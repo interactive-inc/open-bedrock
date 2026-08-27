@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import {
   EmployeeNotificationAdapter,
@@ -5,7 +6,7 @@ import {
 } from "@/api/http/notifications/employee-notification.adapter"
 
 export type Command = {
-  recipientEmployeeId: number
+  recipientEmployeeId: EmployeeId
   action: "approve" | "reject"
   subjectLabel: string
   sourceDomain: string

@@ -1,10 +1,12 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { TrainingEnrollmentRow } from "@/contexts/training/infrastructure/schema/training"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
   courseId: z.number(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   status: z.enum(["enrolled", "completed", "failed"]),
   completedAt: z.string().nullable(),
   score: z.number().safe().int().min(0).max(100).nullable(),
@@ -41,7 +43,7 @@ export class TrainingEnrollment implements Props {
   /** 新規受講登録を組み立てる。id は未採番、初期状態は enrolled。 */
   static create(props: {
     courseId: number
-    employeeId: number
+    employeeId: EmployeeId
     dueDate: string | null
   }): TrainingEnrollment {
     return new TrainingEnrollment({

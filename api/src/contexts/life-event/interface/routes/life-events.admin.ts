@@ -13,6 +13,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 
 /** 並び順のホワイトリスト。未知の値は created_at desc にフォールバックする。 */
 const SORT_OPTIONS = {
@@ -34,7 +35,7 @@ export const GET = factory.createHandlers(
     "query",
     z.object({
       status: z.string().optional(),
-      employee_id: z.string().optional(),
+      employee_id: zEmployeeId.optional(),
       sort: z.string().optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
@@ -73,12 +74,8 @@ export const GET = factory.createHandlers(
       conditions.push(eq(lifeEvents.status, query.status))
     }
 
-    if (query.employee_id !== undefined && query.employee_id !== "") {
-      const employeeId = Number(query.employee_id)
-
-      if (Number.isInteger(employeeId)) {
-        conditions.push(eq(lifeEvents.employeeId, employeeId))
-      }
+    if (query.employee_id !== undefined) {
+      conditions.push(eq(lifeEvents.employeeId, query.employee_id))
     }
 
     const where = conditions.length === 0 ? undefined : and(...conditions)

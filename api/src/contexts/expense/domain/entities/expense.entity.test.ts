@@ -1,10 +1,13 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("Expense.create", () => {
   test("builds an Expense with pending status and null id", () => {
     const expense = Expense.create({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
+      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
       category: "transport",
       amount: 1200,
       spentAt: "2026-06-01",
@@ -15,7 +18,7 @@ describe("Expense.create", () => {
     expect(expense).toBeInstanceOf(Expense)
     expect(expense.id).toBeNull()
     expect(expense.status).toBe("pending")
-    expect(expense.employeeId).toBe(5)
+    expect(expense.employeeId).toBe(toWorkforceEmployeeId(5))
     expect(expense.category).toBe("transport")
     expect(expense.amount).toBe(1200)
     expect(expense.spentAt).toBe("2026-06-01")
@@ -24,7 +27,8 @@ describe("Expense.create", () => {
 
   test("accepts null note", () => {
     const expense = Expense.create({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
+      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
       category: "supplies",
       amount: 500,
       spentAt: "2026-06-02",
@@ -39,7 +43,8 @@ describe("Expense.create", () => {
 describe("Expense.withStatus", () => {
   test("returns a new Expense with the changed status", () => {
     const expense = Expense.create({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
+      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
       category: "transport",
       amount: 1200,
       spentAt: "2026-06-01",
@@ -51,7 +56,7 @@ describe("Expense.withStatus", () => {
 
     expect(approved).toBeInstanceOf(Expense)
     expect(approved.status).toBe("approved")
-    expect(approved.employeeId).toBe(5)
+    expect(approved.employeeId).toBe(toWorkforceEmployeeId(5))
     expect(approved.amount).toBe(1200)
   })
 })
@@ -59,7 +64,8 @@ describe("Expense.withStatus", () => {
 describe("Expense.withDetails", () => {
   test("returns a new Expense with the changed details", () => {
     const expense = Expense.create({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
+      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
       category: "transport",
       amount: 1200,
       spentAt: "2026-06-01",
@@ -79,7 +85,7 @@ describe("Expense.withDetails", () => {
     expect(revised.amount).toBe(3000)
     expect(revised.spentAt).toBe("2026-06-05")
     expect(revised.note).toBe("Technical book")
-    expect(revised.employeeId).toBe(5)
+    expect(revised.employeeId).toBe(toWorkforceEmployeeId(5))
     expect(revised.status).toBe("pending")
   })
 })

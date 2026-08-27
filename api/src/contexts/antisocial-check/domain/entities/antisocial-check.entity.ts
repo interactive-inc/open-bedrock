@@ -1,9 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { AntisocialCheckRow } from "@/contexts/antisocial-check/infrastructure/schema/antisocial-check"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.string(),
-  requesterId: z.number(),
+  requesterId: zEmployeeId,
   partnerName: z.string(),
   partnerAddress: z.string().nullable(),
   representativeName: z.string().nullable(),
@@ -43,7 +45,7 @@ export class AntisocialCheck implements Props {
 
   /** 新規反社チェック申請を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。 */
   static create(props: {
-    requesterId: number
+    requesterId: EmployeeId
     partnerName: string
     partnerAddress: string | null
     representativeName: string | null

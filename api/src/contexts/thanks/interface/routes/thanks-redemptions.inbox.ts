@@ -44,8 +44,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const rows = await c.var.database
     .select({
       redemption: thanksRedemptions,
-      employeeName: employees.name,
-      employeeDeptName: employees.deptName,
+      employeeName: employees.officialName,
       rewardName: thanksRewards.name,
     })
     .from(thanksRedemptions)
@@ -80,14 +79,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const responseBody = zAppThanksRedemptionAdminList.parse({
-    data: rows.map(({ redemption, employeeName, employeeDeptName, rewardName }) => ({
+    data: rows.map(({ redemption, employeeName, rewardName }) => ({
       id: redemption.id,
       employee_id: redemption.employeeId,
       employee_name: employeeName ?? "",
-      employee_dept_name:
-        currentDepartments.source === "lifecycle"
-          ? (currentDepartments.names.get(redemption.employeeId) ?? null)
-          : employeeDeptName,
+      employee_dept_name: currentDepartments.get(redemption.employeeId) ?? null,
       reward_id: redemption.rewardId,
       reward_name: rewardName ?? "",
       point_cost: redemption.pointCost,

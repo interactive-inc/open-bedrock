@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { attendanceRecords } from "@/contexts/attendance/infrastructure/schema/attendance"
 import { companyCalendarDays } from "@/contexts/company-calendar/infrastructure/schema/company-calendar"
 import type { Context } from "@/env"
@@ -9,7 +10,7 @@ export async function readOvertimeSummaryInput(
   input: Readonly<{
     from: string
     to: string
-    employeeIds: ReadonlyArray<number> | null
+    employeeIds: ReadonlyArray<EmployeeId> | null
   }>,
 ) {
   const attendanceConditions = [

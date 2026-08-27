@@ -1,10 +1,11 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { RentalReservation } from "@/contexts/rental/domain/entities/rental-reservation.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("RentalReservation.create", () => {
   test("builds with UUID id and requested status", () => {
     const reservation = RentalReservation.create({
-      requesterId: 1,
+      requesterId: toWorkforceEmployeeId(1),
       itemName: "Projector",
       startDate: "2026-01-10",
       endDate: "2026-01-15",
@@ -24,7 +25,7 @@ describe("RentalReservation.create", () => {
 
   test("returns invalid_date_range when startDate > endDate", () => {
     const reservation = RentalReservation.create({
-      requesterId: 1,
+      requesterId: toWorkforceEmployeeId(1),
       itemName: "Projector",
       startDate: "2026-01-15",
       endDate: "2026-01-10",
@@ -39,7 +40,7 @@ describe("RentalReservation.create", () => {
 describe("RentalReservation.withPurpose", () => {
   test("returns new with changed purpose", () => {
     const reservation = RentalReservation.create({
-      requesterId: 1,
+      requesterId: toWorkforceEmployeeId(1),
       itemName: "Projector",
       startDate: "2026-01-10",
       endDate: "2026-01-15",
@@ -60,7 +61,7 @@ describe("RentalReservation.withPurpose", () => {
 describe("RentalReservation.withDetails", () => {
   test("returns new with valid dates", () => {
     const reservation = RentalReservation.create({
-      requesterId: 1,
+      requesterId: toWorkforceEmployeeId(1),
       itemName: "Projector",
       startDate: "2026-01-10",
       endDate: "2026-01-15",
@@ -88,7 +89,7 @@ describe("RentalReservation.withDetails", () => {
 
   test("returns invalid_date_range with invalid dates", () => {
     const reservation = RentalReservation.create({
-      requesterId: 1,
+      requesterId: toWorkforceEmployeeId(1),
       itemName: "Projector",
       startDate: "2026-01-10",
       endDate: "2026-01-15",

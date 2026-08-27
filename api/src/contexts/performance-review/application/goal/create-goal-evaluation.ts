@@ -1,10 +1,11 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import {
   GoalEvaluation,
   type GoalEvaluationKind,
 } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
 import { resolveEvaluationPermission } from "@/contexts/performance-review/domain/policies/goal-evaluation-permission.policy"
-import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
+import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -17,7 +18,7 @@ export type Command = {
   kind: GoalEvaluationKind
   score: number | null
   comment: string | null
-  evaluatorId: number
+  evaluatorId: EmployeeId
   session: Session
   createdAt: string
 }
@@ -134,15 +135,14 @@ export class CreateGoalEvaluation {
   /** self 評価は本人一致のみで判定するため org を引かない。manager/final のみ関係を解決する。 */
   private async resolveRelation(
     kind: GoalEvaluationKind,
-    goalEmployeeId: number,
-    evaluatorId: number,
+    goalEmployeeId: EmployeeId,
+    evaluatorId: EmployeeId,
   ): Promise<EmployeeRelation | Error> {
     if (kind === "self") {
       return { isSelf: false, isReport: false, isSameDepartment: false }
     }
 
-    return resolveEmployeeRelation({
-      c: this.c,
+    return new ResolveEmployeeRelationAdapter(this.c).resolveEmployeeRelation({
       viewerEmployeeId: evaluatorId,
       targetEmployeeId: goalEmployeeId,
     })

@@ -1,4 +1,5 @@
 import type { Session } from "@/lib/auth/session"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import {
   ApplicationError,
   ConflictError,
@@ -8,12 +9,12 @@ import {
 } from "@/lib/errors"
 import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
 import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
 
 export type Command = {
-  viewerEmployeeId: number
+  viewerEmployeeId: EmployeeId
   session: Session
   courseCode: string
   enrolleeEmployeeCode: string | null
@@ -78,7 +79,7 @@ export class EnrollTraining {
     return created
   }
 
-  private async toEnrolleeId(command: Command): Promise<number | ApplicationError> {
+  private async toEnrolleeId(command: Command): Promise<EmployeeId | ApplicationError> {
     if (command.enrolleeEmployeeCode === null) {
       return command.viewerEmployeeId
     }
@@ -87,7 +88,7 @@ export class EnrollTraining {
       return new ForbiddenError("cannot enroll others", "forbidden")
     }
 
-    const employeeRepository = new EmployeeRepository(this.c)
+    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c)
 
     const employee = await employeeRepository.findByCode(command.enrolleeEmployeeCode)
 

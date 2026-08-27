@@ -1,6 +1,6 @@
 import { toFiscalYear } from "@/contexts/leave/domain/definitions/fiscal-year.definition"
 import { canReadLeaveOf } from "@/contexts/leave/interface/http/leave-requests/can-read-leave-of"
-import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
+import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
@@ -9,6 +9,7 @@ import { leaveBalances } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 
 // @authorization owner - 本人のリソースに限定する
 /**
@@ -17,7 +18,7 @@ import { z } from "zod"
  */
 export const GET = factory.createHandlers(
   verifyBearer,
-  zValidator("query", z.object({ employee_id: z.string().optional() })),
+  zValidator("query", z.object({ employee_id: zEmployeeId.optional() })),
   async (c) => {
     const session = c.var.session
 
@@ -27,16 +28,11 @@ export const GET = factory.createHandlers(
 
     const query = c.req.valid("query")
 
-    const requestedEmployeeId = (() => {
-      if (query.employee_id === undefined) return null
-      const parsed = Number(query.employee_id)
-      return Number.isInteger(parsed) ? parsed : null
-    })()
+    const requestedEmployeeId = query.employee_id ?? null
 
     const targetEmployeeId = requestedEmployeeId === null ? session.employeeId : requestedEmployeeId
 
-    const relation = await resolveEmployeeRelation({
-      c,
+    const relation = await new ResolveEmployeeRelationAdapter(c).resolveEmployeeRelation({
       viewerEmployeeId: session.employeeId,
       targetEmployeeId,
     })

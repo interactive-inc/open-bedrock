@@ -1,4 +1,4 @@
-import { timingSafeStringEqual } from "@/contexts/system/infrastructure/auth/timing-safe-string-equal.repository"
+import { timingSafeStringEqual } from "@system/lib/auth/timing-safe-string-equal"
 import { isPlaceholderSecret } from "@/lib/config/is-placeholder-secret"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { factory } from "@/api/http/factory"

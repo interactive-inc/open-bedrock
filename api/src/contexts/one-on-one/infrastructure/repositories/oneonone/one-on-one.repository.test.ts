@@ -1,13 +1,14 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 function createOneOnOne(): OneOnOne {
   const result = OneOnOne.create({
-    memberId: 1,
-    managerId: 2,
+    memberId: toWorkforceEmployeeId(1),
+    managerId: toWorkforceEmployeeId(2),
     heldAt: "2026-01-01T00:00:00.000Z",
     topics: "今期の振り返り",
     managerNote: null,
@@ -23,7 +24,7 @@ function createOneOnOne(): OneOnOne {
 
 describe("OneOnOneRepository", () => {
   test("save persists the one-on-one", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new OneOnOneRepository(context)
 
@@ -42,7 +43,7 @@ describe("OneOnOneRepository", () => {
   })
 
   test("save returns UniqueConstraintError for duplicate id", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new OneOnOneRepository(context)
 
@@ -60,7 +61,7 @@ describe("OneOnOneRepository", () => {
   })
 
   test("delete returns null for non-existent id", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new OneOnOneRepository(context)
 
@@ -70,7 +71,7 @@ describe("OneOnOneRepository", () => {
   })
 
   test("delete returns true for existing record", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new OneOnOneRepository(context)
 
@@ -88,7 +89,7 @@ describe("OneOnOneRepository", () => {
   })
 
   test("delete returns null on second delete of same record", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new OneOnOneRepository(context)
 

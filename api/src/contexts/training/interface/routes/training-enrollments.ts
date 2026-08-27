@@ -18,6 +18,8 @@ import { codeSchema, isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { asc, count, eq } from "drizzle-orm"
 import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 // @authorization service - session を application service に渡して判定する
 export const POST = factory.createHandlers(
@@ -71,7 +73,7 @@ export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(
     "query",
-    z.object({ employee_id: z.string().optional(), employee_code: codeSchema.optional() }),
+    z.object({ employee_id: zEmployeeId.optional(), employee_code: codeSchema.optional() }),
   ),
   async (c) => {
     const query = c.req.valid("query")
@@ -144,14 +146,14 @@ export const GET = factory.createHandlers(
 
 async function resolveTargetEmployeeId(
   database: Variables["database"],
-  query: { employee_id?: string; employee_code?: string },
-  viewerEmployeeId: number,
-): Promise<number | null> {
+  query: { employee_id?: EmployeeId; employee_code?: string },
+  viewerEmployeeId: EmployeeId,
+): Promise<EmployeeId | null> {
   if (query.employee_code !== undefined) {
     const rows = await database
       .select({ id: employees.id })
       .from(employees)
-      .where(eq(employees.code, query.employee_code))
+      .where(eq(employees.employeeCode, query.employee_code))
       .limit(1)
 
     const row = rows.at(0)
@@ -160,17 +162,11 @@ async function resolveTargetEmployeeId(
   }
 
   if (query.employee_id !== undefined) {
-    const parsed = Number(query.employee_id)
-
-    if (Number.isInteger(parsed) === false || parsed <= 0) {
-      return null
-    }
-
     // employee_code 指定時と同様に実在確認する（挙動の対称性を保つ）。
     const rows = await database
       .select({ id: employees.id })
       .from(employees)
-      .where(eq(employees.id, parsed))
+      .where(eq(employees.id, query.employee_id))
       .limit(1)
 
     const row = rows.at(0)

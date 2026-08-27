@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
 import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
@@ -29,7 +29,7 @@ export class CreateShiftAssignment {
       return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
-    const employeeRepository = new EmployeeRepository(this.c)
+    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c)
 
     const employee = await employeeRepository.findByCode(input.employeeCode)
 

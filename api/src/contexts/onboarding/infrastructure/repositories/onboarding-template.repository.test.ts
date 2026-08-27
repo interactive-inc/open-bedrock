@@ -1,12 +1,12 @@
 import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("OnboardingTemplateRepository", () => {
   test("findByCode returns a seeded template with its tasks", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedD1(db, "onboarding_templates", [
       {
@@ -44,7 +44,7 @@ describe("OnboardingTemplateRepository", () => {
   })
 
   test("findByCode returns null for an unknown code", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new OnboardingTemplateRepository(context)
 

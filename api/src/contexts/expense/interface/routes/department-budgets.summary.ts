@@ -1,5 +1,6 @@
 import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
-import { departments } from "@/contexts/company/infrastructure/schema/organization"
+import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
+import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { factory } from "@/api/http/factory"
 import { UnexpectedError } from "@/lib/errors"
 import { zAppBudgetSummary } from "@/lib/app-schemas"
@@ -37,7 +38,7 @@ export const GET = factory.createHandlers(
 
     const repository = new BudgetRepository(c)
     const budgets = await repository.list({
-      departmentId: null,
+      organizationUnitId: null,
       fiscalPeriod: query.fiscal_period,
     })
 
@@ -45,16 +46,23 @@ export const GET = factory.createHandlers(
       throw toHttpException(new UnexpectedError("failed to list budgets", { cause: budgets }))
     }
 
-    const departmentRows = await c.var.database
-      .select({ id: departments.id, name: departments.name })
-      .from(departments)
-    const departmentNames = new Map(departmentRows.map((row) => [row.id, row.name]))
-    const budgetAmountByDepartment = new Map<number, number>()
-    const consumedByDepartment = new Map<number, number>()
+    const snapshot = await new ReadCanonicalOrganizationStateAdapter(
+      c,
+    ).readCanonicalOrganizationState()
+    if (snapshot instanceof Error) {
+      throw toHttpException(
+        new UnexpectedError("failed to load organization units", { cause: snapshot }),
+      )
+    }
+    const unitNames = new Map(
+      snapshot.organization.units.map((unit) => [unit.organizationUnitId, unit.officialName]),
+    )
+    const budgetAmountByUnit = new Map<OrganizationUnitId, number>()
+    const consumedByUnit = new Map<OrganizationUnitId, number>()
 
     for (const budget of budgets) {
       const consumed = await repository.sumApprovedExpenses({
-        departmentId: budget.departmentId,
+        organizationUnitId: budget.organizationUnitId,
         periodStart: budget.periodStart,
         periodEnd: budget.periodEnd,
       })
@@ -65,37 +73,35 @@ export const GET = factory.createHandlers(
         )
       }
 
-      budgetAmountByDepartment.set(
-        budget.departmentId,
-        (budgetAmountByDepartment.get(budget.departmentId) ?? 0) + budget.amount,
+      budgetAmountByUnit.set(
+        budget.organizationUnitId,
+        (budgetAmountByUnit.get(budget.organizationUnitId) ?? 0) + budget.amount,
       )
-      consumedByDepartment.set(
-        budget.departmentId,
-        (consumedByDepartment.get(budget.departmentId) ?? 0) + consumed,
+      consumedByUnit.set(
+        budget.organizationUnitId,
+        (consumedByUnit.get(budget.organizationUnitId) ?? 0) + consumed,
       )
     }
 
-    const rows = [...budgetAmountByDepartment.keys()]
-      .toSorted((left, right) => left - right)
-      .map((departmentId) => {
-        const budgetAmount = budgetAmountByDepartment.get(departmentId) ?? 0
-        const consumedAmount = consumedByDepartment.get(departmentId) ?? 0
+    const rows = [...budgetAmountByUnit.keys()].toSorted().map((organizationUnitId) => {
+      const budgetAmount = budgetAmountByUnit.get(organizationUnitId) ?? 0
+      const consumedAmount = consumedByUnit.get(organizationUnitId) ?? 0
 
-        return {
-          departmentId,
-          departmentName: departmentNames.get(departmentId) ?? null,
-          fiscalPeriod: query.fiscal_period,
-          budgetAmount,
-          consumedAmount,
-          remainingAmount: budgetAmount - consumedAmount,
-        }
-      })
+      return {
+        organizationUnitId,
+        organizationUnitName: unitNames.get(organizationUnitId) ?? null,
+        fiscalPeriod: query.fiscal_period,
+        budgetAmount,
+        consumedAmount,
+        remainingAmount: budgetAmount - consumedAmount,
+      }
+    })
 
     const responseBody = zAppBudgetSummary.parse({
       fiscal_period: query.fiscal_period,
       data: rows.map((row) => ({
-        department_id: row.departmentId,
-        department_name: row.departmentName,
+        organization_unit_id: row.organizationUnitId,
+        organization_unit_name: row.organizationUnitName,
         fiscal_period: row.fiscalPeriod,
         budget_amount: row.budgetAmount,
         consumed_amount: row.consumedAmount,

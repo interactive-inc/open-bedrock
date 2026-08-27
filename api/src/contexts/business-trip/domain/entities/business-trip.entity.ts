@@ -1,9 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { BusinessTripRow } from "@/contexts/business-trip/infrastructure/schema/business-trip"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.string(),
-  travelerId: z.number(),
+  travelerId: zEmployeeId,
   destination: z.string(),
   startDate: z.string(),
   endDate: z.string(),
@@ -46,7 +48,7 @@ export class BusinessTrip implements Props {
 
   /** 新規出張申請を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。 */
   static create(props: {
-    travelerId: number
+    travelerId: EmployeeId
     destination: string
     startDate: string
     endDate: string

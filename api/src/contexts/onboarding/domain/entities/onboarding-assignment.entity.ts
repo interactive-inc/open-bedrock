@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { OnboardingTask } from "@/contexts/onboarding/domain/entities/onboarding-task.entity"
 import type { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import type { OnboardingAssignmentRow } from "@/contexts/onboarding/infrastructure/schema/onboarding"
@@ -5,7 +7,7 @@ import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   templateCode: z.string(),
   kind: z.enum(["join", "leave"]),
   status: z.enum(["in_progress", "completed"]),
@@ -45,7 +47,7 @@ export class OnboardingAssignment implements Props {
    * テンプレートのタスク定義を割り当てタスクへ展開して内包する。
    */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     template: OnboardingTemplate
     assignedAt: string
   }): OnboardingAssignment {

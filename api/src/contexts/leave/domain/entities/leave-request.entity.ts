@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { leaveStatusSchema, leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
 import type { LeaveType, LeaveUnit } from "@/lib/schemas"
 import type { LeaveRequestRow } from "@/contexts/leave/infrastructure/schema/leave"
@@ -6,7 +8,7 @@ import { z } from "zod"
 /** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const leaveRequestRowSchema = z.object({
   id: z.number(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   leaveType: leaveTypeSchema,
   startDate: z.string(),
   endDate: z.string(),
@@ -16,14 +18,14 @@ export const leaveRequestRowSchema = z.object({
   consumedDays: z.number(),
   reason: z.string().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
-  approverId: z.number().nullable(),
+  approverId: zEmployeeId.nullable(),
   decidedComment: z.string().nullable(),
   createdAt: z.string(),
 })
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   leaveType: leaveTypeSchema,
   startDate: z.string(),
   endDate: z.string(),
@@ -33,7 +35,7 @@ const zProps = z.object({
   consumedDays: z.number(),
   reason: z.string().nullable(),
   status: leaveStatusSchema,
-  approverId: z.number().nullable(),
+  approverId: zEmployeeId.nullable(),
   decidedComment: z.string().nullable(),
   createdAt: z.string(),
 })
@@ -83,7 +85,7 @@ export class LeaveRequest implements Props {
 
   /** 新規作成する休暇申請を組み立てる。id は未採番、初期状態は pending。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     leaveType: LeaveType
     startDate: string
     endDate: string

@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { MeetingMinutes } from "@/contexts/meeting/domain/entities/meeting-minutes.entity"
@@ -11,7 +12,7 @@ export type Command = {
   title: string
   attendees: string | null
   bodyMd: string
-  authorEmployeeId: number
+  authorEmployeeId: EmployeeId
   createdAt: string
 }
 

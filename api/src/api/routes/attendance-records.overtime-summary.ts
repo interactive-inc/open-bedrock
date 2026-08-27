@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { countBusinessDays } from "@/contexts/company-calendar/domain/policies/count-business-days.policy"
 import { toOvertimeEntries } from "@/contexts/attendance/domain/policies/to-overtime-entries.policy"
 import { toMonthRange } from "@/contexts/attendance/interface/http/attendance-records/to-month-range"
@@ -46,7 +47,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const scope = c.req.query("scope") ?? null
 
-  let employeeIds: ReadonlyArray<number> | null
+  let employeeIds: ReadonlyArray<EmployeeId> | null
 
   if (scope === "all") {
     if (session.hasPermission("attendance:read:all") === false) {

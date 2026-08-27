@@ -8,7 +8,9 @@ export async function validateApplicationWorkflowReferences(
   context: Context,
   workflow: ApplicationWorkflow,
 ): Promise<void> {
-  const employeeRows = await context.var.database.select({ code: employees.code }).from(employees)
+  const employeeRows = await context.var.database
+    .select({ code: employees.employeeCode })
+    .from(employees)
   const employeeCodes = new Set(employeeRows.map((row) => row.code))
 
   for (const step of workflow.steps) {

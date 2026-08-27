@@ -3,10 +3,11 @@ import type { Context } from "@/env"
 import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
 import { NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { DepartmentExistenceAdapter } from "@/contexts/expense/infrastructure/adapters/budget/department-existence.adapter"
+import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 
 export type Command = {
-  departmentId: number
+  organizationUnitId: OrganizationUnitId
   fiscalPeriod: string
   periodStart: string
   periodEnd: string
@@ -29,22 +30,24 @@ export class CreateBudget {
       return new ValidationError("period_end must not precede period_start", "invalid_period")
     }
 
-    const departmentExists = await new DepartmentExistenceAdapter(this.c).exists(
-      command.departmentId,
-    )
-
-    if (departmentExists instanceof Error) {
-      return new UnexpectedError("failed to find department", { cause: departmentExists })
+    const snapshot = await new ReadCanonicalOrganizationStateAdapter(
+      this.c,
+    ).readCanonicalOrganizationState()
+    if (snapshot instanceof Error) {
+      return new UnexpectedError("failed to resolve organization unit", { cause: snapshot })
     }
-
-    if (departmentExists === false) {
-      return new NotFoundError("department not found", "department_not_found")
+    if (
+      !snapshot.organization.units.some(
+        (unit) => unit.organizationUnitId === command.organizationUnitId,
+      )
+    ) {
+      return new NotFoundError("organization unit not found", "organization_unit_not_found")
     }
 
     const repository = new BudgetRepository(this.c)
 
     const budget = Budget.create({
-      departmentId: command.departmentId,
+      organizationUnitId: command.organizationUnitId,
       fiscalPeriod: command.fiscalPeriod,
       periodStart: command.periodStart,
       periodEnd: command.periodEnd,

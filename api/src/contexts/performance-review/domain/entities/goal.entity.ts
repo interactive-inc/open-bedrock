@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { GoalRow } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { z } from "zod"
 
@@ -8,7 +10,7 @@ export type GoalOwnerType = z.infer<typeof goalOwnerTypeSchema>
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   period: z.string(),
   title: z.string(),
   kpi: z.string().nullable(),
@@ -57,7 +59,7 @@ export class Goal implements Props {
 
   /** 新規作成する目標を組み立てる。id は未採番、初期状態は draft。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     period: string
     title: string
     kpi: string | null

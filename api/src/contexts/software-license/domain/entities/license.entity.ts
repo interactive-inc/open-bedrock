@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { LicenseRow } from "@/contexts/software-license/infrastructure/schema/software-license"
 import { z } from "zod"
 
@@ -8,7 +10,7 @@ const zProps = z.object({
   category: z.string().nullable(),
   seats: z.number().int().nullable(),
   renewalDeadline: z.string().nullable(),
-  ownerEmployeeId: z.number().int().nullable(),
+  ownerEmployeeId: zEmployeeId.nullable(),
   note: z.string().nullable(),
   status: z.enum(["active", "cancelled"]),
   createdAt: z.string(),
@@ -53,7 +55,7 @@ export class License implements Props {
     category: string | null
     seats: number | null
     renewalDeadline: string | null
-    ownerEmployeeId: number | null
+    ownerEmployeeId: EmployeeId | null
     note: string | null
     createdAt: string
   }): License {

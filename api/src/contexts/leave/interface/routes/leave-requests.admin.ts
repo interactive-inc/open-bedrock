@@ -15,6 +15,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
 import { InternalError } from "@/lib/http/errors"
 
@@ -39,7 +40,7 @@ export const GET = factory.createHandlers(
     "query",
     z.object({
       status: z.enum(["pending", "approved", "rejected"]).optional(),
-      applicant_id: z.string().optional(),
+      applicant_id: zEmployeeId.optional(),
       leave_type: leaveTypeSchema.optional(),
       from: z.string().optional(),
       to: z.string().optional(),
@@ -81,12 +82,8 @@ export const GET = factory.createHandlers(
       conditions.push(eq(leaveRequests.status, query.status))
     }
 
-    if (query.applicant_id !== undefined && query.applicant_id !== "") {
-      const applicantId = Number(query.applicant_id)
-
-      if (Number.isInteger(applicantId)) {
-        conditions.push(eq(leaveRequests.employeeId, applicantId))
-      }
+    if (query.applicant_id !== undefined) {
+      conditions.push(eq(leaveRequests.employeeId, query.applicant_id))
     }
 
     if (query.leave_type !== undefined) {
@@ -114,8 +111,7 @@ export const GET = factory.createHandlers(
       .select({
         id: leaveRequests.id,
         employeeId: leaveRequests.employeeId,
-        applicantName: employees.name,
-        applicantDeptName: employees.deptName,
+        applicantName: employees.officialName,
         leaveType: leaveRequests.leaveType,
         startDate: leaveRequests.startDate,
         endDate: leaveRequests.endDate,
@@ -151,10 +147,7 @@ export const GET = factory.createHandlers(
         id: row.id,
         applicant_id: row.employeeId,
         applicant_name: row.applicantName ?? "",
-        applicant_dept_name:
-          currentDepartments.source === "lifecycle"
-            ? (currentDepartments.names.get(row.employeeId) ?? null)
-            : row.applicantDeptName,
+        applicant_dept_name: currentDepartments.get(row.employeeId) ?? null,
         leave_type: row.leaveType,
         start_date: row.startDate,
         end_date: row.endDate,

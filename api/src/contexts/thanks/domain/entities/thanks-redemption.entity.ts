@@ -1,16 +1,18 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { redemptionStatusSchema } from "@/lib/schemas"
 import type { ThanksRedemptionRow } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   rewardId: z.number(),
   pointCost: z.number(),
   status: redemptionStatusSchema,
   createdAt: z.string(),
   decidedAt: z.string().nullable(),
-  deciderId: z.number().nullable(),
+  deciderId: zEmployeeId.nullable(),
 })
 
 type Props = z.infer<typeof zProps>
@@ -47,7 +49,7 @@ export class ThanksRedemption implements Props {
 
   /** 新規の交換申請を組み立てる。初期状態は pending。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     rewardId: number
     pointCost: number
     createdAt: string

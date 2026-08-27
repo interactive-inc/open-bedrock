@@ -8,7 +8,7 @@ import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure
 
 export type Command = {
   enrollmentId: number
-  viewerEmployeeId: number
+  viewerEmployeeId: EmployeeId
   session: Session
   score: number | null
   completedAt: string
@@ -64,3 +64,4 @@ export class CompleteTrainingEnrollment {
     return completed
   }
 }
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"

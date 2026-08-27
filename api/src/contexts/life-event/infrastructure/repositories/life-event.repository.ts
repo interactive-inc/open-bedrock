@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import type { Context } from "@/env"
 import { lifeEvents } from "@/contexts/life-event/infrastructure/schema/life-event"
@@ -8,7 +9,7 @@ export class LifeEventRepository {
 
   /** 届出者本人のライフイベント届出をイベント日の昇順でページングして返す。 */
   async findByEmployeeId(props: {
-    employeeId: number
+    employeeId: EmployeeId
     limit: number
     offset: number
   }): Promise<ReadonlyArray<LifeEvent> | Error> {

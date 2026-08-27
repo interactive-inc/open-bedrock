@@ -23,7 +23,7 @@ const managers = aliasedTable(employees, "managers")
 /** 1on1 を参加者名込みの snake_case レスポンスへ整形する。名前は別クエリで解決する。 */
 async function toResponseBody(c: Context, oneOnOne: OneOnOne) {
   const nameRows = await c.var.database
-    .select({ memberName: members.name, managerName: managers.name })
+    .select({ memberName: members.officialName, managerName: managers.officialName })
     .from(oneOnOnes)
     .leftJoin(members, eq(members.id, oneOnOnes.memberId))
     .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))

@@ -1,10 +1,11 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { EmployeeSkill } from "@/contexts/skill/domain/entities/employee-skill.entity"
 import { SetMySkill } from "@/contexts/skill/application/set-my-skill"
 import { ApplicationError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
 
 async function seedSkillMaster(db: D1Database, code: string): Promise<void> {
   await seedD1(db, "skill_definitions", [
@@ -14,12 +15,12 @@ async function seedSkillMaster(db: D1Database, code: string): Promise<void> {
 
 describe("SetMySkill", () => {
   test("registers a new skill for the employee", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedSkillMaster(db, "typescript")
 
     const result = await new SetMySkill(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       skillCode: "typescript",
       level: 7,
       years: 3,
@@ -37,12 +38,12 @@ describe("SetMySkill", () => {
   })
 
   test("updates an existing skill registration", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedSkillMaster(db, "typescript")
 
     await new SetMySkill(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       skillCode: "typescript",
       level: 5,
       years: 2,
@@ -50,7 +51,7 @@ describe("SetMySkill", () => {
     })
 
     const result = await new SetMySkill(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       skillCode: "typescript",
       level: 8,
       years: 4,
@@ -67,10 +68,10 @@ describe("SetMySkill", () => {
   })
 
   test("rejects unknown skill code with skill_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new SetMySkill(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       skillCode: "nonexistent",
       level: 5,
       years: null,

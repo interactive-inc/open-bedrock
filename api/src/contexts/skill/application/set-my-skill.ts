@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { EmployeeSkill } from "@/contexts/skill/domain/entities/employee-skill.entity"
 import type { Skill } from "@/contexts/skill/domain/entities/skill.entity"
 import type { Context } from "@/env"
@@ -7,7 +8,7 @@ import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/reposit
 import { SkillRepository } from "@/contexts/skill/infrastructure/repositories/skill.repository"
 
 export type Command = {
-  employeeId: number
+  employeeId: EmployeeId
   skillCode: string
   level: number
   years: number | null

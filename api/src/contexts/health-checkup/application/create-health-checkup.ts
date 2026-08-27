@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { HealthCheckupRepository } from "@/contexts/health-checkup/infrastructure/repositories/health-checkup.repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -13,7 +14,7 @@ export class CreateHealthCheckup {
   }
 
   async run(props: {
-    employeeId: number
+    employeeId: EmployeeId
     fiscalYear: number
     checkupKind: "regular" | "stress_check"
     conductedOn: string | null

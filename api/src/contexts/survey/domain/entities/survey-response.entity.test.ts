@@ -1,3 +1,4 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
 import { describe, expect, test } from "bun:test"
 
@@ -6,7 +7,7 @@ describe("SurveyResponse.fromRow", () => {
     const response = SurveyResponse.fromRow({
       id: 11,
       surveyId: 1,
-      respondentId: 7,
+      respondentId: toWorkforceEmployeeId(7),
       answersJson: JSON.stringify({ q1: 5 }),
       submittedAt: "2026-01-01T00:00:00.000Z",
     })
@@ -19,7 +20,7 @@ describe("SurveyResponse.fromRow", () => {
 
     expect(response.id).toBe(11)
     expect(response.surveyId).toBe(1)
-    expect(response.respondentId).toBe(7)
+    expect(response.respondentId).toBe(toWorkforceEmployeeId(7))
     expect(response.submittedAt).toBe("2026-01-01T00:00:00.000Z")
   })
 
@@ -27,7 +28,7 @@ describe("SurveyResponse.fromRow", () => {
     const response = SurveyResponse.fromRow({
       id: 12,
       surveyId: 1,
-      respondentId: 7,
+      respondentId: toWorkforceEmployeeId(7),
       answersJson: "null",
       submittedAt: "2026-01-02T00:00:00.000Z",
     })
@@ -43,7 +44,7 @@ describe("SurveyResponse.fromRow", () => {
     const result = SurveyResponse.fromRow({
       id: 13,
       surveyId: 1,
-      respondentId: 7,
+      respondentId: toWorkforceEmployeeId(7),
       answersJson: "{not-json",
       submittedAt: "2026-01-03T00:00:00.000Z",
     })

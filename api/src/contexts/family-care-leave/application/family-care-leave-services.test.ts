@@ -1,15 +1,16 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { CreateFamilyCareLeave } from "@/contexts/family-care-leave/application/create-family-care-leave"
 import { UpdateFamilyCareLeave } from "@/contexts/family-care-leave/application/update-family-care-leave"
 import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, ForbiddenError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
 
 async function seedLeave(context: Context, employeeId: number): Promise<string> {
   const created = await new CreateFamilyCareLeave(context).run({
-    employeeId: employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
     leaveKind: "childcare",
     startDate: "2026-10-01",
     endDate: "2027-03-31",
@@ -26,10 +27,10 @@ async function seedLeave(context: Context, employeeId: number): Promise<string> 
 
 describe("CreateFamilyCareLeave", () => {
   test("creates a family care leave with status requested", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const created = await new CreateFamilyCareLeave(context).run({
-      employeeId: 2,
+      employeeId: toWorkforceEmployeeId(2),
       leaveKind: "maternity",
       startDate: "2026-07-01",
       endDate: "2026-09-30",
@@ -54,13 +55,13 @@ describe("ListMyFamilyCareLeaves", () => {})
 
 describe("UpdateFamilyCareLeave", () => {
   test("updates the details for the applicant", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const leaveId = await seedLeave(context, 5)
 
     const result = await new UpdateFamilyCareLeave(context).run({
       familyCareLeaveId: leaveId,
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       leaveKind: "family_care",
       startDate: "2026-11-01",
       endDate: "2026-11-30",
@@ -78,13 +79,13 @@ describe("UpdateFamilyCareLeave", () => {
   })
 
   test("rejects a non applicant with not_applicant", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const leaveId = await seedLeave(context, 5)
 
     const result = await new UpdateFamilyCareLeave(context).run({
       familyCareLeaveId: leaveId,
-      employeeId: 6,
+      employeeId: toWorkforceEmployeeId(6),
       leaveKind: "family_care",
       startDate: "2026-11-01",
       endDate: "2026-11-30",
@@ -95,13 +96,13 @@ describe("UpdateFamilyCareLeave", () => {
   })
 
   test("rejects an update that overlaps another own leave with overlapping_leave", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     // employee 5 の既存申出（2026-10-01〜2027-03-31）に加えて、重ならない別期間の申出を追加する。
     const leaveId = await seedLeave(context, 5)
 
     const other = await new CreateFamilyCareLeave(context).run({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       leaveKind: "family_care",
       startDate: "2027-05-01",
       endDate: "2027-05-31",
@@ -116,7 +117,7 @@ describe("UpdateFamilyCareLeave", () => {
     // 1件目を2件目（2027-05-01〜2027-05-31）と重なる期間へ変更しようとすると重複。
     const result = await new UpdateFamilyCareLeave(context).run({
       familyCareLeaveId: leaveId,
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       leaveKind: "childcare",
       startDate: "2027-05-10",
       endDate: "2027-05-20",
@@ -127,14 +128,14 @@ describe("UpdateFamilyCareLeave", () => {
   })
 
   test("allows an update that only overlaps the leave itself (self-exclusion)", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const leaveId = await seedLeave(context, 5)
 
     // 自身としか重ならない期間変更は自己除外により成功する。
     const result = await new UpdateFamilyCareLeave(context).run({
       familyCareLeaveId: leaveId,
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       leaveKind: "childcare",
       startDate: "2026-10-15",
       endDate: "2027-02-28",

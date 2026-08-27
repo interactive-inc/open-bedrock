@@ -82,7 +82,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     ids.length === 0
       ? []
       : await c.var.database
-          .select({ id: oneOnOnes.id, memberName: members.name, managerName: managers.name })
+          .select({
+            id: oneOnOnes.id,
+            memberName: members.officialName,
+            managerName: managers.officialName,
+          })
           .from(oneOnOnes)
           .leftJoin(members, eq(members.id, oneOnOnes.memberId))
           .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))

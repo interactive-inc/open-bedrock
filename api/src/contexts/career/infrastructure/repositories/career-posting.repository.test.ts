@@ -1,12 +1,12 @@
 import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
 import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("CareerPostingRepository", () => {
   test("findById returns the seeded posting", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedD1(db, "career_postings", [
       {
@@ -34,7 +34,7 @@ describe("CareerPostingRepository", () => {
   })
 
   test("findById returns null for an unknown id", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new CareerPostingRepository(context)
 

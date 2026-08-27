@@ -1,10 +1,11 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("ShiftAssignment.create", () => {
   test("builds with null id and null publishedAt", () => {
     const assignment = ShiftAssignment.create({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       patternId: 1,
       date: "2026-06-15",
       note: "Holiday coverage",
@@ -13,7 +14,7 @@ describe("ShiftAssignment.create", () => {
     expect(assignment).toBeInstanceOf(ShiftAssignment)
     expect(assignment.id).toBeNull()
     expect(assignment.publishedAt).toBeNull()
-    expect(assignment.employeeId).toBe(5)
+    expect(assignment.employeeId).toBe(toWorkforceEmployeeId(5))
     expect(assignment.patternId).toBe(1)
     expect(assignment.date).toBe("2026-06-15")
     expect(assignment.note).toBe("Holiday coverage")
@@ -23,7 +24,7 @@ describe("ShiftAssignment.create", () => {
 describe("ShiftAssignment.isModifiable", () => {
   test("true when unpublished", () => {
     const assignment = ShiftAssignment.create({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       patternId: 1,
       date: "2026-06-15",
       note: null,
@@ -34,7 +35,7 @@ describe("ShiftAssignment.isModifiable", () => {
 
   test("false when published", () => {
     const assignment = ShiftAssignment.create({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       patternId: 1,
       date: "2026-06-15",
       note: null,
@@ -49,7 +50,7 @@ describe("ShiftAssignment.isModifiable", () => {
 describe("ShiftAssignment.withPublished", () => {
   test("returns new with publishedAt set", () => {
     const assignment = ShiftAssignment.create({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       patternId: 1,
       date: "2026-06-15",
       note: null,
@@ -59,7 +60,7 @@ describe("ShiftAssignment.withPublished", () => {
 
     expect(published).toBeInstanceOf(ShiftAssignment)
     expect(published.publishedAt).toBe("2026-06-10T12:00:00.000Z")
-    expect(published.employeeId).toBe(5)
+    expect(published.employeeId).toBe(toWorkforceEmployeeId(5))
     expect(published.date).toBe("2026-06-15")
   })
 })
@@ -67,7 +68,7 @@ describe("ShiftAssignment.withPublished", () => {
 describe("ShiftAssignment.withDetails", () => {
   test("returns new with changed fields", () => {
     const assignment = ShiftAssignment.create({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       patternId: 1,
       date: "2026-06-15",
       note: "Original note",
@@ -83,7 +84,7 @@ describe("ShiftAssignment.withDetails", () => {
     expect(updated.patternId).toBe(2)
     expect(updated.date).toBe("2026-06-20")
     expect(updated.note).toBe("Updated note")
-    expect(updated.employeeId).toBe(5)
+    expect(updated.employeeId).toBe(toWorkforceEmployeeId(5))
     expect(updated.publishedAt).toBeNull()
   })
 })

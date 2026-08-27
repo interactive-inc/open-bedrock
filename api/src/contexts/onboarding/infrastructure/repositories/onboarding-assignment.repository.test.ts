@@ -1,8 +1,9 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
 import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import { OnboardingTemplateTask } from "@/contexts/onboarding/domain/entities/onboarding-template-task.entity"
 import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 function twoTaskTemplate(): OnboardingTemplate {
@@ -34,7 +35,7 @@ async function createTwoTaskAssignment(
 ): Promise<OnboardingAssignment> {
   const created = await repository.create(
     OnboardingAssignment.create({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       template: twoTaskTemplate(),
       assignedAt: "2026-01-01T00:00:00.000Z",
     }),
@@ -49,7 +50,7 @@ async function createTwoTaskAssignment(
 
 describe("OnboardingAssignmentRepository", () => {
   test("create then findById round-trips the assignment with its tasks", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const template = new OnboardingTemplate({
       id: 1,
@@ -71,7 +72,7 @@ describe("OnboardingAssignmentRepository", () => {
 
     const created = await repository.create(
       OnboardingAssignment.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         template,
         assignedAt: "2026-01-01T00:00:00.000Z",
       }),
@@ -98,7 +99,7 @@ describe("OnboardingAssignmentRepository", () => {
   })
 
   test("completeTask marks a single task done and keeps others unchanged", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const repository = new OnboardingAssignmentRepository(context)
     const assignment = await createTwoTaskAssignment(repository)
 
@@ -121,7 +122,7 @@ describe("OnboardingAssignmentRepository", () => {
   })
 
   test("completing all tasks flips assignment to completed", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const repository = new OnboardingAssignmentRepository(context)
     const assignment = await createTwoTaskAssignment(repository)
 
@@ -142,7 +143,7 @@ describe("OnboardingAssignmentRepository", () => {
   })
 
   test("completeTask returns null when the task is already done", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const repository = new OnboardingAssignmentRepository(context)
     const assignment = await createTwoTaskAssignment(repository)
 
@@ -159,7 +160,7 @@ describe("OnboardingAssignmentRepository", () => {
   })
 
   test("concurrent completions of different tasks do not overwrite each other", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const repository = new OnboardingAssignmentRepository(context)
     const assignment = await createTwoTaskAssignment(repository)
 
@@ -191,7 +192,7 @@ describe("OnboardingAssignmentRepository", () => {
   })
 
   test("uncompleteTask reverts a done task to pending", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const repository = new OnboardingAssignmentRepository(context)
     const assignment = await createTwoTaskAssignment(repository)
 
@@ -214,7 +215,7 @@ describe("OnboardingAssignmentRepository", () => {
   })
 
   test("uncompleteTask returns null when the task is already pending", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const repository = new OnboardingAssignmentRepository(context)
     const assignment = await createTwoTaskAssignment(repository)
 
@@ -225,7 +226,7 @@ describe("OnboardingAssignmentRepository", () => {
   })
 
   test("uncompleting a task reverts a completed assignment to in_progress", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
     const repository = new OnboardingAssignmentRepository(context)
     const assignment = await createTwoTaskAssignment(repository)
 

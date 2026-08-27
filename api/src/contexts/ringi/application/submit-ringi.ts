@@ -1,13 +1,14 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
 import { UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  applicantId: number
-  approverId: number
+  applicantId: EmployeeId
+  approverId: EmployeeId
   title: string
   amount: number
   reason: string
@@ -28,7 +29,7 @@ export class SubmitRingi {
       return new ValidationError("cannot assign yourself as approver", "invalid_approver")
     }
 
-    const employeeRepository = new EmployeeRepository(this.c)
+    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c)
 
     const approver = await employeeRepository.findById(command.approverId)
 

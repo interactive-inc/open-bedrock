@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import {
   GoalEvaluation,
@@ -64,7 +65,7 @@ export class GoalEvaluationRepository {
         | {
             id: number
             goalId: number
-            evaluatorId: number
+            evaluatorId: EmployeeId
             kind: string
             score: number | null
             comment: string | null
@@ -137,7 +138,7 @@ export class GoalEvaluationRepository {
         | {
             id: number
             goalId: number
-            evaluatorId: number
+            evaluatorId: EmployeeId
             kind: string
             score: number | null
             comment: string | null

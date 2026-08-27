@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { CreateEmployeeWorkStyle } from "@/contexts/work-style/application/create-employee-work-style"
 import { canReadWorkStylesOf } from "@/contexts/work-style/interface/http/employee-work-styles/can-read-work-styles-of"
 import { resolveTargetEmployeeId } from "@/api/http/utils/resolve-target-employee-id"
@@ -101,7 +102,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      employee_id: z.number().int().positive(),
+      employee_id: zEmployeeId,
       style: workStyleSchema,
       starts_on: isoDate,
       ends_on: isoDate.nullable().optional(),

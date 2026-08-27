@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Commendation } from "@/contexts/commendation/domain/entities/commendation.entity"
 import type { Context } from "@/env"
 import { commendations } from "@/contexts/commendation/infrastructure/schema/commendation"
@@ -8,7 +9,7 @@ export class CommendationRepository {
   constructor(private readonly c: Context) {}
 
   async list(props: {
-    employeeId: number | null
+    employeeId: EmployeeId | null
     limit: number
     offset: number
   }): Promise<ReadonlyArray<Commendation> | Error> {
@@ -27,7 +28,7 @@ export class CommendationRepository {
     }
   }
 
-  async count(employeeId: number | null): Promise<number | Error> {
+  async count(employeeId: EmployeeId | null): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
         .select({ total: count() })
@@ -91,7 +92,7 @@ export class CommendationRepository {
     }
   }
 
-  private toConditions(employeeId: number | null): SQL | undefined {
+  private toConditions(employeeId: EmployeeId | null): SQL | undefined {
     const conditions: Array<SQL> = []
 
     if (employeeId !== null) {

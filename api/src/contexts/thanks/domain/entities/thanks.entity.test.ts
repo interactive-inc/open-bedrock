@@ -1,11 +1,12 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { Thanks } from "@/contexts/thanks/domain/entities/thanks.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("Thanks.create", () => {
   test("builds a thanks with the given points", () => {
     const thanks = Thanks.create({
-      senderEmployeeId: 4,
-      recipientEmployeeId: 5,
+      senderEmployeeId: toWorkforceEmployeeId(4),
+      recipientEmployeeId: toWorkforceEmployeeId(5),
       message: "ありがとう",
       points: 0,
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -24,8 +25,8 @@ describe("Thanks.create", () => {
 
   test("keeps the attached points", () => {
     const thanks = Thanks.create({
-      senderEmployeeId: 4,
-      recipientEmployeeId: 5,
+      senderEmployeeId: toWorkforceEmployeeId(4),
+      recipientEmployeeId: toWorkforceEmployeeId(5),
       message: "ありがとう",
       points: 30,
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -40,8 +41,8 @@ describe("Thanks.create", () => {
 
   test("rejects negative points", () => {
     const thanks = Thanks.create({
-      senderEmployeeId: 4,
-      recipientEmployeeId: 5,
+      senderEmployeeId: toWorkforceEmployeeId(4),
+      recipientEmployeeId: toWorkforceEmployeeId(5),
       message: "ありがとう",
       points: -1,
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -52,8 +53,8 @@ describe("Thanks.create", () => {
 
   test("rejects sending thanks to yourself", () => {
     const thanks = Thanks.create({
-      senderEmployeeId: 4,
-      recipientEmployeeId: 4,
+      senderEmployeeId: toWorkforceEmployeeId(4),
+      recipientEmployeeId: toWorkforceEmployeeId(4),
       message: "ありがとう",
       points: 0,
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -64,8 +65,8 @@ describe("Thanks.create", () => {
 
   test("rejects an empty message", () => {
     const thanks = Thanks.create({
-      senderEmployeeId: 4,
-      recipientEmployeeId: 5,
+      senderEmployeeId: toWorkforceEmployeeId(4),
+      recipientEmployeeId: toWorkforceEmployeeId(5),
       message: "   ",
       points: 0,
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -76,8 +77,8 @@ describe("Thanks.create", () => {
 
   test("accepts a message of exactly 1000 characters", () => {
     const thanks = Thanks.create({
-      senderEmployeeId: 4,
-      recipientEmployeeId: 5,
+      senderEmployeeId: toWorkforceEmployeeId(4),
+      recipientEmployeeId: toWorkforceEmployeeId(5),
       message: "あ".repeat(1000),
       points: 0,
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -88,8 +89,8 @@ describe("Thanks.create", () => {
 
   test("rejects a message of 1001 characters", () => {
     const thanks = Thanks.create({
-      senderEmployeeId: 4,
-      recipientEmployeeId: 5,
+      senderEmployeeId: toWorkforceEmployeeId(4),
+      recipientEmployeeId: toWorkforceEmployeeId(5),
       message: "あ".repeat(1001),
       points: 0,
       createdAt: "2026-01-01T00:00:00.000Z",

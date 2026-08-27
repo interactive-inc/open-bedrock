@@ -1,10 +1,11 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 export type WorkMinutesRow = {
-  employeeId: number
+  employeeId: EmployeeId
   workMinutes: number | null
 }
 
 export type OvertimeEntry = {
-  employeeId: number
+  employeeId: EmployeeId
   workDays: number
   totalWorkMinutes: number
   overtimeMinutes: number
@@ -19,7 +20,7 @@ export function toOvertimeEntries(props: {
   businessDays: number
   dailyRegularMinutes: number
 }): ReadonlyArray<OvertimeEntry> {
-  const totalsByEmployee = new Map<number, { workDays: number; totalWorkMinutes: number }>()
+  const totalsByEmployee = new Map<EmployeeId, { workDays: number; totalWorkMinutes: number }>()
 
   for (const row of props.rows) {
     const current = totalsByEmployee.get(row.employeeId) ?? { workDays: 0, totalWorkMinutes: 0 }
@@ -51,7 +52,7 @@ export function toOvertimeEntries(props: {
     })
   }
 
-  entries.sort((a, b) => a.employeeId - b.employeeId)
+  entries.sort((a, b) => a.employeeId.localeCompare(b.employeeId))
 
   return entries
 }

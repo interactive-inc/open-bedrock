@@ -1,5 +1,7 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedLeaveBalance = {
-  employeeId: number
+  employeeId: EmployeeId
   fiscalYear: string
   leaveType: "annual" | "special" | "summer" | "child_nursing_care" | "caregiving_leave"
   grantedDays: number
@@ -10,7 +12,7 @@ type SeedLeaveBalance = {
 /** 各 employee は残高管理対象の休暇種別ごとに1行を持ち、remainingDays = grantedDays - usedDays。 */
 export const seedLeaveBalances: ReadonlyArray<SeedLeaveBalance> = [
   {
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
     fiscalYear: "2026",
     leaveType: "annual",
     grantedDays: 20,
@@ -18,7 +20,7 @@ export const seedLeaveBalances: ReadonlyArray<SeedLeaveBalance> = [
     remainingDays: 15,
   },
   {
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
     fiscalYear: "2026",
     leaveType: "special",
     grantedDays: 5,
@@ -26,7 +28,7 @@ export const seedLeaveBalances: ReadonlyArray<SeedLeaveBalance> = [
     remainingDays: 5,
   },
   {
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
     fiscalYear: "2026",
     leaveType: "summer",
     grantedDays: 3,
@@ -34,7 +36,7 @@ export const seedLeaveBalances: ReadonlyArray<SeedLeaveBalance> = [
     remainingDays: 3,
   },
   {
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
     fiscalYear: "2026",
     leaveType: "child_nursing_care",
     grantedDays: 5,
@@ -42,7 +44,7 @@ export const seedLeaveBalances: ReadonlyArray<SeedLeaveBalance> = [
     remainingDays: 5,
   },
   {
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
     fiscalYear: "2026",
     leaveType: "caregiving_leave",
     grantedDays: 5,
@@ -50,7 +52,7 @@ export const seedLeaveBalances: ReadonlyArray<SeedLeaveBalance> = [
     remainingDays: 5,
   },
   {
-    employeeId: 10,
+    employeeId: toWorkforceEmployeeId(10),
     fiscalYear: "2026",
     leaveType: "annual",
     grantedDays: 18,
@@ -58,7 +60,7 @@ export const seedLeaveBalances: ReadonlyArray<SeedLeaveBalance> = [
     remainingDays: 16,
   },
   {
-    employeeId: 10,
+    employeeId: toWorkforceEmployeeId(10),
     fiscalYear: "2026",
     leaveType: "special",
     grantedDays: 5,
@@ -66,7 +68,7 @@ export const seedLeaveBalances: ReadonlyArray<SeedLeaveBalance> = [
     remainingDays: 4,
   },
   {
-    employeeId: 10,
+    employeeId: toWorkforceEmployeeId(10),
     fiscalYear: "2026",
     leaveType: "summer",
     grantedDays: 3,
@@ -74,7 +76,7 @@ export const seedLeaveBalances: ReadonlyArray<SeedLeaveBalance> = [
     remainingDays: 3,
   },
   {
-    employeeId: 10,
+    employeeId: toWorkforceEmployeeId(10),
     fiscalYear: "2026",
     leaveType: "child_nursing_care",
     grantedDays: 5,
@@ -82,7 +84,7 @@ export const seedLeaveBalances: ReadonlyArray<SeedLeaveBalance> = [
     remainingDays: 5,
   },
   {
-    employeeId: 10,
+    employeeId: toWorkforceEmployeeId(10),
     fiscalYear: "2026",
     leaveType: "caregiving_leave",
     grantedDays: 5,

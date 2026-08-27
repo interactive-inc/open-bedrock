@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { RoomReservation } from "@/contexts/room/domain/entities/room-reservation.entity"
 import type { Context } from "@/env"
 import { roomReservations } from "@/contexts/room/infrastructure/schema/room"
@@ -46,7 +47,7 @@ export class RoomReservationRepository {
 
   /** 予約者本人の予約を開始時刻の昇順で返す。 */
   async findByReserverId(
-    reserverId: number,
+    reserverId: EmployeeId,
     pagination: { limit: number; offset: number },
   ): Promise<ReadonlyArray<RoomReservation> | Error> {
     try {
@@ -184,7 +185,7 @@ export class RoomReservationRepository {
   }
 
   /** 予約者本人の予約を削除する。所有権チェックと削除をアトミックに行う。 */
-  async deleteByIdAndReserverId(id: string, reserverId: number): Promise<true | null | Error> {
+  async deleteByIdAndReserverId(id: string, reserverId: EmployeeId): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
         .delete(roomReservations)

@@ -1,15 +1,16 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { CreateCertificateRequest } from "@/contexts/certificate-request/application/create-certificate-request"
 import { UpdateCertificateRequest } from "@/contexts/certificate-request/application/update-certificate-request"
 import { CertificateRequest } from "@/contexts/certificate-request/domain/entities/certificate-request.entity"
 import type { Context } from "@/env"
 import { ApplicationError, ForbiddenError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
 
 async function seedRequest(context: Context, requesterId: number): Promise<string> {
   const created = await new CreateCertificateRequest(context).run({
-    requesterId: requesterId,
+    requesterId: toWorkforceEmployeeId(requesterId),
     certificateType: "employment",
     submitTo: "City Hall",
     neededBy: "2026-06-20",
@@ -26,10 +27,10 @@ async function seedRequest(context: Context, requesterId: number): Promise<strin
 
 describe("CreateCertificateRequest", () => {
   test("creates a certificate request with status requested", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const created = await new CreateCertificateRequest(context).run({
-      requesterId: 2,
+      requesterId: toWorkforceEmployeeId(2),
       certificateType: "income",
       submitTo: null,
       neededBy: null,
@@ -54,13 +55,13 @@ describe("ListMyCertificateRequests", () => {})
 
 describe("UpdateCertificateRequest", () => {
   test("updates the details for the requester", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const requestId = await seedRequest(context, 5)
 
     const result = await new UpdateCertificateRequest(context).run({
       certificateRequestId: requestId,
-      requesterId: 5,
+      requesterId: toWorkforceEmployeeId(5),
       certificateType: "retirement",
       submitTo: "Pension Office",
       neededBy: "2026-07-05",
@@ -78,13 +79,13 @@ describe("UpdateCertificateRequest", () => {
   })
 
   test("rejects a non requester with not_requester", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const requestId = await seedRequest(context, 5)
 
     const result = await new UpdateCertificateRequest(context).run({
       certificateRequestId: requestId,
-      requesterId: 6,
+      requesterId: toWorkforceEmployeeId(6),
       certificateType: "retirement",
       submitTo: null,
       neededBy: null,

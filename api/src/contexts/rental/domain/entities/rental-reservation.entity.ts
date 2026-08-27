@@ -1,9 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { RentalReservationRow } from "@/contexts/rental/infrastructure/schema/rental"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.string(),
-  requesterId: z.number(),
+  requesterId: zEmployeeId,
   itemName: z.string(),
   startDate: z.string(),
   endDate: z.string(),
@@ -43,7 +45,7 @@ export class RentalReservation implements Props {
 
   /** 新規予約を組み立てる。id は crypto.randomUUID() で採番し、初期状態は requested。 */
   static create(props: {
-    requesterId: number
+    requesterId: EmployeeId
     itemName: string
     startDate: string
     endDate: string

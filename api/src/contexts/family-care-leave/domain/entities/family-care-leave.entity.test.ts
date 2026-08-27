@@ -1,10 +1,11 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("FamilyCareLeave.create", () => {
   test("builds instance with valid dates", () => {
     const leave = FamilyCareLeave.create({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       leaveKind: "maternity",
       startDate: "2026-09-01",
       endDate: "2027-03-01",
@@ -20,7 +21,7 @@ describe("FamilyCareLeave.create", () => {
 
     expect(leave.id).toMatch(/^[0-9a-f-]{36}$/)
     expect(leave.status).toBe("requested")
-    expect(leave.employeeId).toBe(1)
+    expect(leave.employeeId).toBe(toWorkforceEmployeeId(1))
     expect(leave.leaveKind).toBe("maternity")
     expect(leave.startDate).toBe("2026-09-01")
     expect(leave.endDate).toBe("2027-03-01")
@@ -29,7 +30,7 @@ describe("FamilyCareLeave.create", () => {
 
   test("returns error when startDate is after endDate", () => {
     const leave = FamilyCareLeave.create({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       leaveKind: "childcare",
       startDate: "2027-04-01",
       endDate: "2027-03-01",
@@ -44,7 +45,7 @@ describe("FamilyCareLeave.create", () => {
 describe("FamilyCareLeave.withDetails", () => {
   test("returns new instance with valid dates", () => {
     const leave = FamilyCareLeave.create({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       leaveKind: "maternity",
       startDate: "2026-09-01",
       endDate: "2027-03-01",
@@ -73,12 +74,12 @@ describe("FamilyCareLeave.withDetails", () => {
     expect(updated.startDate).toBe("2027-03-01")
     expect(updated.endDate).toBe("2028-03-01")
     expect(updated.note).toBe("育児休業に変更")
-    expect(updated.employeeId).toBe(1)
+    expect(updated.employeeId).toBe(toWorkforceEmployeeId(1))
   })
 
   test("returns error with invalid dates", () => {
     const leave = FamilyCareLeave.create({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       leaveKind: "care",
       startDate: "2026-09-01",
       endDate: "2027-03-01",

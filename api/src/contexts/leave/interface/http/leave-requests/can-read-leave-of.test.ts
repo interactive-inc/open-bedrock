@@ -1,15 +1,16 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { Session } from "@/lib/auth/session"
 import { canReadLeaveOf } from "@/contexts/leave/interface/http/leave-requests/can-read-leave-of"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
-import { makeTestSession } from "@/api/test/support/make-test-session"
-import { testAccountId } from "@/api/test/support/test-account-id"
+import { makeTestSession } from "@tests/api/support/make-test-session"
+import { testAccountId } from "@tests/api/support/test-account-id"
 import { describe, expect, test } from "bun:test"
 
 function sessionWith(permissions: ReadonlyArray<string>): Session {
   return new Session({
     accountId: testAccountId(1),
-    employeeId: 1,
-    employeeStatus: "active",
+    employeeId: toWorkforceEmployeeId(1),
+    employmentStatus: "ACTIVE",
     permissions: new Set(permissions),
     roleKeys: [],
   })

@@ -1,3 +1,4 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
 import { describe, expect, test } from "bun:test"
 
@@ -5,7 +6,7 @@ describe("CareerApplication.create", () => {
   test("builds with null id and applied status", () => {
     const application = CareerApplication.create({
       postingId: 1,
-      applicantId: 5,
+      applicantId: toWorkforceEmployeeId(5),
       message: "I am interested",
     })
 
@@ -18,7 +19,7 @@ describe("CareerApplication.create", () => {
   test("accepts null message", () => {
     const application = CareerApplication.create({
       postingId: 1,
-      applicantId: 5,
+      applicantId: toWorkforceEmployeeId(5),
       message: null,
     })
 
@@ -30,7 +31,7 @@ describe("CareerApplication.withMessage", () => {
   test("returns new application with changed message", () => {
     const application = CareerApplication.create({
       postingId: 1,
-      applicantId: 5,
+      applicantId: toWorkforceEmployeeId(5),
       message: "original",
     })
 

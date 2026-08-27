@@ -1,17 +1,18 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("ShiftAssignmentRepository", () => {
   test("create then findById round-trips the shift assignment", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ShiftAssignmentRepository(context)
 
     const created = await repository.create(
       ShiftAssignment.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         patternId: null,
         date: "2026-05-31",
         note: null,
@@ -37,13 +38,13 @@ describe("ShiftAssignmentRepository", () => {
   })
 
   test("markPublished publishes an unpublished assignment", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ShiftAssignmentRepository(context)
 
     const created = await repository.create(
       ShiftAssignment.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         patternId: null,
         date: "2026-06-01",
         note: null,
@@ -66,13 +67,13 @@ describe("ShiftAssignmentRepository", () => {
   })
 
   test("markPublished returns null for an already published assignment", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ShiftAssignmentRepository(context)
 
     const created = await repository.create(
       ShiftAssignment.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         patternId: null,
         date: "2026-06-02",
         note: null,
@@ -103,13 +104,13 @@ describe("ShiftAssignmentRepository", () => {
   })
 
   test("update returns null and leaves a published assignment unchanged", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ShiftAssignmentRepository(context)
 
     const created = await repository.create(
       ShiftAssignment.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         patternId: null,
         date: "2026-06-04",
         note: "original",
@@ -144,13 +145,13 @@ describe("ShiftAssignmentRepository", () => {
   })
 
   test("update succeeds for an unpublished assignment and keeps publishedAt null", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ShiftAssignmentRepository(context)
 
     const created = await repository.create(
       ShiftAssignment.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         patternId: null,
         date: "2026-06-06",
         note: "original",

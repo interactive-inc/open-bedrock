@@ -1,15 +1,17 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedRoomReservations } from "@/contexts/room/test/seed/seed-room-reservations.test-support"
 import { seedRooms } from "@/contexts/room/test/seed/seed-rooms.test-support"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const roomAvailabilityResponseSchema = z.object({
   room: z.object({
@@ -26,15 +28,14 @@ const jwtSecret = "room-availability-route-test-secret"
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -72,7 +73,7 @@ async function createTestDb(): Promise<D1Database> {
 
 function managerToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 4,
+    employeeId: toWorkforceEmployeeId(4),
   })
 }
 
@@ -173,13 +174,13 @@ describe("GET /rooms/availability", () => {
     // Build a DB with one room that has two reservations both overlapping the query window.
     const db = createD1TestDatabase(loadSchema())
 
-    await seedD1(db, "employees", [
+    await seedCompanyEmployees(db, [
       {
         id: 4,
         code: "E004",
         name: "Manager",
-        dept_id: 3,
-        dept_name: "開発部",
+        deptId: 3,
+        deptName: "開発部",
         position: "Manager",
         status: "active",
       },
@@ -195,7 +196,7 @@ describe("GET /rooms/availability", () => {
       {
         id: "10000000-0000-0000-0000-000000000001",
         room_id: 10,
-        reserver_id: 4,
+        reserver_id: "4",
         start_at: "2026-06-01T09:00:00Z",
         end_at: "2026-06-01T10:00:00Z",
         purpose: "First overlap",
@@ -203,7 +204,7 @@ describe("GET /rooms/availability", () => {
       {
         id: "10000000-0000-0000-0000-000000000002",
         room_id: 10,
-        reserver_id: 4,
+        reserver_id: "4",
         start_at: "2026-06-01T09:30:00Z",
         end_at: "2026-06-01T10:30:00Z",
         purpose: "Second overlap",
@@ -245,13 +246,13 @@ describe("GET /rooms/availability", () => {
     // Build a DB with two rooms, each having a distinct set of overlapping reservations.
     const db = createD1TestDatabase(loadSchema())
 
-    await seedD1(db, "employees", [
+    await seedCompanyEmployees(db, [
       {
         id: 4,
         code: "E004",
         name: "Manager",
-        dept_id: 3,
-        dept_name: "開発部",
+        deptId: 3,
+        deptName: "開発部",
         position: "Manager",
         status: "active",
       },
@@ -271,7 +272,7 @@ describe("GET /rooms/availability", () => {
       {
         id: "20000000-0000-0000-0000-000000000001",
         room_id: 20,
-        reserver_id: 4,
+        reserver_id: "4",
         start_at: "2026-06-02T10:00:00Z",
         end_at: "2026-06-02T11:00:00Z",
         purpose: "Beta conflict 1",
@@ -279,7 +280,7 @@ describe("GET /rooms/availability", () => {
       {
         id: "20000000-0000-0000-0000-000000000002",
         room_id: 20,
-        reserver_id: 4,
+        reserver_id: "4",
         start_at: "2026-06-02T10:30:00Z",
         end_at: "2026-06-02T11:30:00Z",
         purpose: "Beta conflict 2",
@@ -288,7 +289,7 @@ describe("GET /rooms/availability", () => {
       {
         id: "20000000-0000-0000-0000-000000000003",
         room_id: 21,
-        reserver_id: 4,
+        reserver_id: "4",
         start_at: "2026-06-02T10:15:00Z",
         end_at: "2026-06-02T10:45:00Z",
         purpose: "Gamma conflict 1",

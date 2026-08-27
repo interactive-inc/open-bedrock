@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
 import type { Context } from "@/env"
 import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
@@ -5,7 +6,7 @@ import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  employeeId: number
+  employeeId: EmployeeId
   resignationDate: string
   lastWorkingDate: string | null
   reason: string | null

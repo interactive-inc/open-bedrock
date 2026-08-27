@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
@@ -17,7 +18,7 @@ export const roomReservations = sqliteTable(
   {
     id: text("id").primaryKey(),
     roomId: integer("room_id").notNull(),
-    reserverId: integer("reserver_id").notNull(),
+    reserverId: text("reserver_id").$type<EmployeeId>().notNull(),
     startAt: text("start_at").notNull(),
     endAt: text("end_at").notNull(),
     purpose: text("purpose"),

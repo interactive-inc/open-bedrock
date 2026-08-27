@@ -2,7 +2,7 @@
   "version": 3,
   "coverage": "complete-company-context",
   "sourcePaths": [
-    "src/contexts/company/README.md",
+    "src/contexts/company/CLAUDE.md",
     "src/contexts/company/application/account-profile/update-company-account-profile.ts",
     "src/contexts/company/application/core/write-company-resources.ts",
     "src/contexts/company/application/employee-lifecycle/apply-personnel-action.ts",

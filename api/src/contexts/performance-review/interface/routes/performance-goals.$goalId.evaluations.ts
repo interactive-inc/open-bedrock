@@ -1,5 +1,5 @@
 import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
-import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
+import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
 import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
 
@@ -53,8 +53,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       const isOwner = goal.employeeId === goalCommand.viewerEmployeeId
 
       if (isOwner === false) {
-        const relation = await resolveEmployeeRelation({
-          c: c,
+        const relation = await new ResolveEmployeeRelationAdapter(c).resolveEmployeeRelation({
           viewerEmployeeId: goalCommand.viewerEmployeeId,
           targetEmployeeId: goal.employeeId,
         })

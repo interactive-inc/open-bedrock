@@ -14,6 +14,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
 import { InternalError } from "@/lib/http/errors"
 
@@ -36,7 +37,7 @@ export const GET = factory.createHandlers(
     "query",
     z.object({
       status: z.enum(["pending", "rejected", "fulfilled"]).optional(),
-      employee_id: z.string().optional(),
+      employee_id: zEmployeeId.optional(),
       reward_id: z.string().optional(),
       from: z.string().optional(),
       to: z.string().optional(),
@@ -78,12 +79,8 @@ export const GET = factory.createHandlers(
       conditions.push(eq(thanksRedemptions.status, query.status))
     }
 
-    if (query.employee_id !== undefined && query.employee_id !== "") {
-      const employeeId = Number(query.employee_id)
-
-      if (Number.isInteger(employeeId)) {
-        conditions.push(eq(thanksRedemptions.employeeId, employeeId))
-      }
+    if (query.employee_id !== undefined) {
+      conditions.push(eq(thanksRedemptions.employeeId, query.employee_id))
     }
 
     if (query.reward_id !== undefined && query.reward_id !== "") {
@@ -114,8 +111,7 @@ export const GET = factory.createHandlers(
       .select({
         id: thanksRedemptions.id,
         employeeId: thanksRedemptions.employeeId,
-        employeeName: employees.name,
-        employeeDeptName: employees.deptName,
+        employeeName: employees.officialName,
         rewardId: thanksRedemptions.rewardId,
         rewardName: thanksRewards.name,
         pointCost: thanksRedemptions.pointCost,
@@ -150,10 +146,7 @@ export const GET = factory.createHandlers(
         id: row.id,
         employee_id: row.employeeId,
         employee_name: row.employeeName ?? "",
-        employee_dept_name:
-          currentDepartments.source === "lifecycle"
-            ? (currentDepartments.names.get(row.employeeId) ?? null)
-            : row.employeeDeptName,
+        employee_dept_name: currentDepartments.get(row.employeeId) ?? null,
         reward_id: row.rewardId,
         reward_name: row.rewardName ?? "",
         point_cost: row.pointCost,

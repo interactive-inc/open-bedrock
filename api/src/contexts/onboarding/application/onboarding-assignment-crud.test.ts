@@ -1,3 +1,4 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { AssignOnboarding } from "@/contexts/onboarding/application/assign-onboarding"
 import { CancelOnboardingAssignment } from "@/contexts/onboarding/application/cancel-onboarding-assignment"
 import { CompleteOnboardingTask } from "@/contexts/onboarding/application/complete-onboarding-task"
@@ -9,15 +10,15 @@ import { OnboardingTemplateTask } from "@/contexts/onboarding/domain/entities/on
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { onboardingTasks } from "@/contexts/onboarding/infrastructure/schema/onboarding"
 import { eq } from "drizzle-orm"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { makeTestSession } from "@/api/test/support/make-test-session"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { makeTestSession } from "@tests/api/support/make-test-session"
 import { describe, expect, test } from "bun:test"
 
-let nextEmployeeId = 1
+let nextEmployeeId = 10_000
 
 const template = new OnboardingTemplate({
   id: 1,
@@ -42,13 +43,13 @@ async function seedEmployee(context: Context, code: string): Promise<number> {
   nextEmployeeId += 1
 
   await context.var.database.insert(employees).values({
-    id,
-    code,
-    name: "You",
-    deptId: 1,
-    deptName: "Dept",
-    position: "Staff",
-    status: "active",
+    id: toWorkforceEmployeeId(id),
+    employeeCode: code,
+    officialName: "You",
+    email: null,
+    phone: null,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
   })
 
   return id
@@ -59,7 +60,7 @@ async function seedAssignment(context: Context, employeeId: number): Promise<num
 
   const created = await repository.create(
     OnboardingAssignment.create({
-      employeeId,
+      employeeId: toWorkforceEmployeeId(employeeId),
       template,
       assignedAt: "2026-05-01T00:00:00.000Z",
     }),
@@ -76,7 +77,7 @@ describe("GetOnboardingAssignment", () => {})
 
 describe("UpdateOnboardingAssignment", () => {
   test("a privileged role reschedules the assignment", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const employeeId = await seedEmployee(context, "E103")
 
@@ -96,7 +97,7 @@ describe("UpdateOnboardingAssignment", () => {
   })
 
   test("a member is forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const employeeId = await seedEmployee(context, "E104")
 
@@ -114,7 +115,7 @@ describe("UpdateOnboardingAssignment", () => {
 
 describe("CancelOnboardingAssignment", () => {
   test("a privileged role deletes the assignment and its tasks", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const employeeId = await seedEmployee(context, "E105")
 
@@ -135,7 +136,7 @@ describe("CancelOnboardingAssignment", () => {
   })
 
   test("cancel removes orphaned onboarding_tasks for the assignment", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const employeeId = await seedEmployee(context, "E105B")
 
@@ -157,7 +158,7 @@ describe("CancelOnboardingAssignment", () => {
   })
 
   test("a member is forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const employeeId = await seedEmployee(context, "E106")
 
@@ -174,7 +175,7 @@ describe("CancelOnboardingAssignment", () => {
 
 describe("UncompleteOnboardingTask", () => {
   test("the owner reverts a completed task to pending", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const employeeId = await seedEmployee(context, "E107")
 
@@ -214,7 +215,7 @@ describe("UncompleteOnboardingTask", () => {
   })
 
   test("a non-owner member is forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const employeeId = await seedEmployee(context, "E108")
 
@@ -243,7 +244,7 @@ describe("UncompleteOnboardingTask", () => {
   })
 
   test("an unknown task is not found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UncompleteOnboardingTask(context).run({
       taskId: 9999,
@@ -278,7 +279,7 @@ async function seedTemplate(context: Context): Promise<void> {
 
 describe("AssignOnboarding duplicate check", () => {
   test("assigning the same template twice returns already_assigned", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedEmployee(context, "E201")
     await seedTemplate(context)
@@ -305,7 +306,7 @@ describe("AssignOnboarding duplicate check", () => {
   })
 
   test("allows assigning after the previous assignment is completed", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const employeeId = await seedEmployee(context, "E202")
     await seedTemplate(context)

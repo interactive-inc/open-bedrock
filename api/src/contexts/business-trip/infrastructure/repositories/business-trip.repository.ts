@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
 import type { Context } from "@/env"
 import { businessTrips } from "@/contexts/business-trip/infrastructure/schema/business-trip"
@@ -8,7 +9,7 @@ export class BusinessTripRepository {
 
   /** 同一申請者で期間が重複する出張申請を返す。 */
   async findOverlapping(query: {
-    travelerId: number
+    travelerId: EmployeeId
     startDate: string
     endDate: string
     excludeBusinessTripId: string | null
@@ -37,7 +38,7 @@ export class BusinessTripRepository {
 
   /** 申請者本人の出張申請を開始日の昇順でページングして返す。 */
   async findByTravelerId(props: {
-    travelerId: number
+    travelerId: EmployeeId
     limit: number
     offset: number
   }): Promise<ReadonlyArray<BusinessTrip> | Error> {

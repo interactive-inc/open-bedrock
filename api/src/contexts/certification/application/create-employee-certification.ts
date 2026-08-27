@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CertificationRepository } from "@/contexts/certification/infrastructure/repositories/certification.repository"
 import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/repositories/employee-certification.repository"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -15,7 +16,7 @@ export class CreateEmployeeCertification {
   }
 
   async run(props: {
-    employeeId: number
+    employeeId: EmployeeId
     certificationId: number
     acquiredOn: string
     expiresOn: string | null

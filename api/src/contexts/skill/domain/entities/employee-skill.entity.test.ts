@@ -1,10 +1,11 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { EmployeeSkill } from "@/contexts/skill/domain/entities/employee-skill.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("EmployeeSkill.create", () => {
   test("builds with given fields", () => {
     const skill = EmployeeSkill.create({
-      employeeId: 3,
+      employeeId: toWorkforceEmployeeId(3),
       skillCode: "TS",
       level: 7,
       years: 5,
@@ -12,7 +13,7 @@ describe("EmployeeSkill.create", () => {
     })
 
     expect(skill).toBeInstanceOf(EmployeeSkill)
-    expect(skill.employeeId).toBe(3)
+    expect(skill.employeeId).toBe(toWorkforceEmployeeId(3))
     expect(skill.skillCode).toBe("TS")
     expect(skill.level).toBe(7)
     expect(skill.years).toBe(5)
@@ -21,7 +22,7 @@ describe("EmployeeSkill.create", () => {
 
   test("accepts null years and note", () => {
     const skill = EmployeeSkill.create({
-      employeeId: 4,
+      employeeId: toWorkforceEmployeeId(4),
       skillCode: "GO",
       level: 3,
       years: null,
@@ -37,7 +38,7 @@ describe("EmployeeSkill validation", () => {
   test("rejects level below 1", () => {
     expect(() =>
       EmployeeSkill.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         skillCode: "TS",
         level: 0,
         years: null,
@@ -49,7 +50,7 @@ describe("EmployeeSkill validation", () => {
   test("rejects level above 10", () => {
     expect(() =>
       EmployeeSkill.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         skillCode: "TS",
         level: 11,
         years: null,
@@ -61,7 +62,7 @@ describe("EmployeeSkill validation", () => {
   test("rejects negative years", () => {
     expect(() =>
       EmployeeSkill.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         skillCode: "TS",
         level: 5,
         years: -1,
@@ -73,7 +74,7 @@ describe("EmployeeSkill validation", () => {
   test("rejects non-integer years", () => {
     expect(() =>
       EmployeeSkill.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         skillCode: "TS",
         level: 5,
         years: 2.5,

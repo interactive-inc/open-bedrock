@@ -1,8 +1,10 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedReviewForm = {
   id: number
   cycleId: number
-  subjectEmployeeId: number
-  reviewerEmployeeId: number
+  subjectEmployeeId: EmployeeId
+  reviewerEmployeeId: EmployeeId
   reviewerType: "self" | "manager" | "peer" | "subordinate"
   answers: ReadonlyArray<unknown>
   score: number | null
@@ -16,8 +18,8 @@ export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
   {
     id: 1,
     cycleId: 1,
-    subjectEmployeeId: 5,
-    reviewerEmployeeId: 5,
+    subjectEmployeeId: toWorkforceEmployeeId(5),
+    reviewerEmployeeId: toWorkforceEmployeeId(5),
     reviewerType: "self",
     answers: [],
     score: null,
@@ -28,8 +30,8 @@ export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
   {
     id: 2,
     cycleId: 1,
-    subjectEmployeeId: 5,
-    reviewerEmployeeId: 4,
+    subjectEmployeeId: toWorkforceEmployeeId(5),
+    reviewerEmployeeId: toWorkforceEmployeeId(4),
     reviewerType: "manager",
     answers: [],
     score: null,
@@ -40,8 +42,8 @@ export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
   {
     id: 3,
     cycleId: 2,
-    subjectEmployeeId: 5,
-    reviewerEmployeeId: 4,
+    subjectEmployeeId: toWorkforceEmployeeId(5),
+    reviewerEmployeeId: toWorkforceEmployeeId(4),
     reviewerType: "manager",
     answers: ["優れた協調性"],
     score: 80,

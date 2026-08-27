@@ -1,11 +1,11 @@
 import { ShiftPattern } from "@/contexts/shift/domain/entities/shift-pattern.entity"
 import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("ShiftPatternRepository", () => {
   test("create then findByCode round-trips the shift pattern", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ShiftPatternRepository(context)
 

@@ -1,16 +1,17 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { app } from "@/api/app"
 import type { AuditEventDetail } from "@/api/http/audit/company-audit-event.definition"
 import type { Bindings } from "@/env"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { toAuditCsv } from "@/api/http/audit/to-audit-csv"
 import { AUDIT_CSV_MAX_BYTES } from "@/api/http/audit/to-audit-csv-row"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const jwtSecret = "audit-export-route-test-secret"
 const now = "2026-01-03T00:00:00.000Z"
@@ -21,7 +22,7 @@ type TestDb = { db: D1Database; resetQueries: () => void; queries: () => number 
 async function createTestDb(withFixture = true): Promise<TestDb> {
   let queryCount = 0
   const db = createD1TestDatabase(loadSchema(), { onQuery: () => (queryCount += 1) })
-  await seedD1(db, "employees", [
+  await seedCompanyEmployees(db, [
     { id: 1, code: "E001", name: "Admin", status: "active" },
     { id: 2, code: "E002", name: "Reader", status: "active" },
     { id: 3, code: "E003", name: "Exporter", status: "active" },
@@ -79,7 +80,7 @@ async function grantPermission(
 async function seedExportRow(db: D1Database): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO audit_events
+      `INSERT INTO company_audit_events
        (event_id, request_id, actor_account_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
@@ -91,7 +92,7 @@ async function seedExportRow(db: D1Database): Promise<void> {
 }
 
 function token(employeeId: number): Promise<string> {
-  return createTestToken(jwtSecret, { employeeId })
+  return createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(employeeId) })
 }
 
 function request(
@@ -152,20 +153,24 @@ function rawRequest(
 }
 
 async function latestAudit(db: D1Database): Promise<Record<string, unknown>> {
-  const row = await db.prepare("SELECT * FROM audit_events ORDER BY id DESC LIMIT 1").first()
+  const row = await db
+    .prepare("SELECT * FROM company_audit_events ORDER BY id DESC LIMIT 1")
+    .first()
   if (row === null) throw new Error("missing audit event")
   return row as Record<string, unknown>
 }
 
 async function countAuditRows(db: D1Database): Promise<number> {
   return (
-    (await db.prepare("SELECT count(*) AS count FROM audit_events").first<number>("count")) ?? -1
+    (await db
+      .prepare("SELECT count(*) AS count FROM company_audit_events")
+      .first<number>("count")) ?? -1
   )
 }
 
 async function failSelfAudit(db: D1Database): Promise<void> {
   await db.exec(`CREATE TRIGGER fail_audit_self_insert
-    BEFORE INSERT ON audit_events
+    BEFORE INSERT ON company_audit_events
     WHEN NEW.action LIKE 'audit.event.%'
     BEGIN SELECT RAISE(ABORT, 'self audit disabled'); END;`)
 }
@@ -175,7 +180,7 @@ async function insertBulkRows(db: D1Database, count: number): Promise<void> {
     WITH RECURSIVE sequence(value) AS (
       SELECT 1 UNION ALL SELECT value + 1 FROM sequence WHERE value < ${count}
     )
-    INSERT INTO audit_events
+    INSERT INTO company_audit_events
       (id, event_id, request_id, action, outcome, client_name, created_at)
     SELECT value, 'custom-' || (100000 + value), 'r' || value,
            'custom.bulk', 'succeeded', 'api', 1767225600 + value
@@ -186,7 +191,7 @@ async function insertBulkRows(db: D1Database, count: number): Promise<void> {
 async function insertFormalWorstRows(db: D1Database): Promise<void> {
   const metadata = JSON.stringify("x".repeat(1_000_000))
   const statement = db.prepare(
-    `INSERT INTO audit_events
+    `INSERT INTO company_audit_events
        (id, event_id, request_id, action, outcome, metadata_json, client_name, created_at)
      VALUES (?1, ?2, 'r', 'a', 'succeeded', ?3, 'api', ?4)`,
   )
@@ -197,7 +202,7 @@ async function insertFormalWorstRows(db: D1Database): Promise<void> {
     WITH RECURSIVE sequence(value) AS (
       SELECT 100 UNION ALL SELECT value + 1 FROM sequence WHERE value < 46099
     )
-    INSERT INTO audit_events
+    INSERT INTO company_audit_events
       (id, event_id, request_id, action, outcome, client_name, created_at)
     SELECT value, CAST(value AS TEXT), 'r', 'a', 'succeeded', 'api', value
     FROM sequence
@@ -235,7 +240,7 @@ async function insertOneByteCsvOverflow(db: D1Database): Promise<void> {
     (_, index) => Math.floor(contentBytes / rowCount) + (index < contentBytes % rowCount ? 1 : 0),
   )
   const statement = db.prepare(
-    `INSERT INTO audit_events
+    `INSERT INTO company_audit_events
        (id, event_id, request_id, action, outcome, metadata_json, client_name, created_at)
      VALUES (?1, ?2, 'r', 'a', 'succeeded', ?3, 'api', ?4)`,
   )

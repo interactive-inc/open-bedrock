@@ -15,6 +15,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
 import { InternalError } from "@/lib/http/errors"
 
@@ -40,7 +41,7 @@ export const GET = factory.createHandlers(
     "query",
     z.object({
       status: expenseStatusSchema.optional(),
-      applicant_id: z.string().optional(),
+      applicant_id: zEmployeeId.optional(),
       category: expenseCategorySchema.optional(),
       from: z.string().optional(),
       to: z.string().optional(),
@@ -82,12 +83,8 @@ export const GET = factory.createHandlers(
       conditions.push(eq(expenses.status, query.status))
     }
 
-    if (query.applicant_id !== undefined && query.applicant_id !== "") {
-      const applicantId = Number(query.applicant_id)
-
-      if (Number.isInteger(applicantId)) {
-        conditions.push(eq(expenses.employeeId, applicantId))
-      }
+    if (query.applicant_id !== undefined) {
+      conditions.push(eq(expenses.employeeId, query.applicant_id))
     }
 
     if (query.category !== undefined) {
@@ -114,8 +111,7 @@ export const GET = factory.createHandlers(
       .select({
         id: expenses.id,
         employeeId: expenses.employeeId,
-        applicantName: employees.name,
-        applicantDeptName: employees.deptName,
+        applicantName: employees.officialName,
         category: expenses.category,
         amount: expenses.amount,
         spentAt: expenses.spentAt,
@@ -144,10 +140,7 @@ export const GET = factory.createHandlers(
         id: row.id,
         applicant_id: row.employeeId,
         applicant_name: row.applicantName ?? "",
-        applicant_dept_name:
-          currentDepartments.source === "lifecycle"
-            ? (currentDepartments.names.get(row.employeeId) ?? null)
-            : row.applicantDeptName,
+        applicant_dept_name: currentDepartments.get(row.employeeId) ?? null,
         category: row.category,
         amount: row.amount,
         spent_at: row.spentAt,

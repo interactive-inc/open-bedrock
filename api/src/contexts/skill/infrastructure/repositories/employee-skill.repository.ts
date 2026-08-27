@@ -1,10 +1,11 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { EmployeeSkill } from "@/contexts/skill/domain/entities/employee-skill.entity"
 import type { Context } from "@/env"
 import { employeeSkills } from "@/contexts/skill/infrastructure/schema/skill"
 import { and, eq } from "drizzle-orm"
 
 type EmployeeSkillKey = {
-  employeeId: number
+  employeeId: EmployeeId
   skillCode: string
 }
 

@@ -1,10 +1,11 @@
 import type { BudgetRow } from "@/contexts/expense/infrastructure/schema/budget"
+import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
 
 /** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const budgetRowSchema = z.object({
   id: z.number(),
-  departmentId: z.number(),
+  organizationUnitId: zOrganizationUnitId,
   fiscalPeriod: z.string(),
   periodStart: z.string(),
   periodEnd: z.string(),
@@ -16,7 +17,7 @@ export const budgetRowSchema = z.object({
 
 const zProps = z.object({
   id: z.number().nullable(),
-  departmentId: z.number(),
+  organizationUnitId: zOrganizationUnitId,
   fiscalPeriod: z.string(),
   periodStart: z.string(),
   periodEnd: z.string(),
@@ -34,7 +35,7 @@ type Props = z.infer<typeof zProps>
 export class Budget implements Props {
   readonly id!: Props["id"]
 
-  readonly departmentId!: Props["departmentId"]
+  readonly organizationUnitId!: Props["organizationUnitId"]
 
   readonly fiscalPeriod!: Props["fiscalPeriod"]
 
@@ -60,7 +61,7 @@ export class Budget implements Props {
 
   /** 新規作成する部署予算を組み立てる。id は未採番。 */
   static create(props: {
-    departmentId: number
+    organizationUnitId: Props["organizationUnitId"]
     fiscalPeriod: string
     periodStart: string
     periodEnd: string
@@ -71,7 +72,7 @@ export class Budget implements Props {
   }): Budget {
     return new Budget({
       id: null,
-      departmentId: props.departmentId,
+      organizationUnitId: props.organizationUnitId,
       fiscalPeriod: props.fiscalPeriod,
       periodStart: props.periodStart,
       periodEnd: props.periodEnd,
@@ -85,7 +86,7 @@ export class Budget implements Props {
   static fromRow(row: BudgetRow): Budget {
     return new Budget({
       id: row.id,
-      departmentId: row.departmentId,
+      organizationUnitId: row.organizationUnitId,
       fiscalPeriod: row.fiscalPeriod,
       periodStart: row.periodStart,
       periodEnd: row.periodEnd,

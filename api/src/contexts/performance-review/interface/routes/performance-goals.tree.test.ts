@@ -1,13 +1,20 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
-import { seedOrgMemberships } from "@/api/test/support/company/seed-org-memberships.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { seedOrgMemberships } from "@tests/api/support/company/seed-org-memberships.test-support"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import {
+  initializeCompanyMembershipTestState,
+  initializeStandardCompanyTestState,
+} from "@tests/api/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const jwtSecret = "goal-tree-route-test-secret"
@@ -15,14 +22,14 @@ const jwtSecret = "goal-tree-route-test-secret"
 type TreeNode = {
   id: number
   owner_type: string
-  employee_id: number
+  employee_id: EmployeeId
   children: Array<TreeNode>
 }
 
 const treeNodeSchema: z.ZodType<TreeNode> = z.object({
   id: z.number(),
   owner_type: z.string(),
-  employee_id: z.number(),
+  employee_id: zEmployeeId,
   children: z.array(z.lazy(() => treeNodeSchema)),
 })
 
@@ -35,15 +42,14 @@ const treeResponseSchema = z.object({
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -51,20 +57,19 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
-  await seedD1(
+  await initializeCompanyMembershipTestState(
     db,
-    "org_memberships",
     seedOrgMemberships.map((membership) => ({
-      department_code: membership.departmentCode,
-      employee_code: membership.employeeCode,
-      manager_employee_code: membership.managerEmployeeCode,
+      departmentCode: membership.departmentCode,
+      employeeCode: membership.employeeCode,
+      managerEmployeeCode: membership.managerEmployeeCode,
     })),
   )
 
   await seedD1(db, "performance_goals", [
     {
       id: 1,
-      employee_id: 1,
+      employee_id: "1",
       period: "2026-H1",
       title: "Company goal",
       kpi: null,
@@ -76,7 +81,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 2,
-      employee_id: 4,
+      employee_id: "4",
       period: "2026-H1",
       title: "D003 dept goal",
       kpi: null,
@@ -88,7 +93,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 3,
-      employee_id: 5,
+      employee_id: "5",
       period: "2026-H1",
       title: "E005 individual goal",
       kpi: null,
@@ -100,7 +105,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 4,
-      employee_id: 9,
+      employee_id: "9",
       period: "2026-H1",
       title: "D004 dept goal",
       kpi: null,
@@ -112,7 +117,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 5,
-      employee_id: 10,
+      employee_id: "10",
       period: "2026-H1",
       title: "E010 individual goal",
       kpi: null,
@@ -131,7 +136,7 @@ async function createTestDb(): Promise<D1Database> {
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 

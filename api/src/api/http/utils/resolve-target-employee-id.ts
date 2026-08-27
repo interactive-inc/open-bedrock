@@ -1,20 +1,20 @@
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 
 export type Props = {
   c: Context
   employeeIdParam: string | undefined
   employeeCodeParam: string | undefined
-  sessionEmployeeId: number
+  sessionEmployeeId: EmployeeId
 }
 
 /**
  * リスト系ルートの対象従業員 id を、employee_id / employee_code のいずれか（未指定は本人）から解決する。
- * employee_code 指定時は台帳を引いて数値 id に直す。解決できない code は null（=対象なし）を返す。
+ * employee_code 指定時はCompanyのcanonical Employee IDへ解決する。解決できない code はnullを返す。
  */
-export async function resolveTargetEmployeeId(props: Props): Promise<number | null | Error> {
+export async function resolveTargetEmployeeId(props: Props): Promise<EmployeeId | null | Error> {
   if (props.employeeCodeParam !== undefined) {
-    const repository = new EmployeeRepository(props.c)
+    const repository = new CompanyEmployeeDirectoryReadAdapter(props.c)
 
     const employee = await repository.findByCode(props.employeeCodeParam)
 
@@ -26,10 +26,12 @@ export async function resolveTargetEmployeeId(props: Props): Promise<number | nu
   }
 
   if (props.employeeIdParam !== undefined) {
-    const parsed = Number(props.employeeIdParam)
+    const parsed = zEmployeeId.safeParse(props.employeeIdParam)
 
-    return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+    return parsed.success ? parsed.data : null
   }
 
   return props.sessionEmployeeId
 }
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"

@@ -1,10 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { OneOnOneRow } from "@/contexts/one-on-one/infrastructure/schema/one-on-one"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.string(),
-  memberId: z.number(),
-  managerId: z.number(),
+  memberId: zEmployeeId,
+  managerId: zEmployeeId,
   heldAt: z.string(),
   topics: z.string().nullable(),
   managerNote: z.string().nullable(),

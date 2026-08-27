@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ringiStatusSchema } from "@/lib/schemas"
 import type { RingiRequestRow } from "@/contexts/ringi/infrastructure/schema/ringi"
 import { z } from "zod"
@@ -5,8 +7,8 @@ import { z } from "zod"
 /** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const ringiRequestRowSchema = z.object({
   id: z.number(),
-  applicantId: z.number(),
-  approverId: z.number(),
+  applicantId: zEmployeeId,
+  approverId: zEmployeeId,
   title: z.string(),
   amount: z.number(),
   reason: z.string(),
@@ -18,8 +20,8 @@ export const ringiRequestRowSchema = z.object({
 
 const zProps = z.object({
   id: z.number().nullable(),
-  applicantId: z.number(),
-  approverId: z.number(),
+  applicantId: zEmployeeId,
+  approverId: zEmployeeId,
   title: z.string(),
   amount: z.number(),
   reason: z.string(),
@@ -64,8 +66,8 @@ export class RingiRequest implements Props {
 
   /** 新規に起案する稟議を組み立てる。id は未採番、初期状態は pending。 */
   static create(props: {
-    applicantId: number
-    approverId: number
+    applicantId: EmployeeId
+    approverId: EmployeeId
     title: string
     amount: number
     reason: string

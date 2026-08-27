@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CreateHealthCheckup } from "@/contexts/health-checkup/application/create-health-checkup"
 import { HealthCheckupRepository } from "@/contexts/health-checkup/infrastructure/repositories/health-checkup.repository"
 import { factory } from "@/api/http/factory"
@@ -28,7 +30,7 @@ export const GET = factory.createHandlers(
     "query",
     z.object({
       fiscal_year: z.string().optional(),
-      employee_id: z.string().optional(),
+      employee_id: zEmployeeId.optional(),
     }),
   ),
   async (c) => {
@@ -44,20 +46,14 @@ export const GET = factory.createHandlers(
 
     // employee_id 指定なし: read:all は全社を、それ以外は本人分を見る。
     // employee_id 指定あり: 本人分 or read:all のみ許可する。
-    let employeeId: number | undefined = undefined
+    let employeeId: EmployeeId | undefined = undefined
 
-    if (query.employee_id !== undefined && query.employee_id !== "") {
-      const requestedId = Number(query.employee_id)
-
-      if (Number.isInteger(requestedId) === false) {
-        throw new BadRequestError("invalid parameter")
-      }
-
-      if (requestedId !== session.employeeId && canViewAll === false) {
+    if (query.employee_id !== undefined) {
+      if (query.employee_id !== session.employeeId && canViewAll === false) {
         throw new ForbiddenError()
       }
 
-      employeeId = requestedId
+      employeeId = query.employee_id
     } else if (canViewAll === false) {
       employeeId = session.employeeId
     }
@@ -106,7 +102,7 @@ export const POST = factory.createHandlers(
     "json",
     z
       .object({
-        employee_id: z.number().int().positive().optional(),
+        employee_id: zEmployeeId.optional(),
         employee_code: z.string().min(1).max(200).optional(),
         fiscal_year: z.number().int(),
         checkup_kind: z.enum(["regular", "stress_check"]),

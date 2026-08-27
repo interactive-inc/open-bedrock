@@ -32,6 +32,19 @@ function readManifest() {
   return companySourceManifestSchema.parse(JSON.parse(readFileSync(MANIFEST_PATH, "utf8")))
 }
 
+function collectCompanySourcePaths(): string[] {
+  return Array.from(COMPANY_SOURCE_GLOB.scanSync({ cwd: PROJECT_ROOT, onlyFiles: true })).toSorted()
+}
+
+/** 実ディレクトリ全体をmanifestの正本にし、手作業の列挙漏れを作らない。 */
+export function writeCompanyContextManifest(): void {
+  const manifest = readManifest()
+  writeFileSync(
+    MANIFEST_PATH,
+    `${JSON.stringify({ ...manifest, sourcePaths: collectCompanySourcePaths() }, null, 2)}\n`,
+  )
+}
+
 export async function collectCompanyContextHashes(): Promise<ReadonlyMap<string, string>> {
   const manifest = readManifest()
   const sourcePaths = manifest.sourcePaths.toSorted()
@@ -53,9 +66,7 @@ export async function collectCompanyContextHashes(): Promise<ReadonlyMap<string,
     }
   }
 
-  const actualSourcePaths = Array.from(
-    COMPANY_SOURCE_GLOB.scanSync({ cwd: PROJECT_ROOT, onlyFiles: true }),
-  ).toSorted()
+  const actualSourcePaths = collectCompanySourcePaths()
   const extraSourcePaths = actualSourcePaths.filter(
     (relativePath) => !sourcePaths.includes(relativePath),
   )
@@ -122,8 +133,9 @@ export async function checkCompanyContext(): Promise<string[]> {
 
 if (import.meta.main) {
   if (process.argv.includes("--write")) {
+    writeCompanyContextManifest()
     await writeCompanyContextLock()
-    console.log("Company context lockを更新しました")
+    console.log("Company context manifest / lockをディレクトリ全体から更新しました")
   } else {
     const violations = await checkCompanyContext()
     if (violations.length > 0) {

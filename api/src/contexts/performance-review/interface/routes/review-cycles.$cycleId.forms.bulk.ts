@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { CreateReviewFormsBulk } from "@/contexts/performance-review/application/review/create-review-forms-bulk"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -19,8 +20,8 @@ export const POST = factory.createHandlers(
       forms: z
         .array(
           z.object({
-            subject_employee_id: z.number().int().positive(),
-            reviewer_employee_id: z.number().int().positive(),
+            subject_employee_id: zEmployeeId,
+            reviewer_employee_id: zEmployeeId,
             reviewer_type: z.enum(["self", "manager", "peer", "subordinate"]),
           }),
         )

@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { toAnswers } from "@/contexts/performance-review/domain/definitions/review-answers.definition"
 import { toFormStatus } from "@/contexts/performance-review/domain/definitions/review-form-status.definition"
 import { toReviewerType } from "@/contexts/performance-review/domain/definitions/reviewer-type.definition"
@@ -8,8 +9,8 @@ import { z } from "zod"
 const zProps = z.object({
   id: z.number(),
   cycleId: z.number(),
-  subjectEmployeeId: z.number(),
-  reviewerEmployeeId: z.number(),
+  subjectEmployeeId: zEmployeeId,
+  reviewerEmployeeId: zEmployeeId,
   reviewerType: z.enum(["self", "manager", "peer", "subordinate"]),
   answers: z.array(z.unknown()).readonly(),
   // 0〜100 の整数のみ。DB に不正値が混入しても fromRow で弾く。

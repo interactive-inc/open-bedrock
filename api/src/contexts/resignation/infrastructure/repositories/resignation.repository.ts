@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
@@ -11,7 +12,7 @@ export class ResignationRepository {
 
   /** 申請者本人の退職申請を退職希望日の昇順でページングして返す。 */
   async findByEmployeeId(props: {
-    employeeId: number
+    employeeId: EmployeeId
     limit: number
     offset: number
   }): Promise<ReadonlyArray<Resignation> | Error> {
@@ -47,7 +48,7 @@ export class ResignationRepository {
   }
 
   /** 指定社員の PENDING（requested）状態の退職申請を1件返す。存在しなければ null。 */
-  async findPendingByEmployeeId(employeeId: number): Promise<Resignation | null | Error> {
+  async findPendingByEmployeeId(employeeId: EmployeeId): Promise<Resignation | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()

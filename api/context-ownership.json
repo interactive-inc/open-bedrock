@@ -1,33 +1,11 @@
 {
-  "companyCoreAreas": [
-    "account-profile",
-    "core",
-    "database",
-    "employee",
-    "employee-lifecycle",
-    "organization",
-    "workforce"
-  ],
-  "companySystemAdapterAreas": [],
   "companyAreasByLayer": {
-    "domain": ["catalogs", "definitions", "entities", "policies", "values"],
+    "domain": ["catalogs", "definitions", "entities", "errors", "policies", "schemas", "values"],
     "application": ["account-profile", "core", "employee-lifecycle", "organization"],
-    "infrastructure": [
-      "account-profile",
-      "audit",
-      "configuration",
-      "core",
-      "database",
-      "employee",
-      "employee-lifecycle",
-      "organization",
-      "schema",
-      "workforce"
-    ],
-    "interface": ["capabilities", "request-environment", "routes"]
+    "infrastructure": ["adapters", "repositories", "schema"],
+    "interface": ["capabilities", "errors", "operations", "request-environment", "routes"]
   },
   "businessAreaOwners": {
-    "administration": "administration",
     "announcement": "announcement",
     "antisocial-check": "antisocial-check",
     "asset": "asset",
@@ -79,18 +57,6 @@
     "work-style": "work-style"
   },
   "routeOwners": {
-    "batch": "administration",
-    "department-definitions": "administration",
-    "departments": "administration",
-    "directory": "administration",
-    "employee-events": "administration",
-    "employee-grades": "administration",
-    "employees": "administration",
-    "grade-definitions": "administration",
-    "me": "administration",
-    "personnel-action-requests": "administration",
-    "personnel-actions": "administration",
-    "position-definitions": "administration",
     "announcements": "announcement",
     "antisocial-checks": "antisocial-check",
     "assets": "asset",

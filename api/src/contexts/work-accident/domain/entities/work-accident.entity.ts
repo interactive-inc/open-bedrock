@@ -1,10 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { WorkAccidentRow } from "@/contexts/work-accident/infrastructure/schema/work-accident"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number(),
   occurredOn: z.string(),
-  employeeId: z.number().nullable(),
+  employeeId: zEmployeeId.nullable(),
   location: z.string().nullable(),
   summary: z.string(),
   severity: z.enum(["minor", "serious"]).nullable(),

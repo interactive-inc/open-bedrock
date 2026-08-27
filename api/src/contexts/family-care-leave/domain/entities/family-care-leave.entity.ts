@@ -1,9 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { FamilyCareLeaveRow } from "@/contexts/family-care-leave/infrastructure/schema/family-care-leave"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.string(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   leaveKind: z.string(),
   startDate: z.string(),
   endDate: z.string(),
@@ -43,7 +45,7 @@ export class FamilyCareLeave implements Props {
 
   /** 新規の休業申出を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     leaveKind: string
     startDate: string
     endDate: string

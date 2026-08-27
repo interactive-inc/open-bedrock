@@ -1,21 +1,24 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedRingiRequests } from "@/contexts/ringi/test/seed/seed-ringi-requests.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const statusEnum = z.enum(["pending", "approved", "rejected"])
 
 const ringiResponseSchema = z.object({
   id: z.number(),
-  applicant_id: z.number(),
-  approver_id: z.number(),
+  applicant_id: zEmployeeId,
+  approver_id: zEmployeeId,
   title: z.string(),
   amount: z.number(),
   reason: z.string(),
@@ -34,15 +37,14 @@ const jwtSecret = "ringi-route-test-secret"
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -73,7 +75,7 @@ async function createTestDb(): Promise<D1Database> {
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -101,7 +103,7 @@ describe("POST /ringi-requests", () => {
       path: "/ringi-requests",
       token: await tokenFor(5),
       method: "POST",
-      body: { approver_id: 4, title: "Office chairs", amount: 90000, reason: "ergonomics" },
+      body: { approver_id: "4", title: "Office chairs", amount: 90000, reason: "ergonomics" },
     })
 
     expect(response.status).toBe(201)
@@ -111,8 +113,8 @@ describe("POST /ringi-requests", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.applicant_id).toBe(5)
-      expect(parsed.data.approver_id).toBe(4)
+      expect(parsed.data.applicant_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.approver_id).toBe(toWorkforceEmployeeId(4))
       expect(parsed.data.status).toBe("pending")
       expect(parsed.data.decided_at).toBeNull()
     }
@@ -123,7 +125,7 @@ describe("POST /ringi-requests", () => {
       path: "/ringi-requests",
       token: null,
       method: "POST",
-      body: { approver_id: 4, title: "x", amount: 1, reason: "y" },
+      body: { approver_id: "4", title: "x", amount: 1, reason: "y" },
     })
 
     expect(response.status).toBe(401)
@@ -134,7 +136,7 @@ describe("POST /ringi-requests", () => {
       path: "/ringi-requests",
       token: await tokenFor(5),
       method: "POST",
-      body: { approver_id: 9999, title: "x", amount: 1, reason: "y" },
+      body: { approver_id: "9999", title: "x", amount: 1, reason: "y" },
     })
 
     expect(response.status).toBe(400)
@@ -145,7 +147,7 @@ describe("POST /ringi-requests", () => {
       path: "/ringi-requests",
       token: await tokenFor(5),
       method: "POST",
-      body: { approver_id: 5, title: "x", amount: 1, reason: "y" },
+      body: { approver_id: "5", title: "x", amount: 1, reason: "y" },
     })
 
     expect(response.status).toBe(400)
@@ -156,7 +158,7 @@ describe("POST /ringi-requests", () => {
       path: "/ringi-requests",
       token: await tokenFor(5),
       method: "POST",
-      body: { approver_id: 4, title: "x", amount: -1, reason: "y" },
+      body: { approver_id: "4", title: "x", amount: -1, reason: "y" },
     })
 
     expect(response.status).toBe(400)

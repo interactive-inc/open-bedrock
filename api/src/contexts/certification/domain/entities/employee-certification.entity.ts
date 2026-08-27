@@ -1,9 +1,10 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeCertificationRow } from "@/contexts/certification/infrastructure/schema/certification"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   certificationId: z.number(),
   acquiredOn: z.string(),
   expiresOn: z.string().nullable(),

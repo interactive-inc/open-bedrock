@@ -80,7 +80,9 @@ export class CareerPostingRepository {
    * D1 batch でチェックと削除を単一トランザクションで実行し TOCTOU を防ぐ。
    * 0 行削除（applied 応募が存在）なら null を返す。
    */
-  async deleteIfNoAppliedApplications(postingId: number): Promise<true | null | Error> {
+  async deleteIfNoAppliedApplications(posting: CareerPosting): Promise<true | null | Error> {
+    if (posting.id === null) return new Error("cannot delete unsaved career posting")
+
     try {
       const db = this.c.env.DB
 
@@ -95,7 +97,7 @@ export class CareerPostingRepository {
                  WHERE posting_id = ?1 AND status = 'applied'
                )`,
           )
-          .bind(postingId),
+          .bind(posting.id),
         // applied 応募が存在しない場合のみ career_postings を削除する
         db
           .prepare(
@@ -106,7 +108,7 @@ export class CareerPostingRepository {
                  WHERE posting_id = ?1 AND status = 'applied'
                )`,
           )
-          .bind(postingId),
+          .bind(posting.id),
         abortWhenPreviousStatementChangedNoRows(db),
       ])
 

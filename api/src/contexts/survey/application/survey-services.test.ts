@@ -1,3 +1,5 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { describe, expect, test } from "bun:test"
 import { CreateSurvey } from "@/contexts/survey/application/create-survey"
 import { DeleteSurvey } from "@/contexts/survey/application/delete-survey"
@@ -11,9 +13,9 @@ import { SurveyResponse } from "@/contexts/survey/domain/entities/survey-respons
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { makeTestSession } from "@/api/test/support/make-test-session"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { makeTestSession } from "@tests/api/support/make-test-session"
 
 async function seedSurvey(context: Context, status: "open" | "closed"): Promise<number> {
   const created = await new SurveyRepository(context).create(
@@ -34,7 +36,7 @@ async function seedSurvey(context: Context, status: "open" | "closed"): Promise<
 async function seedResponse(
   context: Context,
   surveyId: number,
-  respondentId: number,
+  respondentId: EmployeeId,
 ): Promise<number> {
   const surveyRepository = new SurveyRepository(context)
 
@@ -56,7 +58,7 @@ async function seedResponse(
 
 describe("CreateSurvey", () => {
   test("creates a survey with admin role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateSurvey(context).run({
       session: makeTestSession("root"),
@@ -76,7 +78,7 @@ describe("CreateSurvey", () => {
   })
 
   test("creates a closed survey", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateSurvey(context).run({
       session: makeTestSession("hr"),
@@ -95,7 +97,7 @@ describe("CreateSurvey", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateSurvey(context).run({
       session: makeTestSession("member"),
@@ -110,7 +112,7 @@ describe("CreateSurvey", () => {
 
 describe("DeleteSurvey", () => {
   test("deletes a closed survey", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "closed")
 
@@ -127,12 +129,12 @@ describe("DeleteSurvey", () => {
   })
 
   test("deletes a closed survey and its responses", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     // open で回答を登録してから closed に変更して削除する
     const surveyId = await seedSurvey(context, "open")
 
-    await seedResponse(context, surveyId, 1)
+    await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
 
     const db = context.env.DB
 
@@ -151,7 +153,7 @@ describe("DeleteSurvey", () => {
   })
 
   test("returns not_deletable for an open survey", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "open")
 
@@ -164,7 +166,7 @@ describe("DeleteSurvey", () => {
   })
 
   test("returns survey_not_found for a missing survey", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new DeleteSurvey(context).run({
       session: makeTestSession("root"),
@@ -175,7 +177,7 @@ describe("DeleteSurvey", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new DeleteSurvey(context).run({
       session: makeTestSession("member"),
@@ -186,11 +188,11 @@ describe("DeleteSurvey", () => {
   })
 
   test("removes the survey and its responses from the database", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "open")
 
-    await seedResponse(context, surveyId, 1)
+    await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
 
     const db = context.env.DB
 
@@ -223,11 +225,11 @@ describe("DeleteSurvey", () => {
   // 後続の survey_responses 削除を防ぐ（レースコンディション対策）。
   // open のまま batch を直接実行し、回答が残ることを検証する。
   test("guard aborts batch so responses survive when survey delete matches no rows", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "open")
 
-    await seedResponse(context, surveyId, 1)
+    await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
 
     const db = context.env.DB
 
@@ -262,7 +264,7 @@ describe("DeleteSurvey", () => {
 
 describe("UpdateSurvey", () => {
   test("updates title and status without changing questions", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "open")
 
@@ -285,7 +287,7 @@ describe("UpdateSurvey", () => {
   })
 
   test("updates questions when no responses exist", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "open")
 
@@ -301,11 +303,11 @@ describe("UpdateSurvey", () => {
   })
 
   test("returns questions_immutable when responses exist and questions changed", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "open")
 
-    await seedResponse(context, surveyId, 1)
+    await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
 
     const result = await new UpdateSurvey(context).run({
       session: makeTestSession("root"),
@@ -319,7 +321,7 @@ describe("UpdateSurvey", () => {
   })
 
   test("returns survey_not_found for a missing survey", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdateSurvey(context).run({
       session: makeTestSession("root"),
@@ -333,7 +335,7 @@ describe("UpdateSurvey", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdateSurvey(context).run({
       session: makeTestSession("member"),
@@ -348,7 +350,7 @@ describe("UpdateSurvey", () => {
 
   // #910: closed → open の再開は回答済みデータとの整合性を壊すため禁止する。
   test("returns survey_reopen_forbidden when reopening a closed survey", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "closed")
 
@@ -364,7 +366,7 @@ describe("UpdateSurvey", () => {
   })
 
   test("allows staying closed when updating a closed survey", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "closed")
 
@@ -388,13 +390,13 @@ describe("UpdateSurvey", () => {
 
 describe("SubmitSurveyResponse", () => {
   test("submits a response to an open survey", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "open")
 
     const result = await new SubmitSurveyResponse(context).run({
       surveyId: surveyId,
-      respondentId: 1,
+      respondentId: toWorkforceEmployeeId(1),
       answersJson: { a: "great" },
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
@@ -404,15 +406,15 @@ describe("SubmitSurveyResponse", () => {
     }
 
     expect(result.surveyId).toBe(surveyId)
-    expect(result.respondentId).toBe(1)
+    expect(result.respondentId).toBe(toWorkforceEmployeeId(1))
   })
 
   test("returns survey_not_found for a missing survey", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new SubmitSurveyResponse(context).run({
       surveyId: 9999,
-      respondentId: 1,
+      respondentId: toWorkforceEmployeeId(1),
       answersJson: {},
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
@@ -421,13 +423,13 @@ describe("SubmitSurveyResponse", () => {
   })
 
   test("returns survey_not_open for a closed survey", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "closed")
 
     const result = await new SubmitSurveyResponse(context).run({
       surveyId: surveyId,
-      respondentId: 1,
+      respondentId: toWorkforceEmployeeId(1),
       answersJson: {},
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
@@ -436,15 +438,15 @@ describe("SubmitSurveyResponse", () => {
   })
 
   test("returns already_submitted for a duplicate response", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "open")
 
-    await seedResponse(context, surveyId, 1)
+    await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
 
     const result = await new SubmitSurveyResponse(context).run({
       surveyId: surveyId,
-      respondentId: 1,
+      respondentId: toWorkforceEmployeeId(1),
       answersJson: {},
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
@@ -459,14 +461,14 @@ describe("ListMySurveyResponses", () => {})
 
 describe("UpdateSurveyResponse", () => {
   test("updates the response content", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "open")
-    const responseId = await seedResponse(context, surveyId, 1)
+    const responseId = await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
 
     const result = await new UpdateSurveyResponse(context).run({
       responseId: responseId,
-      respondentId: 1,
+      respondentId: toWorkforceEmployeeId(1),
       answersJson: { a: "updated" },
       submittedAt: "2026-03-01T00:00:00.000Z",
     })
@@ -481,11 +483,11 @@ describe("UpdateSurveyResponse", () => {
   })
 
   test("returns response_not_found for a missing response", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdateSurveyResponse(context).run({
       responseId: 9999,
-      respondentId: 1,
+      respondentId: toWorkforceEmployeeId(1),
       answersJson: {},
       submittedAt: "2026-03-01T00:00:00.000Z",
     })
@@ -494,14 +496,14 @@ describe("UpdateSurveyResponse", () => {
   })
 
   test("returns not_respondent when viewer is not the respondent", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const surveyId = await seedSurvey(context, "open")
-    const responseId = await seedResponse(context, surveyId, 1)
+    const responseId = await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
 
     const result = await new UpdateSurveyResponse(context).run({
       responseId: responseId,
-      respondentId: 99,
+      respondentId: toWorkforceEmployeeId(99),
       answersJson: {},
       submittedAt: "2026-03-01T00:00:00.000Z",
     })
@@ -510,18 +512,18 @@ describe("UpdateSurveyResponse", () => {
   })
 
   test("returns survey_not_open when survey is closed", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     // open で回答を登録してから closed に変更
     const surveyId = await seedSurvey(context, "open")
-    const responseId = await seedResponse(context, surveyId, 1)
+    const responseId = await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
     const db = context.env.DB
 
     await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = ?1").bind(surveyId).run()
 
     const result = await new UpdateSurveyResponse(context).run({
       responseId: responseId,
-      respondentId: 1,
+      respondentId: toWorkforceEmployeeId(1),
       answersJson: { a: "updated" },
       submittedAt: "2026-03-01T00:00:00.000Z",
     })

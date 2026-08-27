@@ -94,7 +94,7 @@ export type ProcedureDefinition = z.infer<typeof zProcedureDefinition>
 
 const zAudience = z.strictObject({
   all_employees: z.boolean().default(true),
-  employee_statuses: z.array(z.enum(["active", "leave"])).default(["active", "leave"]),
+  employment_statuses: z.array(z.enum(["ACTIVE", "ON_LEAVE"])).default(["ACTIVE", "ON_LEAVE"]),
   department_codes: z.array(code).max(100).default([]),
   org_roles: z.array(code).max(100).default([]),
 })
@@ -159,7 +159,7 @@ export const zGovernanceMetadata = z
     review_due_on: date.nullable().default(null),
     audience: zAudience.default({
       all_employees: true,
-      employee_statuses: ["active", "leave"],
+      employment_statuses: ["ACTIVE", "ON_LEAVE"],
       department_codes: [],
       org_roles: [],
     }),

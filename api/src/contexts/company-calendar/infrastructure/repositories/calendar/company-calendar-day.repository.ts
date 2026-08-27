@@ -95,9 +95,12 @@ export class CompanyCalendarDayRepository {
     }
   }
 
-  async delete(id: number): Promise<null | Error> {
+  async delete(calendarDay: CompanyCalendarDay): Promise<null | Error> {
+    if (calendarDay.id === null) return new Error("cannot delete unsaved company calendar day")
     try {
-      await this.c.var.database.delete(companyCalendarDays).where(eq(companyCalendarDays.id, id))
+      await this.c.var.database
+        .delete(companyCalendarDays)
+        .where(eq(companyCalendarDays.id, calendarDay.id))
 
       return null
     } catch (error) {

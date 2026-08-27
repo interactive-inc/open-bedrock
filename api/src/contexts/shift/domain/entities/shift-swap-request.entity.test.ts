@@ -1,11 +1,12 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { ShiftSwapRequest } from "@/contexts/shift/domain/entities/shift-swap-request.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("ShiftSwapRequest.create", () => {
   test("builds with pending status when requester differs from target", () => {
     const swap = ShiftSwapRequest.create({
-      requesterEmployeeId: 1,
-      targetEmployeeId: 2,
+      requesterEmployeeId: toWorkforceEmployeeId(1),
+      targetEmployeeId: toWorkforceEmployeeId(2),
       date: "2026-06-20",
       note: "Please swap shifts",
     })
@@ -16,8 +17,8 @@ describe("ShiftSwapRequest.create", () => {
       expect(swap.id).toBeNull()
       expect(swap.status).toBe("pending")
       expect(swap.approvedAt).toBeNull()
-      expect(swap.requesterEmployeeId).toBe(1)
-      expect(swap.targetEmployeeId).toBe(2)
+      expect(swap.requesterEmployeeId).toBe(toWorkforceEmployeeId(1))
+      expect(swap.targetEmployeeId).toBe(toWorkforceEmployeeId(2))
       expect(swap.date).toBe("2026-06-20")
       expect(swap.note).toBe("Please swap shifts")
     }
@@ -25,8 +26,8 @@ describe("ShiftSwapRequest.create", () => {
 
   test("returns self_reference reason when requester equals target", () => {
     const swap = ShiftSwapRequest.create({
-      requesterEmployeeId: 5,
-      targetEmployeeId: 5,
+      requesterEmployeeId: toWorkforceEmployeeId(5),
+      targetEmployeeId: toWorkforceEmployeeId(5),
       date: "2026-06-20",
       note: null,
     })
@@ -42,8 +43,8 @@ describe("ShiftSwapRequest.create", () => {
 describe("ShiftSwapRequest.withApproved", () => {
   test("returns new with approved status and approvedAt", () => {
     const swap = ShiftSwapRequest.create({
-      requesterEmployeeId: 1,
-      targetEmployeeId: 2,
+      requesterEmployeeId: toWorkforceEmployeeId(1),
+      targetEmployeeId: toWorkforceEmployeeId(2),
       date: "2026-06-20",
       note: null,
     })
@@ -56,8 +57,8 @@ describe("ShiftSwapRequest.withApproved", () => {
       expect(approved).toBeInstanceOf(ShiftSwapRequest)
       expect(approved.status).toBe("approved")
       expect(approved.approvedAt).toBe("2026-06-18T10:00:00.000Z")
-      expect(approved.requesterEmployeeId).toBe(1)
-      expect(approved.targetEmployeeId).toBe(2)
+      expect(approved.requesterEmployeeId).toBe(toWorkforceEmployeeId(1))
+      expect(approved.targetEmployeeId).toBe(toWorkforceEmployeeId(2))
     }
   })
 })

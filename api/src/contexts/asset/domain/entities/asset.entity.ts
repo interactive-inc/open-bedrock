@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { AssetRow } from "@/contexts/asset/infrastructure/schema/asset"
 import { z } from "zod"
 
@@ -9,7 +10,7 @@ export const assetRowSchema = z.object({
   serial: z.string().nullable(),
   purchasedOn: z.string().nullable(),
   status: z.string(),
-  holderEmployeeId: z.number().nullable(),
+  holderEmployeeId: zEmployeeId.nullable(),
   disposedOn: z.string().nullable(),
   disposalReason: z.string().nullable(),
 })
@@ -21,7 +22,7 @@ const zProps = z.object({
   serial: z.string().nullable(),
   purchasedOn: z.string().nullable(),
   status: z.string(),
-  holderEmployeeId: z.number().nullable(),
+  holderEmployeeId: zEmployeeId.nullable(),
   disposedOn: z.string().nullable(),
   disposalReason: z.string().nullable(),
 })

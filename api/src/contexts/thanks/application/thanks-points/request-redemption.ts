@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -6,7 +7,7 @@ import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/rep
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 
 export type Command = {
-  employeeId: number
+  employeeId: EmployeeId
   rewardId: number
   createdAt: string
 }

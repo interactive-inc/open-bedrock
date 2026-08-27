@@ -1,12 +1,18 @@
-import type { z } from "zod"
+import type { $brand } from "zod"
 
-export type SessionEmployeeStatus = "active" | "leave" | "retired"
-export type SessionAccountId = string & z.$brand<"AccountId">
+/** API composition が検証済みの System Account ID を渡すための中立な契約。 */
+export type AuthenticatedAccountId = string & $brand<"AccountId">
 
-type Props<AccountId extends string> = {
-  accountId: AccountId
-  employeeId: number
-  employeeStatus: SessionEmployeeStatus
+/** API composition が検証済みの Company Employee ID を渡すための中立な契約。 */
+export type AuthenticatedEmployeeId = string & $brand<"WorkforceId:employee">
+
+/** API composition が解決済みの在籍状態。 */
+export type AuthenticatedEmploymentStatus = "PRE_HIRE" | "ACTIVE" | "ON_LEAVE" | "TERMINATED"
+
+type Props = {
+  accountId: AuthenticatedAccountId
+  employeeId: AuthenticatedEmployeeId
+  employmentStatus: AuthenticatedEmploymentStatus
   permissions: ReadonlySet<string>
   roleKeys: ReadonlyArray<string>
 }
@@ -15,21 +21,21 @@ type Props<AccountId extends string> = {
  * 認証済みの本人（セッション）。verify-bearer が JWT 検証後に DB から権限を解決して生成する。
  * permissions/roleKeys が認可の正
  */
-export class Session<AccountId extends string = SessionAccountId> implements Props<AccountId> {
-  constructor(private readonly props: Props<AccountId>) {
+export class Session implements Props {
+  constructor(private readonly props: Props) {
     Object.freeze(this)
   }
 
-  get accountId(): AccountId {
+  get accountId(): AuthenticatedAccountId {
     return this.props.accountId
   }
 
-  get employeeId(): number {
+  get employeeId(): AuthenticatedEmployeeId {
     return this.props.employeeId
   }
 
-  get employeeStatus(): SessionEmployeeStatus {
-    return this.props.employeeStatus
+  get employmentStatus(): AuthenticatedEmploymentStatus {
+    return this.props.employmentStatus
   }
 
   get permissions(): ReadonlySet<string> {

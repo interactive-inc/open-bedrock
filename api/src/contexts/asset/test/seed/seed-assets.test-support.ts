@@ -1,3 +1,5 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedAsset = {
   code: string
   name: string
@@ -5,7 +7,7 @@ type SeedAsset = {
   serial: string | null
   purchasedOn: string | null
   status: string
-  holderEmployeeId: number | null
+  holderEmployeeId: EmployeeId | null
   disposedOn: string | null
   disposalReason: string | null
 }
@@ -18,7 +20,7 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
     serial: "PF-X1-0001",
     purchasedOn: "2024-04-01",
     status: "lent",
-    holderEmployeeId: 5,
+    holderEmployeeId: toWorkforceEmployeeId(5),
     disposedOn: null,
     disposalReason: null,
   },
@@ -29,7 +31,7 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
     serial: "CN-D27-0002",
     purchasedOn: "2024-04-01",
     status: "lent",
-    holderEmployeeId: 9,
+    holderEmployeeId: toWorkforceEmployeeId(9),
     disposedOn: null,
     disposalReason: null,
   },

@@ -1,9 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CertificateRequestRow } from "@/contexts/certificate-request/infrastructure/schema/certificate-request"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.string(),
-  requesterId: z.number(),
+  requesterId: zEmployeeId,
   certificateType: z.string(),
   submitTo: z.string().nullable(),
   neededBy: z.string().nullable(),
@@ -43,7 +45,7 @@ export class CertificateRequest implements Props {
 
   /** 新規証明書発行依頼を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。 */
   static create(props: {
-    requesterId: number
+    requesterId: EmployeeId
     certificateType: string
     submitTo: string | null
     neededBy: string | null

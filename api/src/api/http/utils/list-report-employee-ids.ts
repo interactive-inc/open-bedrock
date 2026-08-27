@@ -1,30 +1,27 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
-import { readCanonicalOrganizationState } from "@/contexts/company/infrastructure/organization/read-canonical-organization-state.repository"
-import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { listReportWorkforceEmployeeIds } from "@/contexts/company/domain/policies/list-report-workforce-employee-ids.policy"
-import { toStorageEmployeeId } from "@/contexts/company/infrastructure/workforce/to-storage-employee-id.repository"
 
 export type Props = {
   c: Context
-  viewerEmployeeId: number
+  viewerEmployeeId: EmployeeId
 }
 
 /**
  * viewer の配下(再帰)にあたる従業員 id をcanonical Company snapshotから解決する。
  * viewer 自身は含めない。
  */
-export async function listReportEmployeeIds(props: Props): Promise<Array<number> | Error> {
-  const snapshot = await readCanonicalOrganizationState(props.c)
+export async function listReportEmployeeIds(
+  props: Props,
+): Promise<ReadonlyArray<EmployeeId> | Error> {
+  const snapshot = await new ReadCanonicalOrganizationStateAdapter(
+    props.c,
+  ).readCanonicalOrganizationState()
   if (snapshot instanceof Error) return snapshot
 
-  const storageIds: number[] = []
-  for (const employeeId of listReportWorkforceEmployeeIds({
+  return listReportWorkforceEmployeeIds({
     states: snapshot.employees,
-    actorEmployeeId: toWorkforceEmployeeId(props.viewerEmployeeId),
-  })) {
-    const storageId = toStorageEmployeeId(employeeId)
-    if (storageId instanceof Error) return storageId
-    storageIds.push(storageId)
-  }
-  return storageIds.toSorted((left, right) => left - right)
+    actorEmployeeId: props.viewerEmployeeId,
+  })
 }

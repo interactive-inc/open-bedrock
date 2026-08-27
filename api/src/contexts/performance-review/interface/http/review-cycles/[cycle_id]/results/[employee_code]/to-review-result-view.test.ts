@@ -1,3 +1,4 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import { toReviewResultView } from "@/contexts/performance-review/interface/http/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
@@ -11,7 +12,7 @@ describe("toReviewResultView", () => {
       dueDate: null,
     })
 
-    const view = toReviewResultView(cycle, [], 1)
+    const view = toReviewResultView(cycle, [], toWorkforceEmployeeId(1))
 
     expect(view).toBeInstanceOf(Error)
   })
@@ -28,8 +29,8 @@ describe("toReviewResultView", () => {
     const form1 = new ReviewForm({
       id: 1,
       cycleId: 1,
-      subjectEmployeeId: 5,
-      reviewerEmployeeId: 2,
+      subjectEmployeeId: toWorkforceEmployeeId(5),
+      reviewerEmployeeId: toWorkforceEmployeeId(2),
       reviewerType: "manager",
       answers: [],
       score: 80,
@@ -42,8 +43,8 @@ describe("toReviewResultView", () => {
     const form2 = new ReviewForm({
       id: 2,
       cycleId: 1,
-      subjectEmployeeId: 5,
-      reviewerEmployeeId: 3,
+      subjectEmployeeId: toWorkforceEmployeeId(5),
+      reviewerEmployeeId: toWorkforceEmployeeId(3),
       reviewerType: "peer",
       answers: [],
       score: 60,
@@ -53,14 +54,14 @@ describe("toReviewResultView", () => {
       visibility: "disclosed",
     })
 
-    const view = toReviewResultView(cycle, [form1, form2], 5)
+    const view = toReviewResultView(cycle, [form1, form2], toWorkforceEmployeeId(5))
 
     if (view instanceof Error) {
       throw view
     }
 
     expect(view.cycleId).toBe(1)
-    expect(view.subjectEmployeeId).toBe(5)
+    expect(view.subjectEmployeeId).toBe(toWorkforceEmployeeId(5))
     expect(view.formCount).toBe(2)
     expect(view.submittedCount).toBe(2)
     expect(view.averageScore).toBe(70)
@@ -78,8 +79,8 @@ describe("toReviewResultView", () => {
     const pendingForm = new ReviewForm({
       id: 1,
       cycleId: 1,
-      subjectEmployeeId: 5,
-      reviewerEmployeeId: 2,
+      subjectEmployeeId: toWorkforceEmployeeId(5),
+      reviewerEmployeeId: toWorkforceEmployeeId(2),
       reviewerType: "self",
       answers: [],
       score: null,
@@ -89,7 +90,7 @@ describe("toReviewResultView", () => {
       visibility: "disclosed",
     })
 
-    const view = toReviewResultView(cycle, [pendingForm], 5)
+    const view = toReviewResultView(cycle, [pendingForm], toWorkforceEmployeeId(5))
 
     if (view instanceof Error) {
       throw view

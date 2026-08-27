@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CertificateRequest } from "@/contexts/certificate-request/domain/entities/certificate-request.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -6,7 +7,7 @@ import { CertificateRequestRepository } from "@/contexts/certificate-request/inf
 
 export type Command = {
   certificateRequestId: string
-  requesterId: number
+  requesterId: EmployeeId
   certificateType: string
   submitTo: string | null
   neededBy: string | null

@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CertificateRequest } from "@/contexts/certificate-request/domain/entities/certificate-request.entity"
 import type { Context } from "@/env"
 import { certificateRequests } from "@/contexts/certificate-request/infrastructure/schema/certificate-request"
@@ -8,7 +9,7 @@ export class CertificateRequestRepository {
 
   /** 依頼者本人の証明書発行依頼を作成日時の降順で返す。 */
   async findByRequesterId(props: {
-    requesterId: number
+    requesterId: EmployeeId
     limit: number
     offset: number
   }): Promise<ReadonlyArray<CertificateRequest> | Error> {

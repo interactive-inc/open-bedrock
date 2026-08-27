@@ -2,13 +2,14 @@ import type { Session } from "@/lib/auth/session"
 import { canEvaluateGoalOf } from "@/contexts/performance-review/domain/policies/goal-evaluation-access.policy"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import type { GoalEvaluationKind } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type Forbidden = { reason: "forbidden" }
 
 export type Props = {
   kind: GoalEvaluationKind
-  goalEmployeeId: number
-  viewerEmployeeId: number
+  goalEmployeeId: EmployeeId
+  viewerEmployeeId: EmployeeId
   session: Session
   relation: EmployeeRelation
 }

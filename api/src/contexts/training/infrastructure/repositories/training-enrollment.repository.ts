@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
@@ -29,7 +30,7 @@ export class TrainingEnrollmentRepository {
 
   async findByCourseAndEmployee(
     courseId: number,
-    employeeId: number,
+    employeeId: EmployeeId,
   ): Promise<TrainingEnrollment | null | Error> {
     try {
       const rows = await this.c.var.database

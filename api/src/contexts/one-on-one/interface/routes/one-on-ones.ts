@@ -102,7 +102,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const where = conditions.length === 0 ? undefined : and(...conditions)
 
   const rows = await c.var.database
-    .select({ oneOnOne: oneOnOnes, memberName: members.name, managerName: managers.name })
+    .select({
+      oneOnOne: oneOnOnes,
+      memberName: members.officialName,
+      managerName: managers.officialName,
+    })
     .from(oneOnOnes)
     .leftJoin(members, eq(members.id, oneOnOnes.memberId))
     .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))
@@ -174,7 +178,7 @@ export const POST = factory.createHandlers(
     }
 
     const nameRows = await c.var.database
-      .select({ memberName: members.name, managerName: managers.name })
+      .select({ memberName: members.officialName, managerName: managers.officialName })
       .from(oneOnOnes)
       .leftJoin(members, eq(members.id, oneOnOnes.memberId))
       .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))

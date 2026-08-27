@@ -9,13 +9,13 @@ let rateLimitWarningLogged = false
  * IP 単位のグローバルレート制限。Cloudflare Workers の Rate Limiting binding を使う。
  * binding 未設定はローカル開発・テストではスキップ、本番相当（CORS_ORIGIN 設定済み）では
  * fail-open にせず 503 で拒否する（設定漏れをブルートフォース可能な状態で放置しない）。
- * /health は監視・ヘルスチェック用途のため対象外。ログインは別途アカウント単位の
+ * /system/health は監視・ヘルスチェック用途のため対象外。ログインは別途アカウント単位の
  * レート制限を持つが、ここでの IP 単位制限も併せてかかる。
  */
 export const rateLimitMiddleware = createMiddleware<HonoEnv>(async (c, next) => {
   const limiter = c.env.API_RATE_LIMITER
 
-  if (c.req.path === "/health") {
+  if (c.req.path === "/system/health") {
     await next()
 
     return

@@ -1,16 +1,18 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedOnboardingAssignments } from "@/contexts/onboarding/test/seed/seed-onboarding-assignments.test-support"
 import { seedOnboardingTasks } from "@/contexts/onboarding/test/seed/seed-onboarding-tasks.test-support"
 import { seedOnboardingTemplates } from "@/contexts/onboarding/test/seed/seed-onboarding-templates.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const onboardingTaskResponseSchema = z.object({
   id: z.number(),
@@ -38,15 +40,14 @@ const jwtSecret = "onboarding-employee-code-route-test-secret"
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -113,9 +114,9 @@ async function createTestDb(): Promise<D1Database> {
   return db
 }
 
-function token(employeeId: number, role: string): Promise<string> {
+function token(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -139,7 +140,7 @@ describe("GET /onboarding-assignments/employees/:code", () => {
   test("a privileged role sees the employee assignments with tasks", async () => {
     const response = await request({
       path: "/onboarding-assignments/employees/E005",
-      token: await token(1, "root"),
+      token: await token(1),
     })
 
     expect(response.status).toBe(200)
@@ -160,7 +161,7 @@ describe("GET /onboarding-assignments/employees/:code", () => {
   test("a member is forbidden", async () => {
     const response = await request({
       path: "/onboarding-assignments/employees/E005",
-      token: await token(6, "member"),
+      token: await token(6),
     })
 
     expect(response.status).toBe(403)
@@ -169,7 +170,7 @@ describe("GET /onboarding-assignments/employees/:code", () => {
   test("returns 404 for an unknown employee", async () => {
     const response = await request({
       path: "/onboarding-assignments/employees/E999",
-      token: await token(1, "root"),
+      token: await token(1),
     })
 
     expect(response.status).toBe(404)
@@ -178,7 +179,7 @@ describe("GET /onboarding-assignments/employees/:code", () => {
   test("limit=1 returns at most one assignment", async () => {
     const response = await request({
       path: "/onboarding-assignments/employees/E005?limit=1",
-      token: await token(1, "root"),
+      token: await token(1),
     })
 
     expect(response.status).toBe(200)
@@ -193,7 +194,7 @@ describe("GET /onboarding-assignments/employees/:code", () => {
   test("offset beyond the assignment count returns an empty list", async () => {
     const response = await request({
       path: "/onboarding-assignments/employees/E005?offset=1",
-      token: await token(1, "root"),
+      token: await token(1),
     })
 
     expect(response.status).toBe(200)

@@ -1,4 +1,5 @@
 import type { Context } from "@/env"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { thanks, thanksRedemptions } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { sql } from "drizzle-orm"
 
@@ -22,7 +23,7 @@ export class ThanksPointBalanceAdapter {
    * 受領側と交換側を別クエリで読むと、その間に入った交換が数え漏れて残高が過大に見える。
    * 単一ステートメントに畳み込み、常に同一時点の値から算出する。
    */
-  async getBalance(employeeId: number): Promise<number | Error> {
+  async getBalance(employeeId: EmployeeId): Promise<number | Error> {
     try {
       const [row] = await this.c.var.database
         .select({

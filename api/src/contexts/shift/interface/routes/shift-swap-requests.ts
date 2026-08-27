@@ -53,8 +53,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const rows = await c.var.database
     .select({
       swapRequest: shiftSwapRequests,
-      requesterCode: requester.code,
-      targetCode: target.code,
+      requesterCode: requester.employeeCode,
+      targetCode: target.employeeCode,
     })
     .from(shiftSwapRequests)
     .leftJoin(requester, eq(requester.id, shiftSwapRequests.requesterEmployeeId))

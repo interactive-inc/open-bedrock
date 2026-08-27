@@ -6,12 +6,14 @@ import { isoDate } from "@/lib/schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { budgets } from "@/contexts/expense/infrastructure/schema/budget"
-import { departments } from "@/contexts/company/infrastructure/schema/organization"
 import { and, asc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
+import { InternalError } from "@/lib/http/errors"
 
 // @authorization permission - 権限キーで判定する
 /** GET /department-budgets — 部署予算の一覧。部署・会計期間で絞り込む。budget:manage を持つロールのみ。 */
@@ -20,7 +22,7 @@ export const GET = factory.createHandlers(
   zValidator(
     "query",
     z.object({
-      department_id: z.string().optional(),
+      organization_unit_id: zOrganizationUnitId.optional(),
       fiscal_period: z.string().optional(),
     }),
   ),
@@ -39,12 +41,8 @@ export const GET = factory.createHandlers(
 
     const conditions: Array<SQL> = []
 
-    if (query.department_id !== undefined && query.department_id !== "") {
-      const departmentId = Number(query.department_id)
-
-      if (Number.isInteger(departmentId)) {
-        conditions.push(eq(budgets.departmentId, departmentId))
-      }
+    if (query.organization_unit_id !== undefined) {
+      conditions.push(eq(budgets.organizationUnitId, query.organization_unit_id))
     }
 
     if (query.fiscal_period !== undefined && query.fiscal_period !== "") {
@@ -56,8 +54,7 @@ export const GET = factory.createHandlers(
     const rows = await c.var.database
       .select({
         id: budgets.id,
-        departmentId: budgets.departmentId,
-        departmentName: departments.name,
+        organizationUnitId: budgets.organizationUnitId,
         fiscalPeriod: budgets.fiscalPeriod,
         periodStart: budgets.periodStart,
         periodEnd: budgets.periodEnd,
@@ -67,15 +64,22 @@ export const GET = factory.createHandlers(
         createdAt: budgets.createdAt,
       })
       .from(budgets)
-      .leftJoin(departments, eq(departments.id, budgets.departmentId))
       .where(where)
-      .orderBy(asc(budgets.departmentId), asc(budgets.fiscalPeriod))
+      .orderBy(asc(budgets.organizationUnitId), asc(budgets.fiscalPeriod))
+
+    const snapshot = await new ReadCanonicalOrganizationStateAdapter(
+      c,
+    ).readCanonicalOrganizationState()
+    if (snapshot instanceof Error) throw new InternalError("failed to load organization units")
+    const unitNames = new Map(
+      snapshot.organization.units.map((unit) => [unit.organizationUnitId, unit.officialName]),
+    )
 
     const responseBody = zAppBudgetList.parse({
       data: rows.map((row) => ({
         id: row.id,
-        department_id: row.departmentId,
-        department_name: row.departmentName,
+        organization_unit_id: row.organizationUnitId,
+        organization_unit_name: unitNames.get(row.organizationUnitId) ?? null,
         fiscal_period: row.fiscalPeriod,
         period_start: row.periodStart,
         period_end: row.periodEnd,
@@ -98,7 +102,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      department_id: z.number().positive().int().safe(),
+      organization_unit_id: zOrganizationUnitId,
       fiscal_period: z.string().min(1).max(200),
       period_start: isoDate,
       period_end: isoDate,
@@ -121,7 +125,7 @@ export const POST = factory.createHandlers(
     const body = c.req.valid("json")
 
     const created = await new CreateBudget(c).run({
-      departmentId: body.department_id,
+      organizationUnitId: body.organization_unit_id,
       fiscalPeriod: body.fiscal_period,
       periodStart: body.period_start,
       periodEnd: body.period_end,
@@ -137,7 +141,7 @@ export const POST = factory.createHandlers(
 
     const responseBody = zAppBudget.parse({
       id: created.id,
-      department_id: created.departmentId,
+      organization_unit_id: created.organizationUnitId,
       fiscal_period: created.fiscalPeriod,
       period_start: created.periodStart,
       period_end: created.periodEnd,

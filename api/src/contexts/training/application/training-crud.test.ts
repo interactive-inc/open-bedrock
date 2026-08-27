@@ -1,3 +1,5 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { describe, expect, test } from "bun:test"
 import { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
 import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
@@ -8,10 +10,10 @@ import { EnrollTraining } from "@/contexts/training/application/enroll-training"
 import { RescheduleTrainingEnrollment } from "@/contexts/training/application/reschedule-training-enrollment"
 import { CompleteTrainingEnrollment } from "@/contexts/training/application/complete-training-enrollment"
 import { CancelTrainingEnrollment } from "@/contexts/training/application/cancel-training-enrollment"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { makeTestSession } from "@/api/test/support/make-test-session"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { makeTestSession } from "@tests/api/support/make-test-session"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import type { Context } from "@/env"
 
@@ -37,17 +39,17 @@ async function seedEnrollment(
   context: Context,
   db: D1Database,
   courseCode: string,
-  employeeId: number,
+  employeeId: EmployeeId,
 ): Promise<TrainingEnrollment> {
   await seedCourse(context, courseCode)
 
-  await seedD1(db, "employees", [
+  await seedCompanyEmployees(db, [
     {
       id: employeeId,
       code: `E${String(employeeId).padStart(3, "0")}`,
       name: "Test Employee",
-      dept_id: 1,
-      dept_name: "Engineering",
+      deptId: 1,
+      deptName: "Engineering",
       position: "Engineer",
       status: "active",
     },
@@ -70,7 +72,7 @@ async function seedEnrollment(
 
 describe("CreateTrainingCourse", () => {
   test("creates a course as admin", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateTrainingCourse(context).run({
       session: makeTestSession("root"),
@@ -93,7 +95,7 @@ describe("CreateTrainingCourse", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateTrainingCourse(context).run({
       session: makeTestSession("member"),
@@ -109,7 +111,7 @@ describe("CreateTrainingCourse", () => {
   })
 
   test("rejects duplicate code with course_code_conflict", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedCourse(context, "TS101")
 
@@ -131,7 +133,7 @@ describe("GetTrainingCourse", () => {})
 
 describe("UpdateTrainingCourse", () => {
   test("updates the course as admin", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedCourse(context, "TS101")
 
@@ -156,7 +158,7 @@ describe("UpdateTrainingCourse", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedCourse(context, "TS101")
 
@@ -174,7 +176,7 @@ describe("UpdateTrainingCourse", () => {
   })
 
   test("rejects archived course with course_archived", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedCourse(context, "TS101")
 
@@ -197,7 +199,7 @@ describe("UpdateTrainingCourse", () => {
   })
 
   test("rejects unknown code with course_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdateTrainingCourse(context).run({
       session: makeTestSession("root"),
@@ -215,7 +217,7 @@ describe("UpdateTrainingCourse", () => {
 
 describe("ArchiveTrainingCourse", () => {
   test("archives the course as admin", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedCourse(context, "TS101")
 
@@ -228,7 +230,7 @@ describe("ArchiveTrainingCourse", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedCourse(context, "TS101")
 
@@ -241,7 +243,7 @@ describe("ArchiveTrainingCourse", () => {
   })
 
   test("rejects unknown code with course_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new ArchiveTrainingCourse(context).run({
       session: makeTestSession("root"),
@@ -254,24 +256,24 @@ describe("ArchiveTrainingCourse", () => {
 
 describe("EnrollTraining", () => {
   test("enrolls self without permission check", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedCourse(context, "TS101")
 
-    await seedD1(db, "employees", [
+    await seedCompanyEmployees(db, [
       {
         id: 1,
         code: "E001",
         name: "Test Employee",
-        dept_id: 1,
-        dept_name: "Engineering",
+        deptId: 1,
+        deptName: "Engineering",
         position: "Engineer",
         status: "active",
       },
     ])
 
     const result = await new EnrollTraining(context).run({
-      viewerEmployeeId: 1,
+      viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       courseCode: "TS101",
       enrolleeEmployeeCode: null,
@@ -288,10 +290,10 @@ describe("EnrollTraining", () => {
   })
 
   test("rejects member enrolling another with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new EnrollTraining(context).run({
-      viewerEmployeeId: 1,
+      viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       courseCode: "TS101",
       enrolleeEmployeeCode: "E002",
@@ -302,10 +304,10 @@ describe("EnrollTraining", () => {
   })
 
   test("rejects unknown course with course_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new EnrollTraining(context).run({
-      viewerEmployeeId: 1,
+      viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       courseCode: "NOPE",
       enrolleeEmployeeCode: null,
@@ -320,8 +322,8 @@ describe("GetTrainingEnrollment", () => {})
 
 describe("RescheduleTrainingEnrollment", () => {
   test("reschedules the enrollment for the enrollee", async () => {
-    const { context, db } = createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", 1)
+    const { context, db } = await createTestContext()
+    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
 
     if (enrollment.id === null) {
       throw new Error("id is null")
@@ -329,7 +331,7 @@ describe("RescheduleTrainingEnrollment", () => {
 
     const result = await new RescheduleTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
-      viewerEmployeeId: 1,
+      viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       dueDate: "2026-12-31",
     })
@@ -344,8 +346,8 @@ describe("RescheduleTrainingEnrollment", () => {
   })
 
   test("rejects non-owner member with forbidden", async () => {
-    const { context, db } = createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", 1)
+    const { context, db } = await createTestContext()
+    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
 
     if (enrollment.id === null) {
       throw new Error("id is null")
@@ -353,7 +355,7 @@ describe("RescheduleTrainingEnrollment", () => {
 
     const result = await new RescheduleTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
-      viewerEmployeeId: 999,
+      viewerEmployeeId: toWorkforceEmployeeId(999),
       session: makeTestSession("member", 999),
       dueDate: "2026-12-31",
     })
@@ -364,8 +366,8 @@ describe("RescheduleTrainingEnrollment", () => {
 
 describe("CompleteTrainingEnrollment", () => {
   test("completes the enrollment for the enrollee", async () => {
-    const { context, db } = createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", 1)
+    const { context, db } = await createTestContext()
+    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
 
     if (enrollment.id === null) {
       throw new Error("id is null")
@@ -373,7 +375,7 @@ describe("CompleteTrainingEnrollment", () => {
 
     const result = await new CompleteTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
-      viewerEmployeeId: 1,
+      viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member", 1),
       score: 85,
       completedAt: "2026-06-15T10:00:00.000Z",
@@ -390,8 +392,8 @@ describe("CompleteTrainingEnrollment", () => {
   })
 
   test("rejects non-owner member with forbidden", async () => {
-    const { context, db } = createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", 1)
+    const { context, db } = await createTestContext()
+    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
 
     if (enrollment.id === null) {
       throw new Error("id is null")
@@ -399,7 +401,7 @@ describe("CompleteTrainingEnrollment", () => {
 
     const result = await new CompleteTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
-      viewerEmployeeId: 999,
+      viewerEmployeeId: toWorkforceEmployeeId(999),
       session: makeTestSession("member", 999),
       score: null,
       completedAt: "2026-06-15T10:00:00.000Z",
@@ -409,8 +411,8 @@ describe("CompleteTrainingEnrollment", () => {
   })
 
   test("rejects already completed enrollment", async () => {
-    const { context, db } = createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", 1)
+    const { context, db } = await createTestContext()
+    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
 
     if (enrollment.id === null) {
       throw new Error("id is null")
@@ -418,7 +420,7 @@ describe("CompleteTrainingEnrollment", () => {
 
     await new CompleteTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
-      viewerEmployeeId: 1,
+      viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member", 1),
       score: 90,
       completedAt: "2026-06-15T10:00:00.000Z",
@@ -426,7 +428,7 @@ describe("CompleteTrainingEnrollment", () => {
 
     const result = await new CompleteTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
-      viewerEmployeeId: 1,
+      viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member", 1),
       score: 95,
       completedAt: "2026-06-16T10:00:00.000Z",
@@ -438,8 +440,8 @@ describe("CompleteTrainingEnrollment", () => {
 
 describe("CancelTrainingEnrollment", () => {
   test("cancels the enrollment for the enrollee", async () => {
-    const { context, db } = createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", 1)
+    const { context, db } = await createTestContext()
+    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
 
     if (enrollment.id === null) {
       throw new Error("id is null")
@@ -447,7 +449,7 @@ describe("CancelTrainingEnrollment", () => {
 
     const result = await new CancelTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
-      viewerEmployeeId: 1,
+      viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
     })
 
@@ -455,8 +457,8 @@ describe("CancelTrainingEnrollment", () => {
   })
 
   test("rejects non-owner member with forbidden", async () => {
-    const { context, db } = createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", 1)
+    const { context, db } = await createTestContext()
+    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
 
     if (enrollment.id === null) {
       throw new Error("id is null")
@@ -464,7 +466,7 @@ describe("CancelTrainingEnrollment", () => {
 
     const result = await new CancelTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
-      viewerEmployeeId: 999,
+      viewerEmployeeId: toWorkforceEmployeeId(999),
       session: makeTestSession("member", 999),
     })
 
@@ -472,11 +474,11 @@ describe("CancelTrainingEnrollment", () => {
   })
 
   test("rejects unknown id with enrollment_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CancelTrainingEnrollment(context).run({
       enrollmentId: 9999,
-      viewerEmployeeId: 1,
+      viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
     })
 

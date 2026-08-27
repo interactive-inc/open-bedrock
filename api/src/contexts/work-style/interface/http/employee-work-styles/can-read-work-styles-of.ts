@@ -3,10 +3,11 @@ import type { Session } from "@/lib/auth/session"
 /**
  * 対象従業員の勤務形態を閲覧できるか判定する。本人か work_style:read:all を持つ場合に許可する。
  */
-export function canReadWorkStylesOf(session: Session, targetEmployeeId: number): boolean {
+export function canReadWorkStylesOf(session: Session, targetEmployeeId: EmployeeId): boolean {
   if (session.employeeId === targetEmployeeId) {
     return true
   }
 
   return session.hasPermission("work_style:read:all")
 }
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"

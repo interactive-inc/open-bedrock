@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -6,7 +7,7 @@ import { CareerApplicationRepository } from "@/contexts/career/infrastructure/re
 
 export type Command = {
   applicationId: number
-  applicantId: number
+  applicantId: EmployeeId
   message: string | null
 }
 

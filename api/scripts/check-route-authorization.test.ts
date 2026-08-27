@@ -205,11 +205,13 @@ describe("checkRouteAuthorization", () => {
     const routeFiles = await collectRouteFiles()
 
     expect(
-      routeFiles.some((routeFile) => routeFile.file.endsWith("system/interface/routes/health.ts")),
+      routeFiles.some((routeFile) =>
+        routeFile.file.endsWith("system/interface/routes/system.health.ts"),
+      ),
     ).toBe(true)
     expect(
       routeFiles.some((routeFile) =>
-        routeFile.file.endsWith("company/interface/routes/company.v1.employees.ts"),
+        routeFile.file.endsWith("company/interface/routes/company.employees.ts"),
       ),
     ).toBe(true)
   })
