@@ -1,6 +1,7 @@
 "use client"
 
 import { LocaleField } from "@/app/(app)/my/settings/_components/locale-field"
+import { PhoneField } from "@/app/(app)/my/settings/_components/phone-field"
 import { ThemeModeField } from "@/app/(app)/my/settings/_components/theme-mode-field"
 import {
   Dialog,
@@ -13,13 +14,18 @@ import type { Locale } from "@/lib/i18n/locale"
 
 type Props = {
   locale: Locale
+  phone: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
 /**
- * 個人設定モーダル。表示テーマ・表示言語を切り替える。
+ * 個人設定モーダル。表示テーマ・表示言語・電話番号を変更する。
  * ヘッダーのユーザーメニュー「設定」から開く。
+ *
+ * 以前はサイドメニューの「個人設定」ページ（/my/settings）に同じ項目が並んでいたが、
+ * 同じ設定が 2 か所にあると、どちらで変えたものが反映されるのか利用者が判断できないため、
+ * 入口をこのモーダルへ寄せた。
  */
 export function SettingsDialog(props: Props) {
   return (
@@ -35,6 +41,8 @@ export function SettingsDialog(props: Props) {
           <ThemeModeField />
 
           <LocaleField locale={props.locale} />
+
+          <PhoneField phone={props.phone} />
         </div>
       </DialogContent>
     </Dialog>

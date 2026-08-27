@@ -25,6 +25,7 @@ export type MeResponse = {
   role: string
   dept_name: string | null
   position: string | null
+  phone: string | null
   permissions: ReadonlyArray<string>
   role_keys: ReadonlyArray<string>
 }

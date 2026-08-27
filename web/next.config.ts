@@ -101,7 +101,6 @@ const nextConfig: NextConfig = {
     const spaceMoves = [
       { from: "me", to: "my" },
       { from: "oneonones", to: "my/oneonones" },
-      { from: "settings", to: "my/settings" },
       ...systemResources.map((resource) => ({ from: resource, to: `system/${resource}` })),
       ...organizationResources.map((resource) => ({
         from: resource,
