@@ -1,33 +1,252 @@
-export type {
-  CompanyResourceValidationCode,
-  OrganizationalAuthorityErrorCode,
-  WorkforceStateResolutionCode,
-  OrganizationChangeValidationCode,
-  AccountEmployeeLinkResolutionCode,
-} from "@/contexts/company/domain/errors.shared"
-export { AccountEmployeeLinkResolutionError } from "@/contexts/company/domain/errors/account-employee-link-resolution-error.error"
-export { CompanyConflictError } from "@/contexts/company/domain/errors/company-conflict-error.error"
-export { CompanyForbiddenError } from "@/contexts/company/domain/errors/company-forbidden-error.error"
-export { CompanyNotFoundError } from "@/contexts/company/domain/errors/company-not-found-error.error"
-export { CompanyOperationError } from "@/contexts/company/domain/errors/company-operation-error.error"
-export { CompanyResourceValidationError } from "@/contexts/company/domain/errors/company-resource-validation-error.error"
-export { CompanyTimeZoneError } from "@/contexts/company/domain/errors/company-time-zone-error.error"
-export { CompanyUnavailableError } from "@/contexts/company/domain/errors/company-unavailable-error.error"
-export { CompanyUnexpectedError } from "@/contexts/company/domain/errors/company-unexpected-error.error"
-export { CompanyUniqueConstraintError } from "@/contexts/company/domain/errors/company-unique-constraint-error.error"
-export { CompanyValidationError } from "@/contexts/company/domain/errors/company-validation-error.error"
-export { InvalidBusinessDateError } from "@/contexts/company/domain/errors/invalid-business-date-error.error"
-export { InvalidCalendarDateError } from "@/contexts/company/domain/errors/invalid-calendar-date-error.error"
-export { InvalidCompanyActorError } from "@/contexts/company/domain/errors/invalid-company-actor-error.error"
-export { InvalidEmployeeError } from "@/contexts/company/domain/errors/invalid-employee-error.error"
-export { InvalidOrganizationLifecycleStateError } from "@/contexts/company/domain/errors/invalid-organization-lifecycle-state-error.error"
-export { InvalidOrganizationPeriodProjectionError } from "@/contexts/company/domain/errors/invalid-organization-period-projection-error.error"
-export { InvalidOrganizationResponsibilityTypeError } from "@/contexts/company/domain/errors/invalid-organization-responsibility-type-error.error"
-export { InvalidOrganizationUnitProjectionError } from "@/contexts/company/domain/errors/invalid-organization-unit-projection-error.error"
-export { InvalidWorkforceIdError } from "@/contexts/company/domain/errors/invalid-workforce-id-error.error"
-export { InvalidWorkforceStateError } from "@/contexts/company/domain/errors/invalid-workforce-state-error.error"
-export { OrganizationalAuthorityError } from "@/contexts/company/domain/errors/organizational-authority-error.error"
-export { OrganizationChangeValidationError } from "@/contexts/company/domain/errors/organization-change-validation-error.error"
-export { UnresolvableWorkflowStepError } from "@/contexts/company/domain/errors/unresolvable-workflow-step-error.error"
-export { WorkforceSnapshotChangedError } from "@/contexts/company/domain/errors/workforce-snapshot-changed-error.error"
-export { WorkforceStateResolutionError } from "@/contexts/company/domain/errors/workforce-state-resolution-error.error"
+import { type WorkforceIdKind } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { DomainError } from "@/contexts/system/domain/errors"
+
+export type CompanyResourceValidationCode =
+  | "invalid_identifier"
+  | "invalid_revision"
+  | "invalid_period"
+  | "invalid_attributes"
+  | "invalid_resource"
+  | "invalid_organization"
+  | "invalid_change"
+  | "invalid_query"
+
+export type OrganizationalAuthorityErrorCode =
+  | "organizational_authority_snapshot_invalid"
+  | "organizational_authority_employee_duplicate"
+  | "organizational_authority_state_as_of_mismatch"
+  | "organizational_authority_state_invalid"
+  | "organizational_authority_period_invalid"
+  | "organizational_authority_period_duplicate"
+  | "organizational_authority_employee_reference_missing"
+  | "organizational_authority_subject_missing"
+  | "organizational_authority_account_employee_duplicate"
+  | "organizational_authority_account_duplicate"
+  | "organizational_authority_account_employee_missing"
+  | "organizational_authority_manager_cycle"
+
+export type WorkforceStateResolutionCode =
+  | "employment_state_ambiguous"
+  | "status_state_missing"
+  | "status_state_ambiguous"
+  | "primary_assignment_state_ambiguous"
+
+export type OrganizationChangeValidationCode =
+  | "empty_change"
+  | "invalid_revision"
+  | "invalid_operation"
+  | "invalid_audit"
+  | "invalid_identity"
+  | "unknown_employee"
+  | "invalid_organization"
+  | "invalid_workforce"
+
+export type AccountEmployeeLinkResolutionCode =
+  | "account_link_ambiguous"
+  | "account_link_account_mismatch"
+  | "account_link_employee_mismatch"
+
+export class AccountEmployeeLinkResolutionError extends DomainError {
+  constructor(readonly code: AccountEmployeeLinkResolutionCode) {
+    super(code)
+    this.name = "AccountEmployeeLinkResolutionError"
+  }
+}
+
+export class CompanyOperationError extends DomainError {
+  constructor(
+    message: string,
+    readonly code: string,
+    options?: ErrorOptions,
+  ) {
+    super(message, options)
+    this.name = new.target.name
+  }
+}
+
+export class CompanyConflictError extends CompanyOperationError {
+  constructor(message: string, code: string, options?: ErrorOptions) {
+    super(message, code, options)
+  }
+}
+
+export class CompanyForbiddenError extends CompanyOperationError {
+  constructor(
+    message = "この操作を行う権限がありません。",
+    code = "forbidden",
+    options?: ErrorOptions,
+  ) {
+    super(message, code, options)
+  }
+}
+
+export class CompanyNotFoundError extends CompanyOperationError {
+  constructor(message: string, code: string, options?: ErrorOptions) {
+    super(message, code, options)
+  }
+}
+
+export class CompanyResourceValidationError extends DomainError {
+  constructor(readonly code: CompanyResourceValidationCode) {
+    super(code)
+    this.name = "CompanyResourceValidationError"
+  }
+}
+
+export class CompanyTimeZoneError extends DomainError {
+  constructor(options?: ErrorOptions) {
+    super("company time zone is unavailable", options)
+    this.name = "CompanyTimeZoneError"
+  }
+}
+
+export class CompanyUnavailableError extends CompanyOperationError {
+  constructor(message: string, code: string, options?: ErrorOptions) {
+    super(message, code, options)
+  }
+}
+
+export class CompanyUnexpectedError extends CompanyOperationError {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, "unexpected", options)
+  }
+}
+
+export class CompanyUniqueConstraintError extends DomainError {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options)
+    this.name = "CompanyUniqueConstraintError"
+  }
+}
+
+export class CompanyValidationError extends CompanyOperationError {
+  constructor(message: string, code: string, options?: ErrorOptions) {
+    super(message, code, options)
+  }
+}
+
+export class InvalidBusinessDateError extends DomainError {
+  constructor(options?: ErrorOptions) {
+    super("business date is invalid", options)
+    this.name = "InvalidBusinessDateError"
+  }
+}
+
+export class InvalidCalendarDateError extends DomainError {
+  readonly code = "invalid_calendar_date"
+
+  constructor() {
+    super("invalid calendar date")
+    this.name = "InvalidCalendarDateError"
+  }
+}
+
+export class InvalidCompanyActorError extends DomainError {
+  readonly code = "invalid_company_actor"
+
+  constructor() {
+    super("company actor is not canonical")
+    this.name = "InvalidCompanyActorError"
+  }
+}
+
+export class InvalidEmployeeError extends DomainError {
+  readonly code = "invalid_employee"
+
+  constructor() {
+    super("employee profile is not canonical")
+    this.name = "InvalidEmployeeError"
+  }
+}
+
+export class InvalidOrganizationLifecycleStateError extends DomainError {
+  readonly code = "invalid_organization_lifecycle_state"
+
+  constructor() {
+    super("organization lifecycle state is missing or invalid")
+    this.name = "InvalidOrganizationLifecycleStateError"
+  }
+}
+
+export class InvalidOrganizationPeriodProjectionError extends DomainError {
+  readonly code = "invalid_organization_period_projection"
+
+  constructor() {
+    super("organization period rows cannot be projected to the canonical workforce model")
+    this.name = "InvalidOrganizationPeriodProjectionError"
+  }
+}
+
+export class InvalidOrganizationResponsibilityTypeError extends DomainError {
+  readonly code = "invalid_organization_responsibility_type"
+
+  constructor() {
+    super("organization responsibility type is not canonical")
+    this.name = "InvalidOrganizationResponsibilityTypeError"
+  }
+}
+
+export class InvalidOrganizationUnitProjectionError extends DomainError {
+  readonly code = "invalid_organization_unit_projection"
+
+  constructor() {
+    super("organization unit rows cannot be projected to the canonical model")
+    this.name = "InvalidOrganizationUnitProjectionError"
+  }
+}
+
+export class InvalidWorkforceIdError extends DomainError {
+  readonly code = "invalid_workforce_id"
+
+  constructor(readonly kind: WorkforceIdKind) {
+    super(`invalid ${kind} id`)
+    this.name = "InvalidWorkforceIdError"
+  }
+}
+
+export class InvalidWorkforceStateError extends DomainError {
+  readonly code = "invalid_workforce_state"
+
+  constructor() {
+    super("workforce state is not canonical")
+    this.name = "InvalidWorkforceStateError"
+  }
+}
+
+export class OrganizationChangeValidationError extends DomainError {
+  constructor(readonly code: OrganizationChangeValidationCode) {
+    super(code)
+    this.name = "OrganizationChangeValidationError"
+  }
+}
+
+export class OrganizationalAuthorityError extends DomainError {
+  constructor(readonly code: OrganizationalAuthorityErrorCode) {
+    super(code)
+    this.name = "OrganizationalAuthorityError"
+  }
+}
+
+export class UnresolvableWorkflowStepError extends DomainError {
+  constructor(readonly stepKey: string) {
+    super(`workflow step has insufficient active approvers: ${stepKey}`)
+    this.name = "UnresolvableWorkflowStepError"
+    Object.freeze(this)
+  }
+}
+
+export class WorkforceSnapshotChangedError extends DomainError {
+  readonly code = "workforce_snapshot_changed"
+
+  constructor() {
+    super("company organization changed while workforce state was read")
+    this.name = "WorkforceSnapshotChangedError"
+  }
+}
+
+export class WorkforceStateResolutionError extends DomainError {
+  constructor(readonly code: WorkforceStateResolutionCode) {
+    super(code)
+    this.name = "WorkforceStateResolutionError"
+  }
+}

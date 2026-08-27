@@ -1,5 +1,5 @@
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
-import type { IssueSystemSession } from "@system/application/auth/issue-system-session"
+import type { SystemSessionIssuer } from "@system/domain/definitions/auth/system-session-issuance.definition"
 import type { SystemIdentityLoginAuditAdapter } from "@system/infrastructure/adapters/audit/system-identity-login-audit.adapter"
 import type { RecordSystemIdentityLoginTokenAdapter } from "@system/infrastructure/adapters/auth/record-system-identity-login-token.adapter"
 import type { SystemIdentityLoginAdapter } from "@system/infrastructure/adapters/auth/system-identity-login.adapter"
@@ -16,7 +16,7 @@ type Props = Readonly<{
     "recordSystemIdentityLoginToken"
   >
   identityLoginRepository: Pick<SystemIdentityLoginAdapter, "find">
-  sessionIssuer: Pick<IssueSystemSession, "execute">
+  sessionIssuer: SystemSessionIssuer
   loginAuditRepository: Pick<SystemIdentityLoginAuditAdapter, "recordDenied">
 }>
 
@@ -42,7 +42,7 @@ export type SystemIdentitySessionIssuance =
 type IssueSystemIdentitySessionContext = Props
 type Context = IssueSystemIdentitySessionContext
 
-/** 検証済み外部IdentityからCompanyを介さずSystem Sessionを発行する。 */
+/** 外部IDでシステムセッションを発行する。 */
 export class IssueSystemIdentitySession {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -86,7 +86,7 @@ export class IssueSystemIdentitySession {
       transport: "system.identity-sessions",
     })
     if (metadataJson instanceof Error) return { kind: "unavailable" }
-    const issuance = await this.c.sessionIssuer.execute({
+    const issuance = await this.c.sessionIssuer.issue({
       accountId: login.account.id,
       tokenVersion: login.account.tokenVersion,
       now,

@@ -1,5 +1,7 @@
 /** /company/definitions */
-import { WriteCompanyResources } from "@/contexts/company/application/core/write-company-resources"
+import { CreateCompanyDefinitions } from "@/contexts/company/application/definitions/create-company-definitions"
+import { DeleteCompanyDefinitions } from "@/contexts/company/application/definitions/delete-company-definitions"
+import { UpdateCompanyDefinitions } from "@/contexts/company/application/definitions/update-company-definitions"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
@@ -255,11 +257,32 @@ export const POST = factory.createHandlers(
         attributes: resource.attributes as CompanyJsonObject,
       })),
     }
-    const writeCompanyResources = new WriteCompanyResources({
+    const applicationContext = {
       actor,
       repository: new D1CompanyResourceRepository(database),
-    })
-    const result = await writeCompanyResources.execute(change)
+    }
+    let operation:
+      | CreateCompanyDefinitions
+      | UpdateCompanyDefinitions
+      | DeleteCompanyDefinitions
+      | null = null
+    if (
+      body.resources.every((resource) => resource.revision === 1 && resource.state === "active")
+    ) {
+      operation = new CreateCompanyDefinitions(applicationContext)
+    } else if (
+      body.resources.every((resource) => resource.revision > 1 && resource.state === "active")
+    ) {
+      operation = new UpdateCompanyDefinitions(applicationContext)
+    } else if (
+      body.resources.every((resource) => resource.revision > 1 && resource.state === "void")
+    ) {
+      operation = new DeleteCompanyDefinitions(applicationContext)
+    } else {
+      throw new CompanyInvariantValidationError("invalid_change")
+    }
+
+    const result = await operation.execute(change)
 
     if (result.kind === "forbidden") {
       throw new CompanyAccessDeniedError()

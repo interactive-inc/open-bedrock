@@ -1,5 +1,5 @@
 /** /company/organization-changes */
-import { WriteOrganizationChange } from "@/contexts/company/application/organization/write-organization-change"
+import { ApplyOrganizationChange } from "@/contexts/company/application/organization/apply-organization-change"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
@@ -160,11 +160,11 @@ export const POST = factory.createHandlers(
         attributes: resource.attributes as CompanyJsonObject,
       })),
     }
-    const writeOrganizationChange = new WriteOrganizationChange({
+    const applyOrganizationChange = new ApplyOrganizationChange({
       actor,
       repository: new D1CompanyResourceRepository(database),
     })
-    const result = await writeOrganizationChange.execute(change)
+    const result = await applyOrganizationChange.execute(change)
 
     if (result.kind === "forbidden") {
       throw new CompanyAccessDeniedError()

@@ -1,4 +1,5 @@
-import { CreateOidcAuthorization } from "@/contexts/system/application/auth/create-oidc-authorization"
+import { ApproveOidcAuthorization } from "@system/application/auth/approve-oidc-authorization"
+import { DenyOidcAuthorization } from "@system/application/auth/deny-oidc-authorization"
 import {
   OidcInvalidRequestApplicationError,
   OidcInvalidScopeApplicationError,
@@ -54,13 +55,17 @@ export const POST = systemFactory.createHandlers(
       throw new OIDCInvalidRequestError(issuer)
     }
 
-    const service = new CreateOidcAuthorization(c)
-
-    const result = await service.execute({
+    const input = {
       issuer,
       ...body,
       clientRegistry: c.var.oidcClientRegistry,
-    })
+    }
+    let result
+    if (body.decision === "allow") {
+      result = await new ApproveOidcAuthorization(c).execute(input)
+    } else {
+      result = await new DenyOidcAuthorization(c).execute(input)
+    }
 
     if (result instanceof OidcInvalidRequestApplicationError) {
       throw new OIDCInvalidRequestError(result)

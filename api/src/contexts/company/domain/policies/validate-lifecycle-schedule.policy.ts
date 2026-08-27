@@ -1,8 +1,6 @@
 import type { LifecycleSchedule } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
-import {
-  toWorkforceLifecycleSchedules,
-  toWorkforceOrganizationUnitId,
-} from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
+import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
+import { toWorkforceLifecycleSchedules } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
 import type {
   WorkforceInvariantCode,
   WorkforceInvariantViolation,

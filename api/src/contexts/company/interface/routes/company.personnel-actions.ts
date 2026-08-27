@@ -1,5 +1,7 @@
 /** /company/personnel-actions */
-import { WriteCompanyResources } from "@/contexts/company/application/core/write-company-resources"
+import { CreatePersonnelActions } from "@/contexts/company/application/personnel-actions/create-personnel-actions"
+import { DeletePersonnelActions } from "@/contexts/company/application/personnel-actions/delete-personnel-actions"
+import { UpdatePersonnelActions } from "@/contexts/company/application/personnel-actions/update-personnel-actions"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
@@ -208,11 +210,29 @@ export const POST = factory.createHandlers(
         attributes: resource.attributes as CompanyJsonObject,
       })),
     }
-    const writeCompanyResources = new WriteCompanyResources({
+    const applicationContext = {
       actor,
       repository: new D1CompanyResourceRepository(database),
-    })
-    const result = await writeCompanyResources.execute(change)
+    }
+    let operation: CreatePersonnelActions | UpdatePersonnelActions | DeletePersonnelActions | null =
+      null
+    if (
+      body.resources.every((resource) => resource.revision === 1 && resource.state === "active")
+    ) {
+      operation = new CreatePersonnelActions(applicationContext)
+    } else if (
+      body.resources.every((resource) => resource.revision > 1 && resource.state === "active")
+    ) {
+      operation = new UpdatePersonnelActions(applicationContext)
+    } else if (
+      body.resources.every((resource) => resource.revision > 1 && resource.state === "void")
+    ) {
+      operation = new DeletePersonnelActions(applicationContext)
+    } else {
+      throw new CompanyInvariantValidationError("invalid_change")
+    }
+
+    const result = await operation.execute(change)
 
     if (result.kind === "forbidden") {
       throw new CompanyAccessDeniedError()

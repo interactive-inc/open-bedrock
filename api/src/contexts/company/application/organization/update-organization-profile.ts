@@ -9,7 +9,7 @@ type Context = Readonly<{
   repository: OrganizationProfileRepository
 }>
 
-/** Domain entityを生成できる組織プロフィールだけを永続化する。 */
+/** 組織プロフィールを更新する。 */
 export class UpdateOrganizationProfile {
   constructor(private readonly c: Context) {
     Object.freeze(this)

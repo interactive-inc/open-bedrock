@@ -1,7 +1,21 @@
-import * as systemSchema from "@system/infrastructure/schema/system"
 import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
+import * as systemAttachmentSchema from "@system/infrastructure/schema/system-attachment"
+import * as systemCoreSchema from "@system/infrastructure/schema/system-core"
+import * as systemProcedureSchema from "@system/infrastructure/schema/system-procedure"
+import * as systemProcedureDelegationSchema from "@system/infrastructure/schema/system-procedure-delegation"
+import * as systemRelationsSchema from "@system/infrastructure/schema/system-relations"
+import * as systemWorkflowSchema from "@system/infrastructure/schema/system-workflow"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
+
+const systemSchema = {
+  ...systemAttachmentSchema,
+  ...systemCoreSchema,
+  ...systemProcedureSchema,
+  ...systemProcedureDelegationSchema,
+  ...systemRelationsSchema,
+  ...systemWorkflowSchema,
+}
 
 type SystemDrizzleDatabase = DrizzleD1Database<typeof systemSchema>
 

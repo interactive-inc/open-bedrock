@@ -1,8 +1,8 @@
-import type {
-  OrganizationRevisionReadResult,
-  OrganizationUnitReadPort,
-  OrganizationUnitSnapshotReadResult,
-} from "@/contexts/company/lib/workforce/read-organization-state"
+import {
+  type OrganizationRevisionReadResult,
+  type OrganizationUnitReadPort,
+  type OrganizationUnitSnapshotReadResult,
+} from "@/contexts/company/domain/definitions/organization-change.definition"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import {
   InvalidOrganizationLifecycleStateError,

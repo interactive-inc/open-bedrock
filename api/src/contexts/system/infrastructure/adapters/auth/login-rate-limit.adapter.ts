@@ -4,6 +4,7 @@ import type {
   SystemDatabaseContext,
 } from "@system/configuration/system-context"
 import { systemAuthenticationAttempts } from "@system/infrastructure/schema/system-core"
+import { LoginRateLimitKeyValue } from "@system/domain/values/auth/login-rate-limit-key.value"
 import { and, count, eq, gt, lte } from "drizzle-orm"
 
 /**
@@ -15,8 +16,8 @@ import { and, count, eq, gt, lte } from "drizzle-orm"
  *
  * このファイルは 2 系統の API を持つ。
  *
- * 1. 単一キーの素朴な API (isLoginRateLimited / recordLoginAttempt / resetLoginAttempts /
- *    loginRateLimitKey / internalVerifyRateLimitKey)。forgot-password (パスワードリセット要求) と
+ * 1. 単一キーの素朴な API (isLoginRateLimited / recordLoginAttempt / resetLoginAttempts)。
+ *    keyはLoginRateLimitKeyValueが生成し、forgot-password (パスワードリセット要求) と
  *    internal-verify (ココロツイット委譲検証 #1718) が使う。呼び出し側が「認証前に上限判定 →
  *    失敗した試行だけ記録 → 成功したらリセット」の順で呼ぶ、check-then-act の構成。
  *
@@ -49,11 +50,11 @@ export class LoginRateLimitAdapter {
   constructor(private readonly c: Context) {}
 
   static loginKey(ip: string | null, identifier: string): string {
-    return loginRateLimitKey(ip, identifier)
+    return LoginRateLimitKeyValue.login(ip, identifier).toString()
   }
 
   static internalVerifyKey(ip: string | null, userId: string): string {
-    return internalVerifyRateLimitKey(ip, userId)
+    return LoginRateLimitKeyValue.internalVerify(ip, userId).toString()
   }
 
   isLimited(props: Readonly<{ key: string; now?: number }>): Promise<boolean> {
@@ -177,21 +178,8 @@ async function resetLoginAttempts(db: Db, key: string): Promise<void> {
  * 正規化は呼び出し側の責務 (#1980)。メールは normalizeEmail (trim + 小文字化)、社員番号は trim のみ
  * (英字入り社員番号の大文字を保つ) 済みの識別子を渡す。ここで一律に小文字化すると社員番号の
  * 大小を潰し Emp-A01 と emp-a01 が同一バケットに落ちるため、builder では小文字化しない
- * (internalVerifyRateLimitKey と同じく正規化済み前提)。
+ * (internal verify key と同じく正規化済み前提)。
  */
-function loginRateLimitKey(ip: string | null, identifier: string): string {
-  return `${toIpPart(ip)}|${identifier}`
-}
-
-/**
- * ココロツイット連携のサービス間検証 API (#1718) 用キー。IP + userId を結合する。
- * ログイン (email ベース) とは名前空間を分け、同一ユーザーでも別バケットで集計する
- * (通常ログインの試行回数を委譲 API が食い潰さないため)。userId は email と違い正規化不要。
- */
-function internalVerifyRateLimitKey(ip: string | null, userId: string): string {
-  return `internal-verify|${toIpPart(ip)}|${userId}`
-}
-
 /**
  * ---------------------------------------------------------------------------
  * ログイン専用の原子的ゲート (#2392)

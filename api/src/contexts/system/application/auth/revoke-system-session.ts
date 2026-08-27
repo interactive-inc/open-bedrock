@@ -1,6 +1,6 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import type { SystemSessionAuditContext } from "@system/domain/definitions/audit/system-session-audit-context.definition"
-import type { SystemSessionMaterial } from "@system/application/auth/issue-system-session"
+import type { SystemSessionMaterial } from "@system/domain/definitions/auth/system-session-issuance.definition"
 import type { SystemSessionRepository } from "@system/infrastructure/repositories/auth/system-session.repository"
 
 type Props = Readonly<{
@@ -18,7 +18,7 @@ export type RevokeSystemSessionResult = Readonly<{ kind: "completed" }>
 type RevokeSystemSessionContext = Props
 type Context = RevokeSystemSessionContext
 
-/** tokenの実在を外部へ漏らさず、既知Session familyだけを監査付きで冪等失効する。 */
+/** システムセッションを失効する。 */
 export class RevokeSystemSession {
   constructor(private readonly c: Context) {
     Object.freeze(this)
