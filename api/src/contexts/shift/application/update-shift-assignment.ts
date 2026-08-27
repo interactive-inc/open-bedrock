@@ -3,8 +3,8 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import { ApplicationError } from "@/lib/errors"
 import type { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
 import type { Context } from "@/env"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
-import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
 
 export type Input = {
   session: Session
@@ -20,7 +20,9 @@ type ResolvedPattern = { patternId: number | null }
  * 権限・パターンを確認し、シフト割当のパターン・日付・備考を変更する。
  */
 export class UpdateShiftAssignment {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ShiftAssignment | ApplicationError> {
     if (input.session.hasPermission("shift:manage") === false) {

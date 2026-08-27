@@ -2,7 +2,7 @@ import { CareerSheet } from "@/contexts/career/domain/entities/career-sheet.enti
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CareerSheetRepository } from "@/contexts/career/infrastructure/career-sheet.repository"
+import { CareerSheetRepository } from "@/contexts/career/infrastructure/repositories/career-sheet.repository"
 
 export type Command = {
   employeeId: number
@@ -15,7 +15,9 @@ export type Command = {
  * 本人のキャリアシートを upsert する。
  */
 export class UpdateMyCareerSheet {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<CareerSheet | ApplicationError> {
     const repository = new CareerSheetRepository(this.c)

@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
 import type { ApplicationError } from "@/lib/errors"
-import { PositionRepository } from "@/contexts/administration/infrastructure/position/position.repository"
+import { PositionRepository } from "@/contexts/administration/infrastructure/repositories/position/position.repository"
 import { UnexpectedError, UnprocessableError } from "@/lib/errors"
 
 /**

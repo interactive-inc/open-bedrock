@@ -3,7 +3,7 @@ import { ItIncident } from "@/contexts/it-incident/domain/entities/it-incident.e
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/it-incident.repository"
+import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/repositories/it-incident.repository"
 
 export type Command = {
   session: Session
@@ -20,7 +20,9 @@ export type Command = {
  * 権限を確認し、インシデント記録を新規登録する。status は open で始まる。
  */
 export class CreateItIncident {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<ItIncident | ApplicationError> {
     if (command.session.hasPermission("it_incident:manage") === false) {

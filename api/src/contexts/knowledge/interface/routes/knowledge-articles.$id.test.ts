@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { seedKnowledgeArticles } from "@/contexts/knowledge/infrastructure/seed/seed-knowledge-articles.repository"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedKnowledgeArticles } from "@/contexts/knowledge/test/seed/seed-knowledge-articles.test-support"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { loadSchema } from "@/api/test/support/load-schema"

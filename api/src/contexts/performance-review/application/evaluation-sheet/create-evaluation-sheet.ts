@@ -1,25 +1,24 @@
-import { eq } from "drizzle-orm"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { EvaluationSheet } from "@/contexts/performance-review/domain/entities/evaluation-sheet.entity"
 import type { Context } from "@/env"
-import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/evaluation-sheet/evaluation-sheet.repository"
+import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/repositories/evaluation-sheet/evaluation-sheet.repository"
 import type { ApplicationError } from "@/lib/errors"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
-import { resolveDirectManagerId } from "@/contexts/company/infrastructure/organization/resolve-direct-manager-id.repository"
-import { resolveDepartmentManagerId } from "@/contexts/company/infrastructure/organization/resolve-department-manager-id.repository"
-import { validateEmployeeActive } from "@/contexts/company/infrastructure/organization/validate-employee-active.repository"
+import { ResolveDirectManagerIdAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-direct-manager-id.adapter"
+import { ResolveDepartmentManagerIdAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-department-manager-id.adapter"
+import { ValidateEmployeeActiveAdapter } from "@/contexts/company/infrastructure/adapters/organization/validate-employee-active.adapter"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { evaluationTemplates } from "@/contexts/performance-review/infrastructure/schema/performance-review"
+import { EvaluationParticipantAdapter } from "@/contexts/performance-review/infrastructure/adapters/evaluation-sheet/evaluation-participant.adapter"
 
 export type Command = {
-  employeeId: number
+  employeeId: EmployeeId
   templateId: number | null
   period: string
   /** HR/admin が明示指定する場合のみ。省略時は directManager を自動解決する。 */
-  primaryEvaluatorId?: number
-  secondaryEvaluatorId?: number | null
+  primaryEvaluatorId?: EmployeeId
+  secondaryEvaluatorId?: EmployeeId | null
   /** 管理者（createdBy）の employeeId。directManager 自動解決用。 */
-  creatorEmployeeId: number
+  creatorEmployeeId: EmployeeId
   now: string
 }
 
@@ -31,7 +30,9 @@ export type Command = {
  * app-opt-in tier: MBO 機能は会社単位のオプション。
  */
 export class CreateEvaluationSheet {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<EvaluationSheet | ApplicationError> {
     const repository = new EvaluationSheetRepository(this.c)
@@ -49,13 +50,13 @@ export class CreateEvaluationSheet {
     }
 
     // 対象社員の存在確認
-    const employeeRows = await this.c.var.database
-      .select({ id: employees.id })
-      .from(employees)
-      .where(eq(employees.id, command.employeeId))
-      .limit(1)
-
-    if (employeeRows.at(0) === undefined) {
+    const employeeIds = await new EvaluationParticipantAdapter(this.c).existingEmployeeIds([
+      command.employeeId,
+    ])
+    if (employeeIds instanceof Error) {
+      return new UnexpectedError("failed to load employee", { cause: employeeIds })
+    }
+    if (!employeeIds.has(command.employeeId)) {
       return new ValidationError("employee not found", "employee_not_found")
     }
 
@@ -118,13 +119,15 @@ export class CreateEvaluationSheet {
 
     // テンプレートの存在確認（指定時のみ）
     if (command.templateId !== null) {
-      const templateRows = await this.c.var.database
-        .select({ id: evaluationTemplates.id })
-        .from(evaluationTemplates)
-        .where(eq(evaluationTemplates.id, command.templateId))
-        .limit(1)
-
-      if (templateRows.at(0) === undefined) {
+      const templateExists = await new EvaluationParticipantAdapter(
+        this.c,
+      ).evaluationTemplateExists(command.templateId)
+      if (templateExists instanceof Error) {
+        return new UnexpectedError("failed to load evaluation template", {
+          cause: templateExists,
+        })
+      }
+      if (!templateExists) {
         return new ValidationError("evaluation template not found", "template_not_found")
       }
     }
@@ -165,11 +168,14 @@ export class CreateEvaluationSheet {
    * resolve-workflow-approver-matches.ts と同じ判定基準を共有する。
    */
   private async validateEvaluatorActive(
-    evaluatorId: number,
+    evaluatorId: EmployeeId,
     role: "primary" | "secondary",
     businessDate: string,
   ): Promise<ApplicationError | null> {
-    const result = await validateEmployeeActive(this.c, evaluatorId, businessDate)
+    const result = await new ValidateEmployeeActiveAdapter(this.c).validateEmployeeActive(
+      evaluatorId,
+      businessDate,
+    )
 
     if (result instanceof Error) {
       return new UnexpectedError(`failed to validate ${role} evaluator active status`, {
@@ -199,18 +205,18 @@ export class CreateEvaluationSheet {
   private async resolvePrimaryEvaluator(
     command: Command,
     businessDate: string,
-  ): Promise<number | ApplicationError> {
+  ): Promise<EmployeeId | ApplicationError> {
     const explicitId = command.primaryEvaluatorId ?? null
 
     if (explicitId !== null) {
       // 明示指定: 存在確認
-      const evaluatorRows = await this.c.var.database
-        .select({ id: employees.id })
-        .from(employees)
-        .where(eq(employees.id, explicitId))
-        .limit(1)
-
-      if (evaluatorRows.at(0) === undefined) {
+      const evaluatorIds = await new EvaluationParticipantAdapter(this.c).existingEmployeeIds([
+        explicitId,
+      ])
+      if (evaluatorIds instanceof Error) {
+        return new UnexpectedError("failed to load primary evaluator", { cause: evaluatorIds })
+      }
+      if (!evaluatorIds.has(explicitId)) {
         return new ValidationError("primary evaluator not found", "primary_evaluator_not_found")
       }
 
@@ -226,7 +232,10 @@ export class CreateEvaluationSheet {
     }
 
     // 未指定 → 直属上長を自動解決（基準日 = 会社営業日）
-    const managerId = await resolveDirectManagerId(this.c, command.employeeId, businessDate)
+    const managerId = await new ResolveDirectManagerIdAdapter(this.c).resolveDirectManagerId(
+      command.employeeId,
+      businessDate,
+    )
 
     if (managerId instanceof Error) {
       return new UnexpectedError("failed to resolve direct manager", {
@@ -259,20 +268,20 @@ export class CreateEvaluationSheet {
    */
   private async resolveSecondaryEvaluator(
     command: Command,
-    primaryEvaluatorId: number,
+    primaryEvaluatorId: EmployeeId,
     businessDate: string,
-  ): Promise<number | null | ApplicationError> {
+  ): Promise<EmployeeId | null | ApplicationError> {
     const explicitId = command.secondaryEvaluatorId ?? null
 
     if (explicitId !== null) {
       // 明示指定: 存在確認
-      const secondaryRows = await this.c.var.database
-        .select({ id: employees.id })
-        .from(employees)
-        .where(eq(employees.id, explicitId))
-        .limit(1)
-
-      if (secondaryRows.at(0) === undefined) {
+      const evaluatorIds = await new EvaluationParticipantAdapter(this.c).existingEmployeeIds([
+        explicitId,
+      ])
+      if (evaluatorIds instanceof Error) {
+        return new UnexpectedError("failed to load secondary evaluator", { cause: evaluatorIds })
+      }
+      if (!evaluatorIds.has(explicitId)) {
         return new ValidationError("secondary evaluator not found", "secondary_evaluator_not_found")
       }
 
@@ -296,7 +305,9 @@ export class CreateEvaluationSheet {
     }
 
     // 未指定 → 部門長を自動解決（ベストエフォート、失敗時は null）
-    const deptManagerId = await resolveDepartmentManagerId(this.c, command.employeeId, businessDate)
+    const deptManagerId = await new ResolveDepartmentManagerIdAdapter(
+      this.c,
+    ).resolveDepartmentManagerId(command.employeeId, businessDate)
 
     if (deptManagerId instanceof Error) {
       return new UnexpectedError("failed to resolve department manager", {

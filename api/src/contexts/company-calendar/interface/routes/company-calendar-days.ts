@@ -1,5 +1,5 @@
 import { CreateCompanyCalendarDay } from "@/contexts/company-calendar/application/calendar/create-company-calendar-day"
-import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/calendar/company-calendar-day.repository"
+import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/repositories/calendar/company-calendar-day.repository"
 import { BadRequestError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"

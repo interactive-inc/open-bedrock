@@ -1,5 +1,5 @@
 import { InitializeCompanyTestState } from "@/api/test/support/company/initialize-company-test-state"
-import { loadCompanyFixtureSnapshot } from "@/api/test/support/company/load-company-fixture-snapshot.repository"
+import { loadCompanyFixtureSnapshot } from "@/api/test/support/company/load-company-fixture-snapshot.test-support"
 import { VerifyCompanyTestState } from "@/api/test/support/company/verify-company-test-state"
 import { initializeCanonicalCompanyOrganization } from "@/api/test/support/company/initialize-canonical-company-organization"
 import type { Context } from "@/env"

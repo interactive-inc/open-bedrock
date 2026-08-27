@@ -5,8 +5,8 @@ import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignme
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
-import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
 
 export type Input = {
   session: Session
@@ -20,7 +20,9 @@ export type Input = {
  * 権限・社員・パターンを確認して下書きのシフト割当を作る。
  */
 export class CreateShiftAssignment {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ShiftAssignment | ApplicationError> {
     if (input.session.hasPermission("shift:manage") === false) {

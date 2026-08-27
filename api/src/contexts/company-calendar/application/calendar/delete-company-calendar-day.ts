@@ -2,7 +2,8 @@ import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/calendar/company-calendar-day.repository"
+import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/repositories/calendar/company-calendar-day.repository"
+import type { CompanyCalendarDay } from "@/contexts/company-calendar/domain/entities/company-calendar-day.entity"
 
 export type Command = {
   session: Session
@@ -13,7 +14,9 @@ export type Command = {
  * 権限と存在を確認し、会社カレンダーから 1 日を削除する。
  */
 export class DeleteCompanyCalendarDay {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<null | ApplicationError> {
     if (command.session.hasPermission("calendar:manage") === false) {
@@ -22,7 +25,7 @@ export class DeleteCompanyCalendarDay {
 
     const repository = new CompanyCalendarDayRepository(this.c)
 
-    const existing = await repository.findById(command.id)
+    const existing: CompanyCalendarDay | null | Error = await repository.findById(command.id)
 
     if (existing instanceof Error) {
       return new UnexpectedError("failed to find calendar day", { cause: existing })

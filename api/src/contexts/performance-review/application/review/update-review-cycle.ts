@@ -3,7 +3,7 @@ import type { ReviewCycle } from "@/contexts/performance-review/domain/entities/
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
 
 export type Input = {
   session: Session
@@ -17,7 +17,9 @@ export type Input = {
  * 管理権限のある本人が、評価サイクルの題目・期間・締切を更新する。
  */
 export class UpdateReviewCycle {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ReviewCycle | ApplicationError> {
     if (input.session.hasPermission("review:administer") === false) {

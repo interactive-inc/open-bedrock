@@ -4,7 +4,7 @@ import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { WorkStyle } from "@/lib/schemas"
 import type { Context } from "@/env"
-import { EmployeeWorkStyleRepository } from "@/contexts/work-style/infrastructure/employee-work-style.repository"
+import { EmployeeWorkStyleRepository } from "@/contexts/work-style/infrastructure/repositories/employee-work-style.repository"
 
 export type Command = {
   session: Session
@@ -20,7 +20,9 @@ export type Command = {
  * 権限を確認し、従業員の勤務形態を 1 件記録する。
  */
 export class CreateEmployeeWorkStyle {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<EmployeeWorkStyle | ApplicationError> {
     if (command.session.hasPermission("work_style:manage") === false) {

@@ -1,56 +1,53 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { SendThanks } from "@/contexts/thanks/application/send-thanks"
 import { Thanks } from "@/contexts/thanks/domain/entities/thanks.entity"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { employments } from "@/contexts/company/infrastructure/schema/employment"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { NotFoundError, ValidationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
 async function seedEmployee(
-  context: Parameters<typeof EmployeeRepository.prototype.create>[0] extends never
-    ? never
-    : ReturnType<typeof createTestContext>["context"],
+  context: Awaited<ReturnType<typeof createTestContext>>["context"],
   code: string,
   name: string,
-): Promise<number> {
-  const repository = new EmployeeRepository(context)
+): Promise<EmployeeId> {
+  const employeeId = toWorkforceEmployeeId(`employee:${code}`)
 
-  const created = await repository.create({
-    code,
-    name,
-    deptId: 3,
-    deptName: "Engineering",
-    position: "Engineer",
-    status: "active",
+  await context.var.database.insert(employees).values({
+    id: employeeId,
+    officialName: name,
+    employeeCode: code,
+    email: null,
+    phone: null,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+  })
+  await context.var.database.insert(employments).values({
+    id: `employment:${code}`,
+    employeeId,
+    contractName: name,
+    employmentType: "FULL_TIME",
+    hireDate: "1970-01-01",
+    status: "ACTIVE",
+    terminationDate: null,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
   })
 
-  if (created instanceof Error) {
-    throw new Error("seed failed")
-  }
-
-  await context.env.DB.prepare(
-    `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-     VALUES (?1, 'active', 0, 0, 0)`,
-  )
-    .bind(created.id)
-    .run()
-  await context.env.DB.prepare(
-    "INSERT INTO account_employee_links (account_id, employee_id) VALUES (?1, ?1)",
-  )
-    .bind(created.id)
-    .run()
-
-  return created.id
+  return employeeId
 }
 
 describe("SendThanks", () => {
   test("rejects self-thanks with reason self_thanks", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const senderId = await seedEmployee(context, "E100", "Alice")
     await seedEmployee(context, "E101", "Bob")
 
-    const result = await new SendThanks(context).run({
+    const result = await new SendThanks({ context }).run({
       senderEmployeeId: senderId,
       recipientEmployeeCode: "E100",
       message: "ありがとう",
@@ -62,12 +59,12 @@ describe("SendThanks", () => {
   })
 
   test("sends thanks to another employee successfully", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const senderId = await seedEmployee(context, "E200", "Alice")
     await seedEmployee(context, "E201", "Bob")
 
-    const result = await new SendThanks(context).run({
+    const result = await new SendThanks({ context }).run({
       senderEmployeeId: senderId,
       recipientEmployeeCode: "E201",
       message: "助けてくれてありがとう",
@@ -79,11 +76,11 @@ describe("SendThanks", () => {
   })
 
   test("returns recipient_not_found for unknown recipient", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const senderId = await seedEmployee(context, "E300", "Alice")
 
-    const result = await new SendThanks(context).run({
+    const result = await new SendThanks({ context }).run({
       senderEmployeeId: senderId,
       recipientEmployeeCode: "E999",
       message: "ありがとう",

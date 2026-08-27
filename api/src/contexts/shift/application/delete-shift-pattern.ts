@@ -2,7 +2,8 @@ import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
+import type { ShiftPattern } from "@/contexts/shift/domain/entities/shift-pattern.entity"
 
 export type Input = {
   session: Session
@@ -16,7 +17,9 @@ export type Deleted = { reason: "deleted" }
  * チェックと削除はリポジトリ層で atomic に行われるため、競合状態でも安全。
  */
 export class DeleteShiftPattern {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<Deleted | ApplicationError> {
     if (input.session.hasPermission("shift:manage") === false) {
@@ -25,7 +28,7 @@ export class DeleteShiftPattern {
 
     const patternRepository = new ShiftPatternRepository(this.c)
 
-    const current = await patternRepository.findById(input.patternId)
+    const current: ShiftPattern | null | Error = await patternRepository.findById(input.patternId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find shift pattern", { cause: current })
@@ -35,7 +38,7 @@ export class DeleteShiftPattern {
       return new NotFoundError("shift pattern not found", "pattern_not_found")
     }
 
-    const deleted = await patternRepository.delete(input.patternId)
+    const deleted = await patternRepository.delete(current)
 
     if (deleted instanceof Error) {
       return new UnexpectedError("failed to delete shift pattern", { cause: deleted })

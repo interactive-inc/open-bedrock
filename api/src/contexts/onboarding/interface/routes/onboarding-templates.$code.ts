@@ -1,5 +1,5 @@
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 import { DeleteOnboardingTemplate } from "@/contexts/onboarding/application/delete-onboarding-template"
 import { UpdateOnboardingTemplate } from "@/contexts/onboarding/application/update-onboarding-template"
 import type { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"

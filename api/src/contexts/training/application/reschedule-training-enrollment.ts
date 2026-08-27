@@ -4,7 +4,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import type { Context } from "@/env"
-import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/training-enrollment.repository"
+import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
 
 export type Command = {
   enrollmentId: number
@@ -17,7 +17,9 @@ export type Command = {
  * 受講期限を変更する。本人または管理権限が必要。完了済みの受講は変更できない。
  */
 export class RescheduleTrainingEnrollment {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<TrainingEnrollment | ApplicationError> {
     const enrollmentRepository = new TrainingEnrollmentRepository(this.c)

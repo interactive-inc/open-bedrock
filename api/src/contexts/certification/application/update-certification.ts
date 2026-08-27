@@ -1,4 +1,4 @@
-import { CertificationRepository } from "@/contexts/certification/infrastructure/certification.repository"
+import { CertificationRepository } from "@/contexts/certification/infrastructure/repositories/certification.repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Certification } from "@/contexts/certification/domain/entities/certification.entity"
@@ -8,7 +8,9 @@ import type { Context } from "@/env"
  * 資格マスタの名称・発行元・説明を更新する。対象が無ければ not found を返す。
  */
 export class UpdateCertification {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(props: {
     id: number

@@ -4,7 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { ShiftPattern } from "@/contexts/shift/domain/entities/shift-pattern.entity"
 import type { Context } from "@/env"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
-import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
 
 export type Input = {
   session: Session
@@ -21,7 +21,9 @@ export type Input = {
  * 権限を確認し、コード重複がなければシフトパターンを作る。
  */
 export class CreateShiftPattern {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ShiftPattern | ApplicationError> {
     if (input.session.hasPermission("shift:manage") === false) {

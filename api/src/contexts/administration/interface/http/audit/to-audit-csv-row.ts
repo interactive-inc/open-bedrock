@@ -1,4 +1,4 @@
-import type { AuditEventDetail } from "@/contexts/administration/application/audit/create-administration-audit-event"
+import type { AuditEventDetail } from "@/contexts/administration/domain/factories/administration-audit-event.factory"
 
 export const AUDIT_CSV_MAX_BYTES = 16 * 1024 * 1024
 

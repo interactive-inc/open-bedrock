@@ -2,7 +2,7 @@ import { RentalReservation } from "@/contexts/rental/domain/entities/rental-rese
 import { ConflictError, ValidationError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation.repository"
+import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
 
 export type Command = {
   requesterId: number
@@ -17,7 +17,9 @@ export type Command = {
  * レンタル予約を申請する。同一品名・期間の重複予約を拒否する。
  */
 export class CreateRentalReservation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<RentalReservation | ApplicationError> {
     const reservationRepository = new RentalReservationRepository(this.c)

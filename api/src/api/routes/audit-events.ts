@@ -1,4 +1,4 @@
-import { createCompanyAuditEventRepository } from "@/api/http/audit-events/create-company-audit-event-repository"
+import { createCompanyAuditEventAdapter } from "@/api/http/audit-events/create-company-audit-event-adapter"
 import { AuditTrail } from "@/api/http/utils/audit-trail"
 import { throwAuditRouteError } from "@/api/http/utils/throw-audit-route-error"
 import { toPublicAuditPage } from "@/api/http/utils/to-public-audit-page"
@@ -15,7 +15,7 @@ export const GET = factory.createHandlers(
   async (c) => {
     const query = c.req.valid("query")
     try {
-      const page = await createCompanyAuditEventRepository(c).search({
+      const page = await createCompanyAuditEventAdapter(c).search({
         limit: query.limit,
         cursor: query.cursor,
         filters: query.filters,

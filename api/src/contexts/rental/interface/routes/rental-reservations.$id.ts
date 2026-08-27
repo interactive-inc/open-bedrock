@@ -1,6 +1,6 @@
 import { ConflictError } from "@/lib/errors"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation.repository"
+import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
 import { UpdateRentalReservation } from "@/contexts/rental/application/update-rental-reservation"
 import type { RentalReservation } from "@/contexts/rental/domain/entities/rental-reservation.entity"
 import { ApplicationError } from "@/lib/errors"

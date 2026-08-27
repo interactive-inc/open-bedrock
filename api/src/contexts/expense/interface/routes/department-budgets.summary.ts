@@ -1,4 +1,4 @@
-import { BudgetRepository } from "@/contexts/expense/infrastructure/budget/budget.repository"
+import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
 import { departments } from "@/contexts/company/infrastructure/schema/organization"
 import { factory } from "@/api/http/factory"
 import { UnexpectedError } from "@/lib/errors"

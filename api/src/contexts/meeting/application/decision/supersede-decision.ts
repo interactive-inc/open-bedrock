@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Decision } from "@/contexts/meeting/domain/entities/decision.entity"
 import type { Context } from "@/env"
-import { DecisionRepository } from "@/contexts/meeting/infrastructure/decision/decision.repository"
+import { DecisionRepository } from "@/contexts/meeting/infrastructure/repositories/decision/decision.repository"
 
 export type Command = {
   session: Session
@@ -16,7 +16,9 @@ export type Command = {
  * active な決定だけを条件付き UPDATE で superseded に遷移させ、対象外なら 409。
  */
 export class SupersedeDecision {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Decision | ApplicationError> {
     const decisionRepository = new DecisionRepository(this.c)

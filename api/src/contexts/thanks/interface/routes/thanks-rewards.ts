@@ -1,5 +1,5 @@
 import { UnexpectedError } from "@/lib/errors"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward.repository"
+import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 import { CreateReward } from "@/contexts/thanks/application/thanks-points/create-reward"
 import { rewardPointCostSchema } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
 import type { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.entity"

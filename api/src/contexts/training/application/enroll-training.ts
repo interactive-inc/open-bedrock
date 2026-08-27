@@ -9,8 +9,8 @@ import {
 import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
-import { TrainingCourseRepository } from "@/contexts/training/infrastructure/training-course.repository"
-import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/training-enrollment.repository"
+import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
+import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
 
 export type Command = {
   viewerEmployeeId: number
@@ -24,7 +24,9 @@ export type Command = {
  * 自分、または管理権限を持つ者が他者を、研修コースに登録する。
  */
 export class EnrollTraining {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<TrainingEnrollment | ApplicationError> {
     const courseRepository = new TrainingCourseRepository(this.c)

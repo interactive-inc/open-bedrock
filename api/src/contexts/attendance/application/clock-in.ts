@@ -1,6 +1,6 @@
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import type { Context } from "@/env"
-import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/attendance-record.repository"
+import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -15,7 +15,9 @@ export type Command = {
  * 出勤を打刻する。既に出勤中なら判別可能な失敗を返す。
  */
 export class ClockIn {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<AttendanceRecord | ApplicationError> {
     const recordRepository = new AttendanceRecordRepository(this.c)

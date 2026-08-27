@@ -2,7 +2,7 @@ import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/fa
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/family-care-leave.repository"
+import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
 
 export type Command = {
   employeeId: number
@@ -17,7 +17,9 @@ export type Command = {
  * 休業申出を作成する。status は "requested" で登録する。
  */
 export class CreateFamilyCareLeave {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<FamilyCareLeave | ApplicationError> {
     const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)

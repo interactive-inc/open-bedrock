@@ -1,6 +1,6 @@
 import type { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
 import type { Context } from "@/env"
-import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/business-trip.repository"
+import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
 import {
   ConflictError,
   ForbiddenError,
@@ -25,7 +25,9 @@ export type Command = {
  * 変更後の期間が他の出張申請と重複する場合も拒否する。
  */
 export class UpdateBusinessTrip {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<BusinessTrip | ApplicationError> {
     const businessTripRepository = new BusinessTripRepository(this.c)

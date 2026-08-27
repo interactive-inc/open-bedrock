@@ -1,7 +1,7 @@
 import type { Session } from "@/lib/auth/session"
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import type { Context } from "@/env"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -16,7 +16,9 @@ export type Command = {
  * 管理権限を持つ者が新しいアンケートを作成する。
  */
 export class CreateSurvey {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Survey | ApplicationError> {
     if (command.session.hasPermission("survey:manage") === false) {

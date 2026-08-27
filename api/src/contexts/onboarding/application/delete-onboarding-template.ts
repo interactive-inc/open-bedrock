@@ -1,11 +1,10 @@
 import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import type { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
-import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
-import { lifecycleEffectTemplateBindings } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
-import { eq } from "drizzle-orm"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 
 export type Command = {
   session: Session
@@ -18,7 +17,9 @@ export type Deleted = { reason: "deleted" }
  * 管理権限を持つ者がオンボーディングテンプレートを削除する。紐づくタスク定義も合わせて削除する。
  */
 export class DeleteOnboardingTemplate {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const templateRepository = new OnboardingTemplateRepository(this.c)
@@ -48,21 +49,7 @@ export class DeleteOnboardingTemplate {
       return new ConflictError("template is in use", "template_in_use")
     }
 
-    try {
-      const bindings = await this.c.var.database
-        .select({ effectType: lifecycleEffectTemplateBindings.effectType })
-        .from(lifecycleEffectTemplateBindings)
-        .where(eq(lifecycleEffectTemplateBindings.templateCode, command.code))
-        .limit(1)
-
-      if (bindings.length > 0) {
-        return new ConflictError("template is in use", "template_in_use")
-      }
-    } catch (cause) {
-      return new UnexpectedError("failed to inspect lifecycle template binding", { cause })
-    }
-
-    const deleted = await templateRepository.delete(command.code)
+    const deleted = await templateRepository.delete(current satisfies OnboardingTemplate)
 
     if (deleted instanceof Error) {
       return new UnexpectedError("failed to delete template", { cause: deleted })

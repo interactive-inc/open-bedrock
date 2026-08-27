@@ -1,6 +1,6 @@
 import { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
 import type { Context } from "@/env"
-import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/antisocial-check.repository"
+import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -16,7 +16,9 @@ export type Command = {
  * 反社チェック申請を作成する。status は "requested" で登録する。
  */
 export class CreateAntisocialCheck {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<AntisocialCheck | ApplicationError> {
     const antisocialCheckRepository = new AntisocialCheckRepository(this.c)

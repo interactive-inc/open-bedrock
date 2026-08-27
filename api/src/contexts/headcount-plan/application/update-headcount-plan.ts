@@ -3,7 +3,7 @@ import { HeadcountPlan } from "@/contexts/headcount-plan/domain/entities/headcou
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/headcount-plan.repository"
+import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/repositories/headcount-plan.repository"
 
 export type Command = {
   session: Session
@@ -16,7 +16,9 @@ export type Command = {
  * 権限と存在を確認し、人員計画の計画人数・備考を差し替える。年度・部署は変えない。
  */
 export class UpdateHeadcountPlan {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<HeadcountPlan | ApplicationError> {
     if (command.session.hasPermission("headcount_plan:manage") === false) {

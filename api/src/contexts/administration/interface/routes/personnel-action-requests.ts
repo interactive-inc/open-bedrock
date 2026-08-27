@@ -1,5 +1,5 @@
 import { CreatePersonnelActionRequest } from "@/contexts/administration/application/employee-lifecycle/procedure/create-personnel-action-request"
-import { listPersonnelActionRequests } from "@/contexts/administration/infrastructure/employee-lifecycle/list-personnel-action-requests.repository"
+import { ListPersonnelActionRequestsAdapter } from "@/contexts/administration/infrastructure/adapters/employee-lifecycle/list-personnel-action-requests.adapter"
 import { resolvePersonnelActionPosition } from "@/contexts/administration/interface/utils/resolve-personnel-action-position"
 import { wirePersonnelActionInputSchema } from "@/contexts/administration/interface/utils/wire-personnel-action-input"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -33,7 +33,7 @@ export const GET = factory.createHandlers(
     const session = c.var.session
     if (session === null) throw new UnauthorizedError()
     const query = c.req.valid("query")
-    const requests = await listPersonnelActionRequests(c, session, {
+    const requests = await new ListPersonnelActionRequestsAdapter(c).list(session, {
       targetEmployeeCode: query.target_employee_code,
       status: query.status,
       limit: query.limit,

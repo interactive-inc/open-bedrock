@@ -1,5 +1,5 @@
 import { factory } from "@/api/http/factory"
-import { RegulationRepository } from "@/contexts/regulation/infrastructure/regulation.repository"
+import { RegulationRepository } from "@/contexts/regulation/infrastructure/repositories/regulation.repository"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppRegulationDetail } from "@/lib/app-schemas"

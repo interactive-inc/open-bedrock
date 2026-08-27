@@ -2,7 +2,7 @@ import { lifecycleSha256 } from "@/contexts/company/domain/definitions/lifecycle
 import {
   loadCompanyFixtureSnapshot,
   type CompanyFixtureSnapshot,
-} from "@/api/test/support/company/load-company-fixture-snapshot.repository"
+} from "@/api/test/support/company/load-company-fixture-snapshot.test-support"
 import { stableLifecycleJson } from "@/contexts/company/domain/definitions/stable-lifecycle-json.definition"
 import { validateCompanyInitializationInput } from "@/api/test/support/company/validate-company-initialization-input"
 import { personnelActionSummarySchema } from "@/contexts/company/domain/definitions/personnel-action-summary.definition"

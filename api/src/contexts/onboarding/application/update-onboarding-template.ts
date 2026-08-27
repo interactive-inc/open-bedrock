@@ -3,9 +3,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from 
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import type { Context } from "@/env"
-import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
-import { lifecycleEffectTemplateBindings } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
-import { eq } from "drizzle-orm"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 
 export type Command = {
   session: Session
@@ -19,7 +17,9 @@ export type Command = {
  * 管理権限を持つ者がオンボーディングテンプレートの名称・種別・説明を変更する。code と tasks は変更しない。
  */
 export class UpdateOnboardingTemplate {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<OnboardingTemplate | ApplicationError> {
     const templateRepository = new OnboardingTemplateRepository(this.c)
@@ -36,25 +36,6 @@ export class UpdateOnboardingTemplate {
 
     if (current === null) {
       return new NotFoundError("template not found", "template_not_found")
-    }
-
-    if (current.kind !== command.kind) {
-      try {
-        const bindings = await this.c.var.database
-          .select({ effectType: lifecycleEffectTemplateBindings.effectType })
-          .from(lifecycleEffectTemplateBindings)
-          .where(eq(lifecycleEffectTemplateBindings.templateCode, command.code))
-          .limit(1)
-
-        if (bindings.length > 0) {
-          return new ValidationError(
-            "cannot change the kind of a lifecycle-bound onboarding template",
-            "lifecycle_binding_kind_conflict",
-          )
-        }
-      } catch (cause) {
-        return new UnexpectedError("failed to inspect lifecycle template binding", { cause })
-      }
     }
 
     const updated = await templateRepository.update(

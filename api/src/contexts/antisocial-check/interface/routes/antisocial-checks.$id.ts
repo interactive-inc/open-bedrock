@@ -1,5 +1,5 @@
 import { ConflictError } from "@/lib/errors"
-import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/antisocial-check.repository"
+import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { UpdateAntisocialCheck } from "@/contexts/antisocial-check/application/update-antisocial-check"
 import type { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"

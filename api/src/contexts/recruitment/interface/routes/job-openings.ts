@@ -4,7 +4,7 @@ import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppRecruitmentPosition, zAppRecruitmentPositionList } from "@/lib/app-schemas"
-import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/recruitment.repository"
+import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/repositories/recruitment.repository"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

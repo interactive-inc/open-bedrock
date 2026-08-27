@@ -1,6 +1,6 @@
 import { periodOf } from "@/contexts/thanks/domain/definitions/thanks-period.definition"
 import { UnexpectedError } from "@/lib/errors"
-import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-budget.repository"
+import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-point-budget.repository"
 
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksBudget } from "@/lib/app-schemas"

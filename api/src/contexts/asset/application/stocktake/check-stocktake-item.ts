@@ -2,7 +2,8 @@ import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { StocktakeRepository } from "@/contexts/asset/infrastructure/stocktake/stocktake.repository"
+import { StocktakeRepository } from "@/contexts/asset/infrastructure/repositories/stocktake/stocktake.repository"
+import type { Stocktake } from "@/contexts/asset/domain/entities/stocktake.entity"
 
 export type Command = {
   session: Session
@@ -18,7 +19,9 @@ export type Command = {
  * 締め済みのセッションには記録できない。対象外の資産は 404。
  */
 export class CheckStocktakeItem {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<"checked" | ApplicationError> {
     const stocktakeRepository = new StocktakeRepository(this.c)
@@ -27,8 +30,18 @@ export class CheckStocktakeItem {
       return new ForbiddenError("cannot manage stocktakes", "forbidden")
     }
 
+    const stocktake: Stocktake | null | Error = await stocktakeRepository.findById(
+      command.stocktakeId,
+    )
+    if (stocktake instanceof Error) {
+      return new UnexpectedError("failed to find stocktake", { cause: stocktake })
+    }
+    if (stocktake === null) {
+      return new NotFoundError("stocktake item not found", "stocktake_item_not_found")
+    }
+
     const result = await stocktakeRepository.checkItem({
-      stocktakeId: command.stocktakeId,
+      stocktake,
       assetCode: command.assetCode,
       checkedAt: command.now,
       checkerEmployeeId: command.checkerEmployeeId,

@@ -9,7 +9,7 @@ import {
 import type { ApplicationError } from "@/lib/errors"
 import type { OrgDepartment } from "@/contexts/administration/domain/entities/org-department.entity"
 import type { Context } from "@/env"
-import { OrgDepartmentRepository } from "@/contexts/administration/infrastructure/organization/org-department.repository"
+import { OrgDepartmentRepository } from "@/contexts/administration/infrastructure/repositories/organization/org-department.repository"
 
 export type Command = {
   session: Session
@@ -24,7 +24,9 @@ export type Command = {
  * 自分自身を親にする直接自己参照、および間接的な循環参照を拒否する。
  */
 export class UpdateOrgDepartment {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<OrgDepartment | ApplicationError> {
     const departmentRepository = new OrgDepartmentRepository(this.c)

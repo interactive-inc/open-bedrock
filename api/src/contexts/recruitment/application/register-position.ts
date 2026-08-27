@@ -3,7 +3,7 @@ import { RecruitmentPosition } from "@/contexts/recruitment/domain/entities/recr
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/recruitment.repository"
+import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/repositories/recruitment.repository"
 
 export type Command = {
   session: Session
@@ -18,7 +18,9 @@ export type Command = {
  * 権限を確認し、募集ポジションを1件登録する。応募者は社外個人情報のため recruitment:manage に閉じる。
  */
 export class RegisterPosition {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<RecruitmentPosition | ApplicationError> {
     if (command.session.hasPermission("recruitment:manage") === false) {

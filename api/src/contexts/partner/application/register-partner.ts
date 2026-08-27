@@ -3,7 +3,7 @@ import { Partner } from "@/contexts/partner/domain/entities/partner.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { PartnerRepository } from "@/contexts/partner/infrastructure/partner.repository"
+import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -22,7 +22,9 @@ export type Command = {
  * 権限と重複コードを確認し、新しい取引先を active 状態で登録する。
  */
 export class RegisterPartner {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Partner | ApplicationError> {
     const partnerRepository = new PartnerRepository(this.c)

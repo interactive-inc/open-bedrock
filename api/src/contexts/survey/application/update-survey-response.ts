@@ -1,6 +1,6 @@
 import type { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
 import type { Context } from "@/env"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -15,7 +15,9 @@ export type Command = {
  * アンケート回答の内容を差し替える。本人以外と、公開を終えたアンケートへの変更を拒否する。
  */
 export class UpdateSurveyResponse {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<SurveyResponse | ApplicationError> {
     const surveyRepository = new SurveyRepository(this.c)

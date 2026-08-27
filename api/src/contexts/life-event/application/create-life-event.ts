@@ -2,7 +2,7 @@ import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.enti
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { LifeEventRepository } from "@/contexts/life-event/infrastructure/life-event.repository"
+import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
 import type { LifeEventType } from "@/lib/schemas"
 
 export type Command = {
@@ -17,7 +17,9 @@ export type Command = {
  * ライフイベント届出を作成する。status は "submitted" で登録する。
  */
 export class CreateLifeEvent {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<LifeEvent | ApplicationError> {
     const lifeEventRepository = new LifeEventRepository(this.c)

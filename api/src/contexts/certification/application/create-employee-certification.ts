@@ -1,5 +1,5 @@
-import { CertificationRepository } from "@/contexts/certification/infrastructure/certification.repository"
-import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/employee-certification.repository"
+import { CertificationRepository } from "@/contexts/certification/infrastructure/repositories/certification.repository"
+import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/repositories/employee-certification.repository"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { EmployeeCertification } from "@/contexts/certification/domain/entities/employee-certification.entity"
@@ -10,7 +10,9 @@ import type { Context } from "@/env"
  * 同一従業員・資格・取得日の重複は conflict を返す。
  */
 export class CreateEmployeeCertification {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(props: {
     employeeId: number

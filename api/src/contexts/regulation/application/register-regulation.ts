@@ -2,7 +2,7 @@ import type { Session } from "@/lib/auth/session"
 import { Regulation } from "@/contexts/regulation/domain/entities/regulation.entity"
 import { RegulationVersion } from "@/contexts/regulation/domain/entities/regulation-version.entity"
 import type { Context } from "@/env"
-import { RegulationRepository } from "@/contexts/regulation/infrastructure/regulation.repository"
+import { RegulationRepository } from "@/contexts/regulation/infrastructure/repositories/regulation.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -27,7 +27,9 @@ export type Registered = {
  * 権限と重複コードを確認し、規程を version 1 の初版付きで新規登録する。
  */
 export class RegisterRegulation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Registered | ApplicationError> {
     const regulationRepository = new RegulationRepository(this.c)

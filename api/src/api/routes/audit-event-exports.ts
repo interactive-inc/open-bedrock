@@ -1,7 +1,7 @@
 import {
-  createCompanyAuditEventRepository,
+  createCompanyAuditEventAdapter,
   type CompanyAuditExportRows,
-} from "@/api/http/audit-events/create-company-audit-event-repository"
+} from "@/api/http/audit-events/create-company-audit-event-adapter"
 import { AuditTrail } from "@/api/http/utils/audit-trail"
 import { throwAuditRouteError } from "@/api/http/utils/throw-audit-route-error"
 import { auditExportPermission } from "@/api/http/middlewares/audit-export-permission"
@@ -21,7 +21,7 @@ export const POST = factory.createHandlers(
     let rows: CompanyAuditExportRows
     let csv: string
     try {
-      rows = await createCompanyAuditEventRepository(c).export({ filters: range.filters })
+      rows = await createCompanyAuditEventAdapter(c).export({ filters: range.filters })
       csv = toAuditCsv(rows)
     } catch (error) {
       if (error instanceof PayloadTooLargeError) {

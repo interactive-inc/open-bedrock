@@ -1,4 +1,4 @@
-import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { UnexpectedError } from "@/lib/errors"
 
 import { factory } from "@/api/http/factory"

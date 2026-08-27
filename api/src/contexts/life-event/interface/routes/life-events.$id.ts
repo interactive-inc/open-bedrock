@@ -1,6 +1,6 @@
 import { ConflictError } from "@/lib/errors"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { LifeEventRepository } from "@/contexts/life-event/infrastructure/life-event.repository"
+import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
 import { UpdateLifeEvent } from "@/contexts/life-event/application/update-life-event"
 import type { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import { ApplicationError } from "@/lib/errors"

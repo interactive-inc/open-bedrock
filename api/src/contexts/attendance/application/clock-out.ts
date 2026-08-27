@@ -1,6 +1,6 @@
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import type { Context } from "@/env"
-import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/attendance-record.repository"
+import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -14,7 +14,9 @@ export type Command = {
  * 退勤を打刻する。出勤中の記録に労働時間を確定する。
  */
 export class ClockOut {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<AttendanceRecord | ApplicationError> {
     const recordRepository = new AttendanceRecordRepository(this.c)

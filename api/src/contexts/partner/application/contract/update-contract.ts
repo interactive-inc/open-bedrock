@@ -3,7 +3,7 @@ import type { Contract } from "@/contexts/partner/domain/entities/contract.entit
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ContractRepository } from "@/contexts/partner/infrastructure/contract/contract.repository"
+import { ContractRepository } from "@/contexts/partner/infrastructure/repositories/contract/contract.repository"
 
 export type Command = {
   session: Session
@@ -22,7 +22,9 @@ export type Command = {
  * 権限と存在を確認し、契約記録の表題・契約日・期間・更新期限・備考を更新する。
  */
 export class UpdateContract {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Contract | ApplicationError> {
     const contractRepository = new ContractRepository(this.c)

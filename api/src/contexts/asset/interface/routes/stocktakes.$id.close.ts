@@ -1,7 +1,7 @@
 import { CloseStocktake } from "@/contexts/asset/application/stocktake/close-stocktake"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { StocktakeRepository } from "@/contexts/asset/infrastructure/stocktake/stocktake.repository"
+import { StocktakeRepository } from "@/contexts/asset/infrastructure/repositories/stocktake/stocktake.repository"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"

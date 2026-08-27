@@ -2,7 +2,7 @@ import { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.en
 import { UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward.repository"
+import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 
 export type Command = {
   name: string
@@ -15,7 +15,9 @@ export type Command = {
  * 交換カタログを1件登録する（管理者向け）。
  */
 export class CreateReward {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<ThanksReward | ApplicationError> {
     const reward = ThanksReward.create({

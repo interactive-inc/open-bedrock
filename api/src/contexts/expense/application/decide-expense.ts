@@ -1,15 +1,16 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import { ExpenseApproval } from "@/contexts/expense/domain/entities/expense-approval.entity"
-import type { Context } from "@/env"
-import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense.repository"
+import type { Context as HonoContext } from "@/env"
+import { ExpenseRepository } from "@/contexts/expense/infrastructure/repositories/expense.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
+import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 
 export type Command = {
   session: Session
   expenseId: number
-  approverId: number
+  approverId: EmployeeId
   action: "approve" | "reject"
   comment: string | null
   createdAt: string
@@ -19,6 +20,18 @@ export type ExpenseDecision = {
   status: "pending" | "approved" | "rejected" | "settled"
 }
 
+type Context = Readonly<{
+  context: HonoContext
+  notifyApprovalResult?: (command: {
+    recipientEmployeeId: EmployeeId
+    action: "approve" | "reject"
+    subjectLabel: string
+    sourceDomain: string
+    sourceId: number | null
+    createdAt: string
+  }) => Promise<unknown>
+}>
+
 /**
  * 経費のステータスを pending からの条件付き UPDATE で確定し、承認記録を同時に INSERT する。
  * D1 batch で status UPDATE と approval INSERT をアトミックに行うため、
@@ -26,24 +39,16 @@ export type ExpenseDecision = {
  * 並行リクエストは条件付き UPDATE でどちらか 1 件しか確定できず、承認記録も重複しない。
  */
 export class DecideExpense {
-  constructor(
-    private readonly c: Context,
-    private readonly notifyApprovalResult: (command: {
-      recipientEmployeeId: number
-      action: "approve" | "reject"
-      subjectLabel: string
-      sourceDomain: string
-      sourceId: number | null
-      createdAt: string
-    }) => Promise<unknown> = async () => null,
-  ) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<ExpenseDecision | ApplicationError> {
     if (command.session.hasPermission("expense:approve") === false) {
       return new ForbiddenError("cannot decide expense", "forbidden")
     }
 
-    const expenseRepository = new ExpenseRepository(this.c)
+    const expenseRepository = new ExpenseRepository(this.c.context)
 
     const existing = await expenseRepository.findById(command.expenseId)
 
@@ -59,11 +64,9 @@ export class DecideExpense {
       return new ForbiddenError("cannot decide own expense", "forbidden")
     }
 
-    const organizationAuthority = await resolveOrganizationAuthority(
-      this.c,
-      command.approverId,
-      existing.employeeId,
-    )
+    const organizationAuthority = await new ResolveOrganizationAuthorityAdapter(
+      this.c.context,
+    ).resolveOrganizationAuthority(command.approverId, existing.employeeId)
 
     if (organizationAuthority instanceof Error) {
       return new UnexpectedError("failed to resolve organization authority", {
@@ -120,7 +123,7 @@ export class DecideExpense {
     }
 
     // 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。
-    await this.notifyApprovalResult({
+    await this.c.notifyApprovalResult?.({
       recipientEmployeeId: existing.employeeId,
       action: command.action,
       subjectLabel: "経費申請",

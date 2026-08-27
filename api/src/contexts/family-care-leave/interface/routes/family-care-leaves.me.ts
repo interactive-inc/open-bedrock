@@ -1,5 +1,5 @@
 import { UnexpectedError } from "@/lib/errors"
-import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/family-care-leave.repository"
+import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
 
 import { factory } from "@/api/http/factory"
 import {

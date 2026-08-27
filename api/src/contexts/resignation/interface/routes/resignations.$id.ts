@@ -1,5 +1,5 @@
 import { ConflictError } from "@/lib/errors"
-import { ResignationRepository } from "@/contexts/resignation/infrastructure/resignation.repository"
+import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { UpdateResignation } from "@/contexts/resignation/application/update-resignation"
 import type { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"

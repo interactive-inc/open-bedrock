@@ -2,7 +2,8 @@ import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { PartnerRepository } from "@/contexts/partner/infrastructure/partner.repository"
+import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
+import type { Partner } from "@/contexts/partner/domain/entities/partner.entity"
 
 export type Command = {
   session: Session
@@ -15,7 +16,9 @@ export type Archived = { reason: "archived" }
  * 管理権限を持つ者が取引先をアーカイブする。契約記録を壊さないため物理削除はしない。
  */
 export class ArchivePartner {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Archived | ApplicationError> {
     const partnerRepository = new PartnerRepository(this.c)
@@ -24,7 +27,7 @@ export class ArchivePartner {
       return new ForbiddenError("cannot manage partners", "forbidden")
     }
 
-    const current = await partnerRepository.findById(command.id)
+    const current: Partner | null | Error = await partnerRepository.findById(command.id)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find partner", { cause: current })

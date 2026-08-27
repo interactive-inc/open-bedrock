@@ -1,10 +1,10 @@
 import { createAuditEvent } from "@/api/http/audit/company-audit-event.definition"
 import type { AuditAction } from "@/api/http/audit/company-audit-event.definition"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/api/http/audit/audit-event.repository"
-import { IdentityRepository } from "@/api/http/provisioning/identity.repository"
-import { AttachExternalIdentity } from "@/api/http/provisioning/attach-external-identity.repository"
-import { ProvisionExternalEmployee } from "@/api/http/provisioning/provision-external-employee.repository"
+import { AuditEventAdapter } from "@/api/http/audit/audit-event.adapter"
+import { IdentityAdapter } from "@/api/http/provisioning/identity.adapter"
+import { AttachExternalIdentity } from "@/api/http/provisioning/attach-external-identity"
+import { ProvisionExternalEmployee } from "@/api/http/provisioning/provision-external-employee"
 import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
@@ -61,7 +61,7 @@ export class ProvisionExternalIdentities {
     input: ExternalIdentityInput,
     now: Date,
   ): Promise<SyncOutcome | ApplicationError> {
-    const identityRepository = new IdentityRepository(this.c)
+    const identityRepository = new IdentityAdapter(this.c)
     const existing = await identityRepository.findByProviderSubject(
       EXTERNAL_PROVIDER,
       input.subject,
@@ -190,7 +190,7 @@ export class ProvisionExternalIdentities {
         },
         this.c.var.auditContext,
       )
-      await new AuditEventRepository(this.c).append(record)
+      await new AuditEventAdapter(this.c).append(record)
 
       return null
     } catch (cause) {

@@ -1,8 +1,9 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import type { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { hasLeaveBalanceTracking } from "@/contexts/leave/domain/policies/has-balance-tracking.policy"
 import { toFiscalYear } from "@/contexts/leave/domain/definitions/fiscal-year.definition"
-import type { Context } from "@/env"
+import type { Context as HonoContext } from "@/env"
 import {
   ConflictError,
   ForbiddenError,
@@ -11,41 +12,45 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request.repository"
-import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
+import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
+import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 
 export type Command = {
   session: Session
   leaveRequestId: number
-  approverId: number
+  approverId: EmployeeId
   action: "approve" | "reject"
   comment: string | null
   createdAt: string
 }
+
+type Context = Readonly<{
+  context: HonoContext
+  notifyApprovalResult?: (command: {
+    recipientEmployeeId: EmployeeId
+    action: "approve" | "reject"
+    subjectLabel: string
+    sourceDomain: string
+    sourceId: number | null
+    createdAt: string
+  }) => Promise<unknown>
+}>
 
 /**
  * 休暇申請を承認/却下する。pending のみ確定でき、残高管理対象の種別のみ承認確定時に残数を減算する。
  * 会計年度は申請の startDate から導出する（サーバ時刻に依存しない）。
  */
 export class DecideLeaveRequest {
-  constructor(
-    private readonly c: Context,
-    private readonly notifyApprovalResult: (command: {
-      recipientEmployeeId: number
-      action: "approve" | "reject"
-      subjectLabel: string
-      sourceDomain: string
-      sourceId: number | null
-      createdAt: string
-    }) => Promise<unknown> = async () => null,
-  ) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<LeaveRequest | ApplicationError> {
     if (command.session.hasPermission("leave:approve") === false) {
       return new ForbiddenError("cannot decide leave requests", "forbidden")
     }
 
-    const leaveRequestRepository = new LeaveRequestRepository(this.c)
+    const leaveRequestRepository = new LeaveRequestRepository(this.c.context)
 
     const existing = await leaveRequestRepository.findById(command.leaveRequestId)
 
@@ -61,11 +66,9 @@ export class DecideLeaveRequest {
       return new ForbiddenError("cannot decide own leave request", "self_approval")
     }
 
-    const organizationAuthority = await resolveOrganizationAuthority(
-      this.c,
-      command.approverId,
-      existing.employeeId,
-    )
+    const organizationAuthority = await new ResolveOrganizationAuthorityAdapter(
+      this.c.context,
+    ).resolveOrganizationAuthority(command.approverId, existing.employeeId)
 
     if (organizationAuthority instanceof Error) {
       return new UnexpectedError("failed to resolve organization authority", {
@@ -177,7 +180,7 @@ export class DecideLeaveRequest {
 
   /** 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。 */
   private async notify(command: Command, existing: LeaveRequest): Promise<void> {
-    await this.notifyApprovalResult({
+    await this.c.notifyApprovalResult?.({
       recipientEmployeeId: existing.employeeId,
       action: command.action,
       subjectLabel: "休暇申請",

@@ -1,12 +1,9 @@
-import { createAdministrationAuditEvent } from "@/contexts/administration/application/audit/create-administration-audit-event"
+import { createAdministrationAuditEvent } from "@/contexts/administration/domain/factories/administration-audit-event.factory"
 import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request.repository"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import type { Session } from "@/lib/auth/session"
-import { AuditEventRepository } from "@/contexts/administration/infrastructure/audit/audit-event.repository"
+import { WithdrawPersonnelActionRequestAdapter } from "@/contexts/administration/infrastructure/adapters/employee-lifecycle/withdraw-personnel-action-request.adapter"
 import type { Context } from "@/env"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import { prepareSystemProcedureCancellation } from "@system/infrastructure/workflow/prepare-system-procedure-cancellation.repository"
 import {
   ApplicationError,
   ConflictError,
@@ -16,7 +13,9 @@ import {
 } from "@/lib/errors"
 
 export class WithdrawPersonnelActionRequest {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: {
     session: Session
@@ -42,8 +41,7 @@ export class WithdrawPersonnelActionRequest {
     }
     const withdrawnAt = new Date(command.withdrawnAt)
     const milliseconds = withdrawnAt.getTime()
-    const seconds = Math.floor(milliseconds / 1_000)
-    if (!Number.isFinite(seconds)) {
+    if (!Number.isFinite(milliseconds)) {
       return new ConflictError("取り下げ日時が不正です", "already_decided")
     }
     const audit = createAdministrationAuditEvent(
@@ -66,37 +64,19 @@ export class WithdrawPersonnelActionRequest {
       },
       this.c.var.auditContext,
     )
-    const cancellationStatements = prepareSystemProcedureCancellation(
-      { env: { DB: this.c.env.DB } },
-      {
-        number: request.applicationId,
-        createdByAccountId: command.session.accountId,
-        cancelledAt: withdrawnAt,
-      },
-    )
-    if (cancellationStatements instanceof Error) {
-      return new UnexpectedError("人事変更申請を取り下げられません", {
-        cause: cancellationStatements,
-      })
+    const withdrawn = await new WithdrawPersonnelActionRequestAdapter(this.c).withdraw({
+      requestId: command.requestId,
+      applicationId: request.applicationId,
+      employeeId: command.session.employeeId,
+      accountId: command.session.accountId,
+      withdrawnAt,
+      audit,
+    })
+    if (withdrawn === "conflict") {
+      return new ConflictError("この人事変更申請はすでに処理されています", "already_decided")
     }
-    try {
-      await this.c.env.DB.batch([
-        this.c.env.DB.prepare(
-          `UPDATE personnel_action_requests
-             SET withdrawn_at = ?2, withdrawn_by_employee_id = ?3
-             WHERE id = ?1 AND withdrawn_at IS NULL AND applied_action_id IS NULL
-               AND requested_by_employee_id = ?3
-             RETURNING id`,
-        ).bind(command.requestId, seconds, command.session.employeeId),
-        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-        ...cancellationStatements,
-        ...new AuditEventRepository(this.c).prepareAppend(audit),
-      ])
-      return { status: "withdrawn" }
-    } catch (cause) {
-      return isAbortedByGuard(cause)
-        ? new ConflictError("この人事変更申請はすでに処理されています", "already_decided")
-        : new UnexpectedError("人事変更申請を取り下げられません", { cause })
-    }
+    return withdrawn instanceof Error
+      ? new UnexpectedError("人事変更申請を取り下げられません", { cause: withdrawn })
+      : { status: "withdrawn" }
   }
 }

@@ -1,5 +1,5 @@
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
-import { CareerPostingRepository } from "@/contexts/career/infrastructure/career-posting.repository"
+import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 import { DeleteCareerPosting } from "@/contexts/career/application/delete-career-posting"
 import { UpdateCareerPosting } from "@/contexts/career/application/update-career-posting"
 import type { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"

@@ -1,6 +1,6 @@
 import type { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
 import type { Context } from "@/env"
-import { ResignationRepository } from "@/contexts/resignation/infrastructure/resignation.repository"
+import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -16,7 +16,9 @@ export type Command = {
  * 退職申請の退職希望日・最終出社日・理由を変更する。本人以外と、承認済み申請の変更を拒否する。
  */
 export class UpdateResignation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Resignation | ApplicationError> {
     const resignationRepository = new ResignationRepository(this.c)

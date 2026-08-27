@@ -20,15 +20,3 @@ export class AdministrationHTTPException extends HTTPException {
     Object.freeze(this)
   }
 }
-
-export class AdministrationBatchUnavailableError extends AdministrationHTTPException {
-  constructor(cause: unknown) {
-    super({
-      status: 500,
-      code: "batch_read_failed",
-      message: "バッチ実行状況を取得できませんでした。",
-      cause,
-    })
-    this.name = "AdministrationBatchUnavailableError"
-  }
-}

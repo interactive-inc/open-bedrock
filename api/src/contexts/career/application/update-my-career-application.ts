@@ -2,7 +2,7 @@ import type { CareerApplication } from "@/contexts/career/domain/entities/career
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application.repository"
+import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
 
 export type Command = {
   applicationId: number
@@ -14,7 +14,9 @@ export type Command = {
  * 応募メッセージを変更する。本人以外と、合否確定済みの応募の変更を拒否する。
  */
 export class UpdateMyCareerApplication {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<CareerApplication | ApplicationError> {
     const applicationRepository = new CareerApplicationRepository(this.c)

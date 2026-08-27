@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
-import { seedShiftSwapRequests } from "@/contexts/shift/infrastructure/seed/seed-shift-swap-requests.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedShiftSwapRequests } from "@/contexts/shift/test/seed/seed-shift-swap-requests.test-support"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"

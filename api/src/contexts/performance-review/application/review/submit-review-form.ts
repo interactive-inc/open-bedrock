@@ -3,8 +3,8 @@ import type { ReviewForm } from "@/contexts/performance-review/domain/entities/r
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
-import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form.repository"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
+import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-form.repository"
 
 export type Input = {
   viewerEmployeeId: number
@@ -19,7 +19,9 @@ export type Input = {
  * 割り当てられた評価者が、open のサイクルに属する自分のフォームを提出する。
  */
 export class SubmitReviewForm {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ReviewForm | ApplicationError> {
     const formRepository = new ReviewFormRepository(this.c)

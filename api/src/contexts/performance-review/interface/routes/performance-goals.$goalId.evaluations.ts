@@ -1,10 +1,10 @@
 import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
 import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
-import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
+import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
 
 import { UnexpectedError } from "@/lib/errors"
-import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/goal/goal-evaluation.repository"
+import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
 import { CreateGoalEvaluation } from "@/contexts/performance-review/application/goal/create-goal-evaluation"
 import { factory } from "@/api/http/factory"
 import { goalEvaluationKindSchema } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"

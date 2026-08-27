@@ -1,7 +1,7 @@
 import type { Session } from "@/lib/auth/session"
 import type { Document } from "@/contexts/document/domain/entities/document.entity"
 import type { Context } from "@/env"
-import { DocumentRepository } from "@/contexts/document/infrastructure/document.repository"
+import { DocumentRepository } from "@/contexts/document/infrastructure/repositories/document.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -20,7 +20,9 @@ export type Command = {
  * 権限を確認し、文書台帳のメタデータを更新する。
  */
 export class UpdateDocument {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Document | ApplicationError> {
     const documentRepository = new DocumentRepository(this.c)

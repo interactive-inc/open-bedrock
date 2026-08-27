@@ -1,5 +1,5 @@
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
 import { DeleteShiftPattern } from "@/contexts/shift/application/delete-shift-pattern"
 import { UpdateShiftPattern } from "@/contexts/shift/application/update-shift-pattern"
 import { ApplicationError } from "@/lib/errors"

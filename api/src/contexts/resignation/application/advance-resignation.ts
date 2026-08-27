@@ -3,7 +3,7 @@ import { Resignation } from "@/contexts/resignation/domain/entities/resignation.
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ResignationRepository } from "@/contexts/resignation/infrastructure/resignation.repository"
+import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
 
 export type Action = "accept" | "reject"
 
@@ -18,7 +18,9 @@ export type Command = {
  * それ以外の現在状態からの遷移は 409 とする。
  */
 export class AdvanceResignation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Resignation | ApplicationError> {
     if (command.session.hasPermission("resignation:manage") === false) {

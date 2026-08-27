@@ -3,8 +3,8 @@ import { Contract } from "@/contexts/partner/domain/entities/contract.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ContractRepository } from "@/contexts/partner/infrastructure/contract/contract.repository"
-import { PartnerRepository } from "@/contexts/partner/infrastructure/partner.repository"
+import { ContractRepository } from "@/contexts/partner/infrastructure/repositories/contract/contract.repository"
+import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
 
 export type Command = {
   session: Session
@@ -24,7 +24,9 @@ export type Command = {
  * 権限と親取引先の存在を確認し、契約記録を新規作成する。
  */
 export class CreateContract {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Contract | ApplicationError> {
     if (command.session.hasPermission("contract:manage") === false) {

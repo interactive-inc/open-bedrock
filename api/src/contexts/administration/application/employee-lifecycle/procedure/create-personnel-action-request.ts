@@ -1,17 +1,18 @@
-import { createAdministrationAuditEvent } from "@/contexts/administration/application/audit/create-administration-audit-event"
+import { createAdministrationAuditEvent } from "@/contexts/administration/domain/factories/administration-audit-event.factory"
 import { fingerprintPersonnelAction } from "@/contexts/company/domain/definitions/fingerprint-personnel-action.definition"
 import { GetLifecycleState } from "@/contexts/company/infrastructure/employee-lifecycle/get-lifecycle-state.repository"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
-import { resolveActiveSystemAccountId } from "@/contexts/administration/infrastructure/iam/resolve-active-system-account-id.repository"
+import { ResolveActiveSystemAccountIdAdapter } from "@/contexts/administration/infrastructure/adapters/iam/resolve-active-system-account-id.adapter"
 import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
 import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
 import { resolveCompanyProcedureTask } from "@/contexts/company/infrastructure/organization/resolve-company-procedure-task.repository"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import type { PersonnelActionInput } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import type { Session } from "@/lib/auth/session"
-import { AuditEventRepository } from "@/contexts/administration/infrastructure/audit/audit-event.repository"
+import { AuditEventAdapter } from "@/contexts/administration/infrastructure/adapters/audit/audit-event.adapter"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
-import { createPersonnelActionRequest } from "@/contexts/administration/infrastructure/employee-lifecycle/create-personnel-action-request.repository"
+import { CreatePersonnelActionRequestAdapter } from "@/contexts/administration/infrastructure/adapters/employee-lifecycle/create-personnel-action-request.adapter"
+import { PersonnelActionRequestWorkflowAdapter } from "@/contexts/administration/infrastructure/adapters/employee-lifecycle/personnel-action-request-workflow.adapter"
 import type { Context } from "@/env"
 import {
   ApplicationError,
@@ -21,12 +22,8 @@ import {
   UnprocessableError,
   ValidationError,
 } from "@/lib/errors"
-import { CancelSystemProcedure } from "@system/application/workflow/cancel-system-procedure"
-import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
-import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
 
 export type CreatedPersonnelActionRequest = {
   id: string
@@ -39,18 +36,10 @@ export type CreatedPersonnelActionRequest = {
   createdAt: string
 }
 
-const PERSONNEL_ACTION_PROCEDURE_KEY = procedureKeySchema.parse("personnel_action_request")
-const PERSONNEL_ACTION_OPERATION_KEY = "company.personnel-action.apply"
-
-function targetDepartmentCode(input: PersonnelActionInput): string | null {
-  return "departmentCode" in input ? (input.departmentCode ?? null) : null
-}
-
-function eventOn(input: PersonnelActionInput): string {
-  return input.kind === "retired" ? input.retirementOn : input.eventOn
-}
-
 export class CreatePersonnelActionRequest {
+  private static readonly procedureKey = procedureKeySchema.parse("personnel_action_request")
+  private static readonly operationKey = "company.personnel-action.apply"
+
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
@@ -102,7 +91,7 @@ export class CreatePersonnelActionRequest {
       requesterCode: requester.code,
       targetEmployeeId: target?.id ?? null,
       prospective,
-      departmentCode: targetDepartmentCode(command.input),
+      departmentCode: this.targetDepartmentCode(command.input),
     })
     if (authorityError !== null) return authorityError
     const revisionError = await this.validateRevisions({
@@ -113,15 +102,17 @@ export class CreatePersonnelActionRequest {
     })
     if (revisionError !== null) return revisionError
 
-    const procedure = await new SystemD1ProcedureRepository({
-      env: { DB: this.c.env.DB },
-    }).findCurrent(PERSONNEL_ACTION_PROCEDURE_KEY)
+    const workflow = new PersonnelActionRequestWorkflowAdapter(this.c)
+    const procedure = await workflow.findCurrent(CreatePersonnelActionRequest.procedureKey)
     if (procedure instanceof Error) {
       return new UnexpectedError("人事変更申請手続を取得できません", {
         cause: procedure,
       })
     }
-    if (procedure === null || procedure.completionOperationKey !== PERSONNEL_ACTION_OPERATION_KEY) {
+    if (
+      procedure === null ||
+      procedure.completionOperationKey !== CreatePersonnelActionRequest.operationKey
+    ) {
       return new UnprocessableError("人事変更申請手続が構成されていません", "workflow_unresolvable")
     }
     let decisionPolicy: unknown
@@ -157,14 +148,16 @@ export class CreatePersonnelActionRequest {
       activatedAt: createdAt,
       afterTaskKey: null,
       excludedEmployeeIds: new Set(target === null ? [requester.id] : [requester.id, target.id]),
-      targetDepartmentCode: targetDepartmentCode(command.input),
+      targetDepartmentCode: this.targetDepartmentCode(command.input),
     })
     if (task instanceof Error || task === null) {
       return new UnprocessableError("適用可能な承認手順がありません", "workflow_unresolvable", {
         cause: task instanceof Error ? task : undefined,
       })
     }
-    const accountId = await resolveActiveSystemAccountId(this.c, command.session.accountId)
+    const accountId = await new ResolveActiveSystemAccountIdAdapter(this.c).resolve(
+      command.session.accountId,
+    )
     if (accountId instanceof Error) {
       return new UnexpectedError("申請者のSystemアカウントを解決できません", {
         cause: accountId,
@@ -196,7 +189,7 @@ export class CreatePersonnelActionRequest {
         authorization: { permission: "employee:lifecycle:request" },
         metadata: {
           actionKind: command.input.kind,
-          effectiveOn: eventOn(command.input),
+          effectiveOn: this.eventOn(command.input),
         },
         now: createdAt,
       },
@@ -212,7 +205,7 @@ export class CreatePersonnelActionRequest {
               employeeName: command.input.employeeName,
             })
           : null,
-      targetDepartmentCode: targetDepartmentCode(command.input),
+      targetDepartmentCode: this.targetDepartmentCode(command.input),
       kind: command.input.kind,
       payloadJson: payloadJson.toString(),
       payloadFingerprint: fingerprint,
@@ -220,10 +213,9 @@ export class CreatePersonnelActionRequest {
       baseEmployeeRevision: command.baseEmployeeRevision,
       baseOrganizationRevision: command.baseOrganizationRevision,
       createdAt: createdAtSeconds,
-      auditStatements: new AuditEventRepository(this.c).prepareAppend(audit),
+      auditStatements: new AuditEventAdapter(this.c).prepareAppend(audit),
     }
-    const writer = new SystemD1WorkflowWriter({ env: { DB: this.c.env.DB } })
-    const started = await new StartSystemProcedure(writer).run({
+    const started = await workflow.start({
       seriesId,
       version: 1,
       procedureKey: procedure.key,
@@ -245,13 +237,13 @@ export class CreatePersonnelActionRequest {
         cause: started,
       })
     }
-    const associated = await createPersonnelActionRequest(this.c, {
+    const associated = await new CreatePersonnelActionRequestAdapter(this.c).create({
       ...association,
       applicationId: started.number,
       systemProposalSeriesId: seriesId,
     })
     if (associated instanceof Error) {
-      const cancelled = await new CancelSystemProcedure(writer).run({
+      const cancelled = await workflow.cancel({
         number: started.number,
         createdByAccountId: accountId,
         cancelledAt: createdAt,
@@ -328,9 +320,14 @@ export class CreatePersonnelActionRequest {
     }>,
   ): Promise<ApplicationError | null> {
     if (input.prospective) {
-      const organizationRevision = await this.c.env.DB.prepare(
-        "SELECT revision FROM organization_lifecycle_states WHERE id = 1",
-      ).first<number>("revision")
+      const organizationRevision = await new PersonnelActionRequestWorkflowAdapter(
+        this.c,
+      ).organizationRevision()
+      if (organizationRevision instanceof Error) {
+        return new UnexpectedError("組織リビジョンを取得できません", {
+          cause: organizationRevision,
+        })
+      }
       return input.baseEmployeeRevision !== 0 ||
         (input.baseOrganizationRevision !== null &&
           input.baseOrganizationRevision !== organizationRevision)
@@ -350,5 +347,13 @@ export class CreatePersonnelActionRequest {
         state.organizationRevision !== input.baseOrganizationRevision)
       ? new ConflictError("人事情報が更新されています", "personnel_action_stale")
       : null
+  }
+
+  private targetDepartmentCode(input: PersonnelActionInput): string | null {
+    return "departmentCode" in input ? (input.departmentCode ?? null) : null
+  }
+
+  private eventOn(input: PersonnelActionInput): string {
+    return input.kind === "retired" ? input.retirementOn : input.eventOn
   }
 }

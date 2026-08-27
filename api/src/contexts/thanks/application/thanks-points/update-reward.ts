@@ -2,7 +2,7 @@ import { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.en
 import { NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward.repository"
+import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 
 export type Command = {
   rewardId: number
@@ -16,7 +16,9 @@ export type Command = {
  * stock は decrementStock() で原子的に管理するため、ここでは触らない。
  */
 export class UpdateReward {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<ThanksReward | ApplicationError> {
     const rewardRepository = new ThanksRewardRepository(this.c)

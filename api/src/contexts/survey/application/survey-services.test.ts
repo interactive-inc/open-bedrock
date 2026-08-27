@@ -9,7 +9,7 @@ import { UpdateSurveyResponse } from "@/contexts/survey/application/update-surve
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
 import type { Context } from "@/env"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { createTestContext } from "@/api/test/support/create-test-context"

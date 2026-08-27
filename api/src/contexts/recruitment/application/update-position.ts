@@ -3,7 +3,7 @@ import { RecruitmentPosition } from "@/contexts/recruitment/domain/entities/recr
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/recruitment.repository"
+import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/repositories/recruitment.repository"
 
 export type Command = {
   session: Session
@@ -18,7 +18,9 @@ export type Command = {
  * 権限と存在を確認し、募集ポジションの内容と状態を差し替える。
  */
 export class UpdatePosition {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<RecruitmentPosition | ApplicationError> {
     if (command.session.hasPermission("recruitment:manage") === false) {

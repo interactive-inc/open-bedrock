@@ -1,13 +1,14 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
-import type { Context } from "@/env"
-import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/ringi-request.repository"
+import type { Context as HonoContext } from "@/env"
+import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   session: Session
   ringiId: number
-  approverId: number
+  approverId: EmployeeId
   action: "approve" | "reject"
   comment: string | null
   createdAt: string
@@ -17,25 +18,29 @@ export type RingiDecision = {
   status: "pending" | "approved" | "rejected"
 }
 
+type Context = Readonly<{
+  context: HonoContext
+  notifyApprovalResult?: (command: {
+    recipientEmployeeId: EmployeeId
+    action: "approve" | "reject"
+    subjectLabel: string
+    sourceDomain: string
+    sourceId: number | null
+    createdAt: string
+  }) => Promise<unknown>
+}>
+
 /**
  * 稟議のステータスを pending からの条件付き UPDATE で確定する。指名された承認者本人のみ決裁でき、
  * pending 以外からの遷移は 409 を返す。条件付き UPDATE で二重決定を防ぐ（TOCTOU 競合にも強い）。
  */
 export class DecideRingi {
-  constructor(
-    private readonly c: Context,
-    private readonly notifyApprovalResult: (command: {
-      recipientEmployeeId: number
-      action: "approve" | "reject"
-      subjectLabel: string
-      sourceDomain: string
-      sourceId: number | null
-      createdAt: string
-    }) => Promise<unknown> = async () => null,
-  ) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<RingiDecision | ApplicationError> {
-    const repository = new RingiRequestRepository(this.c)
+    const repository = new RingiRequestRepository(this.c.context)
 
     const existing = await repository.findById(command.ringiId)
 
@@ -84,7 +89,7 @@ export class DecideRingi {
     }
 
     // 決定は確定済みのため、起案者への結果通知が失敗しても決定は返す。
-    await this.notifyApprovalResult({
+    await this.c.notifyApprovalResult?.({
       recipientEmployeeId: existing.applicantId,
       action: command.action,
       subjectLabel: "稟議",

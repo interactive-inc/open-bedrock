@@ -1,5 +1,5 @@
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { RoomReservationRepository } from "@/contexts/room/infrastructure/room-reservation.repository"
+import { RoomReservationRepository } from "@/contexts/room/infrastructure/repositories/room-reservation.repository"
 import { UpdateRoomReservation } from "@/contexts/room/application/update-room-reservation"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"

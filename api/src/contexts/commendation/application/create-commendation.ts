@@ -3,7 +3,7 @@ import { Commendation } from "@/contexts/commendation/domain/entities/commendati
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CommendationRepository } from "@/contexts/commendation/infrastructure/commendation.repository"
+import { CommendationRepository } from "@/contexts/commendation/infrastructure/repositories/commendation.repository"
 
 export type Command = {
   session: Session
@@ -18,7 +18,9 @@ export type Command = {
  * 権限を確認し、社員の表彰を1件記録する。
  */
 export class CreateCommendation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Commendation | ApplicationError> {
     if (command.session.hasPermission("commendation:manage") === false) {

@@ -1,4 +1,4 @@
-import { AccountDirectoryReadRepository } from "@/api/http/accounts/account-directory-read.repository"
+import { AccountDirectoryReadAdapter } from "@/api/http/accounts/account-directory-read.adapter"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
@@ -41,7 +41,7 @@ export const GET = factory.createHandlers(
       min: 0,
       max: MAX_LIST_OFFSET,
     })
-    const repository = new AccountDirectoryReadRepository(context)
+    const repository = new AccountDirectoryReadAdapter(context)
     const page = await repository.list({ status, limit, offset })
     if (page instanceof Error) throw new InternalError("failed to list account directory")
 

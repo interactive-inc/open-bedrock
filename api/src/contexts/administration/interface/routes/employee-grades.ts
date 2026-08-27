@@ -5,7 +5,7 @@ import { resolveTargetEmployeeId } from "@/api/http/utils/resolve-target-employe
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEmployeeGrade, zAppEmployeeGradeList } from "@/lib/app-schemas"
-import { EmployeeGradeRepository } from "@/contexts/administration/infrastructure/grade/employee-grade.repository"
+import { EmployeeGradeRepository } from "@/contexts/administration/infrastructure/repositories/grade/employee-grade.repository"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

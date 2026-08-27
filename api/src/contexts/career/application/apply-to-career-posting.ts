@@ -2,8 +2,8 @@ import { CareerApplication } from "@/contexts/career/domain/entities/career-appl
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application.repository"
-import { CareerPostingRepository } from "@/contexts/career/infrastructure/career-posting.repository"
+import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
+import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 
 export type Command = {
   postingId: number
@@ -15,7 +15,9 @@ export type Command = {
  * 公募への応募を作成する。公募が公開中でない・重複応募は判別可能な失敗で返す。
  */
 export class ApplyToCareerPosting {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<CareerApplication | ApplicationError> {
     const postingRepository = new CareerPostingRepository(this.c)

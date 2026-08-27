@@ -3,7 +3,7 @@ import { canModifyEnrollment } from "@/contexts/training/domain/policies/enrollm
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/training-enrollment.repository"
+import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
 
 export type Command = {
   enrollmentId: number
@@ -17,7 +17,9 @@ export type Cancelled = { reason: "cancelled" }
  * 受講登録を取り消す。本人または管理権限が必要。完了済みは履歴保全のため取り消せない。
  */
 export class CancelTrainingEnrollment {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Cancelled | ApplicationError> {
     const enrollmentRepository = new TrainingEnrollmentRepository(this.c)

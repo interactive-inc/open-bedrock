@@ -1,5 +1,5 @@
 import { ConflictError } from "@/lib/errors"
-import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/business-trip.repository"
+import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { UpdateBusinessTrip } from "@/contexts/business-trip/application/update-business-trip"
 import type { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"

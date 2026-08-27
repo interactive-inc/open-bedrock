@@ -3,7 +3,7 @@ import type { Partner } from "@/contexts/partner/domain/entities/partner.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { PartnerRepository } from "@/contexts/partner/infrastructure/partner.repository"
+import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
 
 export type Command = {
   session: Session
@@ -20,7 +20,9 @@ export type Command = {
  * 権限と存在を確認し、取引先の名称・分類・法人番号・備考を更新する。
  */
 export class UpdatePartner {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Partner | ApplicationError> {
     const partnerRepository = new PartnerRepository(this.c)

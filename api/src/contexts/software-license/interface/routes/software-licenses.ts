@@ -7,7 +7,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { LicenseRepository } from "@/contexts/software-license/infrastructure/license/license.repository"
+import { LicenseRepository } from "@/contexts/software-license/infrastructure/repositories/license/license.repository"
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"

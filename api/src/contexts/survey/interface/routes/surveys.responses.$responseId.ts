@@ -1,5 +1,5 @@
 import { ConflictError } from "@/lib/errors"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 
 import { UpdateSurveyResponse } from "@/contexts/survey/application/update-survey-response"

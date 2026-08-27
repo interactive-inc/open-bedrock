@@ -8,7 +8,7 @@ import type {
   NonCorrectionWirePersonnelActionInput,
   WirePersonnelActionInput,
 } from "@/contexts/administration/interface/utils/wire-personnel-action-input"
-import { PositionRepository } from "@/contexts/administration/infrastructure/position/position.repository"
+import { PositionRepository } from "@/contexts/administration/infrastructure/repositories/position/position.repository"
 import { positionRequiresDepartment } from "@/contexts/administration/interface/utils/position-requires-department"
 import { ApplicationError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 

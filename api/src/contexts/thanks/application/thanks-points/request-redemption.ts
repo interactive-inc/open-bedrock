@@ -2,8 +2,8 @@ import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redem
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption.repository"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward.repository"
+import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
+import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 
 export type Command = {
   employeeId: number
@@ -16,7 +16,9 @@ export type Command = {
  * 同一社員に対して PENDING 状態の申請が既に存在する場合は重複を防止する。
  */
 export class RequestRedemption {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<ThanksRedemption | ApplicationError> {
     const rewardRepository = new ThanksRewardRepository(this.c)

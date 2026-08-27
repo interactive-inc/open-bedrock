@@ -12,7 +12,7 @@ import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppHeadcountPlan, zAppHeadcountPlanList } from "@/lib/app-schemas"
-import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/headcount-plan.repository"
+import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/repositories/headcount-plan.repository"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

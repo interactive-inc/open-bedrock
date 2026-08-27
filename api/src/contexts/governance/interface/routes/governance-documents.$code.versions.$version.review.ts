@@ -24,9 +24,10 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
   const version = parseGovernanceVersion(c.req.param("version"))
   if (code === null || version === null) throw new NotFoundError("governance version not found")
   const body = c.req.valid("json")
-  const result = await new GovernancePublicationService(c, (audit) =>
-    prepareGovernanceAudit({ c, ...audit }),
-  ).decideReview({
+  const result = await new GovernancePublicationService({
+    context: c,
+    prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
+  }).decideReview({
     session,
     code,
     version,

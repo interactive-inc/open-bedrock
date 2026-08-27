@@ -3,8 +3,8 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import { OrgDepartment } from "@/contexts/administration/domain/entities/org-department.entity"
 import type { Context } from "@/env"
-import { OrgDepartmentRepository } from "@/contexts/administration/infrastructure/organization/org-department.repository"
-import { DepartmentRepository } from "@/contexts/administration/infrastructure/organization/department.repository"
+import { OrgDepartmentRepository } from "@/contexts/administration/infrastructure/repositories/organization/org-department.repository"
+import { DepartmentAdapter } from "@/contexts/administration/infrastructure/adapters/organization/department.adapter"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -22,7 +22,9 @@ export type Command = {
  * 権限・コード重複・親ノードの存在を確認し、新しい部署ノードを作成する。
  */
 export class CreateOrgDepartment {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<OrgDepartment | ApplicationError> {
     const departmentRepository = new OrgDepartmentRepository(this.c)
@@ -50,7 +52,7 @@ export class CreateOrgDepartment {
       return new ConflictError("department code already exists", "department_code_conflict")
     }
 
-    const departmentMaster = await new DepartmentRepository(this.c).findById(
+    const departmentMaster = await new DepartmentAdapter(this.c).findById(
       command.department.departmentId,
     )
     if (departmentMaster instanceof Error) {

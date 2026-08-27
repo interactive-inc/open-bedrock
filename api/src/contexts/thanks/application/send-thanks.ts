@@ -1,5 +1,5 @@
-import { Thanks, thanksRowSchema } from "@/contexts/thanks/domain/entities/thanks.entity"
-import { parseD1Row } from "@/lib/d1/parse-d1-row"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { Thanks } from "@/contexts/thanks/domain/entities/thanks.entity"
 import {
   ConflictError,
   ForbiddenError,
@@ -9,39 +9,44 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { periodOf } from "@/contexts/thanks/domain/definitions/thanks-period.definition"
-import { toNonNegativePoints } from "@/contexts/thanks/domain/values/non-negative-points.value"
-import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
-import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-budget.repository"
+import { toNonNegativePoints } from "@/contexts/thanks/domain/policies/non-negative-points.policy"
+import type { Context as HonoContext } from "@/env"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
+import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-point-budget.repository"
+import { ThanksRepository } from "@/contexts/thanks/infrastructure/repositories/thanks.repository"
 
 export type Command = {
-  senderEmployeeId: number
+  senderEmployeeId: EmployeeId
   recipientEmployeeCode: string
   message: string
   points: number | null
   createdAt: string
 }
 
+type Context = Readonly<{
+  context: HonoContext
+  publishEmployeeNotification?: (notification: {
+    recipientEmployeeId: EmployeeId
+    kind: "thanks"
+    title: string
+    body: string | null
+    sourceDomain: string
+    sourceId: number | null
+    createdAt: string
+  }) => Promise<unknown>
+}>
+
 /**
  * 全従業員が他の従業員へ感謝を送る。感謝を保存し、受信者にだけ通知を作成する。
  * 既存 PublishEmployeeNotification の role gate は感謝に不適合なため Company gateway を直接使う。
  */
 export class SendThanks {
-  constructor(
-    private readonly c: Context,
-    private readonly publishEmployeeNotification: (notification: {
-      recipientEmployeeId: number
-      kind: "thanks"
-      title: string
-      body: string | null
-      sourceDomain: string
-      sourceId: number | null
-      createdAt: string
-    }) => Promise<unknown> = async () => null,
-  ) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Thanks | ApplicationError> {
-    const employeeRepository = new EmployeeRepository(this.c)
+    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c.context)
 
     const sender = await employeeRepository.findById(command.senderEmployeeId)
 
@@ -54,7 +59,10 @@ export class SendThanks {
       return new UnexpectedError("sender not found")
     }
 
-    if (sender.status === "retired") {
+    if (
+      sender.employment === null ||
+      (sender.employment.status !== "ACTIVE" && sender.employment.status !== "ON_LEAVE")
+    ) {
       return new ForbiddenError("sender is no longer active", "sender_inactive")
     }
 
@@ -68,7 +76,10 @@ export class SendThanks {
       return new NotFoundError("recipient not found", "recipient_not_found")
     }
 
-    if (recipient.status === "retired") {
+    if (
+      recipient.employment === null ||
+      (recipient.employment.status !== "ACTIVE" && recipient.employment.status !== "ON_LEAVE")
+    ) {
       return new ConflictError("recipient is no longer active", "recipient_inactive")
     }
 
@@ -112,25 +123,23 @@ export class SendThanks {
 
     // ポイント消費と感謝 INSERT を D1 batch でアトミックに実行する。
     // batch 内のいずれかが失敗すれば全体がロールバックされるため補償処理は不要。
-    const created = await this.consumeAndInsert({
-      thanks,
-      senderEmployeeId: sender.id,
-      points,
+    const created = await new ThanksRepository(this.c.context).consumeBudgetAndCreate({
+      thanksRecord: thanks,
       period,
     })
 
     if (created instanceof Error) {
-      return created
+      return new UnexpectedError("failed to send thanks", { cause: created })
     }
 
     if (created === null) {
       return new ValidationError("insufficient thanks point budget", "insufficient_budget")
     }
 
-    const notified = await this.publishEmployeeNotification({
+    const notified = await this.c.publishEmployeeNotification?.({
       recipientEmployeeId: recipient.id,
       kind: "thanks",
-      title: `${sender.name}さんから感謝が届きました`,
+      title: `${sender.officialName}さんから感謝が届きました`,
       body: created.message,
       sourceDomain: "thanks",
       sourceId: created.id,
@@ -148,11 +157,11 @@ export class SendThanks {
 
   /** 当月の原資レコードが存在しなければ既定額で遅延生成する（batch 前に存在を保証する）。 */
   private async ensureBudget(props: {
-    senderEmployeeId: number
+    senderEmployeeId: EmployeeId
     period: string
     createdAt: string
   }): Promise<null | ApplicationError> {
-    const budgetRepository = new ThanksPointBudgetRepository(this.c)
+    const budgetRepository = new ThanksPointBudgetRepository(this.c.context)
 
     const budget = await budgetRepository.findOrCreate({
       employeeId: props.senderEmployeeId,
@@ -163,96 +172,5 @@ export class SendThanks {
     return budget instanceof Error
       ? new UnexpectedError("failed to ensure thanks point budget", { cause: budget })
       : null
-  }
-
-  /**
-   * ポイント消費（points > 0 の場合）と感謝 INSERT を D1 batch でアトミックに実行する。
-   * batch は暗黙のトランザクションで包まれるため、INSERT が失敗しても consume は自動ロールバックされる。
-   * ポイント付きの場合、INSERT は「consume UPDATE が 1 行以上更新した」ことを条件に実行する
-   * （INSERT ... SELECT + EXISTS で条件分岐し、残量不足なら 0 行挿入で済ませる）。
-   */
-  private async consumeAndInsert(props: {
-    thanks: Thanks
-    senderEmployeeId: number
-    points: number
-    period: string
-  }): Promise<Thanks | null | ApplicationError> {
-    try {
-      const db = this.c.env.DB
-
-      // ポイントなし（メッセージのみの感謝）は consume 不要なので INSERT だけを batch に入れる。
-      if (props.points === 0) {
-        const results = await db.batch([
-          db
-            .prepare(
-              "INSERT INTO thanks_messages (sender_employee_id, recipient_employee_id, message, points, created_at) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
-            )
-            .bind(
-              props.thanks.senderEmployeeId,
-              props.thanks.recipientEmployeeId,
-              props.thanks.message,
-              props.thanks.points,
-              props.thanks.createdAt,
-            ),
-        ])
-
-        const row = parseD1Row(results[0], thanksRowSchema)
-
-        if (row instanceof Error) {
-          return new UnexpectedError("failed to parse thanks row", { cause: row })
-        }
-
-        if (row === undefined) {
-          return new UnexpectedError("failed to insert thanks")
-        }
-
-        return Thanks.fromRow(row)
-      }
-
-      // ポイント付き: consume UPDATE → 条件付き INSERT を 1 トランザクションで実行する。
-      // INSERT は SQLite の changes() で「直前の UPDATE が 1 行以上更新した」ことを確認してから
-      // 挿入する。consume が 0 行更新（残量不足）なら INSERT も 0 行になり、ポイント消失を防ぐ。
-      const results = await db.batch([
-        db
-          .prepare(
-            "UPDATE thanks_point_budgets SET consumed_points = consumed_points + ?1 WHERE employee_id = ?2 AND period = ?3 AND granted_points - consumed_points >= ?1",
-          )
-          .bind(props.points, props.senderEmployeeId, props.period),
-        db
-          .prepare(
-            "INSERT INTO thanks_messages (sender_employee_id, recipient_employee_id, message, points, created_at) SELECT ?1, ?2, ?3, ?4, ?5 WHERE changes() > 0 RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
-          )
-          .bind(
-            props.thanks.senderEmployeeId,
-            props.thanks.recipientEmployeeId,
-            props.thanks.message,
-            props.thanks.points,
-            props.thanks.createdAt,
-          ),
-      ])
-
-      // INSERT 結果が空なら consume が 0 行 = 残量不足。
-      const insertResult = results[1]
-
-      if ((insertResult.results?.length ?? 0) === 0) {
-        return null
-      }
-
-      const row = parseD1Row(insertResult, thanksRowSchema)
-
-      if (row instanceof Error) {
-        return new UnexpectedError("failed to parse thanks row", { cause: row })
-      }
-
-      if (row === undefined) {
-        return new UnexpectedError("failed to insert thanks")
-      }
-
-      return Thanks.fromRow(row)
-    } catch (error) {
-      return error instanceof Error
-        ? new UnexpectedError("failed to send thanks", { cause: error })
-        : new UnexpectedError("failed to send thanks")
-    }
   }
 }

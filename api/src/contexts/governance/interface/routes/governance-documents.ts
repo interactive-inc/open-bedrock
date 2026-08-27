@@ -1,5 +1,5 @@
-import { GovernanceAccessRepository } from "@/contexts/governance/infrastructure/governance-access.repository"
-import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
+import { GovernanceAccessAdapter } from "@/contexts/governance/infrastructure/adapters/governance-access.adapter"
+import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { factory } from "@/api/http/factory"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -9,12 +9,12 @@ import { toGovernanceDocumentResponse } from "@/contexts/governance/interface/li
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()
-  const governanceAccess = new GovernanceAccessRepository({ c, session })
+  const governanceAccess = new GovernanceAccessAdapter({ context: c, session })
   const elevated =
     governanceAccess.canManage() || governanceAccess.canReview() || governanceAccess.canPublish()
   if (!governanceAccess.canRead() && !elevated) throw new ForbiddenError()
 
-  const records = await new GovernanceRepository(c).listDocuments(elevated)
+  const records = await new GovernanceAdapter(c).listDocuments(elevated)
   if (records instanceof Error) throw new InternalError("failed to list governance documents")
   const access = await Promise.all(
     records.map(async (record) => ({

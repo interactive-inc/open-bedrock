@@ -1,5 +1,5 @@
 import { UnexpectedError } from "@/lib/errors"
-import { LifeEventRepository } from "@/contexts/life-event/infrastructure/life-event.repository"
+import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
 
 import { ApplicationError } from "@/lib/errors"
 import { zAppLifeEventList } from "@/lib/app-schemas"

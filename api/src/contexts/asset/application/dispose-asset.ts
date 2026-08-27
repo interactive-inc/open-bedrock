@@ -3,7 +3,7 @@ import type { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { AssetRepository } from "@/contexts/asset/infrastructure/asset.repository"
+import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
 
 export type Command = {
   session: Session
@@ -17,7 +17,9 @@ export type Command = {
  * 貸出中は廃棄不可、廃棄済みは重複廃棄不可。競合は条件付き write で防ぐ。
  */
 export class DisposeAsset {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Asset | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)

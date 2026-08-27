@@ -1,17 +1,17 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { EvaluationSheet } from "@/contexts/performance-review/domain/entities/evaluation-sheet.entity"
 import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/evaluation-sheet/evaluation-sheet.repository"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { inArray } from "drizzle-orm"
+import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/repositories/evaluation-sheet/evaluation-sheet.repository"
+import { EvaluationParticipantAdapter } from "@/contexts/performance-review/infrastructure/adapters/evaluation-sheet/evaluation-participant.adapter"
 
 export type Command = {
   sheetId: number
-  primaryEvaluatorId: number
-  secondaryEvaluatorId: number | null
+  primaryEvaluatorId: EmployeeId
+  secondaryEvaluatorId: EmployeeId | null
   expectedRevision: number
-  actorEmployeeId: number
+  actorEmployeeId: EmployeeId
   now: string
 }
 
@@ -21,7 +21,9 @@ export type Command = {
  * 監査ログに変更前後をアトミックに記録する。
  */
 export class ChangeEvaluators {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<EvaluationSheet | ApplicationError> {
     const repository = new EvaluationSheetRepository(this.c)
@@ -81,12 +83,13 @@ export class ChangeEvaluators {
       evaluatorIds.push(command.secondaryEvaluatorId)
     }
 
-    const evaluatorRows = await this.c.var.database
-      .select({ id: employees.id })
-      .from(employees)
-      .where(inArray(employees.id, evaluatorIds))
+    const foundIds = await new EvaluationParticipantAdapter(this.c).existingEmployeeIds(
+      evaluatorIds,
+    )
 
-    const foundIds = new Set(evaluatorRows.map((r) => r.id))
+    if (foundIds instanceof Error) {
+      return new UnexpectedError("failed to load evaluators", { cause: foundIds })
+    }
 
     if (!foundIds.has(command.primaryEvaluatorId)) {
       return new ValidationError("primary evaluator not found", "primary_evaluator_not_found")

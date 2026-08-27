@@ -3,6 +3,7 @@ import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import type { Employee } from "@/contexts/company/domain/entities/employee.entity"
 
 export type Command = {
   session: Session
@@ -17,13 +18,17 @@ export type Deleted = { reason: "deleted" }
  * approvals, evaluations, attendance, and audit actor references must remain intact.
  */
 export class DeleteEmployee {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
     if (command.session.hasPermission("employee:delete") === false) {
       return new ForbiddenError("cannot delete employees", "forbidden")
     }
-    const employee = await new EmployeeRepository(this.c).findByCode(command.code)
+    const employee: Employee | null | Error = await new EmployeeRepository(this.c).findByCode(
+      command.code,
+    )
     if (employee instanceof Error) {
       return new UnexpectedError("failed to find employee", {
         cause: employee,

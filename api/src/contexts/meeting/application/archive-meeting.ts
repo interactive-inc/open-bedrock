@@ -3,7 +3,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Meeting } from "@/contexts/meeting/domain/entities/meeting.entity"
 import type { Context } from "@/env"
-import { MeetingRepository } from "@/contexts/meeting/infrastructure/meeting.repository"
+import { MeetingRepository } from "@/contexts/meeting/infrastructure/repositories/meeting.repository"
 
 export type Command = {
   session: Session
@@ -14,7 +14,9 @@ export type Command = {
  * 権限を確認し、会議体をアーカイブする。議事録を壊さないため物理削除はしない。
  */
 export class ArchiveMeeting {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Meeting | ApplicationError> {
     const meetingRepository = new MeetingRepository(this.c)

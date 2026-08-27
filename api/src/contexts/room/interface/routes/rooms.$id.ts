@@ -1,5 +1,5 @@
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
-import { RoomRepository } from "@/contexts/room/infrastructure/room.repository"
+import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
 import { DeleteRoom } from "@/contexts/room/application/delete-room"
 import { UpdateRoom } from "@/contexts/room/application/update-room"
 import { factory } from "@/api/http/factory"

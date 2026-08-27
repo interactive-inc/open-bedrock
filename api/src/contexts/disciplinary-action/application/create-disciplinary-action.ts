@@ -3,7 +3,7 @@ import { DisciplinaryAction } from "@/contexts/disciplinary-action/domain/entiti
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { DisciplinaryActionRepository } from "@/contexts/disciplinary-action/infrastructure/disciplinary-action.repository"
+import { DisciplinaryActionRepository } from "@/contexts/disciplinary-action/infrastructure/repositories/disciplinary-action.repository"
 
 export type Command = {
   session: Session
@@ -18,7 +18,9 @@ export type Command = {
  * 権限を確認し、社員の懲戒を1件記録する。非公開のため本人にも開かない。
  */
 export class CreateDisciplinaryAction {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<DisciplinaryAction | ApplicationError> {
     if (command.session.hasPermission("disciplinary_action:manage") === false) {
