@@ -3,7 +3,7 @@ import type { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { AssetRepository } from "@/contexts/asset/infrastructure/asset.repository"
+import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
 
 export type Command = {
   session: Session
@@ -16,7 +16,9 @@ export type Command = {
  * 1 回の D1 batch でアトミックに行う。並行リクエストとの競合は条件付き write で防ぐ。
  */
 export class ReturnAsset {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Asset | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)

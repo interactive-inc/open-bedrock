@@ -1,7 +1,7 @@
 import type { Session } from "@/lib/auth/session"
 import type { Regulation } from "@/contexts/regulation/domain/entities/regulation.entity"
 import type { Context } from "@/env"
-import { RegulationRepository } from "@/contexts/regulation/infrastructure/regulation.repository"
+import { RegulationRepository } from "@/contexts/regulation/infrastructure/repositories/regulation.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -14,7 +14,9 @@ export type Command = {
  * 権限を確認し、規程をアーカイブする。版は残す。
  */
 export class ArchiveRegulation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Regulation | ApplicationError> {
     const regulationRepository = new RegulationRepository(this.c)

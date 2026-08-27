@@ -1,5 +1,5 @@
 import { ApproveShiftSwapRequest } from "@/contexts/shift/application/approve-shift-swap-request"
-import { EmployeeNotificationGateway } from "@/api/http/notifications/employee-notification.gateway.repository"
+import { EmployeeNotificationAdapter } from "@/api/http/notifications/employee-notification.adapter"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
@@ -19,9 +19,11 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const swapRequest = await new ApproveShiftSwapRequest(c, (notification) =>
-    new EmployeeNotificationGateway(c).create(notification),
-  ).run({
+  const swapRequest = await new ApproveShiftSwapRequest({
+    context: c,
+    publishEmployeeNotification: (notification) =>
+      new EmployeeNotificationAdapter(c).create(notification),
+  }).run({
     session: session,
     approverId: session.employeeId,
     swapRequestId,

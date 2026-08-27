@@ -1,4 +1,4 @@
-import { createCompanyAuditEventRepository } from "@/api/http/audit-events/create-company-audit-event-repository"
+import { createCompanyAuditEventAdapter } from "@/api/http/audit-events/create-company-audit-event-adapter"
 import { AuditTrail } from "@/api/http/utils/audit-trail"
 import { auditEventNotFound } from "@/api/http/utils/audit-event-not-found"
 import { throwAuditRouteError } from "@/api/http/utils/throw-audit-route-error"
@@ -16,7 +16,7 @@ export const GET = factory.createHandlers(
   async (c) => {
     const { eventId } = c.req.valid("param")
     try {
-      const detail = await createCompanyAuditEventRepository(c).findByEventId(eventId)
+      const detail = await createCompanyAuditEventAdapter(c).findByEventId(eventId)
       if (detail === null) {
         await new AuditTrail(c).appendReadSucceeded(eventId, 0)
         throw auditEventNotFound()

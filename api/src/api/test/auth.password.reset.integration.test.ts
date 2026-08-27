@@ -3,11 +3,11 @@ import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"
 import { seedD1 } from "@/api/test/support/seed-d1"
 import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
 import {
   seedPasswordHash,
   seedPepperSecret,
-} from "@/api/test/support/company/seed-password-hash.repository"
+} from "@/api/test/support/company/seed-password-hash.test-support"
 import { verifyPassword } from "@system/infrastructure/auth/verify-password.repository"
 import { hashPasswordResetToken } from "@system/infrastructure/auth/hash-password-reset-token.repository"
 import { describe, expect, test } from "bun:test"

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
-import { seedFamilyCareLeaves } from "@/contexts/family-care-leave/infrastructure/seed/seed-family-care-leaves.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedFamilyCareLeaves } from "@/contexts/family-care-leave/test/seed/seed-family-care-leaves.test-support"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"

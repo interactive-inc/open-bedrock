@@ -5,7 +5,7 @@ import {
 import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EvaluationTemplateRepository } from "@/contexts/performance-review/infrastructure/evaluation-template/evaluation-template.repository"
+import { EvaluationTemplateRepository } from "@/contexts/performance-review/infrastructure/repositories/evaluation-template/evaluation-template.repository"
 
 export type Command = {
   title: string
@@ -16,7 +16,9 @@ export type Command = {
 }
 
 export class CreateEvaluationTemplate {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<EvaluationTemplate | ApplicationError> {
     const repository = new EvaluationTemplateRepository(this.c)

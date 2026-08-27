@@ -3,7 +3,7 @@ import type { License } from "@/contexts/software-license/domain/entities/licens
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { LicenseRepository } from "@/contexts/software-license/infrastructure/license/license.repository"
+import { LicenseRepository } from "@/contexts/software-license/infrastructure/repositories/license/license.repository"
 
 export type Command = {
   session: Session
@@ -14,7 +14,9 @@ export type Command = {
  * 権限と存在を確認し、ライセンスを解約済みに倒す。棚卸し履歴を壊さないため物理削除はしない。
  */
 export class CancelLicense {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<License | ApplicationError> {
     const repository = new LicenseRepository(this.c)

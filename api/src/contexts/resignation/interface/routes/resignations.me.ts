@@ -1,4 +1,4 @@
-import { ResignationRepository } from "@/contexts/resignation/infrastructure/resignation.repository"
+import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
 import { UnexpectedError } from "@/lib/errors"
 
 import { factory } from "@/api/http/factory"

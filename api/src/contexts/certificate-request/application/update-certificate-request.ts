@@ -2,7 +2,7 @@ import type { CertificateRequest } from "@/contexts/certificate-request/domain/e
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/certificate-request.repository"
+import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
 
 export type Command = {
   certificateRequestId: string
@@ -17,7 +17,9 @@ export type Command = {
  * 証明書発行依頼の種別・提出先・希望日・備考を変更する。本人以外と、確定済み依頼の変更を拒否する。
  */
 export class UpdateCertificateRequest {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<CertificateRequest | ApplicationError> {
     const certificateRequestRepository = new CertificateRequestRepository(this.c)

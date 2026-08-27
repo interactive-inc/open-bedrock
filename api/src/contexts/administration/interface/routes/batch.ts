@@ -1,5 +1,5 @@
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { AdministrationBatchUnavailableError } from "@/contexts/administration/interface/errors"
+import { AdministrationBatchUnavailableError } from "@/contexts/administration/interface/errors/administration-batch-unavailable-error.error"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

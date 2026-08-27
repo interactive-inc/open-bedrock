@@ -1,5 +1,5 @@
 import { UnexpectedError } from "@/lib/errors"
-import { RoomRepository } from "@/contexts/room/infrastructure/room.repository"
+import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
 
 import { RegisterRoom } from "@/contexts/room/application/register-room"
 import { factory } from "@/api/http/factory"

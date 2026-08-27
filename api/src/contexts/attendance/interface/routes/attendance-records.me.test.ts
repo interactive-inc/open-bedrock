@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { seedAttendanceRecords } from "@/contexts/attendance/infrastructure/seed/seed-attendance-records.repository"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedAttendanceRecords } from "@/contexts/attendance/test/seed/seed-attendance-records.test-support"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
 import { createTestToken } from "@/api/test/support/create-test-token"
 import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
 import { loadSchema } from "@/api/test/support/load-schema"

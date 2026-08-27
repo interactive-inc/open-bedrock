@@ -3,9 +3,9 @@ import type { ReviewCycle } from "@/contexts/performance-review/domain/entities/
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
-import { ReviewCyclePolicyRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-policy.repository"
-import { ReviewFormGenerationRepository } from "@/contexts/performance-review/infrastructure/review/review-form-generation.repository"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
+import { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
+import { ReviewFormGenerationAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-form-generation.adapter"
 
 export type Input = {
   session: Session
@@ -18,7 +18,9 @@ export type Input = {
  * 許可する遷移: draft→open, open→closed のみ。
  */
 export class SetReviewCycleStatus {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ReviewCycle | ApplicationError> {
     if (input.session.hasPermission("review:administer") === false) {
@@ -51,13 +53,13 @@ export class SetReviewCycleStatus {
     }
 
     if (input.status === "open" && reviewCycle.id !== null) {
-      const policy = await new ReviewCyclePolicyRepository(this.c).find(reviewCycle.id)
+      const policy = await new ReviewCyclePolicyAdapter(this.c).find(reviewCycle.id)
 
       if (policy instanceof Error) {
         return new UnexpectedError("failed to load review cycle policy", { cause: policy })
       }
 
-      const generated = await new ReviewFormGenerationRepository(this.c).generate({
+      const generated = await new ReviewFormGenerationAdapter(this.c).generate({
         cycleId: reviewCycle.id,
         policy,
       })

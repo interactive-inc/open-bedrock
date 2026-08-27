@@ -10,7 +10,7 @@ import {
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { resolveEmployeePositionName } from "@/contexts/administration/interface/http/employees/resolve-employee-position-name"
 import { positionRequiresDepartment } from "@/contexts/administration/interface/utils/position-requires-department"
-import { IdentityRepository } from "@/contexts/administration/infrastructure/auth/identity.repository"
+import { IdentityAdapter } from "@/contexts/administration/infrastructure/adapters/auth/identity.adapter"
 import { ApplicationError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
@@ -159,7 +159,7 @@ export const GET = factory.createHandlers(
       return query.status === undefined || status === query.status
     })
     const page = filtered.slice(offset, offset + limit)
-    const emailByEmployeeId = await new IdentityRepository(c).findEmailsByEmployeeIds(
+    const emailByEmployeeId = await new IdentityAdapter(c).findEmailsByEmployeeIds(
       page.map((row) => row.id),
     )
 

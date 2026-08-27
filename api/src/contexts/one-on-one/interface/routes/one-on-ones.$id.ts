@@ -1,4 +1,4 @@
-import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/oneonone/one-on-one.repository"
+import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { UpdateOneOnOne } from "@/contexts/one-on-one/application/oneonone/update-one-on-one"
 import type { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"

@@ -7,7 +7,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/salary-revision/salary-revision.repository"
+import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/repositories/salary-revision/salary-revision.repository"
 import { resolveTargetEmployeeId } from "@/api/http/utils/resolve-target-employee-id"
 import { resolveEmployeeIdFromBody } from "@/api/http/utils/resolve-employee-id-from-body"
 import { ApplicationError } from "@/lib/errors"

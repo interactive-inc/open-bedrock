@@ -3,7 +3,7 @@ import { Position } from "@/contexts/administration/domain/entities/position.ent
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { PositionRepository } from "@/contexts/administration/infrastructure/position/position.repository"
+import { PositionRepository } from "@/contexts/administration/infrastructure/repositories/position/position.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -19,7 +19,9 @@ export type Command = {
  * 権限と重複コードを確認し、新しい役職をマスタに登録する。
  */
 export class CreatePosition {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Position | ApplicationError> {
     const repository = new PositionRepository(this.c)

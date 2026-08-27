@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
 import type { Context } from "@/env"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
 
 export type Input = {
   session: Session
@@ -15,7 +15,9 @@ export type Input = {
  * 権限を確認し、未公開の割当を公開済みにする。
  */
 export class PublishShiftAssignment {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ShiftAssignment | ApplicationError> {
     if (input.session.hasPermission("shift:manage") === false) {

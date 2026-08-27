@@ -3,7 +3,7 @@ import { RentalReservation } from "@/contexts/rental/domain/entities/rental-rese
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation.repository"
+import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
 
 export type Action = "lend" | "return"
 
@@ -18,7 +18,9 @@ export type Command = {
  * それ以外の現在状態からの遷移は 409 とする。
  */
 export class AdvanceRentalReservation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<RentalReservation | ApplicationError> {
     if (command.session.hasPermission("rental:manage") === false) {

@@ -2,7 +2,7 @@ import { factory } from "@/api/http/factory"
 import { toPrimaryRole } from "@/contexts/administration/interface/utils/to-primary-role"
 import { zAppAuthMe } from "@/lib/app-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { IdentityRepository } from "@/contexts/administration/infrastructure/auth/identity.repository"
+import { IdentityAdapter } from "@/contexts/administration/infrastructure/adapters/auth/identity.adapter"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { eq } from "drizzle-orm"
@@ -36,7 +36,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   // emailはSystem Identity profileが正。本人のIDから解決する。
-  const emailByEmployeeId = await new IdentityRepository(c).findEmailsByEmployeeIds([row.id])
+  const emailByEmployeeId = await new IdentityAdapter(c).findEmailsByEmployeeIds([row.id])
 
   if (emailByEmployeeId instanceof Error) {
     throw new InternalError("internal server error")

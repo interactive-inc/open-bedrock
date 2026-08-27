@@ -3,7 +3,7 @@ import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.enti
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { LifeEventRepository } from "@/contexts/life-event/infrastructure/life-event.repository"
+import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
 
 export type Action = "approve" | "reject"
 
@@ -18,7 +18,9 @@ export type Command = {
  * それ以外の現在状態からの遷移は 409 とする。
  */
 export class AdvanceLifeEvent {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<LifeEvent | ApplicationError> {
     if (command.session.hasPermission("life_event:manage") === false) {

@@ -2,7 +2,8 @@ import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RoomRepository } from "@/contexts/room/infrastructure/room.repository"
+import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
+import type { Room } from "@/contexts/room/domain/entities/room.entity"
 
 export type Command = {
   session: Session
@@ -16,7 +17,9 @@ export type Deleted = { reason: "deleted" }
  * rooms DELETE に RETURNING id を付与し、0 行削除（TOCTOU 競合）は not_found として扱う。
  */
 export class DeleteRoom {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const roomRepository = new RoomRepository(this.c)
@@ -25,7 +28,7 @@ export class DeleteRoom {
       return new ForbiddenError("cannot manage rooms", "forbidden")
     }
 
-    const room = await roomRepository.findById(command.roomId)
+    const room: Room | null | Error = await roomRepository.findById(command.roomId)
 
     if (room instanceof Error) {
       return new UnexpectedError("failed to find room", { cause: room })
@@ -35,25 +38,16 @@ export class DeleteRoom {
       return new NotFoundError("room not found", "room_not_found")
     }
 
-    try {
-      const db = this.c.env.DB
+    const deleted = await roomRepository.deleteWithReservations(room)
 
-      const results = await db.batch([
-        db.prepare("DELETE FROM room_reservations WHERE room_id = ?1").bind(command.roomId),
-        db.prepare("DELETE FROM rooms WHERE id = ?1 RETURNING id").bind(command.roomId),
-      ])
-
-      const roomDeleteResult = results.at(1)
-
-      if (roomDeleteResult === undefined || roomDeleteResult.results.length === 0) {
-        return new NotFoundError("room not found", "room_not_found")
-      }
-
-      return { reason: "deleted" }
-    } catch (error) {
-      return error instanceof Error
-        ? new UnexpectedError("failed to delete room", { cause: error })
-        : new UnexpectedError("failed to delete room")
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete room", { cause: deleted })
     }
+
+    if (deleted === null) {
+      return new NotFoundError("room not found", "room_not_found")
+    }
+
+    return { reason: "deleted" }
   }
 }

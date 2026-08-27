@@ -1,7 +1,7 @@
 import type { Session } from "@/lib/auth/session"
-import { createAdministrationAuditEvent } from "@/contexts/administration/application/audit/create-administration-audit-event"
+import { createAdministrationAuditEvent } from "@/contexts/administration/domain/factories/administration-audit-event.factory"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/contexts/administration/infrastructure/audit/audit-event.repository"
+import { AuditEventAdapter } from "@/contexts/administration/infrastructure/adapters/audit/audit-event.adapter"
 import { resolveOrganizationAuthority } from "@/contexts/company/infrastructure/organization/resolve-organization-authority.repository"
 
 export type LifecycleReadAuthorization = {
@@ -81,7 +81,7 @@ export class LifecycleAccess {
     resultCount: number
     filterFingerprint: string
   }): Promise<void> {
-    await new AuditEventRepository(this.props.c).append(
+    await new AuditEventAdapter(this.props.c).append(
       createAdministrationAuditEvent(
         {
           actorAccountId: this.props.session.accountId,
@@ -107,7 +107,7 @@ export class LifecycleAccess {
     permission: "employee:lifecycle:apply" | "employee:lifecycle:read:all" | "employee:read"
     reasonCode: string
   }): Promise<void> {
-    await new AuditEventRepository(this.props.c).append(
+    await new AuditEventAdapter(this.props.c).append(
       createAdministrationAuditEvent(
         {
           actorAccountId: this.props.session.accountId,

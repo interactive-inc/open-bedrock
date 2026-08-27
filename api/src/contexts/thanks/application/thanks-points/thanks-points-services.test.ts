@@ -4,7 +4,7 @@ import { CreateReward } from "@/contexts/thanks/application/thanks-points/create
 import { DecideRedemption } from "@/contexts/thanks/application/thanks-points/decide-redemption"
 import { RequestRedemption } from "@/contexts/thanks/application/thanks-points/request-redemption"
 import { UpdateReward } from "@/contexts/thanks/application/thanks-points/update-reward"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward.repository"
+import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { createTestContext } from "@/api/test/support/create-test-context"

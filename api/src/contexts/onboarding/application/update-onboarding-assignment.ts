@@ -5,7 +5,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 
 export type Command = {
   assignmentId: number
@@ -22,7 +22,9 @@ export type UpdateOnboardingAssignmentResult = {
  * 割り当ての割当日を変更する。特権ロールのみ許可する。
  */
 export class UpdateOnboardingAssignment {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<UpdateOnboardingAssignmentResult | ApplicationError> {
     if (command.session.hasPermission("onboarding:manage") === false) {

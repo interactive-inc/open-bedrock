@@ -2,7 +2,7 @@ import { CertificateRequest } from "@/contexts/certificate-request/domain/entiti
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/certificate-request.repository"
+import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
 
 export type Command = {
   requesterId: number
@@ -17,7 +17,9 @@ export type Command = {
  * 証明書発行依頼を作成する。status は "requested" で登録する。
  */
 export class CreateCertificateRequest {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<CertificateRequest | ApplicationError> {
     const certificateRequestRepository = new CertificateRequestRepository(this.c)

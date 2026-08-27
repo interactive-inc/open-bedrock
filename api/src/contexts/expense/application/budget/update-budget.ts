@@ -1,6 +1,6 @@
 import type { Budget } from "@/contexts/expense/domain/entities/budget.entity"
 import type { Context } from "@/env"
-import { BudgetRepository } from "@/contexts/expense/infrastructure/budget/budget.repository"
+import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -15,7 +15,9 @@ export type Command = {
  * 部署予算の金額・名称・メモを変更する。部署・会計期間は変更しない
  */
 export class UpdateBudget {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Budget | ApplicationError> {
     const repository = new BudgetRepository(this.c)

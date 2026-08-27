@@ -1,6 +1,6 @@
 import { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
 import type { Context } from "@/env"
-import { ResignationRepository } from "@/contexts/resignation/infrastructure/resignation.repository"
+import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -17,7 +17,9 @@ export type Command = {
  * 同一社員の PENDING（requested）申請が既に存在する場合は重複として拒否する。
  */
 export class CreateResignation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Resignation | ApplicationError> {
     const resignationRepository = new ResignationRepository(this.c)

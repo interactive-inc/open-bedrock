@@ -1,5 +1,5 @@
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
 import { DeleteShiftAssignment } from "@/contexts/shift/application/delete-shift-assignment"
 import { UpdateShiftAssignment } from "@/contexts/shift/application/update-shift-assignment"
 import { ApplicationError } from "@/lib/errors"

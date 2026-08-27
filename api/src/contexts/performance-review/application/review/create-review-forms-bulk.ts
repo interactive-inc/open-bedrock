@@ -1,17 +1,17 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import type { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
-import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form.repository"
-import type { ReviewFormDraft } from "@/contexts/performance-review/infrastructure/review/review-form.repository"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { inArray } from "drizzle-orm"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
+import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-form.repository"
+import type { ReviewFormDraft } from "@/contexts/performance-review/infrastructure/repositories/review/review-form.repository"
+import { EvaluationParticipantAdapter } from "@/contexts/performance-review/infrastructure/adapters/evaluation-sheet/evaluation-participant.adapter"
 
 export type BulkFormInput = {
-  subjectEmployeeId: number
-  reviewerEmployeeId: number
+  subjectEmployeeId: EmployeeId
+  reviewerEmployeeId: EmployeeId
   reviewerType: "self" | "manager" | "peer" | "subordinate"
 }
 
@@ -26,7 +26,9 @@ export type Input = {
  * 一括で評価フォームとして作成する（360度評価）。作成されるフォームは hidden で始まる。
  */
 export class CreateReviewFormsBulk {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ReadonlyArray<ReviewForm> | ApplicationError> {
     if (input.session.hasPermission("review:administer") === false) {
@@ -76,9 +78,9 @@ export class CreateReviewFormsBulk {
   /** 被評価者・評価者に実在しない社員 ID があれば 1 件返す。全て実在すれば null。 */
   private async findMissingEmployeeId(
     forms: ReadonlyArray<BulkFormInput>,
-  ): Promise<number | null | Error> {
+  ): Promise<EmployeeId | null | Error> {
     try {
-      const ids = new Set<number>()
+      const ids = new Set<EmployeeId>()
 
       for (const form of forms) {
         ids.add(form.subjectEmployeeId)
@@ -88,12 +90,11 @@ export class CreateReviewFormsBulk {
 
       const idList = Array.from(ids)
 
-      const rows = await this.c.var.database
-        .select({ id: employees.id })
-        .from(employees)
-        .where(inArray(employees.id, idList))
+      const found = await new EvaluationParticipantAdapter(this.c).existingEmployeeIds(idList)
 
-      const found = new Set(rows.map((row) => row.id))
+      if (found instanceof Error) {
+        return found
+      }
 
       for (const id of idList) {
         if (found.has(id) === false) {

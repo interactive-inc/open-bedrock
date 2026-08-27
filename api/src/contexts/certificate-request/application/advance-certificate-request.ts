@@ -3,7 +3,7 @@ import { CertificateRequest } from "@/contexts/certificate-request/domain/entiti
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/certificate-request.repository"
+import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
 
 export type Action = "issue" | "reject"
 
@@ -18,7 +18,9 @@ export type Command = {
  * それ以外の現在状態からの遷移は 409 とする。
  */
 export class AdvanceCertificateRequest {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<CertificateRequest | ApplicationError> {
     if (command.session.hasPermission("certificate_request:manage") === false) {

@@ -7,7 +7,7 @@ import { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onbo
 import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import { OnboardingTemplateTask } from "@/contexts/onboarding/domain/entities/onboarding-template-task.entity"
 import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"

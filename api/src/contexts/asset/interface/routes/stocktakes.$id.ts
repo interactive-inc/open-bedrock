@@ -1,6 +1,6 @@
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { StocktakeRepository } from "@/contexts/asset/infrastructure/stocktake/stocktake.repository"
+import { StocktakeRepository } from "@/contexts/asset/infrastructure/repositories/stocktake/stocktake.repository"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppStocktake } from "@/lib/app-schemas"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"

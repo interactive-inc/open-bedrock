@@ -10,7 +10,7 @@ import {
 import { zAppReviewResult } from "@/lib/app-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/review/review-form.repository"
+import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-form.repository"
 
 // @authorization permission - 権限キーで判定する
 /**

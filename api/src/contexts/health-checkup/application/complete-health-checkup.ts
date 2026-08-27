@@ -1,4 +1,4 @@
-import { HealthCheckupRepository } from "@/contexts/health-checkup/infrastructure/health-checkup.repository"
+import { HealthCheckupRepository } from "@/contexts/health-checkup/infrastructure/repositories/health-checkup.repository"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { HealthCheckup } from "@/contexts/health-checkup/domain/entities/health-checkup.entity"
@@ -9,7 +9,9 @@ import type { Context } from "@/env"
  * 対象が無ければ not found、scheduled 以外なら遷移不可（conflict）を返す。
  */
 export class CompleteHealthCheckup {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(props: { id: number; conductedOn: string }): Promise<HealthCheckup | ApplicationError> {
     const repository = new HealthCheckupRepository(this.c)

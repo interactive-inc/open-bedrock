@@ -3,7 +3,7 @@ import { Grade } from "@/contexts/administration/domain/entities/grade.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { GradeRepository } from "@/contexts/administration/infrastructure/grade/grade.repository"
+import { GradeRepository } from "@/contexts/administration/infrastructure/repositories/grade/grade.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -19,7 +19,9 @@ export type Command = {
  * 権限を確認し、等級マスタの定義を差し替える。
  */
 export class UpdateGrade {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Grade | ApplicationError> {
     const repository = new GradeRepository(this.c)

@@ -9,7 +9,7 @@ import {
 import type { ApplicationError } from "@/lib/errors"
 import type { RoomReservation } from "@/contexts/room/domain/entities/room-reservation.entity"
 import type { Context } from "@/env"
-import { RoomReservationRepository } from "@/contexts/room/infrastructure/room-reservation.repository"
+import { RoomReservationRepository } from "@/contexts/room/infrastructure/repositories/room-reservation.repository"
 
 export type Command = {
   reservationId: string
@@ -23,7 +23,9 @@ export type Command = {
  * 会議室予約の時刻と用途を変更する。本人以外の変更と、変更後の時間帯の重複を拒否する。
  */
 export class UpdateRoomReservation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<RoomReservation | ApplicationError> {
     if (command.startAt >= command.endAt) {

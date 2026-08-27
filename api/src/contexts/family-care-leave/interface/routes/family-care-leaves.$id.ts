@@ -1,6 +1,6 @@
 import { ConflictError } from "@/lib/errors"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/family-care-leave.repository"
+import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
 import { UpdateFamilyCareLeave } from "@/contexts/family-care-leave/application/update-family-care-leave"
 import type { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import { factory } from "@/api/http/factory"

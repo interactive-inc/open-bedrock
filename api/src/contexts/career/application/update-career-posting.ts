@@ -3,7 +3,7 @@ import type { CareerPosting } from "@/contexts/career/domain/entities/career-pos
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CareerPostingRepository } from "@/contexts/career/infrastructure/career-posting.repository"
+import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 
 export type Command = {
   session: Session
@@ -19,7 +19,9 @@ export type Command = {
  * 管理ロールが社内公募の内容と状態を変更する。
  */
 export class UpdateCareerPosting {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<CareerPosting | ApplicationError> {
     const postingRepository = new CareerPostingRepository(this.c)

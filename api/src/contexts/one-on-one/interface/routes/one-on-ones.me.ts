@@ -1,4 +1,4 @@
-import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/oneonone/one-on-one.repository"
+import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
 import { UnexpectedError } from "@/lib/errors"
 
 import { factory } from "@/api/http/factory"

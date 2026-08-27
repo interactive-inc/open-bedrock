@@ -1,5 +1,5 @@
 import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
-import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense.repository"
+import { ExpenseRepository } from "@/contexts/expense/infrastructure/repositories/expense.repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {

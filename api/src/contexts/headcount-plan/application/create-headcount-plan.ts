@@ -3,7 +3,7 @@ import { HeadcountPlan } from "@/contexts/headcount-plan/domain/entities/headcou
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/headcount-plan.repository"
+import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/repositories/headcount-plan.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -19,7 +19,9 @@ export type Command = {
  * 権限と重複(年度・部署)を確認し、人員計画を1件登録する。
  */
 export class CreateHeadcountPlan {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<HeadcountPlan | ApplicationError> {
     if (command.session.hasPermission("headcount_plan:manage") === false) {

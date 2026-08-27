@@ -15,9 +15,10 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const code = parseGovernanceCode(c.req.param("code"))
   const version = parseGovernanceVersion(c.req.param("version"))
   if (code === null || version === null) throw new NotFoundError("governance version not found")
-  const result = await new GovernancePublicationService(c, (audit) =>
-    prepareGovernanceAudit({ c, ...audit }),
-  ).submitReview({ session, code, version })
+  const result = await new GovernancePublicationService({
+    context: c,
+    prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
+  }).submitReview({ session, code, version })
   if (result instanceof ApplicationError) throw toHttpException(result)
   if (result instanceof Error) throw result
   return c.json(result, 200)

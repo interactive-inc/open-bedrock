@@ -1,44 +1,47 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftSwapRequest } from "@/contexts/shift/domain/entities/shift-swap-request.entity"
-import type { Context } from "@/env"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
-import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/shift-swap-request.repository"
+import type { Context as HonoContext } from "@/env"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
+import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/repositories/shift-swap-request.repository"
 
 export type Input = {
   session: Session
-  approverId: number
+  approverId: EmployeeId
   swapRequestId: number
   approvedAt: string
 }
+
+type Context = Readonly<{
+  context: HonoContext
+  publishEmployeeNotification?: (notification: {
+    recipientEmployeeId: EmployeeId
+    kind: "approval_result"
+    title: string
+    body: string | null
+    sourceDomain: string
+    sourceId: number | null
+    createdAt: string
+  }) => Promise<unknown>
+}>
 
 /**
  * 権限を確認し、保留中のシフト交代申請を承認する。
  * 承認時に両者のシフト割当の pattern_id をアトミックに入れ替え、両者へ通知を送る。
  */
 export class ApproveShiftSwapRequest {
-  constructor(
-    private readonly c: Context,
-    private readonly publishEmployeeNotification: (notification: {
-      recipientEmployeeId: number
-      kind: "approval_result"
-      title: string
-      body: string | null
-      sourceDomain: string
-      sourceId: number | null
-      createdAt: string
-    }) => Promise<unknown> = async () => null,
-  ) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ShiftSwapRequest | ApplicationError> {
     if (input.session.hasPermission("shift_swap:approve") === false) {
       return new ForbiddenError("cannot approve shift swap", "forbidden")
     }
 
-    const swapRequestRepository = new ShiftSwapRequestRepository(this.c)
+    const swapRequestRepository = new ShiftSwapRequestRepository(this.c.context)
 
     const swapRequest = await swapRequestRepository.findById(input.swapRequestId)
 
@@ -63,7 +66,7 @@ export class ApproveShiftSwapRequest {
     }
 
     // 両者の割当を取得する。どちらか一方でも無ければ承認を拒否する。
-    const assignmentRepository = new ShiftAssignmentRepository(this.c)
+    const assignmentRepository = new ShiftAssignmentRepository(this.c.context)
 
     const requesterAssignment = await assignmentRepository.findByEmployeeIdAndDate(
       swapRequest.requesterEmployeeId,
@@ -99,48 +102,31 @@ export class ApproveShiftSwapRequest {
     // 同日に複数の交換申請を持つ場合の並行承認で lost update を防ぐ。
     const approved = swapRequest.withApproved(input.approvedAt)
 
-    try {
-      const db = this.c.env.DB
-      await db.batch([
-        db
-          .prepare(
-            "UPDATE shift_swap_requests SET status = ?1, approved_at = ?2 WHERE id = ?3 AND status = 'pending'",
-          )
-          .bind(approved.status, approved.approvedAt, swapRequest.id),
-        abortWhenPreviousStatementChangedNoRows(db),
-        db
-          .prepare(
-            "UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id IS ?3",
-          )
-          .bind(targetAssignment.patternId, requesterAssignment.id, requesterAssignment.patternId),
-        abortWhenPreviousStatementChangedNoRows(db),
-        db
-          .prepare(
-            "UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id IS ?3",
-          )
-          .bind(requesterAssignment.patternId, targetAssignment.id, targetAssignment.patternId),
-        abortWhenPreviousStatementChangedNoRows(db),
-      ])
-    } catch (error) {
-      if (isAbortedByGuard(error)) {
-        return new ConflictError(
-          "shift swap conflict: request or assignment changed concurrently",
-          "conflict",
-        )
-      }
-      return error instanceof Error
-        ? new UnexpectedError("failed to swap shift assignments", { cause: error })
-        : new UnexpectedError("failed to swap shift assignments")
+    const persisted = await swapRequestRepository.approveWithAssignmentSwap({
+      approved,
+      requesterAssignment,
+      targetAssignment,
+    })
+
+    if (persisted instanceof Error) {
+      return new UnexpectedError("failed to swap shift assignments", { cause: persisted })
+    }
+
+    if ("reason" in persisted) {
+      return new ConflictError(
+        "shift swap conflict: request or assignment changed concurrently",
+        "conflict",
+      )
     }
 
     // 通知はベストエフォート。交換は完了済みなので、通知が失敗してもログのみ残して結果を返す。
     await this.notifySwap(swapRequest, input.approvedAt)
 
-    return approved
+    return persisted
   }
 
   private async notifySwap(swapRequest: ShiftSwapRequest, createdAt: string): Promise<void> {
-    const requesterNotified = await this.publishEmployeeNotification({
+    const requesterNotified = await this.c.publishEmployeeNotification?.({
       recipientEmployeeId: swapRequest.requesterEmployeeId,
       kind: "approval_result",
       title: `${swapRequest.date} のシフト交代申請が承認されました`,
@@ -154,7 +140,7 @@ export class ApproveShiftSwapRequest {
       console.error("failed to create swap notification for requester", requesterNotified)
     }
 
-    const targetNotified = await this.publishEmployeeNotification({
+    const targetNotified = await this.c.publishEmployeeNotification?.({
       recipientEmployeeId: swapRequest.targetEmployeeId,
       kind: "approval_result",
       title: `${swapRequest.date} のシフト交代が承認されました`,

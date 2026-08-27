@@ -1,5 +1,5 @@
 import { CreateGrade } from "@/contexts/administration/application/grade/create-grade"
-import { GradeRepository } from "@/contexts/administration/infrastructure/grade/grade.repository"
+import { GradeRepository } from "@/contexts/administration/infrastructure/repositories/grade/grade.repository"
 import { InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"

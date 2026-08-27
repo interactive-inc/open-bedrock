@@ -1,4 +1,4 @@
-import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
+import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
 import { buildGoalTree } from "@/contexts/performance-review/domain/policies/goal-tree.policy"
 import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
 import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"

@@ -1,9 +1,12 @@
 import type { Session } from "@/lib/auth/session"
 import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
-import type { Context } from "@/env"
-import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
-import { GovernanceAccessRepository } from "@/contexts/governance/infrastructure/governance-access.repository"
-import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/resolve-governance-org-role.repository"
+import type { Context as HonoContext } from "@/env"
+import {
+  GovernanceAdapter,
+  type GovernanceAuditStatements,
+} from "@/contexts/governance/infrastructure/adapters/governance.adapter"
+import { GovernanceAccessAdapter } from "@/contexts/governance/infrastructure/adapters/governance-access.adapter"
+import { ResolveGovernanceOrgRoleAdapter } from "@/contexts/governance/infrastructure/adapters/resolve-governance-org-role.adapter"
 import {
   ConflictError,
   ForbiddenError,
@@ -12,21 +15,25 @@ import {
   UnprocessableError,
 } from "@/lib/errors"
 
+type Context = Readonly<{
+  context: HonoContext
+  prepareAudit: (props: {
+    session: Session
+    action:
+      | "governance.review.submitted"
+      | "governance.review.decided"
+      | "governance.document.published"
+      | "governance.document.acknowledged"
+    targetType: "governance_version"
+    targetId: string
+    metadata?: SystemJsonValue
+  }) => GovernanceAuditStatements
+}>
+
 export class GovernancePublicationService {
-  constructor(
-    private readonly c: Context,
-    private readonly prepareAudit: (props: {
-      session: Session
-      action:
-        | "governance.review.submitted"
-        | "governance.review.decided"
-        | "governance.document.published"
-        | "governance.document.acknowledged"
-      targetType: "governance_version"
-      targetId: string
-      metadata?: SystemJsonValue
-    }) => readonly [D1PreparedStatement, D1PreparedStatement],
-  ) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async submitReview(props: {
     session: Session
@@ -49,7 +56,9 @@ export class GovernancePublicationService {
     }
     const roles = loaded.version.metadata.publication.approver_org_roles
     const resolved = await Promise.all(
-      roles.map((code) => resolveGovernanceOrgRole({ c: this.c, code })),
+      roles.map((code) =>
+        new ResolveGovernanceOrgRoleAdapter(this.c.context).resolveGovernanceOrgRole(code),
+      ),
     )
     const roleError = resolved.find((item) => item instanceof Error)
     if (roleError instanceof Error) {
@@ -64,10 +73,10 @@ export class GovernancePublicationService {
         "governance_reviewer_unassigned",
       )
     }
-    const result = await new GovernanceRepository(this.c).submitForReview({
+    const result = await new GovernanceAdapter(this.c.context).submitForReview({
       versionId: loaded.version.row.id,
       approverOrgRoles: roles,
-      auditStatements: this.prepareAudit({
+      auditStatements: this.c.prepareAudit({
         session: props.session,
         action: "governance.review.submitted",
         targetType: "governance_version",
@@ -88,7 +97,12 @@ export class GovernancePublicationService {
     decision: "approved" | "rejected"
     comment: string | null
   }): Promise<{ state: "approved" | "rejected" } | Error> {
-    if (!new GovernanceAccessRepository({ c: this.c, session: props.session }).canReview()) {
+    if (
+      !new GovernanceAccessAdapter({
+        context: this.c.context,
+        session: props.session,
+      }).canReview()
+    ) {
       return new ForbiddenError("規程版を審査する権限がありません", "governance_review_forbidden")
     }
     const loaded = await this.load(props.code, props.version)
@@ -99,7 +113,9 @@ export class GovernancePublicationService {
     if (!loaded.version.metadata.publication.approver_org_roles.includes(props.orgRoleCode)) {
       return new ForbiddenError("この組織ロールは審査候補ではありません", "governance_review_role")
     }
-    const assignees = await resolveGovernanceOrgRole({ c: this.c, code: props.orgRoleCode })
+    const assignees = await new ResolveGovernanceOrgRoleAdapter(
+      this.c.context,
+    ).resolveGovernanceOrgRole(props.orgRoleCode)
     if (assignees instanceof Error) {
       return new UnexpectedError("審査担当を解決できません", { cause: assignees })
     }
@@ -109,14 +125,14 @@ export class GovernancePublicationService {
         "governance_review_scope",
       )
     }
-    const result = await new GovernanceRepository(this.c).decideReview({
+    const result = await new GovernanceAdapter(this.c.context).decideReview({
       versionId: loaded.version.row.id,
       orgRoleCode: props.orgRoleCode,
       decision: props.decision,
       employeeId: props.session.employeeId,
-      decidedAt: this.c.env.NOW ?? new Date().toISOString(),
+      decidedAt: this.c.context.env.NOW ?? new Date().toISOString(),
       comment: props.comment,
-      auditStatements: this.prepareAudit({
+      auditStatements: this.c.prepareAudit({
         session: props.session,
         action: "governance.review.decided",
         targetType: "governance_version",
@@ -141,7 +157,12 @@ export class GovernancePublicationService {
     code: string
     version: string
   }): Promise<{ state: "published"; version_id: string } | Error> {
-    if (!new GovernanceAccessRepository({ c: this.c, session: props.session }).canPublish()) {
+    if (
+      !new GovernanceAccessAdapter({
+        context: this.c.context,
+        session: props.session,
+      }).canPublish()
+    ) {
       return new ForbiddenError("規程版を公開する権限がありません", "governance_publish_forbidden")
     }
     const loaded = await this.load(props.code, props.version)
@@ -175,12 +196,12 @@ export class GovernancePublicationService {
     } else if (loaded.version.row.state !== "draft") {
       return new ConflictError("直接公開できる下書きではありません", "governance_publish_state")
     }
-    const result = await new GovernanceRepository(this.c).publish({
+    const result = await new GovernanceAdapter(this.c.context).publish({
       document: loaded.document,
       version: loaded.version,
       accountId: props.session.accountId,
-      now: this.c.env.NOW ?? new Date().toISOString(),
-      auditStatements: this.prepareAudit({
+      now: this.c.context.env.NOW ?? new Date().toISOString(),
+      auditStatements: this.c.prepareAudit({
         session: props.session,
         action: "governance.document.published",
         targetType: "governance_version",
@@ -200,7 +221,7 @@ export class GovernancePublicationService {
     if (!props.session.permissions.has("governance:acknowledge")) {
       return new ForbiddenError("規程を確認する権限がありません", "governance_ack_forbidden")
     }
-    const repository = new GovernanceRepository(this.c)
+    const repository = new GovernanceAdapter(this.c.context)
     const record = await repository.findVisibleRecord({ code: props.code, includeDraft: false })
     if (record instanceof Error) {
       return new UnexpectedError("規程を取得できません", { cause: record })
@@ -208,8 +229,8 @@ export class GovernancePublicationService {
     if (record === null || record.version === null) {
       return new NotFoundError("公開済みの規程がありません", "governance_not_found")
     }
-    const audience = await new GovernanceAccessRepository({
-      c: this.c,
+    const audience = await new GovernanceAccessAdapter({
+      context: this.c.context,
       session: props.session,
     }).isAudienceMember(record.version.metadata)
     if (audience instanceof Error) {
@@ -218,13 +239,13 @@ export class GovernancePublicationService {
     if (!audience) {
       return new ForbiddenError("この規程の適用対象ではありません", "governance_ack_scope")
     }
-    const acknowledgedAt = this.c.env.NOW ?? new Date().toISOString()
+    const acknowledgedAt = this.c.context.env.NOW ?? new Date().toISOString()
     const result = await repository.acknowledge({
       versionId: record.version.row.id,
       employeeId: props.session.employeeId,
       contentHash: record.version.row.contentHash,
       acknowledgedAt,
-      auditStatements: this.prepareAudit({
+      auditStatements: this.c.prepareAudit({
         session: props.session,
         action: "governance.document.acknowledged",
         targetType: "governance_version",
@@ -238,7 +259,7 @@ export class GovernancePublicationService {
   }
 
   private async load(code: string, version: string) {
-    const repository = new GovernanceRepository(this.c)
+    const repository = new GovernanceAdapter(this.c.context)
     const document = await repository.findDocument(code)
     if (document instanceof Error) {
       return new UnexpectedError("規程を取得できません", { cause: document })

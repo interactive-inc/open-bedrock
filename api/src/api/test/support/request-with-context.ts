@@ -1,6 +1,6 @@
 import { app } from "@/api/app"
 import type { Bindings } from "@/env"
-import { seedPepperSecret } from "@/api/test/support/company/seed-password-hash.repository"
+import { seedPepperSecret } from "@/api/test/support/company/seed-password-hash.test-support"
 
 export type Props = {
   db: D1Database

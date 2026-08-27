@@ -1,4 +1,4 @@
-import { WorkAccidentRepository } from "@/contexts/work-accident/infrastructure/work-accident.repository"
+import { WorkAccidentRepository } from "@/contexts/work-accident/infrastructure/repositories/work-accident.repository"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { WorkAccident } from "@/contexts/work-accident/domain/entities/work-accident.entity"
@@ -9,7 +9,9 @@ import type { Context } from "@/env"
  * 対象が無ければ not found、reported 以外なら遷移不可（conflict）を返す。
  */
 export class CloseWorkAccident {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(props: { id: number }): Promise<WorkAccident | ApplicationError> {
     const repository = new WorkAccidentRepository(this.c)

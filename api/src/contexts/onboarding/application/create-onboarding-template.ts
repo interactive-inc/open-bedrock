@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import type { Context } from "@/env"
-import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -18,7 +18,9 @@ export type Command = {
  * 管理権限を持つ者が新しいオンボーディングテンプレートを作成する。
  */
 export class CreateOnboardingTemplate {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<OnboardingTemplate | ApplicationError> {
     const templateRepository = new OnboardingTemplateRepository(this.c)

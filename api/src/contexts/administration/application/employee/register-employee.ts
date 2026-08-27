@@ -2,14 +2,14 @@ import type { Session } from "@/lib/auth/session"
 import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
 import type { EmployeeDirectoryEntryValue } from "@/contexts/company/domain/values/employee-directory-entry.value"
 import type { Context } from "@/env"
-import { IdentityRepository } from "@/contexts/administration/infrastructure/auth/identity.repository"
+import { IdentityAdapter } from "@/contexts/administration/infrastructure/adapters/auth/identity.adapter"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
-import { PrepareEmployeeAccountProvisioning } from "@/contexts/administration/infrastructure/iam/prepare-employee-account-provisioning.repository"
+import { PrepareEmployeeAccountProvisioningAdapter } from "@/contexts/administration/infrastructure/adapters/iam/prepare-employee-account-provisioning.adapter"
+import { RegisterEmployeeAdapter } from "@/contexts/administration/infrastructure/adapters/employee/register-employee.adapter"
 import { SystemPasswordValue } from "@system/domain/values/auth/system-password.value"
 import { hashPassword } from "@system/infrastructure/auth/hash-password.repository"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
-import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,
@@ -17,7 +17,6 @@ import {
   UnexpectedError,
   ValidationError,
 } from "@/lib/errors"
-import { SystemRoleAdministrationRepository } from "@system/infrastructure/iam/system-role-administration.repository"
 
 export type Command = {
   session: Session
@@ -35,7 +34,9 @@ export type Command = {
 }
 
 export class RegisterEmployee {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<EmployeeDirectoryEntryValue | ApplicationError> {
     if (
@@ -57,14 +58,12 @@ export class RegisterEmployee {
         "role_escalation_forbidden",
       )
     }
-    const roles = await new SystemRoleAdministrationRepository({
-      env: { DB: this.c.env.DB },
-    }).list()
-    if (roles instanceof Error) {
-      return new UnexpectedError("failed to find role", { cause: roles })
+    const adapter = new RegisterEmployeeAdapter(this.c)
+    const role = await adapter.findRole(`company:${command.employee.role}`)
+    if (role instanceof Error) {
+      return new UnexpectedError("failed to find role", { cause: role })
     }
-    const role = roles.find((candidate) => candidate.key === `company:${command.employee.role}`)
-    if (role === undefined) return new ValidationError("role not found", "role_not_found")
+    if (role === null) return new ValidationError("role not found", "role_not_found")
     if (
       !role.permissionKeys.every((permissionKey) => command.session.hasPermission(permissionKey))
     ) {
@@ -83,7 +82,7 @@ export class RegisterEmployee {
     }
     const [existing, existingByEmail] = await Promise.all([
       new EmployeeRepository(this.c).findByCode(command.employee.code),
-      new IdentityRepository(this.c).findEmployeeIdByEmail(command.employee.email),
+      new IdentityAdapter(this.c).findEmployeeIdByEmail(command.employee.email),
     ])
     if (existing instanceof Error || existingByEmail instanceof Error) {
       return new UnexpectedError("failed to validate employee identity", {
@@ -97,10 +96,12 @@ export class RegisterEmployee {
       return new ConflictError("email already exists", "email_conflict")
     }
 
-    const organizationRevision =
-      (await this.c.env.DB.prepare(
-        "SELECT revision FROM organization_lifecycle_states WHERE id = 1",
-      ).first<number>("revision")) ?? 0
+    const organizationRevision = await adapter.organizationRevision()
+    if (organizationRevision instanceof Error) {
+      return new UnexpectedError("failed to read organization revision", {
+        cause: organizationRevision,
+      })
+    }
     const prepared = await new ApplyPersonnelAction(this.c).prepareDirectProspectiveHire({
       session: command.session,
       input: {
@@ -123,7 +124,7 @@ export class RegisterEmployee {
 
     const passwordHash = await hashPassword(password.toString(), pepper)
     const now = new Date(this.c.env.NOW ?? Date.now())
-    const accountStatements = new PrepareEmployeeAccountProvisioning(this.c).prepare({
+    const accountStatements = new PrepareEmployeeAccountProvisioningAdapter(this.c).prepare({
       employeeCode: command.employee.code,
       email: command.employee.email,
       passwordHash,
@@ -136,22 +137,18 @@ export class RegisterEmployee {
         cause: accountStatements,
       })
     }
-    try {
-      await this.c.env.DB.batch([...prepared.statements, ...accountStatements])
-    } catch (cause) {
-      if (
-        (cause instanceof Error && cause.message.includes("integer overflow")) ||
-        isAbortedByGuard(cause)
-      ) {
-        return new ForbiddenError(
-          "live permissions changed while registering employee",
-          "role_escalation_forbidden",
-        )
-      }
-      if (cause instanceof Error && cause.message.includes("UNIQUE constraint")) {
-        return new ConflictError("employee identity already exists", "employee_code_conflict")
-      }
-      return new UnexpectedError("failed to register employee", { cause })
+    const committed = await adapter.commit([...prepared.statements, ...accountStatements])
+    if (committed === "forbidden") {
+      return new ForbiddenError(
+        "live permissions changed while registering employee",
+        "role_escalation_forbidden",
+      )
+    }
+    if (committed === "conflict") {
+      return new ConflictError("employee identity already exists", "employee_code_conflict")
+    }
+    if (committed instanceof Error) {
+      return new UnexpectedError("failed to register employee", { cause: committed })
     }
     const created = await new EmployeeRepository(this.c).findByCode(command.employee.code)
     return created instanceof Error || created === null

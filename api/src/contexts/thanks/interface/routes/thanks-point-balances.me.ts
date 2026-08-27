@@ -1,4 +1,4 @@
-import { ThanksPointBalanceRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-point-balance.repository"
+import { ThanksPointBalanceAdapter } from "@/contexts/thanks/infrastructure/adapters/thanks-points/thanks-point-balance.adapter"
 import { UnexpectedError } from "@/lib/errors"
 import { zAppThanksBalance } from "@/lib/app-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -18,7 +18,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const balance = await new ThanksPointBalanceRepository(c).getBalance(session.employeeId)
+  const balance = await new ThanksPointBalanceAdapter(c).getBalance(session.employeeId)
 
   if (balance instanceof Error) {
     throw toHttpException(new UnexpectedError("failed to find balance", { cause: balance }))

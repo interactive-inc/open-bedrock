@@ -3,7 +3,7 @@ import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { Decision } from "@/contexts/meeting/domain/entities/decision.entity"
 import type { Context } from "@/env"
-import { DecisionRepository } from "@/contexts/meeting/infrastructure/decision/decision.repository"
+import { DecisionRepository } from "@/contexts/meeting/infrastructure/repositories/decision/decision.repository"
 
 export type Command = {
   session: Session
@@ -19,7 +19,9 @@ export type Command = {
  * 権限を確認し、意思決定記録を新規作成する。
  */
 export class CreateDecision {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Decision | ApplicationError> {
     const decisionRepository = new DecisionRepository(this.c)

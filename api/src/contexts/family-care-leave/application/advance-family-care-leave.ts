@@ -3,7 +3,7 @@ import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/fa
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/family-care-leave.repository"
+import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
 
 export type Action = "approve" | "cancel"
 
@@ -18,7 +18,9 @@ export type Command = {
  * それ以外の現在状態からの遷移は 409 とする。
  */
 export class AdvanceFamilyCareLeave {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<FamilyCareLeave | ApplicationError> {
     if (command.session.hasPermission("family_care_leave:manage") === false) {

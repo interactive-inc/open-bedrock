@@ -5,7 +5,7 @@ import type { EmployeeDirectoryEntryValue } from "@/contexts/company/domain/valu
 import type { Context } from "@/env"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { IdentityRepository } from "@/contexts/administration/infrastructure/auth/identity.repository"
+import { IdentityAdapter } from "@/contexts/administration/infrastructure/adapters/auth/identity.adapter"
 import { toPrimaryRole } from "@/contexts/administration/interface/utils/to-primary-role"
 import {
   ApplicationError,
@@ -42,7 +42,7 @@ async function toResponseBody(
     position: string | null
   }>,
 ) {
-  const emailByEmployeeId = await new IdentityRepository(c).findEmailsByEmployeeIds([employee.id])
+  const emailByEmployeeId = await new IdentityAdapter(c).findEmailsByEmployeeIds([employee.id])
 
   if (emailByEmployeeId instanceof Error) {
     return new UnexpectedError("failed to resolve email", { cause: emailByEmployeeId })

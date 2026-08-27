@@ -9,8 +9,8 @@ import type { EmployeeRelation } from "@/contexts/company/domain/definitions/emp
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/goal/goal-evaluation.repository"
-import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
+import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
+import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
 
 export type Command = {
   goalId: number
@@ -26,7 +26,9 @@ export type Command = {
  * 目標の存在確認・権限判定・評価作成・final時の完了反映までを束ねる。
  */
 export class CreateGoalEvaluation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<GoalEvaluation | ApplicationError> {
     const goalRepository = new GoalRepository(this.c)

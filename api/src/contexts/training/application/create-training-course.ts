@@ -4,7 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
 import type { Context } from "@/env"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
-import { TrainingCourseRepository } from "@/contexts/training/infrastructure/training-course.repository"
+import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
 
 export type Command = {
   session: Session
@@ -20,7 +20,9 @@ export type Command = {
  * 管理権限を持つ者が新しい研修コースを作成する。
  */
 export class CreateTrainingCourse {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<TrainingCourse | ApplicationError> {
     const courseRepository = new TrainingCourseRepository(this.c)

@@ -1,7 +1,7 @@
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
-import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/ringi-request.repository"
+import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
 import { UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -19,7 +19,9 @@ export type Command = {
  * 自分自身を承認者に指定することはできない。
  */
 export class SubmitRingi {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<RingiRequest | ApplicationError> {
     if (command.approverId === command.applicantId) {

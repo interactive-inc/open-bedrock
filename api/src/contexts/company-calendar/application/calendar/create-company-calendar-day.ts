@@ -4,7 +4,7 @@ import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { CalendarDayKind } from "@/lib/schemas"
 import type { Context } from "@/env"
-import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/calendar/company-calendar-day.repository"
+import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/repositories/calendar/company-calendar-day.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -19,7 +19,9 @@ export type Command = {
  * 権限と同一日の重複を確認し、会社カレンダーに 1 日を記録する。
  */
 export class CreateCompanyCalendarDay {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<CompanyCalendarDay | ApplicationError> {
     if (command.session.hasPermission("calendar:manage") === false) {

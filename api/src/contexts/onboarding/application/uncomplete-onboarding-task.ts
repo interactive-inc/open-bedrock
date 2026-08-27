@@ -4,7 +4,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTask } from "@/contexts/onboarding/domain/entities/onboarding-task.entity"
 import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 
 export type Command = {
   taskId: number
@@ -15,7 +15,9 @@ export type Command = {
  * タスクの完了を取り消し、割り当ての完了状態を再計算する。本人か特権ロールのみ許可。
  */
 export class UncompleteOnboardingTask {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<OnboardingTask | ApplicationError> {
     const assignmentRepository = new OnboardingAssignmentRepository(this.c)

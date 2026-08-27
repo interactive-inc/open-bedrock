@@ -1,6 +1,6 @@
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import type { Context } from "@/env"
-import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/knowledge-article.repository"
+import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -17,7 +17,9 @@ export type Command = {
  * ナレッジ記事を新規作成する。作成者は author となる。
  */
 export class CreateKnowledgeArticle {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<KnowledgeArticle | ApplicationError> {
     const articleRepository = new KnowledgeArticleRepository(this.c)

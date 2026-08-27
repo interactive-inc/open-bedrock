@@ -2,8 +2,8 @@ import type { Session } from "@/lib/auth/session"
 import type { AuditEventInput } from "@/api/http/audit/company-audit-event.definition"
 import { createAuditEvent } from "@/api/http/audit/company-audit-event.definition"
 import type { Context } from "@/env"
-import type { AuditEventFilters } from "@/api/http/audit/audit-event.repository"
-import { AuditEventRepository } from "@/api/http/audit/audit-event.repository"
+import type { AuditEventFilters } from "@/api/http/audit/audit-event.adapter"
+import { AuditEventAdapter } from "@/api/http/audit/audit-event.adapter"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { auditUnavailable } from "@/api/http/utils/audit-unavailable"
 import { hashAuditFilters } from "@/api/http/utils/hash-audit-filters"
@@ -138,7 +138,7 @@ export class AuditTrail {
         },
         this.c.var.auditContext,
       )
-      await new AuditEventRepository(this.c).append(record)
+      await new AuditEventAdapter(this.c).append(record)
     } catch (error) {
       throw auditUnavailable(error)
     }

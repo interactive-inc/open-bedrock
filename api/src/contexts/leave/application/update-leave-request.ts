@@ -1,4 +1,4 @@
-import { LeaveBalanceSufficiencyRepository } from "@/contexts/leave/infrastructure/leave-balance-sufficiency.repository"
+import { LeaveBalanceSufficiencyAdapter } from "@/contexts/leave/infrastructure/adapters/leave-balance-sufficiency.adapter"
 import { computeConsumedDays } from "@/contexts/leave/domain/policies/compute-consumed-days.policy"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { validateLeaveUnit } from "@/contexts/leave/domain/policies/validate-leave-unit.policy"
@@ -11,7 +11,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request.repository"
+import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
 import type { LeaveType, LeaveUnit } from "@/lib/schemas"
 
 export type Command = {
@@ -29,7 +29,9 @@ export type Command = {
  * 休暇申請の内容を変更する。本人以外と、決定済み申請の変更を拒否する。
  */
 export class UpdateLeaveRequest {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<LeaveRequest | ApplicationError> {
     const repository = new LeaveRequestRepository(this.c)
@@ -71,7 +73,7 @@ export class UpdateLeaveRequest {
 
     const consumedDays = computeConsumedDays({ unit: command.unit, hours: command.hours, days })
 
-    const balanceError = await new LeaveBalanceSufficiencyRepository(this.c).check({
+    const balanceError = await new LeaveBalanceSufficiencyAdapter(this.c).check({
       employeeId: command.employeeId,
       leaveType: command.leaveType,
       startDate: command.startDate,

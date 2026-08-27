@@ -1,5 +1,5 @@
 import { CreateDepartment } from "@/contexts/administration/application/organization/create-department"
-import { DepartmentRepository } from "@/contexts/administration/infrastructure/organization/department.repository"
+import { DepartmentAdapter } from "@/contexts/administration/infrastructure/adapters/organization/department.adapter"
 import { InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -75,7 +75,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const repository = new DepartmentRepository(c)
+  const repository = new DepartmentAdapter(c)
 
   const departmentDefinitions = await repository.findAll({ limit, offset })
 

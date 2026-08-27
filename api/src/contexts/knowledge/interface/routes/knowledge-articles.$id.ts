@@ -1,4 +1,4 @@
-import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/knowledge-article.repository"
+import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import {
   ForbiddenError,
   NotFoundError as ApplicationNotFoundError,

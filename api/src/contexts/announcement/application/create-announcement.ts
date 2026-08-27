@@ -1,7 +1,7 @@
 import type { Session } from "@/lib/auth/session"
 import { Announcement } from "@/contexts/announcement/domain/entities/announcement.entity"
 import type { Context } from "@/env"
-import { AnnouncementRepository } from "@/contexts/announcement/infrastructure/announcement.repository"
+import { AnnouncementRepository } from "@/contexts/announcement/infrastructure/repositories/announcement.repository"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -17,7 +17,9 @@ export type Command = {
  * 権限を確認し、社内アナウンスを draft 状態で新規作成する。
  */
 export class CreateAnnouncement {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Announcement | ApplicationError> {
     const announcementRepository = new AnnouncementRepository(this.c)

@@ -1,6 +1,6 @@
 import type { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import type { Context } from "@/env"
-import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense.repository"
+import { ExpenseRepository } from "@/contexts/expense/infrastructure/repositories/expense.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ExpenseCategory } from "@/lib/schemas"
@@ -18,7 +18,9 @@ export type Command = {
  * 本人の経費申請の内容を変更する。本人以外と、承認・却下・精算済みの変更を拒否する。
  */
 export class UpdateExpense {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Expense | ApplicationError> {
     const repository = new ExpenseRepository(this.c)

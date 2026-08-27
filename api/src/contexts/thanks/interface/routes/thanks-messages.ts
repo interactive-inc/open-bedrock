@@ -1,5 +1,5 @@
 import { SendThanks } from "@/contexts/thanks/application/send-thanks"
-import { EmployeeNotificationGateway } from "@/api/http/notifications/employee-notification.gateway.repository"
+import { EmployeeNotificationAdapter } from "@/api/http/notifications/employee-notification.adapter"
 import { Thanks } from "@/contexts/thanks/domain/entities/thanks.entity"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -19,6 +19,7 @@ import { zValidator } from "@hono/zod-validator"
 import { count, desc } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /thanks-messages — 全従業員が閲覧する感謝のタイムライン（新着順・ページング） */
@@ -99,9 +100,11 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const result = await new SendThanks(c, (notification) =>
-      new EmployeeNotificationGateway(c).create(notification),
-    ).run({
+    const result = await new SendThanks({
+      context: c,
+      publishEmployeeNotification: (notification) =>
+        new EmployeeNotificationAdapter(c).create(notification),
+    }).run({
       senderEmployeeId: session.employeeId,
       recipientEmployeeCode: json.recipient_employee_code,
       message: json.message,
@@ -113,7 +116,7 @@ export const POST = factory.createHandlers(
       throw toHttpException(result)
     }
 
-    let nameById: Map<number, string>
+    let nameById: Map<EmployeeId, string>
 
     try {
       nameById = await toEmployeeNameMap(c, [result.senderEmployeeId, result.recipientEmployeeId])

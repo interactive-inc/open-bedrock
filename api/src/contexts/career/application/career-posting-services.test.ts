@@ -4,7 +4,7 @@ import { CreateCareerPosting } from "@/contexts/career/application/create-career
 import { DeleteCareerPosting } from "@/contexts/career/application/delete-career-posting"
 import { UpdateCareerPosting } from "@/contexts/career/application/update-career-posting"
 import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
-import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application.repository"
+import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

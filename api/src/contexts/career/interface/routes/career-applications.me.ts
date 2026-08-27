@@ -1,5 +1,5 @@
 import { UnexpectedError } from "@/lib/errors"
-import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application.repository"
+import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
 
 import { factory } from "@/api/http/factory"
 import {

@@ -8,8 +8,8 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RoomReservationRepository } from "@/contexts/room/infrastructure/room-reservation.repository"
-import { RoomRepository } from "@/contexts/room/infrastructure/room.repository"
+import { RoomReservationRepository } from "@/contexts/room/infrastructure/repositories/room-reservation.repository"
+import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
 
 export type Command = {
   roomId: number
@@ -23,7 +23,9 @@ export type Command = {
  * 会議室を予約する。会議室が存在しない場合、重複時は判別可能な失敗を返す。
  */
 export class CreateRoomReservation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<RoomReservation | ApplicationError> {
     if (command.startAt >= command.endAt) {

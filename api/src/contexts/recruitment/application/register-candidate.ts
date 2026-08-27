@@ -3,7 +3,7 @@ import { RecruitmentCandidate } from "@/contexts/recruitment/domain/entities/rec
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/recruitment.repository"
+import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/repositories/recruitment.repository"
 
 export type Command = {
   session: Session
@@ -19,7 +19,9 @@ export type Command = {
  * 権限と募集の存在を確認し、応募者を applied ステージで1件登録する。
  */
 export class RegisterCandidate {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<RecruitmentCandidate | ApplicationError> {
     if (command.session.hasPermission("recruitment:manage") === false) {

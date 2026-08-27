@@ -1,4 +1,4 @@
-import { eq, sum } from "drizzle-orm"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type {
   EvaluationSheet,
   EvaluationSheetStatus,
@@ -6,15 +6,12 @@ import type {
 import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/evaluation-sheet/evaluation-sheet.repository"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
+import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/repositories/evaluation-sheet/evaluation-sheet.repository"
 
 export type Command = {
   sheetId: number
   targetStatus: EvaluationSheetStatus
-  actorEmployeeId: number
+  actorEmployeeId: EmployeeId
   expectedRevision: number
   note: string | null
   now: string
@@ -29,7 +26,9 @@ export type Command = {
  * weight 合計がちょうど 100% であることを検証する。
  */
 export class TransitionEvaluationSheet {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<EvaluationSheet | ApplicationError> {
     const repository = new EvaluationSheetRepository(this.c)
@@ -106,70 +105,19 @@ export class TransitionEvaluationSheet {
     transitioned: EvaluationSheet,
     command: Command,
   ): Promise<EvaluationSheet | ApplicationError> {
-    try {
-      const db = this.c.env.DB
-
-      await db.batch([
-        db
-          .prepare(
-            `UPDATE evaluation_sheets
-             SET status = ?1, primary_evaluator_id = ?2, secondary_evaluator_id = ?3,
-                 submitted_at = ?4, approved_at = ?5, finalized_at = ?6,
-                 revision = ?7, updated_at = ?8
-             WHERE id = ?9 AND revision = ?10
-               AND (SELECT COUNT(*) FROM performance_goals WHERE evaluation_sheet_id = ?9) > 0
-               AND (SELECT COALESCE(SUM(weight), 0) FROM performance_goals WHERE evaluation_sheet_id = ?9) = 100`,
-          )
-          .bind(
-            transitioned.status,
-            transitioned.primaryEvaluatorId,
-            transitioned.secondaryEvaluatorId,
-            transitioned.submittedAt,
-            transitioned.approvedAt,
-            transitioned.finalizedAt,
-            transitioned.revision,
-            transitioned.updatedAt,
-            transitioned.id,
-            existing.revision,
-          ),
-        abortWhenPreviousStatementChangedNoRows(db),
-        db
-          .prepare(
-            `INSERT INTO evaluation_sheet_audit_logs
-               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
-          )
-          .bind(
-            transitioned.id,
-            command.actorEmployeeId,
-            "status_change",
-            existing.status,
-            command.targetStatus,
-            command.note,
-            command.now,
-          ),
-      ])
-
-      const repository = new EvaluationSheetRepository(this.c)
-      const saved = await repository.findById(command.sheetId)
-
-      if (saved instanceof Error || saved === null) {
-        return new UnexpectedError("failed to read back submitted evaluation sheet")
-      }
-
-      return saved
-    } catch (error) {
-      if (isAbortedByGuard(error)) {
-        return new ConflictError(
-          "submit failed: concurrent modification changed weight, goals, or revision",
-          "concurrent_conflict",
-        )
-      }
-
-      return error instanceof Error
-        ? new UnexpectedError("failed to submit evaluation sheet", { cause: error })
-        : new UnexpectedError("failed to submit evaluation sheet")
-    }
+    const saved = await new EvaluationSheetRepository(this.c).submitWithAuditLog(
+      existing,
+      transitioned,
+      {
+        actorId: command.actorEmployeeId,
+        note: command.note,
+        now: command.now,
+      },
+    )
+    if (saved instanceof ConflictError) return saved
+    return saved instanceof Error
+      ? new UnexpectedError("failed to submit evaluation sheet", { cause: saved })
+      : saved
   }
 
   /**
@@ -178,12 +126,10 @@ export class TransitionEvaluationSheet {
    * - weight 合計がちょうど 100% であること
    */
   private async validateSubmitWeights(sheetId: number): Promise<ApplicationError | null> {
-    const rows = await this.c.var.database
-      .select({ total: sum(goals.weight) })
-      .from(goals)
-      .where(eq(goals.evaluationSheetId, sheetId))
-
-    const total = Number(rows.at(0)?.total ?? 0)
+    const total = await new EvaluationSheetRepository(this.c).totalGoalWeight(sheetId)
+    if (total instanceof Error) {
+      return new UnexpectedError("failed to load evaluation sheet goals", { cause: total })
+    }
 
     if (total === 0) {
       return new ValidationError(

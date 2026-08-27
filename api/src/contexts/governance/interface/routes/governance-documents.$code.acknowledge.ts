@@ -13,9 +13,10 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   if (session === null) throw new UnauthorizedError()
   const code = parseGovernanceCode(c.req.param("code"))
   if (code === null) throw new NotFoundError("governance document not found")
-  const result = await new GovernancePublicationService(c, (audit) =>
-    prepareGovernanceAudit({ c, ...audit }),
-  ).acknowledge({ session, code })
+  const result = await new GovernancePublicationService({
+    context: c,
+    prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
+  }).acknowledge({ session, code })
   if (result instanceof ApplicationError) throw toHttpException(result)
   if (result instanceof Error) throw result
   return c.json(result, 200)

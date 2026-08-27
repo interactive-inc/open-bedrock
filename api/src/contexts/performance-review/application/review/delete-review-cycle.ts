@@ -1,10 +1,9 @@
 import type { Session } from "@/lib/auth/session"
 import type { Context } from "@/env"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
+import type { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 
 export type Input = {
   session: Session
@@ -18,7 +17,9 @@ export type Deleted = { reason: "deleted" }
  * draft 状態のサイクルのみ削除を許可する。
  */
 export class DeleteReviewCycle {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<Deleted | ApplicationError> {
     if (input.session.hasPermission("review:administer") === false) {
@@ -27,7 +28,7 @@ export class DeleteReviewCycle {
 
     const repository = new ReviewCycleRepository(this.c)
 
-    const reviewCycle = await repository.findById(input.cycleId)
+    const reviewCycle: ReviewCycle | null | Error = await repository.findById(input.cycleId)
 
     if (reviewCycle instanceof Error) {
       return new UnexpectedError("failed to find review cycle", { cause: reviewCycle })
@@ -41,24 +42,14 @@ export class DeleteReviewCycle {
       return new ConflictError("review cycle is not deletable", "not_deletable")
     }
 
-    const db = this.c.env.DB
+    const deleted = await repository.deleteWithForms(reviewCycle)
 
-    try {
-      await db.batch([
-        db.prepare("DELETE FROM review_forms WHERE cycle_id = ?1").bind(input.cycleId),
-        db
-          .prepare("DELETE FROM review_cycles WHERE id = ?1 AND status = 'draft'")
-          .bind(input.cycleId),
-        abortWhenPreviousStatementChangedNoRows(db),
-      ])
-    } catch (error) {
-      if (isAbortedByGuard(error)) {
-        return new ConflictError("review cycle is not deletable", "not_deletable")
-      }
+    if (deleted instanceof ConflictError) {
+      return deleted
+    }
 
-      return error instanceof Error
-        ? new UnexpectedError("failed to delete review cycle", { cause: error })
-        : new UnexpectedError("failed to delete review cycle")
+    if (deleted instanceof Error) {
+      return new UnexpectedError("failed to delete review cycle", { cause: deleted })
     }
 
     return { reason: "deleted" }

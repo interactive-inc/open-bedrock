@@ -1,7 +1,7 @@
 import type { SurveySubmissionView } from "@/contexts/survey/domain/definitions/survey-submission-view.definition"
 import { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
 import type { Context } from "@/env"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/survey.repository"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -16,7 +16,9 @@ export type Command = {
  * アンケート回答を提出する。未公開・重複提出は判別可能な失敗で返す。
  */
 export class SubmitSurveyResponse {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<SurveySubmissionView | ApplicationError> {
     const surveyRepository = new SurveyRepository(this.c)

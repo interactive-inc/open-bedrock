@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import { ApplicationError } from "@/lib/errors"
 import type { ShiftPattern } from "@/contexts/shift/domain/entities/shift-pattern.entity"
 import type { Context } from "@/env"
-import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/shift-pattern.repository"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
 
 export type Input = {
   session: Session
@@ -19,7 +19,9 @@ export type Input = {
  * 権限・コード重複を確認し、シフトパターンの内容を変更する。
  */
 export class UpdateShiftPattern {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ShiftPattern | ApplicationError> {
     if (input.session.hasPermission("shift:manage") === false) {

@@ -1,13 +1,11 @@
 import type { Session } from "@/lib/auth/session"
 import { GetLifecycleState } from "@/contexts/company/infrastructure/employee-lifecycle/get-lifecycle-state.repository"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
-import { createAdministrationAuditEvent } from "@/contexts/administration/application/audit/create-administration-audit-event"
+import { createAdministrationAuditEvent } from "@/contexts/administration/domain/factories/administration-audit-event.factory"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/contexts/administration/infrastructure/audit/audit-event.repository"
+import { ArchiveEmployeeAdapter } from "@/contexts/administration/infrastructure/adapters/employee-lifecycle/archive-employee.adapter"
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle.repository"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,
@@ -16,13 +14,11 @@ import {
   UnexpectedError,
 } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/contexts/administration/domain/catalogs/effective-root-permission-key.catalog"
-import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
-import { PrepareSystemAccountSuspension } from "@system/infrastructure/iam/prepare-system-account-suspension.repository"
 
 export class ArchiveEmployee {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: {
     session: Session
@@ -85,55 +81,20 @@ export class ArchiveEmployee {
         "employee_not_retired",
       )
     }
-    const futureManagerAssignment = await this.c.env.DB.prepare(
-      `SELECT 1 AS found FROM employee_org_assignment_period_versions assignment
-       WHERE assignment.manager_employee_id = ?1 AND assignment.starts_on > ?2
-         AND assignment.is_void = 0
-         AND assignment.revision = (
-           SELECT MAX(candidate.revision) FROM employee_org_assignment_period_versions candidate
-           WHERE candidate.period_id = assignment.period_id
-         ) LIMIT 1`,
-    )
-      .bind(employee.id, businessDate)
-      .first<number>("found")
-    if (futureManagerAssignment === 1) {
+    const archiveAdapter = new ArchiveEmployeeAdapter(this.c)
+    const account = await archiveAdapter.loadAccount(employee.id, businessDate)
+    if (account === "future_manager_assignment") {
       return new ConflictError(
         "将来の上司割当がある従業員はアーカイブできません",
         "employee_not_retired",
       )
     }
-    const accountIdValue = await this.c.env.DB.prepare(
-      "SELECT account_id FROM account_employee_links WHERE employee_id = ?1",
-    )
-      .bind(employee.id)
-      .first<string>("account_id")
-    const accountId = zAccountId.safeParse(accountIdValue)
-    if (!accountId.success) {
-      return new UnexpectedError("従業員のSystem Accountを取得できません")
-    }
-    const account = await new SystemAccountRepository({
-      database: this.c.env.DB,
-    }).findById(accountId.data)
-    if (account === null || account instanceof Error) {
+    if (account instanceof Error) {
       return new UnexpectedError("従業員のSystem Accountを取得できません", {
-        cause: account instanceof Error ? account : undefined,
+        cause: account,
       })
     }
     const archivedAt = new Date(command.archivedAt)
-    const systemStatements = new PrepareSystemAccountSuspension({
-      env: { DB: this.c.env.DB },
-    }).prepare({
-      actorAccountId: command.session.accountId,
-      targetAccountId: account.id,
-      protectedPermissionKeys: EFFECTIVE_ROOT_PERMISSION_KEYS,
-      now: archivedAt,
-    })
-    if (systemStatements instanceof Error) {
-      return new UnexpectedError("System Account停止を準備できません", {
-        cause: systemStatements,
-      })
-    }
-    const archivedAtSeconds = Math.floor(Date.parse(command.archivedAt) / 1_000)
     const audit = createAdministrationAuditEvent(
       {
         actorAccountId: command.session.accountId,
@@ -159,33 +120,24 @@ export class ArchiveEmployee {
       },
       this.c.var.auditContext,
     )
-    try {
-      await this.c.env.DB.batch([
-        this.c.env.DB.prepare(
-          `UPDATE employees SET archived_at = ?2, archived_by_account_id = ?3
-             WHERE id = ?1 AND archived_at IS NULL AND status = 'retired'
-               AND COALESCE((SELECT revision FROM employee_lifecycle_revisions
-                             WHERE employee_id = ?1), 0) = ?4
-             RETURNING id`,
-        ).bind(employee.id, archivedAtSeconds, command.session.accountId, state.employeeRevision),
-        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-        ...systemStatements,
-        this.c.env.DB.prepare("DELETE FROM org_memberships WHERE employee_code = ?1").bind(
-          employee.code,
-        ),
-        ...new AuditEventRepository(this.c).prepareAppend(audit),
-      ])
-      return { status: "archived" }
-    } catch (cause) {
-      if (cause instanceof Error && cause.message.includes("malformed JSON")) {
-        return new ConflictError("最後の実効管理者はアーカイブできません", "last_admin")
-      }
-      if (cause instanceof Error && cause.message.includes("integer overflow")) {
-        return new ForbiddenError("System Accountを停止する権限がありません", "forbidden")
-      }
-      return isAbortedByGuard(cause)
-        ? new ConflictError("従業員情報が更新されています", "personnel_action_stale")
-        : new UnexpectedError("従業員をアーカイブできません", { cause })
+    const archived = await archiveAdapter.archive({
+      employeeId: employee.id,
+      employeeCode: employee.code,
+      employeeRevision: state.employeeRevision,
+      accountId: account.id,
+      actorAccountId: command.session.accountId,
+      archivedAt,
+      audit,
+    })
+    if (archived === "archived") return { status: "archived" }
+    if (archived === "last_admin") {
+      return new ConflictError("最後の実効管理者はアーカイブできません", "last_admin")
     }
+    if (archived === "forbidden") {
+      return new ForbiddenError("System Accountを停止する権限がありません", "forbidden")
+    }
+    return archived === "stale"
+      ? new ConflictError("従業員情報が更新されています", "personnel_action_stale")
+      : new UnexpectedError("従業員をアーカイブできません", { cause: archived })
   }
 }

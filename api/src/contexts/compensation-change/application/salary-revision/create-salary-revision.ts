@@ -3,7 +3,7 @@ import { SalaryRevision } from "@/contexts/compensation-change/domain/entities/s
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/salary-revision/salary-revision.repository"
+import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/repositories/salary-revision/salary-revision.repository"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
@@ -22,7 +22,9 @@ export type Command = {
  * 給与改定の事実記録を追加する。同一社員・同一適用日の重複は 409。
  */
 export class CreateSalaryRevision {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<SalaryRevision | ApplicationError> {
     if (command.session.hasPermission("salary_revision:manage") === false) {

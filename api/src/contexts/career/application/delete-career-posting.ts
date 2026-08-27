@@ -2,7 +2,8 @@ import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { CareerPostingRepository } from "@/contexts/career/infrastructure/career-posting.repository"
+import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
+import type { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
 
 export type Command = {
   session: Session
@@ -18,7 +19,9 @@ export type Deleted = { reason: "deleted" }
  * 間に応募が入るレースコンディションを防ぐ。
  */
 export class DeleteCareerPosting {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const postingRepository = new CareerPostingRepository(this.c)
@@ -27,7 +30,9 @@ export class DeleteCareerPosting {
       return new ForbiddenError("cannot manage career postings", "forbidden")
     }
 
-    const current = await postingRepository.findById(command.postingId)
+    const current: CareerPosting | null | Error = await postingRepository.findById(
+      command.postingId,
+    )
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find career posting", { cause: current })

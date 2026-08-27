@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { Meeting } from "@/contexts/meeting/domain/entities/meeting.entity"
 import type { Context } from "@/env"
-import { MeetingRepository } from "@/contexts/meeting/infrastructure/meeting.repository"
+import { MeetingRepository } from "@/contexts/meeting/infrastructure/repositories/meeting.repository"
 
 export type Command = {
   session: Session
@@ -18,7 +18,9 @@ export type Command = {
  * 権限を確認し、会議体を新規登録する。code は全社で一意。
  */
 export class CreateMeeting {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Meeting | ApplicationError> {
     const meetingRepository = new MeetingRepository(this.c)

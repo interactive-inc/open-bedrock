@@ -2,7 +2,7 @@ import type { LifeEvent } from "@/contexts/life-event/domain/entities/life-event
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { LifeEventRepository } from "@/contexts/life-event/infrastructure/life-event.repository"
+import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
 import type { LifeEventType } from "@/lib/schemas"
 
 export type Command = {
@@ -17,7 +17,9 @@ export type Command = {
  * ライフイベント届出の種別・発生日・詳細を変更する。本人以外と、承認済み届出の変更を拒否する。
  */
 export class UpdateLifeEvent {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<LifeEvent | ApplicationError> {
     const lifeEventRepository = new LifeEventRepository(this.c)

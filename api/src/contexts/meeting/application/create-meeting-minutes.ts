@@ -2,8 +2,8 @@ import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { MeetingMinutes } from "@/contexts/meeting/domain/entities/meeting-minutes.entity"
 import type { Context } from "@/env"
-import { MeetingMinutesRepository } from "@/contexts/meeting/infrastructure/meeting-minutes.repository"
-import { MeetingRepository } from "@/contexts/meeting/infrastructure/meeting.repository"
+import { MeetingMinutesRepository } from "@/contexts/meeting/infrastructure/repositories/meeting-minutes.repository"
+import { MeetingRepository } from "@/contexts/meeting/infrastructure/repositories/meeting.repository"
 
 export type Command = {
   meetingCode: string
@@ -20,7 +20,9 @@ export type Command = {
  * 会議体 code から meeting_id を解決し、存在しなければ NotFound。
  */
 export class CreateMeetingMinutes {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<MeetingMinutes | ApplicationError> {
     const meetingRepository = new MeetingRepository(this.c)

@@ -1,7 +1,7 @@
 import {
   loadCompanyFixtureSnapshot,
   type CompanyFixtureSnapshot,
-} from "@/api/test/support/company/load-company-fixture-snapshot.repository"
+} from "@/api/test/support/company/load-company-fixture-snapshot.test-support"
 import { validateCompanyInitializationInput } from "@/api/test/support/company/validate-company-initialization-input"
 import { containsDate } from "@/contexts/company/domain/definitions/contains-date.definition"
 import type { LifecycleSchedule } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"

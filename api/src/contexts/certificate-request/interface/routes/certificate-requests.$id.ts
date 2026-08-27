@@ -1,6 +1,6 @@
 import { ConflictError } from "@/lib/errors"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/certificate-request.repository"
+import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
 import { UpdateCertificateRequest } from "@/contexts/certificate-request/application/update-certificate-request"
 import type { CertificateRequest } from "@/contexts/certificate-request/domain/entities/certificate-request.entity"
 import { ApplicationError } from "@/lib/errors"

@@ -1,6 +1,6 @@
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
-import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/employee-skill.repository"
-import { SkillRepository } from "@/contexts/skill/infrastructure/skill.repository"
+import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/repositories/employee-skill.repository"
+import { SkillRepository } from "@/contexts/skill/infrastructure/repositories/skill.repository"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"

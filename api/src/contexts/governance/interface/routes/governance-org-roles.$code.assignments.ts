@@ -24,9 +24,10 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
   const code = parseGovernanceCode(c.req.param("code"))
   if (code === null) throw new NotFoundError("governance organization role not found")
   const body = c.req.valid("json")
-  const result = await new ManageGovernanceOrgRole(c, (audit) =>
-    prepareGovernanceAudit({ c, ...audit }),
-  ).assign({
+  const result = await new ManageGovernanceOrgRole({
+    context: c,
+    prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
+  }).assign({
     session,
     orgRoleCode: code,
     employeeCode: body.employee_code,

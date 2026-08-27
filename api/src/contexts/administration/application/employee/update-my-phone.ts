@@ -14,7 +14,9 @@ export type Command = {
  * 本人が自己申告する電話番号を更新する。常に session の本人だけを対象にする。
  */
 export class UpdateMyPhone {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<EmployeeDirectoryEntryValue | ApplicationError> {
     if (command.phone !== null && command.phone.length > 30) {

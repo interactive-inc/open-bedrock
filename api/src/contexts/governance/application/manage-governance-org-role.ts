@@ -1,8 +1,11 @@
 import type { Session } from "@/lib/auth/session"
 import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
-import type { Context } from "@/env"
-import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
-import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
+import type { Context as HonoContext } from "@/env"
+import {
+  GovernanceAdapter,
+  type GovernanceAuditStatements,
+} from "@/contexts/governance/infrastructure/adapters/governance.adapter"
+import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
 import {
   ConflictError,
   ForbiddenError,
@@ -12,17 +15,21 @@ import {
 } from "@/lib/errors"
 import { isoDate } from "@/lib/schemas"
 
+type Context = Readonly<{
+  context: HonoContext
+  prepareAudit: (props: {
+    session: Session
+    action: "governance.org_role.assigned" | "governance.org_role.revoked"
+    targetType: "governance_org_role"
+    targetId: string
+    metadata?: SystemJsonValue
+  }) => GovernanceAuditStatements
+}>
+
 export class ManageGovernanceOrgRole {
-  constructor(
-    private readonly c: Context,
-    private readonly prepareAudit: (props: {
-      session: Session
-      action: "governance.org_role.assigned" | "governance.org_role.revoked"
-      targetType: "governance_org_role"
-      targetId: string
-      metadata?: SystemJsonValue
-    }) => readonly [D1PreparedStatement, D1PreparedStatement],
-  ) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async assign(props: {
     session: Session
@@ -43,11 +50,11 @@ export class ManageGovernanceOrgRole {
     ) {
       return new ValidationError("有効期間が不正です", "governance_role_period_invalid")
     }
-    const repository = new GovernanceRepository(this.c)
+    const repository = new GovernanceAdapter(this.c.context)
     const [role, assignments, organization] = await Promise.all([
       repository.findOrgRole(props.orgRoleCode),
       repository.listManualAssignments(props.orgRoleCode),
-      loadCurrentOrganization(this.c),
+      new CurrentOrganizationReadModelAdapter(this.c.context).loadCurrentOrganization(),
     ])
     if (role instanceof Error || assignments instanceof Error || organization instanceof Error) {
       return new UnexpectedError("組織責任の現在状態を確認できません", {
@@ -80,7 +87,7 @@ export class ManageGovernanceOrgRole {
       return new NotFoundError("部署がありません", "governance_role_department_not_found")
     }
     const overlaps = assignments.filter((assignment) =>
-      periodsOverlap(
+      this.periodsOverlap(
         { startsOn: props.startsOn, endsOn: props.endsOn },
         { startsOn: assignment.startsOn, endsOn: assignment.endsOn },
       ),
@@ -106,8 +113,8 @@ export class ManageGovernanceOrgRole {
       sourceDocumentCode: props.sourceDocumentCode,
       cardinality: role.cardinality,
       accountId: props.session.accountId,
-      now: this.c.env.NOW ?? new Date().toISOString(),
-      auditStatements: this.prepareAudit({
+      now: this.c.context.env.NOW ?? new Date().toISOString(),
+      auditStatements: this.c.prepareAudit({
         session: props.session,
         action: "governance.org_role.assigned",
         targetType: "governance_org_role",
@@ -132,11 +139,11 @@ export class ManageGovernanceOrgRole {
     if (!props.session.permissions.has("governance:manage")) {
       return new ForbiddenError("組織責任を解除する権限がありません", "governance_role_forbidden")
     }
-    const result = await new GovernanceRepository(this.c).revokeAssignment({
+    const result = await new GovernanceAdapter(this.c.context).revokeAssignment({
       id: props.assignmentId,
       accountId: props.session.accountId,
-      revokedAt: this.c.env.NOW ?? new Date().toISOString(),
-      auditStatements: this.prepareAudit({
+      revokedAt: this.c.context.env.NOW ?? new Date().toISOString(),
+      auditStatements: this.c.prepareAudit({
         session: props.session,
         action: "governance.org_role.revoked",
         targetType: "governance_org_role",
@@ -151,14 +158,14 @@ export class ManageGovernanceOrgRole {
       ? null
       : new NotFoundError("組織責任の割当がありません", "governance_assignment_not_found")
   }
-}
 
-function periodsOverlap(
-  left: { startsOn: string; endsOn: string | null },
-  right: { startsOn: string; endsOn: string | null },
-): boolean {
-  return (
-    (right.endsOn === null || left.startsOn < right.endsOn) &&
-    (left.endsOn === null || right.startsOn < left.endsOn)
-  )
+  private periodsOverlap(
+    left: { startsOn: string; endsOn: string | null },
+    right: { startsOn: string; endsOn: string | null },
+  ): boolean {
+    return (
+      (right.endsOn === null || left.startsOn < right.endsOn) &&
+      (left.endsOn === null || right.startsOn < left.endsOn)
+    )
+  }
 }

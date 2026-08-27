@@ -8,7 +8,7 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { RentalReservationRepository } from "@/contexts/rental/infrastructure/rental-reservation.repository"
+import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
 
 export type Command = {
   reservationId: string
@@ -23,7 +23,9 @@ export type Command = {
  * レンタル予約の品名・期間・用途を変更する。本人以外の変更を拒否する。
  */
 export class UpdateRentalReservation {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<RentalReservation | ApplicationError> {
     const reservationRepository = new RentalReservationRepository(this.c)

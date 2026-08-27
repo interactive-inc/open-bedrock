@@ -3,7 +3,7 @@ import type { Stocktake } from "@/contexts/asset/domain/entities/stocktake.entit
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { StocktakeRepository } from "@/contexts/asset/infrastructure/stocktake/stocktake.repository"
+import { StocktakeRepository } from "@/contexts/asset/infrastructure/repositories/stocktake/stocktake.repository"
 
 export type Command = {
   session: Session
@@ -16,7 +16,9 @@ export type Command = {
  * すでに締め済みなら 409。競合は条件付き write で防ぐ。
  */
 export class CloseStocktake {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Stocktake | ApplicationError> {
     const stocktakeRepository = new StocktakeRepository(this.c)

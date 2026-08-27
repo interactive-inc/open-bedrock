@@ -1,6 +1,6 @@
 import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import { UpdateExpense } from "@/contexts/expense/application/update-expense"
-import { ExpenseRepository } from "@/contexts/expense/infrastructure/expense.repository"
+import { ExpenseRepository } from "@/contexts/expense/infrastructure/repositories/expense.repository"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"
 import { createTestContext } from "@/api/test/support/create-test-context"

@@ -3,7 +3,7 @@ import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/business-trip.repository"
+import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
 
 export type Action = "approve" | "reject"
 
@@ -18,7 +18,9 @@ export type Command = {
  * それ以外の現在状態からの遷移は 409 とする。
  */
 export class AdvanceBusinessTrip {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<BusinessTrip | ApplicationError> {
     if (command.session.hasPermission("business_trip:manage") === false) {

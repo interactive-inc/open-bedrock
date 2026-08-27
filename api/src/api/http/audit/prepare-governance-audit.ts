@@ -6,7 +6,7 @@ import {
   type AuditTargetType,
 } from "@/api/http/audit/company-audit-event.definition"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/api/http/audit/audit-event.repository"
+import { AuditEventAdapter } from "@/api/http/audit/audit-event.adapter"
 
 export function prepareGovernanceAudit(props: {
   c: Context
@@ -29,5 +29,5 @@ export function prepareGovernanceAudit(props: {
     },
     props.c.var.auditContext,
   )
-  return new AuditEventRepository(props.c).prepareAppend(record)
+  return new AuditEventAdapter(props.c).prepareAppend(record)
 }

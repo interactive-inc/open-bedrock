@@ -3,8 +3,8 @@ import type { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-redemption.repository"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/thanks-points/thanks-reward.repository"
+import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
+import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 
 export type Command = {
   session: Session
@@ -39,7 +39,9 @@ export type DecideResult =
  * 二重承認・別申請の合計超過のいずれでも残高がマイナスに割れないようにする（TOCTOU 対策）。
  */
 export class DecideRedemption {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<DecideResult> {
     if (command.session.hasPermission("thanks_redemption:approve") === false) {

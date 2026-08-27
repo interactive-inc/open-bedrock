@@ -1,5 +1,5 @@
 import { CreateWorkAccident } from "@/contexts/work-accident/application/create-work-accident"
-import { WorkAccidentRepository } from "@/contexts/work-accident/infrastructure/work-accident.repository"
+import { WorkAccidentRepository } from "@/contexts/work-accident/infrastructure/repositories/work-accident.repository"
 import { factory } from "@/api/http/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppWorkAccident, zAppWorkAccidentList } from "@/lib/app-schemas"

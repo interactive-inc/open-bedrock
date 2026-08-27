@@ -1,4 +1,4 @@
-import { CertificationRepository } from "@/contexts/certification/infrastructure/certification.repository"
+import { CertificationRepository } from "@/contexts/certification/infrastructure/repositories/certification.repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Certification } from "@/contexts/certification/domain/entities/certification.entity"
@@ -8,7 +8,9 @@ import type { Context } from "@/env"
  * 資格マスタを新規作成する。code は一意。重複時は conflict を返す。
  */
 export class CreateCertification {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(props: {
     code: string

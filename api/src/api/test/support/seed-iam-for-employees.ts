@@ -1,4 +1,4 @@
-import { seedEmployees } from "@/api/test/support/company/seed-employees.repository"
+import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
 
 /** 認証・認可情報を持つ seed 従業員の最小形。 */
 export type IamSeedEmployee = {

@@ -3,7 +3,7 @@ import { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { AssetRepository } from "@/contexts/asset/infrastructure/asset.repository"
+import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -21,7 +21,9 @@ export type Command = {
  * 権限と重複コードを確認し、新しい資産を在庫状態で登録する。
  */
 export class RegisterAsset {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Asset | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)

@@ -7,9 +7,8 @@ import {
   UnexpectedError,
 } from "@/lib/errors"
 import type { Context } from "@/env"
-import { OrgDepartmentRepository } from "@/contexts/administration/infrastructure/organization/org-department.repository"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
+import { OrgDepartmentRepository } from "@/contexts/administration/infrastructure/repositories/organization/org-department.repository"
+import type { OrgDepartment } from "@/contexts/administration/domain/entities/org-department.entity"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 
 export type Command = {
@@ -24,7 +23,9 @@ export type Deleted = { reason: "archived" }
  * 過去の人事履歴と参照整合性は保持する。
  */
 export class DeleteOrgDepartment {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const departmentRepository = new OrgDepartmentRepository(this.c)
@@ -33,7 +34,9 @@ export class DeleteOrgDepartment {
       return new ForbiddenError("cannot manage org", "forbidden")
     }
 
-    const current = await departmentRepository.findByCode(command.code)
+    const current: OrgDepartment | null | Error = await departmentRepository.findByCode(
+      command.code,
+    )
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find department", {
@@ -55,53 +58,19 @@ export class DeleteOrgDepartment {
       })
     }
     const archivedAt = Math.floor(Date.parse(this.c.env.NOW ?? new Date().toISOString()) / 1_000)
-    const db = this.c.env.DB
-    try {
-      await db.batch([
-        db
-          .prepare(
-            `UPDATE org_departments
-             SET archived_at = ?2, archived_by_account_id = ?3
-             WHERE code = ?1 AND archived_at IS NULL
-               AND NOT EXISTS (
-                 SELECT 1 FROM org_departments child
-                 WHERE child.parent_code = ?1 AND child.archived_at IS NULL
-               )
-               AND NOT EXISTS (
-                 SELECT 1 FROM employee_org_assignment_period_versions assignment
-                 WHERE assignment.department_code = ?1
-                   AND assignment.is_void = 0
-                   AND assignment.revision = (
-                     SELECT MAX(candidate.revision)
-                     FROM employee_org_assignment_period_versions candidate
-                     WHERE candidate.period_id = assignment.period_id
-                   )
-                   AND (assignment.ends_on IS NULL OR assignment.ends_on > ?4)
-               )
-               AND NOT EXISTS (
-                 SELECT 1 FROM employee_org_responsibility_period_versions responsibility
-                 WHERE responsibility.department_code = ?1
-                   AND responsibility.is_void = 0
-                   AND responsibility.revision = (
-                     SELECT MAX(candidate.revision)
-                     FROM employee_org_responsibility_period_versions candidate
-                     WHERE candidate.period_id = responsibility.period_id
-                   )
-                   AND (responsibility.ends_on IS NULL OR responsibility.ends_on > ?4)
-               )
-             RETURNING code`,
-          )
-          .bind(command.code, archivedAt, command.session.accountId, businessDate),
-        abortWhenPreviousStatementChangedNoRows(db),
-      ])
-      return { reason: "archived" }
-    } catch (cause) {
-      return isAbortedByGuard(cause)
-        ? new ConflictError(
-            "department has current or future organization facts or child departments",
-            "department_in_use",
-          )
-        : new UnexpectedError("failed to archive department", { cause })
+    const archived = await departmentRepository.archive(current, {
+      archivedAt,
+      archivedByAccountId: command.session.accountId,
+      businessDate,
+    })
+    if (archived === "in_use") {
+      return new ConflictError(
+        "department has current or future organization facts or child departments",
+        "department_in_use",
+      )
     }
+    return archived instanceof Error
+      ? new UnexpectedError("failed to archive department", { cause: archived })
+      : { reason: "archived" }
   }
 }

@@ -2,7 +2,8 @@ import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { TrainingCourseRepository } from "@/contexts/training/infrastructure/training-course.repository"
+import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
+import type { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
 
 export type Command = {
   session: Session
@@ -15,7 +16,9 @@ export type Archived = { reason: "archived" }
  * 管理権限を持つ者が研修コースをアーカイブする。受講履歴を壊さないため物理削除はしない。
  */
 export class ArchiveTrainingCourse {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Archived | ApplicationError> {
     const courseRepository = new TrainingCourseRepository(this.c)
@@ -24,7 +27,7 @@ export class ArchiveTrainingCourse {
       return new ForbiddenError("cannot manage training", "forbidden")
     }
 
-    const current = await courseRepository.findByCode(command.code)
+    const current: TrainingCourse | null | Error = await courseRepository.findByCode(command.code)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find training course", { cause: current })

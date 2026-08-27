@@ -1,7 +1,7 @@
 import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
 import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { GoalRepository } from "@/contexts/performance-review/infrastructure/goal/goal.repository"
+import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
 import { DeleteGoal } from "@/contexts/performance-review/application/goal/delete-goal"
 import { UpdateGoal } from "@/contexts/performance-review/application/goal/update-goal"
 import type { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"

@@ -1,5 +1,5 @@
 import { UnexpectedError } from "@/lib/errors"
-import { CareerSheetRepository } from "@/contexts/career/infrastructure/career-sheet.repository"
+import { CareerSheetRepository } from "@/contexts/career/infrastructure/repositories/career-sheet.repository"
 
 import { UpdateMyCareerSheet } from "@/contexts/career/application/update-my-career-sheet"
 import { careerSheets } from "@/contexts/career/infrastructure/schema/career"

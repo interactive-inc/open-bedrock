@@ -1,4 +1,4 @@
-import type { AuditEventPage } from "@/api/http/audit/audit-event.repository"
+import type { AuditEventPage } from "@/api/http/audit/audit-event.adapter"
 import { auditUnavailable } from "@/api/http/utils/audit-unavailable"
 import { toPublicAuditSummary } from "@/api/http/utils/to-public-audit-summary"
 import { zAppAuditEventPage } from "@/lib/app-schemas"

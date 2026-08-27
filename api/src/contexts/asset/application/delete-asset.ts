@@ -2,7 +2,8 @@ import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { AssetRepository } from "@/contexts/asset/infrastructure/asset.repository"
+import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
+import type { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 
 export type Command = {
   session: Session
@@ -16,7 +17,9 @@ export type Deleted = { reason: "deleted" }
  * アトミックに行う。貸与中は拒否する。並行リクエストとの競合は条件付き write で防ぐ。
  */
 export class DeleteAsset {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)
@@ -25,7 +28,7 @@ export class DeleteAsset {
       return new ForbiddenError("cannot manage assets", "forbidden")
     }
 
-    const asset = await assetRepository.findByCode(command.code)
+    const asset: Asset | null | Error = await assetRepository.findByCode(command.code)
 
     if (asset instanceof Error) {
       return new UnexpectedError("failed to find asset", { cause: asset })

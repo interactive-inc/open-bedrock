@@ -1,6 +1,6 @@
 import type { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import type { Context } from "@/env"
-import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/knowledge-article.repository"
+import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -17,7 +17,9 @@ export type Command = {
  * ナレッジ記事の表題・カテゴリ・タグ・本文を更新する。作成者以外の更新を拒否する。
  */
 export class UpdateKnowledgeArticle {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<KnowledgeArticle | ApplicationError> {
     const articleRepository = new KnowledgeArticleRepository(this.c)

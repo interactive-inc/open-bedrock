@@ -2,7 +2,8 @@ import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+import type { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
 
 export type Command = {
   assignmentId: number
@@ -15,7 +16,9 @@ export type Cancelled = { reason: "cancelled" }
  * 割り当てを配下タスクごと取り消す。特権ロールのみ許可する。
  */
 export class CancelOnboardingAssignment {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Cancelled | ApplicationError> {
     if (command.session.hasPermission("onboarding:manage") === false) {
@@ -24,7 +27,9 @@ export class CancelOnboardingAssignment {
 
     const assignmentRepository = new OnboardingAssignmentRepository(this.c)
 
-    const current = await assignmentRepository.findById(command.assignmentId)
+    const current: OnboardingAssignment | null | Error = await assignmentRepository.findById(
+      command.assignmentId,
+    )
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find assignment", { cause: current })
@@ -38,7 +43,7 @@ export class CancelOnboardingAssignment {
       return new ConflictError("assignment is not modifiable", "not_modifiable")
     }
 
-    const deleted = await assignmentRepository.delete(command.assignmentId)
+    const deleted = await assignmentRepository.delete(current)
 
     if (deleted instanceof Error) {
       return new UnexpectedError("failed to delete assignment", { cause: deleted })

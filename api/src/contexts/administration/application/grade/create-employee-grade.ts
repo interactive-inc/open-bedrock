@@ -3,8 +3,8 @@ import { EmployeeGrade } from "@/contexts/administration/domain/entities/employe
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { EmployeeGradeRepository } from "@/contexts/administration/infrastructure/grade/employee-grade.repository"
-import { GradeRepository } from "@/contexts/administration/infrastructure/grade/grade.repository"
+import { EmployeeGradeRepository } from "@/contexts/administration/infrastructure/repositories/grade/employee-grade.repository"
+import { GradeRepository } from "@/contexts/administration/infrastructure/repositories/grade/grade.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -20,7 +20,9 @@ export type Command = {
  * 権限と等級の存在を確認し、社員の等級割当を1件記録する。
  */
 export class CreateEmployeeGrade {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<EmployeeGrade | ApplicationError> {
     if (command.session.hasPermission("grade:manage") === false) {

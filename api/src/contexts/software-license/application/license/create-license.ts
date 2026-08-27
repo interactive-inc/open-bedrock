@@ -3,7 +3,7 @@ import { License } from "@/contexts/software-license/domain/entities/license.ent
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { LicenseRepository } from "@/contexts/software-license/infrastructure/license/license.repository"
+import { LicenseRepository } from "@/contexts/software-license/infrastructure/repositories/license/license.repository"
 
 export type Command = {
   session: Session
@@ -23,7 +23,9 @@ export type Command = {
  * 権限を確認し、ライセンス・SaaS 台帳を新規登録する。
  */
 export class CreateLicense {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<License | ApplicationError> {
     if (command.session.hasPermission("license:manage") === false) {

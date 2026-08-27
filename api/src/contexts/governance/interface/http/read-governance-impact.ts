@@ -1,5 +1,5 @@
-import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/resolve-governance-org-role.repository"
-import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
+import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/adapters/resolve-governance-org-role.adapter"
+import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
 import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
@@ -28,7 +28,7 @@ export async function readGovernanceImpact(
       "governance_impact_forbidden",
     )
   }
-  const repository = new GovernanceRepository(c)
+  const repository = new GovernanceAdapter(c)
   const [records, roles, capabilities, organization, employeeRows, documents] = await Promise.all([
     repository.listDocuments(true),
     repository.listOrgRoles(),

@@ -1,7 +1,7 @@
 import type { Session } from "@/lib/auth/session"
 import type { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
 import type { Context } from "@/env"
-import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/antisocial-check.repository"
+import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -19,7 +19,9 @@ export type Command = {
  * 自分の申請を自分で判定することと、確定済み申請の再変更を拒否する。
  */
 export class UpdateAntisocialCheck {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<AntisocialCheck | ApplicationError> {
     const antisocialCheckRepository = new AntisocialCheckRepository(this.c)

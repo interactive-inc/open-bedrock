@@ -1,5 +1,5 @@
-import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/resolve-governance-org-role.repository"
-import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
+import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/adapters/resolve-governance-org-role.adapter"
+import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { factory } from "@/api/http/factory"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -14,7 +14,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   ) {
     throw new ForbiddenError()
   }
-  const repository = new GovernanceRepository(c)
+  const repository = new GovernanceAdapter(c)
   const roles = await repository.listOrgRoles()
   if (roles instanceof Error)
     throw new InternalError("failed to list governance organization roles")

@@ -4,7 +4,7 @@ import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attach
 import { AttachmentObjectStore } from "@system/infrastructure/attachments/attachment-object-store.repository"
 import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
 import { NotFoundError as ApplicationNotFoundError, UnprocessableError } from "@/lib/errors"
-import { canReadExpense } from "@/contexts/expense/infrastructure/can-read-expense.repository"
+import { canReadExpense } from "@/contexts/expense/infrastructure/adapters/can-read-expense.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
 import { expenseAttachments, expenses } from "@/contexts/expense/infrastructure/schema/expense"

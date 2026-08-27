@@ -5,7 +5,7 @@ import {
   NotFoundError as ApplicationNotFoundError,
   UnexpectedError,
 } from "@/lib/errors"
-import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/leave-request.repository"
+import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
 import { UpdateLeaveRequest } from "@/contexts/leave/application/update-leave-request"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { ApplicationError } from "@/lib/errors"

@@ -1,6 +1,6 @@
 import { canModifyEnrollment } from "@/contexts/training/domain/policies/enrollment-modification.policy"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/training-enrollment.repository"
+import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
 import { CancelTrainingEnrollment } from "@/contexts/training/application/cancel-training-enrollment"
 import { RescheduleTrainingEnrollment } from "@/contexts/training/application/reschedule-training-enrollment"
 import type { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"

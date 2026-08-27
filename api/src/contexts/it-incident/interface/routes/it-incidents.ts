@@ -7,7 +7,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/it-incident.repository"
+import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/repositories/it-incident.repository"
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"

@@ -1,5 +1,5 @@
 import { DecideRingi } from "@/contexts/ringi/application/decide-ringi"
-import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result.repository"
+import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppRingiDecision } from "@/lib/app-schemas"
@@ -31,9 +31,10 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const updated = await new DecideRingi(c, (command) =>
-      new NotifyApprovalResult(c).run(command),
-    ).run({
+    const updated = await new DecideRingi({
+      context: c,
+      notifyApprovalResult: (command) => new NotifyApprovalResult(c).run(command),
+    }).run({
       session: session,
       ringiId,
       approverId: session.employeeId,

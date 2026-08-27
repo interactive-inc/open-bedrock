@@ -1,6 +1,6 @@
 import type { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import type { Context } from "@/env"
-import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/oneonone/one-on-one.repository"
+import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -16,7 +16,9 @@ export type Command = {
  * 1on1 の記録内容を変更する。記録した上長以外の変更を拒否する。
  */
 export class UpdateOneOnOne {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<OneOnOne | ApplicationError> {
     const oneOnOneRepository = new OneOnOneRepository(this.c)

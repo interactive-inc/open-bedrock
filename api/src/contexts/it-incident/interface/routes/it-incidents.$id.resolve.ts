@@ -1,5 +1,5 @@
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/it-incident.repository"
+import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/repositories/it-incident.repository"
 
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"

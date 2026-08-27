@@ -3,8 +3,8 @@ import type { ApplicationError } from "@/lib/errors"
 import { ShiftSwapRequest } from "@/contexts/shift/domain/entities/shift-swap-request.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/shift-assignment.repository"
-import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/shift-swap-request.repository"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
+import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/repositories/shift-swap-request.repository"
 
 export type Input = {
   requesterEmployeeId: number
@@ -17,7 +17,9 @@ export type Input = {
  * 交代相手を確認して、本人からのシフト交代申請を作る。
  */
 export class CreateShiftSwapRequest {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ShiftSwapRequest | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)

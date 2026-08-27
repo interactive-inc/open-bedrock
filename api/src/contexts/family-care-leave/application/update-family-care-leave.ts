@@ -8,7 +8,7 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/family-care-leave.repository"
+import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
 
 export type Command = {
   familyCareLeaveId: string
@@ -23,7 +23,9 @@ export type Command = {
  * 休業申出の種別・期間・備考を変更する。本人以外と、承認済み申出の変更を拒否する。
  */
 export class UpdateFamilyCareLeave {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<FamilyCareLeave | ApplicationError> {
     const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)

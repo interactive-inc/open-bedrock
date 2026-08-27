@@ -3,7 +3,7 @@ import { Grade } from "@/contexts/administration/domain/entities/grade.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { GradeRepository } from "@/contexts/administration/infrastructure/grade/grade.repository"
+import { GradeRepository } from "@/contexts/administration/infrastructure/repositories/grade/grade.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -19,7 +19,9 @@ export type Command = {
  * 権限と重複コードを確認し、新しい等級をマスタに登録する。
  */
 export class CreateGrade {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Grade | ApplicationError> {
     const repository = new GradeRepository(this.c)

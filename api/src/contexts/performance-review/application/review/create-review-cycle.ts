@@ -3,12 +3,12 @@ import { ReviewCycle } from "@/contexts/performance-review/domain/entities/revie
 import type { Context } from "@/env"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle.repository"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
 import {
   defaultReviewCyclePolicy,
   type ReviewCyclePolicy,
 } from "@/contexts/performance-review/domain/values/review-cycle-policy.value"
-import { ReviewCyclePolicyRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-policy.repository"
+import { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
 
 export type Input = {
   session: Session
@@ -22,7 +22,9 @@ export type Input = {
  * 管理権限のある本人が、新しい評価サイクルを draft 状態で作成する。
  */
 export class CreateReviewCycle {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(input: Input): Promise<ReviewCycle | ApplicationError> {
     if (input.session.hasPermission("review:administer") === false) {
@@ -45,7 +47,7 @@ export class CreateReviewCycle {
       return new UnexpectedError("review cycle id is not assigned")
     }
 
-    const savedPolicy = await new ReviewCyclePolicyRepository(this.c).upsert(
+    const savedPolicy = await new ReviewCyclePolicyAdapter(this.c).upsert(
       created.id,
       input.policy ?? defaultReviewCyclePolicy,
     )

@@ -6,7 +6,7 @@ import { resolveEmployeeIdFromBody } from "@/api/http/utils/resolve-employee-id-
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEmployeeEvent, zAppEmployeeEventList } from "@/lib/app-schemas"
-import { EmployeeEventRepository } from "@/contexts/administration/infrastructure/employee-event/employee-event.repository"
+import { EmployeeEventRepository } from "@/contexts/administration/infrastructure/repositories/employee-event/employee-event.repository"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

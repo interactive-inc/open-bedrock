@@ -18,7 +18,9 @@ export type Command = {
  * IAM、所属、役職、在籍状態は各専用操作が正で、この汎用更新では受け付けない。
  */
 export class UpdateEmployee {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<EmployeeDirectoryEntryValue | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)

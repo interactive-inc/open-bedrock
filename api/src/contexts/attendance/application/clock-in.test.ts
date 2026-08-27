@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import { ClockIn } from "@/contexts/attendance/application/clock-in"
-import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/attendance-record.repository"
+import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
 import { ApplicationError, ConflictError } from "@/lib/errors"
 import { createTestContext } from "@/api/test/support/create-test-context"
 import { expectApplicationError } from "@/api/test/support/expect-application-error"

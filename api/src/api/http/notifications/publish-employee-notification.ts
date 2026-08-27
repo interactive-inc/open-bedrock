@@ -1,9 +1,9 @@
 import type { Session } from "@/lib/auth/session"
 import type { CompanyNotificationKind } from "@/api/http/notifications/notification-kind.definition"
-import type { PublishedEmployeeNotification } from "@/api/http/notifications/employee-notification.gateway.repository"
+import type { PublishedEmployeeNotification } from "@/api/http/notifications/employee-notification.adapter"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
-import { EmployeeNotificationGateway } from "@/api/http/notifications/employee-notification.gateway.repository"
+import { EmployeeNotificationAdapter } from "@/api/http/notifications/employee-notification.adapter"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -46,7 +46,7 @@ export class PublishEmployeeNotification {
       return new NotFoundError("recipient not found", "recipient_not_found")
     }
 
-    const created = await new EmployeeNotificationGateway(this.c).create({
+    const created = await new EmployeeNotificationAdapter(this.c).create({
       recipientEmployeeId: recipient.id,
       kind: command.kind,
       title: command.title,

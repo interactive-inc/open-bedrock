@@ -1,6 +1,6 @@
 import { ConflictError } from "@/lib/errors"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/shift-swap-request.repository"
+import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/repositories/shift-swap-request.repository"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppShiftSwapRequest } from "@/lib/app-schemas"

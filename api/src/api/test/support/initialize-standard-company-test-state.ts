@@ -1,6 +1,6 @@
 import { initializeCompanyTestState } from "@/api/test/support/initialize-company-test-state"
-import { seedDepartments } from "@/api/test/support/company/seed-departments.repository"
-import { seedOrgDepartments } from "@/api/test/support/company/seed-org-departments.repository"
+import { seedDepartments } from "@/api/test/support/company/seed-departments.test-support"
+import { seedOrgDepartments } from "@/api/test/support/company/seed-org-departments.test-support"
 
 /** 標準Company fixtureの組織定義を補い、canonical Company状態を初期化する。 */
 export async function initializeStandardCompanyTestState(db: D1Database): Promise<void> {

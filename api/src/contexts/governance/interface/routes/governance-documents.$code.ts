@@ -1,6 +1,6 @@
-import { GovernanceAccessRepository } from "@/contexts/governance/infrastructure/governance-access.repository"
-import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/resolve-governance-org-role.repository"
-import { GovernanceRepository } from "@/contexts/governance/infrastructure/governance.repository"
+import { GovernanceAccessAdapter } from "@/contexts/governance/infrastructure/adapters/governance-access.adapter"
+import { ResolveGovernanceOrgRoleAdapter } from "@/contexts/governance/infrastructure/adapters/resolve-governance-org-role.adapter"
+import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { factory } from "@/api/http/factory"
 import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { parseGovernanceCode } from "@/api/http/utils/parse-governance-code"
@@ -13,8 +13,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (session === null) throw new UnauthorizedError()
   const code = parseGovernanceCode(c.req.param("code"))
   if (code === null) throw new NotFoundError("governance document not found")
-  const repository = new GovernanceRepository(c)
-  const governanceAccess = new GovernanceAccessRepository({ c, session })
+  const repository = new GovernanceAdapter(c)
+  const governanceAccess = new GovernanceAccessAdapter({ context: c, session })
   const elevated =
     governanceAccess.canManage() || governanceAccess.canReview() || governanceAccess.canPublish()
   let record = await repository.findVisibleRecord({ code, includeDraft: elevated })
@@ -47,7 +47,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const approvalEligibility = await Promise.all(
     response.approvals.map(async (approval) => {
       if (!governanceAccess.canReview() || approval.status !== "pending") return false
-      const assignees = await resolveGovernanceOrgRole({ c, code: approval.org_role_code })
+      const assignees = await new ResolveGovernanceOrgRoleAdapter(c).resolveGovernanceOrgRole(
+        approval.org_role_code,
+      )
       if (assignees instanceof Error)
         throw new InternalError("failed to resolve governance reviewer")
       return assignees.some((assignee) => assignee.employee_id === session.employeeId)

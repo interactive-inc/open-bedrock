@@ -3,7 +3,7 @@ import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { DepartmentRepository } from "@/contexts/administration/infrastructure/organization/department.repository"
+import { DepartmentAdapter } from "@/contexts/administration/infrastructure/adapters/organization/department.adapter"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -16,14 +16,16 @@ export type Command = {
  * 組織図への配置（部署ノードの作成）は含まない。
  */
 export class CreateDepartment {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Department | ApplicationError> {
     if (command.session.hasPermission("org:manage") === false) {
       return new ForbiddenError("cannot manage departments", "forbidden")
     }
 
-    const repository = new DepartmentRepository(this.c)
+    const repository = new DepartmentAdapter(this.c)
 
     const created = await repository.create(command.name)
 

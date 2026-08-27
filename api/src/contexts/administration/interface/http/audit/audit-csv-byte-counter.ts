@@ -1,4 +1,4 @@
-import type { AuditEventDetail } from "@/contexts/administration/application/audit/create-administration-audit-event"
+import type { AuditEventDetail } from "@/contexts/administration/domain/factories/administration-audit-event.factory"
 import { PayloadTooLargeError } from "@/lib/errors"
 import {
   AUDIT_CSV_HEADER,

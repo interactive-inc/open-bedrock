@@ -1,10 +1,9 @@
 import { Budget } from "@/contexts/expense/domain/entities/budget.entity"
 import type { Context } from "@/env"
-import { BudgetRepository } from "@/contexts/expense/infrastructure/budget/budget.repository"
+import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
 import { NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { departments } from "@/contexts/company/infrastructure/schema/organization"
-import { eq } from "drizzle-orm"
+import { DepartmentExistenceAdapter } from "@/contexts/expense/infrastructure/adapters/budget/department-existence.adapter"
 
 export type Command = {
   departmentId: number
@@ -21,20 +20,24 @@ export type Command = {
  * 部署予算を登録する。対象部署の実在と期間の前後関係を検証する
  */
 export class CreateBudget {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Budget | ApplicationError> {
     if (command.periodEnd < command.periodStart) {
       return new ValidationError("period_end must not precede period_start", "invalid_period")
     }
 
-    const departmentRows = await this.c.var.database
-      .select({ id: departments.id })
-      .from(departments)
-      .where(eq(departments.id, command.departmentId))
-      .limit(1)
+    const departmentExists = await new DepartmentExistenceAdapter(this.c).exists(
+      command.departmentId,
+    )
 
-    if (departmentRows.at(0) === undefined) {
+    if (departmentExists instanceof Error) {
+      return new UnexpectedError("failed to find department", { cause: departmentExists })
+    }
+
+    if (departmentExists === false) {
       return new NotFoundError("department not found", "department_not_found")
     }
 

@@ -1,5 +1,5 @@
 import { zReviewCyclePolicy } from "@/contexts/performance-review/domain/values/review-cycle-policy.value"
-import { ReviewCyclePolicyRepository } from "@/contexts/performance-review/infrastructure/review/review-cycle-policy.repository"
+import { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
 import {
   ConflictError,
   ForbiddenError,
@@ -32,7 +32,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(1)
     .then((rows) => rows.at(0))
   if (cycle === undefined) throw new NotFoundError("review cycle not found")
-  const policy = await new ReviewCyclePolicyRepository(c).find(cycleId)
+  const policy = await new ReviewCyclePolicyAdapter(c).find(cycleId)
   if (policy instanceof Error) throw new InternalError("failed to load review policy")
   return c.json({ policy }, 200)
 })
@@ -53,7 +53,7 @@ export const PUT = factory.createHandlers(
     if (cycle === undefined) throw new NotFoundError("review cycle not found")
     if (cycle.status !== "draft") throw new ConflictError("review policy is locked after opening")
     const policy = c.req.valid("json")
-    const saved = await new ReviewCyclePolicyRepository(c).upsert(cycleId, policy)
+    const saved = await new ReviewCyclePolicyAdapter(c).upsert(cycleId, policy)
     if (saved instanceof Error) throw new InternalError("failed to save review policy")
     return c.json({ policy }, 200)
   },

@@ -3,7 +3,7 @@ import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Room } from "@/contexts/room/domain/entities/room.entity"
 import type { Context } from "@/env"
-import { RoomRepository } from "@/contexts/room/infrastructure/room.repository"
+import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
 
 export type Command = {
   session: Session
@@ -18,7 +18,9 @@ export type Command = {
  * 権限を確認し、新しい会議室を登録する。id は DB autoincrement に委ねる。
  */
 export class RegisterRoom {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<Room | ApplicationError> {
     const roomRepository = new RoomRepository(this.c)

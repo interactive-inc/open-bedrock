@@ -1,6 +1,6 @@
 import { ConflictError } from "@/lib/errors"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { CareerApplicationRepository } from "@/contexts/career/infrastructure/career-application.repository"
+import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
 
 import { UpdateMyCareerApplication } from "@/contexts/career/application/update-my-career-application"
 import type { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"

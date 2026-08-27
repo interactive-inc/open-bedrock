@@ -3,7 +3,7 @@ import { EmployeeEvent } from "@/contexts/administration/domain/entities/employe
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { EmployeeEventRepository } from "@/contexts/administration/infrastructure/employee-event/employee-event.repository"
+import { EmployeeEventRepository } from "@/contexts/administration/infrastructure/repositories/employee-event/employee-event.repository"
 
 export type Command = {
   session: Session
@@ -20,7 +20,9 @@ export type Command = {
  * 権限を確認し、社員の異動・在籍イベントを1件記録する。
  */
 export class CreateEmployeeEvent {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<EmployeeEvent | ApplicationError> {
     if (command.session.hasPermission("employee_event:manage") === false) {

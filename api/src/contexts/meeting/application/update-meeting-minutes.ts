@@ -3,7 +3,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { MeetingMinutes } from "@/contexts/meeting/domain/entities/meeting-minutes.entity"
 import type { Context } from "@/env"
-import { MeetingMinutesRepository } from "@/contexts/meeting/infrastructure/meeting-minutes.repository"
+import { MeetingMinutesRepository } from "@/contexts/meeting/infrastructure/repositories/meeting-minutes.repository"
 
 export type Command = {
   session: Session
@@ -18,7 +18,9 @@ export type Command = {
  * 議事録の開催日・表題・出席者・本文を更新する。作成者本人 or meeting:manage のみ。
  */
 export class UpdateMeetingMinutes {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<MeetingMinutes | ApplicationError> {
     const minutesRepository = new MeetingMinutesRepository(this.c)

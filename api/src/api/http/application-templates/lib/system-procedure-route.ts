@@ -1,4 +1,4 @@
-import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id.repository"
+import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id.query"
 import type { CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import type { Context } from "@/env"

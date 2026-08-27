@@ -3,8 +3,8 @@ import type { Skill } from "@/contexts/skill/domain/entities/skill.entity"
 import type { Context } from "@/env"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/employee-skill.repository"
-import { SkillRepository } from "@/contexts/skill/infrastructure/skill.repository"
+import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/repositories/employee-skill.repository"
+import { SkillRepository } from "@/contexts/skill/infrastructure/repositories/skill.repository"
 
 export type Command = {
   employeeId: number
@@ -23,7 +23,9 @@ export type SetMySkillResult = {
  * 本人のスキルを登録・更新し、登録結果とスキルマスタを返す。
  */
 export class SetMySkill {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<SetMySkillResult | ApplicationError> {
     const skillRepository = new SkillRepository(this.c)

@@ -7,8 +7,8 @@ import type { OnboardingTask } from "@/contexts/onboarding/domain/entities/onboa
 import type { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/onboarding-assignment.repository"
-import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/onboarding-template.repository"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
@@ -29,7 +29,9 @@ export type AssignOnboardingResult = {
  * テンプレートを社員に割り当て、タスクを展開して関連エンティティを返す。
  */
 export class AssignOnboarding {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<AssignOnboardingResult | ApplicationError> {
     if (command.session.hasPermission("onboarding:manage") === false) {

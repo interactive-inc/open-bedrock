@@ -28,9 +28,11 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()
   const body = c.req.valid("json")
-  const result = await new SyncGovernanceMarkdown(c, PERMISSION_KEYS, (audit) =>
-    prepareGovernanceAudit({ c, ...audit }),
-  ).run({
+  const result = await new SyncGovernanceMarkdown({
+    context: c,
+    permissionKeys: PERMISSION_KEYS,
+    prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
+  }).run({
     session,
     referenceCatalog: { training: await readTrainingCourseCodeSet(c) },
     documents: body.documents.map((document) => ({

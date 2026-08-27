@@ -1,6 +1,6 @@
 import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
 import type { Context } from "@/env"
-import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/business-trip.repository"
+import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -19,7 +19,9 @@ export type Command = {
  * 同一申請者の期間が重複する出張申請が既に存在する場合は拒否する。
  */
 export class CreateBusinessTrip {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async run(command: Command): Promise<BusinessTrip | ApplicationError> {
     const businessTripRepository = new BusinessTripRepository(this.c)
