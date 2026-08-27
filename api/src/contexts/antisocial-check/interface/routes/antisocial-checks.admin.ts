@@ -64,7 +64,7 @@ export const GET = factory.createHandlers(
     })
 
     const rows = await c.var.database
-      .select({ check: antisocialChecks, requesterName: employees.name })
+      .select({ check: antisocialChecks, requesterName: employees.officialName })
       .from(antisocialChecks)
       .leftJoin(employees, eq(employees.id, antisocialChecks.requesterId))
       .where(and(...conditions))

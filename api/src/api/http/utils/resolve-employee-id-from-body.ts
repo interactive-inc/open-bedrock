@@ -1,24 +1,25 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 
 export type Props = {
   c: Context
-  employeeId: number | undefined
+  employeeId: EmployeeId | undefined
   employeeCode: string | undefined
 }
 
 /**
  * 登録系ルートの対象従業員 id を、リクエストボディの employee_id / employee_code のいずれかから解決する。
- * employee_code 指定時は台帳を引いて数値 id に直す。解決できない code は null（=対象なし）を返す。
+ * employee_code 指定時はCompanyのcanonical Employee IDへ解決する。解決できない code はnullを返す。
  * どちらを渡すかの検証（exactly one）は各ルートの zValidator が行う。
  */
-export async function resolveEmployeeIdFromBody(props: Props): Promise<number | null | Error> {
+export async function resolveEmployeeIdFromBody(props: Props): Promise<EmployeeId | null | Error> {
   if (props.employeeId !== undefined) {
     return props.employeeId
   }
 
   if (props.employeeCode !== undefined) {
-    const repository = new EmployeeRepository(props.c)
+    const repository = new CompanyEmployeeDirectoryReadAdapter(props.c)
 
     const employee = await repository.findByCode(props.employeeCode)
 

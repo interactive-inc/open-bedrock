@@ -1,4 +1,5 @@
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import { UnexpectedError } from "@/lib/errors"
@@ -9,7 +10,7 @@ export type Command = {
   category: string
   tags: string | null
   bodyMd: string
-  authorId: number
+  authorId: EmployeeId
   createdAt: string
 }
 

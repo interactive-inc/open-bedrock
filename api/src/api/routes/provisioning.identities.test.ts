@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
 import { z } from "zod"
 
 const jwtSecret = "provisioning-route-jwt-secret"
@@ -65,7 +65,10 @@ describe("POST /provisioning/identities", () => {
     })
 
     const employee = await db
-      .prepare("SELECT code, name FROM employees WHERE name = 'External Hundred'")
+      .prepare(
+        `SELECT employee_code AS code, official_name AS name
+         FROM company_employees WHERE official_name = 'External Hundred'`,
+      )
       .first<{ code: string | null; name: string }>()
     expect(employee?.code).toBeNull()
 
@@ -120,7 +123,7 @@ describe("POST /provisioning/identities", () => {
     expect(summarySchema.parse(await second.json())).toEqual({ created: 0, updated: 0, skipped: 1 })
 
     expect(await count(db, "system_identity_bindings", "subject = 'ext-200'")).toBe(1)
-    expect(await count(db, "employees", "name = 'External Two'")).toBe(1)
+    expect(await count(db, "company_employees", "official_name = 'External Two'")).toBe(1)
     expect(
       await count(
         db,
@@ -158,8 +161,8 @@ describe("POST /provisioning/identities", () => {
 
     const employee = await db
       .prepare(
-        `SELECT e.name FROM employees e
-         JOIN account_employee_links link ON link.employee_id = e.id
+        `SELECT employee.official_name AS name FROM company_employees AS employee
+         JOIN company_account_employee_links AS link ON link.employee_id = employee.id
          JOIN system_identity_bindings i ON i.account_id = link.account_id
          WHERE i.subject = 'ext-300'`,
       )

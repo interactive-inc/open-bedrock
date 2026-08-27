@@ -1,10 +1,12 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { toBusinessDate } from "@/lib/to-business-date"
 import type { AttendanceRecordRow } from "@/contexts/attendance/infrastructure/schema/attendance"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   workDate: z.string(),
   clockInAt: z.string().nullable(),
   clockOutAt: z.string().nullable(),
@@ -44,7 +46,7 @@ export class AttendanceRecord implements Props {
 
   /** 出勤打刻で新規の勤怠記録を組み立てる。workDate は打刻時刻を業務 TZ（JST）で日付化した値、初期状態は open。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     clockInAt: string
     note: string | null
   }): AttendanceRecord {

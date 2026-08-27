@@ -48,8 +48,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       assetName: assets.name,
       kind: assets.kind,
       holderId: employees.id,
-      holderCode: employees.code,
-      holderName: employees.name,
+      holderCode: employees.employeeCode,
+      holderName: employees.officialName,
       lentAt: assetLendings.lentAt,
     })
     .from(assets)

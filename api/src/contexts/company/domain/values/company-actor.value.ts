@@ -11,16 +11,16 @@ export type CompanyActorProps = Readonly<{
   capabilities: ReadonlyArray<CompanyCapability>
 }>
 
-function isOpaqueIdentifier(value: string): boolean {
-  return value.length >= 1 && value.length <= 256 && value.trim() === value
-}
-
 /** 認証結果からCompanyへ渡す、検証済みかつ変更不能な実行主体。 */
 export class CompanyActorValue {
   readonly accountId: string
   readonly employeeId: string | null
   readonly organizationIds: ReadonlyArray<string>
   readonly capabilities: ReadonlyArray<CompanyCapability>
+
+  private static isOpaqueIdentifier(value: string): boolean {
+    return value.length >= 1 && value.length <= 256 && value.trim() === value
+  }
 
   private constructor(props: CompanyActorProps) {
     this.accountId = props.accountId
@@ -32,11 +32,12 @@ export class CompanyActorValue {
 
   static restore(props: CompanyActorProps): CompanyActorValue {
     if (
-      !isOpaqueIdentifier(props.accountId) ||
-      (props.employeeId !== null && !isOpaqueIdentifier(props.employeeId)) ||
+      !CompanyActorValue.isOpaqueIdentifier(props.accountId) ||
+      (props.employeeId !== null && !CompanyActorValue.isOpaqueIdentifier(props.employeeId)) ||
       props.organizationIds.length === 0 ||
       props.organizationIds.some(
-        (organizationId) => organizationId !== "*" && !isOpaqueIdentifier(organizationId),
+        (organizationId) =>
+          organizationId !== "*" && !CompanyActorValue.isOpaqueIdentifier(organizationId),
       ) ||
       new Set(props.organizationIds).size !== props.organizationIds.length ||
       props.capabilities.some((capability) => !companyCapabilities.includes(capability)) ||

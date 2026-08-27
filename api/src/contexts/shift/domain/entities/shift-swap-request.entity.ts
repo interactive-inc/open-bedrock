@@ -1,10 +1,12 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { ShiftSwapRequestRow } from "@/contexts/shift/infrastructure/schema/shift"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
-  requesterEmployeeId: z.number(),
-  targetEmployeeId: z.number(),
+  requesterEmployeeId: zEmployeeId,
+  targetEmployeeId: zEmployeeId,
   date: z.string(),
   note: z.string().nullable(),
   status: z.string(),
@@ -40,8 +42,8 @@ export class ShiftSwapRequest implements Props {
 
   /** 新規作成する交代申請を組み立てる。id は未採番、初期状態は pending。 */
   static create(props: {
-    requesterEmployeeId: number
-    targetEmployeeId: number
+    requesterEmployeeId: EmployeeId
+    targetEmployeeId: EmployeeId
     date: string
     note: string | null
   }): ShiftSwapRequest | { reason: "self_reference" } {

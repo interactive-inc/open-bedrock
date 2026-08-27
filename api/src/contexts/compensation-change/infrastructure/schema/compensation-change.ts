@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
@@ -6,7 +7,7 @@ export const salaryRevisions = sqliteTable(
   "salary_revisions",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    employeeId: integer("employee_id").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     effectiveDate: text("effective_date").notNull(),
     previousBaseSalary: integer("previous_base_salary").notNull(),
     newBaseSalary: integer("new_base_salary").notNull(),

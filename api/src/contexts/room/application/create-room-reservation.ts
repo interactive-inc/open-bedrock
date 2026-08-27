@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { RoomReservation } from "@/contexts/room/domain/entities/room-reservation.entity"
 import {
   ConflictError,
@@ -13,7 +14,7 @@ import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room
 
 export type Command = {
   roomId: number
-  reserverId: number
+  reserverId: EmployeeId
   startAt: string
   endAt: string
   purpose: string | null

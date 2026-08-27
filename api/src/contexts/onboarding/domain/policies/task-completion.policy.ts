@@ -1,7 +1,8 @@
 import type { Session } from "@/lib/auth/session"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type Props = {
-  taskEmployeeId: number
+  taskEmployeeId: EmployeeId
   session: Session
 }
 

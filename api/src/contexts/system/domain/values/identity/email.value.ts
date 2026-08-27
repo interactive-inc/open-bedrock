@@ -1,15 +1,16 @@
 import { InvalidEmailError } from "@/contexts/system/domain/errors"
 import { z } from "zod"
 
-const normalizeEmail = (value: string): string => value.trim().toLowerCase()
-const emailSchema = z.preprocess(
-  (value) => (typeof value === "string" ? normalizeEmail(value) : value),
-  z.email(),
-)
-
 export class EmailValue {
-  static readonly schema = emailSchema
+  static readonly schema = z.preprocess(
+    (value) => (typeof value === "string" ? EmailValue.normalizeEmail(value) : value),
+    z.email(),
+  )
   readonly value: string
+
+  private static normalizeEmail(value: string): string {
+    return value.trim().toLowerCase()
+  }
 
   private constructor(value: string) {
     this.value = value
@@ -17,7 +18,7 @@ export class EmailValue {
   }
 
   static create(value: string): EmailValue | InvalidEmailError {
-    const parsed = emailSchema.safeParse(value)
+    const parsed = EmailValue.schema.safeParse(value)
     return parsed.success ? new EmailValue(parsed.data) : new InvalidEmailError()
   }
 

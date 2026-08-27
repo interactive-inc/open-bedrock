@@ -1,3 +1,4 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import { describe, expect, test } from "bun:test"
 
@@ -8,7 +9,7 @@ describe("KnowledgeArticle.create", () => {
       category: "engineering",
       tags: "deploy,ci",
       bodyMd: "# Steps\n\n1. Build\n2. Deploy",
-      authorId: 5,
+      authorId: toWorkforceEmployeeId(5),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -26,7 +27,7 @@ describe("KnowledgeArticle.withContent", () => {
       category: "general",
       tags: null,
       bodyMd: "body",
-      authorId: 5,
+      authorId: toWorkforceEmployeeId(5),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -41,6 +42,6 @@ describe("KnowledgeArticle.withContent", () => {
     expect(updated.category).toBe("engineering")
     expect(updated.tags).toBe("new-tag")
     expect(updated.bodyMd).toBe("new body")
-    expect(updated.authorId).toBe(5)
+    expect(updated.authorId).toBe(toWorkforceEmployeeId(5))
   })
 })

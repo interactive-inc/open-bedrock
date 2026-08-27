@@ -1,10 +1,12 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { EmployeeWorkStyleRow } from "@/contexts/work-style/infrastructure/schema/work-style"
 import { workStyleSchema } from "@/lib/schemas"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   style: workStyleSchema,
   startsOn: z.string(),
   endsOn: z.string().nullable(),
@@ -41,7 +43,7 @@ export class EmployeeWorkStyle implements Props {
 
   /** 新規作成する勤務形態の記録を組み立てる。id は未採番。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     style: Props["style"]
     startsOn: string
     endsOn: string | null

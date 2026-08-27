@@ -11,7 +11,7 @@ import { zAppLeaveRequestInboxList } from "@/lib/app-schemas"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm"
-import { listManagedEmployeeIds } from "@/contexts/company/infrastructure/organization/list-managed-employee-ids.repository"
+import { ListManagedEmployeeIdsAdapter } from "@/contexts/company/infrastructure/adapters/organization/list-managed-employee-ids.adapter"
 
 /** 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。 */
 const SORT_OPTIONS = {
@@ -38,7 +38,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const managedEmployeeIds = session.hasPermission("org:manage")
     ? null
-    : await listManagedEmployeeIds(c, session.employeeId)
+    : await new ListManagedEmployeeIdsAdapter(c).listManagedEmployeeIds(session.employeeId)
 
   if (managedEmployeeIds instanceof Error) {
     throw new InternalError("failed to resolve organization scope")
@@ -75,7 +75,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     : "created_at_desc"
 
   const rows = await c.var.database
-    .select({ leaveRequest: leaveRequests, applicantName: employees.name })
+    .select({ leaveRequest: leaveRequests, applicantName: employees.officialName })
     .from(leaveRequests)
     .leftJoin(employees, eq(employees.id, leaveRequests.employeeId))
     .where(pendingInScope)

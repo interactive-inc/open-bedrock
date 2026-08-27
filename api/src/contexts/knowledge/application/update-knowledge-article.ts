@@ -1,4 +1,5 @@
 import type { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -6,7 +7,7 @@ import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   articleId: number
-  authorId: number
+  authorId: EmployeeId
   title: string
   category: string
   tags: string | null

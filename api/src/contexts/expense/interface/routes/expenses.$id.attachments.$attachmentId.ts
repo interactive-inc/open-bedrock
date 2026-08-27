@@ -1,12 +1,12 @@
-import { decryptAttachment } from "@system/infrastructure/attachments/decrypt-attachment.repository"
-import { toSha256Hex } from "@system/infrastructure/attachments/to-sha256-hex.repository"
-import { AttachmentKekRegistry } from "@system/infrastructure/attachments/attachment-kek-registry.repository"
-import { AttachmentObjectStore } from "@system/infrastructure/attachments/attachment-object-store.repository"
-import { AttachmentRepository } from "@system/infrastructure/attachments/attachment.repository"
+import { decryptAttachment } from "@system/lib/attachments/decrypt-attachment"
+import { toSha256Hex } from "@system/lib/attachments/to-sha256-hex"
+import { AttachmentKekRegistry } from "@system/lib/attachments/attachment-kek-registry"
+import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
+import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
 import { NotFoundError as ApplicationNotFoundError, UnprocessableError } from "@/lib/errors"
-import { canReadExpense } from "@/contexts/expense/infrastructure/adapters/can-read-expense.adapter"
+import { CanReadExpenseAdapter } from "@/contexts/expense/infrastructure/adapters/can-read-expense.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event.repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import { expenseAttachments, expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -47,7 +47,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("attachment not found")
   }
 
-  const readable = await canReadExpense(c, {
+  const readable = await new CanReadExpenseAdapter(c).canReadExpense({
     session,
     applicantEmployeeId: row.applicantId,
   })
@@ -61,7 +61,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const content = await (async () => {
-    const row = await new AttachmentRepository(c).findById(attachmentId)
+    const row = await new AttachmentAdapter(c).findById(attachmentId)
 
     if (row instanceof Error) return row
 
@@ -81,7 +81,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
     if (kek instanceof Error) return kek
 
-    const ciphertext = await new AttachmentObjectStore(c).get(row.objectKey)
+    const ciphertext = await new AttachmentObjectAdapter(c).get(row.objectKey)
 
     if (ciphertext instanceof Error) return ciphertext
 

@@ -1,9 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CommendationRow } from "@/contexts/commendation/infrastructure/schema/commendation"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   title: z.string(),
   reason: z.string(),
   awardedOn: z.string(),
@@ -35,7 +37,7 @@ export class Commendation implements Props {
   }
 
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     title: string
     reason: string
     awardedOn: string

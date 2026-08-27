@@ -1,10 +1,10 @@
 import { buildDashboardMonthLabels } from "@/api/http/dashboard/build-dashboard-month-labels"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { surveys } from "@/contexts/survey/infrastructure/schema/survey"
 import type { Context } from "@/env"
-import { countPendingSystemCases } from "@system/infrastructure/workflow/count-pending-system-cases.repository"
-import { listSystemCaseMonthlyCounts } from "@system/infrastructure/workflow/list-system-case-monthly-counts.repository"
+import { CountPendingSystemCasesAdapter } from "@system/infrastructure/adapters/workflow/count-pending-system-cases.adapter"
+import { ListSystemCaseMonthlyCountsAdapter } from "@system/infrastructure/adapters/workflow/list-system-case-monthly-counts.adapter"
 import { count, eq } from "drizzle-orm"
 
 /** System・Company・評価・Surveyの集計を製品dashboard responseへ合成する。 */
@@ -14,32 +14,44 @@ export async function readDashboard(context: Context, now: string) {
   if (firstMonth === undefined) return new Error("dashboard month window is empty")
   const windowStartDate = new Date(`${firstMonth}-01T00:00:00Z`)
 
-  const [pendingApplicationCount, applicationTrendRows, dashboardRows] = await Promise.all([
-    countPendingSystemCases({ env: { DB: context.env.DB } }),
-    listSystemCaseMonthlyCounts({ env: { DB: context.env.DB } }, windowStartDate),
-    context.var.database.batch([
-      context.var.database.select({ total: count() }).from(employees),
-      context.var.database
-        .select({ total: count() })
-        .from(goals)
-        .where(eq(goals.status, "in_progress")),
-      context.var.database
-        .select({ total: count() })
-        .from(surveys)
-        .where(eq(surveys.status, "open")),
-      context.var.database
-        .select({ dept_name: employees.deptName, total: count() })
-        .from(employees)
-        .groupBy(employees.deptName),
-      context.var.database
-        .select({ status: goals.status, total: count() })
-        .from(goals)
-        .groupBy(goals.status),
-    ]),
-  ])
+  const [pendingApplicationCount, applicationTrendRows, companySnapshot, dashboardRows] =
+    await Promise.all([
+      new CountPendingSystemCasesAdapter({ env: { DB: context.env.DB } }).countPendingSystemCases(),
+      new ListSystemCaseMonthlyCountsAdapter({
+        env: { DB: context.env.DB },
+      }).listSystemCaseMonthlyCounts(windowStartDate),
+      new ReadCanonicalOrganizationStateAdapter(context).readCanonicalOrganizationState(),
+      context.var.database.batch([
+        context.var.database
+          .select({ total: count() })
+          .from(goals)
+          .where(eq(goals.status, "in_progress")),
+        context.var.database
+          .select({ total: count() })
+          .from(surveys)
+          .where(eq(surveys.status, "open")),
+        context.var.database
+          .select({ status: goals.status, total: count() })
+          .from(goals)
+          .groupBy(goals.status),
+      ]),
+    ])
   if (pendingApplicationCount instanceof Error) return pendingApplicationCount
   if (applicationTrendRows instanceof Error) return applicationTrendRows
-  const [employeeRows, openGoalRows, openSurveyRows, departmentRows, goalStatusRows] = dashboardRows
+  if (companySnapshot instanceof Error) return companySnapshot
+  const [openGoalRows, openSurveyRows, goalStatusRows] = dashboardRows
+  const unitById = new Map(
+    companySnapshot.organization.units.map((unit) => [unit.organizationUnitId, unit]),
+  )
+  const departmentCounts = new Map<string, number>()
+  const activeStates = companySnapshot.employees.filter((state) => state.status === "ACTIVE")
+  for (const state of activeStates) {
+    const name =
+      state.primaryAssignment === null
+        ? "未所属"
+        : (unitById.get(state.primaryAssignment.organizationUnitId)?.officialName ?? "未所属")
+    departmentCounts.set(name, (departmentCounts.get(name) ?? 0) + 1)
+  }
   const goalStatusCounts: Record<string, number> = {}
   let goalTotal = 0
   for (const row of goalStatusRows) {
@@ -50,13 +62,13 @@ export async function readDashboard(context: Context, now: string) {
   const trendByMonth = new Map(applicationTrendRows.map((row) => [row.month, row.total]))
 
   return {
-    employee_count: employeeRows.at(0)?.total ?? 0,
+    employee_count: activeStates.length,
     open_goal_count: openGoalRows.at(0)?.total ?? 0,
     pending_application_count: pendingApplicationCount,
     open_survey_count: openSurveyRows.at(0)?.total ?? 0,
-    department_breakdown: departmentRows.map((row) => ({
-      dept_name: row.dept_name ?? "未所属",
-      count: row.total,
+    department_breakdown: [...departmentCounts].map(([dept_name, count]) => ({
+      dept_name,
+      count,
     })),
     goal_status_summary: {
       draft: goalStatusCounts.draft ?? 0,

@@ -12,7 +12,10 @@ import { requestContextMiddleware } from "@/api/http/middlewares/request-context
 import { factory } from "@/api/http/factory"
 import { auditNoStore } from "@/api/http/middlewares/audit-no-store"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import type { CompanyCapability } from "@/contexts/company/domain/definitions/company-actor.definition"
+import {
+  CompanyActorValue,
+  type CompanyCapability,
+} from "@/contexts/company/domain/values/company-actor.value"
 import { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import { SystemIdentityUnavailableError } from "@system/interface/errors"
@@ -78,6 +81,7 @@ const systemContextMiddleware = factory.createMiddleware(async (c, next) => {
   }
 
   c.set("now", () => new Date(c.env.NOW ?? Date.now()))
+  c.set("companyClock", () => new Date(c.env.NOW ?? Date.now()))
   c.set("oidcClientRegistry", oidcClientRegistry)
   c.set("oidcIssuerConfiguration", oidcIssuerConfiguration)
   await next()
@@ -105,11 +109,6 @@ const globalBodyLimitExceptAuditExport = factory.createMiddleware(async (c, next
 })
 
 const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
-  if (c.req.path === "/company/v1/bootstrap") {
-    await next()
-    return
-  }
-
   const session = c.var.session
   if (session === null) throw new HTTPException(401, { message: "authentication required" })
 
@@ -131,12 +130,15 @@ const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
   }
   if (session.hasPermission("system:admin")) capabilities.push("company:admin")
 
-  c.set("companyActor", {
-    accountId: `account:${session.accountId}`,
-    employeeId: `employee:${session.employeeId}`,
-    organizationIds: ["organization:default"],
-    capabilities,
-  })
+  c.set(
+    "companyActor",
+    CompanyActorValue.restore({
+      accountId: String(session.accountId),
+      employeeId: session.employeeId === null ? null : String(session.employeeId),
+      organizationIds: ["organization:default"],
+      capabilities,
+    }),
+  )
   await next()
 })
 
@@ -170,10 +172,10 @@ export const appBase = factory
   .use("*", systemContextMiddleware)
   .use("*", featureGate)
   .use("*", databaseMiddleware)
-  .use("/oauth/authorizations", verifyBearer)
-  .use("/oauth/authorizations", systemAuthorizationMiddleware)
-  .use("/oauth/mcp-grants", verifyBearer)
-  .use("/oauth/mcp-grants", systemAuthorizationMiddleware)
+  .use("/system/oauth/authorizations", verifyBearer)
+  .use("/system/oauth/authorizations", systemAuthorizationMiddleware)
+  .use("/system/oauth/mcp-grants", verifyBearer)
+  .use("/system/oauth/mcp-grants", systemAuthorizationMiddleware)
   .use("/company/*", verifyBearer)
   .use("/company/*", companyActorMiddleware)
   .onError(handleApiError)

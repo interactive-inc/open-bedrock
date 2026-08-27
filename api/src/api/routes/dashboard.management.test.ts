@@ -1,12 +1,16 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import {
+  seedCompanyEmployees,
+  seedCompanyOrganization,
+} from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "management-dashboard-route-test-secret"
 
@@ -68,15 +72,14 @@ const managementEmployees = [
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     managementEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: null,
-      dept_name: employee.dept,
+      deptId: employee.dept === "HR" ? 1 : 2,
+      deptName: employee.dept,
       position: null,
       // E004 は退職済み(在籍数に数えない)。
       status: employee.id === 4 ? "retired" : "active",
@@ -93,11 +96,38 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
+  await seedCompanyOrganization(db, {
+    employees: managementEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      deptId: employee.dept === "HR" ? 1 : 2,
+      deptName: employee.dept,
+      status: employee.id === 4 ? "retired" : "active",
+    })),
+    departments: [
+      {
+        id: 1,
+        code: "D001",
+        name: "HR",
+        parentCode: null,
+        managerEmployeeCode: "E001",
+      },
+      {
+        id: 2,
+        code: "D002",
+        name: "Sales",
+        parentCode: "D001",
+        managerEmployeeCode: "E002",
+      },
+    ],
+  })
+
   // 入社 2 件(直近 30 日以内)、退職 1 件(直近)、入社 1 件(30 日より前=数えない)。
-  await seedD1(db, "employee_events", [
+  await seedD1(db, "company_employee_events", [
     {
       id: 1,
-      employee_id: 2,
+      employee_id: "2",
       kind: "join",
       effective_date: "2026-06-01",
       from_department_code: null,
@@ -107,7 +137,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 2,
-      employee_id: 3,
+      employee_id: "3",
       kind: "join",
       effective_date: "2026-05-20",
       from_department_code: null,
@@ -117,7 +147,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 3,
-      employee_id: 4,
+      employee_id: "4",
       kind: "retire",
       effective_date: "2026-06-10",
       from_department_code: "D002",
@@ -127,7 +157,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 4,
-      employee_id: 1,
+      employee_id: "1",
       kind: "join",
       effective_date: "2026-04-01",
       from_department_code: null,
@@ -139,16 +169,16 @@ async function createTestDb(): Promise<D1Database> {
 
   // 当月の打刻 2 件、前月 1 件(数えない)。
   await seedD1(db, "attendance_records", [
-    { id: 1, employee_id: 2, work_date: "2026-06-02", status: "closed" },
-    { id: 2, employee_id: 2, work_date: "2026-06-03", status: "closed" },
-    { id: 3, employee_id: 2, work_date: "2026-05-30", status: "closed" },
+    { id: 1, employee_id: "2", work_date: "2026-06-02", status: "closed" },
+    { id: 2, employee_id: "2", work_date: "2026-06-03", status: "closed" },
+    { id: 3, employee_id: "2", work_date: "2026-05-30", status: "closed" },
   ])
 
   // 休暇: 当月 2 件(うち pending 1)、前月 pending 1(件数は当月外だが pending は全期間)。
   await seedD1(db, "leave_requests", [
     {
       id: 1,
-      employee_id: 2,
+      employee_id: "2",
       leave_type: "annual",
       start_date: "2026-06-20",
       end_date: "2026-06-21",
@@ -161,20 +191,20 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 2,
-      employee_id: 3,
+      employee_id: "3",
       leave_type: "annual",
       start_date: "2026-06-22",
       end_date: "2026-06-22",
       days: 1,
       reason: null,
       status: "approved",
-      approver_id: 1,
+      approver_id: "1",
       decided_comment: null,
       created_at: "2026-06-06T00:00:00.000Z",
     },
     {
       id: 3,
-      employee_id: 3,
+      employee_id: "3",
       leave_type: "annual",
       start_date: "2026-05-10",
       end_date: "2026-05-10",
@@ -191,7 +221,8 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "expenses", [
     {
       id: 1,
-      employee_id: 2,
+      employee_id: "2",
+      organization_unit_id: "department:D002",
       category: "transport",
       amount: 1000,
       spent_at: "2026-06-01",
@@ -201,7 +232,8 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 2,
-      employee_id: 3,
+      employee_id: "3",
+      organization_unit_id: "department:D002",
       category: "supplies",
       amount: 2000,
       spent_at: "2026-06-03",
@@ -211,7 +243,8 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 3,
-      employee_id: 3,
+      employee_id: "3",
+      organization_unit_id: "department:D002",
       category: "books",
       amount: 500,
       spent_at: "2026-05-01",
@@ -232,7 +265,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "performance_goals", [
     {
       id: 1,
-      employee_id: 2,
+      employee_id: "2",
       period: "2026-H1",
       title: "g1",
       kpi: null,
@@ -241,7 +274,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 2,
-      employee_id: 2,
+      employee_id: "2",
       period: "2026-H1",
       title: "g2",
       kpi: null,
@@ -250,7 +283,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 3,
-      employee_id: 3,
+      employee_id: "3",
       period: "2026-H1",
       title: "g3",
       kpi: null,
@@ -259,7 +292,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 4,
-      employee_id: 3,
+      employee_id: "3",
       period: "2025-H2",
       title: "g4",
       kpi: null,
@@ -285,14 +318,12 @@ async function createTestDb(): Promise<D1Database> {
       updated_at: Date.parse(`2026-06-0${index + 1}T00:00:00Z`),
     })),
   )
-  await initializeStandardCompanyTestState(db)
-
   return db
 }
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 

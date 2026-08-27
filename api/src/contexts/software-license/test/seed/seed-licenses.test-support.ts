@@ -1,3 +1,5 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedLicense = {
   id: number
   name: string
@@ -5,7 +7,7 @@ type SeedLicense = {
   category: string | null
   seats: number | null
   renewalDeadline: string | null
-  ownerEmployeeId: number | null
+  ownerEmployeeId: EmployeeId | null
   note: string | null
   status: "active" | "cancelled"
   createdAt: string
@@ -19,7 +21,7 @@ export const seedLicenses: ReadonlyArray<SeedLicense> = [
     category: "saas",
     seats: 50,
     renewalDeadline: "2026-03-31",
-    ownerEmployeeId: 1,
+    ownerEmployeeId: toWorkforceEmployeeId(1),
     note: null,
     status: "active",
     createdAt: "2026-01-05T00:00:00Z",

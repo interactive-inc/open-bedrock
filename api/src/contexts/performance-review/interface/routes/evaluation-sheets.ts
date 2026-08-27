@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -26,11 +27,11 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      employee_id: z.number().int().positive(),
+      employee_id: zEmployeeId,
       template_id: z.number().int().positive().nullable().optional(),
       period: z.string().min(1).max(100),
-      primary_evaluator_id: z.number().int().positive().optional(),
-      secondary_evaluator_id: z.number().int().positive().nullable().optional(),
+      primary_evaluator_id: zEmployeeId.optional(),
+      secondary_evaluator_id: zEmployeeId.nullable().optional(),
     }),
   ),
   async (c) => {
@@ -112,10 +113,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   if (employeeIdParam !== undefined) {
-    const employeeId = Number(employeeIdParam)
+    const employeeId = zEmployeeId.safeParse(employeeIdParam)
 
-    if (Number.isInteger(employeeId)) {
-      conditions.push(eq(evaluationSheets.employeeId, employeeId))
+    if (employeeId.success) {
+      conditions.push(eq(evaluationSheets.employeeId, employeeId.data))
     }
   }
 

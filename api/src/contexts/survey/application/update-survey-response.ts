@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
@@ -6,7 +7,7 @@ import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   responseId: number
-  respondentId: number
+  respondentId: EmployeeId
   answersJson: unknown
   submittedAt: string
 }

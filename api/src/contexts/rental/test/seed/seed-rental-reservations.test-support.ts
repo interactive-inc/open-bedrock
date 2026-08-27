@@ -1,6 +1,8 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedRentalReservation = {
   id: string
-  requesterId: number
+  requesterId: EmployeeId
   itemName: string
   startDate: string
   endDate: string
@@ -12,7 +14,7 @@ type SeedRentalReservation = {
 export const seedRentalReservations: ReadonlyArray<SeedRentalReservation> = [
   {
     id: "10000000-0000-0000-0000-000000000001",
-    requesterId: 2,
+    requesterId: toWorkforceEmployeeId(2),
     itemName: "プロジェクター",
     startDate: "2026-06-10",
     endDate: "2026-06-12",
@@ -22,7 +24,7 @@ export const seedRentalReservations: ReadonlyArray<SeedRentalReservation> = [
   },
   {
     id: "10000000-0000-0000-0000-000000000002",
-    requesterId: 4,
+    requesterId: toWorkforceEmployeeId(4),
     itemName: "ノートPC",
     startDate: "2026-06-15",
     endDate: "2026-06-20",
@@ -32,7 +34,7 @@ export const seedRentalReservations: ReadonlyArray<SeedRentalReservation> = [
   },
   {
     id: "10000000-0000-0000-0000-000000000003",
-    requesterId: 9,
+    requesterId: toWorkforceEmployeeId(9),
     itemName: "カメラ",
     startDate: "2026-06-18",
     endDate: "2026-06-19",

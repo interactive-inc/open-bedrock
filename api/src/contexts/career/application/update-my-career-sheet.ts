@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CareerSheet } from "@/contexts/career/domain/entities/career-sheet.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -5,7 +6,7 @@ import type { Context } from "@/env"
 import { CareerSheetRepository } from "@/contexts/career/infrastructure/repositories/career-sheet.repository"
 
 export type Command = {
-  employeeId: number
+  employeeId: EmployeeId
   goalsText: string | null
   strengthsText: string | null
   now: string

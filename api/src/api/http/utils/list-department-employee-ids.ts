@@ -1,6 +1,6 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
-import { readCanonicalOrganizationState } from "@/contexts/company/infrastructure/organization/read-canonical-organization-state.repository"
-import { toStorageEmployeeId } from "@/contexts/company/infrastructure/workforce/to-storage-employee-id.repository"
+import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 
 export type Props = {
   c: Context
@@ -11,8 +11,10 @@ export type Props = {
  * 指定部署に所属(主配属・兼務とも)する従業員 id をcanonical Company snapshotから解決する。
  * 下位部署は含まない(部署スコープの既存規約)。部署が存在しない場合も空配列を返す。
  */
-export async function listDepartmentEmployeeIds(props: Props): Promise<Array<number> | Error> {
-  const snapshot = await readCanonicalOrganizationState(props.c)
+export async function listDepartmentEmployeeIds(props: Props): Promise<Array<EmployeeId> | Error> {
+  const snapshot = await new ReadCanonicalOrganizationStateAdapter(
+    props.c,
+  ).readCanonicalOrganizationState()
   if (snapshot instanceof Error) return snapshot
   const unitIds = new Set(
     snapshot.organization.units
@@ -21,7 +23,7 @@ export async function listDepartmentEmployeeIds(props: Props): Promise<Array<num
   )
   if (unitIds.size === 0) return []
 
-  const employeeIds: number[] = []
+  const employeeIds: EmployeeId[] = []
   for (const employee of snapshot.employees) {
     if (
       employee.employmentId === null ||
@@ -35,9 +37,7 @@ export async function listDepartmentEmployeeIds(props: Props): Promise<Array<num
     ]
     if (!assignments.some((assignment) => unitIds.has(assignment.organizationUnitId))) continue
 
-    const storageId = toStorageEmployeeId(employee.employeeId)
-    if (storageId instanceof Error) return storageId
-    employeeIds.push(storageId)
+    employeeIds.push(employee.employeeId)
   }
-  return employeeIds.toSorted((left, right) => left - right)
+  return employeeIds.toSorted()
 }

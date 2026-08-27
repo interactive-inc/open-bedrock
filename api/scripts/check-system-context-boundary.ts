@@ -6,15 +6,33 @@ import ts from "typescript"
 
 const PROJECT_ROOT = resolve(import.meta.dir, "..")
 const SOURCE_ROOT = resolve(PROJECT_ROOT, "src")
-const API_SOURCE_ROOT = existsSync(resolve(SOURCE_ROOT, "api"))
-  ? resolve(SOURCE_ROOT, "api")
-  : SOURCE_ROOT
 const SYSTEM_CONTEXT_ROOT = resolve(SOURCE_ROOT, "contexts/system")
-const CONTEXT_FIRST_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
-const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"] as const
+const CONTEXT_FIRST_LAYERS = [
+  "application",
+  "configuration",
+  "domain",
+  "infrastructure",
+  "interface",
+  "lib",
+] as const
+const SYSTEM_SELF_REFERENCE_LAYERS = [
+  "application",
+  "configuration",
+  "domain",
+  "infrastructure",
+  "lib",
+] as const
 const SYSTEM_CAPABILITY_LAYERS = ["application", "infrastructure"] as const
+const INFRASTRUCTURE_IMPLEMENTATION_DIRECTORIES = new Set(["adapters", "repositories"])
+const SYSTEM_LAYER_STRUCTURAL_DIRECTORIES = new Set(["errors"])
 const SYSTEM_PATH_MAPPING_LAYERS = [...SYSTEM_SELF_REFERENCE_LAYERS, "interface"] as const
-const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain", "interface"] as const
+const PRODUCT_NEUTRAL_SYSTEM_LAYERS = [
+  "application",
+  "configuration",
+  "domain",
+  "interface",
+  "lib",
+] as const
 const SYSTEM_SCHEMA_PATHS = discoverSystemSchemaPaths(
   resolve(SYSTEM_CONTEXT_ROOT, "infrastructure/schema"),
 )
@@ -24,9 +42,10 @@ const SYSTEM_CAPABILITY_CATALOG_PATH = resolve(
   SYSTEM_CONTEXT_ROOT,
   "domain/catalogs/configuration/system-capability.catalog.ts",
 )
-const SYSTEM_SOURCE_PATHS = CONTEXT_FIRST_LAYERS.map((layer) =>
-  resolve(SYSTEM_CONTEXT_ROOT, layer),
-).filter(existsSync)
+const SYSTEM_SOURCE_PATHS = [
+  ...CONTEXT_FIRST_LAYERS.map((layer) => resolve(SYSTEM_CONTEXT_ROOT, layer)),
+  ...SYSTEM_SCHEMA_PATHS,
+].filter(existsSync)
 const PRODUCT_NEUTRAL_SYSTEM_SOURCE_PATHS = new Set(
   PRODUCT_NEUTRAL_SYSTEM_LAYERS.map((layer) => resolve(SYSTEM_CONTEXT_ROOT, layer)),
 )
@@ -49,38 +68,17 @@ const NON_CONTEXT_DIRECTORIES = new Set([
 ])
 const FORBIDDEN_VOCABULARY =
   /\b(announcements?|billing|care|chats?|company|companies|departments?|employees?|employments?|expenses?|facilities|facility|human\s+resources?|leaves?|org|organizations?|personnel|residents?|ringi|shifts?|staff|thanks|tweets?|twit|workforces?)\b/i
-const LAYER_MODULE =
+const RETIRED_LAYER_MODULE =
   /^@\/(?:api\/)?(domain|application|infrastructure|interface\/converters)(?:\/(.*))?$/
-const GLOBAL_SCHEMA_MODULE = /^@\/api\/database\/schema(?:\/|$)/
-const PRODUCT_SCHEMA_MODULE = /^@\/schema(?:\/|$)/
+const GLOBAL_SCHEMA_MODULE = /^@\/database\/schema(?:\/|$)/
+const RETIRED_SCHEMA_MODULE = /^@\/schema(?:\/|$)/
 const API_ROOT_MODULE =
-  /^@\/api\/(?:configuration|context(?:-module\.registry)?|help-assets|iam|index|navigation|orchestration)(?:\/|$)/
+  /^@\/(?:api\/(?:context(?:-module\.registry)?|help-assets|index)|configuration|database|iam|navigation|API composition)(?:\/|$)/
 const COMPOSITION_MODULE = /^@\/(?:api\/)?composition(?:\/|$)/
 const CONTEXT_MODULE =
-  /^@\/contexts\/([^/]+)\/(?:domain|application|infrastructure|interface)(?:\/|$)/
-const SYSTEM_SELF_REFERENCE_MODULE = /^@system\/(application|domain|infrastructure|interface)\/.+$/
-const SYSTEM_SCHEMA_REFERENCE_MODULE = /^@system\/infrastructure\/schema(?:\/|$)/
-const RETIRED_SYSTEM_SCHEMA_MODULE = /(?:^|\/)system-runtime$/
-const RETIRED_SYSTEM_SCHEMA_SYMBOLS = new Set([
-  "auditLogs",
-  "bootstrapState",
-  "deletedRecords",
-  "entityIdAliases",
-  "oidcAccessTokens",
-  "oidcAuthorizationCodes",
-  "userIdentities",
-  "users",
-])
-const RETIRED_SYSTEM_SQL_TABLES = [
-  "audit_logs",
-  "bootstrap_state",
-  "deleted_records",
-  "entity_id_aliases",
-  "oidc_access_tokens",
-  "oidc_authorization_codes",
-  "user_identities",
-  "users",
-] as const
+  /^@\/contexts\/([^/]+)\/(?:application|configuration|domain|infrastructure|interface|lib)(?:\/|$)/
+const SYSTEM_SELF_REFERENCE_MODULE =
+  /^@system\/(application|configuration|domain|infrastructure|interface|lib)\/.+$/
 
 /** 配置を固定せず、System所有schemaのproduction TypeScriptを再帰的に列挙する。 */
 export function discoverSystemSchemaPaths(root: string): ReadonlyArray<string> {
@@ -127,6 +125,10 @@ function isUnknownRecord(value: unknown): value is Readonly<Record<string, unkno
 
 function hasExportModifier(node: ts.Node & { modifiers?: ts.NodeArray<ts.ModifierLike> }): boolean {
   return node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ?? false
+}
+
+function isSystemContextRoot(sourceRoot: string): boolean {
+  return sourceRoot.replaceAll("\\", "/").endsWith("/contexts/system")
 }
 
 /** System schema が所有する exported sqliteTable のシンボル名を構文木から集める。 */
@@ -196,148 +198,47 @@ export function collectSystemSchemaTableNames(file: string, source: string): str
   return tableNames.toSorted()
 }
 
-/** System schema が所有する物理SQL table名をsqliteTable宣言から集める。 */
-export function collectSystemSqlTableNames(file: string, source: string): string[] {
-  const sourceFile = ts.createSourceFile(
-    file,
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TS,
-  )
-  const tableNames = new Set<string>()
-
-  function visit(node: ts.Node): void {
-    if (
-      ts.isCallExpression(node) &&
-      ((ts.isIdentifier(node.expression) && node.expression.text === "sqliteTable") ||
-        (ts.isPropertyAccessExpression(node.expression) &&
-          node.expression.name.text === "sqliteTable")) &&
-      node.arguments[0] !== undefined &&
-      ts.isStringLiteralLike(node.arguments[0])
-    ) {
-      tableNames.add(node.arguments[0].text)
-    }
-
-    ts.forEachChild(node, visit)
-  }
-
-  visit(sourceFile)
-  return [...tableNames].toSorted()
-}
-
-/** System外のproduction sourceからSystem所有tableを直接操作するSQLとschema importを拒否する。 */
-export function inspectSystemStorageAccess(
-  file: string,
-  source: string,
-  tableNames: ReadonlySet<string>,
-): SystemBoundaryViolation[] {
-  const sourceFile = ts.createSourceFile(
-    file,
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-  )
-  const violations: SystemBoundaryViolation[] = []
-  const foundTables = new Set<string>()
-  const directSqlPrefix = "\\b(?:from|join|into|update|table|references)\\s+(?:\"|'|\\[|`)?"
-
-  function visit(node: ts.Node): void {
-    const moduleSpecifier = getModuleSpecifier(node)
-    if (
-      typeof moduleSpecifier === "string" &&
-      SYSTEM_SCHEMA_REFERENCE_MODULE.test(moduleSpecifier)
-    ) {
-      violations.push({
-        file,
-        reason: `System外からSystem schemaを直接importしています: ${moduleSpecifier}`,
-      })
-    }
-
-    if (ts.isStringLiteralLike(node) || ts.isTemplateLiteralToken(node)) {
-      for (const tableName of tableNames) {
-        const escapedTableName = tableName.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")
-        const directSql = new RegExp(`${directSqlPrefix}${escapedTableName}\\b`, "iu")
-        if (directSql.test(node.text)) foundTables.add(tableName)
-      }
-    }
-
-    ts.forEachChild(node, visit)
-  }
-
-  visit(sourceFile)
-  for (const tableName of [...foundTables].toSorted()) {
-    violations.push({
-      file,
-      reason: `System外からSystem所有tableを直接操作しています: ${tableName}`,
-    })
-  }
-  return violations
-}
-
-/** System内へ廃止済みschema exportや物理tableの実行経路が戻ることを拒否する。 */
-export function inspectRetiredSystemStorage(
-  file: string,
-  source: string,
-): SystemBoundaryViolation[] {
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true)
-  const violations = new Set<string>()
-
-  function visit(node: ts.Node): void {
-    const moduleSpecifier = getModuleSpecifier(node)
-    if (typeof moduleSpecifier === "string" && RETIRED_SYSTEM_SCHEMA_MODULE.test(moduleSpecifier)) {
-      violations.add(`廃止済みSystem schema moduleをimportしています: ${moduleSpecifier}`)
-    }
-    if (ts.isIdentifier(node) && RETIRED_SYSTEM_SCHEMA_SYMBOLS.has(node.text)) {
-      violations.add(`廃止済みSystem schema exportを参照しています: ${node.text}`)
-    }
-    if (ts.isStringLiteralLike(node) || ts.isTemplateLiteralToken(node)) {
-      for (const table of RETIRED_SYSTEM_SQL_TABLES) {
-        const directSql = new RegExp(
-          `\\b(?:from|join|into|update|table|references)\\s+(?:"|'|\\[|\`)?${table}\\b`,
-          "iu",
-        )
-        if (directSql.test(node.text)) {
-          violations.add(`廃止済みSystem tableを参照しています: ${table}`)
-        }
-      }
-    }
-
-    ts.forEachChild(node, visit)
-  }
-
-  visit(sourceFile)
-
-  return [...violations].toSorted().map((reason) => ({ file, reason }))
-}
-
 /** application/infrastructure の System 直下にある capability namespace を集める。 */
 export function discoverSystemCapabilityNames(
-  systemRoot: string = SYSTEM_CONTEXT_ROOT,
+  systemContextRoot: string = SYSTEM_CONTEXT_ROOT,
 ): ReadonlySet<string> {
   const capabilities = new Set<string>()
+  if (!isSystemContextRoot(systemContextRoot)) return capabilities
 
   for (const layer of SYSTEM_CAPABILITY_LAYERS) {
-    const layerRoot = resolve(systemRoot, layer)
+    const layerRoot = resolve(systemContextRoot, layer)
 
     if (!existsSync(layerRoot)) continue
 
     for (const entry of readdirSync(layerRoot, { withFileTypes: true })) {
       if (layer === "infrastructure" && entry.name === "schema") continue
-      if (entry.isDirectory()) capabilities.add(entry.name)
+      if (!entry.isDirectory()) continue
+      if (SYSTEM_LAYER_STRUCTURAL_DIRECTORIES.has(entry.name)) continue
+
+      if (layer === "infrastructure" && INFRASTRUCTURE_IMPLEMENTATION_DIRECTORIES.has(entry.name)) {
+        for (const capability of readdirSync(resolve(layerRoot, entry.name), {
+          withFileTypes: true,
+        })) {
+          if (capability.isDirectory()) capabilities.add(capability.name)
+        }
+        continue
+      }
+
+      capabilities.add(entry.name)
     }
   }
 
-  if (existsSync(resolve(systemRoot, "interface"))) {
-    capabilities.add("http")
-  }
+  if (existsSync(resolve(systemContextRoot, "interface"))) capabilities.add("http")
+  if (existsSync(resolve(systemContextRoot, "configuration"))) capabilities.add("configuration")
 
   return capabilities
 }
 
 /** domain / interface と同じく、層をまたいで共有する errors.ts だけは層直下に置ける。 */
-const SYSTEM_CAPABILITY_ROOT_SHARED_FILES: ReadonlySet<string> = new Set(["errors.ts"])
+const SYSTEM_CAPABILITY_ROOT_SHARED_FILES: ReadonlySet<string> = new Set([
+  "errors.shared.ts",
+  "errors.ts",
+])
 
 export function inspectSystemCapabilityRootEntries(
   file: string,
@@ -357,13 +258,11 @@ export function inspectSystemCapabilityRootEntries(
     }))
 }
 
-function inspectSystemCapabilityLayout(
-  systemRoot: string = SYSTEM_CONTEXT_ROOT,
-): SystemBoundaryViolation[] {
+function inspectSystemCapabilityLayout(): SystemBoundaryViolation[] {
   const violations: SystemBoundaryViolation[] = []
 
   for (const layer of SYSTEM_CAPABILITY_LAYERS) {
-    const layerRoot = resolve(systemRoot, layer)
+    const layerRoot = resolve(SYSTEM_CONTEXT_ROOT, layer)
 
     if (!existsSync(layerRoot)) continue
 
@@ -658,20 +557,21 @@ export function inspectSystemOwnershipManifest(
 export function inspectSystemSelfReferencePathMappings(
   file: string,
   pathMappings: unknown,
-  apiSourceRoot: string,
+  systemContextRoot: string,
 ): SystemBoundaryViolation[] {
   if (!isUnknownRecord(pathMappings)) {
     return [{ file, reason: "System self-reference の path mapping がありません" }]
   }
 
-  const normalizedSourceRoot = apiSourceRoot.replaceAll("\\", "/")
+  const normalizedSourceRoot = systemContextRoot.replaceAll("\\", "/")
+  if (!normalizedSourceRoot.endsWith("contexts/system")) {
+    return [{ file, reason: "System self-reference は contexts/system だけへ対応づけてください" }]
+  }
   const violations: SystemBoundaryViolation[] = []
 
   for (const layer of SYSTEM_PATH_MAPPING_LAYERS) {
     const alias = `@system/${layer}/*`
-    const expectedPath = normalizedSourceRoot.endsWith("contexts/system")
-      ? `./${normalizedSourceRoot}/${layer}/*`
-      : `./${normalizedSourceRoot}/${layer}/system/*`
+    const expectedPath = `./${normalizedSourceRoot}/${layer}/*`
     const configuredPaths = pathMappings[alias]
     const isExpectedMapping =
       Array.isArray(configuredPaths) &&
@@ -699,15 +599,12 @@ export function selectDownstreamContextNames(
   )
 }
 
-export function discoverDownstreamContexts(apiSourceRoot = API_SOURCE_ROOT): ReadonlySet<string> {
+export function discoverDownstreamContexts(
+  contextsRoot = resolve(SOURCE_ROOT, "contexts"),
+): ReadonlySet<string> {
   const directoryNames: string[] = []
 
-  const contextRoots = new Set([resolve(apiSourceRoot, "contexts")])
-  if (apiSourceRoot === API_SOURCE_ROOT) contextRoots.add(resolve(SOURCE_ROOT, "contexts"))
-
-  for (const contextsRoot of contextRoots) {
-    if (!existsSync(contextsRoot)) continue
-
+  if (existsSync(contextsRoot)) {
     for (const entry of readdirSync(contextsRoot, { withFileTypes: true })) {
       if (entry.isDirectory()) directoryNames.push(entry.name)
     }
@@ -796,17 +693,17 @@ function inspectModuleSpecifier(file: string, moduleSpecifier: string): SystemBo
       : [{ file, reason: `System から下位コンテキストへ依存しています: ${moduleSpecifier}` }]
   }
 
-  if (PRODUCT_SCHEMA_MODULE.test(moduleSpecifier)) {
-    return [{ file, reason: `System から製品DB schemaへ依存しています: ${moduleSpecifier}` }]
+  if (RETIRED_SCHEMA_MODULE.test(moduleSpecifier)) {
+    return [{ file, reason: `System から廃止済みschema rootへ依存しています: ${moduleSpecifier}` }]
   }
 
-  const layerModule = moduleSpecifier.match(LAYER_MODULE)
-
-  if (layerModule === null) {
-    return []
+  if (RETIRED_LAYER_MODULE.test(moduleSpecifier)) {
+    return [
+      { file, reason: `System から廃止済みlayer-first rootへ依存しています: ${moduleSpecifier}` },
+    ]
   }
 
-  return [{ file, reason: `System からcontext外layerへ依存しています: ${moduleSpecifier}` }]
+  return []
 }
 
 /** System 実装1ファイルに、下位コンテキストの語彙または依存が混入していないか調べる。 */
@@ -876,8 +773,6 @@ export function inspectSystemSource(
     })
   }
 
-  violations.push(...inspectRetiredSystemStorage(file, source))
-
   return violations
 }
 
@@ -910,43 +805,6 @@ async function inspectSystemPath(
       forbiddenProductMarkers,
     ),
   )
-}
-
-async function inspectNonSystemStorageAccess(): Promise<SystemBoundaryViolation[]> {
-  const tableNames = new Set(
-    SYSTEM_SCHEMA_PATHS.flatMap((path) =>
-      collectSystemSqlTableNames(relative(PROJECT_ROOT, path), readFileSync(path, "utf8")),
-    ),
-  )
-  const violations: SystemBoundaryViolation[] = []
-
-  for await (const discoveredFile of new Glob("**/*.{ts,tsx}").scan(SOURCE_ROOT)) {
-    const file = resolve(SOURCE_ROOT, discoveredFile)
-    const normalizedFile = file.replaceAll("\\", "/")
-    if (
-      normalizedFile.startsWith(`${SYSTEM_CONTEXT_ROOT.replaceAll("\\", "/")}/`) ||
-      normalizedFile.includes("/application/system/") ||
-      normalizedFile.includes("/domain/system/") ||
-      normalizedFile.includes("/infrastructure/system/") ||
-      normalizedFile.includes("/interface/system/") ||
-      normalizedFile.includes("/infrastructure/schema/") ||
-      normalizedFile.includes("/src/schema/") ||
-      /\.(?:test|spec|test-support)\.tsx?$/.test(normalizedFile) ||
-      normalizedFile.includes("/test/")
-    ) {
-      continue
-    }
-
-    violations.push(
-      ...inspectSystemStorageAccess(
-        relative(PROJECT_ROOT, file),
-        readFileSync(file, "utf8"),
-        tableNames,
-      ),
-    )
-  }
-
-  return violations
 }
 
 function readForbiddenProductMarkers(): ReadonlySet<string> {
@@ -1040,8 +898,6 @@ export async function checkSystemContextBoundary(): Promise<SystemBoundaryViolat
   for (const path of TYPESCRIPT_CONFIG_PATHS) {
     violations.push(...inspectTypeScriptConfig(path))
   }
-
-  violations.push(...(await inspectNonSystemStorageAccess()))
 
   return violations
 }

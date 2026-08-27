@@ -1,5 +1,6 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
-import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { index, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** 棚卸しセッション（stocktake ドメイン）。open→closed の状態を持つ。 */
 export const stocktakes = sqliteTable(
@@ -24,7 +25,7 @@ export const stocktakeItems = sqliteTable(
     stocktakeId: text("stocktake_id").notNull(),
     assetCode: text("asset_code").notNull(),
     checkedAt: text("checked_at"),
-    checkerEmployeeId: integer("checker_employee_id"),
+    checkerEmployeeId: text("checker_employee_id").$type<EmployeeId>(),
     locationNote: text("location_note"),
   },
   (table) => [primaryKey({ columns: [table.stocktakeId, table.assetCode] })],

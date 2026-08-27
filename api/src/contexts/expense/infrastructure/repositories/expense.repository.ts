@@ -32,6 +32,7 @@ export class ExpenseRepository {
         .insert(expenses)
         .values({
           employeeId: expense.employeeId,
+          organizationUnitId: expense.organizationUnitId,
           category: expense.category,
           amount: expense.amount,
           spentAt: expense.spentAt,
@@ -157,8 +158,8 @@ export class ExpenseRepository {
           WHERE id = ?1
             AND status = 'pending'
           RETURNING
-            id, employee_id AS employeeId, category, amount, spent_at AS spentAt,
-            note, status, created_at AS createdAt
+            id, employee_id AS employeeId, organization_unit_id AS organizationUnitId,
+            category, amount, spent_at AS spentAt, note, status, created_at AS createdAt
           `,
         ).bind(props.expenseId, props.status),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),

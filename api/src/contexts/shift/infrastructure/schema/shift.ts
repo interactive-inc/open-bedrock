@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
@@ -19,7 +20,7 @@ export const shiftAssignments = sqliteTable(
   "shift_assignments",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    employeeId: integer("employee_id").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     patternId: integer("pattern_id"),
     date: text("date").notNull(),
     note: text("note"),
@@ -38,8 +39,8 @@ export const shiftSwapRequests = sqliteTable(
   "shift_swap_requests",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    requesterEmployeeId: integer("requester_employee_id").notNull(),
-    targetEmployeeId: integer("target_employee_id").notNull(),
+    requesterEmployeeId: text("requester_employee_id").$type<EmployeeId>().notNull(),
+    targetEmployeeId: text("target_employee_id").$type<EmployeeId>().notNull(),
     date: text("date").notNull(),
     note: text("note"),
     status: text("status").notNull(),

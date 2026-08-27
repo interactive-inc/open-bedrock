@@ -1,17 +1,18 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { PublishShiftAssignment } from "@/contexts/shift/application/publish-shift-assignment"
 import { UpdateShiftAssignment } from "@/contexts/shift/application/update-shift-assignment"
 import { ConflictError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { makeTestSession } from "@/api/test/support/make-test-session"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { makeTestSession } from "@tests/api/support/make-test-session"
 import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 
 async function createAssignment(repository: ShiftAssignmentRepository): Promise<ShiftAssignment> {
   const created = await repository.create(
     ShiftAssignment.create({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       patternId: null,
       date: "2026-06-01",
       note: null,
@@ -27,7 +28,7 @@ async function createAssignment(repository: ShiftAssignmentRepository): Promise<
 
 describe("PublishShiftAssignment", () => {
   test("publishing twice returns already_published on the second call", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ShiftAssignmentRepository(context)
 
@@ -55,7 +56,7 @@ describe("PublishShiftAssignment", () => {
 
 describe("UpdateShiftAssignment", () => {
   test("updating a published assignment returns already_published", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ShiftAssignmentRepository(context)
 

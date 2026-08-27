@@ -1,13 +1,16 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const jwtSecret = "minutes-route-test-secret"
 
@@ -18,7 +21,7 @@ const minutesResponseSchema = z.object({
   title: z.string(),
   attendees: z.string().nullable(),
   body_md: z.string(),
-  author_employee_id: z.number(),
+  author_employee_id: zEmployeeId,
   created_at: z.string(),
 })
 
@@ -30,15 +33,14 @@ const minutesListResponseSchema = z.object({
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -67,7 +69,7 @@ async function createTestDb(): Promise<D1Database> {
       title: "2月度取締役会",
       attendees: "E001,E002",
       body_md: "## 議題\n\n予算の確認。",
-      author_employee_id: 2,
+      author_employee_id: "2",
       created_at: "2026-02-01T00:00:00Z",
     },
   ])
@@ -78,19 +80,19 @@ async function createTestDb(): Promise<D1Database> {
 
 function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 1,
+    employeeId: toWorkforceEmployeeId(1),
   })
 }
 
 function authorToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 2,
+    employeeId: toWorkforceEmployeeId(2),
   })
 }
 
 function otherMemberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 3,
+    employeeId: toWorkforceEmployeeId(3),
   })
 }
 
@@ -145,7 +147,7 @@ describe("POST /meetings/:code/minutes", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.author_employee_id).toBe(3)
+      expect(parsed.data.author_employee_id).toBe(toWorkforceEmployeeId(3))
       expect(parsed.data.meeting_id).toBe(1)
     }
   })

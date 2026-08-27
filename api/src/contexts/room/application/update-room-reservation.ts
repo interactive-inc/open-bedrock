@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import {
   ConflictError,
   ForbiddenError,
@@ -13,7 +14,7 @@ import { RoomReservationRepository } from "@/contexts/room/infrastructure/reposi
 
 export type Command = {
   reservationId: string
-  reserverId: number
+  reserverId: EmployeeId
   startAt: string
   endAt: string
   purpose: string | null

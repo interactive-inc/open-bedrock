@@ -1,7 +1,7 @@
 import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
 import { buildGoalTree } from "@/contexts/performance-review/domain/policies/goal-tree.policy"
 import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
-import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
+import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import type { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import { factory } from "@/api/http/factory"
 import { UnexpectedError } from "@/lib/errors"
@@ -38,8 +38,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       continue
     }
 
-    const relation = await resolveEmployeeRelation({
-      c,
+    const relation = await new ResolveEmployeeRelationAdapter(c).resolveEmployeeRelation({
       viewerEmployeeId: session.employeeId,
       targetEmployeeId: goal.employeeId,
     })

@@ -1,9 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { SalaryRevisionRow } from "@/contexts/compensation-change/infrastructure/schema/compensation-change"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number().int(),
+  employeeId: zEmployeeId,
   effectiveDate: z.string(),
   previousBaseSalary: z.number().int(),
   newBaseSalary: z.number().int(),
@@ -39,7 +41,7 @@ export class SalaryRevision implements Props {
 
   /** 新規の給与改定記録を組み立てる。id は未採番。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     effectiveDate: string
     previousBaseSalary: number
     newBaseSalary: number

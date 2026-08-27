@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { LeaveStatus, LeaveType, LeaveUnit } from "@/lib/schemas"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core"
@@ -5,7 +6,7 @@ import { integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite
 /** 休暇申請（本人の申請・承認/却下の記録）。id は自動採番。 */
 export const leaveRequests = sqliteTable("leave_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeId: integer("employee_id").notNull(),
+  employeeId: text("employee_id").$type<EmployeeId>().notNull(),
   leaveType: text("leave_type").notNull().$type<LeaveType>(),
   startDate: text("start_date").notNull(),
   endDate: text("end_date").notNull(),
@@ -16,7 +17,7 @@ export const leaveRequests = sqliteTable("leave_requests", {
   consumedDays: real("consumed_days").notNull(),
   reason: text("reason"),
   status: text("status").notNull().$type<LeaveStatus>(),
-  approverId: integer("approver_id"),
+  approverId: text("approver_id").$type<EmployeeId>(),
   decidedComment: text("decided_comment"),
   createdAt: text("created_at").notNull(),
 })
@@ -27,7 +28,7 @@ export type LeaveRequestRow = InferSelectModel<typeof leaveRequests>
 export const leaveBalances = sqliteTable(
   "leave_balances",
   {
-    employeeId: integer("employee_id").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     fiscalYear: text("fiscal_year").notNull(),
     leaveType: text("leave_type").notNull().$type<LeaveType>(),
     // 半休(0.5)・時間休(時間数/8)の按分に対応するため REAL。

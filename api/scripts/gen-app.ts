@@ -14,7 +14,7 @@
  * - `route.ts` / `<action>-route.ts` の URL はファイルを除いたディレクトリのパス
  * - それ以外の名前付きファイルはファイル名も URL の末尾に含める
  * - root直下のdot区切りrouteはdotをURLの`/`へ展開する
- *   (`company.v1.capabilities.ts` -> `/company/v1/capabilities`)
+ *   (`company.capabilities.ts` -> `/company/capabilities`)
  * - `$param` は `:param` にする
  * - `*.test.ts` と、HTTP メソッドを export しない同居ヘルパは対象外
  * - middleware・エラーハンドラは手書きの `app-base.ts` が持つ。生成器は触らない

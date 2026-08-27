@@ -7,6 +7,7 @@ import {
 } from "@system/interface/errors"
 /** /system/roles */
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { iamRoleKeySchema } from "@system/domain/schemas/iam/iam-role.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import { IamRoleEntity } from "@system/domain/entities/iam-role.entity"
@@ -55,11 +56,7 @@ export const POST = systemFactory.createHandlers(
     "json",
     z
       .object({
-        key: z
-          .string()
-          .min(3)
-          .max(100)
-          .regex(/^[a-z][a-z0-9_-]*(?::[a-z][a-z0-9_-]*)+$/),
+        key: iamRoleKeySchema,
         name: z.string().min(1).max(100),
         resource_type: z.string().min(3).max(100).nullable().default(null),
         description: z.string().min(1).max(1000).nullable(),

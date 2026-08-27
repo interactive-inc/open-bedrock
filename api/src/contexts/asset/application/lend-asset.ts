@@ -4,7 +4,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 
 export type Command = {
   session: Session
@@ -25,7 +25,7 @@ export class LendAsset {
   async run(command: Command): Promise<Asset | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)
 
-    const employeeRepository = new EmployeeRepository(this.c)
+    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c)
 
     if (command.session.hasPermission("asset:manage") === false) {
       return new ForbiddenError("cannot manage assets", "forbidden")

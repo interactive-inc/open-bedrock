@@ -9,7 +9,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { CreateSurvey } from "@/contexts/survey/application/create-survey"
-import { surveyQuestionSchema } from "@/contexts/survey/domain/values/survey-question.value"
+import { surveyQuestionSchema } from "@/contexts/survey/domain/definitions/survey-question.definition"
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import { surveys } from "@/contexts/survey/infrastructure/schema/survey"
 import { zAppSurvey, zAppSurveyList } from "@/lib/app-schemas"

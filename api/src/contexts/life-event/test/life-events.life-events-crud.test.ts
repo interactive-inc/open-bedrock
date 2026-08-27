@@ -1,21 +1,24 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
 import { contextStorage } from "hono/context-storage"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 import { seedLifeEvents } from "@/contexts/life-event/test/seed/seed-life-events.test-support"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { databaseMiddleware } from "@/api/database-middleware"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { factory } from "@/api/http/factory"
 import * as createRoute from "@/contexts/life-event/interface/routes/life-events"
 import * as detailRoute from "@/contexts/life-event/interface/routes/life-events.$id"
 import * as meRoute from "@/contexts/life-event/interface/routes/life-events.me"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 /**
  * app.ts は統合者が後で配線するため、ここでは同じミドルウェア連鎖の使い捨て app に
@@ -41,7 +44,7 @@ const app = factory
 
 const lifeEventResponseSchema = z.object({
   id: z.string(),
-  employee_id: z.number(),
+  employee_id: zEmployeeId,
   event_type: z.string(),
   event_date: z.string(),
   detail: z.string().nullable(),
@@ -58,15 +61,14 @@ const othersLifeEventId = "20000000-0000-0000-0000-000000000001"
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -94,7 +96,7 @@ async function createTestDb(): Promise<D1Database> {
 
 function applicantToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 4,
+    employeeId: toWorkforceEmployeeId(4),
   })
 }
 
@@ -152,7 +154,7 @@ describe("POST /life-events", () => {
 
     if (parsed.success) {
       expect(parsed.data.status).toBe("submitted")
-      expect(parsed.data.employee_id).toBe(4)
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(4))
       expect(parsed.data.detail).toBe("氏名変更の手続きを予定")
     }
   })
@@ -208,7 +210,7 @@ describe("GET /life-events/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].employee_id).toBe(4)
+      expect(parsed.data.data[0].employee_id).toBe(toWorkforceEmployeeId(4))
     }
   })
 

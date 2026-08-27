@@ -80,7 +80,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     targetEmployeeIds.length === 0
       ? []
       : await c.var.database
-          .select({ id: employees.id, name: employees.name })
+          .select({ id: employees.id, name: employees.officialName })
           .from(employees)
           .where(inArray(employees.id, targetEmployeeIds))
 

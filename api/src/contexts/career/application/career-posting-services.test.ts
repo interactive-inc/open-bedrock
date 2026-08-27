@@ -1,3 +1,4 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { ApplyToCareerPosting } from "@/contexts/career/application/apply-to-career-posting"
 import { CreateCareerPosting } from "@/contexts/career/application/create-career-posting"
@@ -7,9 +8,9 @@ import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.
 import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { makeTestSession } from "@/api/test/support/make-test-session"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { makeTestSession } from "@tests/api/support/make-test-session"
 
 async function seedPosting(context: Context): Promise<number> {
   const created = await new CreateCareerPosting(context).run({
@@ -30,7 +31,7 @@ async function seedPosting(context: Context): Promise<number> {
 
 describe("CreateCareerPosting", () => {
   test("admin creates a posting and the DB assigns an id", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const created = await new CreateCareerPosting(context).run({
       session: makeTestSession("hr"),
@@ -52,7 +53,7 @@ describe("CreateCareerPosting", () => {
   })
 
   test("a non-privileged role is forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const created = await new CreateCareerPosting(context).run({
       session: makeTestSession("member"),
@@ -73,7 +74,7 @@ describe("GetCareerPosting", () => {})
 
 describe("UpdateCareerPosting", () => {
   test("admin updates a posting's content and status", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const postingId = await seedPosting(context)
 
@@ -98,7 +99,7 @@ describe("UpdateCareerPosting", () => {
   })
 
   test("returns posting_not_found for a missing id", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const updated = await new UpdateCareerPosting(context).run({
       session: makeTestSession("root"),
@@ -116,7 +117,7 @@ describe("UpdateCareerPosting", () => {
 
 describe("DeleteCareerPosting", () => {
   test("a non-privileged role is forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const postingId = await seedPosting(context)
 
@@ -129,14 +130,14 @@ describe("DeleteCareerPosting", () => {
   })
 
   test("returns has_applied_applications when the posting has applied applications", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const postingId = await seedPosting(context)
 
     // Apply to the posting so it has a pending application
     const applied = await new ApplyToCareerPosting(context).run({
       postingId,
-      applicantId: 10,
+      applicantId: toWorkforceEmployeeId(10),
       message: null,
     })
 
@@ -153,7 +154,7 @@ describe("DeleteCareerPosting", () => {
   })
 
   test("deletes rejected applications atomically when deleting a posting", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     const postingId = await seedPosting(context)
 

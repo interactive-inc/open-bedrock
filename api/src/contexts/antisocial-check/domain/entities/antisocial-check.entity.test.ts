@@ -1,10 +1,11 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("AntisocialCheck.create", () => {
   test("builds with UUID id, requested status, and null result", () => {
     const check = AntisocialCheck.create({
-      requesterId: 1,
+      requesterId: toWorkforceEmployeeId(1),
       partnerName: "Sample Corp",
       partnerAddress: "1-2-3 Example, Tokyo",
       representativeName: "Taro Yamada",
@@ -15,7 +16,7 @@ describe("AntisocialCheck.create", () => {
     expect(check.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
     expect(check.status).toBe("requested")
     expect(check.result).toBeNull()
-    expect(check.requesterId).toBe(1)
+    expect(check.requesterId).toBe(toWorkforceEmployeeId(1))
     expect(check.partnerName).toBe("Sample Corp")
     expect(check.partnerAddress).toBe("1-2-3 Example, Tokyo")
     expect(check.representativeName).toBe("Taro Yamada")
@@ -25,7 +26,7 @@ describe("AntisocialCheck.create", () => {
 describe("AntisocialCheck.withDetails", () => {
   test("returns new instance with changed fields", () => {
     const check = AntisocialCheck.create({
-      requesterId: 1,
+      requesterId: toWorkforceEmployeeId(1),
       partnerName: "Sample Corp",
       partnerAddress: null,
       representativeName: null,
@@ -44,7 +45,7 @@ describe("AntisocialCheck.withDetails", () => {
     expect(updated.partnerAddress).toBe("4-5-6 Example, Osaka")
     expect(updated.representativeName).toBe("Hanako Suzuki")
     expect(updated.result).toBe("clear")
-    expect(updated.requesterId).toBe(1)
+    expect(updated.requesterId).toBe(toWorkforceEmployeeId(1))
     expect(updated.status).toBe("completed")
   })
 })

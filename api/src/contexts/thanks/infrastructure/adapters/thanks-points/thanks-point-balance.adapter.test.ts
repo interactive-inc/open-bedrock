@@ -1,5 +1,7 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ThanksPointBalanceAdapter } from "@/contexts/thanks/infrastructure/adapters/thanks-points/thanks-point-balance.adapter"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import {
   thanks,
   thanksPointBudgets,
@@ -11,12 +13,12 @@ import { describe, expect, test } from "bun:test"
 
 /** 受領を作る（recipient に points を贈る thanks 行を直接挿入する）。 */
 async function seedReceived(
-  context: ReturnType<typeof createTestContext>["context"],
-  recipientEmployeeId: number,
+  context: Awaited<ReturnType<typeof createTestContext>>["context"],
+  recipientEmployeeId: EmployeeId,
   points: number,
 ): Promise<void> {
   await context.var.database.insert(thanks).values({
-    senderEmployeeId: 99,
+    senderEmployeeId: toWorkforceEmployeeId(99),
     recipientEmployeeId,
     message: "テスト",
     points,
@@ -26,7 +28,7 @@ async function seedReceived(
 
 /** 任意のステータスの交換を作る。差し引き対象の判定を確かめるために使う。 */
 async function seedRedemption(
-  context: ReturnType<typeof createTestContext>["context"],
+  context: Awaited<ReturnType<typeof createTestContext>>["context"],
   props: { employeeId: number; pointCost: number; status: RedemptionStatus },
 ): Promise<void> {
   const rewardRows = await context.var.database
@@ -47,7 +49,7 @@ async function seedRedemption(
   }
 
   await context.var.database.insert(thanksRedemptions).values({
-    employeeId: props.employeeId,
+    employeeId: toWorkforceEmployeeId(props.employeeId),
     rewardId,
     pointCost: props.pointCost,
     status: props.status,
@@ -59,92 +61,108 @@ async function seedRedemption(
 
 describe("ThanksPointBalanceAdapter.getBalance", () => {
   test("returns 0 when nothing has been received", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    const balance = await new ThanksPointBalanceAdapter(context).getBalance(5)
+    const balance = await new ThanksPointBalanceAdapter(context).getBalance(
+      toWorkforceEmployeeId(5),
+    )
 
     expect(balance).toBe(0)
   })
 
   test("sums received points", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedReceived(context, 5, 100)
-    await seedReceived(context, 5, 20)
+    await seedReceived(context, toWorkforceEmployeeId(5), 100)
+    await seedReceived(context, toWorkforceEmployeeId(5), 20)
 
-    const balance = await new ThanksPointBalanceAdapter(context).getBalance(5)
+    const balance = await new ThanksPointBalanceAdapter(context).getBalance(
+      toWorkforceEmployeeId(5),
+    )
 
     expect(balance).toBe(120)
   })
 
   test("counts only points received by the given employee", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedReceived(context, 5, 100)
-    await seedReceived(context, 6, 999)
+    await seedReceived(context, toWorkforceEmployeeId(5), 100)
+    await seedReceived(context, toWorkforceEmployeeId(6), 999)
 
-    const balance = await new ThanksPointBalanceAdapter(context).getBalance(5)
+    const balance = await new ThanksPointBalanceAdapter(context).getBalance(
+      toWorkforceEmployeeId(5),
+    )
 
     expect(balance).toBe(100)
   })
 
   test("deducts fulfilled redemptions", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedReceived(context, 5, 100)
+    await seedReceived(context, toWorkforceEmployeeId(5), 100)
     await seedRedemption(context, { employeeId: 5, pointCost: 30, status: "fulfilled" })
 
-    const balance = await new ThanksPointBalanceAdapter(context).getBalance(5)
+    const balance = await new ThanksPointBalanceAdapter(context).getBalance(
+      toWorkforceEmployeeId(5),
+    )
 
     expect(balance).toBe(70)
   })
 
   test("deducts pending redemptions so reserved points cannot be spent twice", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedReceived(context, 5, 100)
+    await seedReceived(context, toWorkforceEmployeeId(5), 100)
     await seedRedemption(context, { employeeId: 5, pointCost: 30, status: "pending" })
 
-    const balance = await new ThanksPointBalanceAdapter(context).getBalance(5)
+    const balance = await new ThanksPointBalanceAdapter(context).getBalance(
+      toWorkforceEmployeeId(5),
+    )
 
     expect(balance).toBe(70)
   })
 
   test("does not deduct rejected redemptions", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedReceived(context, 5, 100)
+    await seedReceived(context, toWorkforceEmployeeId(5), 100)
     await seedRedemption(context, { employeeId: 5, pointCost: 30, status: "rejected" })
 
-    const balance = await new ThanksPointBalanceAdapter(context).getBalance(5)
+    const balance = await new ThanksPointBalanceAdapter(context).getBalance(
+      toWorkforceEmployeeId(5),
+    )
 
     expect(balance).toBe(100)
   })
 
   test("deducts only the given employee's redemptions", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
-    await seedReceived(context, 5, 100)
+    await seedReceived(context, toWorkforceEmployeeId(5), 100)
     await seedRedemption(context, { employeeId: 6, pointCost: 30, status: "fulfilled" })
 
-    const balance = await new ThanksPointBalanceAdapter(context).getBalance(5)
+    const balance = await new ThanksPointBalanceAdapter(context).getBalance(
+      toWorkforceEmployeeId(5),
+    )
 
     expect(balance).toBe(100)
   })
 
   // 受領残高は当月原資と別概念。原資をいくら積んでも受領残高は動かない。
   test("ignores the monthly sending budget entirely", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await context.var.database.insert(thanksPointBudgets).values({
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       period: "2026-01",
       grantedPoints: 400,
       consumedPoints: 250,
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    const balance = await new ThanksPointBalanceAdapter(context).getBalance(5)
+    const balance = await new ThanksPointBalanceAdapter(context).getBalance(
+      toWorkforceEmployeeId(5),
+    )
 
     expect(balance).toBe(0)
   })

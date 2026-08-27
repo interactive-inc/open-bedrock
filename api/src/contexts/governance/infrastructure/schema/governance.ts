@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { sql } from "drizzle-orm"
@@ -34,7 +35,7 @@ export const governanceOrgRoleAssignments = sqliteTable(
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     orgRoleCode: text("org_role_code").notNull(),
-    employeeId: integer("employee_id").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     departmentCode: text("department_code"),
     startsOn: text("starts_on").notNull(),
     endsOn: text("ends_on"),
@@ -135,7 +136,7 @@ export const governancePublicationApprovals = sqliteTable(
     versionId: text("version_id").notNull(),
     orgRoleCode: text("org_role_code").notNull(),
     status: text("status").notNull().$type<"pending" | "approved" | "rejected">(),
-    decidedByEmployeeId: integer("decided_by_employee_id"),
+    decidedByEmployeeId: text("decided_by_employee_id").$type<EmployeeId>(),
     decidedAt: text("decided_at"),
     comment: text("comment"),
   },
@@ -150,7 +151,7 @@ export const governanceAcknowledgements = sqliteTable(
   "governance_acknowledgements",
   {
     versionId: text("version_id").notNull(),
-    employeeId: integer("employee_id").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     contentHash: text("content_hash").notNull(),
     acknowledgedAt: text("acknowledged_at").notNull(),
   },

@@ -1,27 +1,33 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedLeaveBalances } from "@/contexts/leave/test/seed/seed-leave-balances.test-support"
 import { seedLeaveRequests } from "@/contexts/leave/test/seed/seed-leave-requests.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
-import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import {
+  initializeCompanyMembershipTestState,
+  initializeStandardCompanyTestState,
+} from "@tests/api/support/initialize-standard-company-test-state"
+import { initializeCompanyTestFixture } from "@tests/api/support/initialize-company-test-fixture"
 import { z } from "zod"
 
 const leaveRequestCreateResponseSchema = z.object({
   id: z.number(),
-  employee_id: z.number(),
+  employee_id: zEmployeeId,
   leave_type: z.string(),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
   reason: z.string().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
-  approver_id: z.number().nullable(),
+  approver_id: zEmployeeId.nullable(),
   decided_comment: z.string().nullable(),
   created_at: z.string(),
 })
@@ -31,15 +37,14 @@ const jwtSecret = "leave-requests-route-test-secret"
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -47,8 +52,8 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
-  await seedD1(db, "org_memberships", [
-    { department_code: "D003", employee_code: "E005", manager_employee_code: "E004" },
+  await initializeCompanyMembershipTestState(db, [
+    { departmentCode: "D003", employeeCode: "E005", managerEmployeeCode: "E004" },
   ])
 
   await seedD1(
@@ -90,7 +95,7 @@ async function createTestDb(): Promise<D1Database> {
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -131,7 +136,7 @@ describe("POST /leave-requests", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(5)
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
       expect(parsed.data.days).toBe(5)
       expect(parsed.data.status).toBe("pending")
       expect(parsed.data.approver_id).toBeNull()
@@ -143,7 +148,7 @@ describe("POST /leave-requests", () => {
     // 依存する。seed が変わったら無言で壊れないよう前提をここで明示検証する。
     const seeded = seedLeaveRequests[0]
 
-    expect(seeded?.employeeId).toBe(5)
+    expect(seeded?.employeeId).toBe(toWorkforceEmployeeId(5))
     expect(seeded?.status).toBe("pending")
     expect(seeded?.startDate).toBe("2026-06-01")
     expect(seeded?.endDate).toBe("2026-06-03")
@@ -318,7 +323,7 @@ describe("POST /leave-requests", () => {
 
 const leaveAdminItemSchema = z.object({
   id: z.number(),
-  applicant_id: z.number(),
+  applicant_id: zEmployeeId,
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),
   leave_type: z.string(),
@@ -346,15 +351,14 @@ const scopeEmployeeRows = [
 async function createScopeTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     scopeEmployeeRows.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.code,
-      dept_id: employee.departmentId,
-      dept_name: "Dept",
+      deptId: employee.departmentId,
+      deptName: "Dept",
       position: "-",
       status: "active",
     })),
@@ -370,17 +374,10 @@ async function createScopeTestDb(): Promise<D1Database> {
     })),
   )
 
-  await seedD1(db, "org_memberships", [
-    { department_code: "D001", employee_code: "M002", manager_employee_code: null },
-    { department_code: "D001", employee_code: "R020", manager_employee_code: "M002" },
-    { department_code: "D001", employee_code: "R021", manager_employee_code: "M002" },
-    { department_code: "D002", employee_code: "S022", manager_employee_code: null },
-  ])
-
   await seedD1(db, "leave_requests", [
     {
       id: 100,
-      employee_id: 20,
+      employee_id: "20",
       leave_type: "annual",
       start_date: "2026-06-01",
       end_date: "2026-06-02",
@@ -393,14 +390,14 @@ async function createScopeTestDb(): Promise<D1Database> {
     },
     {
       id: 101,
-      employee_id: 21,
+      employee_id: "21",
       leave_type: "special",
       start_date: "2026-07-01",
       end_date: "2026-07-01",
       days: 1,
       reason: null,
       status: "approved",
-      approver_id: 2,
+      approver_id: "2",
       decided_comment: "ok",
       created_at: "2026-05-21T00:00:00Z",
     },
@@ -408,9 +405,22 @@ async function createScopeTestDb(): Promise<D1Database> {
 
   await initializeCompanyTestFixture({
     db,
+    employees: scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.code,
+      deptId: employee.departmentId,
+      status: "active",
+    })),
     departments: [
       { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
       { id: 2, code: "D002", name: "Dept Two", managerEmployeeCode: "S022" },
+    ],
+    memberships: [
+      { departmentCode: "D001", employeeCode: "M002", managerEmployeeCode: null },
+      { departmentCode: "D001", employeeCode: "R020", managerEmployeeCode: "M002" },
+      { departmentCode: "D001", employeeCode: "R021", managerEmployeeCode: "M002" },
+      { departmentCode: "D002", employeeCode: "S022", managerEmployeeCode: null },
     ],
   })
 
@@ -433,7 +443,9 @@ describe("GET /leave-requests", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data.every((item) => item.applicant_id === 20)).toBe(true)
+      expect(
+        parsed.data.data.every((item) => item.applicant_id === toWorkforceEmployeeId(20)),
+      ).toBe(true)
     }
   })
 
@@ -465,9 +477,11 @@ describe("GET /leave-requests", () => {
     if (parsed.success) {
       expect(parsed.data.total).toBe(2)
 
-      const applicantIds = parsed.data.data.map((item) => item.applicant_id).sort((a, b) => a - b)
+      const applicantIds = parsed.data.data
+        .map((item) => item.applicant_id)
+        .sort((left, right) => left.localeCompare(right))
 
-      expect(applicantIds).toEqual([20, 21])
+      expect(applicantIds).toEqual([toWorkforceEmployeeId(20), toWorkforceEmployeeId(21)])
     }
   })
 

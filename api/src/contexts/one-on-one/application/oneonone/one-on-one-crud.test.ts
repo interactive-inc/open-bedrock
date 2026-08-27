@@ -1,21 +1,22 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import { CreateOneOnOne } from "@/contexts/one-on-one/application/oneonone/create-one-on-one"
 import { UpdateOneOnOne } from "@/contexts/one-on-one/application/oneonone/update-one-on-one"
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
 import type { Context } from "@/env"
 
 async function seedEmployees(db: D1Database): Promise<void> {
-  await seedD1(db, "employees", [
+  await seedCompanyEmployees(db, [
     {
       id: 1,
       code: "E001",
       name: "Manager",
-      dept_id: null,
-      dept_name: null,
+      deptId: null,
+      deptName: null,
       position: null,
       status: "active",
     },
@@ -23,8 +24,8 @@ async function seedEmployees(db: D1Database): Promise<void> {
       id: 2,
       code: "E002",
       name: "Member",
-      dept_id: null,
-      dept_name: null,
+      deptId: null,
+      deptName: null,
       position: null,
       status: "active",
     },
@@ -36,7 +37,7 @@ async function seedOneOnOne(context: Context, db: D1Database): Promise<OneOnOne>
 
   const result = await new CreateOneOnOne(context).run({
     memberCode: "E002",
-    managerId: 1,
+    managerId: toWorkforceEmployeeId(1),
     heldAt: "2026-03-15T10:00:00.000Z",
     topics: "progress review",
     managerNote: null,
@@ -52,13 +53,13 @@ async function seedOneOnOne(context: Context, db: D1Database): Promise<OneOnOne>
 
 describe("CreateOneOnOne", () => {
   test("creates a 1on1 record", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedEmployees(db)
 
     const result = await new CreateOneOnOne(context).run({
       memberCode: "E002",
-      managerId: 1,
+      managerId: toWorkforceEmployeeId(1),
       heldAt: "2026-03-15T10:00:00.000Z",
       topics: "goals",
       managerNote: "good progress",
@@ -71,19 +72,19 @@ describe("CreateOneOnOne", () => {
       throw new Error("create failed")
     }
 
-    expect(result.memberId).toBe(2)
-    expect(result.managerId).toBe(1)
+    expect(result.memberId).toBe(toWorkforceEmployeeId(2))
+    expect(result.managerId).toBe(toWorkforceEmployeeId(1))
     expect(result.topics).toBe("goals")
   })
 
   test("rejects unknown member code with member_not_found", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedEmployees(db)
 
     const result = await new CreateOneOnOne(context).run({
       memberCode: "UNKNOWN",
-      managerId: 1,
+      managerId: toWorkforceEmployeeId(1),
       heldAt: "2026-03-15T10:00:00.000Z",
       topics: null,
       managerNote: null,
@@ -94,13 +95,13 @@ describe("CreateOneOnOne", () => {
   })
 
   test("rejects self reference with self_reference", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedEmployees(db)
 
     const result = await new CreateOneOnOne(context).run({
       memberCode: "E001",
-      managerId: 1,
+      managerId: toWorkforceEmployeeId(1),
       heldAt: "2026-03-15T10:00:00.000Z",
       topics: null,
       managerNote: null,
@@ -115,13 +116,13 @@ describe("GetOneOnOne", () => {})
 
 describe("UpdateOneOnOne", () => {
   test("updates the record for the manager", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     const created = await seedOneOnOne(context, db)
 
     const result = await new UpdateOneOnOne(context).run({
       oneOnOneId: created.id,
-      managerId: 1,
+      managerId: toWorkforceEmployeeId(1),
       topics: "updated topics",
       managerNote: "new note",
       nextAction: "action item",
@@ -138,13 +139,13 @@ describe("UpdateOneOnOne", () => {
   })
 
   test("rejects non-manager with not_manager", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     const created = await seedOneOnOne(context, db)
 
     const result = await new UpdateOneOnOne(context).run({
       oneOnOneId: created.id,
-      managerId: 999,
+      managerId: toWorkforceEmployeeId(999),
       topics: "hacked",
       managerNote: null,
       nextAction: null,

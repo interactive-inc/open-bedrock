@@ -1,13 +1,14 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
-import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 /** 退職申請（申出の受付から書類交付までの記録。法的判定は持たず記録のみ） */
 export const resignations = sqliteTable(
   "resignations",
   {
     id: text("id").primaryKey(),
-    employeeId: integer("employee_id").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     resignationDate: text("resignation_date").notNull(),
     lastWorkingDate: text("last_working_date"),
     reason: text("reason"),

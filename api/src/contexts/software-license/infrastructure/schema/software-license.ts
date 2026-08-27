@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
@@ -9,7 +10,7 @@ export const licenses = sqliteTable("software_licenses", {
   category: text("category"),
   seats: integer("seats"),
   renewalDeadline: text("renewal_deadline"),
-  ownerEmployeeId: integer("owner_employee_id"),
+  ownerEmployeeId: text("owner_employee_id").$type<EmployeeId>(),
   note: text("note"),
   status: text("status").notNull(),
   createdAt: text("created_at").notNull(),

@@ -1,12 +1,15 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/contexts/expense/infrastructure/repositories/expense.repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ExpenseCategory } from "@/lib/schemas"
+import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
+import { ValidationError } from "@/lib/errors"
 
 export type Command = {
-  employeeId: number
+  employeeId: EmployeeId
   category: ExpenseCategory
   amount: number
   spentAt: string
@@ -25,8 +28,23 @@ export class SubmitExpense {
   async run(command: Command): Promise<Expense | ApplicationError> {
     const repository = new ExpenseRepository(this.c)
 
+    const snapshot = await new ReadCanonicalOrganizationStateAdapter(
+      this.c,
+    ).readCanonicalOrganizationState()
+    if (snapshot instanceof Error) {
+      return new UnexpectedError("failed to resolve expense organization", { cause: snapshot })
+    }
+    const employee = snapshot.employees.find((state) => state.employeeId === command.employeeId)
+    if (employee?.primaryAssignment === null || employee?.primaryAssignment === undefined) {
+      return new ValidationError(
+        "employee has no current primary organization assignment",
+        "organization_assignment_required",
+      )
+    }
+
     const expense = Expense.create({
       employeeId: command.employeeId,
+      organizationUnitId: employee.primaryAssignment.organizationUnitId,
       category: command.category,
       amount: command.amount,
       spentAt: command.spentAt,

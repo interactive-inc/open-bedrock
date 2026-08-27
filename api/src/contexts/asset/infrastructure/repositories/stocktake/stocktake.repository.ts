@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Stocktake, stocktakeRowSchema } from "@/contexts/asset/domain/entities/stocktake.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/lib/d1/parse-d1-row"
@@ -10,7 +11,7 @@ export type StocktakeItemDetail = {
   assetName: string
   kind: string
   checkedAt: string | null
-  checkerEmployeeId: number | null
+  checkerEmployeeId: EmployeeId | null
   locationNote: string | null
 }
 
@@ -177,17 +178,17 @@ export class StocktakeRepository {
    * セッションが open でなければ "not_open" を返す。
    */
   async checkItem(props: {
-    stocktake: Stocktake
+    stocktakeId: string
     assetCode: string
     checkedAt: string
-    checkerEmployeeId: number
+    checkerEmployeeId: EmployeeId
     locationNote: string | null
   }): Promise<"checked" | "item_not_found" | "not_open" | Error> {
     try {
       const sessionRows = await this.c.var.database
         .select({ status: stocktakes.status })
         .from(stocktakes)
-        .where(eq(stocktakes.id, props.stocktake.id))
+        .where(eq(stocktakes.id, props.stocktakeId))
         .limit(1)
 
       const session = sessionRows.at(0)
@@ -209,7 +210,7 @@ export class StocktakeRepository {
         `,
       )
         .bind(
-          props.stocktake.id,
+          props.stocktakeId,
           props.assetCode,
           props.checkedAt,
           props.checkerEmployeeId,

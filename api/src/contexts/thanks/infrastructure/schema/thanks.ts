@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { RedemptionStatus } from "@/lib/schemas"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
@@ -6,8 +7,8 @@ import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core
 /** 感謝（サンクス）。送り手が受け手へ送る感謝メッセージ。points は将来のポイント付与用で本 Task では常に 0。 */
 export const thanks = sqliteTable("thanks_messages", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  senderEmployeeId: integer("sender_employee_id").notNull(),
-  recipientEmployeeId: integer("recipient_employee_id").notNull(),
+  senderEmployeeId: text("sender_employee_id").$type<EmployeeId>().notNull(),
+  recipientEmployeeId: text("recipient_employee_id").$type<EmployeeId>().notNull(),
   message: text("message").notNull(),
   points: integer("points").notNull().default(0),
   createdAt: text("created_at").notNull(),
@@ -24,7 +25,7 @@ export const thanksPointBudgets = sqliteTable(
   "thanks_point_budgets",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    employeeId: integer("employee_id").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     period: text("period").notNull(),
     grantedPoints: integer("granted_points").notNull(),
     consumedPoints: integer("consumed_points").notNull().default(0),
@@ -57,13 +58,13 @@ export const thanksRedemptions = sqliteTable(
   "thanks_redemptions",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    employeeId: integer("employee_id").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     rewardId: integer("reward_id").notNull(),
     pointCost: integer("point_cost").notNull(),
     status: text("status").notNull().$type<RedemptionStatus>(),
     createdAt: text("created_at").notNull(),
     decidedAt: text("decided_at"),
-    deciderId: integer("decider_id"),
+    deciderId: text("decider_id").$type<EmployeeId>(),
   },
   // 1 社員につき pending の交換申請は 1 件まで（二重申請・残高の二重引当を防ぐ）。
   (table) => [

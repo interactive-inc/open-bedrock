@@ -1,9 +1,10 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { HealthCheckupRow } from "@/contexts/health-checkup/infrastructure/schema/health-checkup"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   fiscalYear: z.number(),
   checkupKind: z.enum(["regular", "stress_check"]),
   conductedOn: z.string().nullable(),

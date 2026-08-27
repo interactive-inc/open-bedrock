@@ -15,6 +15,8 @@ import type {
 } from "@/api/http/audit/company-audit-record.definition"
 import { ValidationError } from "@/lib/errors"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
 
 export { auditClientNameSchema, auditOutcomeSchema, auditRequestContextSchema }
@@ -92,7 +94,7 @@ export type AuditTargetType = z.infer<typeof auditTargetTypeSchema>
 
 export type AuditEventInput = Readonly<{
   actorAccountId: AccountId | null
-  actorEmployeeId: number | null
+  actorEmployeeId: EmployeeId | null
   action: AuditAction
   target: Readonly<{ type: AuditTargetType; id: string | null }>
   outcome: AuditOutcome
@@ -104,12 +106,13 @@ export type AuditEventInput = Readonly<{
   now: Date
 }>
 
-export type AuditEventRecord = CompanyAuditRecord & Readonly<{ actorEmployeeId: number | null }>
-export type AuditEventSummary = CompanyAuditSummary & Readonly<{ actorEmployeeId: number | null }>
-export type AuditEventDetail = CompanyAuditDetail & Readonly<{ actorEmployeeId: number | null }>
+export type AuditEventRecord = CompanyAuditRecord & Readonly<{ actorEmployeeId: EmployeeId | null }>
+export type AuditEventSummary = CompanyAuditSummary &
+  Readonly<{ actorEmployeeId: EmployeeId | null }>
+export type AuditEventDetail = CompanyAuditDetail & Readonly<{ actorEmployeeId: EmployeeId | null }>
 
 const actorAccountIdSchema = zAccountId.nullable()
-const actorEmployeeIdSchema = z.number().int().safe().positive().nullable()
+const actorEmployeeIdSchema = zEmployeeId.nullable()
 const eventEnvelopeSchema = z.strictObject({
   actorAccountId: actorAccountIdSchema,
   actorEmployeeId: actorEmployeeIdSchema,

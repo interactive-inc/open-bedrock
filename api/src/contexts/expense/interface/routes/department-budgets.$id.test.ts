@@ -1,23 +1,24 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { seedBudgets } from "@/contexts/expense/test/seed/seed-budgets.test-support"
-import { seedDepartments } from "@/api/test/support/company/seed-departments.test-support"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedExpenses } from "@/contexts/expense/test/seed/seed-expenses.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const jwtSecret = "budget-detail-route-test-secret"
 
 const budgetDetailSchema = z.object({
   id: z.number(),
-  department_id: z.number(),
-  department_name: z.string().nullable(),
+  organization_unit_id: z.string(),
+  organization_unit_name: z.string().nullable(),
   fiscal_period: z.string(),
   period_start: z.string(),
   period_end: z.string(),
@@ -30,7 +31,7 @@ const budgetDetailSchema = z.object({
 })
 
 const budgetSchema = budgetDetailSchema.omit({
-  department_name: true,
+  organization_unit_name: true,
   consumed_amount: true,
   remaining_amount: true,
 })
@@ -38,21 +39,16 @@ const budgetSchema = budgetDetailSchema.omit({
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
-    db,
-    "departments",
-    seedDepartments.map((department) => ({ id: department.id, name: department.name })),
-  )
+  await initializeStandardCompanyTestState(db)
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -66,6 +62,7 @@ async function createTestDb(): Promise<D1Database> {
     seedExpenses.map((expense) => ({
       id: expense.id,
       employee_id: expense.employeeId,
+      organization_unit_id: expense.organizationUnitId,
       category: expense.category,
       amount: expense.amount,
       spent_at: expense.spentAt,
@@ -77,10 +74,10 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "department_budgets",
+    "expense_budgets",
     seedBudgets.map((budget) => ({
       id: budget.id,
-      department_id: budget.departmentId,
+      organization_unit_id: budget.organizationUnitId,
       fiscal_period: budget.fiscalPeriod,
       period_start: budget.periodStart,
       period_end: budget.periodEnd,
@@ -90,14 +87,12 @@ async function createTestDb(): Promise<D1Database> {
       created_at: budget.createdAt,
     })),
   )
-  await initializeStandardCompanyTestState(db)
-
   return db
 }
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -134,7 +129,7 @@ describe("GET /department-budgets/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.department_id).toBe(3)
+      expect(parsed.data.organization_unit_id).toBe("department:D003")
       expect(parsed.data.amount).toBe(1000000)
       expect(parsed.data.consumed_amount).toBe(3300)
       expect(parsed.data.remaining_amount).toBe(996700)
@@ -195,7 +190,7 @@ describe("PATCH /department-budgets/:id", () => {
     expect(body.amount).toBe(1200000)
     expect(body.name).toBe("Engineering FY2026 (revised)")
     expect(body.note).toBe("raised")
-    expect(body.department_id).toBe(3)
+    expect(body.organization_unit_id).toBe("department:D003")
   })
 
   test("returns 404 for a missing budget", async () => {

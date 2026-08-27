@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LeaveBalanceSufficiencyAdapter } from "@/contexts/leave/infrastructure/adapters/leave-balance-sufficiency.adapter"
 import { computeConsumedDays } from "@/contexts/leave/domain/policies/compute-consumed-days.policy"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
@@ -16,7 +17,7 @@ import type { LeaveType, LeaveUnit } from "@/lib/schemas"
 
 export type Command = {
   leaveRequestId: number
-  employeeId: number
+  employeeId: EmployeeId
   leaveType: LeaveType
   startDate: string
   endDate: string

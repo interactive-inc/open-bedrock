@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ThanksPointBudget } from "@/contexts/thanks/domain/entities/thanks-point-budget.entity"
 import { monthlyBudgetPoints } from "@/contexts/thanks/domain/catalogs/thanks-point-limit.catalog"
 import type { Context } from "@/env"
@@ -12,7 +13,7 @@ export class ThanksPointBudgetRepository {
 
   /** 当月 period の原資レコードを取得する。無ければ null。 */
   async find(props: {
-    employeeId: number
+    employeeId: EmployeeId
     period: string
   }): Promise<ThanksPointBudget | null | Error> {
     try {
@@ -40,7 +41,7 @@ export class ThanksPointBudgetRepository {
    * 一意制約により同時生成は片方が衝突するため、衝突時は再取得でフォールバックする。
    */
   async findOrCreate(props: {
-    employeeId: number
+    employeeId: EmployeeId
     period: string
     createdAt: string
   }): Promise<ThanksPointBudget | Error> {
@@ -96,7 +97,7 @@ export class ThanksPointBudgetRepository {
    * 0 行更新は残量不足。points<=0 は呼び出し側で除外する前提（消費不要）。
    */
   async consume(props: {
-    employeeId: number
+    employeeId: EmployeeId
     period: string
     points: number
   }): Promise<ConsumeOutcome | Error> {
@@ -124,7 +125,7 @@ export class ThanksPointBudgetRepository {
 
   /** consume の補償。感謝の保存が失敗したときに予約した消費を戻す（下限 0 に丸める）。 */
   async release(props: {
-    employeeId: number
+    employeeId: EmployeeId
     period: string
     points: number
   }): Promise<null | Error> {

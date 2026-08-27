@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -7,7 +8,7 @@ import type { LifeEventType } from "@/lib/schemas"
 
 export type Command = {
   lifeEventId: string
-  employeeId: number
+  employeeId: EmployeeId
   eventType: LifeEventType
   eventDate: string
   detail: string | null

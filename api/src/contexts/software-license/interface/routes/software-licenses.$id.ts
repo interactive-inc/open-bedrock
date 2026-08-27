@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { UpdateLicense } from "@/contexts/software-license/application/license/update-license"
 import type { License } from "@/contexts/software-license/domain/entities/license.entity"
 import { factory } from "@/api/http/factory"
@@ -39,7 +40,7 @@ export const PUT = factory.createHandlers(
       category: z.enum(["saas", "software", "other"]).nullable().optional(),
       seats: z.number().int().nonnegative().nullable().optional(),
       renewal_deadline: isoDate.nullable().optional(),
-      owner_employee_id: z.number().int().positive().nullable().optional(),
+      owner_employee_id: zEmployeeId.nullable().optional(),
       note: z.string().max(3_000).nullable().optional(),
     }),
   ),

@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
 import type { Context } from "@/env"
 import { careerApplications } from "@/contexts/career/infrastructure/schema/career"
@@ -56,7 +57,7 @@ export class CareerApplicationRepository {
 
   /** 応募者本人の応募を id の昇順で返す。 */
   async findByApplicantId(props: {
-    applicantId: number
+    applicantId: EmployeeId
     limit: number
     offset: number
   }): Promise<ReadonlyArray<CareerApplication> | Error> {
@@ -164,7 +165,7 @@ export class CareerApplicationRepository {
 
   async findByPostingAndApplicant(
     postingId: number,
-    applicantId: number,
+    applicantId: EmployeeId,
   ): Promise<CareerApplication | null | Error> {
     try {
       const rows = await this.c.var.database

@@ -1,9 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { ThanksPointBudgetRow } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   period: z.string(),
   grantedPoints: z.number(),
   consumedPoints: z.number(),
@@ -36,7 +38,7 @@ export class ThanksPointBudget implements Props {
   }
 
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     period: string
     grantedPoints: number
     createdAt: string

@@ -1,14 +1,15 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { Session } from "@/lib/auth/session"
 import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import { describe, expect, test } from "bun:test"
-import { testAccountId } from "@/api/test/support/test-account-id"
+import { testAccountId } from "@tests/api/support/test-account-id"
 
 function sessionWith(permissions: ReadonlyArray<string>): Session {
   return new Session({
     accountId: testAccountId(1),
-    employeeId: 1,
-    employeeStatus: "active",
+    employeeId: toWorkforceEmployeeId(1),
+    employmentStatus: "ACTIVE",
     permissions: new Set(permissions),
     roleKeys: [],
   })

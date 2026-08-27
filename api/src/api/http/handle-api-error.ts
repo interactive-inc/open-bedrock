@@ -2,7 +2,6 @@ import {
   CompanyHTTPException,
   type CompanyHTTPExceptionStatus,
 } from "@/contexts/company/interface/errors"
-import { AdministrationHTTPException } from "@/contexts/administration/interface/errors"
 import { OIDCHTTPException, SystemHTTPException } from "@system/interface/errors"
 import { ApplicationError } from "@/lib/errors"
 import type { HonoEnv } from "@/env"
@@ -64,12 +63,6 @@ export function handleApiError(error: Error, context: Context<HonoEnv>): Respons
       error.status,
       { "content-type": "application/problem+json" },
     )
-  }
-
-  if (error instanceof AdministrationHTTPException) {
-    if (error.status >= 500) console.error("[expected server error]", error.cause ?? error)
-
-    return context.json({ error: error.message, code: error.code }, error.status)
   }
 
   if (error instanceof HTTPException) {

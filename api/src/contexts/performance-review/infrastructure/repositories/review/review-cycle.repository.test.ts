@@ -1,11 +1,11 @@
 import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("ReviewCycleRepository", () => {
   test("create then findById round-trips the review cycle", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ReviewCycleRepository(context)
 
@@ -36,7 +36,7 @@ describe("ReviewCycleRepository", () => {
   })
 
   test("findMany respects limit and offset", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new ReviewCycleRepository(context)
 

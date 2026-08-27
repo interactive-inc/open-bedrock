@@ -1,13 +1,15 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { initializeCompanyTestFixture } from "@tests/api/support/initialize-company-test-fixture"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "overtime-summary-route-test-secret"
 
@@ -17,7 +19,7 @@ const overtimeSummarySchema = z.object({
   daily_regular_minutes: z.number(),
   entries: z.array(
     z.object({
-      employee_id: z.number(),
+      employee_id: zEmployeeId,
       work_days: z.number(),
       total_work_minutes: z.number(),
       overtime_minutes: z.number(),
@@ -36,15 +38,14 @@ const scopeEmployeeRows = [
 async function createScopeTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     scopeEmployeeRows.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.code,
-      dept_id: 1,
-      dept_name: "Dept",
+      deptId: 1,
+      deptName: "Dept",
       position: "-",
       status: "active",
     })),
@@ -60,12 +61,6 @@ async function createScopeTestDb(): Promise<D1Database> {
     })),
   )
 
-  await seedD1(db, "org_memberships", [
-    { department_code: "D001", employee_code: "M002", manager_employee_code: null },
-    { department_code: "D001", employee_code: "R020", manager_employee_code: "M002" },
-    { department_code: "D001", employee_code: "R021", manager_employee_code: "M002" },
-  ])
-
   // 2026-06 は平日 22 日 = 所定 10560 分。R020 は 12 日で 6000 分（時間外 0）。
   // R021 は毎日 600 分×22 日 = 13200 分（時間外 2640 分）。
   const records: Array<Record<string, string | number | boolean | null>> = []
@@ -75,7 +70,7 @@ async function createScopeTestDb(): Promise<D1Database> {
   for (let day = 1; day <= 12; day++) {
     records.push({
       id: id++,
-      employee_id: 20,
+      employee_id: "20",
       work_date: `2026-06-${String(day).padStart(2, "0")}`,
       clock_in_at: null,
       clock_out_at: null,
@@ -87,7 +82,7 @@ async function createScopeTestDb(): Promise<D1Database> {
   for (let day = 1; day <= 22; day++) {
     records.push({
       id: id++,
-      employee_id: 21,
+      employee_id: "21",
       work_date: `2026-06-${String(day).padStart(2, "0")}`,
       clock_in_at: null,
       clock_out_at: null,
@@ -100,7 +95,19 @@ async function createScopeTestDb(): Promise<D1Database> {
 
   await initializeCompanyTestFixture({
     db,
+    employees: scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.code,
+      deptId: 1,
+      status: "active",
+    })),
     departments: [{ id: 1, code: "D001", name: "Dept", managerEmployeeCode: "M002" }],
+    memberships: [
+      { departmentCode: "D001", employeeCode: "M002", managerEmployeeCode: null },
+      { departmentCode: "D001", employeeCode: "R020", managerEmployeeCode: "M002" },
+      { departmentCode: "D001", employeeCode: "R021", managerEmployeeCode: "M002" },
+    ],
   })
 
   return db
@@ -108,7 +115,7 @@ async function createScopeTestDb(): Promise<D1Database> {
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -135,9 +142,9 @@ describe("GET /attendance-records/overtime-summary", () => {
 
       const byId = new Map(parsed.data.entries.map((entry) => [entry.employee_id, entry]))
 
-      expect(byId.get(20)?.overtime_minutes).toBe(0)
-      expect(byId.get(21)?.total_work_minutes).toBe(13200)
-      expect(byId.get(21)?.overtime_minutes).toBe(2640)
+      expect(byId.get(toWorkforceEmployeeId(20))?.overtime_minutes).toBe(0)
+      expect(byId.get(toWorkforceEmployeeId(21))?.total_work_minutes).toBe(13200)
+      expect(byId.get(toWorkforceEmployeeId(21))?.overtime_minutes).toBe(2640)
     }
   })
 
@@ -182,7 +189,7 @@ describe("GET /attendance-records/overtime-summary", () => {
 
     if (parsed.success) {
       expect(parsed.data.entries.length).toBe(1)
-      expect(parsed.data.entries[0]?.employee_id).toBe(21)
+      expect(parsed.data.entries[0]?.employee_id).toBe(toWorkforceEmployeeId(21))
       expect(parsed.data.entries[0]?.overtime_minutes).toBe(2640)
     }
   })

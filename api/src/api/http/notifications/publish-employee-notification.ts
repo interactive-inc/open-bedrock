@@ -1,8 +1,9 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import type { CompanyNotificationKind } from "@/api/http/notifications/notification-kind.definition"
 import type { PublishedEmployeeNotification } from "@/api/http/notifications/employee-notification.adapter"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { EmployeeNotificationAdapter } from "@/api/http/notifications/employee-notification.adapter"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -20,7 +21,7 @@ export type Command = {
 
 export type SentNotification = Readonly<{
   notification: PublishedEmployeeNotification
-  recipientEmployeeId: number
+  recipientEmployeeId: EmployeeId
 }>
 
 /**
@@ -30,7 +31,7 @@ export class PublishEmployeeNotification {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<SentNotification | ApplicationError> {
-    const employeeRepository = new EmployeeRepository(this.c)
+    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c)
 
     if (command.session.hasPermission("notification:send") === false) {
       return new ForbiddenError("cannot send notification", "notification_forbidden")

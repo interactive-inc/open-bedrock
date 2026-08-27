@@ -1,17 +1,18 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import { ClockIn } from "@/contexts/attendance/application/clock-in"
 import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
 import { ApplicationError, ConflictError } from "@/lib/errors"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
 
 describe("ClockIn", () => {
   test("creates an open attendance record", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new ClockIn(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       now: "2026-03-15T09:00:00.000Z",
       note: null,
     })
@@ -22,17 +23,17 @@ describe("ClockIn", () => {
       throw new Error("expected attendance record")
     }
 
-    expect(result.employeeId).toBe(1)
+    expect(result.employeeId).toBe(toWorkforceEmployeeId(1))
     expect(result.clockInAt).toBe("2026-03-15T09:00:00.000Z")
     expect(result.status).toBe("open")
     expect(result.workDate).toBe("2026-03-15")
   })
 
   test("creates an attendance record with a note", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new ClockIn(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       now: "2026-03-15T09:00:00.000Z",
       note: "remote work",
     })
@@ -45,10 +46,10 @@ describe("ClockIn", () => {
   })
 
   test("rejects duplicate clock in with already_clocked_in", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const first = await new ClockIn(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       now: "2026-03-15T09:00:00.000Z",
       note: null,
     })
@@ -58,7 +59,7 @@ describe("ClockIn", () => {
     }
 
     const second = await new ClockIn(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       now: "2026-03-15T10:00:00.000Z",
       note: null,
     })
@@ -67,16 +68,16 @@ describe("ClockIn", () => {
   })
 
   test("allows clock in for a different employee", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await new ClockIn(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       now: "2026-03-15T09:00:00.000Z",
       note: null,
     })
 
     const result = await new ClockIn(context).run({
-      employeeId: 2,
+      employeeId: toWorkforceEmployeeId(2),
       now: "2026-03-15T09:05:00.000Z",
       note: null,
     })
@@ -85,10 +86,10 @@ describe("ClockIn", () => {
   })
 
   test("allows clock in after previous record is closed", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const first = await new ClockIn(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       now: "2026-03-15T09:00:00.000Z",
       note: null,
     })
@@ -107,7 +108,7 @@ describe("ClockIn", () => {
     )
 
     const second = await new ClockIn(context).run({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       now: "2026-03-16T09:00:00.000Z",
       note: null,
     })

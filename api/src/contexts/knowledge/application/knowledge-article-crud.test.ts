@@ -1,9 +1,10 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import { CreateKnowledgeArticle } from "@/contexts/knowledge/application/create-knowledge-article"
 import { UpdateKnowledgeArticle } from "@/contexts/knowledge/application/update-knowledge-article"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { ApplicationError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import type { Context } from "@/env"
 
@@ -13,7 +14,7 @@ async function seedArticle(context: Context, authorId: number): Promise<Knowledg
     category: "engineering",
     tags: "test,article",
     bodyMd: "# Test\n\nBody text.",
-    authorId: authorId,
+    authorId: toWorkforceEmployeeId(authorId),
     createdAt: "2026-03-15T09:00:00.000Z",
   })
 
@@ -26,14 +27,14 @@ async function seedArticle(context: Context, authorId: number): Promise<Knowledg
 
 describe("CreateKnowledgeArticle", () => {
   test("creates a new knowledge article", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateKnowledgeArticle(context).run({
       title: "New Article",
       category: "general",
       tags: null,
       bodyMd: "Content here.",
-      authorId: 1,
+      authorId: toWorkforceEmployeeId(1),
       createdAt: "2026-03-15T09:00:00.000Z",
     })
 
@@ -46,18 +47,18 @@ describe("CreateKnowledgeArticle", () => {
     expect(result.title).toBe("New Article")
     expect(result.category).toBe("general")
     expect(result.tags).toBeNull()
-    expect(result.authorId).toBe(1)
+    expect(result.authorId).toBe(toWorkforceEmployeeId(1))
   })
 
   test("creates an article with tags", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateKnowledgeArticle(context).run({
       title: "Tagged Article",
       category: "engineering",
       tags: "typescript,testing",
       bodyMd: "Content.",
-      authorId: 2,
+      authorId: toWorkforceEmployeeId(2),
       createdAt: "2026-03-15T10:00:00.000Z",
     })
 
@@ -71,7 +72,7 @@ describe("CreateKnowledgeArticle", () => {
 
 describe("UpdateKnowledgeArticle", () => {
   test("updates the article for the author", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const article = await seedArticle(context, 1)
 
@@ -81,7 +82,7 @@ describe("UpdateKnowledgeArticle", () => {
 
     const result = await new UpdateKnowledgeArticle(context).run({
       articleId: article.id,
-      authorId: 1,
+      authorId: toWorkforceEmployeeId(1),
       title: "Updated Title",
       category: "design",
       tags: "updated",
@@ -99,7 +100,7 @@ describe("UpdateKnowledgeArticle", () => {
   })
 
   test("rejects update by non-author with not_author", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const article = await seedArticle(context, 1)
 
@@ -109,7 +110,7 @@ describe("UpdateKnowledgeArticle", () => {
 
     const result = await new UpdateKnowledgeArticle(context).run({
       articleId: article.id,
-      authorId: 999,
+      authorId: toWorkforceEmployeeId(999),
       title: "Hacked",
       category: "hacked",
       tags: null,
@@ -120,11 +121,11 @@ describe("UpdateKnowledgeArticle", () => {
   })
 
   test("rejects unknown id with article_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdateKnowledgeArticle(context).run({
       articleId: 9999,
-      authorId: 1,
+      authorId: toWorkforceEmployeeId(1),
       title: "Ghost",
       category: "ghost",
       tags: null,

@@ -1,3 +1,5 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type {
   AuditEventDetail,
   AuditEventRecord,
@@ -85,7 +87,7 @@ const SUMMARY_STORAGE_OK_SQL = `
     (column) => `(typeof(${column}) = 'text' OR typeof(${column}) = 'null')`,
   ).join(" AND\n  ")} AND
   (typeof(actor_account_id) = 'text' OR typeof(actor_account_id) = 'null') AND
-  (typeof(actor_employee_id) = 'integer' OR typeof(actor_employee_id) = 'null') AND
+  (typeof(actor_employee_id) = 'text' OR typeof(actor_employee_id) = 'null') AND
   typeof(created_at) = 'integer'
 `
 
@@ -160,7 +162,7 @@ const DETAIL_STORAGE_OK_SQL = `
     (column) => `(typeof(${column}) = 'text' OR typeof(${column}) = 'null')`,
   ).join(" AND\n  ")} AND
   (typeof(actor_account_id) = 'text' OR typeof(actor_account_id) = 'null') AND
-  (typeof(actor_employee_id) = 'integer' OR typeof(actor_employee_id) = 'null') AND
+  (typeof(actor_employee_id) = 'text' OR typeof(actor_employee_id) = 'null') AND
   typeof(created_at) = 'integer'
 `
 
@@ -207,7 +209,7 @@ const DETAIL_COMPACT_STORAGE_OK_SQL = `
   typeof(id) = 'integer' AND
   typeof(created_at) = 'integer' AND
   (typeof(actor_account_id) = 'text' OR typeof(actor_account_id) = 'null') AND
-  (typeof(actor_employee_id) = 'integer' OR typeof(actor_employee_id) = 'null') AND
+  (typeof(actor_employee_id) = 'text' OR typeof(actor_employee_id) = 'null') AND
   ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_layout_bytes >= -1`).join(" AND\n  ")}
 `
 
@@ -242,7 +244,7 @@ const validIsoEpochSchema = z
   .refine((value) => Number.isFinite(new Date(value * 1_000).getTime()))
 
 const actorAccountIdSchema = zAccountId.nullable()
-const actorEmployeeIdSchema = z.number().int().safe().nullable()
+const actorEmployeeIdSchema = zEmployeeId.nullable()
 
 const auditSummaryDatabaseRowSchema = z.strictObject({
   id: z.number().int().safe(),
@@ -324,7 +326,7 @@ type AuditExportReadDescriptor = {
   id: number
   createdAt: number
   actorAccountId: AccountId | null
-  actorEmployeeId: number | null
+  actorEmployeeId: EmployeeId | null
   byteLengths: ReadonlyArray<number | null>
   exactHex: ReadonlyArray<string | null> | null
   rawBytes: number
@@ -336,7 +338,7 @@ type AuditExportSegmentPlanItem = {
   id: number
   createdAt: number
   actorAccountId: AccountId | null
-  actorEmployeeId: number | null
+  actorEmployeeId: EmployeeId | null
   columnIndex: number
   offset: number
   expectedBytes: number
@@ -676,7 +678,7 @@ function validateExactProjectionLayout(
     id: number
     created_at: number
     actor_account_id: AccountId | null
-    actor_employee_id: number | null
+    actor_employee_id: EmployeeId | null
   }>,
   columns: ReadonlyArray<string>,
 ): void {
@@ -1005,7 +1007,7 @@ function summaryDescriptorSql(
   const limitIndex = parts.bindings.push(limit)
   const snapshotSql =
     snapshotMaxId === null
-      ? "(SELECT MAX(id) FROM company_audit_events)"
+      ? "(SELECT MAX(id) FROM company_audit_event_details)"
       : `?${parts.bindings.push(snapshotMaxId)}`
   const where = parts.clauses.length === 0 ? "" : `WHERE ${parts.clauses.join(" AND ")}`
   const order = ascending ? "ASC" : "DESC"
@@ -1017,7 +1019,7 @@ function summaryDescriptorSql(
                  (${SUMMARY_MAX_TEXT_BYTES_SQL}) AS max_text_bytes,
                  (${SUMMARY_STORAGE_OK_SQL}) AS storage_ok,
                  ${snapshotSql} AS snapshot_max_id
-          FROM company_audit_events ${where}
+          FROM company_audit_event_details ${where}
           ORDER BY created_at ${order}, id ${order} LIMIT ?${limitIndex}`,
     bindings: parts.bindings,
   }
@@ -1065,7 +1067,7 @@ function exportDescriptorSql(
     sql: `WITH layout AS (
             SELECT id, created_at, actor_account_id, actor_employee_id,
                    ${DETAIL_TEXT_COLUMNS.join(", ")}, ${DETAIL_COMPACT_LAYOUT_COLUMNS}
-            FROM company_audit_events ${where}
+            FROM company_audit_event_details ${where}
             ORDER BY created_at DESC, id DESC
             LIMIT ?${limitIndex}
           ), measured AS (
@@ -1228,7 +1230,7 @@ const EXPORT_SEGMENT_SQL = `
            CAST(json_extract(value, '$[2]') AS INTEGER) AS id,
            CAST(json_extract(value, '$[3]') AS INTEGER) AS created_at,
            CAST(json_extract(value, '$[4]') AS TEXT) AS actor_account_id,
-           CAST(json_extract(value, '$[5]') AS INTEGER) AS actor_employee_id,
+           CAST(json_extract(value, '$[5]') AS TEXT) AS actor_employee_id,
            CAST(json_extract(value, '$[6]') AS INTEGER) AS column_index,
            CAST(json_extract(value, '$[7]') AS INTEGER) AS byte_offset,
            CAST(json_extract(value, '$[8]') AS INTEGER) AS expected_bytes,
@@ -1249,7 +1251,7 @@ const EXPORT_SEGMENT_SQL = `
              `hex(substr(CAST(a.${column} AS BLOB), ` + `p.byte_offset + 1, p.expected_bytes))`,
          )}
   FROM plan p
-  JOIN company_audit_events a ON a.id = p.id
+  JOIN company_audit_event_details a ON a.id = p.id
   ORDER BY p.plan_ordinal
 `
 
@@ -1284,7 +1286,7 @@ export class AuditEventAdapter {
     if (hexDescriptors.length > 0) {
       const summaryResult = await this.c.env.DB.prepare(
         `SELECT ${SUMMARY_HEX_SELECT_COLUMNS}
-         FROM company_audit_events
+         FROM company_audit_event_details
          WHERE id IN (SELECT value FROM json_each(?1))
          ORDER BY created_at ${order}, id ${order}`,
       )
@@ -1320,7 +1322,7 @@ export class AuditEventAdapter {
   ): Promise<ReadonlyArray<AuditDetailDatabaseRow>> {
     const detailResult = await this.c.env.DB.prepare(
       `SELECT ${DETAIL_HEX_SELECT_COLUMNS}
-       FROM company_audit_events
+       FROM company_audit_event_details
        WHERE id IN (SELECT value FROM json_each(?1))
        ORDER BY created_at DESC, id DESC`,
     )
@@ -1461,7 +1463,7 @@ export class AuditEventAdapter {
     descriptor: {
       id: number
       actor_account_id: AccountId | null
-      actor_employee_id: number | null
+      actor_employee_id: EmployeeId | null
       created_at: number
     } & Record<string, unknown>,
     columns: ReadonlyArray<string>,
@@ -1521,7 +1523,7 @@ export class AuditEventAdapter {
       if (selections.length === 0) throw new Error("audit segmented text read made no progress")
 
       const segmentResult = await this.c.env.DB.prepare(
-        `SELECT ${projections.join(", ")} FROM company_audit_events WHERE id = ?1 LIMIT 1`,
+        `SELECT ${projections.join(", ")} FROM company_audit_event_details WHERE id = ?1 LIMIT 1`,
       )
         .bind(...bindings)
         .all()
@@ -1638,7 +1640,7 @@ export class AuditEventAdapter {
           target_type, target_id, outcome, reason_code, authorization_json,
           before_json, after_json, metadata_json, client_ip, client_name, created_at)
        SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16
-       FROM audit_batch_decisions
+       FROM company_audit_batch_decisions
        WHERE decision_id = ?17 AND decision_value = ?18`,
     ).bind(
       record.eventId,
@@ -1709,17 +1711,17 @@ export class AuditEventAdapter {
     const invariant = this.c.env.DB.prepare(
       `SELECT CASE WHEN
          (SELECT COUNT(*)
-            FROM audit_batch_decisions
+            FROM company_audit_batch_decisions
            WHERE decision_id = ?1
              AND decision_value IN (${decisionPlaceholders.join(", ")})) = 1
          AND
          (SELECT COUNT(*)
-            FROM company_audit_events
+            FROM company_audit_event_details
            WHERE event_id IN (${eventIdPlaceholders.join(", ")})) = 1
        THEN 1 ELSE json_extract('', '$') END AS ok`,
     ).bind(props.decisionId, ...decisions, ...eventIds)
     const deleteMarker = this.c.env.DB.prepare(
-      "DELETE FROM audit_batch_decisions WHERE decision_id = ?1",
+      "DELETE FROM company_audit_batch_decisions WHERE decision_id = ?1",
     ).bind(props.decisionId)
     const [firstCase, ...remainingCases] = props.cases
     const statements: [D1PreparedStatement, ...D1PreparedStatement[]] = [
@@ -1743,19 +1745,19 @@ export class AuditEventAdapter {
   prepareAppend(record: AuditEventRecord): readonly [D1PreparedStatement, D1PreparedStatement] {
     const invariant = this.c.env.DB.prepare(
       `SELECT CASE WHEN
-         EXISTS (SELECT 1 FROM audit_events WHERE event_id = ?1)
+         EXISTS (SELECT 1 FROM company_audit_events WHERE event_id = ?1)
          AND NOT EXISTS (SELECT 1 FROM company_audit_event_appends WHERE event_id = ?1)
          AND (
            (?2 IS NULL AND NOT EXISTS (
              SELECT 1
-             FROM audit_event_employee_contexts employee_context
-             JOIN audit_events event ON event.id = employee_context.audit_event_id
+             FROM company_audit_event_employee_contexts employee_context
+             JOIN company_audit_events event ON event.id = employee_context.audit_event_id
              WHERE event.event_id = ?1
            ))
            OR EXISTS (
              SELECT 1
-             FROM audit_event_employee_contexts employee_context
-             JOIN audit_events event ON event.id = employee_context.audit_event_id
+             FROM company_audit_event_employee_contexts employee_context
+             JOIN company_audit_events event ON event.id = employee_context.audit_event_id
              WHERE event.event_id = ?1 AND employee_context.employee_id = ?2
            )
          )
@@ -1951,7 +1953,7 @@ export class AuditEventAdapter {
                 (${DETAIL_WIRE_BYTES_SQL}) AS wire_bytes,
                 (${DETAIL_MAX_TEXT_BYTES_SQL}) AS max_text_bytes,
                 (${DETAIL_STORAGE_OK_SQL}) AS storage_ok
-         FROM company_audit_events WHERE event_id = ?1 LIMIT 1`,
+         FROM company_audit_event_details WHERE event_id = ?1 LIMIT 1`,
       )
         .bind(eventId)
         .all()

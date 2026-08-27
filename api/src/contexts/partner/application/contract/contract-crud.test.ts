@@ -4,9 +4,9 @@ import { Partner } from "@/contexts/partner/domain/entities/partner.entity"
 import { RegisterPartner } from "@/contexts/partner/application/register-partner"
 import { CreateContract } from "@/contexts/partner/application/contract/create-contract"
 import { UpdateContract } from "@/contexts/partner/application/contract/update-contract"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { makeTestSession } from "@/api/test/support/make-test-session"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { makeTestSession } from "@tests/api/support/make-test-session"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
 import type { Context } from "@/env"
 
@@ -54,7 +54,7 @@ async function seedContract(context: Context, partnerId: number): Promise<Contra
 
 describe("CreateContract", () => {
   test("creates a contract as admin", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const partner = await seedPartner(context)
 
@@ -84,7 +84,7 @@ describe("CreateContract", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const partner = await seedPartner(context)
 
@@ -106,7 +106,7 @@ describe("CreateContract", () => {
   })
 
   test("rejects unknown partner with partner_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new CreateContract(context).run({
       session: makeTestSession("root"),
@@ -128,7 +128,7 @@ describe("CreateContract", () => {
 
 describe("UpdateContract", () => {
   test("updates a contract as admin", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const partner = await seedPartner(context)
 
@@ -162,7 +162,7 @@ describe("UpdateContract", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const partner = await seedPartner(context)
 
@@ -189,7 +189,7 @@ describe("UpdateContract", () => {
   })
 
   test("rejects unknown id with contract_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdateContract(context).run({
       session: makeTestSession("root"),

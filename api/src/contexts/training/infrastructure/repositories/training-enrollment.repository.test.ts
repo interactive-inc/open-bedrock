@@ -1,8 +1,9 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
 import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
 import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import type { Context } from "@/env"
 import { describe, expect, test } from "bun:test"
 
@@ -27,7 +28,7 @@ async function seedActiveCourse(context: Context) {
 
 describe("TrainingEnrollmentRepository", () => {
   test("create then findById round-trips the enrollment", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const courseId = await seedActiveCourse(context)
 
@@ -36,7 +37,7 @@ describe("TrainingEnrollmentRepository", () => {
     const created = await repository.create(
       TrainingEnrollment.create({
         courseId,
-        employeeId: 2,
+        employeeId: toWorkforceEmployeeId(2),
         dueDate: "2026-03-31",
       }),
     )
@@ -64,12 +65,12 @@ describe("TrainingEnrollmentRepository", () => {
     }
 
     expect(found.courseId).toBe(courseId)
-    expect(found.employeeId).toBe(2)
+    expect(found.employeeId).toBe(toWorkforceEmployeeId(2))
     expect(found.status).toBe("enrolled")
   })
 
   test("create returns course_archived when course is archived", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const courseRepo = new TrainingCourseRepository(context)
     const course = await courseRepo.create(
@@ -90,7 +91,7 @@ describe("TrainingEnrollmentRepository", () => {
     const created = await repository.create(
       TrainingEnrollment.create({
         courseId: course.id!,
-        employeeId: 2,
+        employeeId: toWorkforceEmployeeId(2),
         dueDate: null,
       }),
     )
@@ -100,7 +101,7 @@ describe("TrainingEnrollmentRepository", () => {
   })
 
   test("completeEnrollment persists the completion", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const courseId = await seedActiveCourse(context)
 
@@ -109,7 +110,7 @@ describe("TrainingEnrollmentRepository", () => {
     const created = await repository.create(
       TrainingEnrollment.create({
         courseId,
-        employeeId: 2,
+        employeeId: toWorkforceEmployeeId(2),
         dueDate: null,
       }),
     )
@@ -141,7 +142,7 @@ describe("TrainingEnrollmentRepository", () => {
   })
 
   test("delete returns null for completed enrollment", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const courseId = await seedActiveCourse(context)
 
@@ -150,7 +151,7 @@ describe("TrainingEnrollmentRepository", () => {
     const created = await repository.create(
       TrainingEnrollment.create({
         courseId,
-        employeeId: 2,
+        employeeId: toWorkforceEmployeeId(2),
         dueDate: null,
       }),
     )
@@ -167,11 +168,11 @@ describe("TrainingEnrollmentRepository", () => {
   })
 
   test("findByCourseAndEmployee returns null when none matches", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new TrainingEnrollmentRepository(context)
 
-    const found = await repository.findByCourseAndEmployee(9999, 9999)
+    const found = await repository.findByCourseAndEmployee(9999, toWorkforceEmployeeId(9999))
 
     expect(found).toBeNull()
   })

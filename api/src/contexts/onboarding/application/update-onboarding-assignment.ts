@@ -1,10 +1,10 @@
 import type { Session } from "@/lib/auth/session"
-import type { EmployeeDirectoryEntryValue } from "@/contexts/company/domain/values/employee-directory-entry.value"
+import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 
 export type Command = {
@@ -15,7 +15,7 @@ export type Command = {
 
 export type UpdateOnboardingAssignmentResult = {
   assignment: OnboardingAssignment
-  employee: EmployeeDirectoryEntryValue
+  employee: CompanyEmployeeDirectoryEntry
 }
 
 /**
@@ -53,7 +53,7 @@ export class UpdateOnboardingAssignment {
       return new UnexpectedError("failed to update assignment", { cause: updated })
     }
 
-    const employeeRepository = new EmployeeRepository(this.c)
+    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c)
 
     const employee = await employeeRepository.findById(updated.employeeId)
 

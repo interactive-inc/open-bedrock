@@ -1,4 +1,4 @@
-import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
+import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import {
   ForbiddenError,
   InternalError,
@@ -26,6 +26,7 @@ import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { and, count, eq, inArray, type SQL } from "drizzle-orm"
 import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 
 // @authorization permission - 権限キーで判定する
 /**
@@ -145,8 +146,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const requestedEmployeeId = (() => {
     if (employeeIdParam === undefined) return null
-    const parsed = Number(employeeIdParam)
-    return Number.isInteger(parsed) ? parsed : null
+    const parsed = zEmployeeId.safeParse(employeeIdParam)
+    return parsed.success ? parsed.data : null
   })()
 
   const conditions: Array<SQL> = []
@@ -213,8 +214,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     const isViewingOthers = targetEmployeeId !== session.employeeId
 
     if (isViewingOthers) {
-      const relation = await resolveEmployeeRelation({
-        c,
+      const relation = await new ResolveEmployeeRelationAdapter(c).resolveEmployeeRelation({
         viewerEmployeeId: session.employeeId,
         targetEmployeeId,
       })

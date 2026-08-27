@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import {
   EvaluationTemplate,
   type EvaluationTemplateItem,
@@ -11,7 +12,7 @@ export type Command = {
   title: string
   period: string
   items: ReadonlyArray<EvaluationTemplateItem>
-  createdBy: number
+  createdBy: EmployeeId
   now: string
 }
 

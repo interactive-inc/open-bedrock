@@ -1,16 +1,18 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedOnboardingAssignments } from "@/contexts/onboarding/test/seed/seed-onboarding-assignments.test-support"
 import { seedOnboardingTasks } from "@/contexts/onboarding/test/seed/seed-onboarding-tasks.test-support"
 import { seedOnboardingTemplates } from "@/contexts/onboarding/test/seed/seed-onboarding-templates.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const onboardingTaskResponseSchema = z.object({
   id: z.number(),
@@ -40,15 +42,14 @@ const fixedNow = "2026-01-01T00:00:00.000Z"
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -115,9 +116,9 @@ async function createTestDb(): Promise<D1Database> {
   return db
 }
 
-function token(employeeId: number, role: string): Promise<string> {
+function token(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -141,7 +142,7 @@ describe("POST /onboarding-assignments", () => {
   test("assigns a template to an employee and returns 201", async () => {
     const response = await request({
       path: "/onboarding-assignments",
-      token: await token(2, "hr"),
+      token: await token(2),
       method: "POST",
       body: { employee_code: "E003", template_code: "engineer_join" },
     })
@@ -164,7 +165,7 @@ describe("POST /onboarding-assignments", () => {
   test("returns 404 for an unknown employee", async () => {
     const response = await request({
       path: "/onboarding-assignments",
-      token: await token(2, "hr"),
+      token: await token(2),
       method: "POST",
       body: { employee_code: "E999", template_code: "engineer_join" },
     })
@@ -175,7 +176,7 @@ describe("POST /onboarding-assignments", () => {
   test("returns 404 for an unknown template", async () => {
     const response = await request({
       path: "/onboarding-assignments",
-      token: await token(2, "hr"),
+      token: await token(2),
       method: "POST",
       body: { employee_code: "E003", template_code: "missing" },
     })
@@ -186,7 +187,7 @@ describe("POST /onboarding-assignments", () => {
   test("returns 400 when employee_code is missing", async () => {
     const response = await request({
       path: "/onboarding-assignments",
-      token: await token(2, "hr"),
+      token: await token(2),
       method: "POST",
       body: { template_code: "engineer_join" },
     })
@@ -202,7 +203,7 @@ describe("POST /onboarding-assignments", () => {
       db,
       jwtSecret,
       path: "/onboarding-assignments",
-      token: await token(2, "hr"),
+      token: await token(2),
       method: "POST",
       body: { employee_code: "E005", template_code: "engineer_join" },
     })

@@ -1,10 +1,12 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { RoomReservationRow } from "@/contexts/room/infrastructure/schema/room"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.string(),
   roomId: z.number(),
-  reserverId: z.number(),
+  reserverId: zEmployeeId,
   startAt: z.string(),
   endAt: z.string(),
   purpose: z.string().nullable(),
@@ -38,7 +40,7 @@ export class RoomReservation implements Props {
   /** 新規予約を組み立てる。id は crypto.randomUUID() で採番する。 */
   static create(props: {
     roomId: number
-    reserverId: number
+    reserverId: EmployeeId
     startAt: string
     endAt: string
     purpose: string | null

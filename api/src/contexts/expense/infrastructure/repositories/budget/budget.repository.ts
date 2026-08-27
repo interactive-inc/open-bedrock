@@ -1,13 +1,13 @@
 import { Budget } from "@/contexts/expense/domain/entities/budget.entity"
 import type { Context } from "@/env"
 import { budgets } from "@/contexts/expense/infrastructure/schema/budget"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { and, asc, eq, gte, lte, sum } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
+import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type BudgetListFilter = {
-  departmentId: number | null
+  organizationUnitId: OrganizationUnitId | null
   fiscalPeriod: string | null
 }
 
@@ -34,8 +34,8 @@ export class BudgetRepository {
     try {
       const conditions: Array<SQL> = []
 
-      if (filter.departmentId !== null) {
-        conditions.push(eq(budgets.departmentId, filter.departmentId))
+      if (filter.organizationUnitId !== null) {
+        conditions.push(eq(budgets.organizationUnitId, filter.organizationUnitId))
       }
 
       if (filter.fiscalPeriod !== null) {
@@ -48,7 +48,7 @@ export class BudgetRepository {
         .select()
         .from(budgets)
         .where(where)
-        .orderBy(asc(budgets.departmentId), asc(budgets.fiscalPeriod))
+        .orderBy(asc(budgets.organizationUnitId), asc(budgets.fiscalPeriod))
 
       return rows.map((row) => Budget.fromRow(row))
     } catch (error) {
@@ -61,7 +61,7 @@ export class BudgetRepository {
       const rows = await this.c.var.database
         .insert(budgets)
         .values({
-          departmentId: budget.departmentId,
+          organizationUnitId: budget.organizationUnitId,
           fiscalPeriod: budget.fiscalPeriod,
           periodStart: budget.periodStart,
           periodEnd: budget.periodEnd,
@@ -122,7 +122,7 @@ export class BudgetRepository {
    * spent_at が予算の period_start..period_end に収まる approved の経費のみ対象。
    */
   async sumApprovedExpenses(props: {
-    departmentId: number
+    organizationUnitId: OrganizationUnitId
     periodStart: string
     periodEnd: string
   }): Promise<number | Error> {
@@ -130,10 +130,9 @@ export class BudgetRepository {
       const rows = await this.c.var.database
         .select({ total: sum(expenses.amount) })
         .from(expenses)
-        .innerJoin(employees, eq(employees.id, expenses.employeeId))
         .where(
           and(
-            eq(employees.deptId, props.departmentId),
+            eq(expenses.organizationUnitId, props.organizationUnitId),
             eq(expenses.status, "approved"),
             gte(expenses.spentAt, props.periodStart),
             lte(expenses.spentAt, props.periodEnd),

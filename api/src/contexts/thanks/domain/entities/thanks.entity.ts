@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { ThanksRow } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { z } from "zod"
 
@@ -7,8 +9,8 @@ export const thanksMessageSchema = z.string().trim().min(1).max(1000)
 /** D1 batch の RETURNING 結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const thanksRowSchema = z.object({
   id: z.number(),
-  senderEmployeeId: z.number(),
-  recipientEmployeeId: z.number(),
+  senderEmployeeId: zEmployeeId,
+  recipientEmployeeId: zEmployeeId,
   message: z.string(),
   points: z.number(),
   createdAt: z.string(),
@@ -16,8 +18,8 @@ export const thanksRowSchema = z.object({
 
 const zProps = z.object({
   id: z.number().nullable(),
-  senderEmployeeId: z.number(),
-  recipientEmployeeId: z.number(),
+  senderEmployeeId: zEmployeeId,
+  recipientEmployeeId: zEmployeeId,
   message: z.string(),
   points: z.number(),
   createdAt: z.string(),
@@ -56,8 +58,8 @@ export class Thanks implements Props {
    * points は 0 以上の整数（呼び出し側で上限・原資チェック済みの値を渡す前提）。
    */
   static create(props: {
-    senderEmployeeId: number
-    recipientEmployeeId: number
+    senderEmployeeId: EmployeeId
+    recipientEmployeeId: EmployeeId
     message: string
     points: number
     createdAt: string

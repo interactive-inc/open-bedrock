@@ -8,7 +8,7 @@ import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure
 
 export type Command = {
   enrollmentId: number
-  viewerEmployeeId: number
+  viewerEmployeeId: EmployeeId
   session: Session
   dueDate: string | null
 }
@@ -63,3 +63,4 @@ export class RescheduleTrainingEnrollment {
     return updated
   }
 }
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"

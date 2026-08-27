@@ -1,4 +1,5 @@
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
@@ -8,7 +9,7 @@ import { and, asc, eq } from "drizzle-orm"
 export class AttendanceRecordRepository {
   constructor(private readonly c: Context) {}
 
-  async findOpenByEmployeeId(employeeId: number): Promise<AttendanceRecord | null | Error> {
+  async findOpenByEmployeeId(employeeId: EmployeeId): Promise<AttendanceRecord | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()

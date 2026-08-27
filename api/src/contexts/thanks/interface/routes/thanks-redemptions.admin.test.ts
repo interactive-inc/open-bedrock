@@ -1,19 +1,22 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const jwtSecret = "thanks-redemption-admin-route-test-secret"
 
 const redemptionAdminResponseSchema = z.object({
   id: z.number(),
-  employee_id: z.number(),
+  employee_id: zEmployeeId,
   employee_name: z.string(),
   employee_dept_name: z.string().nullable(),
   reward_id: z.number(),
@@ -22,7 +25,7 @@ const redemptionAdminResponseSchema = z.object({
   status: z.enum(["pending", "rejected", "fulfilled"]),
   created_at: z.string(),
   decided_at: z.string().nullable(),
-  decider_id: z.number().nullable(),
+  decider_id: zEmployeeId.nullable(),
 })
 
 const listSchema = z.object({
@@ -33,15 +36,14 @@ const listSchema = z.object({
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -71,7 +73,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "thanks_redemptions", [
     {
       id: 1,
-      employee_id: 5,
+      employee_id: "5",
       reward_id: 1,
       point_cost: 50,
       status: "pending",
@@ -81,23 +83,23 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 2,
-      employee_id: 10,
+      employee_id: "10",
       reward_id: 2,
       point_cost: 200,
       status: "fulfilled",
       created_at: "2026-06-05T00:00:00Z",
       decided_at: "2026-06-06T00:00:00Z",
-      decider_id: 1,
+      decider_id: "1",
     },
     {
       id: 3,
-      employee_id: 13,
+      employee_id: "13",
       reward_id: 1,
       point_cost: 50,
       status: "rejected",
       created_at: "2026-06-10T00:00:00Z",
       decided_at: "2026-06-11T00:00:00Z",
-      decider_id: 1,
+      decider_id: "1",
     },
   ])
 
@@ -108,7 +110,7 @@ async function createTestDb(): Promise<D1Database> {
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -183,7 +185,9 @@ describe("GET /thanks-redemptions/admin", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data.every((item) => item.employee_id === 5)).toBe(true)
+      expect(parsed.data.data.every((item) => item.employee_id === toWorkforceEmployeeId(5))).toBe(
+        true,
+      )
     }
   })
 

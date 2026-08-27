@@ -1,10 +1,11 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { LeaveBalance } from "@/contexts/leave/domain/entities/leave-balance.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("LeaveBalance.decrement", () => {
   test("returns a new balance with updated used and remaining days", () => {
     const balance = LeaveBalance.fromRow({
-      employeeId: 7,
+      employeeId: toWorkforceEmployeeId(7),
       fiscalYear: "2026",
       leaveType: "annual",
       grantedDays: 20,
@@ -22,13 +23,13 @@ describe("LeaveBalance.decrement", () => {
 
     expect(decremented.usedDays).toBe(8)
     expect(decremented.remainingDays).toBe(12)
-    expect(decremented.employeeId).toBe(7)
+    expect(decremented.employeeId).toBe(toWorkforceEmployeeId(7))
     expect(decremented.grantedDays).toBe(20)
   })
 
   test("decrementing all remaining days succeeds", () => {
     const balance = LeaveBalance.fromRow({
-      employeeId: 7,
+      employeeId: toWorkforceEmployeeId(7),
       fiscalYear: "2026",
       leaveType: "annual",
       grantedDays: 10,
@@ -50,7 +51,7 @@ describe("LeaveBalance.decrement", () => {
 
   test("decrement with 0 returns invalid_decrement", () => {
     const balance = LeaveBalance.fromRow({
-      employeeId: 7,
+      employeeId: toWorkforceEmployeeId(7),
       fiscalYear: "2026",
       leaveType: "annual",
       grantedDays: 20,
@@ -66,7 +67,7 @@ describe("LeaveBalance.decrement", () => {
 
   test("decrement with negative returns invalid_decrement", () => {
     const balance = LeaveBalance.fromRow({
-      employeeId: 7,
+      employeeId: toWorkforceEmployeeId(7),
       fiscalYear: "2026",
       leaveType: "annual",
       grantedDays: 20,
@@ -82,7 +83,7 @@ describe("LeaveBalance.decrement", () => {
 
   test("decrement more than remaining returns invalid_decrement", () => {
     const balance = LeaveBalance.fromRow({
-      employeeId: 7,
+      employeeId: toWorkforceEmployeeId(7),
       fiscalYear: "2026",
       leaveType: "annual",
       grantedDays: 10,

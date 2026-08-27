@@ -5,13 +5,13 @@ import { toManagementDashboardRanges } from "@/api/http/dashboard/management/to-
 import type { AppManagementDashboard } from "@/lib/app-schemas"
 import { attendanceRecords } from "@/contexts/attendance/infrastructure/schema/attendance"
 import { employeeEvents } from "@/contexts/company/infrastructure/schema/employee-event"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
-import { countPendingSystemCases } from "@system/infrastructure/workflow/count-pending-system-cases.repository"
-import { and, count, eq, gte, like, sql } from "drizzle-orm"
+import { CountPendingSystemCasesAdapter } from "@system/infrastructure/adapters/workflow/count-pending-system-cases.adapter"
+import { and, count, eq, gte, like } from "drizzle-orm"
 
 /**
  * 経営ダッシュボードの横断集計。予測・計算は持たず、在籍・入退社・勤怠・休暇・経費・評価・
@@ -30,15 +30,39 @@ export class GetManagementDashboard {
     try {
       const database = this.c.var.database
 
-      const pendingApplicationCount = await countPendingSystemCases({ env: { DB: this.c.env.DB } })
+      const pendingApplicationCount = await new CountPendingSystemCasesAdapter({
+        env: { DB: this.c.env.DB },
+      }).countPendingSystemCases()
       if (pendingApplicationCount instanceof Error) {
         return new UnexpectedError("failed to aggregate management dashboard", {
           cause: pendingApplicationCount,
         })
       }
 
+      const companySnapshot = await new ReadCanonicalOrganizationStateAdapter(
+        this.c,
+      ).readCanonicalOrganizationState()
+      if (companySnapshot instanceof Error) {
+        return new UnexpectedError("failed to aggregate management dashboard", {
+          cause: companySnapshot,
+        })
+      }
+      const activeStates = companySnapshot.employees.filter((state) => state.status === "ACTIVE")
+      const unitById = new Map(
+        companySnapshot.organization.units.map((unit) => [unit.organizationUnitId, unit]),
+      )
+      const headcountByUnitName = new Map<string, number>()
+      for (const state of activeStates) {
+        if (state.primaryAssignment === null) continue
+        const unit = unitById.get(state.primaryAssignment.organizationUnitId)
+        if (unit === undefined) continue
+        headcountByUnitName.set(
+          unit.officialName,
+          (headcountByUnitName.get(unit.officialName) ?? 0) + 1,
+        )
+      }
+
       const [
-        employeeRows,
         joinRows,
         retireRows,
         attendanceRows,
@@ -48,7 +72,6 @@ export class GetManagementDashboard {
         expensePendingRows,
         openReviewCycleRows,
       ] = await database.batch([
-        database.select({ total: count() }).from(employees).where(eq(employees.status, "active")),
         database
           .select({ total: count() })
           .from(employeeEvents)
@@ -84,16 +107,6 @@ export class GetManagementDashboard {
           .where(eq(reviewCycles.status, "open")),
       ])
 
-      const departmentRows = await database
-        .select({
-          department_name: employees.deptName,
-          headcount: count(),
-        })
-        .from(employees)
-        .where(eq(employees.status, "active"))
-        .groupBy(employees.deptName)
-        .orderBy(sql`count(*) desc`)
-
       const goalRows = await database
         .select({
           period: goals.period,
@@ -104,11 +117,10 @@ export class GetManagementDashboard {
         .groupBy(goals.period, goals.status)
 
       return {
-        employee_count: employeeRows.at(0)?.total ?? 0,
-        department_headcounts: departmentRows.map((row) => ({
-          department_name: row.department_name,
-          headcount: row.headcount,
-        })),
+        employee_count: activeStates.length,
+        department_headcounts: [...headcountByUnitName]
+          .map(([department_name, headcount]) => ({ department_name, headcount }))
+          .toSorted((left, right) => right.headcount - left.headcount),
         recent_join_count: joinRows.at(0)?.total ?? 0,
         recent_retire_count: retireRows.at(0)?.total ?? 0,
         attendance_record_count: attendanceRows.at(0)?.total ?? 0,

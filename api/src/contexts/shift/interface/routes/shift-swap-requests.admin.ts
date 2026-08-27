@@ -15,6 +15,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
 import { InternalError } from "@/lib/http/errors"
 
@@ -39,8 +40,8 @@ export const GET = factory.createHandlers(
     "query",
     z.object({
       status: z.string().optional(),
-      requester_id: z.string().optional(),
-      target_id: z.string().optional(),
+      requester_id: zEmployeeId.optional(),
+      target_id: zEmployeeId.optional(),
       from: z.string().optional(),
       to: z.string().optional(),
       sort: z.string().optional(),
@@ -81,20 +82,12 @@ export const GET = factory.createHandlers(
       conditions.push(eq(shiftSwapRequests.status, query.status))
     }
 
-    if (query.requester_id !== undefined && query.requester_id !== "") {
-      const requesterId = Number(query.requester_id)
-
-      if (Number.isInteger(requesterId)) {
-        conditions.push(eq(shiftSwapRequests.requesterEmployeeId, requesterId))
-      }
+    if (query.requester_id !== undefined) {
+      conditions.push(eq(shiftSwapRequests.requesterEmployeeId, query.requester_id))
     }
 
-    if (query.target_id !== undefined && query.target_id !== "") {
-      const targetId = Number(query.target_id)
-
-      if (Number.isInteger(targetId)) {
-        conditions.push(eq(shiftSwapRequests.targetEmployeeId, targetId))
-      }
+    if (query.target_id !== undefined) {
+      conditions.push(eq(shiftSwapRequests.targetEmployeeId, query.target_id))
     }
 
     if (query.from !== undefined && query.from !== "") {
@@ -120,12 +113,11 @@ export const GET = factory.createHandlers(
       .select({
         id: shiftSwapRequests.id,
         requesterEmployeeId: shiftSwapRequests.requesterEmployeeId,
-        requesterCode: requester.code,
-        requesterName: requester.name,
-        requesterDeptName: requester.deptName,
+        requesterCode: requester.employeeCode,
+        requesterName: requester.officialName,
         targetEmployeeId: shiftSwapRequests.targetEmployeeId,
-        targetCode: target.code,
-        targetName: target.name,
+        targetCode: target.employeeCode,
+        targetName: target.officialName,
         date: shiftSwapRequests.date,
         note: shiftSwapRequests.note,
         status: shiftSwapRequests.status,
@@ -158,10 +150,7 @@ export const GET = factory.createHandlers(
         requester_employee_id: row.requesterEmployeeId,
         requester_employee_code: row.requesterCode ?? "",
         requester_name: row.requesterName ?? "",
-        requester_dept_name:
-          currentDepartments.source === "lifecycle"
-            ? (currentDepartments.names.get(row.requesterEmployeeId) ?? null)
-            : row.requesterDeptName,
+        requester_dept_name: currentDepartments.get(row.requesterEmployeeId) ?? null,
         target_employee_id: row.targetEmployeeId,
         target_employee_code: row.targetCode ?? "",
         target_name: row.targetName ?? "",

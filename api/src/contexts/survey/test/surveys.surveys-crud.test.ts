@@ -1,15 +1,17 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedSurveyResponses } from "@/contexts/survey/test/seed/seed-survey-responses.test-support"
 import { seedSurveys } from "@/contexts/survey/test/seed/seed-surveys.test-support"
 import { databaseMiddleware } from "@/api/database-middleware"
 import { HTTPException } from "hono/http-exception"
 import { contextStorage } from "hono/context-storage"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import * as surveyCreateRoute from "@/contexts/survey/interface/routes/surveys"
 import * as surveyDetailRoute from "@/contexts/survey/interface/routes/surveys.$surveyId"
 import * as surveyResponseCreateRoute from "@/contexts/survey/interface/routes/surveys.$surveyId.responses"
@@ -17,7 +19,7 @@ import * as surveySummaryRoute from "@/contexts/survey/interface/routes/surveys.
 import type { Bindings } from "@/env"
 import { factory } from "@/api/http/factory"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const surveyResponseSchema = z.object({
   id: z.number().nullable(),
@@ -52,15 +54,14 @@ const testApp = factory
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -98,14 +99,14 @@ async function createTestDb(): Promise<D1Database> {
 /** 管理権限ロール。 */
 function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 1,
+    employeeId: toWorkforceEmployeeId(1),
   })
 }
 
 /** 一般ロール（管理権限なし）。 */
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 13,
+    employeeId: toWorkforceEmployeeId(13),
   })
 }
 

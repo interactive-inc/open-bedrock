@@ -1,11 +1,12 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 
 describe("RingiRequest.create", () => {
   test("builds a pending ringi with an unassigned id and no decision", () => {
     const ringi = RingiRequest.create({
-      applicantId: 5,
-      approverId: 4,
+      applicantId: toWorkforceEmployeeId(5),
+      approverId: toWorkforceEmployeeId(4),
       title: "New vendor",
       amount: 240000,
       reason: "faster builds",
@@ -16,14 +17,14 @@ describe("RingiRequest.create", () => {
     expect(ringi.status).toBe("pending")
     expect(ringi.decidedAt).toBeNull()
     expect(ringi.decisionComment).toBeNull()
-    expect(ringi.applicantId).toBe(5)
-    expect(ringi.approverId).toBe(4)
+    expect(ringi.applicantId).toBe(toWorkforceEmployeeId(5))
+    expect(ringi.approverId).toBe(toWorkforceEmployeeId(4))
   })
 
   test("is frozen (immutable)", () => {
     const ringi = RingiRequest.create({
-      applicantId: 5,
-      approverId: 4,
+      applicantId: toWorkforceEmployeeId(5),
+      approverId: toWorkforceEmployeeId(4),
       title: "x",
       amount: 1,
       reason: "y",
@@ -38,8 +39,8 @@ describe("RingiRequest.fromRow", () => {
   test("reconstructs a decided ringi from a row", () => {
     const ringi = RingiRequest.fromRow({
       id: 2,
-      applicantId: 5,
-      approverId: 4,
+      applicantId: toWorkforceEmployeeId(5),
+      approverId: toWorkforceEmployeeId(4),
       title: "Conference",
       amount: 500000,
       reason: "brand",

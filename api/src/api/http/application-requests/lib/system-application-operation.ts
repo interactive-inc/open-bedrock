@@ -1,13 +1,15 @@
-import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id.query"
-import { resolveActiveCompanyAccountParticipant } from "@/api/http/accounts/resolve-active-company-account-participant.query"
-import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants.query"
-import { resolveSystemAccountIdsForEmployees } from "@/api/http/accounts/resolve-system-account-ids-for-employees.query"
-import { resolveCompanyProcedureTask } from "@/contexts/company/infrastructure/organization/resolve-company-procedure-task.repository"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
+import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id"
+import { resolveActiveCompanyAccountParticipant } from "@/api/http/accounts/resolve-active-company-account-participant"
+import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants"
+import { resolveSystemAccountIdsForEmployees } from "@/api/http/accounts/resolve-system-account-ids-for-employees"
+import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { type CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
-import { findPersonnelActionRequest } from "@/contexts/company/infrastructure/employee-lifecycle/find-personnel-action-request.repository"
+import { FindPersonnelActionRequestAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/find-personnel-action-request.adapter"
 import type { Context } from "@/env"
 import { canRepairWorkflow } from "@/api/http/application-requests/lib/can-repair-workflow"
 import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
@@ -33,12 +35,12 @@ import {
 } from "@system/domain/policies/decision-task.policy"
 import { DecideSystemTask } from "@system/application/workflow/decide-system-task"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
-import type { SystemProposalView } from "@system/infrastructure/workflow/system-d1-proposal-query.repository"
+import type { SystemProposalView } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { systemCaseIdSchema } from "@system/domain/schemas/workflow/system-case.schema"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
-import { SystemD1ProposalQuery } from "@system/infrastructure/workflow/system-d1-proposal-query.repository"
-import { SystemD1WorkflowWriter } from "@system/infrastructure/workflow/system-d1-workflow-writer.repository"
+import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 
 export type SystemApplicationResult = Readonly<{
   proposal: SystemProposalView
@@ -46,14 +48,14 @@ export type SystemApplicationResult = Readonly<{
   approverRoles: ReadonlyArray<string>
 }>
 
-export function systemProposalQuery(c: Context): SystemD1ProposalQuery {
-  return new SystemD1ProposalQuery({ env: { DB: c.env.DB } })
+export function systemProposalQuery(c: Context): SystemD1ProposalAdapter {
+  return new SystemD1ProposalAdapter({ env: { DB: c.env.DB } })
 }
 
 export async function submitSystemApplication(
   c: Context,
   input: Readonly<{
-    applicantId: number
+    applicantId: EmployeeId
     templateCode: string
     payload: unknown
     createdAt: Date
@@ -94,7 +96,7 @@ export async function reviseSystemApplication(
   c: Context,
   input: Readonly<{
     number: number
-    applicantId: number
+    applicantId: EmployeeId
     payload: unknown
     revisedAt: Date
     mode: "edit" | "resubmit"
@@ -153,7 +155,7 @@ export async function reviseSystemApplication(
 
 export async function withdrawSystemApplication(
   c: Context,
-  input: Readonly<{ number: number; applicantId: number; withdrawnAt: Date }>,
+  input: Readonly<{ number: number; applicantId: EmployeeId; withdrawnAt: Date }>,
 ): Promise<true | ApplicationError> {
   const current = await systemProposalQuery(c).findByNumber(input.number)
   if (current instanceof Error) {
@@ -174,7 +176,7 @@ export async function withdrawSystemApplication(
     )
   }
   const result = await new CancelSystemProcedure(
-    new SystemD1WorkflowWriter({ env: { DB: c.env.DB } }),
+    new SystemD1WorkflowAdapter({ env: { DB: c.env.DB } }),
   ).run({
     number: input.number,
     createdByAccountId: current.createdByAccountId,
@@ -195,7 +197,7 @@ export async function decideSystemApplication(
   c: Context,
   input: Readonly<{
     number: number
-    actorEmployeeId: number
+    actorEmployeeId: EmployeeId
     action: "approve" | "reject"
     comment: string | null
     decidedAt: Date
@@ -296,7 +298,9 @@ export async function decideSystemApplication(
       cause: applicantParticipant instanceof Error ? applicantParticipant : undefined,
     })
   }
-  const applicant = await new EmployeeRepository(c).findById(applicantParticipant.employeeId)
+  const applicant = await new CompanyEmployeeDirectoryReadAdapter(c).findById(
+    applicantParticipant.employeeId,
+  )
   if (applicant instanceof Error || applicant === null) {
     return new UnexpectedError("failed to load workflow applicant", {
       cause: applicant instanceof Error ? applicant : undefined,
@@ -306,13 +310,13 @@ export async function decideSystemApplication(
     input.action === "reject" && step?.rejection_behavior === "return" ? "return" : input.action
   let nextTask = null
   if (systemAction === "approve") {
-    let authoritySubjectEmployeeId: number | null | undefined
+    let authoritySubjectEmployeeId: EmployeeId | null | undefined
     let targetDepartmentCode: string | null | undefined
-    let excludedEmployeeIds: ReadonlySet<number> | undefined
+    let excludedEmployeeIds: ReadonlySet<EmployeeId> | undefined
     if (proposal.completionOperationKey === "company.personnel-action.apply") {
-      const personnelRequest = await findPersonnelActionRequest(c, session, {
-        applicationId: proposal.number,
-      })
+      const personnelRequest = await new FindPersonnelActionRequestAdapter(
+        c,
+      ).findPersonnelActionRequest(session, { applicationId: proposal.number })
       if (personnelRequest instanceof Error) return personnelRequest
       if (personnelRequest === null) {
         return new UnexpectedError("Company personnel action association is missing")
@@ -325,24 +329,17 @@ export async function decideSystemApplication(
           : [personnelRequest.requestedByEmployeeId, personnelRequest.targetEmployeeId],
       )
     }
-    const next = await resolveCompanyProcedureTask({
+    const next = await new ResolveCompanyProcedureTaskAdapter({
       c,
       policy,
       payload: payload.value,
-      applicant: {
-        id: applicant.id,
-        code: applicant.code,
-        dept_id: applicant.deptId,
-        dept_name: applicant.deptName,
-        position: applicant.position,
-        status: applicant.status,
-      },
+      applicant: toProcedureApplicant(applicant),
       activatedAt: input.decidedAt,
       afterTaskKey: proposal.currentTaskKey,
       authoritySubjectEmployeeId,
       targetDepartmentCode,
       excludedEmployeeIds,
-    })
+    }).resolveCompanyProcedureTask()
     if (next instanceof Error) {
       return new UnprocessableError(
         "next workflow step cannot be resolved",
@@ -368,7 +365,7 @@ export async function decideSystemApplication(
   const caseId = systemCaseIdSchema.safeParse(proposal.caseId)
   if (!caseId.success) return new UnexpectedError("invalid System Case ID")
   const result = await new DecideSystemTask(
-    new SystemD1WorkflowWriter({ env: { DB: c.env.DB } }),
+    new SystemD1WorkflowAdapter({ env: { DB: c.env.DB } }),
   ).run({
     caseId: caseId.data,
     taskKey: proposal.currentTaskKey,
@@ -425,7 +422,7 @@ export async function reassignSystemApplicationTask(
   c: Context,
   input: Readonly<{
     number: number
-    candidateEmployeeIds: ReadonlyArray<number>
+    candidateEmployeeIds: ReadonlyArray<EmployeeId>
     requiredApprovals: number | undefined
     reason: string
     reassignedAt: Date
@@ -435,7 +432,7 @@ export async function reassignSystemApplicationTask(
       status: "pending"
       stepKey: string
       round: number
-      candidateEmployeeIds: ReadonlyArray<number>
+      candidateEmployeeIds: ReadonlyArray<EmployeeId>
     }>
   | ApplicationError
 > {
@@ -508,7 +505,7 @@ export async function reassignSystemApplicationTask(
     return new UnexpectedError("failed to resolve repair candidates", { cause: participants })
   }
   const liveParticipants = participants.filter(
-    (participant) => participant.status === "active" && participant.archivedAt === null,
+    (participant) => participant.status === "ACTIVE" || participant.status === "ON_LEAVE",
   )
   const resolvedEmployeeIds = new Set(liveParticipants.map((participant) => participant.employeeId))
   if (candidateEmployeeIds.some((employeeId) => !resolvedEmployeeIds.has(employeeId))) {
@@ -574,7 +571,7 @@ export async function reassignSystemApplicationTask(
       cause: replacement,
     })
   }
-  const result = await new SystemD1WorkflowWriter({ env: { DB: c.env.DB } }).reassign({
+  const result = await new SystemD1WorkflowAdapter({ env: { DB: c.env.DB } }).reassign({
     caseId: proposal.caseId,
     taskKey: proposal.currentTaskKey,
     round: proposal.currentTaskRound,
@@ -594,7 +591,7 @@ export async function reassignSystemApplicationTask(
 async function startSystemApplication(
   c: Context,
   input: Readonly<{
-    applicantId: number
+    applicantId: EmployeeId
     schema: unknown
     policy: CompanyProcedureDecisionPolicy
     procedureKey: string
@@ -612,7 +609,7 @@ async function startSystemApplication(
       cause: payload,
     })
   }
-  const applicant = await new EmployeeRepository(c).findById(input.applicantId)
+  const applicant = await new CompanyEmployeeDirectoryReadAdapter(c).findById(input.applicantId)
   if (applicant instanceof Error) {
     return new UnexpectedError("failed to find applicant", { cause: applicant })
   }
@@ -630,21 +627,14 @@ async function startSystemApplication(
   if (participant === null || participant.employeeId !== input.applicantId) {
     return new ForbiddenError("cannot submit as another employee", "forbidden")
   }
-  const resolvedTask = await resolveCompanyProcedureTask({
+  const resolvedTask = await new ResolveCompanyProcedureTaskAdapter({
     c,
     policy: input.policy,
     payload,
-    applicant: {
-      id: applicant.id,
-      code: applicant.code,
-      dept_id: applicant.deptId,
-      dept_name: applicant.deptName,
-      position: applicant.position,
-      status: applicant.status,
-    },
+    applicant: toProcedureApplicant(applicant),
     activatedAt: input.createdAt,
     afterTaskKey: null,
-  })
+  }).resolveCompanyProcedureTask()
   if (resolvedTask instanceof Error || resolvedTask === null) {
     return new UnprocessableError(
       "application workflow has no eligible decision step",
@@ -652,9 +642,9 @@ async function startSystemApplication(
       { cause: resolvedTask instanceof Error ? resolvedTask : undefined },
     )
   }
-  const started = await new StartSystemProcedure(
-    new SystemD1WorkflowWriter({ env: { DB: c.env.DB } }),
-  ).run({
+  const started = await new StartSystemProcedure({
+    writer: new SystemD1WorkflowAdapter({ env: { DB: c.env.DB } }),
+  }).run({
     seriesId: input.seriesId,
     version: input.version,
     procedureKey: input.procedureKey,
@@ -677,8 +667,20 @@ async function startSystemApplication(
 
   return {
     proposal,
-    applicantName: applicant.name,
+    applicantName: applicant.officialName,
     approverRoles: input.policy.approverRoles,
+  }
+}
+
+function toProcedureApplicant(applicant: CompanyEmployeeDirectoryEntry) {
+  return {
+    employeeId: applicant.id,
+    employeeCode: applicant.employeeCode,
+    employmentStatus: applicant.employment?.status ?? null,
+    organizationUnitId: applicant.primaryAssignment?.organizationUnitId ?? null,
+    organizationUnitCode: applicant.primaryAssignment?.organizationUnitCode ?? null,
+    organizationUnitName: applicant.primaryAssignment?.organizationUnitName ?? null,
+    positionTitle: applicant.primaryAssignment?.positionTitle ?? null,
   }
 }
 

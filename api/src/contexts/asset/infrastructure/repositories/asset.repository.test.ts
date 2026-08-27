@@ -1,6 +1,7 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { assetLendings } from "@/contexts/asset/infrastructure/schema/asset"
 import { describe, expect, test } from "bun:test"
 import type { Context } from "@/env"
@@ -26,7 +27,7 @@ async function seedInStock(context: Context, code: string): Promise<void> {
 
 describe("AssetRepository", () => {
   test("create then findByCode round-trips the asset", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new AssetRepository(context)
 
@@ -59,7 +60,7 @@ describe("AssetRepository", () => {
   })
 
   test("lendFromStock lends an in_stock asset and opens a lending atomically", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new AssetRepository(context)
 
@@ -67,7 +68,7 @@ describe("AssetRepository", () => {
 
     const lent = await repository.lendFromStock({
       assetCode: "PC-002",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       lentAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -78,7 +79,7 @@ describe("AssetRepository", () => {
     }
 
     expect(lent.status).toBe("lent")
-    expect(lent.holderEmployeeId).toBe(1)
+    expect(lent.holderEmployeeId).toBe(toWorkforceEmployeeId(1))
 
     const lendings = await context.var.database
       .select()
@@ -90,7 +91,7 @@ describe("AssetRepository", () => {
   })
 
   test("lendFromStock returns null for an already lent asset and adds no lending", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new AssetRepository(context)
 
@@ -98,13 +99,13 @@ describe("AssetRepository", () => {
 
     await repository.lendFromStock({
       assetCode: "PC-003",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       lentAt: "2026-01-01T00:00:00.000Z",
     })
 
     const second = await repository.lendFromStock({
       assetCode: "PC-003",
-      employeeId: 2,
+      employeeId: toWorkforceEmployeeId(2),
       lentAt: "2026-01-02T00:00:00.000Z",
     })
 
@@ -123,11 +124,11 @@ describe("AssetRepository", () => {
       throw new Error("findByCode failed")
     }
 
-    expect(found.holderEmployeeId).toBe(1)
+    expect(found.holderEmployeeId).toBe(toWorkforceEmployeeId(1))
   })
 
   test("returnFromLent returns the asset to stock and closes the open lending", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new AssetRepository(context)
 
@@ -135,7 +136,7 @@ describe("AssetRepository", () => {
 
     await repository.lendFromStock({
       assetCode: "PC-004",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       lentAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -162,7 +163,7 @@ describe("AssetRepository", () => {
   })
 
   test("returnFromLent returns null for an asset that is not lent", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new AssetRepository(context)
 
@@ -177,7 +178,7 @@ describe("AssetRepository", () => {
   })
 
   test("deleteIfNotLent deletes the asset and its lendings", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new AssetRepository(context)
 
@@ -185,7 +186,7 @@ describe("AssetRepository", () => {
 
     await repository.lendFromStock({
       assetCode: "PC-006",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       lentAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -194,7 +195,9 @@ describe("AssetRepository", () => {
       returnedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    const outcome = await repository.deleteIfNotLent("PC-006")
+    const asset = await repository.findByCode("PC-006")
+    if (asset instanceof Error || asset === null) throw new Error("asset should exist")
+    const outcome = await repository.deleteIfNotLent(asset)
 
     expect(outcome).toBe("deleted")
 
@@ -211,7 +214,7 @@ describe("AssetRepository", () => {
   })
 
   test("deleteIfNotLent returns null for a lent asset and keeps it", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new AssetRepository(context)
 
@@ -219,11 +222,13 @@ describe("AssetRepository", () => {
 
     await repository.lendFromStock({
       assetCode: "PC-007",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       lentAt: "2026-01-01T00:00:00.000Z",
     })
 
-    const outcome = await repository.deleteIfNotLent("PC-007")
+    const lentAsset = await repository.findByCode("PC-007")
+    if (lentAsset instanceof Error || lentAsset === null) throw new Error("asset should exist")
+    const outcome = await repository.deleteIfNotLent(lentAsset)
 
     expect(outcome).toBeNull()
 

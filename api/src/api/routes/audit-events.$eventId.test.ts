@@ -1,11 +1,12 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const jwtSecret = "audit-detail-route-test-secret"
 const now = "2026-01-03T00:00:00.000Z"
@@ -16,7 +17,7 @@ const missingUuid = "42345678-1234-4abc-8def-1234567890ab"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
-  await seedD1(db, "employees", [
+  await seedCompanyEmployees(db, [
     { id: 1, code: "E001", name: "Admin", status: "active" },
     { id: 2, code: "E002", name: "Reader", status: "active" },
     { id: 3, code: "E003", name: "Exporter", status: "active" },
@@ -72,7 +73,7 @@ async function grantPermission(
 async function seedDetail(db: D1Database, eventId: string, createdAt: number): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO audit_events
+      `INSERT INTO company_audit_events
        (event_id, request_id, actor_account_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
@@ -85,7 +86,7 @@ async function seedDetail(db: D1Database, eventId: string, createdAt: number): P
 }
 
 function token(employeeId: number): Promise<string> {
-  return createTestToken(jwtSecret, { employeeId })
+  return createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(employeeId) })
 }
 
 function request(db: D1Database, eventId: string, bearer: string | null): Promise<Response> {
@@ -99,14 +100,16 @@ function request(db: D1Database, eventId: string, bearer: string | null): Promis
 }
 
 async function latestAudit(db: D1Database): Promise<Record<string, unknown>> {
-  const row = await db.prepare("SELECT * FROM audit_events ORDER BY id DESC LIMIT 1").first()
+  const row = await db
+    .prepare("SELECT * FROM company_audit_events ORDER BY id DESC LIMIT 1")
+    .first()
   if (row === null) throw new Error("missing audit event")
   return row as Record<string, unknown>
 }
 
 async function failSelfAudit(db: D1Database): Promise<void> {
   await db.exec(`CREATE TRIGGER fail_audit_self_insert
-    BEFORE INSERT ON audit_events
+    BEFORE INSERT ON company_audit_events
     WHEN NEW.action LIKE 'audit.event.%'
     BEGIN SELECT RAISE(ABORT, 'self audit disabled'); END;`)
 }

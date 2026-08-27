@@ -1,9 +1,10 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { leaveTypeSchema } from "@/lib/schemas"
 import type { LeaveBalanceRow } from "@/contexts/leave/infrastructure/schema/leave"
 import { z } from "zod"
 
 const zProps = z.object({
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   fiscalYear: z.string(),
   leaveType: leaveTypeSchema,
   grantedDays: z.number(),

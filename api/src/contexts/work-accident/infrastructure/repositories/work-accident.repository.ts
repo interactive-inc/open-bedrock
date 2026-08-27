@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { WorkAccident } from "@/contexts/work-accident/domain/entities/work-accident.entity"
 import type { Context } from "@/env"
 import { workAccidents } from "@/contexts/work-accident/infrastructure/schema/work-accident"
@@ -10,7 +11,7 @@ export class WorkAccidentRepository {
   /** 発生記録を status・employee_id で絞り込み、発生日の降順で返す。 */
   async find(props: {
     status?: string
-    employeeId?: number
+    employeeId?: EmployeeId
   }): Promise<ReadonlyArray<WorkAccident> | Error> {
     try {
       const conditions: Array<SQL> = []
@@ -56,7 +57,7 @@ export class WorkAccidentRepository {
   /** 発生記録を INSERT する。対象者不特定の事故もあるため employeeId は null 可。 */
   async create(props: {
     occurredOn: string
-    employeeId: number | null
+    employeeId: EmployeeId | null
     location: string | null
     summary: string
     severity: "minor" | "serious" | null

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import { buildGoalTree } from "@/contexts/performance-review/domain/policies/goal-tree.policy"
 import type { GoalOwnerType } from "@/contexts/performance-review/domain/entities/goal.entity"
@@ -7,7 +8,7 @@ import type { GoalOwnerType } from "@/contexts/performance-review/domain/entitie
 function goal(props: { id: number; ownerType: GoalOwnerType; parentGoalId: number | null }): Goal {
   return Goal.fromRow({
     id: props.id,
-    employeeId: 1,
+    employeeId: toWorkforceEmployeeId(1),
     period: "2026-H1",
     title: `goal ${props.id}`,
     kpi: null,

@@ -43,6 +43,12 @@ describe("IamRoleEntity", () => {
     )
   })
 
+  test("Role keyはopaque識別子の数字開始segmentを許可する", () => {
+    expect(requireRole(roleProps({ key: "company:role:1f0db135" })).key).toBe(
+      "company:role:1f0db135",
+    )
+  })
+
   test("Roleが宣言したresource typeにだけbindingできる", () => {
     const global = requireRole(roleProps())
     const scoped = requireRole(roleProps({ resourceType: "example:resource" }))

@@ -1,3 +1,5 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
 import { contextStorage } from "hono/context-storage"
 import { HTTPException } from "hono/http-exception"
@@ -7,14 +9,15 @@ import type { Bindings } from "@/env"
 import { factory } from "@/api/http/factory"
 import { seedAssetLendings } from "@/contexts/asset/test/seed/seed-asset-lendings.test-support"
 import { seedAssets } from "@/contexts/asset/test/seed/seed-assets.test-support"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { seedD1 } from "@/api/test/support/seed-d1"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const jwtSecret = "asset-crud-route-test-secret"
 
@@ -25,7 +28,7 @@ const assetResponseSchema = z.object({
   serial: z.string().nullable(),
   purchased_on: z.string().nullable(),
   status: z.string(),
-  holder_employee_id: z.number().nullable(),
+  holder_employee_id: zEmployeeId.nullable(),
 })
 
 /** app.ts と同じ登録（:code）でハンドラを載せたローカル app。app.ts は他エージェントと共有のため触れない。 */
@@ -46,15 +49,14 @@ const localApp = factory
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -94,13 +96,13 @@ async function createTestDb(): Promise<D1Database> {
 
 function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 1,
+    employeeId: toWorkforceEmployeeId(1),
   })
 }
 
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
   })
 }
 

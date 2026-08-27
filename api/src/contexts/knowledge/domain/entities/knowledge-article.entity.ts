@@ -1,3 +1,5 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { KnowledgeArticleRow } from "@/contexts/knowledge/infrastructure/schema/knowledge"
 import { z } from "zod"
 
@@ -7,7 +9,7 @@ const zProps = z.object({
   category: z.string(),
   tags: z.string().nullable(),
   bodyMd: z.string(),
-  authorId: z.number(),
+  authorId: zEmployeeId,
   createdAt: z.string(),
 })
 
@@ -43,7 +45,7 @@ export class KnowledgeArticle implements Props {
     category: string
     tags: string | null
     bodyMd: string
-    authorId: number
+    authorId: EmployeeId
     createdAt: string
   }): KnowledgeArticle {
     return new KnowledgeArticle({

@@ -1,6 +1,7 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
@@ -8,7 +9,7 @@ import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   memberCode: string
-  managerId: number
+  managerId: EmployeeId
   heldAt: string
   topics: string | null
   managerNote: string | null
@@ -26,7 +27,9 @@ export class CreateOneOnOne {
   async run(command: Command): Promise<OneOnOne | ApplicationError> {
     const oneOnOneRepository = new OneOnOneRepository(this.c)
 
-    const employee = await new EmployeeRepository(this.c).findByCode(command.memberCode)
+    const employee = await new CompanyEmployeeDirectoryReadAdapter(this.c).findByCode(
+      command.memberCode,
+    )
     const memberId = employee instanceof Error ? employee : (employee?.id ?? null)
 
     if (memberId instanceof Error) {

@@ -4,7 +4,6 @@ import { relative, resolve } from "node:path"
 import process from "node:process"
 import ts from "typescript"
 import { z } from "zod"
-import { LIB_BOUNDARY_BASELINE } from "./lib-boundary-baseline"
 
 const PROJECT_ROOT = resolve(import.meta.dir, "..")
 const SOURCE_ROOT = resolve(PROJECT_ROOT, "src")
@@ -15,7 +14,7 @@ const OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "context-ownership.json")
 const RETIRED_CONTEXT_NAMES = new Set(["request"])
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
-const API_ROOT_DIRECTORIES = new Set(["http", "routes", "test"])
+const API_ROOT_DIRECTORIES = new Set(["http", "routes"])
 const API_ROOT_FILES = new Set([
   "api-route-module.ts",
   "app-base.ts",
@@ -23,18 +22,8 @@ const API_ROOT_FILES = new Set([
   "database-middleware.ts",
   "route-module.registry.ts",
 ])
-const LAYER_FIRST_PLATFORM_DIRECTORIES = new Set([
-  "lib",
-  "middlewares",
-  "routes",
-  "shared",
-  "test-helpers",
-  "utils",
-])
 const ownershipManifest = z
   .strictObject({
-    companyCoreAreas: z.array(z.string().min(1)),
-    companySystemAdapterAreas: z.array(z.string().min(1)),
     companyAreasByLayer: z.strictObject({
       domain: z.array(z.string().min(1)),
       application: z.array(z.string().min(1)),
@@ -65,7 +54,11 @@ export function inspectCompanyRootPath(file: string): ContextBoundaryViolation[]
   if (match === null) return []
 
   const rootDirectory = match[1]
-  return rootDirectory !== undefined && (isContextLayer(rootDirectory) || rootDirectory === "test")
+  return rootDirectory !== undefined &&
+    (isContextLayer(rootDirectory) ||
+      rootDirectory === "configuration" ||
+      rootDirectory === "lib" ||
+      rootDirectory === "test")
     ? []
     : [{ file, reason: `Company直下のDDD layerではありません: ${rootDirectory ?? "unknown"}` }]
 }
@@ -243,35 +236,28 @@ function isContextLayer(value: string): value is ContextLayer {
   return CONTEXT_LAYERS.some((layer) => layer === value)
 }
 
-/** context-first と製品固有のlayer-first pathを同じ所有情報へ正規化する。 */
+export function inspectRetiredLayerFirstRootPath(file: string): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+  return /(?:^|\/)src\/(?:api\/)?(?:domain|application|infrastructure|interface)(?:\/|$)/.test(
+    normalized,
+  )
+    ? [{ file, reason: "撤去済みの layer-first root を再作成しないでください" }]
+    : []
+}
+
+/** context-first source の所有情報を読む。 */
 export function classifyContextSource(file: string): ContextSource | null {
   const normalized = file.replaceAll("\\", "/")
   const contextFirst = normalized.match(
     /(?:^|\/)src\/contexts\/([^/]+)\/(domain|application|infrastructure|interface)(?:\/|$)/,
   )
 
-  if (contextFirst !== null) {
-    const context = contextFirst[1]
-    const layer = contextFirst[2]
+  if (contextFirst === null) return null
 
-    return context !== undefined && layer !== undefined && isContextLayer(layer)
-      ? { context, layer }
-      : null
-  }
+  const context = contextFirst[1]
+  const layer = contextFirst[2]
 
-  const layerFirst = normalized.match(
-    /(?:^|\/)src\/(?:api\/)?(domain|application|infrastructure|interface)\/([^/]+)(?:\/|$)/,
-  )
-
-  if (layerFirst === null) return null
-
-  const layer = layerFirst[1]
-  const context = layerFirst[2]
-
-  return context !== undefined &&
-    layer !== undefined &&
-    isContextLayer(layer) &&
-    !LAYER_FIRST_PLATFORM_DIRECTORIES.has(context)
+  return context !== undefined && layer !== undefined && isContextLayer(layer)
     ? { context, layer }
     : null
 }
@@ -292,28 +278,12 @@ export function classifyContextModule(moduleSpecifier: string): ContextSource | 
     /^@\/contexts\/([^/]+)\/(domain|application|infrastructure|interface)(?:\/|$)/,
   )
 
-  if (contextFirst !== null) {
-    const context = contextFirst[1]
-    const layer = contextFirst[2]
+  if (contextFirst === null) return null
 
-    return context !== undefined && layer !== undefined && isContextLayer(layer)
-      ? { context, layer }
-      : null
-  }
+  const context = contextFirst[1]
+  const layer = contextFirst[2]
 
-  const layerFirst = moduleSpecifier.match(
-    /^@\/(?:api\/)?(domain|application|infrastructure|interface)\/([^/]+)(?:\/|$)/,
-  )
-
-  if (layerFirst === null) return null
-
-  const layer = layerFirst[1]
-  const context = layerFirst[2]
-
-  return context !== undefined &&
-    layer !== undefined &&
-    isContextLayer(layer) &&
-    !LAYER_FIRST_PLATFORM_DIRECTORIES.has(context)
+  return context !== undefined && layer !== undefined && isContextLayer(layer)
     ? { context, layer }
     : null
 }
@@ -375,6 +345,12 @@ function inspectModuleDependency(
     return [{ file, reason: "context境界を迂回する相対 import があります" }]
   }
 
+  if (
+    /^@\/(?:api\/)?(?:domain|application|infrastructure|interface)(?:\/|$)/.test(moduleSpecifier)
+  ) {
+    return [{ file, reason: `撤去済みの layer-first path へ依存しています: ${moduleSpecifier}` }]
+  }
+
   const target = classifyContextModule(moduleSpecifier)
 
   if (target !== null) {
@@ -392,11 +368,7 @@ function inspectModuleDependency(
     return [{ file, reason: `context外の schema へ依存しています: ${moduleSpecifier}` }]
   }
 
-  if (
-    moduleSpecifier === "@/api" ||
-    (moduleSpecifier.startsWith("@/api/") &&
-      !/^@\/api\/(?:domain|application|infrastructure|interface)\//.test(moduleSpecifier))
-  ) {
+  if (moduleSpecifier === "@/api" || moduleSpecifier.startsWith("@/api/")) {
     if (source.layer === "interface" && moduleSpecifier.startsWith("@/api/http/")) {
       return []
     }
@@ -485,6 +457,14 @@ export function inspectLibSource(file: string, sourceText: string): ContextBound
 export async function collectContextBoundaryViolations(): Promise<ContextBoundaryViolation[]> {
   const violations: ContextBoundaryViolation[] = [...inspectOwnershipManifest()]
 
+  for (const rootName of ["domain", "application", "infrastructure", "interface"]) {
+    for (const root of [resolve(SOURCE_ROOT, rootName), resolve(SOURCE_ROOT, "api", rootName)]) {
+      if (existsSync(root)) {
+        violations.push(...inspectRetiredLayerFirstRootPath(relative(PROJECT_ROOT, root)))
+      }
+    }
+  }
+
   if (existsSync(API_ROOT)) {
     for await (const file of new Glob("**/*.{ts,tsx}").scan(API_ROOT)) {
       violations.push(...inspectApiRootPath(relative(PROJECT_ROOT, resolve(API_ROOT, file))))
@@ -531,31 +511,8 @@ export async function collectContextBoundaryViolations(): Promise<ContextBoundar
   return violations
 }
 
-function violationKey(violation: ContextBoundaryViolation): string {
-  return JSON.stringify([violation.file, violation.reason])
-}
-
-/** 既存lib違反の完全一致だけを許可し、新規違反と解消済みbaselineを拒否する。 */
-export function inspectBoundaryBaseline(
-  current: ReadonlyArray<ContextBoundaryViolation>,
-  baseline: ReadonlyArray<ContextBoundaryViolation>,
-): ReadonlyArray<ContextBoundaryViolation> {
-  const currentKeys = new Set(current.map(violationKey))
-  const baselineKeys = new Set(baseline.map(violationKey))
-  const unexpected = current.filter((violation) => !baselineKeys.has(violationKey(violation)))
-  const stale = baseline
-    .filter((violation) => !currentKeys.has(violationKey(violation)))
-    .map((violation) => ({
-      file: violation.file,
-      reason: `解消済みのlib境界baselineを削除してください: ${violation.reason}`,
-    }))
-
-  return [...unexpected, ...stale]
-}
-
-/** 現在の境界違反を縮小専用baselineと照合する。 */
 export async function checkContextBoundaries(): Promise<ReadonlyArray<ContextBoundaryViolation>> {
-  return inspectBoundaryBaseline(await collectContextBoundaryViolations(), LIB_BOUNDARY_BASELINE)
+  return collectContextBoundaryViolations()
 }
 
 if (import.meta.main) {

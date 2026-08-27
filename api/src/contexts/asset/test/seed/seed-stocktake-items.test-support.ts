@@ -1,8 +1,10 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedStocktakeItem = {
   stocktakeId: string
   assetCode: string
   checkedAt: string | null
-  checkerEmployeeId: number | null
+  checkerEmployeeId: EmployeeId | null
   locationNote: string | null
 }
 
@@ -11,7 +13,7 @@ export const seedStocktakeItems: ReadonlyArray<SeedStocktakeItem> = [
     stocktakeId: "a1b2c3d4-e5f6-4a1b-8c2d-000000000001",
     assetCode: "A0001",
     checkedAt: "2026-04-02T10:00:00Z",
-    checkerEmployeeId: 1,
+    checkerEmployeeId: toWorkforceEmployeeId(1),
     locationNote: "5F 開発席",
   },
   {
@@ -46,14 +48,14 @@ export const seedStocktakeItems: ReadonlyArray<SeedStocktakeItem> = [
     stocktakeId: "a1b2c3d4-e5f6-4a1b-8c2d-000000000002",
     assetCode: "A0001",
     checkedAt: "2025-10-03T11:00:00Z",
-    checkerEmployeeId: 1,
+    checkerEmployeeId: toWorkforceEmployeeId(1),
     locationNote: "5F 開発席",
   },
   {
     stocktakeId: "a1b2c3d4-e5f6-4a1b-8c2d-000000000002",
     assetCode: "A0003",
     checkedAt: "2025-10-03T11:10:00Z",
-    checkerEmployeeId: 1,
+    checkerEmployeeId: toWorkforceEmployeeId(1),
     locationNote: "倉庫",
   },
 ]

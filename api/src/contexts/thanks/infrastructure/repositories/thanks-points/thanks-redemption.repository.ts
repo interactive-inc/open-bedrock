@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/lib/d1/parse-d1-row"
@@ -33,13 +35,13 @@ export type RewardInactiveError = { reason: "reward_inactive" }
 
 const thanksRedemptionD1RowSchema = z.object({
   id: z.number(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   rewardId: z.number(),
   pointCost: z.number(),
   status: redemptionStatusSchema,
   createdAt: z.string(),
   decidedAt: z.string().nullable(),
-  deciderId: z.number().nullable(),
+  deciderId: zEmployeeId.nullable(),
 })
 
 export class ThanksRedemptionRepository {
@@ -196,9 +198,9 @@ export class ThanksRedemptionRepository {
    */
   async approveFromPending(props: {
     redemptionId: number
-    employeeId: number
+    employeeId: EmployeeId
     rewardId: number
-    deciderId: number
+    deciderId: EmployeeId
     decidedAt: string
   }): Promise<ThanksRedemption | null | Error> {
     try {
@@ -279,7 +281,7 @@ export class ThanksRedemptionRepository {
   /** 却下を pending からの条件付き UPDATE で原子的に行う。0 行更新は既に決裁済み。 */
   async rejectFromPending(props: {
     redemptionId: number
-    deciderId: number
+    deciderId: EmployeeId
     decidedAt: string
   }): Promise<ThanksRedemption | null | Error> {
     try {
@@ -303,7 +305,7 @@ export class ThanksRedemptionRepository {
   }
 
   async findByEmployee(props: {
-    employeeId: number
+    employeeId: EmployeeId
     limit: number
     offset: number
   }): Promise<ReadonlyArray<ThanksRedemption> | Error> {
@@ -342,7 +344,7 @@ export class ThanksRedemptionRepository {
   }
 
   /** 指定社員に pending 状態の交換申請が存在するかを返す。 */
-  async hasPendingByEmployee(employeeId: number): Promise<boolean | Error> {
+  async hasPendingByEmployee(employeeId: EmployeeId): Promise<boolean | Error> {
     try {
       const rows = await this.c.var.database
         .select({ id: thanksRedemptions.id })

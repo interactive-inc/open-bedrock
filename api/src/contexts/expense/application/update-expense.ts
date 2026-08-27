@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/contexts/expense/infrastructure/repositories/expense.repository"
@@ -7,7 +8,7 @@ import type { ExpenseCategory } from "@/lib/schemas"
 
 export type Command = {
   expenseId: number
-  employeeId: number
+  employeeId: EmployeeId
   category: ExpenseCategory
   amount: number
   spentAt: string

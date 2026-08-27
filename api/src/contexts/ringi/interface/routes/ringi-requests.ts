@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { SubmitRingi } from "@/contexts/ringi/application/submit-ringi"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -15,7 +16,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      approver_id: z.number().int().positive().safe(),
+      approver_id: zEmployeeId,
       title: z.string().min(1).max(200),
       amount: z.number().positive().int().safe(),
       reason: z.string().min(1).max(3_000),

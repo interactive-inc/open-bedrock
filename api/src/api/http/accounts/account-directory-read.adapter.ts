@@ -1,10 +1,10 @@
 import {
   type CompanyAccountParticipant,
   resolveCompanyAccountParticipants,
-} from "@/api/http/accounts/resolve-company-account-participants.query"
-import { IdentityAdapter } from "@/contexts/administration/infrastructure/adapters/auth/identity.adapter"
+} from "@/api/http/accounts/resolve-company-account-participants"
 import type { Context } from "@/env"
-import { SystemAccountAdministrationRepository } from "@system/infrastructure/iam/system-account-administration.repository"
+import { SystemAccountCatalogRepository } from "@system/infrastructure/repositories/iam/system-account-catalog.repository"
+import { SystemIdentityCatalogRepository } from "@system/infrastructure/repositories/identity/system-identity-catalog.repository"
 
 const QUERY_CHUNK_SIZE = 50
 
@@ -30,13 +30,13 @@ type Props = Readonly<{
 
 /** System Account と Company Employee を管理用 read model として合成する。 */
 export class AccountDirectoryReadAdapter {
-  constructor(private readonly c: Context) {
+  constructor(private readonly context: Context) {
     Object.freeze(this)
   }
 
   async list(props: Props): Promise<AccountDirectoryPage | Error> {
-    const systemAccounts = await new SystemAccountAdministrationRepository({
-      env: { DB: this.c.env.DB },
+    const systemAccounts = await new SystemAccountCatalogRepository({
+      env: { DB: this.context.env.DB },
     }).list()
     if (systemAccounts instanceof Error) return systemAccounts
     const selectedAccounts = systemAccounts.filter(
@@ -45,26 +45,19 @@ export class AccountDirectoryReadAdapter {
     const participants: CompanyAccountParticipant[] = []
     for (let index = 0; index < selectedAccounts.length; index += QUERY_CHUNK_SIZE) {
       const chunk = await resolveCompanyAccountParticipants(
-        this.c,
+        this.context,
         selectedAccounts.slice(index, index + QUERY_CHUNK_SIZE).map((account) => account.id),
       )
       if (chunk instanceof Error) return chunk
       participants.push(...chunk)
     }
     const currentParticipants = participants.filter(
-      (participant) => participant.archivedAt === null,
+      (participant) => participant.status === "ACTIVE" || participant.status === "ON_LEAVE",
     )
-    const emails = new Map<number, string>()
-    const identityRepository = new IdentityAdapter(this.c)
-    for (let index = 0; index < currentParticipants.length; index += QUERY_CHUNK_SIZE) {
-      const chunk = await identityRepository.findEmailsByEmployeeIds(
-        currentParticipants
-          .slice(index, index + QUERY_CHUNK_SIZE)
-          .map((participant) => participant.employeeId),
-      )
-      if (chunk instanceof Error) return chunk
-      for (const [employeeId, email] of chunk) emails.set(employeeId, email)
-    }
+    const emails = await new SystemIdentityCatalogRepository({
+      env: { DB: this.context.env.DB },
+    }).primaryEmailsForAccounts(currentParticipants.map((participant) => participant.accountId))
+    if (emails instanceof Error) return emails
     const accountsById = new Map(selectedAccounts.map((account) => [account.id, account]))
     const entries = currentParticipants
       .flatMap((participant) => {
@@ -75,7 +68,7 @@ export class AccountDirectoryReadAdapter {
               {
                 account_id: account.id,
                 name: participant.employeeName,
-                email: emails.get(participant.employeeId) ?? null,
+                email: emails.get(participant.accountId) ?? null,
                 status: account.status,
               },
             ]

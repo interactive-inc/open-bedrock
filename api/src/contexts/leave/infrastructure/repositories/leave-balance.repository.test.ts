@@ -1,16 +1,17 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { LeaveBalanceRepository } from "@/contexts/leave/infrastructure/repositories/leave-balance.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
 import { LeaveBalance } from "@/contexts/leave/domain/entities/leave-balance.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("LeaveBalanceRepository", () => {
   test("findByKey returns the seeded balance", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedD1(db, "leave_balances", [
       {
-        employee_id: 1,
+        employee_id: "1",
         fiscal_year: "2026",
         leave_type: "annual",
         granted_days: 20,
@@ -22,7 +23,7 @@ describe("LeaveBalanceRepository", () => {
     const repository = new LeaveBalanceRepository(context)
 
     const found = await repository.findByKey({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       fiscalYear: "2026",
       leaveType: "annual",
     })
@@ -38,11 +39,11 @@ describe("LeaveBalanceRepository", () => {
   })
 
   test("consumeDays atomically decrements the balance", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedD1(db, "leave_balances", [
       {
-        employee_id: 1,
+        employee_id: "1",
         fiscal_year: "2026",
         leave_type: "annual",
         granted_days: 20,
@@ -54,7 +55,7 @@ describe("LeaveBalanceRepository", () => {
     const repository = new LeaveBalanceRepository(context)
 
     const outcome = await repository.consumeDays({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       leaveType: "annual",
       fiscalYear: "2026",
       days: 2,
@@ -63,7 +64,7 @@ describe("LeaveBalanceRepository", () => {
     expect(outcome).toBe("consumed")
 
     const after = await repository.findByKey({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       fiscalYear: "2026",
       leaveType: "annual",
     })
@@ -77,11 +78,11 @@ describe("LeaveBalanceRepository", () => {
   })
 
   test("consumeDays returns insufficient when remaining_days < days", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedD1(db, "leave_balances", [
       {
-        employee_id: 1,
+        employee_id: "1",
         fiscal_year: "2026",
         leave_type: "annual",
         granted_days: 20,
@@ -93,7 +94,7 @@ describe("LeaveBalanceRepository", () => {
     const repository = new LeaveBalanceRepository(context)
 
     const outcome = await repository.consumeDays({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       leaveType: "annual",
       fiscalYear: "2026",
       days: 3,
@@ -103,7 +104,7 @@ describe("LeaveBalanceRepository", () => {
 
     // Balance should remain unchanged
     const after = await repository.findByKey({
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       fiscalYear: "2026",
       leaveType: "annual",
     })

@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { CreateLicense } from "@/contexts/software-license/application/license/create-license"
 import { factory } from "@/api/http/factory"
 import {
@@ -103,7 +104,7 @@ export const POST = factory.createHandlers(
       category: z.enum(["saas", "software", "other"]).nullable().optional(),
       seats: z.number().int().nonnegative().nullable().optional(),
       renewal_deadline: isoDate.nullable().optional(),
-      owner_employee_id: z.number().int().positive().nullable().optional(),
+      owner_employee_id: zEmployeeId.nullable().optional(),
       note: z.string().max(3_000).nullable().optional(),
     }),
   ),

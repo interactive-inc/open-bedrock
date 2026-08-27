@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
@@ -27,7 +28,7 @@ export class OneOnOneRepository {
 
   /** 本人が参加した（メンバー or マネージャー）1on1 を開催日時の降順で返す。 */
   async findByParticipantId(
-    employeeId: number,
+    employeeId: EmployeeId,
     options: { limit: number; offset: number },
   ): Promise<ReadonlyArray<OneOnOne> | Error> {
     try {

@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LeaveBalanceRepository } from "@/contexts/leave/infrastructure/repositories/leave-balance.repository"
 import type { Context } from "@/env"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
@@ -13,7 +14,7 @@ export class LeaveBalanceSufficiencyAdapter {
   }
 
   async check(props: {
-    employeeId: number
+    employeeId: EmployeeId
     leaveType: LeaveType
     startDate: string
     consumedDays: number

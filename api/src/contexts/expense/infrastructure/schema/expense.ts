@@ -1,11 +1,24 @@
+import type {
+  EmployeeId,
+  OrganizationUnitId,
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { ExpenseApprovalAction, ExpenseCategory, ExpenseStatus } from "@/lib/schemas"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { organizationUnits } from "@/contexts/company/infrastructure/schema/organization"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** 経費申請（申請者・カテゴリ・金額・ステータス）。 */
 export const expenses = sqliteTable("expenses", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeId: integer("employee_id").notNull(),
+  employeeId: text("employee_id")
+    .$type<EmployeeId>()
+    .notNull()
+    .references(() => employees.id, { onDelete: "restrict" }),
+  organizationUnitId: text("organization_unit_id")
+    .$type<OrganizationUnitId>()
+    .notNull()
+    .references(() => organizationUnits.id, { onDelete: "restrict" }),
   category: text("category").notNull().$type<ExpenseCategory>(),
   amount: integer("amount").notNull(),
   spentAt: text("spent_at").notNull(),
@@ -20,7 +33,10 @@ export type ExpenseRow = InferSelectModel<typeof expenses>
 export const expenseApprovals = sqliteTable("expense_approvals", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   expenseId: integer("expense_id").notNull(),
-  approverId: integer("approver_id").notNull(),
+  approverId: text("approver_id")
+    .$type<EmployeeId>()
+    .notNull()
+    .references(() => employees.id, { onDelete: "restrict" }),
   action: text("action").notNull().$type<ExpenseApprovalAction>(),
   comment: text("comment"),
   createdAt: text("created_at").notNull(),

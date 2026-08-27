@@ -1,5 +1,5 @@
 import { resolveAttendanceSearchQuery } from "@/contexts/attendance/interface/http/attendance-records/resolve-attendance-search-query"
-import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
+import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/api/http/utils/list-report-employee-ids"
@@ -47,11 +47,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const scope = c.req.query("scope") ?? null
 
-  const requestedEmployeeId = (() => {
-    if (parsed.data.employee_id === undefined) return null
-    const parsed2 = Number(parsed.data.employee_id)
-    return Number.isInteger(parsed2) ? parsed2 : null
-  })()
+  const requestedEmployeeId = parsed.data.employee_id ?? null
 
   const from = parsed.data.from ?? null
 
@@ -122,8 +118,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     let relation: EmployeeRelation | null = null
 
     if (isViewingOthers && requestedEmployeeId !== null) {
-      const resolved = await resolveEmployeeRelation({
-        c,
+      const resolved = await new ResolveEmployeeRelationAdapter(c).resolveEmployeeRelation({
         viewerEmployeeId: session.employeeId,
         targetEmployeeId: requestedEmployeeId,
       })

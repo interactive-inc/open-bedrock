@@ -42,7 +42,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const [rows, totalRows] = await Promise.all([
     c.var.database
-      .select({ ringi: ringiRequests, applicantName: employees.name })
+      .select({ ringi: ringiRequests, applicantName: employees.officialName })
       .from(ringiRequests)
       .leftJoin(employees, eq(employees.id, ringiRequests.applicantId))
       .where(and(...conditions))

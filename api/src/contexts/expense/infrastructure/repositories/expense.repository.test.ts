@@ -1,18 +1,21 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import { ExpenseApproval } from "@/contexts/expense/domain/entities/expense-approval.entity"
 import { ExpenseRepository } from "@/contexts/expense/infrastructure/repositories/expense.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("ExpenseRepository", () => {
   test("create then findById round-trips the expense", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new ExpenseRepository(context)
 
     const created = await repository.create(
       Expense.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
+        organizationUnitId: toWorkforceOrganizationUnitId("D003"),
         category: "transport",
         amount: 1200,
         spentAt: "2026-01-01",
@@ -40,13 +43,14 @@ describe("ExpenseRepository", () => {
   })
 
   test("update persists the status change", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new ExpenseRepository(context)
 
     const created = await repository.create(
       Expense.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
+        organizationUnitId: toWorkforceOrganizationUnitId("D003"),
         category: "transport",
         amount: 1200,
         spentAt: "2026-01-01",
@@ -71,13 +75,14 @@ describe("ExpenseRepository", () => {
   })
 
   test("update returns null and does not modify a non-pending expense", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new ExpenseRepository(context)
 
     const created = await repository.create(
       Expense.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
+        organizationUnitId: toWorkforceOrganizationUnitId("D003"),
         category: "transport",
         amount: 1200,
         spentAt: "2026-01-01",
@@ -121,13 +126,14 @@ describe("ExpenseRepository", () => {
   })
 
   test("delete returns null and does not remove a non-pending expense", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new ExpenseRepository(context)
 
     const created = await repository.create(
       Expense.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
+        organizationUnitId: toWorkforceOrganizationUnitId("D003"),
         category: "transport",
         amount: 1200,
         spentAt: "2026-01-01",
@@ -163,13 +169,14 @@ describe("ExpenseRepository", () => {
   })
 
   test("decideFromPending flips a pending expense", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new ExpenseRepository(context)
 
     const created = await repository.create(
       Expense.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
+        organizationUnitId: toWorkforceOrganizationUnitId("D003"),
         category: "transport",
         amount: 1200,
         spentAt: "2026-01-01",
@@ -197,13 +204,14 @@ describe("ExpenseRepository", () => {
   })
 
   test("decideFromPending returns null for an already decided expense", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new ExpenseRepository(context)
 
     const created = await repository.create(
       Expense.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
+        organizationUnitId: toWorkforceOrganizationUnitId("D003"),
         category: "transport",
         amount: 1200,
         spentAt: "2026-01-01",
@@ -232,13 +240,14 @@ describe("ExpenseRepository", () => {
   })
 
   test("decideFromPending returns null for a settled expense and keeps it settled", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new ExpenseRepository(context)
 
     const created = await repository.create(
       Expense.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
+        organizationUnitId: toWorkforceOrganizationUnitId("D003"),
         category: "transport",
         amount: 1200,
         spentAt: "2026-01-01",
@@ -270,7 +279,7 @@ describe("ExpenseRepository", () => {
   })
 
   test("decideFromPending returns null for an unknown expense id", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new ExpenseRepository(context)
 
@@ -280,14 +289,14 @@ describe("ExpenseRepository", () => {
   })
 
   test("addApproval persists an approval record for the expense", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new ExpenseRepository(context)
 
     const approval = await repository.addApproval(
       ExpenseApproval.create({
         expenseId: 1,
-        approverId: 2,
+        approverId: toWorkforceEmployeeId(2),
         action: "approve",
         comment: null,
         createdAt: "2026-01-01T00:00:00.000Z",

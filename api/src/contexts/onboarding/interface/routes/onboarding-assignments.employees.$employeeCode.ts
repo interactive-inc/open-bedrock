@@ -35,7 +35,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const employeeRows = await c.var.database
     .select()
     .from(employees)
-    .where(eq(employees.code, code))
+    .where(eq(employees.employeeCode, code))
     .limit(1)
 
   const employee = employeeRows.at(0)
@@ -85,8 +85,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const body = assignmentRows.map((row) => ({
     id: row.assignment.id,
-    employee_code: employee.code,
-    employee_name: employee.name,
+    employee_code: employee.employeeCode,
+    employee_name: employee.officialName,
     template_code: row.assignment.templateCode,
     template_name: row.templateName ?? "",
     kind: row.assignment.kind,

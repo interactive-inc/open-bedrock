@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -6,7 +7,7 @@ import { LifeEventRepository } from "@/contexts/life-event/infrastructure/reposi
 import type { LifeEventType } from "@/lib/schemas"
 
 export type Command = {
-  employeeId: number
+  employeeId: EmployeeId
   eventType: LifeEventType
   eventDate: string
   detail: string | null

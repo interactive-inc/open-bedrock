@@ -1,6 +1,13 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
+import type {
+  EmployeeId,
+  OrganizationUnitId,
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedExpense = {
   id: number
-  employeeId: number
+  employeeId: EmployeeId
+  organizationUnitId: OrganizationUnitId
   category: "transport" | "supplies" | "entertainment" | "books" | "other"
   amount: number
   spentAt: string
@@ -13,7 +20,8 @@ type SeedExpense = {
 export const seedExpenses: ReadonlyArray<SeedExpense> = [
   {
     id: 1,
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
+    organizationUnitId: toWorkforceOrganizationUnitId("D003"),
     category: "transport",
     amount: 1200,
     spentAt: "2026-05-10",
@@ -23,7 +31,8 @@ export const seedExpenses: ReadonlyArray<SeedExpense> = [
   },
   {
     id: 2,
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
+    organizationUnitId: toWorkforceOrganizationUnitId("D003"),
     category: "books",
     amount: 3300,
     spentAt: "2026-05-12",
@@ -33,7 +42,8 @@ export const seedExpenses: ReadonlyArray<SeedExpense> = [
   },
   {
     id: 3,
-    employeeId: 10,
+    employeeId: toWorkforceEmployeeId(10),
+    organizationUnitId: toWorkforceOrganizationUnitId("D004"),
     category: "entertainment",
     amount: 8800,
     spentAt: "2026-05-14",

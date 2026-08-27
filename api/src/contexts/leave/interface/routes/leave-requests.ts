@@ -11,7 +11,7 @@ import { zAppLeaveRequest, zAppLeaveRequestAdminList } from "@/lib/app-schemas"
 import { canReadLeaveOf } from "@/contexts/leave/interface/http/leave-requests/can-read-leave-of"
 import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/api/http/utils/list-report-employee-ids"
-import { resolveEmployeeRelation } from "@/contexts/company/infrastructure/organization/resolve-employee-relation.repository"
+import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import { factory } from "@/api/http/factory"
 import { isoDate, leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
 import {
@@ -27,6 +27,8 @@ import { and, count, desc, eq, inArray } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
 
 // @authorization permission - 権限キーで判定する
 /**
@@ -40,7 +42,7 @@ export const GET = factory.createHandlers(
   zValidator(
     "query",
     z.object({
-      employee_id: z.string().optional(),
+      employee_id: zEmployeeId.optional(),
       scope: z.enum(["reports", "all", "department"]).optional(),
       department_code: z.string().optional(),
       status: z.enum(["pending", "approved", "rejected"]).optional(),
@@ -57,11 +59,7 @@ export const GET = factory.createHandlers(
 
     const query = c.req.valid("query")
 
-    const requestedEmployeeId = (() => {
-      if (query.employee_id === undefined) return null
-      const parsed = Number(query.employee_id)
-      return Number.isInteger(parsed) ? parsed : null
-    })()
+    const requestedEmployeeId = query.employee_id ?? null
 
     const conditions: Array<SQL> = []
 
@@ -125,8 +123,7 @@ export const GET = factory.createHandlers(
       const targetEmployeeId =
         requestedEmployeeId === null ? session.employeeId : requestedEmployeeId
 
-      const relation = await resolveEmployeeRelation({
-        c,
+      const relation = await new ResolveEmployeeRelationAdapter(c).resolveEmployeeRelation({
         viewerEmployeeId: session.employeeId,
         targetEmployeeId,
       })
@@ -166,8 +163,7 @@ export const GET = factory.createHandlers(
       .select({
         id: leaveRequests.id,
         employeeId: leaveRequests.employeeId,
-        applicantName: employees.name,
-        applicantDeptName: employees.deptName,
+        applicantName: employees.officialName,
         leaveType: leaveRequests.leaveType,
         startDate: leaveRequests.startDate,
         endDate: leaveRequests.endDate,
@@ -190,12 +186,20 @@ export const GET = factory.createHandlers(
       .from(leaveRequests)
       .where(where)
 
+    const currentDepartments = await loadCurrentEmployeeDepartmentNames(
+      c,
+      rows.map((row) => row.employeeId),
+    )
+    if (currentDepartments instanceof Error) {
+      throw new InternalError("failed to load current departments")
+    }
+
     const responseBody = zAppLeaveRequestAdminList.parse({
       data: rows.map((row) => ({
         id: row.id,
         applicant_id: row.employeeId,
         applicant_name: row.applicantName ?? "",
-        applicant_dept_name: row.applicantDeptName,
+        applicant_dept_name: currentDepartments.get(row.employeeId) ?? null,
         leave_type: row.leaveType,
         start_date: row.startDate,
         end_date: row.endDate,

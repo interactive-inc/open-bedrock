@@ -4,11 +4,11 @@ import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.ent
 import { DecideLeaveRequest } from "@/contexts/leave/application/decide-leave-request"
 import { ForbiddenError, ValidationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { makeTestSession } from "@/api/test/support/make-test-session"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { makeTestSession } from "@tests/api/support/make-test-session"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { initializeCompanyTestFixture } from "@tests/api/support/initialize-company-test-fixture"
 import { describe, expect, test } from "bun:test"
 
 async function seedPendingRequest(

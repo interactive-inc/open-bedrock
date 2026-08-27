@@ -1,16 +1,17 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { CreateAntisocialCheck } from "@/contexts/antisocial-check/application/create-antisocial-check"
 import { UpdateAntisocialCheck } from "@/contexts/antisocial-check/application/update-antisocial-check"
 import { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
 import type { Context } from "@/env"
 import { ApplicationError, ForbiddenError } from "@/lib/errors"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { makeTestSession } from "@/api/test/support/make-test-session"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { makeTestSession } from "@tests/api/support/make-test-session"
 
 async function seedCheck(context: Context, requesterId: number): Promise<string> {
   const created = await new CreateAntisocialCheck(context).run({
-    requesterId: requesterId,
+    requesterId: toWorkforceEmployeeId(requesterId),
     partnerName: "Example Trading Co.",
     partnerAddress: "1-2-3 Sample, Example City",
     representativeName: "Pat Example",
@@ -26,10 +27,10 @@ async function seedCheck(context: Context, requesterId: number): Promise<string>
 
 describe("CreateAntisocialCheck", () => {
   test("creates an antisocial check with status requested and null result", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const created = await new CreateAntisocialCheck(context).run({
-      requesterId: 2,
+      requesterId: toWorkforceEmployeeId(2),
       partnerName: "Sample Logistics Inc.",
       partnerAddress: null,
       representativeName: null,
@@ -54,7 +55,7 @@ describe("ListMyAntisocialChecks", () => {})
 
 describe("UpdateAntisocialCheck", () => {
   test("allows a manager to complete another request without changing its details", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const checkId = await seedCheck(context, 5)
 
@@ -79,7 +80,7 @@ describe("UpdateAntisocialCheck", () => {
   })
 
   test("allows a non-manager requester to update details but ignores result", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const checkId = await seedCheck(context, 5)
 
@@ -103,7 +104,7 @@ describe("UpdateAntisocialCheck", () => {
   })
 
   test("rejects result change from a non-manager requester with result_forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const checkId = await seedCheck(context, 5)
 
@@ -120,7 +121,7 @@ describe("UpdateAntisocialCheck", () => {
   })
 
   test("rejects a manager deciding their own request", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const checkId = await seedCheck(context, 5)
 
@@ -137,7 +138,7 @@ describe("UpdateAntisocialCheck", () => {
   })
 
   test("rejects a non requester with not_requester", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const checkId = await seedCheck(context, 5)
 

@@ -16,6 +16,9 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
+import { InternalError } from "@/lib/http/errors"
 
 /** 並び順ホワイトリスト。未知の値は created_at desc にフォールバックする。 */
 const SORT_OPTIONS = {
@@ -41,7 +44,7 @@ export const GET = factory.createHandlers(
     "query",
     z.object({
       status: ringiStatusSchema.optional(),
-      applicant_id: z.string().optional(),
+      applicant_id: zEmployeeId.optional(),
       sort: z.string().optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
@@ -80,12 +83,8 @@ export const GET = factory.createHandlers(
       conditions.push(eq(ringiRequests.status, query.status))
     }
 
-    if (query.applicant_id !== undefined && query.applicant_id !== "") {
-      const applicantId = Number(query.applicant_id)
-
-      if (Number.isInteger(applicantId)) {
-        conditions.push(eq(ringiRequests.applicantId, applicantId))
-      }
+    if (query.applicant_id !== undefined) {
+      conditions.push(eq(ringiRequests.applicantId, query.applicant_id))
     }
 
     const where = conditions.length === 0 ? undefined : and(...conditions)
@@ -100,10 +99,9 @@ export const GET = factory.createHandlers(
       .select({
         id: ringiRequests.id,
         applicantId: ringiRequests.applicantId,
-        applicantName: employees.name,
-        applicantDeptName: employees.deptName,
+        applicantName: employees.officialName,
         approverId: ringiRequests.approverId,
-        approverName: approvers.name,
+        approverName: approvers.officialName,
         title: ringiRequests.title,
         amount: ringiRequests.amount,
         status: ringiRequests.status,
@@ -123,12 +121,20 @@ export const GET = factory.createHandlers(
       .from(ringiRequests)
       .where(where)
 
+    const currentDepartments = await loadCurrentEmployeeDepartmentNames(
+      c,
+      rows.map((row) => row.applicantId),
+    )
+    if (currentDepartments instanceof Error) {
+      throw new InternalError("failed to load current departments")
+    }
+
     const responseBody = zAppRingiAdminList.parse({
       data: rows.map((row) => ({
         id: row.id,
         applicant_id: row.applicantId,
         applicant_name: row.applicantName ?? "",
-        applicant_dept_name: row.applicantDeptName,
+        applicant_dept_name: currentDepartments.get(row.applicantId) ?? null,
         approver_id: row.approverId,
         approver_name: row.approverName ?? "",
         title: row.title,

@@ -1,18 +1,18 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const jwtSecret = "employee-certification-route-test-secret"
 
 const employeeCertificationListSchema = z.object({
-  data: z.array(z.object({ employee_id: z.number() })),
+  data: z.array(z.object({ employee_id: zEmployeeId })),
   total: z.number(),
 })
 
@@ -22,6 +22,8 @@ const employeeCertificationListSchema = z.object({
  */
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
+
+  await initializeStandardCompanyTestState(db)
 
   await seedD1(db, "certification_definitions", [
     {
@@ -37,7 +39,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "employee_certifications", [
     {
       id: 1,
-      employee_id: 5,
+      employee_id: "5",
       certification_id: 1,
       acquired_on: "2024-04-01",
       expires_on: null,
@@ -46,29 +48,12 @@ async function createTestDb(): Promise<D1Database> {
     },
   ])
 
-  await seedD1(
-    db,
-    "employees",
-    seedEmployees.map((employee) => ({
-      id: employee.id,
-      code: employee.code,
-      name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
-      position: employee.position,
-      status: employee.status,
-    })),
-  )
-
-  await seedIamForEmployees(db)
-  await initializeStandardCompanyTestState(db)
-
   return db
 }
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -100,7 +85,7 @@ describe("GET /employee-certifications", () => {
 
     if (parsed.success) {
       expect(parsed.data.total).toBe(1)
-      expect(parsed.data.data[0].employee_id).toBe(5)
+      expect(parsed.data.data[0].employee_id).toBe(toWorkforceEmployeeId(5))
     }
   })
 
@@ -152,7 +137,7 @@ describe("POST /employee-certifications", () => {
       path: "/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: 6, certification_id: 1, acquired_on: "2025-04-01" },
+      body: { employee_id: "6", certification_id: 1, acquired_on: "2025-04-01" },
     })
 
     expect(response.status).toBe(201)
@@ -163,7 +148,7 @@ describe("POST /employee-certifications", () => {
       path: "/employee-certifications",
       token: await tokenFor(5),
       method: "POST",
-      body: { employee_id: 5, certification_id: 1, acquired_on: "2025-04-01" },
+      body: { employee_id: "5", certification_id: 1, acquired_on: "2025-04-01" },
     })
 
     expect(response.status).toBe(403)
@@ -174,7 +159,7 @@ describe("POST /employee-certifications", () => {
       path: "/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: 5, certification_id: 1, acquired_on: "2024-04-01" },
+      body: { employee_id: "5", certification_id: 1, acquired_on: "2024-04-01" },
     })
 
     expect(response.status).toBe(409)
@@ -185,7 +170,7 @@ describe("POST /employee-certifications", () => {
       path: "/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: 6, certification_id: 999, acquired_on: "2025-04-01" },
+      body: { employee_id: "6", certification_id: 999, acquired_on: "2025-04-01" },
     })
 
     expect(response.status).toBe(404)

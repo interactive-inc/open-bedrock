@@ -1,19 +1,19 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const jwtSecret = "health-checkup-route-test-secret"
 
 const healthCheckupSchema = z.object({
   id: z.number(),
-  employee_id: z.number(),
+  employee_id: zEmployeeId,
   fiscal_year: z.number(),
   checkup_kind: z.string(),
   conducted_on: z.string().nullable(),
@@ -34,10 +34,12 @@ const healthCheckupListSchema = z.object({
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
+  await initializeStandardCompanyTestState(db)
+
   await seedD1(db, "health_checkups", [
     {
       id: 1,
-      employee_id: 5,
+      employee_id: "5",
       fiscal_year: 2026,
       checkup_kind: "regular",
       conducted_on: null,
@@ -47,7 +49,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: 2,
-      employee_id: 5,
+      employee_id: "5",
       fiscal_year: 2025,
       checkup_kind: "stress_check",
       conducted_on: "2025-06-01",
@@ -57,29 +59,12 @@ async function createTestDb(): Promise<D1Database> {
     },
   ])
 
-  await seedD1(
-    db,
-    "employees",
-    seedEmployees.map((employee) => ({
-      id: employee.id,
-      code: employee.code,
-      name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
-      position: employee.position,
-      status: employee.status,
-    })),
-  )
-
-  await seedIamForEmployees(db)
-  await initializeStandardCompanyTestState(db)
-
   return db
 }
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -111,7 +96,9 @@ describe("GET /health-checkups", () => {
 
     if (parsed.success) {
       expect(parsed.data.total).toBe(2)
-      expect(parsed.data.data.every((item) => item.employee_id === 5)).toBe(true)
+      expect(parsed.data.data.every((item) => item.employee_id === toWorkforceEmployeeId(5))).toBe(
+        true,
+      )
     }
   })
 
@@ -203,7 +190,7 @@ describe("POST /health-checkups", () => {
       path: "/health-checkups",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: 6, fiscal_year: 2026, checkup_kind: "regular" },
+      body: { employee_id: "6", fiscal_year: 2026, checkup_kind: "regular" },
     })
 
     expect(response.status).toBe(201)
@@ -222,7 +209,7 @@ describe("POST /health-checkups", () => {
       path: "/health-checkups",
       token: await tokenFor(5),
       method: "POST",
-      body: { employee_id: 5, fiscal_year: 2026, checkup_kind: "regular" },
+      body: { employee_id: "5", fiscal_year: 2026, checkup_kind: "regular" },
     })
 
     expect(response.status).toBe(403)
@@ -243,7 +230,7 @@ describe("POST /health-checkups", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(6)
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(6))
     }
   })
 
@@ -263,7 +250,7 @@ describe("POST /health-checkups", () => {
       path: "/health-checkups",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: 6, employee_code: "E006", fiscal_year: 2026, checkup_kind: "regular" },
+      body: { employee_id: "6", employee_code: "E006", fiscal_year: 2026, checkup_kind: "regular" },
     })
 
     expect(response.status).toBe(400)

@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { HealthCheckup } from "@/contexts/health-checkup/domain/entities/health-checkup.entity"
 import type { Context } from "@/env"
 import { healthCheckups } from "@/contexts/health-checkup/infrastructure/schema/health-checkup"
@@ -10,7 +11,7 @@ export class HealthCheckupRepository {
   /** 実施記録を年度・従業員で絞り込み、実施年度の降順で返す。 */
   async find(props: {
     fiscalYear?: number
-    employeeId?: number
+    employeeId?: EmployeeId
   }): Promise<ReadonlyArray<HealthCheckup> | Error> {
     try {
       const conditions: Array<SQL> = []
@@ -55,7 +56,7 @@ export class HealthCheckupRepository {
 
   /** 実施記録を INSERT する。結果カラムは持たない（実施情報のみ）。 */
   async create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     fiscalYear: number
     checkupKind: "regular" | "stress_check"
     conductedOn: string | null

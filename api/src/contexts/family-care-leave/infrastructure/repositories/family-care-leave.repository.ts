@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import type { Context } from "@/env"
 import { familyCareLeaves } from "@/contexts/family-care-leave/infrastructure/schema/family-care-leave"
@@ -8,7 +9,7 @@ export class FamilyCareLeaveRepository {
 
   /** 申出者本人の休業申出を開始日の昇順で返す。 */
   async findByEmployeeId(props: {
-    employeeId: number
+    employeeId: EmployeeId
     limit: number
     offset: number
   }): Promise<ReadonlyArray<FamilyCareLeave> | Error> {
@@ -34,7 +35,7 @@ export class FamilyCareLeaveRepository {
    * excludeId を渡すと当該申出自身を除外する（更新時に自己ヒットして常に重複扱いになるのを防ぐ）。
    */
   async findOverlapping(props: {
-    employeeId: number
+    employeeId: EmployeeId
     startDate: string
     endDate: string
     excludeId?: string

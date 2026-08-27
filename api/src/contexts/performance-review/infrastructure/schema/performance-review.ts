@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
@@ -16,8 +17,8 @@ export type ReviewCycleRow = InferSelectModel<typeof reviewCycles>
 export const reviewForms = sqliteTable("review_forms", {
   id: integer("id").primaryKey(),
   cycleId: integer("cycle_id").notNull(),
-  subjectEmployeeId: integer("subject_employee_id").notNull(),
-  reviewerEmployeeId: integer("reviewer_employee_id").notNull(),
+  subjectEmployeeId: text("subject_employee_id").$type<EmployeeId>().notNull(),
+  reviewerEmployeeId: text("reviewer_employee_id").$type<EmployeeId>().notNull(),
   reviewerType: text("reviewer_type").notNull(),
   answers: text("answers").notNull(),
   score: integer("score"),
@@ -49,7 +50,7 @@ export const evaluationTemplates = sqliteTable(
     period: text("period").notNull(),
     items: text("items").notNull(),
     status: text("status").notNull().default("draft"),
-    createdBy: integer("created_by").notNull(),
+    createdBy: text("created_by").$type<EmployeeId>().notNull(),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },
@@ -70,12 +71,12 @@ export const evaluationSheets = sqliteTable(
   "evaluation_sheets",
   {
     id: integer("id").primaryKey(),
-    employeeId: integer("employee_id").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     templateId: integer("template_id"),
     period: text("period").notNull(),
     status: text("status").notNull().default("draft"),
-    primaryEvaluatorId: integer("primary_evaluator_id").notNull(),
-    secondaryEvaluatorId: integer("secondary_evaluator_id"),
+    primaryEvaluatorId: text("primary_evaluator_id").$type<EmployeeId>().notNull(),
+    secondaryEvaluatorId: text("secondary_evaluator_id").$type<EmployeeId>(),
     submittedAt: text("submitted_at"),
     approvedAt: text("approved_at"),
     finalizedAt: text("finalized_at"),
@@ -99,7 +100,7 @@ export const evaluationSheetAuditLogs = sqliteTable(
   {
     id: integer("id").primaryKey(),
     sheetId: integer("sheet_id").notNull(),
-    actorId: integer("actor_id").notNull(),
+    actorId: text("actor_id").$type<EmployeeId>().notNull(),
     action: text("action").notNull(),
     fromValue: text("from_value"),
     toValue: text("to_value"),

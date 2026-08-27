@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { SalaryRevision } from "@/contexts/compensation-change/domain/entities/salary-revision.entity"
 import type { Context } from "@/env"
 import { salaryRevisions } from "@/contexts/compensation-change/infrastructure/schema/compensation-change"
@@ -10,7 +11,7 @@ export class SalaryRevisionRepository {
 
   /** 社員の給与改定履歴を適用日の降順で返す。 */
   async findByEmployeeId(props: {
-    employeeId: number
+    employeeId: EmployeeId
     limit: number
     offset: number
   }): Promise<ReadonlyArray<SalaryRevision> | Error> {
@@ -29,7 +30,7 @@ export class SalaryRevisionRepository {
     }
   }
 
-  async countByEmployeeId(employeeId: number): Promise<number | Error> {
+  async countByEmployeeId(employeeId: EmployeeId): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
         .select({ total: count() })

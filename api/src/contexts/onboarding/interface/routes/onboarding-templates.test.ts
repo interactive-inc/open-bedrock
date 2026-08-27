@@ -1,16 +1,18 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedOnboardingAssignments } from "@/contexts/onboarding/test/seed/seed-onboarding-assignments.test-support"
 import { seedOnboardingTasks } from "@/contexts/onboarding/test/seed/seed-onboarding-tasks.test-support"
 import { seedOnboardingTemplates } from "@/contexts/onboarding/test/seed/seed-onboarding-templates.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const onboardingTemplateResponseSchema = z.object({
   code: z.string(),
@@ -26,15 +28,14 @@ const jwtSecret = "onboarding-templates-route-test-secret"
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -97,7 +98,7 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await seedD1(db, "lifecycle_effect_template_bindings", [
+  await seedD1(db, "company_lifecycle_effect_template_bindings", [
     {
       effect_type: "hire",
       template_code: "engineer_join",
@@ -110,9 +111,9 @@ async function createTestDb(): Promise<D1Database> {
   return db
 }
 
-function token(employeeId: number, role: string): Promise<string> {
+function token(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -136,7 +137,7 @@ describe("GET /onboarding-templates", () => {
   test("returns 200 with the template response shape", async () => {
     const response = await request({
       path: "/onboarding-templates",
-      token: await token(1, "root"),
+      token: await token(1),
     })
 
     expect(response.status).toBe(200)
@@ -163,7 +164,7 @@ describe("GET /onboarding-templates", () => {
   test("filters templates by kind", async () => {
     const response = await request({
       path: "/onboarding-templates?kind=leave",
-      token: await token(1, "root"),
+      token: await token(1),
     })
 
     expect(response.status).toBe(200)
@@ -183,7 +184,7 @@ describe("GET /onboarding-templates", () => {
   test("returns 400 for an invalid kind", async () => {
     const response = await request({
       path: "/onboarding-templates?kind=bogus",
-      token: await token(1, "root"),
+      token: await token(1),
     })
 
     expect(response.status).toBe(400)
@@ -192,7 +193,7 @@ describe("GET /onboarding-templates", () => {
   test("returns only 1 template when limit=1 and task_count reflects that template", async () => {
     const response = await request({
       path: "/onboarding-templates?limit=1",
-      token: await token(1, "root"),
+      token: await token(1),
     })
 
     expect(response.status).toBe(200)
@@ -223,7 +224,7 @@ describe("GET /onboarding-templates", () => {
   test("returns 403 for a member without onboarding:manage", async () => {
     const response = await request({
       path: "/onboarding-templates",
-      token: await token(5, "member"),
+      token: await token(5),
     })
 
     expect(response.status).toBe(403)
@@ -232,7 +233,7 @@ describe("GET /onboarding-templates", () => {
   test("returns 200 for a manager with onboarding:manage", async () => {
     const response = await request({
       path: "/onboarding-templates",
-      token: await token(4, "manager"),
+      token: await token(4),
     })
 
     expect(response.status).toBe(200)
@@ -243,7 +244,7 @@ describe("/onboarding-templates/:code/lifecycle-binding", () => {
   test("sets and removes a supported lifecycle binding", async () => {
     const updated = await request({
       path: "/onboarding-templates/common_leave/lifecycle-binding",
-      token: await token(1, "root"),
+      token: await token(1),
       method: "PUT",
       body: { effect_type: "retired" },
     })
@@ -255,7 +256,7 @@ describe("/onboarding-templates/:code/lifecycle-binding", () => {
 
     const removed = await request({
       path: "/onboarding-templates/engineer_join/lifecycle-binding",
-      token: await token(1, "root"),
+      token: await token(1),
       method: "DELETE",
     })
     expect(removed.status).toBe(204)
@@ -264,7 +265,7 @@ describe("/onboarding-templates/:code/lifecycle-binding", () => {
   test("rejects unsupported kinds and callers without management permission", async () => {
     const unsupported = await request({
       path: "/onboarding-templates/common_leave/lifecycle-binding",
-      token: await token(1, "root"),
+      token: await token(1),
       method: "PUT",
       body: { effect_type: "hire" },
     })
@@ -272,7 +273,7 @@ describe("/onboarding-templates/:code/lifecycle-binding", () => {
 
     const forbidden = await request({
       path: "/onboarding-templates/engineer_join/lifecycle-binding",
-      token: await token(5, "member"),
+      token: await token(5),
       method: "DELETE",
     })
     expect(forbidden.status).toBe(403)

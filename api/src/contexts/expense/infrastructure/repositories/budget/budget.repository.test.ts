@@ -1,12 +1,18 @@
 import { Budget } from "@/contexts/expense/domain/entities/budget.entity"
+import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
 import { describe, expect, test } from "bun:test"
 
-function budget(props: { departmentId: number; periodStart: string; periodEnd: string }): Budget {
+function budget(props: {
+  organizationUnitCode: string
+  periodStart: string
+  periodEnd: string
+}): Budget {
   return Budget.create({
-    departmentId: props.departmentId,
+    organizationUnitId: toWorkforceOrganizationUnitId(props.organizationUnitCode),
     fiscalPeriod: "2026",
     periodStart: props.periodStart,
     periodEnd: props.periodEnd,
@@ -19,12 +25,12 @@ function budget(props: { departmentId: number; periodStart: string; periodEnd: s
 
 describe("BudgetRepository", () => {
   test("create then findById round-trips the budget", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new BudgetRepository(context)
 
     const created = await repository.create(
-      budget({ departmentId: 3, periodStart: "2026-04-01", periodEnd: "2027-03-31" }),
+      budget({ organizationUnitCode: "D003", periodStart: "2026-04-01", periodEnd: "2027-03-31" }),
     )
 
     expect(created).toBeInstanceOf(Budget)
@@ -39,17 +45,17 @@ describe("BudgetRepository", () => {
       throw new Error("findById failed")
     }
 
-    expect(found.departmentId).toBe(3)
+    expect(found.organizationUnitId).toBe(toWorkforceOrganizationUnitId("D003"))
     expect(found.amount).toBe(1_000_000)
   })
 
   test("update persists amount, name and note without touching department or period", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new BudgetRepository(context)
 
     const created = await repository.create(
-      budget({ departmentId: 3, periodStart: "2026-04-01", periodEnd: "2027-03-31" }),
+      budget({ organizationUnitCode: "D003", periodStart: "2026-04-01", periodEnd: "2027-03-31" }),
     )
 
     if (created instanceof Error) {
@@ -67,17 +73,17 @@ describe("BudgetRepository", () => {
     expect(updated.amount).toBe(2_000_000)
     expect(updated.name).toBe("revised")
     expect(updated.note).toBe("raised")
-    expect(updated.departmentId).toBe(3)
+    expect(updated.organizationUnitId).toBe(toWorkforceOrganizationUnitId("D003"))
     expect(updated.periodStart).toBe("2026-04-01")
   })
 
   test("delete removes the budget and returns null when missing", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new BudgetRepository(context)
 
     const created = await repository.create(
-      budget({ departmentId: 3, periodStart: "2026-04-01", periodEnd: "2027-03-31" }),
+      budget({ organizationUnitCode: "D003", periodStart: "2026-04-01", periodEnd: "2027-03-31" }),
     )
 
     if (created instanceof Error || created.id === null) {
@@ -89,15 +95,15 @@ describe("BudgetRepository", () => {
   })
 
   test("sumApprovedExpenses sums only approved expenses of the department within the period", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext({ withCompanyOrganization: true })
 
-    await seedD1(db, "employees", [
+    await seedCompanyEmployees(db, [
       {
         id: 1,
         code: "E001",
         name: "Eng A",
-        dept_id: 3,
-        dept_name: "Engineering",
+        deptId: 3,
+        deptName: "Engineering",
         position: null,
         status: "active",
       },
@@ -105,8 +111,8 @@ describe("BudgetRepository", () => {
         id: 2,
         code: "E002",
         name: "Sales A",
-        dept_id: 4,
-        dept_name: "Sales",
+        deptId: 4,
+        deptName: "Sales",
         position: null,
         status: "active",
       },
@@ -116,7 +122,8 @@ describe("BudgetRepository", () => {
       // 対象: dept 3, approved, 期間内
       {
         id: 1,
-        employee_id: 1,
+        employee_id: "1",
+        organization_unit_id: "department:D003",
         category: "books",
         amount: 3300,
         spent_at: "2026-05-12",
@@ -127,7 +134,8 @@ describe("BudgetRepository", () => {
       // 除外: pending
       {
         id: 2,
-        employee_id: 1,
+        employee_id: "1",
+        organization_unit_id: "department:D003",
         category: "transport",
         amount: 1200,
         spent_at: "2026-05-10",
@@ -138,7 +146,8 @@ describe("BudgetRepository", () => {
       // 除外: 別部署
       {
         id: 3,
-        employee_id: 2,
+        employee_id: "2",
+        organization_unit_id: "department:D004",
         category: "other",
         amount: 5000,
         spent_at: "2026-05-14",
@@ -149,7 +158,8 @@ describe("BudgetRepository", () => {
       // 除外: 期間外
       {
         id: 4,
-        employee_id: 1,
+        employee_id: "1",
+        organization_unit_id: "department:D003",
         category: "other",
         amount: 9999,
         spent_at: "2027-05-01",
@@ -162,7 +172,7 @@ describe("BudgetRepository", () => {
     const repository = new BudgetRepository(context)
 
     const total = await repository.sumApprovedExpenses({
-      departmentId: 3,
+      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
       periodStart: "2026-04-01",
       periodEnd: "2027-03-31",
     })
@@ -171,12 +181,12 @@ describe("BudgetRepository", () => {
   })
 
   test("sumApprovedExpenses returns 0 when nothing matches", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new BudgetRepository(context)
 
     const total = await repository.sumApprovedExpenses({
-      departmentId: 99,
+      organizationUnitId: toWorkforceOrganizationUnitId("D099"),
       periodStart: "2026-04-01",
       periodEnd: "2027-03-31",
     })

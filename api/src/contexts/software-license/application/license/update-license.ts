@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import type { License } from "@/contexts/software-license/domain/entities/license.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -14,7 +15,7 @@ export type Command = {
     category: string | null
     seats: number | null
     renewalDeadline: string | null
-    ownerEmployeeId: number | null
+    ownerEmployeeId: EmployeeId | null
     note: string | null
   }
 }

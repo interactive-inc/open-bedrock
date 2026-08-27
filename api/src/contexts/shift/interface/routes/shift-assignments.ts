@@ -1,6 +1,5 @@
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { orgDepartments } from "@/contexts/company/infrastructure/schema/organization"
-import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
+import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
@@ -16,7 +15,7 @@ import { zAppShiftAssignment, zAppShiftAssignmentList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { codeSchema, isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
-import { and, count, eq, gte, lte, type SQL } from "drizzle-orm"
+import { and, count, gte, inArray, lte, type SQL } from "drizzle-orm"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する
@@ -118,25 +117,19 @@ export const GET = factory.createHandlers(
     }
 
     if (query.dept_code !== undefined) {
-      const departments = await c.var.database
-        .select({ departmentId: orgDepartments.departmentId })
-        .from(orgDepartments)
-        .where(eq(orgDepartments.code, query.dept_code))
-        .limit(1)
-
-      const department = departments.at(0)
-
-      if (department === undefined) {
+      const employeeIds = await listDepartmentEmployeeIds({ c, departmentCode: query.dept_code })
+      if (employeeIds instanceof Error) {
+        throw new InternalError("failed to resolve department employees")
+      }
+      if (employeeIds.length === 0) {
         return c.json(zAppShiftAssignmentList.parse({ data: [], total: 0 }), 200)
       }
-
-      conditions.push(eq(employees.deptId, department.departmentId))
+      conditions.push(inArray(shiftAssignments.employeeId, employeeIds))
     }
 
     const rows = await c.var.database
       .select({ assignment: shiftAssignments })
       .from(shiftAssignments)
-      .leftJoin(employees, eq(employees.id, shiftAssignments.employeeId))
       .where(conditions.length === 0 ? undefined : and(...conditions))
       .orderBy(shiftAssignments.id)
       .limit(limit)
@@ -145,7 +138,6 @@ export const GET = factory.createHandlers(
     const totalRows = await c.var.database
       .select({ total: count() })
       .from(shiftAssignments)
-      .leftJoin(employees, eq(employees.id, shiftAssignments.employeeId))
       .where(conditions.length === 0 ? undefined : and(...conditions))
 
     const responseBody = zAppShiftAssignmentList.parse({

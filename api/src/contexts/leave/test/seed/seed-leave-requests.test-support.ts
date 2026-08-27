@@ -1,13 +1,15 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedLeaveRequest = {
   id: number
-  employeeId: number
+  employeeId: EmployeeId
   leaveType: "annual" | "special"
   startDate: string
   endDate: string
   days: number
   reason: string | null
   status: "pending" | "approved" | "rejected"
-  approverId: number | null
+  approverId: EmployeeId | null
   decidedComment: string | null
   createdAt: string
 }
@@ -16,7 +18,7 @@ type SeedLeaveRequest = {
 export const seedLeaveRequests: ReadonlyArray<SeedLeaveRequest> = [
   {
     id: 1,
-    employeeId: 5,
+    employeeId: toWorkforceEmployeeId(5),
     leaveType: "annual",
     startDate: "2026-06-01",
     endDate: "2026-06-03",
@@ -29,14 +31,14 @@ export const seedLeaveRequests: ReadonlyArray<SeedLeaveRequest> = [
   },
   {
     id: 2,
-    employeeId: 10,
+    employeeId: toWorkforceEmployeeId(10),
     leaveType: "special",
     startDate: "2026-07-10",
     endDate: "2026-07-10",
     days: 1,
     reason: null,
     status: "approved",
-    approverId: 4,
+    approverId: toWorkforceEmployeeId(4),
     decidedComment: "承認しました",
     createdAt: "2026-05-21T00:00:00Z",
   },

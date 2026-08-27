@@ -26,25 +26,6 @@ export type WorkforceStateProps = Readonly<{
   responsibilities: ReadonlyArray<OrgResponsibilityPeriod>
 }>
 
-function isCanonicalPeriod(period: WorkforcePeriodVersion, asOf: CalendarDate): boolean {
-  return (
-    Number.isSafeInteger(period.revision) &&
-    period.revision >= 1 &&
-    Number.isSafeInteger(period.recordedAt) &&
-    period.recordedAt >= 0 &&
-    isCalendarDate(period.startsOn) &&
-    (period.endsOn === null ||
-      (isCalendarDate(period.endsOn) && period.startsOn < period.endsOn)) &&
-    !period.isVoid &&
-    period.startsOn <= asOf &&
-    (period.endsOn === null || asOf < period.endsOn)
-  )
-}
-
-function freezePeriod<TPeriod extends object>(period: TPeriod): Readonly<TPeriod> {
-  return Object.freeze({ ...period })
-}
-
 /** 一人のEmployeeについて、同一基準日時点で確定したWorkforce状態。 */
 export class WorkforceStateValue {
   readonly employeeId: EmployeeId
@@ -55,15 +36,40 @@ export class WorkforceStateValue {
   readonly concurrentAssignments: ReadonlyArray<OrgAssignmentPeriod>
   readonly responsibilities: ReadonlyArray<OrgResponsibilityPeriod>
 
+  private static isCanonicalPeriod(period: WorkforcePeriodVersion, asOf: CalendarDate): boolean {
+    return (
+      Number.isSafeInteger(period.revision) &&
+      period.revision >= 1 &&
+      Number.isSafeInteger(period.recordedAt) &&
+      period.recordedAt >= 0 &&
+      isCalendarDate(period.startsOn) &&
+      (period.endsOn === null ||
+        (isCalendarDate(period.endsOn) && period.startsOn < period.endsOn)) &&
+      !period.isVoid &&
+      period.startsOn <= asOf &&
+      (period.endsOn === null || asOf < period.endsOn)
+    )
+  }
+
+  private static freezePeriod<TPeriod extends object>(period: TPeriod): Readonly<TPeriod> {
+    return Object.freeze({ ...period })
+  }
+
   private constructor(props: WorkforceStateProps) {
     this.employeeId = props.employeeId
     this.asOf = props.asOf
     this.status = props.status
     this.employmentId = props.employmentId
     this.primaryAssignment =
-      props.primaryAssignment === null ? null : freezePeriod(props.primaryAssignment)
-    this.concurrentAssignments = Object.freeze(props.concurrentAssignments.map(freezePeriod))
-    this.responsibilities = Object.freeze(props.responsibilities.map(freezePeriod))
+      props.primaryAssignment === null
+        ? null
+        : WorkforceStateValue.freezePeriod(props.primaryAssignment)
+    this.concurrentAssignments = Object.freeze(
+      props.concurrentAssignments.map((period) => WorkforceStateValue.freezePeriod(period)),
+    )
+    this.responsibilities = Object.freeze(
+      props.responsibilities.map((period) => WorkforceStateValue.freezePeriod(period)),
+    )
     Object.freeze(this)
   }
 
@@ -86,7 +92,7 @@ export class WorkforceStateValue {
       if (
         assignment.employeeId !== props.employeeId ||
         assignment.employmentId !== props.employmentId ||
-        !isCanonicalPeriod(assignment, props.asOf) ||
+        !WorkforceStateValue.isCanonicalPeriod(assignment, props.asOf) ||
         (assignment === props.primaryAssignment
           ? assignment.assignmentType !== "PRIMARY"
           : assignment.assignmentType !== "CONCURRENT") ||
@@ -100,7 +106,7 @@ export class WorkforceStateValue {
       if (
         responsibility.employeeId !== props.employeeId ||
         responsibility.employmentId !== props.employmentId ||
-        !isCanonicalPeriod(responsibility, props.asOf) ||
+        !WorkforceStateValue.isCanonicalPeriod(responsibility, props.asOf) ||
         !isOrgResponsibilityType(responsibility.responsibilityType) ||
         !assignments.some(
           (assignment) => assignment.organizationUnitId === responsibility.organizationUnitId,

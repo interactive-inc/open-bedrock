@@ -1,13 +1,14 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("SurveyRepository", () => {
   test("findById returns the seeded survey", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedD1(db, "surveys", [
       {
@@ -33,7 +34,7 @@ describe("SurveyRepository", () => {
   })
 
   test("findById returns null for an unknown id", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new SurveyRepository(context)
 
@@ -43,7 +44,7 @@ describe("SurveyRepository", () => {
   })
 
   test("createResponse then findResponseBySurveyIdAndRespondentId round-trips the response", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedD1(db, "surveys", [
       {
@@ -59,7 +60,7 @@ describe("SurveyRepository", () => {
     const created = await repository.createResponse(
       SurveyResponse.create({
         surveyId: 1,
-        respondentId: 2,
+        respondentId: toWorkforceEmployeeId(2),
         answersJson: { q1: 5 },
         submittedAt: "2026-01-01T00:00:00.000Z",
       }),
@@ -71,7 +72,10 @@ describe("SurveyRepository", () => {
       throw new Error("createResponse failed")
     }
 
-    const found = await repository.findResponseBySurveyIdAndRespondentId(1, 2)
+    const found = await repository.findResponseBySurveyIdAndRespondentId(
+      1,
+      toWorkforceEmployeeId(2),
+    )
 
     expect(found).toBeInstanceOf(SurveyResponse)
 
@@ -80,15 +84,18 @@ describe("SurveyRepository", () => {
     }
 
     expect(found.surveyId).toBe(1)
-    expect(found.respondentId).toBe(2)
+    expect(found.respondentId).toBe(toWorkforceEmployeeId(2))
   })
 
   test("findResponseBySurveyIdAndRespondentId returns null when none matches", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new SurveyRepository(context)
 
-    const found = await repository.findResponseBySurveyIdAndRespondentId(9999, 9999)
+    const found = await repository.findResponseBySurveyIdAndRespondentId(
+      9999,
+      toWorkforceEmployeeId(9999),
+    )
 
     expect(found).toBeNull()
   })

@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
@@ -9,7 +10,7 @@ import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core
  */
 export const goals = sqliteTable("performance_goals", {
   id: integer("id").primaryKey(),
-  employeeId: integer("employee_id").notNull(),
+  employeeId: text("employee_id").$type<EmployeeId>().notNull(),
   period: text("period").notNull(),
   title: text("title").notNull(),
   kpi: text("kpi"),
@@ -29,7 +30,7 @@ export const goalEvaluations = sqliteTable(
   {
     id: integer("id").primaryKey(),
     goalId: integer("goal_id").notNull(),
-    evaluatorId: integer("evaluator_id").notNull(),
+    evaluatorId: text("evaluator_id").$type<EmployeeId>().notNull(),
     kind: text("kind").notNull(),
     score: integer("score"),
     comment: text("comment"),

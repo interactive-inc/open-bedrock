@@ -1,5 +1,5 @@
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
-import { surveyQuestionSchema } from "@/contexts/survey/domain/values/survey-question.value"
+import { surveyQuestionSchema } from "@/contexts/survey/domain/definitions/survey-question.definition"
 import { toAnswerDistribution } from "@/contexts/survey/interface/http/surveys/[survey_id]/summary/to-answer-distribution"
 import { toAnswersList } from "@/contexts/survey/interface/http/surveys/[survey_id]/summary/to-answers-list"
 import { toTextAnswers } from "@/contexts/survey/interface/http/surveys/[survey_id]/summary/to-text-answers"

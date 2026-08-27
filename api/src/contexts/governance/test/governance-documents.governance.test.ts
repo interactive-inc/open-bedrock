@@ -1,57 +1,42 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { describe, expect, test } from "bun:test"
-import { seedDepartments } from "@/api/test/support/company/seed-departments.test-support"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
-import { seedOrgDepartments } from "@/api/test/support/company/seed-org-departments.test-support"
-import { seedOrgMemberships } from "@/api/test/support/company/seed-org-memberships.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { seedOrgMemberships } from "@tests/api/support/company/seed-org-memberships.test-support"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import {
+  initializeCompanyMembershipTestState,
+  initializeStandardCompanyTestState,
+} from "@tests/api/support/initialize-standard-company-test-state"
 import { z } from "zod"
 
 const jwtSecret = "governance-route-test-secret"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
   )
-  await seedD1(
+  await initializeCompanyMembershipTestState(
     db,
-    "departments",
-    seedDepartments.map((department) => ({ id: department.id, name: department.name })),
-  )
-  await seedD1(
-    db,
-    "org_departments",
-    seedOrgDepartments.map((department) => ({
-      code: department.code,
-      department_id: department.departmentId,
-      parent_code: department.parentCode,
-      manager_employee_code: department.managerEmployeeCode,
-      sort_order: department.order,
-    })),
-  )
-  await seedD1(
-    db,
-    "org_memberships",
     seedOrgMemberships.map((membership) => ({
-      department_code: membership.departmentCode,
-      employee_code: membership.employeeCode,
-      manager_employee_code: membership.managerEmployeeCode,
+      departmentCode: membership.departmentCode,
+      employeeCode: membership.employeeCode,
+      managerEmployeeCode: membership.managerEmployeeCode,
     })),
   )
   await seedIamForEmployees(db)
@@ -60,7 +45,7 @@ async function createTestDb(): Promise<D1Database> {
   return db
 }
 
-function token(employeeId: number): Promise<string> {
+function token(employeeId: EmployeeId): Promise<string> {
   return createTestToken(jwtSecret, { employeeId })
 }
 
@@ -97,7 +82,7 @@ controls:
 async function request(props: {
   db: D1Database
   path: string
-  employeeId: number
+  employeeId: EmployeeId
   method?: string
   body?: unknown
 }) {
@@ -117,7 +102,7 @@ describe("governance documents", () => {
     const sync = await request({
       db,
       path: "/governance-documents/sync",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
       body: {
         documents: [
@@ -137,7 +122,7 @@ describe("governance documents", () => {
     const memberDraftList = await request({
       db,
       path: "/governance-documents",
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
     })
     expect(memberDraftList.status).toBe(200)
     expect((await memberDraftList.json()) as { total: number }).toMatchObject({ total: 0 })
@@ -145,7 +130,7 @@ describe("governance documents", () => {
     const publish = await request({
       db,
       path: "/governance-documents/policy.information-security/versions/1.0.0/publish",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
     })
     expect(publish.status).toBe(200)
@@ -153,7 +138,7 @@ describe("governance documents", () => {
     const memberDetail = await request({
       db,
       path: "/governance-documents/policy.information-security",
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
     })
     expect(memberDetail.status).toBe(200)
     const detail = z
@@ -168,20 +153,22 @@ describe("governance documents", () => {
     const acknowledge = await request({
       db,
       path: "/governance-documents/policy.information-security/acknowledge",
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
       method: "POST",
     })
     expect(acknowledge.status).toBe(200)
     const acknowledgedDetail = await request({
       db,
       path: "/governance-documents/policy.information-security",
-      employeeId: 5,
+      employeeId: toWorkforceEmployeeId(5),
     })
     expect((await acknowledgedDetail.json()) as { acknowledged: boolean }).toMatchObject({
       acknowledged: true,
     })
     const audits = await db
-      .prepare("SELECT action FROM audit_events WHERE action LIKE 'governance.%' ORDER BY id")
+      .prepare(
+        "SELECT action FROM company_audit_events WHERE action LIKE 'governance.%' ORDER BY id",
+      )
       .all<{ action: string }>()
     expect(audits.results.map((row) => row.action)).toEqual([
       "governance.document.synced",
@@ -195,7 +182,7 @@ describe("governance documents", () => {
     await request({
       db,
       path: "/governance-documents/sync",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
       body: {
         documents: [{ source_path: ".docs/governance/security.md", markdown: markdown() }],
@@ -204,13 +191,13 @@ describe("governance documents", () => {
     await request({
       db,
       path: "/governance-documents/policy.information-security/versions/1.0.0/publish",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
     })
     const changed = await request({
       db,
       path: "/governance-documents/sync",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
       body: {
         documents: [
@@ -232,7 +219,7 @@ describe("governance documents", () => {
     const first = await request({
       db,
       path: "/governance-org-roles/ciso/assignments",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
       body: { employee_code: "E001", starts_on: "2026-01-01" },
     })
@@ -242,7 +229,7 @@ describe("governance documents", () => {
     const overlapping = await request({
       db,
       path: "/governance-org-roles/ciso/assignments",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
       body: { employee_code: "E002", starts_on: "2026-02-01" },
     })
@@ -251,7 +238,7 @@ describe("governance documents", () => {
     const revoked = await request({
       db,
       path: `/governance-org-roles/assignments/${assignment.id}`,
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "DELETE",
     })
     expect(revoked.status).toBe(204)
@@ -267,7 +254,7 @@ describe("governance documents", () => {
     const replacement = await request({
       db,
       path: "/governance-org-roles/ciso/assignments",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
       body: { employee_code: "E002", starts_on: "2026-02-01" },
     })
@@ -297,7 +284,7 @@ describe("governance documents", () => {
     await request({
       db,
       path: "/governance-documents/sync",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
       body: {
         documents: [
@@ -311,7 +298,7 @@ describe("governance documents", () => {
     const submit = await request({
       db,
       path: "/governance-documents/policy.information-security/versions/1.0.0/submit-review",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
     })
     expect(submit.status).toBe(200)
@@ -319,7 +306,7 @@ describe("governance documents", () => {
     const candidateDetail = await request({
       db,
       path: "/governance-documents/policy.information-security",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
     })
     expect(candidateDetail.status).toBe(200)
     const detailBody = z
@@ -335,7 +322,7 @@ describe("governance documents", () => {
     const nonCandidate = await request({
       db,
       path: "/governance-documents/policy.information-security/versions/1.0.0/review",
-      employeeId: 2,
+      employeeId: toWorkforceEmployeeId(2),
       method: "POST",
       body: { org_role_code: "board", decision: "approved" },
     })
@@ -344,7 +331,7 @@ describe("governance documents", () => {
     const candidate = await request({
       db,
       path: "/governance-documents/policy.information-security/versions/1.0.0/review",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
       body: { org_role_code: "board", decision: "approved" },
     })
@@ -352,7 +339,7 @@ describe("governance documents", () => {
     const cisoCandidate = await request({
       db,
       path: "/governance-documents/policy.information-security/versions/1.0.0/review",
-      employeeId: 2,
+      employeeId: toWorkforceEmployeeId(2),
       method: "POST",
       body: { org_role_code: "ciso", decision: "approved" },
     })
@@ -360,7 +347,7 @@ describe("governance documents", () => {
     const publish = await request({
       db,
       path: "/governance-documents/policy.information-security/versions/1.0.0/publish",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
     })
     expect(publish.status).toBe(200)
@@ -371,13 +358,17 @@ describe("governance documents", () => {
     await request({
       db,
       path: "/governance-documents/sync",
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
       method: "POST",
       body: {
         documents: [{ source_path: ".docs/governance/security.md", markdown: markdown() }],
       },
     })
-    const impact = await request({ db, path: "/governance-documents/impact", employeeId: 1 })
+    const impact = await request({
+      db,
+      path: "/governance-documents/impact",
+      employeeId: toWorkforceEmployeeId(1),
+    })
     expect(impact.status).toBe(200)
     const body = z
       .object({

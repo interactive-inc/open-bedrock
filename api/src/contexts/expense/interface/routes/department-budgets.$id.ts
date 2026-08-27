@@ -1,5 +1,5 @@
 import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
-import { departments } from "@/contexts/company/infrastructure/schema/organization"
+import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { UpdateBudget } from "@/contexts/expense/application/budget/update-budget"
 import { factory } from "@/api/http/factory"
 import { ApplicationError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -10,7 +10,6 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { eq } from "drizzle-orm"
 
 // @authorization permission - 権限キーで判定する
 /** GET /department-budgets/:id — 予算の詳細（承認済み経費の消化額・残額を集計して返す）。budget:manage を持つロールのみ。 */
@@ -39,7 +38,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const consumed = await repository.sumApprovedExpenses({
-    departmentId: budget.departmentId,
+    organizationUnitId: budget.organizationUnitId,
     periodStart: budget.periodStart,
     periodEnd: budget.periodEnd,
   })
@@ -50,16 +49,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     )
   }
 
-  const departmentRows = await c.var.database
-    .select({ name: departments.name })
-    .from(departments)
-    .where(eq(departments.id, budget.departmentId))
-    .limit(1)
+  const snapshot = await new ReadCanonicalOrganizationStateAdapter(
+    c,
+  ).readCanonicalOrganizationState()
+  if (snapshot instanceof Error) {
+    throw toHttpException(
+      new UnexpectedError("failed to resolve organization unit", { cause: snapshot }),
+    )
+  }
+  const unit = snapshot.organization.units.find(
+    (candidate) => candidate.organizationUnitId === budget.organizationUnitId,
+  )
 
   const responseBody = zAppBudgetDetail.parse({
     id: budget.id,
-    department_id: budget.departmentId,
-    department_name: departmentRows.at(0)?.name ?? null,
+    organization_unit_id: budget.organizationUnitId,
+    organization_unit_name: unit?.officialName ?? null,
     fiscal_period: budget.fiscalPeriod,
     period_start: budget.periodStart,
     period_end: budget.periodEnd,
@@ -114,7 +119,7 @@ export const PATCH = factory.createHandlers(
 
     const responseBody = zAppBudget.parse({
       id: updated.id,
-      department_id: updated.departmentId,
+      organization_unit_id: updated.organizationUnitId,
       fiscal_period: updated.fiscalPeriod,
       period_start: updated.periodStart,
       period_end: updated.periodEnd,

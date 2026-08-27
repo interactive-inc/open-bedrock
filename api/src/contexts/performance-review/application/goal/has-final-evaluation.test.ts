@@ -1,3 +1,4 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { GoalEvaluation } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
 import { hasFinalEvaluation } from "@/contexts/performance-review/domain/policies/final-goal-evaluation.policy"
 import { describe, expect, test } from "bun:test"
@@ -6,7 +7,7 @@ describe("hasFinalEvaluation", () => {
   test("returns true when array contains a final evaluation", () => {
     const selfEvaluation = GoalEvaluation.create({
       goalId: 1,
-      evaluatorId: 10,
+      evaluatorId: toWorkforceEmployeeId(10),
       kind: "self",
       score: 80,
       comment: null,
@@ -15,7 +16,7 @@ describe("hasFinalEvaluation", () => {
 
     const finalEvaluation = GoalEvaluation.create({
       goalId: 1,
-      evaluatorId: 20,
+      evaluatorId: toWorkforceEmployeeId(20),
       kind: "final",
       score: 85,
       comment: null,
@@ -28,7 +29,7 @@ describe("hasFinalEvaluation", () => {
   test("returns false when no final evaluation", () => {
     const selfEvaluation = GoalEvaluation.create({
       goalId: 1,
-      evaluatorId: 10,
+      evaluatorId: toWorkforceEmployeeId(10),
       kind: "self",
       score: 80,
       comment: null,
@@ -37,7 +38,7 @@ describe("hasFinalEvaluation", () => {
 
     const managerEvaluation = GoalEvaluation.create({
       goalId: 1,
-      evaluatorId: 20,
+      evaluatorId: toWorkforceEmployeeId(20),
       kind: "manager",
       score: 85,
       comment: null,

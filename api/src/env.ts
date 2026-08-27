@@ -1,5 +1,5 @@
 import type { Session } from "@/lib/auth/session"
-import type { CompanyActor } from "@/contexts/company/domain/definitions/company-actor.definition"
+import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type { schema } from "@/schema"
 import type {
   SystemD1Context,
@@ -7,7 +7,7 @@ import type {
   SystemEmailSender,
   SystemRequestAudit,
   SystemRequestAuditContext,
-} from "@system/infrastructure/configuration/system-context.repository"
+} from "@system/configuration/system-context"
 import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
@@ -59,7 +59,7 @@ export type Bindings = {
   // 外部 identity トークンに期待する aud（想定受信者）。未設定なら identity ログインを拒否する。
   IDENTITY_AUDIENCE?: string
   // 初期 ROOT 作成用。`wrangler secret put BOOTSTRAP_TOKEN` で登録し、初期化完了後は削除を推奨。
-  // 未設定時は機能無効（POST /system/v1/bootstrap は 404 を返す）。
+  // 未設定時は機能無効（POST /system/bootstrap は 404 を返す）。
   BOOTSTRAP_TOKEN?: string
   // CLI（ネイティブアプリ）ログインで、本人確認を委ねる外部 identity provider（ブローカー）のログイン URL。
   // canonical System CLI authorization APIはこのURLへcallback/state/PKCE challengeを付けて302する。
@@ -75,7 +75,8 @@ export type RequestAuditContext = SystemRequestAudit
 
 /** リクエストスコープの変数。database に Drizzle、session に本人（Session。認可判定は session.hasPermission）を載せる。 */
 export type Variables = {
-  companyActor?: CompanyActor
+  companyActor?: CompanyActorValue
+  companyClock?: () => Date
   database: DrizzleD1Database<typeof schema>
   session: Session | null
   auditContext: RequestAuditContext

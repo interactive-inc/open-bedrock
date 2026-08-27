@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { RentalReservation } from "@/contexts/rental/domain/entities/rental-reservation.entity"
 import type { Context } from "@/env"
 import { rentalReservations } from "@/contexts/rental/infrastructure/schema/rental"
@@ -35,7 +36,7 @@ export class RentalReservationRepository {
 
   /** 申請者本人の予約を開始日の昇順で返す。 */
   async findByRequesterId(props: {
-    requesterId: number
+    requesterId: EmployeeId
     limit: number
     offset: number
   }): Promise<ReadonlyArray<RentalReservation> | Error> {

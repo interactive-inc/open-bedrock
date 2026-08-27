@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { lifeEventTypeSchema } from "@/lib/schemas"
 import type { LifeEventType } from "@/lib/schemas"
 import type { LifeEventRow } from "@/contexts/life-event/infrastructure/schema/life-event"
@@ -5,7 +7,7 @@ import { z } from "zod"
 
 const zProps = z.object({
   id: z.string(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   eventType: lifeEventTypeSchema,
   eventDate: z.string(),
   detail: z.string().nullable(),
@@ -42,7 +44,7 @@ export class LifeEvent implements Props {
 
   /** 新規ライフイベント届出を組み立てる。id は crypto.randomUUID() で採番し、status は "submitted" で作成する。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     eventType: LifeEventType
     eventDate: string
     detail: string | null

@@ -42,7 +42,7 @@ export class DeleteAsset {
       return new ConflictError("asset is currently lent", "asset_in_use")
     }
 
-    const outcome = await assetRepository.deleteIfNotLent(command.code)
+    const outcome = await assetRepository.deleteIfNotLent(asset)
 
     if (outcome instanceof Error) {
       return new UnexpectedError("failed to delete asset", { cause: outcome })

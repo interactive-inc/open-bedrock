@@ -1,10 +1,11 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("BusinessTrip.create", () => {
   test("builds instance with status requested for valid dates", () => {
     const trip = BusinessTrip.create({
-      travelerId: 1,
+      travelerId: toWorkforceEmployeeId(1),
       destination: "大阪",
       startDate: "2026-07-01",
       endDate: "2026-07-03",
@@ -20,7 +21,7 @@ describe("BusinessTrip.create", () => {
     }
 
     expect(trip.status).toBe("requested")
-    expect(trip.travelerId).toBe(1)
+    expect(trip.travelerId).toBe(toWorkforceEmployeeId(1))
     expect(trip.destination).toBe("大阪")
     expect(trip.startDate).toBe("2026-07-01")
     expect(trip.endDate).toBe("2026-07-03")
@@ -31,7 +32,7 @@ describe("BusinessTrip.create", () => {
 
   test("returns error when startDate is after endDate", () => {
     const trip = BusinessTrip.create({
-      travelerId: 1,
+      travelerId: toWorkforceEmployeeId(1),
       destination: "大阪",
       startDate: "2026-07-05",
       endDate: "2026-07-03",
@@ -47,7 +48,7 @@ describe("BusinessTrip.create", () => {
 describe("BusinessTrip.isModifiable", () => {
   test("returns true for requested status", () => {
     const trip = BusinessTrip.create({
-      travelerId: 1,
+      travelerId: toWorkforceEmployeeId(1),
       destination: "東京",
       startDate: "2026-07-01",
       endDate: "2026-07-02",
@@ -66,7 +67,7 @@ describe("BusinessTrip.isModifiable", () => {
   test("returns false for approved status", () => {
     const trip = new BusinessTrip({
       id: crypto.randomUUID(),
-      travelerId: 1,
+      travelerId: toWorkforceEmployeeId(1),
       destination: "東京",
       startDate: "2026-07-01",
       endDate: "2026-07-02",
@@ -83,7 +84,7 @@ describe("BusinessTrip.isModifiable", () => {
 describe("BusinessTrip.withDetails", () => {
   test("returns new instance with valid dates", () => {
     const trip = BusinessTrip.create({
-      travelerId: 1,
+      travelerId: toWorkforceEmployeeId(1),
       destination: "大阪",
       startDate: "2026-07-01",
       endDate: "2026-07-03",
@@ -115,12 +116,12 @@ describe("BusinessTrip.withDetails", () => {
     expect(updated.endDate).toBe("2026-08-05")
     expect(updated.purpose).toBe("研修")
     expect(updated.estimatedCost).toBe(80000)
-    expect(updated.travelerId).toBe(1)
+    expect(updated.travelerId).toBe(toWorkforceEmployeeId(1))
   })
 
   test("returns error with invalid dates", () => {
     const trip = BusinessTrip.create({
-      travelerId: 1,
+      travelerId: toWorkforceEmployeeId(1),
       destination: "大阪",
       startDate: "2026-07-01",
       endDate: "2026-07-03",

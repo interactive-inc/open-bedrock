@@ -1,9 +1,11 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { DisciplinaryActionRow } from "@/contexts/disciplinary-action/infrastructure/schema/disciplinary-action"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   kind: z.string(),
   summary: z.string(),
   decidedOn: z.string(),
@@ -35,7 +37,7 @@ export class DisciplinaryAction implements Props {
   }
 
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     kind: string
     summary: string
     decidedOn: string

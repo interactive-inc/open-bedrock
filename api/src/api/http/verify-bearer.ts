@@ -1,14 +1,17 @@
 import { Session } from "@/lib/auth/session"
 import type { HonoEnv } from "@/env"
-import { AccountEmployeeLinkRepository } from "@/contexts/company/infrastructure/employee/account-employee-link.repository"
-import { resolveLiveEmployeeAccess } from "@/contexts/company/infrastructure/employee/resolve-live-employee-access.repository"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import { resolveLiveEmployeeAccess } from "@/api/http/employees/resolve-live-employee-access"
+import { AccountEmployeeLinkReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/account-employee-link-read.adapter"
+import { ResolveAccountEmployeeLink } from "@/contexts/company/lib/workforce/resolve-account-employee-link"
+import type { SystemAccountId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-access-token-secret.value"
-import { AccessTokenService } from "@system/infrastructure/auth/access-token-service.repository"
-import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/infrastructure/auth/system-access-token-profile.repository"
-import { SystemAccountRepository } from "@system/infrastructure/auth/system-account.repository"
-import { SystemD1AuthorizationRepository } from "@system/infrastructure/iam/system-authorization.repository"
+import { AccessTokenService } from "@system/lib/auth/access-token-service"
+import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/lib/auth/system-access-token-profile"
+import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
+import { SystemD1AuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-authorization.adapter"
 import { readBearerAuthorization } from "@system/interface/lib/authorization/bearer-authorization"
 import { createMiddleware } from "hono/factory"
 
@@ -18,7 +21,7 @@ import { createMiddleware } from "hono/factory"
  * tokenVersion 不一致・account 非 active・employee retired は即 401。
  */
 export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
-  if (c.req.path === "/company/v1/bootstrap") {
+  if (c.req.path === "/company/bootstrap") {
     await next()
     return
   }
@@ -67,7 +70,7 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     throw new UnauthorizedError("invalid token")
   }
 
-  const accountAuthorization = await new SystemD1AuthorizationRepository({
+  const accountAuthorization = await new SystemD1AuthorizationAdapter({
     env: { DB: c.env.DB },
   }).resolveForAccount({ accountId: accountId.data, resource: null, at: now })
   if (accountAuthorization instanceof Error) {
@@ -75,14 +78,22 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   }
   if (accountAuthorization === null) throw new UnauthorizedError("invalid token")
 
-  const account = await new AccountEmployeeLinkRepository(c).findLinkedAccount(accountId.data)
-  if (account instanceof Error) {
+  const account = await new ResolveAccountEmployeeLink(new AccountEmployeeLinkReadAdapter(c), {
+    evaluate: async (candidate: SystemAccountId) => ({
+      ok: true as const,
+      eligible: candidate === restoreWorkforceId("system_account", accountId.data),
+    }),
+  }).execute({
+    kind: "by_account",
+    accountId: restoreWorkforceId("system_account", accountId.data),
+  })
+  if (account.kind === "unavailable" || account.kind === "invalid_link") {
     throw new UnauthorizedError("account authentication is unavailable")
   }
-  if (account === null) throw new UnauthorizedError("account not found")
+  if (account.kind !== "found") throw new UnauthorizedError("account not found")
 
   c.set("accountTokenVersion", authentication.account.tokenVersion)
-  const access = await resolveLiveEmployeeAccess(c, account.employeeId)
+  const access = await resolveLiveEmployeeAccess(c, account.link.employeeId)
   if (access === null || access instanceof Error) {
     throw new UnauthorizedError("employee is unavailable")
   }
@@ -90,9 +101,9 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   c.set(
     "session",
     new Session({
-      accountId: account.accountId,
-      employeeId: account.employeeId,
-      employeeStatus: access.status,
+      accountId: accountId.data,
+      employeeId: account.link.employeeId,
+      employmentStatus: access.status,
       permissions: accountAuthorization.permissionKeys,
       roleKeys: accountAuthorization.roleKeys.map((key) => key.replace(/^company:/, "")),
     }),

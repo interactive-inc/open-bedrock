@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { CreateWorkAccident } from "@/contexts/work-accident/application/create-work-accident"
 import { WorkAccidentRepository } from "@/contexts/work-accident/infrastructure/repositories/work-accident.repository"
 import { factory } from "@/api/http/factory"
@@ -5,12 +6,7 @@ import { isoDate } from "@/lib/schemas"
 import { zAppWorkAccident, zAppWorkAccidentList } from "@/lib/app-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import {
-  BadRequestError,
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/lib/http/errors"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -25,7 +21,7 @@ export const GET = factory.createHandlers(
     "query",
     z.object({
       status: z.string().optional(),
-      employee_id: z.string().optional(),
+      employee_id: zEmployeeId.optional(),
     }),
   ),
   async (c) => {
@@ -43,14 +39,7 @@ export const GET = factory.createHandlers(
 
     const status = query.status !== undefined && query.status !== "" ? query.status : undefined
 
-    const employeeId =
-      query.employee_id !== undefined && query.employee_id !== ""
-        ? Number(query.employee_id)
-        : undefined
-
-    if (employeeId !== undefined && Number.isInteger(employeeId) === false) {
-      throw new BadRequestError("invalid parameter")
-    }
+    const employeeId = query.employee_id
 
     const records = await new WorkAccidentRepository(c).find({ status, employeeId })
 
@@ -84,7 +73,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       occurred_on: isoDate,
-      employee_id: z.number().int().positive().nullable().optional(),
+      employee_id: zEmployeeId.nullable().optional(),
       location: z.string().max(500).nullable().optional(),
       summary: z.string().min(1).max(3_000),
       severity: z.enum(["minor", "serious"]).nullable().optional(),

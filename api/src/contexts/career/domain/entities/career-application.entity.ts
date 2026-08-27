@@ -1,10 +1,12 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CareerApplicationRow } from "@/contexts/career/infrastructure/schema/career"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
   postingId: z.number(),
-  applicantId: z.number(),
+  applicantId: zEmployeeId,
   message: z.string().nullable(),
   status: z.enum(["applied", "accepted", "rejected"]),
 })
@@ -35,7 +37,7 @@ export class CareerApplication implements Props {
   /** 新規の応募を組み立てる。id は未採番、初期状態は applied。 */
   static create(props: {
     postingId: number
-    applicantId: number
+    applicantId: EmployeeId
     message: string | null
   }): CareerApplication {
     return new CareerApplication({

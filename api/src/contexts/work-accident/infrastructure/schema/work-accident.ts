@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
@@ -7,7 +8,7 @@ export const workAccidents = sqliteTable(
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     occurredOn: text("occurred_on").notNull(),
-    employeeId: integer("employee_id"),
+    employeeId: text("employee_id").$type<EmployeeId>(),
     location: text("location"),
     summary: text("summary").notNull(),
     severity: text("severity"),

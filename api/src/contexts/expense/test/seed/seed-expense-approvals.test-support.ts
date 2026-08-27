@@ -1,7 +1,8 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedExpenseApproval = {
   id: number
   expenseId: number
-  approverId: number
+  approverId: EmployeeId
   action: "approve" | "reject"
   comment: string | null
   createdAt: string

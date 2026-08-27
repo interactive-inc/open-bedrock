@@ -1,4 +1,5 @@
 import { CareerSheet } from "@/contexts/career/domain/entities/career-sheet.entity"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import { careerSheets } from "@/contexts/career/infrastructure/schema/career"
 import { eq } from "drizzle-orm"
@@ -7,7 +8,7 @@ export class CareerSheetRepository {
   constructor(private readonly c: Context) {}
 
   /** 社員のキャリアシートを削除する。未登録でもエラーにしない。 */
-  async deleteByEmployeeId(employeeId: number): Promise<null | Error> {
+  async deleteByEmployeeId(employeeId: EmployeeId): Promise<null | Error> {
     try {
       await this.c.var.database.delete(careerSheets).where(eq(careerSheets.employeeId, employeeId))
 

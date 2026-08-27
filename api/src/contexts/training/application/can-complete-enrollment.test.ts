@@ -1,13 +1,14 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { canCompleteEnrollment } from "@/contexts/training/domain/policies/enrollment-completion.policy"
-import { makeTestSession } from "@/api/test/support/make-test-session"
+import { makeTestSession } from "@tests/api/support/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canCompleteEnrollment", () => {
   test("owner can complete", () => {
     expect(
       canCompleteEnrollment({
-        enrollmentEmployeeId: 5,
-        viewerEmployeeId: 5,
+        enrollmentEmployeeId: toWorkforceEmployeeId(5),
+        viewerEmployeeId: toWorkforceEmployeeId(5),
         session: makeTestSession("member"),
       }),
     ).toBe(true)
@@ -16,8 +17,8 @@ describe("canCompleteEnrollment", () => {
   test("non-owner with manager role can complete", () => {
     expect(
       canCompleteEnrollment({
-        enrollmentEmployeeId: 5,
-        viewerEmployeeId: 6,
+        enrollmentEmployeeId: toWorkforceEmployeeId(5),
+        viewerEmployeeId: toWorkforceEmployeeId(6),
         session: makeTestSession("manager"),
       }),
     ).toBe(true)
@@ -26,8 +27,8 @@ describe("canCompleteEnrollment", () => {
   test("non-owner with hr role can complete", () => {
     expect(
       canCompleteEnrollment({
-        enrollmentEmployeeId: 5,
-        viewerEmployeeId: 6,
+        enrollmentEmployeeId: toWorkforceEmployeeId(5),
+        viewerEmployeeId: toWorkforceEmployeeId(6),
         session: makeTestSession("hr"),
       }),
     ).toBe(true)
@@ -36,8 +37,8 @@ describe("canCompleteEnrollment", () => {
   test("non-owner with admin role can complete", () => {
     expect(
       canCompleteEnrollment({
-        enrollmentEmployeeId: 5,
-        viewerEmployeeId: 6,
+        enrollmentEmployeeId: toWorkforceEmployeeId(5),
+        viewerEmployeeId: toWorkforceEmployeeId(6),
         session: makeTestSession("root"),
       }),
     ).toBe(true)
@@ -46,8 +47,8 @@ describe("canCompleteEnrollment", () => {
   test("non-owner with member role cannot complete", () => {
     expect(
       canCompleteEnrollment({
-        enrollmentEmployeeId: 5,
-        viewerEmployeeId: 6,
+        enrollmentEmployeeId: toWorkforceEmployeeId(5),
+        viewerEmployeeId: toWorkforceEmployeeId(6),
         session: makeTestSession("member"),
       }),
     ).toBe(false)

@@ -1,17 +1,19 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanyNotificationKind } from "@/api/http/notifications/notification-kind.definition"
 import type { Context } from "@/env"
-import { ResolveAccountEmployeeLink } from "@/contexts/company/infrastructure/workforce/resolve-account-employee-link.repository"
+import { ResolveAccountEmployeeLink } from "@/contexts/company/lib/workforce/resolve-account-employee-link"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
-import { AccountEmployeeLinkReadRepository } from "@/contexts/company/infrastructure/workforce/account-employee-link-read.repository"
+import { AccountEmployeeLinkReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/account-employee-link-read.adapter"
+import { SystemAccountEligibilityAdapter } from "@/api/http/accounts/system-account-eligibility.adapter"
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
 import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
 import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
-import { SystemNotificationRepository } from "@system/infrastructure/notifications/system-notification.repository"
+import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 export type EmployeeNotification = Readonly<{
-  recipientEmployeeId: number
+  recipientEmployeeId: EmployeeId
   kind: CompanyNotificationKind
   title: string
   body: string | null
@@ -38,7 +40,8 @@ export class EmployeeNotificationAdapter {
 
   async create(props: EmployeeNotification): Promise<PublishedEmployeeNotification | Error> {
     const resolved = await new ResolveAccountEmployeeLink(
-      new AccountEmployeeLinkReadRepository(this.c),
+      new AccountEmployeeLinkReadAdapter(this.c),
+      new SystemAccountEligibilityAdapter(this.c.env.DB),
     ).execute({
       kind: "by_employee",
       employeeId: toWorkforceEmployeeId(props.recipientEmployeeId),

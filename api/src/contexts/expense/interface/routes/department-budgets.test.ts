@@ -1,15 +1,16 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { seedBudgets } from "@/contexts/expense/test/seed/seed-budgets.test-support"
-import { seedDepartments } from "@/api/test/support/company/seed-departments.test-support"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const jwtSecret = "budget-route-test-secret"
 
@@ -17,7 +18,7 @@ const now = "2026-07-08T00:00:00.000Z"
 
 const budgetResponseSchema = z.object({
   id: z.number(),
-  department_id: z.number(),
+  organization_unit_id: z.string(),
   fiscal_period: z.string(),
   period_start: z.string(),
   period_end: z.string(),
@@ -29,8 +30,8 @@ const budgetResponseSchema = z.object({
 
 const listItemSchema = z.object({
   id: z.number(),
-  department_id: z.number(),
-  department_name: z.string().nullable(),
+  organization_unit_id: z.string(),
+  organization_unit_name: z.string().nullable(),
   fiscal_period: z.string(),
   period_start: z.string(),
   period_end: z.string(),
@@ -48,21 +49,16 @@ const listSchema = z.object({
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
-    db,
-    "departments",
-    seedDepartments.map((department) => ({ id: department.id, name: department.name })),
-  )
+  await initializeStandardCompanyTestState(db)
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -72,10 +68,10 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "department_budgets",
+    "expense_budgets",
     seedBudgets.map((budget) => ({
       id: budget.id,
-      department_id: budget.departmentId,
+      organization_unit_id: budget.organizationUnitId,
       fiscal_period: budget.fiscalPeriod,
       period_start: budget.periodStart,
       period_end: budget.periodEnd,
@@ -85,14 +81,12 @@ async function createTestDb(): Promise<D1Database> {
       created_at: budget.createdAt,
     })),
   )
-  await initializeStandardCompanyTestState(db)
-
   return db
 }
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -130,13 +124,13 @@ describe("GET /department-budgets", () => {
 
     if (parsed.success) {
       expect(parsed.data.total).toBe(2)
-      expect(parsed.data.data[0]?.department_name).toBe("開発部")
+      expect(parsed.data.data[0]?.organization_unit_name).toBe("開発部")
     }
   })
 
-  test("filters by fiscal_period and department_id", async () => {
+  test("filters by fiscal_period and organization_unit_id", async () => {
     const response = await request({
-      path: "/department-budgets?department_id=3&fiscal_period=2026",
+      path: "/department-budgets?organization_unit_id=department%3AD003&fiscal_period=2026",
       token: await tokenFor(1),
     })
 
@@ -148,7 +142,7 @@ describe("GET /department-budgets", () => {
 
     if (parsed.success) {
       expect(parsed.data.total).toBe(1)
-      expect(parsed.data.data[0]?.department_id).toBe(3)
+      expect(parsed.data.data[0]?.organization_unit_id).toBe("department:D003")
     }
   })
 
@@ -175,7 +169,7 @@ describe("POST /department-budgets", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        department_id: 5,
+        organization_unit_id: "department:D005",
         fiscal_period: "2026",
         period_start: "2026-04-01",
         period_end: "2027-03-31",
@@ -191,7 +185,7 @@ describe("POST /department-budgets", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.department_id).toBe(5)
+      expect(parsed.data.organization_unit_id).toBe("department:D005")
       expect(parsed.data.amount).toBe(300000)
       expect(parsed.data.note).toBeNull()
       expect(parsed.data.created_at).toBe(now)
@@ -204,7 +198,7 @@ describe("POST /department-budgets", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        department_id: 999,
+        organization_unit_id: "department:D999",
         fiscal_period: "2026",
         period_start: "2026-04-01",
         period_end: "2027-03-31",
@@ -222,7 +216,7 @@ describe("POST /department-budgets", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        department_id: 3,
+        organization_unit_id: "department:D003",
         fiscal_period: "2026",
         period_start: "2026-04-01",
         period_end: "2026-03-01",
@@ -240,7 +234,7 @@ describe("POST /department-budgets", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        department_id: 3,
+        organization_unit_id: "department:D003",
         fiscal_period: "2026",
         period_start: "2026-04-01",
         period_end: "2027-03-31",
@@ -258,7 +252,7 @@ describe("POST /department-budgets", () => {
       token: await tokenFor(2),
       method: "POST",
       body: {
-        department_id: 3,
+        organization_unit_id: "department:D003",
         fiscal_period: "2026",
         period_start: "2026-04-01",
         period_end: "2027-03-31",

@@ -1,7 +1,7 @@
-import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/adapters/resolve-governance-org-role.adapter"
+import { ResolveGovernanceOrgRoleAdapter } from "@/contexts/governance/infrastructure/adapters/resolve-governance-org-role.adapter"
 import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
-import { loadCurrentOrganization } from "@/contexts/company/infrastructure/organization/current-organization-read-model.repository"
+import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
@@ -33,8 +33,8 @@ export async function readGovernanceImpact(
     repository.listDocuments(true),
     repository.listOrgRoles(),
     repository.listCapabilities(),
-    loadCurrentOrganization(c),
-    c.var.database.select({ name: employees.name }).from(employees),
+    new CurrentOrganizationReadModelAdapter(c).loadCurrentOrganization(),
+    c.var.database.select({ name: employees.officialName }).from(employees),
     c.var.database
       .select({ code: governanceDocuments.code, kind: governanceDocuments.kind })
       .from(governanceDocuments),
@@ -76,11 +76,14 @@ export async function readGovernanceImpact(
     ),
     control: new Set(documents.filter((item) => item.kind === "control").map((item) => item.code)),
   }
-  const roleCache = new Map<string, Awaited<ReturnType<typeof resolveGovernanceOrgRole>>>()
+  const roleCache = new Map<
+    string,
+    Awaited<ReturnType<ResolveGovernanceOrgRoleAdapter["resolveGovernanceOrgRole"]>>
+  >()
   const resolveRole = async (code: string) => {
     const cached = roleCache.get(code)
     if (cached !== undefined) return cached
-    const resolved = await resolveGovernanceOrgRole({ c: c, code })
+    const resolved = await new ResolveGovernanceOrgRoleAdapter(c).resolveGovernanceOrgRole(code)
     roleCache.set(code, resolved)
     return resolved
   }

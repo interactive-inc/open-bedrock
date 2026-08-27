@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
@@ -18,7 +19,7 @@ export const employeeCertifications = sqliteTable(
   "employee_certifications",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    employeeId: integer("employee_id").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     certificationId: integer("certification_id").notNull(),
     acquiredOn: text("acquired_on").notNull(),
     expiresOn: text("expires_on"),

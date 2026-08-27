@@ -1,7 +1,9 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 type SeedRingiRequest = {
   id: number
-  applicantId: number
-  approverId: number
+  applicantId: EmployeeId
+  approverId: EmployeeId
   title: string
   amount: number
   reason: string
@@ -15,8 +17,8 @@ type SeedRingiRequest = {
 export const seedRingiRequests: ReadonlyArray<SeedRingiRequest> = [
   {
     id: 1,
-    applicantId: 5,
-    approverId: 4,
+    applicantId: toWorkforceEmployeeId(5),
+    approverId: toWorkforceEmployeeId(4),
     title: "新しいCIベンダーとの契約",
     amount: 240000,
     reason: "チームのビルド高速化のため",
@@ -27,8 +29,8 @@ export const seedRingiRequests: ReadonlyArray<SeedRingiRequest> = [
   },
   {
     id: 2,
-    applicantId: 5,
-    approverId: 4,
+    applicantId: toWorkforceEmployeeId(5),
+    approverId: toWorkforceEmployeeId(4),
     title: "カンファレンス協賛",
     amount: 500000,
     reason: "ブランド露出のため",
@@ -39,8 +41,8 @@ export const seedRingiRequests: ReadonlyArray<SeedRingiRequest> = [
   },
   {
     id: 3,
-    applicantId: 10,
-    approverId: 9,
+    applicantId: toWorkforceEmployeeId(10),
+    approverId: toWorkforceEmployeeId(9),
     title: "CRMの追加ライセンス",
     amount: 120000,
     reason: "営業チームの増員のため",

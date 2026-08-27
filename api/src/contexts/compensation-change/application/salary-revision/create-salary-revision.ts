@@ -1,15 +1,16 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Session } from "@/lib/auth/session"
 import { SalaryRevision } from "@/contexts/compensation-change/domain/entities/salary-revision.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/repositories/salary-revision/salary-revision.repository"
-import { EmployeeRepository } from "@/contexts/company/infrastructure/employee/employee.repository"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
 
 export type Command = {
   session: Session
-  employeeId: number
+  employeeId: EmployeeId
   effectiveDate: string
   previousBaseSalary: number
   newBaseSalary: number
@@ -31,7 +32,9 @@ export class CreateSalaryRevision {
       return new ForbiddenError("cannot manage salary revisions", "forbidden")
     }
 
-    const employee = await new EmployeeRepository(this.c).findById(command.employeeId)
+    const employee = await new CompanyEmployeeDirectoryReadAdapter(this.c).findById(
+      command.employeeId,
+    )
 
     if (employee instanceof Error) {
       return new UnexpectedError("failed to find employee", { cause: employee })

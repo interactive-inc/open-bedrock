@@ -1,19 +1,20 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-form.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("ReviewFormRepository", () => {
   test("findById returns the seeded review form", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedD1(db, "review_forms", [
       {
         id: 1,
         cycle_id: 1,
-        subject_employee_id: 2,
-        reviewer_employee_id: 3,
+        subject_employee_id: "2",
+        reviewer_employee_id: "3",
         reviewer_type: "manager",
         answers: "[]",
         score: null,
@@ -37,7 +38,7 @@ describe("ReviewFormRepository", () => {
   })
 
   test("update persists the submission", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedD1(db, "review_cycles", [
       { id: 1, title: "2026-H1", period: "2026-H1", status: "open", due_date: null },
@@ -47,8 +48,8 @@ describe("ReviewFormRepository", () => {
       {
         id: 1,
         cycle_id: 1,
-        subject_employee_id: 2,
-        reviewer_employee_id: 3,
+        subject_employee_id: "2",
+        reviewer_employee_id: "3",
         reviewer_type: "manager",
         answers: "[]",
         score: null,
@@ -80,14 +81,14 @@ describe("ReviewFormRepository", () => {
   })
 
   test("update returns null when the form is already submitted", async () => {
-    const { context, db } = createTestContext()
+    const { context, db } = await createTestContext()
 
     await seedD1(db, "review_forms", [
       {
         id: 1,
         cycle_id: 1,
-        subject_employee_id: 2,
-        reviewer_employee_id: 3,
+        subject_employee_id: "2",
+        reviewer_employee_id: "3",
         reviewer_type: "manager",
         answers: '["prior answer"]',
         score: 90,
@@ -101,8 +102,8 @@ describe("ReviewFormRepository", () => {
     const form = new ReviewForm({
       id: 1,
       cycleId: 1,
-      subjectEmployeeId: 2,
-      reviewerEmployeeId: 3,
+      subjectEmployeeId: toWorkforceEmployeeId(2),
+      reviewerEmployeeId: toWorkforceEmployeeId(3),
       reviewerType: "manager",
       answers: ["overwrite attempt"],
       score: 50,

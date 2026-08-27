@@ -1,4 +1,4 @@
-import { resolveGovernanceOrgRole } from "@/contexts/governance/infrastructure/adapters/resolve-governance-org-role.adapter"
+import { ResolveGovernanceOrgRoleAdapter } from "@/contexts/governance/infrastructure/adapters/resolve-governance-org-role.adapter"
 import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { factory } from "@/api/http/factory"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
@@ -21,7 +21,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const resolved = await Promise.all(
     roles.map(async (role) => ({
       role,
-      assignees: await resolveGovernanceOrgRole({ c, code: role.code }),
+      assignees: await new ResolveGovernanceOrgRoleAdapter(c).resolveGovernanceOrgRole(role.code),
     })),
   )
   if (resolved.some((item) => item.assignees instanceof Error)) {

@@ -1,6 +1,9 @@
+import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
+import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+
 type SeedBudget = {
   id: number
-  departmentId: number
+  organizationUnitId: OrganizationUnitId
   fiscalPeriod: string
   periodStart: string
   periodEnd: string
@@ -11,13 +14,13 @@ type SeedBudget = {
 }
 
 /**
- * departmentId は seedDepartments に存在する部署に対応させる。
- * dept 3(開発部)は seed-expenses の承認済み経費(id:2, 3300)が消化額に反映される。
+ * organizationUnitId は標準 Company 組織に存在する単位へ対応させる。
+ * 開発部は seed-expenses の承認済み経費(id:2, 3300)が消化額に反映される。
  */
 export const seedBudgets: ReadonlyArray<SeedBudget> = [
   {
     id: 1,
-    departmentId: 3,
+    organizationUnitId: toWorkforceOrganizationUnitId("D003"),
     fiscalPeriod: "2026",
     periodStart: "2026-04-01",
     periodEnd: "2027-03-31",
@@ -28,7 +31,7 @@ export const seedBudgets: ReadonlyArray<SeedBudget> = [
   },
   {
     id: 2,
-    departmentId: 4,
+    organizationUnitId: toWorkforceOrganizationUnitId("D004"),
     fiscalPeriod: "2026",
     periodStart: "2026-04-01",
     periodEnd: "2027-03-31",

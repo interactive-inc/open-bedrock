@@ -1,3 +1,4 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { CreateSalaryRevision } from "@/contexts/compensation-change/application/salary-revision/create-salary-revision"
 import { factory } from "@/api/http/factory"
 import {
@@ -105,7 +106,7 @@ export const POST = factory.createHandlers(
     "json",
     z
       .object({
-        employee_id: z.number().int().positive().optional(),
+        employee_id: zEmployeeId.optional(),
         employee_code: z.string().min(1).max(200).optional(),
         effective_date: isoDate,
         previous_base_salary: z.number().int().nonnegative(),

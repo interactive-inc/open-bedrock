@@ -7,7 +7,7 @@ import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure
 
 export type Command = {
   enrollmentId: number
-  viewerEmployeeId: number
+  viewerEmployeeId: EmployeeId
   session: Session
 }
 
@@ -60,3 +60,4 @@ export class CancelTrainingEnrollment {
     return { reason: "cancelled" }
   }
 }
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"

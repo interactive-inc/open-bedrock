@@ -1,3 +1,5 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { MeetingMinutesRow } from "@/contexts/meeting/infrastructure/schema/meeting"
 import { z } from "zod"
 
@@ -8,7 +10,7 @@ const zProps = z.object({
   title: z.string(),
   attendees: z.string().nullable(),
   bodyMd: z.string(),
-  authorEmployeeId: z.number(),
+  authorEmployeeId: zEmployeeId,
   createdAt: z.string(),
 })
 
@@ -47,7 +49,7 @@ export class MeetingMinutes implements Props {
     title: string
     attendees: string | null
     bodyMd: string
-    authorEmployeeId: number
+    authorEmployeeId: EmployeeId
     createdAt: string
   }): MeetingMinutes {
     return new MeetingMinutes({

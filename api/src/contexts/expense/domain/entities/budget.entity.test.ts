@@ -1,10 +1,11 @@
 import { Budget } from "@/contexts/expense/domain/entities/budget.entity"
+import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import { describe, expect, test } from "bun:test"
 
 describe("Budget.create", () => {
   test("builds a Budget with null id", () => {
     const budget = Budget.create({
-      departmentId: 3,
+      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
       fiscalPeriod: "2026",
       periodStart: "2026-04-01",
       periodEnd: "2027-03-31",
@@ -16,7 +17,7 @@ describe("Budget.create", () => {
 
     expect(budget).toBeInstanceOf(Budget)
     expect(budget.id).toBeNull()
-    expect(budget.departmentId).toBe(3)
+    expect(budget.organizationUnitId).toBe(toWorkforceOrganizationUnitId("D003"))
     expect(budget.fiscalPeriod).toBe("2026")
     expect(budget.periodStart).toBe("2026-04-01")
     expect(budget.periodEnd).toBe("2027-03-31")
@@ -27,7 +28,7 @@ describe("Budget.create", () => {
 
   test("accepts null note", () => {
     const budget = Budget.create({
-      departmentId: 4,
+      organizationUnitId: toWorkforceOrganizationUnitId("D004"),
       fiscalPeriod: "2026-05",
       periodStart: "2026-05-01",
       periodEnd: "2026-05-31",
@@ -44,7 +45,7 @@ describe("Budget.create", () => {
 describe("Budget.withDetails", () => {
   test("returns a new Budget with the changed amount, name and note", () => {
     const budget = Budget.create({
-      departmentId: 3,
+      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
       fiscalPeriod: "2026",
       periodStart: "2026-04-01",
       periodEnd: "2027-03-31",
@@ -64,7 +65,7 @@ describe("Budget.withDetails", () => {
     expect(revised.amount).toBe(1_200_000)
     expect(revised.name).toBe("Engineering FY2026 (revised)")
     expect(revised.note).toBeNull()
-    expect(revised.departmentId).toBe(3)
+    expect(revised.organizationUnitId).toBe(toWorkforceOrganizationUnitId("D003"))
     expect(revised.fiscalPeriod).toBe("2026")
     expect(revised.periodStart).toBe("2026-04-01")
   })

@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import {
   LeaveRequest,
   leaveRequestRowSchema,
@@ -41,7 +42,7 @@ export class LeaveRequestRepository {
    * excludeId を渡すと当該申請自身を除外する（更新時に自己ヒットして常に重複扱いになるのを防ぐ）。
    */
   async findOverlapping(props: {
-    employeeId: number
+    employeeId: EmployeeId
     startDate: string
     endDate: string
     excludeId?: number
@@ -141,7 +142,7 @@ export class LeaveRequestRepository {
   async decideFromPending(props: {
     leaveRequestId: number
     status: "approved" | "rejected"
-    approverId: number
+    approverId: EmployeeId
     decidedComment: string | null
   }): Promise<LeaveRequest | null | Error> {
     try {
@@ -170,7 +171,7 @@ export class LeaveRequestRepository {
    */
   async approveFromPendingAndConsumeBalance(props: {
     leaveRequestId: number
-    approverId: number
+    approverId: EmployeeId
     decidedComment: string | null
     fiscalYear: string
   }): Promise<ApproveWithBalanceOutcome> {

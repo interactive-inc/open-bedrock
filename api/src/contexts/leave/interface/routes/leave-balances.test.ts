@@ -1,13 +1,14 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { initializeCompanyTestFixture } from "@tests/api/support/initialize-company-test-fixture"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const jwtSecret = "leave-balance-route-test-secret"
 
@@ -29,15 +30,14 @@ const employeeRows = [
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     employeeRows.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.code,
-      dept_id: employee.departmentId,
-      dept_name: "Dept",
+      deptId: employee.departmentId,
+      deptName: "Dept",
       position: "-",
       status: "active",
     })),
@@ -53,15 +53,9 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await seedD1(db, "org_memberships", [
-    { department_code: "D001", employee_code: "M002", manager_employee_code: null },
-    { department_code: "D001", employee_code: "R020", manager_employee_code: "M002" },
-    { department_code: "D002", employee_code: "X023", manager_employee_code: null },
-  ])
-
   await seedD1(db, "leave_balances", [
     {
-      employee_id: 20,
+      employee_id: "20",
       fiscal_year: "2026",
       leave_type: "annual",
       granted_days: 20,
@@ -72,9 +66,21 @@ async function createTestDb(): Promise<D1Database> {
 
   await initializeCompanyTestFixture({
     db,
+    employees: employeeRows.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.code,
+      deptId: employee.departmentId,
+      status: "active",
+    })),
     departments: [
       { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
       { id: 2, code: "D002", name: "Dept Two" },
+    ],
+    memberships: [
+      { departmentCode: "D001", employeeCode: "M002", managerEmployeeCode: null },
+      { departmentCode: "D001", employeeCode: "R020", managerEmployeeCode: "M002" },
+      { departmentCode: "D002", employeeCode: "X023", managerEmployeeCode: null },
     ],
   })
 
@@ -83,7 +89,7 @@ async function createTestDb(): Promise<D1Database> {
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 

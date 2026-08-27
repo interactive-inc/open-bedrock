@@ -3,9 +3,9 @@ import { Partner } from "@/contexts/partner/domain/entities/partner.entity"
 import { RegisterPartner } from "@/contexts/partner/application/register-partner"
 import { UpdatePartner } from "@/contexts/partner/application/update-partner"
 import { ArchivePartner } from "@/contexts/partner/application/archive-partner"
-import { createTestContext } from "@/api/test/support/create-test-context"
-import { makeTestSession } from "@/api/test/support/make-test-session"
-import { expectApplicationError } from "@/api/test/support/expect-application-error"
+import { createTestContext } from "@tests/api/support/create-test-context"
+import { makeTestSession } from "@tests/api/support/make-test-session"
+import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import type { Context } from "@/env"
 
@@ -31,7 +31,7 @@ async function seedPartner(context: Context, code: string): Promise<Partner> {
 
 describe("RegisterPartner", () => {
   test("creates a partner as admin", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new RegisterPartner(context).run({
       session: makeTestSession("root"),
@@ -57,7 +57,7 @@ describe("RegisterPartner", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new RegisterPartner(context).run({
       session: makeTestSession("member"),
@@ -75,7 +75,7 @@ describe("RegisterPartner", () => {
   })
 
   test("rejects duplicate code with partner_code_conflict", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     await seedPartner(context, "P0001")
 
@@ -97,7 +97,7 @@ describe("RegisterPartner", () => {
 
 describe("UpdatePartner", () => {
   test("updates a partner as admin", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const partner = await seedPartner(context, "P0001")
 
@@ -128,7 +128,7 @@ describe("UpdatePartner", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const partner = await seedPartner(context, "P0001")
 
@@ -146,7 +146,7 @@ describe("UpdatePartner", () => {
   })
 
   test("rejects unknown id with partner_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new UpdatePartner(context).run({
       session: makeTestSession("root"),
@@ -160,7 +160,7 @@ describe("UpdatePartner", () => {
 
 describe("ArchivePartner", () => {
   test("archives a partner as admin", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const partner = await seedPartner(context, "P0001")
 
@@ -177,7 +177,7 @@ describe("ArchivePartner", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const partner = await seedPartner(context, "P0001")
 
@@ -194,7 +194,7 @@ describe("ArchivePartner", () => {
   })
 
   test("rejects unknown id with partner_not_found", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const result = await new ArchivePartner(context).run({
       session: makeTestSession("root"),

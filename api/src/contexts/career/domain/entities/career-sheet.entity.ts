@@ -1,8 +1,10 @@
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CareerSheetRow } from "@/contexts/career/infrastructure/schema/career"
 import { z } from "zod"
 
 const zProps = z.object({
-  employeeId: z.number(),
+  employeeId: zEmployeeId,
   goalsText: z.string().nullable(),
   strengthsText: z.string().nullable(),
   updatedAt: z.string(),
@@ -30,7 +32,7 @@ export class CareerSheet implements Props {
 
   /** 本人のキャリアシートを組み立てる。employeeId が主キーのためすべて指定する。 */
   static create(props: {
-    employeeId: number
+    employeeId: EmployeeId
     goalsText: string | null
     strengthsText: string | null
     updatedAt: string

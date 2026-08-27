@@ -7,7 +7,7 @@ const manifestPath = resolve(projectRoot, "api-foundation.json")
 const foundationFiles = [
   "scripts/check-api-foundation.ts",
   "src/api/api-route-module.ts",
-  "src/api/test/api-route-module.test.ts",
+  "tests/api/api-route-module.test.ts",
 ] as const
 
 type Manifest = Readonly<{

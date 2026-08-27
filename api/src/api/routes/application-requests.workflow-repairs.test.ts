@@ -1,13 +1,18 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { ApplyPersonnelAction } from "@/contexts/company/application/employee-lifecycle/apply-personnel-action"
+import { CompanyOperationError } from "@/contexts/company/domain/errors"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
-import { createTestToken } from "@/api/test/support/create-test-token"
+import { createTestToken } from "@tests/api/support/create-test-token"
 import {
   createLifecycleRouteDb,
   lifecycleRouteJwtSecret,
-} from "@/api/test/support/lifecycle-route-fixture"
-import { requestWithContext } from "@/api/test/support/request-with-context"
+} from "@tests/api/support/lifecycle-route-fixture"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { createTestContextForDatabase } from "@tests/api/support/create-test-context"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/workflow/system-d1-procedure.repository"
+import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
 import { describe, expect, test } from "bun:test"
 
 const now = "2026-01-01T00:00:00.000Z"
@@ -20,20 +25,19 @@ const applicantName = "Emery Lane"
 
 /**
  * 凍結される承認候補の全員。
- * management_chain は直属の上長だけでなく、そこから上へ辿れる責任者まで候補にする。
- * fixture では employee 5 の上長 employee 4（D003 の department_manager）と、
- * さらに上位の employee 1 の 2 名が候補になる。
+ * 組織責務を持たない2名を明示候補にし、正規の退職発令で到達不能にする。
  * 承認モードは any（requiredApprovals = 1）なので、片方だけ retired にしても
  * もう片方が在籍のまま残り reachable >= requiredApprovals が成立して検出されない。
  * 修復対象を作るには候補を全員 retired にする必要がある。
  */
-const approverEmployeeIds = [4, 1] as const
+const approverEmployees = [
+  { id: 6, code: "E006" },
+  { id: 10, code: "E010" },
+] as const
 
 /**
  * workflow 監査と template 管理の両権限を持つ閲覧者。
- * seed で root ロールを持つのは employee 1 だけであり、この 1 名は承認候補でもある。
- * 権限は System の role binding が持ち、employees の status とは独立なので、
- * retired にした後も閲覧者として認証・認可を通過する。
+ * seed で root ロールを持つ employee 1 は承認候補から分離し、検査中も在籍を保つ。
  */
 const inspectorEmployeeId = 1
 
@@ -45,7 +49,7 @@ type TestState = Readonly<{
 
 function token(employeeId: number): Promise<string> {
   return createTestToken(lifecycleRouteJwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -60,7 +64,10 @@ async function createTestState(): Promise<TestState> {
         {
           key: "manager_approval",
           name: "Manager approval",
-          approvers: [{ type: "management_chain" }],
+          approvers: approverEmployees.map((employee) => ({
+            type: "employee" as const,
+            employee_code: employee.code,
+          })),
           approval_mode: "any",
           condition_mode: "all",
           conditions: [],
@@ -126,7 +133,7 @@ async function submit(db: D1Database, reason: string): Promise<void> {
 }
 
 /**
- * pending 案件を count 件だけ作り、承認候補を全員 retired にして修復対象へ落とす。
+ * pending 案件を count 件だけ作り、承認候補を正規の退職発令で修復対象へ落とす。
  * 候補は task 生成時に System 側へ凍結されるため、提出後の retire は
  * workflow の行を壊さずに「在籍者数 < 必要承認数」だけを成立させる。
  */
@@ -135,11 +142,35 @@ async function seedBrokenProposals(state: TestState, count: number): Promise<voi
     await submit(state.db, `Repair candidate ${index + 1}`)
   }
 
-  for (const employeeId of approverEmployeeIds) {
-    await state.db
-      .prepare("UPDATE employees SET status = 'retired' WHERE id = ?1")
-      .bind(employeeId)
-      .run()
+  for (const employee of approverEmployees) {
+    const employeeRevision = await state.db
+      .prepare("SELECT revision FROM company_employee_lifecycle_revisions WHERE employee_id = ?1")
+      .bind(String(employee.id))
+      .first<number>("revision")
+    const organizationRevision = await state.db
+      .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
+      .first<number>("revision")
+    if (employeeRevision === null || organizationRevision === null) {
+      throw new Error("canonical Company revisions are missing")
+    }
+
+    const retired = await new ApplyPersonnelAction(createTestContextForDatabase(state.db)).run({
+      session: {
+        accountId: zAccountId.parse(String(inspectorEmployeeId)),
+        employeeId: toWorkforceEmployeeId(inspectorEmployeeId),
+        hasPermission: (permission) => permission === "employee:lifecycle:apply",
+      },
+      employeeId: toWorkforceEmployeeId(employee.id),
+      input: {
+        kind: "retired",
+        employeeCode: employee.code,
+        retirementOn: restoreCalendarDate("2025-12-31"),
+      },
+      idempotencyKey: `workflow-repair-retirement-${employee.id}`,
+      expectedEmployeeRevision: employeeRevision,
+      expectedOrganizationRevision: organizationRevision,
+    })
+    if (retired instanceof CompanyOperationError) throw retired
   }
 }
 

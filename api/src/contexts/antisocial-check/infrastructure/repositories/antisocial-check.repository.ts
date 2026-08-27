@@ -1,3 +1,4 @@
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
 import type { Context } from "@/env"
 import { antisocialChecks } from "@/contexts/antisocial-check/infrastructure/schema/antisocial-check"
@@ -8,7 +9,7 @@ export class AntisocialCheckRepository {
 
   /** 申請者本人の反社チェック申請を作成日時の降順で返す。 */
   async findByRequesterId(props: {
-    requesterId: number
+    requesterId: EmployeeId
     limit: number
     offset: number
   }): Promise<ReadonlyArray<AntisocialCheck> | Error> {

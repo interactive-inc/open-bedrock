@@ -1,15 +1,17 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
-import { seedEmployees } from "@/api/test/support/company/seed-employees.test-support"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedOneOnOnes } from "@/contexts/one-on-one/test/seed/seed-one-on-ones.test-support"
-import { createTestToken } from "@/api/test/support/create-test-token"
-import { createD1TestDatabase } from "@/api/test/support/d1-test-database"
-import { loadSchema } from "@/api/test/support/load-schema"
-import { requestWithContext } from "@/api/test/support/request-with-context"
-import { seedD1 } from "@/api/test/support/seed-d1"
-import { seedIamForEmployees } from "@/api/test/support/seed-iam-for-employees"
-import { initializeCompanyTestFixture } from "@/api/test/support/initialize-company-test-fixture"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { initializeCompanyTestFixture } from "@tests/api/support/initialize-company-test-fixture"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { z } from "zod"
-import { initializeStandardCompanyTestState } from "@/api/test/support/initialize-standard-company-test-state"
 
 const oneOnOneResponseSchema = z.object({
   id: z.string(),
@@ -26,15 +28,14 @@ const jwtSecret = "one-on-one-route-test-secret"
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     seedEmployees.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.deptId,
-      dept_name: employee.deptName,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
       position: employee.position,
       status: employee.status,
     })),
@@ -62,7 +63,7 @@ async function createTestDb(): Promise<D1Database> {
 
 function managerToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 4,
+    employeeId: toWorkforceEmployeeId(4),
   })
 }
 
@@ -107,7 +108,7 @@ describe("GET /one-on-ones", () => {
 
   test("returns an empty array for an employee with no sessions", async () => {
     const token = await createTestToken(jwtSecret, {
-      employeeId: 1,
+      employeeId: toWorkforceEmployeeId(1),
     })
 
     const response = await getRequest(token)
@@ -190,7 +191,7 @@ describe("POST /one-on-ones", () => {
 
 function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId,
+    employeeId: toWorkforceEmployeeId(employeeId),
   })
 }
 
@@ -232,15 +233,14 @@ const scopeEmployeeRows = [
 async function createDepartmentScopeTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(
+  await seedCompanyEmployees(
     db,
-    "employees",
     scopeEmployeeRows.map((employee) => ({
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      dept_id: employee.departmentId,
-      dept_name: "Dept",
+      deptId: employee.departmentId,
+      deptName: "Dept",
       position: "-",
       status: "active",
     })),
@@ -256,18 +256,11 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
     })),
   )
 
-  await seedD1(db, "org_memberships", [
-    { department_code: "D001", employee_code: "M002", manager_employee_code: null },
-    { department_code: "D001", employee_code: "R020", manager_employee_code: "M002" },
-    { department_code: "D001", employee_code: "R021", manager_employee_code: "M002" },
-    { department_code: "D002", employee_code: "S022", manager_employee_code: null },
-  ])
-
   await seedD1(db, "one_on_ones", [
     {
       id: "dept-001",
-      member_id: 20,
-      manager_id: 2,
+      member_id: "20",
+      manager_id: "2",
       held_at: "2026-06-01T05:00:00Z",
       topics: "D001 session A",
       manager_note: "internal note A",
@@ -275,8 +268,8 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
     },
     {
       id: "dept-002",
-      member_id: 21,
-      manager_id: 2,
+      member_id: "21",
+      manager_id: "2",
       held_at: "2026-06-08T05:00:00Z",
       topics: "D001 session B",
       manager_note: "internal note B",
@@ -284,8 +277,8 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
     },
     {
       id: "dept-003",
-      member_id: 22,
-      manager_id: 22,
+      member_id: "22",
+      manager_id: "22",
       held_at: "2026-06-10T05:00:00Z",
       topics: "D002 session",
       manager_note: null,
@@ -295,9 +288,22 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
 
   await initializeCompanyTestFixture({
     db,
+    employees: scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      deptId: employee.departmentId,
+      status: "active",
+    })),
     departments: [
       { id: 1, code: "D001", name: "Dept One", managerEmployeeCode: "M002" },
       { id: 2, code: "D002", name: "Dept Two", managerEmployeeCode: "S022" },
+    ],
+    memberships: [
+      { departmentCode: "D001", employeeCode: "M002", managerEmployeeCode: null },
+      { departmentCode: "D001", employeeCode: "R020", managerEmployeeCode: "M002" },
+      { departmentCode: "D001", employeeCode: "R021", managerEmployeeCode: "M002" },
+      { departmentCode: "D002", employeeCode: "S022", managerEmployeeCode: null },
     ],
   })
 

@@ -1,3 +1,4 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { describe, expect, test } from "bun:test"
 
@@ -30,7 +31,7 @@ describe("LeaveRequest.daysBetween", () => {
 describe("LeaveRequest.create", () => {
   test("builds a LeaveRequest with pending status and null id", () => {
     const request = LeaveRequest.create({
-      employeeId: 7,
+      employeeId: toWorkforceEmployeeId(7),
       leaveType: "annual",
       startDate: "2026-07-01",
       endDate: "2026-07-03",
@@ -47,7 +48,7 @@ describe("LeaveRequest.create", () => {
     expect(request.status).toBe("pending")
     expect(request.approverId).toBeNull()
     expect(request.decidedComment).toBeNull()
-    expect(request.employeeId).toBe(7)
+    expect(request.employeeId).toBe(toWorkforceEmployeeId(7))
     expect(request.leaveType).toBe("annual")
     expect(request.startDate).toBe("2026-07-01")
     expect(request.endDate).toBe("2026-07-03")
@@ -59,7 +60,7 @@ describe("LeaveRequest.create", () => {
 describe("LeaveRequest.isModifiable", () => {
   test("is true for pending", () => {
     const request = LeaveRequest.create({
-      employeeId: 7,
+      employeeId: toWorkforceEmployeeId(7),
       leaveType: "annual",
       startDate: "2026-07-01",
       endDate: "2026-07-01",
@@ -77,7 +78,7 @@ describe("LeaveRequest.isModifiable", () => {
   test("is false for approved", () => {
     const approved = new LeaveRequest({
       id: null,
-      employeeId: 7,
+      employeeId: toWorkforceEmployeeId(7),
       leaveType: "annual",
       startDate: "2026-07-01",
       endDate: "2026-07-01",
@@ -87,7 +88,7 @@ describe("LeaveRequest.isModifiable", () => {
       consumedDays: 1,
       reason: null,
       status: "approved",
-      approverId: 2,
+      approverId: toWorkforceEmployeeId(2),
       decidedComment: null,
       createdAt: "2026-06-15T09:00:00.000Z",
     })
@@ -98,7 +99,7 @@ describe("LeaveRequest.isModifiable", () => {
   test("is false for rejected", () => {
     const rejected = new LeaveRequest({
       id: null,
-      employeeId: 7,
+      employeeId: toWorkforceEmployeeId(7),
       leaveType: "annual",
       startDate: "2026-07-01",
       endDate: "2026-07-01",
@@ -108,7 +109,7 @@ describe("LeaveRequest.isModifiable", () => {
       consumedDays: 1,
       reason: null,
       status: "rejected",
-      approverId: 3,
+      approverId: toWorkforceEmployeeId(3),
       decidedComment: "Denied",
       createdAt: "2026-06-15T09:00:00.000Z",
     })
@@ -120,7 +121,7 @@ describe("LeaveRequest.isModifiable", () => {
 describe("LeaveRequest.withRevised", () => {
   test("returns a new LeaveRequest with the changed details", () => {
     const request = LeaveRequest.create({
-      employeeId: 7,
+      employeeId: toWorkforceEmployeeId(7),
       leaveType: "annual",
       startDate: "2026-07-01",
       endDate: "2026-07-03",
@@ -148,7 +149,7 @@ describe("LeaveRequest.withRevised", () => {
     expect(revised.startDate).toBe("2026-08-10")
     expect(revised.endDate).toBe("2026-08-12")
     expect(revised.reason).toBe("Wedding")
-    expect(revised.employeeId).toBe(7)
+    expect(revised.employeeId).toBe(toWorkforceEmployeeId(7))
     expect(revised.status).toBe("pending")
   })
 })

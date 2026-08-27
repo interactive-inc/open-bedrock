@@ -1,11 +1,12 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("OneOnOne.create", () => {
   test("builds instance with UUID id when member and manager differ", () => {
     const record = OneOnOne.create({
-      memberId: 1,
-      managerId: 2,
+      memberId: toWorkforceEmployeeId(1),
+      managerId: toWorkforceEmployeeId(2),
       heldAt: "2026-01-15T10:00:00.000Z",
       topics: "Career growth",
       managerNote: "Good progress",
@@ -19,14 +20,14 @@ describe("OneOnOne.create", () => {
     }
 
     expect(record.id.length).toBeGreaterThan(0)
-    expect(record.memberId).toBe(1)
-    expect(record.managerId).toBe(2)
+    expect(record.memberId).toBe(toWorkforceEmployeeId(1))
+    expect(record.managerId).toBe(toWorkforceEmployeeId(2))
   })
 
   test("returns self_reference when member equals manager", () => {
     const record = OneOnOne.create({
-      memberId: 1,
-      managerId: 1,
+      memberId: toWorkforceEmployeeId(1),
+      managerId: toWorkforceEmployeeId(1),
       heldAt: "2026-01-15T10:00:00.000Z",
       topics: null,
       managerNote: null,
@@ -40,8 +41,8 @@ describe("OneOnOne.create", () => {
 describe("OneOnOne.withRecord", () => {
   test("returns new with changed topics, note, and action", () => {
     const record = OneOnOne.create({
-      memberId: 1,
-      managerId: 2,
+      memberId: toWorkforceEmployeeId(1),
+      managerId: toWorkforceEmployeeId(2),
       heldAt: "2026-01-15T10:00:00.000Z",
       topics: null,
       managerNote: null,
@@ -67,8 +68,8 @@ describe("OneOnOne.withRecord", () => {
 describe("OneOnOne update methods", () => {
   test("updateTopics returns new with changed topics", () => {
     const record = OneOnOne.create({
-      memberId: 1,
-      managerId: 2,
+      memberId: toWorkforceEmployeeId(1),
+      managerId: toWorkforceEmployeeId(2),
       heldAt: "2026-01-15T10:00:00.000Z",
       topics: null,
       managerNote: null,
@@ -86,8 +87,8 @@ describe("OneOnOne update methods", () => {
 
   test("updateManagerNote returns new with changed note", () => {
     const record = OneOnOne.create({
-      memberId: 1,
-      managerId: 2,
+      memberId: toWorkforceEmployeeId(1),
+      managerId: toWorkforceEmployeeId(2),
       heldAt: "2026-01-15T10:00:00.000Z",
       topics: null,
       managerNote: null,
@@ -105,8 +106,8 @@ describe("OneOnOne update methods", () => {
 
   test("updateNextAction returns new with changed action", () => {
     const record = OneOnOne.create({
-      memberId: 1,
-      managerId: 2,
+      memberId: toWorkforceEmployeeId(1),
+      managerId: toWorkforceEmployeeId(2),
       heldAt: "2026-01-15T10:00:00.000Z",
       topics: null,
       managerNote: null,

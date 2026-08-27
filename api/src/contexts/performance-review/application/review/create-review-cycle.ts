@@ -7,7 +7,7 @@ import { ReviewCycleRepository } from "@/contexts/performance-review/infrastruct
 import {
   defaultReviewCyclePolicy,
   type ReviewCyclePolicy,
-} from "@/contexts/performance-review/domain/values/review-cycle-policy.value"
+} from "@/contexts/performance-review/domain/definitions/review-cycle-policy.definition"
 import { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
 
 export type Input = {

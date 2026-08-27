@@ -1,17 +1,18 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { CareerSheet } from "@/contexts/career/domain/entities/career-sheet.entity"
 import { CareerSheetRepository } from "@/contexts/career/infrastructure/repositories/career-sheet.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("CareerSheetRepository", () => {
   test("upsert returns the persisted sheet", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new CareerSheetRepository(context)
 
     const upserted = await repository.upsert(
       CareerSheet.create({
-        employeeId: 1,
+        employeeId: toWorkforceEmployeeId(1),
         goalsText: "目標",
         strengthsText: "強み",
         updatedAt: "2026-01-01T00:00:00.000Z",
@@ -24,7 +25,7 @@ describe("CareerSheetRepository", () => {
       throw upserted
     }
 
-    expect(upserted.employeeId).toBe(1)
+    expect(upserted.employeeId).toBe(toWorkforceEmployeeId(1))
     expect(upserted.goalsText).toBe("目標")
   })
 })

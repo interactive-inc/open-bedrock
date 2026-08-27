@@ -1,11 +1,11 @@
 import { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
-import { createTestContext } from "@/api/test/support/create-test-context"
+import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("TrainingCourseRepository", () => {
   test("create then findByCode round-trips the course", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new TrainingCourseRepository(context)
 
@@ -43,7 +43,7 @@ describe("TrainingCourseRepository", () => {
   })
 
   test("findById returns null for an unknown id", async () => {
-    const { context } = createTestContext()
+    const { context } = await createTestContext()
 
     const repository = new TrainingCourseRepository(context)
 
