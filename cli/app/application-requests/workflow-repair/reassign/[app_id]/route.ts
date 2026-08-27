@@ -42,7 +42,7 @@ export default factory.createHandlers(
 
     if (candidateEmployeeIds === null) {
       throw new UsageError(
-        `--candidates は正の従業員 ID をカンマ区切りで 1〜${MAX_CANDIDATES} 件指定してください`,
+        `--candidates は従業員 ID をカンマ区切りで 1〜${MAX_CANDIDATES} 件指定してください`,
       )
     }
 
@@ -66,7 +66,9 @@ export default factory.createHandlers(
     }
 
     const client = await createClient()
-    const response = await client["application-requests"][":id"]["reassign-workflow-step"].$post({
+    const response = await client["company"]["application-requests"][":id"][
+      "reassign-workflow-step"
+    ].$post({
       param: { id: applicationId },
       json: {
         candidate_employee_ids: candidateEmployeeIds,
@@ -80,26 +82,19 @@ export default factory.createHandlers(
   },
 )
 
-function parseCandidateEmployeeIds(raw: string): number[] | null {
+function parseCandidateEmployeeIds(raw: string): string[] | null {
   const values = raw.trim().split(/[\s,]+/)
 
   if (values.length === 0 || values[0] === "") {
     return null
   }
 
-  const candidates: number[] = []
-  const seen = new Set<number>()
+  const candidates: string[] = []
+  const seen = new Set<string>()
 
   for (const value of values) {
-    if (/^\d+$/.test(value) === false) {
-      return null
-    }
-
-    const candidate = Number(value)
-
-    if (Number.isSafeInteger(candidate) === false || candidate <= 0) {
-      return null
-    }
+    if (value.length > 255 || /^[A-Za-z0-9:_-]+$/.test(value) === false) return null
+    const candidate = value
 
     if (seen.has(candidate) === false) {
       seen.add(candidate)

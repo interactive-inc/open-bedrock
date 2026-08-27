@@ -30,7 +30,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["shift-patterns"].$post({
+    const response = await client["shift"]["shift-patterns"].$post({
       json: {
         code: query.code,
         name: query.name,

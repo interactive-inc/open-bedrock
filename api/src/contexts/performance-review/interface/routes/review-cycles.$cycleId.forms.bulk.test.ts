@@ -71,13 +71,18 @@ async function request(
 
 describe("POST /review-cycles/:cycleId/forms/bulk", () => {
   test("admin creates self/manager/peer forms in one call and they start hidden", async () => {
-    const response = await request("/review-cycles/1/forms/bulk", await adminToken(), "POST", {
-      forms: [
-        { subject_employee_id: "5", reviewer_employee_id: "5", reviewer_type: "self" },
-        { subject_employee_id: "5", reviewer_employee_id: "4", reviewer_type: "manager" },
-        { subject_employee_id: "5", reviewer_employee_id: "2", reviewer_type: "peer" },
-      ],
-    })
+    const response = await request(
+      "/performance-review/review-cycles/1/forms/bulk",
+      await adminToken(),
+      "POST",
+      {
+        forms: [
+          { subject_employee_id: "5", reviewer_employee_id: "5", reviewer_type: "self" },
+          { subject_employee_id: "5", reviewer_employee_id: "4", reviewer_type: "manager" },
+          { subject_employee_id: "5", reviewer_employee_id: "2", reviewer_type: "peer" },
+        ],
+      },
+    )
 
     expect(response.status).toBe(201)
 
@@ -105,31 +110,48 @@ describe("POST /review-cycles/:cycleId/forms/bulk", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/review-cycles/1/forms/bulk", await memberToken(), "POST", {
-      forms: [{ subject_employee_id: "5", reviewer_employee_id: "5", reviewer_type: "self" }],
-    })
+    const response = await request(
+      "/performance-review/review-cycles/1/forms/bulk",
+      await memberToken(),
+      "POST",
+      {
+        forms: [{ subject_employee_id: "5", reviewer_employee_id: "5", reviewer_type: "self" }],
+      },
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 when the cycle does not exist", async () => {
-    const response = await request("/review-cycles/999/forms/bulk", await adminToken(), "POST", {
-      forms: [{ subject_employee_id: "5", reviewer_employee_id: "5", reviewer_type: "self" }],
-    })
+    const response = await request(
+      "/performance-review/review-cycles/999/forms/bulk",
+      await adminToken(),
+      "POST",
+      {
+        forms: [{ subject_employee_id: "5", reviewer_employee_id: "5", reviewer_type: "self" }],
+      },
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("returns 404 when a referenced employee does not exist", async () => {
-    const response = await request("/review-cycles/1/forms/bulk", await adminToken(), "POST", {
-      forms: [{ subject_employee_id: "5", reviewer_employee_id: "9999", reviewer_type: "peer" }],
-    })
+    const response = await request(
+      "/performance-review/review-cycles/1/forms/bulk",
+      await adminToken(),
+      "POST",
+      {
+        forms: [{ subject_employee_id: "5", reviewer_employee_id: "9999", reviewer_type: "peer" }],
+      },
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/review-cycles/1/forms/bulk", null, "POST", { forms: [] })
+    const response = await request("/performance-review/review-cycles/1/forms/bulk", null, "POST", {
+      forms: [],
+    })
 
     expect(response.status).toBe(401)
   })

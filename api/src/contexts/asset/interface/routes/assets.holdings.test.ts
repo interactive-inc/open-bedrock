@@ -94,7 +94,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /assets/holdings", () => {
   test("lists lent assets with holder and lent_at for a privileged role", async () => {
-    const response = await request("/assets/holdings", await adminToken())
+    const response = await request("/asset/assets/holdings", await adminToken())
 
     expect(response.status).toBe(200)
 
@@ -116,13 +116,13 @@ describe("GET /assets/holdings", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/assets/holdings", await memberToken())
+    const response = await request("/asset/assets/holdings", await memberToken())
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/assets/holdings", null)
+    const response = await request("/asset/assets/holdings", null)
 
     expect(response.status).toBe(401)
   })

@@ -7,7 +7,7 @@ export async function listAntisocialCheckAdmin(): Promise<
 > {
   const client = await createClient()
 
-  const response = await client["antisocial-checks"].admin.$get({
+  const response = await client["antisocial-check"]["antisocial-checks"].admin.$get({
     query: { status: "requested", limit: "100" },
   })
 

@@ -56,14 +56,6 @@ export default async function OrgPage() {
             <h2 className="text-xl font-semibold">部署ノードの管理</h2>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={<Link href="/organization/departments/definitions" />}
-              >
-                部署マスタの管理
-              </Button>
-
               <Button nativeButton={false} render={<Link href="/organization/departments/new" />}>
                 <Plus />
                 新規部署

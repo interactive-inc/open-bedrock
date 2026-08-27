@@ -27,7 +27,7 @@ export default factory.createHandlers(
     }
     const response = await (
       await createClient()
-    )["application-requests"][":id"].resubmit.$post({ param: { id }, json: { payload } })
+    ).company["application-requests"][":id"].resubmit.$post({ param: { id }, json: { payload } })
     return c.json(await response.json())
   },
 )

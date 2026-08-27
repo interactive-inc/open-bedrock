@@ -93,7 +93,10 @@ const attendanceListResponseSchema = z.object({
 
 describe("GET /attendance-records", () => {
   test("privileged role can read another employee via employee_id", async () => {
-    const response = await getRequest("/attendance-records?employee_id=5", await tokenFor(1))
+    const response = await getRequest(
+      "/attendance/attendance-records?employee_id=5",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
 
@@ -111,13 +114,19 @@ describe("GET /attendance-records", () => {
   })
 
   test("member requesting another employee_id is forbidden", async () => {
-    const response = await getRequest("/attendance-records?employee_id=9", await tokenFor(5))
+    const response = await getRequest(
+      "/attendance/attendance-records?employee_id=9",
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("manager can read a report's attendance (E004 over E005)", async () => {
-    const response = await getRequest("/attendance-records?employee_id=5", await tokenFor(4))
+    const response = await getRequest(
+      "/attendance/attendance-records?employee_id=5",
+      await tokenFor(4),
+    )
 
     expect(response.status).toBe(200)
 
@@ -133,25 +142,31 @@ describe("GET /attendance-records", () => {
   })
 
   test("manager cannot read a non-report's attendance (E004 not over E009)", async () => {
-    const response = await getRequest("/attendance-records?employee_id=9", await tokenFor(4))
+    const response = await getRequest(
+      "/attendance/attendance-records?employee_id=9",
+      await tokenFor(4),
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 400 when from is not a valid date format", async () => {
-    const response = await getRequest("/attendance-records?from=aaa", await tokenFor(1))
+    const response = await getRequest("/attendance/attendance-records?from=aaa", await tokenFor(1))
 
     expect(response.status).toBe(400)
   })
 
   test("returns 400 when to is not a valid date format", async () => {
-    const response = await getRequest("/attendance-records?to=2026/06/01", await tokenFor(1))
+    const response = await getRequest(
+      "/attendance/attendance-records?to=2026/06/01",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(400)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await getRequest("/attendance-records", null)
+    const response = await getRequest("/attendance/attendance-records", null)
 
     expect(response.status).toBe(401)
   })
@@ -241,7 +256,7 @@ describe("GET /attendance-records?scope=reports", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/attendance-records?scope=reports",
+      path: "/attendance/attendance-records?scope=reports",
       token: await tokenFor(2),
     })
 
@@ -266,7 +281,7 @@ describe("GET /attendance-records?scope=reports", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/attendance-records?scope=reports",
+      path: "/attendance/attendance-records?scope=reports",
       token: await tokenFor(22),
     })
 
@@ -286,7 +301,7 @@ describe("GET /attendance-records?scope=reports", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/attendance-records?scope=reports",
+      path: "/attendance/attendance-records?scope=reports",
       token: await tokenFor(20),
     })
 

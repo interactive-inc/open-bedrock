@@ -21,7 +21,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["health-checkups"].$get({
+    const response = await client["health-checkup"]["health-checkups"].$get({
       query: {
         fiscal_year: query["fiscal-year"],
         employee_id: query["employee-id"],

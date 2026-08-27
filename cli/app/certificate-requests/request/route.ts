@@ -26,7 +26,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["certificate-requests"].$post({
+    const response = await client["certificate-request"]["certificate-requests"].$post({
       json: {
         certificate_type: query.type,
         submit_to: query["submit-to"] ?? null,

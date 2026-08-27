@@ -10,7 +10,7 @@ export async function createCareerPosting(
 ): Promise<CareerPosting | Error> {
   const client = await createClient()
 
-  const response = await client["career-postings"].$post({
+  const response = await client["career"]["career-postings"].$post({
     json: {
       title: request.title,
       dept_id: request.dept_id ?? undefined,

@@ -1,9 +1,7 @@
 import { OrgDepartmentCreateForm } from "@/app/(app)/organization/departments/_components/org-department-create-form"
 import { BackButton } from "@/components/back-button"
-import { FetchError } from "@/components/fetch-error"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
-import { getDepartmentDefinitionList } from "@/lib/api/get-department-definition-list"
 import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "部署作成" }
@@ -11,8 +9,6 @@ export const metadata = { title: "部署作成" }
 /** 部署ノード作成画面。作成後は /organization/departments へ redirect する（org:manage が必要）。 */
 export default async function OrgDepartmentNewPage() {
   await requirePermission("org:manage")
-
-  const departmentDefinitions = await getDepartmentDefinitionList()
 
   return (
     <div className="flex flex-col gap-6">
@@ -24,11 +20,7 @@ export default async function OrgDepartmentNewPage() {
 
       <Card className="max-w-2xl">
         <CardContent>
-          {departmentDefinitions instanceof Error ? (
-            <FetchError message="部署マスタの取得に失敗しました" />
-          ) : (
-            <OrgDepartmentCreateForm departmentDefinitions={departmentDefinitions} />
-          )}
+          <OrgDepartmentCreateForm />
         </CardContent>
       </Card>
     </div>

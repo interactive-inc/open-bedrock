@@ -5,7 +5,7 @@ import type { SurveyResponseItem } from "@/lib/api/types/survey-types"
 export async function listMySurveyResponses(): Promise<ReadonlyArray<SurveyResponseItem> | Error> {
   const client = await createClient()
 
-  const response = await client.surveys.responses.me.$get()
+  const response = await client["survey"]["surveys"].responses.me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load survey responses")

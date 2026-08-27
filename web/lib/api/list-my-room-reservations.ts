@@ -7,7 +7,7 @@ export async function listMyRoomReservations(): Promise<
 > {
   const client = await createClient()
 
-  const response = await client.rooms.reservations.me.$get()
+  const response = await client["room"]["rooms"].reservations.me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load room reservations")

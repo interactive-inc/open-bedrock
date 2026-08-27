@@ -1,4 +1,4 @@
-import { AdvanceRentalReservation } from "@/contexts/rental/application/advance-rental-reservation"
+import { LendRentalReservation } from "@/contexts/rental/application/lend-rental-reservation"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -16,10 +16,9 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const updated = await new AdvanceRentalReservation(c).run({
+  const updated = await new LendRentalReservation(c).execute({
     session: session,
     reservationId: validateUuidParam(c.req.param("id"), "rental reservation"),
-    action: "lend",
   })
 
   if (updated instanceof ApplicationError) {

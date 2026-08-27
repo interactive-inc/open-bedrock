@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-/** POST /system/v1/roles。custom System Role を作成する。 */
+/** POST /system/roles。custom System Role を作成する。 */
 export async function createRole(request: {
   key: string
   name: string
@@ -9,7 +9,7 @@ export async function createRole(request: {
 }) {
   const client = await createClient()
 
-  const response = await client.system.v1.roles.$post({
+  const response = await client.system.roles.$post({
     json: {
       key: request.key,
       name: request.name,

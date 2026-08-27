@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.partners[":id"].archive.$post({
+    const response = await client["partner"]["partners"][":id"].archive.$post({
       param: { id: partnerId },
     })
 

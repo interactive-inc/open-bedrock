@@ -30,7 +30,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["knowledge-articles"].$get({ query })
+    const response = await client["knowledge"]["knowledge-articles"].$get({ query })
 
     const rows = await response.json()
 

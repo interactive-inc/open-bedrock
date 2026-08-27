@@ -3,7 +3,7 @@ import type { ApiClient } from "api/app"
 
 /** 目標ツリーの型。api/app の AppType から InferResponseType で自動導出する */
 export type GoalTreeResponse = InferResponseType<
-  ApiClient["performance-goals"]["tree"]["$get"],
+  ApiClient["performance-review"]["performance-goals"]["tree"]["$get"],
   200
 >
 

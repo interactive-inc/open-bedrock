@@ -18,7 +18,7 @@ export type KnowledgeSearchResult = {
   category: string
   title: string
   snippet: string
-  author_id: number
+  author_id: string
   created_at: string
 }
 
@@ -33,7 +33,7 @@ export type KnowledgeDetailResponse = {
   category: string
   tags: string | null
   body_md: string
-  author_id: number
+  author_id: string
   created_at: string
 }
 

@@ -28,7 +28,7 @@ server.tool(
     offset: z.number().optional().describe("Offset for pagination"),
   },
   async ({ period, scope, employee_id, department_code, limit, offset }) => {
-    const data = await apiRequest("/performance-goals", {
+    const data = await apiRequest("/performance-review/performance-goals", {
       query: { period, scope, employee_id, department_code, limit, offset },
     })
 
@@ -44,7 +44,9 @@ server.tool(
     offset: z.number().optional().describe("Offset for pagination"),
   },
   async ({ limit, offset }) => {
-    const data = await apiRequest("/performance-goals/me", { query: { limit, offset } })
+    const data = await apiRequest("/performance-review/performance-goals/me", {
+      query: { limit, offset },
+    })
 
     return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
   },
@@ -57,7 +59,7 @@ server.tool(
     goal_id: z.string().regex(/^\d+$/).describe("The goal ID to retrieve"),
   },
   async ({ goal_id }) => {
-    const data = await apiRequest(`/performance-goals/${goal_id}`)
+    const data = await apiRequest(`/performance-review/performance-goals/${goal_id}`)
 
     return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
   },
@@ -70,7 +72,9 @@ server.tool(
     period: z.string().optional().describe("Evaluation period (e.g. 2025-H1)"),
   },
   async ({ period }) => {
-    const data = await apiRequest("/performance-goals/tree", { query: { period } })
+    const data = await apiRequest("/performance-review/performance-goals/tree", {
+      query: { period },
+    })
 
     return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
   },
@@ -102,7 +106,7 @@ server.tool(
     department_code,
     evaluation_sheet_id,
   }) => {
-    const data = await apiRequest("/performance-goals", {
+    const data = await apiRequest("/performance-review/performance-goals", {
       method: "POST",
       json: {
         period,
@@ -131,7 +135,7 @@ server.tool(
     kpi: z.string().optional().describe("New KPI"),
   },
   async ({ goal_id, period, title, weight, kpi }) => {
-    const data = await apiRequest(`/performance-goals/${goal_id}`, {
+    const data = await apiRequest(`/performance-review/performance-goals/${goal_id}`, {
       method: "PUT",
       json: { period, title, weight, kpi },
     })
@@ -147,7 +151,9 @@ server.tool(
     goal_id: z.string().regex(/^\d+$/).describe("The goal ID to delete"),
   },
   async ({ goal_id }) => {
-    const data = await apiRequest(`/performance-goals/${goal_id}`, { method: "DELETE" })
+    const data = await apiRequest(`/performance-review/performance-goals/${goal_id}`, {
+      method: "DELETE",
+    })
 
     return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
   },
@@ -163,7 +169,7 @@ server.tool(
     comment: z.string().optional().describe("Evaluation comment"),
   },
   async ({ goal_id, kind, score, comment }) => {
-    const data = await apiRequest(`/performance-goals/${goal_id}/evaluations`, {
+    const data = await apiRequest(`/performance-review/performance-goals/${goal_id}/evaluations`, {
       method: "POST",
       json: { kind, score, comment },
     })
@@ -192,7 +198,7 @@ server.tool(
     offset: z.number().optional().describe("Offset for pagination"),
   },
   async ({ period, status, employee_id, limit, offset }) => {
-    const data = await apiRequest("/evaluation-sheets", {
+    const data = await apiRequest("/performance-review/evaluation-sheets", {
       query: { period, status, employee_id, limit, offset },
     })
 
@@ -210,7 +216,7 @@ server.tool(
     offset: z.number().optional().describe("Offset for pagination"),
   },
   async ({ period, status, limit, offset }) => {
-    const data = await apiRequest("/evaluation-sheets/me", {
+    const data = await apiRequest("/performance-review/evaluation-sheets/me", {
       query: { period, status, limit, offset },
     })
 
@@ -225,7 +231,7 @@ server.tool(
     sheet_id: z.string().regex(/^\d+$/).describe("The evaluation sheet ID"),
   },
   async ({ sheet_id }) => {
-    const data = await apiRequest(`/evaluation-sheets/${sheet_id}`)
+    const data = await apiRequest(`/performance-review/evaluation-sheets/${sheet_id}`)
 
     return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
   },
@@ -242,7 +248,7 @@ server.tool(
     secondary_evaluator_id: z.number().optional().describe("Secondary evaluator employee ID"),
   },
   async ({ employee_id, period, template_id, primary_evaluator_id, secondary_evaluator_id }) => {
-    const data = await apiRequest("/evaluation-sheets", {
+    const data = await apiRequest("/performance-review/evaluation-sheets", {
       method: "POST",
       json: { employee_id, period, template_id, primary_evaluator_id, secondary_evaluator_id },
     })
@@ -274,7 +280,7 @@ server.tool(
     note: z.string().optional().describe("Note for the transition (e.g. rejection reason)"),
   },
   async ({ sheet_id, status, expected_revision, note }) => {
-    const data = await apiRequest(`/evaluation-sheets/${sheet_id}/transition`, {
+    const data = await apiRequest(`/performance-review/evaluation-sheets/${sheet_id}/transition`, {
       method: "POST",
       json: { status, expected_revision, note: note ?? null },
     })
@@ -293,7 +299,7 @@ server.tool(
     expected_revision: z.number().describe("Expected revision number for optimistic locking"),
   },
   async ({ sheet_id, primary_evaluator_id, secondary_evaluator_id, expected_revision }) => {
-    const data = await apiRequest(`/evaluation-sheets/${sheet_id}/evaluators`, {
+    const data = await apiRequest(`/performance-review/evaluation-sheets/${sheet_id}/evaluators`, {
       method: "PUT",
       json: { primary_evaluator_id, secondary_evaluator_id, expected_revision },
     })
@@ -333,7 +339,7 @@ server.tool(
       ),
   },
   async (args) => {
-    const data = await apiRequest("/life-events", {
+    const data = await apiRequest("/life-event/life-events", {
       method: "POST",
       json: {
         event_type: args.event_type,
@@ -351,7 +357,7 @@ server.tool(
   "List my own life event reports and their statuses.",
   {},
   async () => {
-    const data = await apiRequest("/life-events/me")
+    const data = await apiRequest("/life-event/life-events/me")
 
     return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
   },
@@ -368,7 +374,7 @@ server.tool(
     category: z.string().optional().describe("Filter by template category"),
   },
   async (args) => {
-    const data = await apiRequest("/application-templates", {
+    const data = await apiRequest("/company/application-templates", {
       query: { category: args.category },
     })
 
@@ -386,7 +392,7 @@ server.tool(
       .describe("Form values matching the template's field schema"),
   },
   async (args) => {
-    const data = await apiRequest("/application-requests", {
+    const data = await apiRequest("/company/application-requests", {
       method: "POST",
       json: { template_code: args.template_code, payload: args.payload },
     })
@@ -402,7 +408,9 @@ server.tool(
     status: z.string().optional().describe("Filter by status (e.g. pending, approved, rejected)"),
   },
   async (args) => {
-    const data = await apiRequest("/application-requests", { query: { status: args.status } })
+    const data = await apiRequest("/company/application-requests", {
+      query: { status: args.status },
+    })
 
     return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
   },
@@ -413,7 +421,7 @@ server.tool(
   "List application requests waiting for my approval.",
   {},
   async () => {
-    const data = await apiRequest("/application-requests/inbox")
+    const data = await apiRequest("/company/application-requests/inbox")
 
     return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
   },
@@ -426,7 +434,7 @@ server.tool(
     application_id: z.string().regex(/^\d+$/).describe("The application request ID"),
   },
   async (args) => {
-    const data = await apiRequest(`/application-requests/${args.application_id}`)
+    const data = await apiRequest(`/company/application-requests/${args.application_id}`)
 
     return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
   },
@@ -440,7 +448,7 @@ server.tool(
     comment: z.string().optional().describe("Optional approval comment"),
   },
   async (args) => {
-    const data = await apiRequest(`/application-requests/${args.application_id}/approve`, {
+    const data = await apiRequest(`/company/application-requests/${args.application_id}/approve`, {
       method: "POST",
       json: { comment: args.comment ?? null },
     })
@@ -457,7 +465,7 @@ server.tool(
     comment: z.string().min(1).describe("Reason for rejection (required)"),
   },
   async (args) => {
-    const data = await apiRequest(`/application-requests/${args.application_id}/reject`, {
+    const data = await apiRequest(`/company/application-requests/${args.application_id}/reject`, {
       method: "POST",
       json: { comment: args.comment },
     })
@@ -510,7 +518,7 @@ server.tool(
       attachmentIds.push(await uploadAttachment(path))
     }
 
-    const data = await apiRequest("/expenses", {
+    const data = await apiRequest("/expense/expenses", {
       method: "POST",
       json: {
         category: args.category,
@@ -526,7 +534,7 @@ server.tool(
 )
 
 server.tool("expenses_mine", "List my own expense claims.", {}, async () => {
-  const data = await apiRequest("/expenses/me")
+  const data = await apiRequest("/expense/expenses/me")
 
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }
 })

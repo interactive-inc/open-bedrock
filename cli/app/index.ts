@@ -334,13 +334,11 @@ import careerApplicationUpdateHandler from "@/app/career-applications/update/rou
 import careerApplicationsHandler from "@/app/career-applications/list/route"
 import careerSheetDeleteHandler from "@/app/career-sheets/delete/route"
 import careerWithdrawHandler from "@/app/career-applications/withdraw/route"
-import employeeDeleteHandler from "@/app/employees/delete/[employee_code]/route"
 import employeeRegisterHandler from "@/app/employees/register/route"
 import employeeShowHandler from "@/app/employees/show/[employee_code]/route"
 import employeeUpdateHandler from "@/app/employees/update/[employee_code]/route"
 import employeeTimelineHandler from "@/app/employees/timeline/route"
 import employeeStateHandler from "@/app/employees/state/route"
-import employeeArchiveHandler from "@/app/employees/archive/route"
 import personnelActionRequestHandler from "@/app/personnel-actions/request/route"
 import personnelActionApplyHandler from "@/app/personnel-actions/apply/route"
 import personnelActionCorrectHandler from "@/app/personnel-actions/correct/route"
@@ -876,13 +874,11 @@ routes.post("/career-applications/update", ...careerApplicationUpdateHandler)
 routes.post("/career-applications/list", ...careerApplicationsHandler)
 routes.post("/career-sheets/delete", ...careerSheetDeleteHandler)
 routes.post("/career-applications/withdraw", ...careerWithdrawHandler)
-routes.post("/employees/delete/:employee_code?", ...employeeDeleteHandler)
 routes.post("/employees/register", ...employeeRegisterHandler)
 routes.post("/employees/show/:employee_code?", ...employeeShowHandler)
 routes.post("/employees/update/:employee_code?", ...employeeUpdateHandler)
 routes.post("/employees/timeline", ...employeeTimelineHandler)
 routes.post("/employees/state", ...employeeStateHandler)
-routes.post("/employees/archive", ...employeeArchiveHandler)
 routes.post("/personnel-actions/request", ...personnelActionRequestHandler)
 routes.post("/personnel-actions/apply", ...personnelActionApplyHandler)
 routes.post("/personnel-actions/correct", ...personnelActionCorrectHandler)

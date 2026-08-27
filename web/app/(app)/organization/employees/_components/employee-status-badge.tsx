@@ -29,8 +29,6 @@ function toStatusLabel(status: string): string {
 
   if (status === "prehire") return "入社予定"
 
-  if (status === "archived") return "アーカイブ済み"
-
   return status
 }
 
@@ -48,7 +46,7 @@ function toStatusVariant(status: string): "default" | "secondary" | "destructive
     return "destructive"
   }
 
-  if (status === "prehire" || status === "archived") return "outline"
+  if (status === "prehire") return "outline"
 
   return "outline"
 }

@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
-/** POST /system/v1/accounts/:accountId/role-bindings。System Role を付与する。 */
+/** POST /system/accounts/:accountId/role-bindings。System Role を付与する。 */
 export async function grantAccountRole(accountId: string, roleId: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.system.v1.accounts[":accountId"]["role-bindings"].$post({
+  const response = await client.system.accounts[":accountId"]["role-bindings"].$post({
     param: { accountId },
     json: { role_id: roleId, resource: null },
   })

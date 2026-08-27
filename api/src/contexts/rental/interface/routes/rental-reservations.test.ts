@@ -77,7 +77,7 @@ async function postReservation(token: string | null, body: unknown): Promise<Res
   return requestWithContext({
     db: await createTestDb(),
     jwtSecret,
-    path: "/rental-reservations",
+    path: "/rental/rental-reservations",
     token,
     method: "POST",
     body,
@@ -130,7 +130,10 @@ describe("POST /rental-reservations", () => {
   })
 
   test("returns 404 for an unknown route under /rentals", async () => {
-    const response = await getRequest("/rental-reservations/unknown/extra", await managerToken())
+    const response = await getRequest(
+      "/rental/rental-reservations/unknown/extra",
+      await managerToken(),
+    )
 
     expect(response.status).toBe(404)
   })

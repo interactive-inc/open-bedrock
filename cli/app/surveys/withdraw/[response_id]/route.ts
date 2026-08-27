@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.surveys.responses[":responseId"].$delete({
+    const response = await client["survey"]["surveys"].responses[":responseId"].$delete({
       param: { responseId: responseId },
     })
 

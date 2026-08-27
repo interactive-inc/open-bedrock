@@ -7,7 +7,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getReportsLeaveRequests(params: { limit?: number } = {}) {
   const client = await createClient()
 
-  const response = await client["leave-requests"].$get({
+  const response = await client["leave"]["leave-requests"].$get({
     query: {
       scope: "reports",
       limit: params.limit !== undefined ? String(params.limit) : undefined,

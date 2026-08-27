@@ -79,7 +79,11 @@ async function request(
 
 describe("POST /review-cycles/:cycleId/close", () => {
   test("admin closes the open cycle and returns 200", async () => {
-    const response = await request("/review-cycles/1/close", await adminToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/1/close",
+      await adminToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(200)
 
@@ -93,19 +97,31 @@ describe("POST /review-cycles/:cycleId/close", () => {
   })
 
   test("returns 404 for a missing cycle", async () => {
-    const response = await request("/review-cycles/9999/close", await adminToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/9999/close",
+      await adminToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("member closing a cycle is forbidden", async () => {
-    const response = await request("/review-cycles/1/close", await memberToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/1/close",
+      await memberToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 409 when closing a draft cycle", async () => {
-    const response = await request("/review-cycles/3/close", await adminToken(), "POST")
+    const response = await request(
+      "/performance-review/review-cycles/3/close",
+      await adminToken(),
+      "POST",
+    )
 
     expect(response.status).toBe(409)
   })

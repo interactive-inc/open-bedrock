@@ -8,7 +8,7 @@ export async function getMyShiftAssignments(
 ): Promise<Array<MyShiftAssignmentResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["shift-assignments"].me.$get({
+  const response = await client["shift"]["shift-assignments"].me.$get({
     query: { from: from ?? undefined, to: to ?? undefined },
   })
 

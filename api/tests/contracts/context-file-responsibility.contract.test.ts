@@ -24,11 +24,7 @@ const allContextProductionFiles = [
   .sort()
 
 function isLayerErrorFile(file: string, layer: "application" | "infrastructure"): boolean {
-  return (
-    file.includes(`/${layer}/errors/`) ||
-    file.endsWith(`/${layer}/errors.ts`) ||
-    file.endsWith(`/${layer}/errors.shared.ts`)
-  )
+  return file.endsWith(`/${layer}/errors.ts`)
 }
 
 function usesDomainModel(source: string): boolean {
@@ -80,8 +76,8 @@ describe("Context file responsibility contract", () => {
   })
 
   test("Applicationは1ファイル1操作でDomain modelを経由する", () => {
-    const operationName =
-      /^(?:Add|Advance|Analyze|Apply|Approve|Archive|Assign|Authenticate|Backfill|Bootstrap|Cancel|Change|Check|Clock|Close|Complete|Create|Decide|Delete|Disclose|Dispose|Download|Enroll|Exchange|Export|Fetch|Find|Generate|Get|Issue|Lend|List|Manage|Mark|Preview|Process|Provision|Publish|Query|Read|Rebuild|Register|Remove|Request|Reset|Reschedule|Resolve|Return|Revoke|Rotate|Search|Send|Set|Start|Store|Submit|Supersede|Sync|Transition|Uncomplete|Update|Verify|View|Withdraw|Write)|Service$/i
+    const ambiguousOperationName =
+      /^(?:Advance|Decide|Handle|Manage|Process|Save|Transition|Upsert|Write)(?:$|[A-Z])/
     const violations = productionFiles
       .filter((file) => file.includes("/application/") && !isLayerErrorFile(file, "application"))
       .flatMap((file) => {
@@ -100,8 +96,8 @@ describe("Context file responsibility contract", () => {
             ? []
             : [`${file}: operation count=${classes.length + functions.length}`]),
           ...[...classes, ...functions]
-            .filter((name) => !operationName.test(name))
-            .map((name) => `${file}: invalid operation name ${name}`),
+            .filter((name) => ambiguousOperationName.test(name))
+            .map((name) => `${file}: ambiguous operation name ${name}`),
           ...(usesDomainModel(source) ? [] : [`${file}: Domain model is not used`]),
           ...(/usecase/i.test(source) ? [`${file}: useCase naming`] : []),
         ]

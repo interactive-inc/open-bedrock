@@ -7,7 +7,7 @@ export async function updateMyPhone(
 ): Promise<{ phone: string | null } | Error> {
   const client = await createClient()
 
-  const response = await client.me.phone.$put({ json: { phone } })
+  const response = await client.company["my-profile"].$put({ json: { phone } })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "電話番号の更新に失敗しました" })

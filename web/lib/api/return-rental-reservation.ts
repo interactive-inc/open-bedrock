@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function returnRentalReservation(id: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["rental-reservations"][":id"].return.$post({
+  const response = await client["rental"]["rental-reservations"][":id"].return.$post({
     param: { id },
   })
 

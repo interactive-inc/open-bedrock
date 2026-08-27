@@ -28,7 +28,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["document-ledger-entries"].$post({
+    const response = await client["document"]["document-ledger-entries"].$post({
       json: {
         title: query.title,
         location: query.location,

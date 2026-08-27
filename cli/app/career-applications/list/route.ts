@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["career-applications"].me.$get()
+    const response = await client["career"]["career-applications"].me.$get()
 
     const applications = await response.json()
 

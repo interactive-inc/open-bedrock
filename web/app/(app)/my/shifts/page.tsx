@@ -65,7 +65,7 @@ export default async function ShiftPage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/inbox/shift-swaps" />}
+                render={<Link href="/company/inbox/shift-swaps" />}
               >
                 交代承認
               </Button>

@@ -86,7 +86,7 @@ describe("GET /shift-swap-requests/me", () => {
   test("returns the caller's own requests with the target employee's name filled in", async () => {
     // seed id=1: requester=5, target=4（Drew Sato）
     const response = await request({
-      path: "/shift-swap-requests/me",
+      path: "/shift/shift-swap-requests/me",
       token: await tokenFor(5),
     })
 
@@ -108,7 +108,7 @@ describe("GET /shift-swap-requests/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/shift-swap-requests/me", token: null })
+    const response = await request({ path: "/shift/shift-swap-requests/me", token: null })
 
     expect(response.status).toBe(401)
   })

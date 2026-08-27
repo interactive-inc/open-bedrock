@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.assets[":code"].$get({
+    const response = await client["asset"]["assets"][":code"].$get({
       param: { code: assetCode },
     })
 

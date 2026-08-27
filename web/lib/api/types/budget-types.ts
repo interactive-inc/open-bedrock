@@ -1,8 +1,8 @@
-/** GET /department-budgets の各要素（部署予算一覧。部署名を含む）。 */
+/** GET /department-budgets の各要素（組織単位別の予算一覧。組織名を含む）。 */
 export type BudgetListItemResponse = {
   id: number
-  department_id: number
-  department_name: string | null
+  organization_unit_id: string
+  organization_unit_name: string | null
   fiscal_period: string
   period_start: string
   period_end: string
@@ -15,8 +15,8 @@ export type BudgetListItemResponse = {
 /** GET /department-budgets/:id のレスポンス（消化額・残額を含む予算詳細）。 */
 export type BudgetDetailResponse = {
   id: number
-  department_id: number
-  department_name: string | null
+  organization_unit_id: string
+  organization_unit_name: string | null
   fiscal_period: string
   period_start: string
   period_end: string
@@ -28,10 +28,10 @@ export type BudgetDetailResponse = {
   created_at: string
 }
 
-/** GET /department-budgets/summary の各要素（部署ごとの消化状況）。 */
+/** GET /department-budgets/summary の各要素（組織単位ごとの消化状況）。 */
 export type BudgetSummaryItemResponse = {
-  department_id: number
-  department_name: string | null
+  organization_unit_id: string
+  organization_unit_name: string | null
   fiscal_period: string
   budget_amount: number
   consumed_amount: number
@@ -40,7 +40,7 @@ export type BudgetSummaryItemResponse = {
 
 /** POST /department-budgets のリクエスト body。 */
 export type BudgetCreateRequest = {
-  department_id: number
+  organization_unit_id: string
   fiscal_period: string
   period_start: string
   period_end: string
@@ -59,7 +59,7 @@ export type BudgetUpdateRequest = {
 /** POST /department-budgets・PATCH /department-budgets/:id のレスポンス（作成・更新後の予算。api は snake_case で返す）。 */
 export type BudgetMutatedResponse = {
   id: number | null
-  department_id: number
+  organization_unit_id: string
   fiscal_period: string
   period_start: string
   period_end: string

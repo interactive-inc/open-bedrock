@@ -36,7 +36,7 @@ export type ExpenseAttachmentSummary = {
 
 export type ExpenseDetailResponse = {
   id: number
-  employee_id: number
+  employee_id: string
   applicant_name: string
   category: ExpenseCategory
   amount: number
@@ -53,7 +53,7 @@ export type ExpenseDetailResponse = {
  */
 export type ExpenseCreatedResponse = {
   id: number | null
-  employee_id: number
+  employee_id: string
   category: ExpenseCategory
   amount: number
   spent_at: string
@@ -90,7 +90,7 @@ export type ExpenseUpdateRequest = {
  */
 export type ExpenseUpdatedResponse = {
   id: number | null
-  employee_id: number
+  employee_id: string
   category: ExpenseCategory
   amount: number
   spent_at: string

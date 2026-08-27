@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getOnboardingMe() {
   const client = await createClient()
 
-  const response = await client["onboarding-assignments"].me.$get()
+  const response = await client["onboarding"]["onboarding-assignments"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load onboarding tasks")

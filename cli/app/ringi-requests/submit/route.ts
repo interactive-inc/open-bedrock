@@ -36,9 +36,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["ringi-requests"].$post({
+    const response = await client["ringi"]["ringi-requests"].$post({
       json: {
-        approver_id: toFiniteNumber(approverId, "--approver-id"),
+        approver_id: approverId,
         title,
         amount: toFiniteNumber(amount, "--amount"),
         reason,

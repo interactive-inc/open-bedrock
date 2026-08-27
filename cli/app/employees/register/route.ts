@@ -62,7 +62,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.employees.$post({ json: payload })
+    const response = await client.company["employee-registrations"].$post({ json: payload })
 
     return c.json(await response.json())
   },

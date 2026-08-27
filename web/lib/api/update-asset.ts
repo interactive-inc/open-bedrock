@@ -9,7 +9,7 @@ import type { AssetUpdateRequest } from "@/lib/api/types/asset-types"
 export async function updateAsset(code: string, request: AssetUpdateRequest) {
   const client = await createClient()
 
-  const response = await client.assets[":code"].$put({ param: { code }, json: request })
+  const response = await client["asset"]["assets"][":code"].$put({ param: { code }, json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

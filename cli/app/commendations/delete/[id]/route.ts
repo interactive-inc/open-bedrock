@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.commendations[":id"].$delete({ param: { id } })
+    const response = await client["commendation"]["commendations"][":id"].$delete({ param: { id } })
 
     return c.json({ ok: response.ok, status: response.status })
   },

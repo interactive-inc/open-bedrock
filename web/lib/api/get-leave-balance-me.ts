@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getLeaveBalanceMe() {
   const client = await createClient()
 
-  const response = await client["leave-balances"].me.$get()
+  const response = await client["leave"]["leave-balances"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load leave balance")

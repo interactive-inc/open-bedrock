@@ -1,6 +1,5 @@
 import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 import type { LifecycleAssignmentState } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle-read.adapter"
-import { toLifecycleStorageId } from "@/contexts/company/lib/workforce/to-lifecycle-storage-id"
 
 type Props = Readonly<{
   assignment: OrgAssignmentPeriod
@@ -9,31 +8,19 @@ type Props = Readonly<{
 
 /** 共通assignmentに対応する表示projectionを一意に解決し、意味のdriftを拒否する。 */
 export function resolveLifecycleAssignment(props: Props): LifecycleAssignmentState | Error {
-  const periodId = toLifecycleStorageId(String(props.assignment.periodId), "assignment-period:")
-  const employmentPeriodId = toLifecycleStorageId(
-    String(props.assignment.employmentId),
-    "employment:",
+  const projection = props.projections.find(
+    (candidate) => candidate.periodId === props.assignment.periodId,
   )
-  const departmentCode = toLifecycleStorageId(
-    String(props.assignment.organizationUnitId),
-    "department:",
-  )
-
-  if (periodId instanceof Error) return periodId
-  if (employmentPeriodId instanceof Error) return employmentPeriodId
-  if (departmentCode instanceof Error) return departmentCode
-
-  const projection = props.projections.find((candidate) => candidate.periodId === periodId)
   const managerEmployeeId = props.assignment.managerEmployeeId
   const hasSameManager =
     managerEmployeeId === null
       ? projection?.managerEmployeeId === null
-      : String(managerEmployeeId) === `employee:${String(projection?.managerEmployeeId)}`
+      : managerEmployeeId === projection?.managerEmployeeId
 
   if (
     projection === undefined ||
-    projection.employmentPeriodId !== employmentPeriodId ||
-    projection.departmentCode !== departmentCode ||
+    projection.employmentPeriodId !== props.assignment.employmentId ||
+    projection.organizationUnitId !== props.assignment.organizationUnitId ||
     projection.assignmentType !== props.assignment.assignmentType.toLowerCase() ||
     projection.positionTitle !== props.assignment.positionTitle ||
     projection.startsOn !== props.assignment.startsOn ||

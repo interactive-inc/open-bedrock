@@ -86,7 +86,7 @@ async function request(
 
 describe("GET /software-licenses", () => {
   test("returns 200 with all licenses for a read:all viewer (admin)", async () => {
-    const response = await request("/software-licenses", await tokenFor(1))
+    const response = await request("/software-license/software-licenses", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -100,13 +100,13 @@ describe("GET /software-licenses", () => {
   })
 
   test("returns 403 for a viewer without read:all (member)", async () => {
-    const response = await request("/software-licenses", await tokenFor(5))
+    const response = await request("/software-license/software-licenses", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/software-licenses", null)
+    const response = await request("/software-license/software-licenses", null)
 
     expect(response.status).toBe(401)
   })
@@ -114,12 +114,17 @@ describe("GET /software-licenses", () => {
 
 describe("POST /software-licenses", () => {
   test("creates a license as admin", async () => {
-    const response = await request("/software-licenses", await tokenFor(1), "POST", {
-      name: "New SaaS",
-      category: "saas",
-      seats: 5,
-      renewal_deadline: "2027-01-31",
-    })
+    const response = await request(
+      "/software-license/software-licenses",
+      await tokenFor(1),
+      "POST",
+      {
+        name: "New SaaS",
+        category: "saas",
+        seats: 5,
+        renewal_deadline: "2027-01-31",
+      },
+    )
 
     expect(response.status).toBe(201)
 
@@ -134,9 +139,14 @@ describe("POST /software-licenses", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/software-licenses", await tokenFor(5), "POST", {
-      name: "Blocked",
-    })
+    const response = await request(
+      "/software-license/software-licenses",
+      await tokenFor(5),
+      "POST",
+      {
+        name: "Blocked",
+      },
+    )
 
     expect(response.status).toBe(403)
   })
@@ -144,11 +154,16 @@ describe("POST /software-licenses", () => {
 
 describe("PUT /software-licenses/:id", () => {
   test("updates a license as admin", async () => {
-    const response = await request("/software-licenses/1", await tokenFor(1), "PUT", {
-      name: "Renamed Tracker",
-      seats: 60,
-      renewal_deadline: "2026-04-30",
-    })
+    const response = await request(
+      "/software-license/software-licenses/1",
+      await tokenFor(1),
+      "PUT",
+      {
+        name: "Renamed Tracker",
+        seats: 60,
+        renewal_deadline: "2026-04-30",
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -163,9 +178,14 @@ describe("PUT /software-licenses/:id", () => {
   })
 
   test("returns 404 for unknown id", async () => {
-    const response = await request("/software-licenses/9999", await tokenFor(1), "PUT", {
-      name: "Missing",
-    })
+    const response = await request(
+      "/software-license/software-licenses/9999",
+      await tokenFor(1),
+      "PUT",
+      {
+        name: "Missing",
+      },
+    )
 
     expect(response.status).toBe(404)
   })
@@ -173,7 +193,11 @@ describe("PUT /software-licenses/:id", () => {
 
 describe("POST /software-licenses/:id/cancel", () => {
   test("cancels a license as admin", async () => {
-    const response = await request("/software-licenses/1/cancel", await tokenFor(1), "POST")
+    const response = await request(
+      "/software-license/software-licenses/1/cancel",
+      await tokenFor(1),
+      "POST",
+    )
 
     expect(response.status).toBe(200)
 
@@ -187,7 +211,11 @@ describe("POST /software-licenses/:id/cancel", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/software-licenses/1/cancel", await tokenFor(5), "POST")
+    const response = await request(
+      "/software-license/software-licenses/1/cancel",
+      await tokenFor(5),
+      "POST",
+    )
 
     expect(response.status).toBe(403)
   })

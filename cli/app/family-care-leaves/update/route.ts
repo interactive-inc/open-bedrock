@@ -28,7 +28,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["family-care-leaves"][":id"].$put({
+    const response = await client["family-care-leave"]["family-care-leaves"][":id"].$put({
       param: { id: query.id },
       json: {
         leave_kind: query.kind,

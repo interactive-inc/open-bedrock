@@ -13,7 +13,7 @@ export async function getTrainingCourses(props: {
 }): Promise<TrainingCourseListResult | Error> {
   const client = await createClient()
 
-  const response = await client["training-courses"].$get({
+  const response = await client["training"]["training-courses"].$get({
     query: { limit: String(props.limit), offset: String(props.offset) },
   })
 

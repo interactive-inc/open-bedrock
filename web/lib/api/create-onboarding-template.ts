@@ -14,7 +14,7 @@ export async function createOnboardingTemplate(
 ): Promise<OnboardingTemplateDetail | Error> {
   const client = await createClient()
 
-  const response = await client["onboarding-templates"].$post({
+  const response = await client["onboarding"]["onboarding-templates"].$post({
     json: {
       code: request.code,
       name: request.name,

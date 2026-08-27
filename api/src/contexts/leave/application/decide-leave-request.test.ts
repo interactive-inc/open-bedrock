@@ -1,7 +1,8 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
-import { DecideLeaveRequest } from "@/contexts/leave/application/decide-leave-request"
+import { ApproveLeaveRequest } from "@/contexts/leave/application/approve-leave-request"
+import { RejectLeaveRequest } from "@/contexts/leave/application/reject-leave-request"
 import { ForbiddenError, ValidationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
 import { createTestContext } from "@tests/api/support/create-test-context"
@@ -55,7 +56,7 @@ async function seedManagerRelationship(db: D1Database): Promise<void> {
   })
 }
 
-describe("DecideLeaveRequest", () => {
+describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
   test("returns forbidden for a member role", async () => {
     const { context, db } = await createTestContext()
 
@@ -74,11 +75,10 @@ describe("DecideLeaveRequest", () => {
 
     const request = await seedPendingRequest(repository, toWorkforceEmployeeId(5))
 
-    const result = await new DecideLeaveRequest({ context }).run({
+    const result = await new ApproveLeaveRequest({ context }).execute({
       session: makeTestSession("member"),
       leaveRequestId: request.id ?? 0,
       approverId: toWorkforceEmployeeId(2),
-      action: "approve",
       comment: null,
       createdAt: "2026-06-15T00:00:00.000Z",
     })
@@ -95,11 +95,10 @@ describe("DecideLeaveRequest", () => {
 
     const request = await seedPendingRequest(repository, toWorkforceEmployeeId(5))
 
-    const result = await new DecideLeaveRequest({ context }).run({
+    const result = await new RejectLeaveRequest({ context }).execute({
       session: makeTestSession("manager"),
       leaveRequestId: request.id ?? 0,
       approverId: toWorkforceEmployeeId(2),
-      action: "reject",
       comment: "insufficient coverage",
       createdAt: "2026-06-15T00:00:00.000Z",
     })
@@ -133,11 +132,10 @@ describe("DecideLeaveRequest", () => {
 
     const request = await seedPendingRequest(repository, toWorkforceEmployeeId(5))
 
-    const result = await new DecideLeaveRequest({ context }).run({
+    const result = await new ApproveLeaveRequest({ context }).execute({
       session: makeTestSession("root"),
       leaveRequestId: request.id ?? 0,
       approverId: toWorkforceEmployeeId(5),
-      action: "approve",
       comment: null,
       createdAt: "2026-06-15T00:00:00.000Z",
     })
@@ -153,11 +151,10 @@ describe("DecideLeaveRequest", () => {
 
     const request = await seedPendingRequest(repository, toWorkforceEmployeeId(5))
 
-    const result = await new DecideLeaveRequest({ context }).run({
+    const result = await new RejectLeaveRequest({ context }).execute({
       session: makeTestSession("hr"),
       leaveRequestId: request.id ?? 0,
       approverId: toWorkforceEmployeeId(2),
-      action: "reject",
       comment: "policy violation",
       createdAt: "2026-06-15T00:00:00.000Z",
     })
@@ -200,11 +197,10 @@ describe("DecideLeaveRequest", () => {
       throw new Error("seed failed")
     }
 
-    const result = await new DecideLeaveRequest({ context }).run({
+    const result = await new ApproveLeaveRequest({ context }).execute({
       session: makeTestSession("manager"),
       leaveRequestId: created.id ?? 0,
       approverId: toWorkforceEmployeeId(2),
-      action: "approve",
       comment: null,
       createdAt: "2026-06-15T00:00:00.000Z",
     })
@@ -250,11 +246,10 @@ describe("DecideLeaveRequest", () => {
       throw new Error("seed failed")
     }
 
-    const result = await new DecideLeaveRequest({ context }).run({
+    const result = await new RejectLeaveRequest({ context }).execute({
       session: makeTestSession("manager"),
       leaveRequestId: created.id ?? 0,
       approverId: toWorkforceEmployeeId(2),
-      action: "reject",
       comment: "no coverage",
       createdAt: "2026-06-15T00:00:00.000Z",
     })

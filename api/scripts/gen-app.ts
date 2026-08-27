@@ -38,10 +38,10 @@ const APP_PATH = resolve(SOURCE_ROOT, "api/app.ts")
 const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const
 const ROUTES_PER_TYPE_PART = 48
 const TYPE_HEAVY_ROUTE_PREFIXES = [
-  "/application-requests",
-  "/application-templates",
-  "/approval-delegations",
-  "/personnel-action-requests",
+  "/company/application-requests",
+  "/company/application-templates",
+  "/company/approval-delegations",
+  "/company/personnel-action-requests",
 ] as const
 type Method = (typeof METHODS)[number]
 
@@ -65,6 +65,13 @@ export function toUrl(relativeFile: string): string {
     segment.split(".").map((part) => (part.startsWith("$") ? `:${part.slice(1)}` : part)),
   )
   return `/${mapped.join("/")}`
+}
+
+/** context routeを必ず `/{context}/{resource}` へ置き、既にprefix済みなら重ねない。 */
+export function toContextUrl(context: string, relativeFile: string): string {
+  const route = toUrl(relativeFile)
+  const prefix = `/${context}`
+  return route === prefix || route.startsWith(`${prefix}/`) ? route : `${prefix}${route}`
 }
 
 /**
@@ -173,7 +180,8 @@ export async function collectRegistrations(
       seenAlias.set(alias, file)
 
       const module = `${routeModule.routeImportPrefix}/${file.replace(/\.ts$/, "")}`
-      const url = toUrl(file)
+      const url =
+        routeModule.tier === "composition" ? toUrl(file) : toContextUrl(routeModule.context, file)
       for (const method of methods) {
         registrations.push({ module, url, method, alias })
       }

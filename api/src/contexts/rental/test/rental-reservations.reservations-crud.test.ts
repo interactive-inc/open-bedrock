@@ -91,7 +91,10 @@ async function request(props: {
 
 describe("GET /rental-reservations/me", () => {
   test("returns only the viewer's reservations", async () => {
-    const response = await request({ path: "/rental-reservations/me", token: await managerToken() })
+    const response = await request({
+      path: "/rental/rental-reservations/me",
+      token: await managerToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -108,7 +111,7 @@ describe("GET /rental-reservations/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/rental-reservations/me", token: null })
+    const response = await request({ path: "/rental/rental-reservations/me", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -117,7 +120,7 @@ describe("GET /rental-reservations/me", () => {
 describe("GET /rental-reservations/:id", () => {
   test("returns the reservation for its requester", async () => {
     const response = await request({
-      path: `/rental-reservations/${ownReservationId}`,
+      path: `/rental/rental-reservations/${ownReservationId}`,
       token: await managerToken(),
     })
 
@@ -134,7 +137,7 @@ describe("GET /rental-reservations/:id", () => {
 
   test("returns 403 for another person's reservation", async () => {
     const response = await request({
-      path: `/rental-reservations/${othersReservationId}`,
+      path: `/rental/rental-reservations/${othersReservationId}`,
       token: await managerToken(),
     })
 
@@ -143,7 +146,7 @@ describe("GET /rental-reservations/:id", () => {
 
   test("returns 404 for an unknown reservation", async () => {
     const response = await request({
-      path: "/rental-reservations/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/rental/rental-reservations/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await managerToken(),
     })
 
@@ -154,7 +157,7 @@ describe("GET /rental-reservations/:id", () => {
 describe("PUT /rental-reservations/:id", () => {
   test("updates the item, period and purpose of the viewer's reservation", async () => {
     const response = await request({
-      path: `/rental-reservations/${ownReservationId}`,
+      path: `/rental/rental-reservations/${ownReservationId}`,
       token: await managerToken(),
       method: "PUT",
       body: {
@@ -180,7 +183,7 @@ describe("PUT /rental-reservations/:id", () => {
 
   test("returns 403 when updating another person's reservation", async () => {
     const response = await request({
-      path: `/rental-reservations/${othersReservationId}`,
+      path: `/rental/rental-reservations/${othersReservationId}`,
       token: await managerToken(),
       method: "PUT",
       body: {
@@ -196,7 +199,7 @@ describe("PUT /rental-reservations/:id", () => {
 
   test("returns 404 for an unknown reservation", async () => {
     const response = await request({
-      path: "/rental-reservations/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/rental/rental-reservations/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await managerToken(),
       method: "PUT",
       body: {
@@ -214,7 +217,7 @@ describe("PUT /rental-reservations/:id", () => {
 describe("DELETE /rental-reservations/:id", () => {
   test("cancels the viewer's reservation and returns 204", async () => {
     const response = await request({
-      path: `/rental-reservations/${ownReservationId}`,
+      path: `/rental/rental-reservations/${ownReservationId}`,
       token: await managerToken(),
       method: "DELETE",
     })
@@ -224,7 +227,7 @@ describe("DELETE /rental-reservations/:id", () => {
 
   test("returns 403 when cancelling another person's reservation", async () => {
     const response = await request({
-      path: `/rental-reservations/${othersReservationId}`,
+      path: `/rental/rental-reservations/${othersReservationId}`,
       token: await managerToken(),
       method: "DELETE",
     })
@@ -234,7 +237,7 @@ describe("DELETE /rental-reservations/:id", () => {
 
   test("returns 404 for an unknown reservation", async () => {
     const response = await request({
-      path: "/rental-reservations/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/rental/rental-reservations/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await managerToken(),
       method: "DELETE",
     })
@@ -244,7 +247,7 @@ describe("DELETE /rental-reservations/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: `/rental-reservations/${ownReservationId}`,
+      path: `/rental/rental-reservations/${ownReservationId}`,
       token: null,
       method: "DELETE",
     })

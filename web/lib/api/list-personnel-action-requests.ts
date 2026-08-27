@@ -3,7 +3,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 
 export async function listPersonnelActionRequests(targetEmployeeCode: string) {
   const client = await createClient()
-  const response = await client["personnel-action-requests"].$get(
+  const response = await client.company["personnel-action-requests"].$get(
     {
       query: {
         target_employee_code: targetEmployeeCode,

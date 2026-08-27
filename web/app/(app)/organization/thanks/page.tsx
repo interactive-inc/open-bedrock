@@ -48,7 +48,7 @@ export default async function ThanksPage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/inbox/thanks-redemptions" />}
+                render={<Link href="/company/inbox/thanks-redemptions" />}
               >
                 交換承認
               </Button>

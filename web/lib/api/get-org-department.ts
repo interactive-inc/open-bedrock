@@ -5,7 +5,7 @@ import type { OrgDepartmentResponse } from "@/lib/api/types/org-types"
 export async function getOrgDepartment(code: string): Promise<OrgDepartmentResponse | Error> {
   const client = await createClient()
 
-  const response = await client.departments[":code"].$get({
+  const response = await client.company["organization-units"][":code"].$get({
     param: { code },
   })
 

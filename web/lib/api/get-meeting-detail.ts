@@ -5,7 +5,7 @@ import { ApiResponseError } from "@/lib/api/api-response-error"
 export async function getMeetingDetail(code: string) {
   const client = await createClient()
 
-  const response = await client.meetings[":code"].$get({
+  const response = await client["meeting"]["meetings"][":code"].$get({
     param: { code: code },
   })
 

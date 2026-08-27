@@ -1,9 +1,9 @@
 import { UpdateEvaluationTemplate } from "@/contexts/performance-review/application/evaluation-template/update-evaluation-template"
-import { SetEvaluationTemplateStatus } from "@/contexts/performance-review/application/evaluation-template/set-evaluation-template-status"
+import { ActivateEvaluationTemplate } from "@/contexts/performance-review/application/evaluation-template/activate-evaluation-template"
+import { ArchiveEvaluationTemplate } from "@/contexts/performance-review/application/evaluation-template/archive-evaluation-template"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEvaluationTemplate } from "@/lib/app-schemas"
-import { evaluationTemplateStatusSchema } from "@/contexts/performance-review/domain/entities/evaluation-template.entity"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { evaluationTemplates } from "@/contexts/performance-review/infrastructure/schema/performance-review"
@@ -142,7 +142,7 @@ export const PATCH = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      status: evaluationTemplateStatusSchema,
+      status: z.enum(["active", "archived"]),
     }),
   ),
   async (c) => {
@@ -159,11 +159,15 @@ export const PATCH = factory.createHandlers(
     const templateId = validateIntParam(c.req.param("templateId"), "evaluation template")
     const json = c.req.valid("json")
 
-    const template = await new SetEvaluationTemplateStatus(c).run({
-      templateId,
-      status: json.status,
-      now: new Date().toISOString(),
-    })
+    const input = { templateId, now: new Date().toISOString() }
+    let template
+    if (json.status === "active") {
+      template = await new ActivateEvaluationTemplate(c).execute(input)
+    } else if (json.status === "archived") {
+      template = await new ArchiveEvaluationTemplate(c).execute(input)
+    } else {
+      throw new Error("unreachable evaluation template status")
+    }
 
     if (template instanceof ApplicationError) {
       throw toHttpException(template)

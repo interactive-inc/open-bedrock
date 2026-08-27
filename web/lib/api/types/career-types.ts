@@ -1,5 +1,5 @@
 export type CareerSheet = {
-  employee_id: number
+  employee_id: string
   goals_text: string | null
   strengths_text: string | null
   updated_at: string | null
@@ -40,7 +40,7 @@ export type CareerApplication = {
   // api は永続化前を null とするため number | null。
   id: number | null
   posting_id: number
-  applicant_id: number
+  applicant_id: string
   message: string | null
   status: "applied" | "accepted" | "rejected"
 }

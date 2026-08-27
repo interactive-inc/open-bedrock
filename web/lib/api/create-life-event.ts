@@ -6,7 +6,7 @@ import type { LifeEventCreateRequest } from "@/lib/api/types/life-event-types"
 export async function createLifeEvent(request: LifeEventCreateRequest) {
   const client = await createClient()
 
-  const response = await client["life-events"].$post({ json: request })
+  const response = await client["life-event"]["life-events"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "ライフイベント届出の作成に失敗しました" })

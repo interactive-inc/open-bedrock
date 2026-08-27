@@ -8,7 +8,9 @@ export async function updateLifecycleTemplateBinding(
   effectType: LifecycleEffect,
 ): Promise<{ effect_type: LifecycleEffect; template_code: string } | Error> {
   const client = await createClient()
-  const response = await client["onboarding-templates"][":code"]["lifecycle-binding"].$put({
+  const response = await client["onboarding"]["onboarding-templates"][":code"][
+    "lifecycle-binding"
+  ].$put({
     param: { code: templateCode },
     json: { effect_type: effectType },
   })

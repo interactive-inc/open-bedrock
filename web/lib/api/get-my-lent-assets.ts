@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getMyLentAssets() {
   const client = await createClient()
 
-  const response = await client.assets.lent.me.$get()
+  const response = await client["asset"]["assets"].lent.me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load lent assets")

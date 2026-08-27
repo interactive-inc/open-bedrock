@@ -68,14 +68,19 @@ function managerToken(): Promise<string> {
 }
 
 async function getRequest(token: string | null): Promise<Response> {
-  return requestWithContext({ db: await createTestDb(), jwtSecret, path: "/one-on-ones", token })
+  return requestWithContext({
+    db: await createTestDb(),
+    jwtSecret,
+    path: "/one-on-one/one-on-ones",
+    token,
+  })
 }
 
 async function postOneOnOne(token: string | null, body: unknown): Promise<Response> {
   return requestWithContext({
     db: await createTestDb(),
     jwtSecret,
-    path: "/one-on-ones",
+    path: "/one-on-one/one-on-ones",
     token,
     method: "POST",
     body,
@@ -345,7 +350,7 @@ describe("GET /one-on-ones?scope=department", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/one-on-ones?scope=department&department_code=D001",
+      path: "/one-on-one/one-on-ones?scope=department&department_code=D001",
       token: await tokenFor(20),
     })
 
@@ -373,7 +378,7 @@ describe("GET /one-on-ones?scope=department", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/one-on-ones?scope=department&department_code=D002",
+      path: "/one-on-one/one-on-ones?scope=department&department_code=D002",
       token: await tokenFor(20),
     })
 
@@ -384,7 +389,7 @@ describe("GET /one-on-ones?scope=department", () => {
     const response = await requestWithContext({
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
-      path: "/one-on-ones?scope=department&department_code=D001",
+      path: "/one-on-one/one-on-ones?scope=department&department_code=D001",
       token: await tokenFor(20),
     })
 
@@ -399,7 +404,7 @@ describe("GET /one-on-ones?scope=department", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/one-on-ones?scope=department",
+      path: "/one-on-one/one-on-ones?scope=department",
       token: await tokenFor(20),
     })
 

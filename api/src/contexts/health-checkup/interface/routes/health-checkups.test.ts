@@ -86,7 +86,10 @@ async function request(props: {
 
 describe("GET /health-checkups", () => {
   test("member can read their own records", async () => {
-    const response = await request({ path: "/health-checkups", token: await tokenFor(5) })
+    const response = await request({
+      path: "/health-checkup/health-checkups",
+      token: await tokenFor(5),
+    })
 
     expect(response.status).toBe(200)
 
@@ -104,7 +107,7 @@ describe("GET /health-checkups", () => {
 
   test("member is 403 when requesting another employee's records", async () => {
     const response = await request({
-      path: "/health-checkups?employee_id=5",
+      path: "/health-checkup/health-checkups?employee_id=5",
       token: await tokenFor(6),
     })
 
@@ -113,7 +116,7 @@ describe("GET /health-checkups", () => {
 
   test("admin (health_checkup:read:all) can read another employee's records", async () => {
     const response = await request({
-      path: "/health-checkups?employee_id=5",
+      path: "/health-checkup/health-checkups?employee_id=5",
       token: await tokenFor(1),
     })
 
@@ -121,7 +124,10 @@ describe("GET /health-checkups", () => {
   })
 
   test("admin without employee_id sees all records across employees", async () => {
-    const response = await request({ path: "/health-checkups", token: await tokenFor(1) })
+    const response = await request({
+      path: "/health-checkup/health-checkups",
+      token: await tokenFor(1),
+    })
 
     expect(response.status).toBe(200)
 
@@ -136,7 +142,7 @@ describe("GET /health-checkups", () => {
 
   test("filters by fiscal_year", async () => {
     const response = await request({
-      path: "/health-checkups?employee_id=5&fiscal_year=2026",
+      path: "/health-checkup/health-checkups?employee_id=5&fiscal_year=2026",
       token: await tokenFor(1),
     })
 
@@ -153,7 +159,10 @@ describe("GET /health-checkups", () => {
   })
 
   test("response never exposes result columns (実施情報のみ)", async () => {
-    const response = await request({ path: "/health-checkups", token: await tokenFor(5) })
+    const response = await request({
+      path: "/health-checkup/health-checkups",
+      token: await tokenFor(5),
+    })
 
     const parsed = z
       .object({ data: z.array(z.record(z.string(), z.unknown())) })
@@ -178,7 +187,7 @@ describe("GET /health-checkups", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/health-checkups", token: null })
+    const response = await request({ path: "/health-checkup/health-checkups", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -187,7 +196,7 @@ describe("GET /health-checkups", () => {
 describe("POST /health-checkups", () => {
   test("creates a record for admin (health_checkup:manage)", async () => {
     const response = await request({
-      path: "/health-checkups",
+      path: "/health-checkup/health-checkups",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_id: "6", fiscal_year: 2026, checkup_kind: "regular" },
@@ -206,7 +215,7 @@ describe("POST /health-checkups", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/health-checkups",
+      path: "/health-checkup/health-checkups",
       token: await tokenFor(5),
       method: "POST",
       body: { employee_id: "5", fiscal_year: 2026, checkup_kind: "regular" },
@@ -217,7 +226,7 @@ describe("POST /health-checkups", () => {
 
   test("creates a record by employee_code", async () => {
     const response = await request({
-      path: "/health-checkups",
+      path: "/health-checkup/health-checkups",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E006", fiscal_year: 2026, checkup_kind: "stress_check" },
@@ -236,7 +245,7 @@ describe("POST /health-checkups", () => {
 
   test("returns 404 for an unknown employee_code", async () => {
     const response = await request({
-      path: "/health-checkups",
+      path: "/health-checkup/health-checkups",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E999", fiscal_year: 2026, checkup_kind: "regular" },
@@ -247,7 +256,7 @@ describe("POST /health-checkups", () => {
 
   test("returns 400 when both employee_id and employee_code are given", async () => {
     const response = await request({
-      path: "/health-checkups",
+      path: "/health-checkup/health-checkups",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_id: "6", employee_code: "E006", fiscal_year: 2026, checkup_kind: "regular" },
@@ -258,7 +267,7 @@ describe("POST /health-checkups", () => {
 
   test("returns 400 when neither employee_id nor employee_code is given", async () => {
     const response = await request({
-      path: "/health-checkups",
+      path: "/health-checkup/health-checkups",
       token: await tokenFor(1),
       method: "POST",
       body: { fiscal_year: 2026, checkup_kind: "regular" },
@@ -271,7 +280,7 @@ describe("POST /health-checkups", () => {
 describe("POST /health-checkups/:id/complete", () => {
   test("completes a scheduled record for admin", async () => {
     const response = await request({
-      path: "/health-checkups/1/complete",
+      path: "/health-checkup/health-checkups/1/complete",
       token: await tokenFor(1),
       method: "POST",
       body: { conducted_on: "2026-06-15" },
@@ -291,7 +300,7 @@ describe("POST /health-checkups/:id/complete", () => {
 
   test("returns 409 when already completed", async () => {
     const response = await request({
-      path: "/health-checkups/2/complete",
+      path: "/health-checkup/health-checkups/2/complete",
       token: await tokenFor(1),
       method: "POST",
       body: { conducted_on: "2026-06-15" },
@@ -302,7 +311,7 @@ describe("POST /health-checkups/:id/complete", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/health-checkups/1/complete",
+      path: "/health-checkup/health-checkups/1/complete",
       token: await tokenFor(5),
       method: "POST",
       body: { conducted_on: "2026-06-15" },

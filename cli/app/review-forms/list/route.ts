@@ -25,7 +25,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["review-forms"].$get({
+    const response = await client["performance-review"]["review-forms"].$get({
       query: {
         subject_employee_id: query["subject-employee-id"],
         cycle_id: query["cycle-id"],

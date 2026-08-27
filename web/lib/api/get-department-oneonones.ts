@@ -7,7 +7,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getDepartmentOneOnOnes(departmentCode: string) {
   const client = await createClient()
 
-  const response = await client["one-on-ones"].$get({
+  const response = await client["one-on-one"]["one-on-ones"].$get({
     query: {
       scope: "department",
       department_code: departmentCode,

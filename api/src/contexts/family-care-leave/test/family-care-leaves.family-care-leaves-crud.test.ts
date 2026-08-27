@@ -36,11 +36,11 @@ const app = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
-  .post("/family-care-leaves", ...createRoute.POST)
-  .get("/family-care-leaves/me", ...meRoute.GET)
-  .get("/family-care-leaves/:id", ...detailRoute.GET)
-  .put("/family-care-leaves/:id", ...detailRoute.PUT)
-  .delete("/family-care-leaves/:id", ...detailRoute.DELETE)
+  .post("/family-care-leave/family-care-leaves", ...createRoute.POST)
+  .get("/family-care-leave/family-care-leaves/me", ...meRoute.GET)
+  .get("/family-care-leave/family-care-leaves/:id", ...detailRoute.GET)
+  .put("/family-care-leave/family-care-leaves/:id", ...detailRoute.PUT)
+  .delete("/family-care-leave/family-care-leaves/:id", ...detailRoute.DELETE)
 
 const familyCareLeaveResponseSchema = z.object({
   id: z.string(),
@@ -138,7 +138,7 @@ async function request(props: {
 describe("POST /family-care-leaves", () => {
   test("creates a family care leave with status requested", async () => {
     const response = await request({
-      path: "/family-care-leaves",
+      path: "/family-care-leave/family-care-leaves",
       token: await applicantToken(),
       method: "POST",
       body: {
@@ -164,7 +164,7 @@ describe("POST /family-care-leaves", () => {
 
   test("returns 409 when overlapping with an existing leave", async () => {
     const response = await request({
-      path: "/family-care-leaves",
+      path: "/family-care-leave/family-care-leaves",
       token: await applicantToken(),
       method: "POST",
       body: {
@@ -180,7 +180,7 @@ describe("POST /family-care-leaves", () => {
 
   test("creates a family care leave with null note", async () => {
     const response = await request({
-      path: "/family-care-leaves",
+      path: "/family-care-leave/family-care-leaves",
       token: await applicantToken(),
       method: "POST",
       body: {
@@ -203,7 +203,7 @@ describe("POST /family-care-leaves", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/family-care-leaves",
+      path: "/family-care-leave/family-care-leaves",
       token: null,
       method: "POST",
       body: {
@@ -220,7 +220,7 @@ describe("POST /family-care-leaves", () => {
 describe("GET /family-care-leaves/me", () => {
   test("returns only the viewer's family care leaves", async () => {
     const response = await request({
-      path: "/family-care-leaves/me",
+      path: "/family-care-leave/family-care-leaves/me",
       token: await applicantToken(),
     })
 
@@ -239,7 +239,10 @@ describe("GET /family-care-leaves/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/family-care-leaves/me", token: null })
+    const response = await request({
+      path: "/family-care-leave/family-care-leaves/me",
+      token: null,
+    })
 
     expect(response.status).toBe(401)
   })
@@ -248,7 +251,7 @@ describe("GET /family-care-leaves/me", () => {
 describe("GET /family-care-leaves/:id", () => {
   test("returns the family care leave for its applicant", async () => {
     const response = await request({
-      path: `/family-care-leaves/${ownFamilyCareLeaveId}`,
+      path: `/family-care-leave/family-care-leaves/${ownFamilyCareLeaveId}`,
       token: await applicantToken(),
     })
 
@@ -265,7 +268,7 @@ describe("GET /family-care-leaves/:id", () => {
 
   test("returns 403 for another person's family care leave", async () => {
     const response = await request({
-      path: `/family-care-leaves/${othersFamilyCareLeaveId}`,
+      path: `/family-care-leave/family-care-leaves/${othersFamilyCareLeaveId}`,
       token: await applicantToken(),
     })
 
@@ -274,7 +277,7 @@ describe("GET /family-care-leaves/:id", () => {
 
   test("returns 404 for an unknown family care leave", async () => {
     const response = await request({
-      path: "/family-care-leaves/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/family-care-leave/family-care-leaves/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await applicantToken(),
     })
 
@@ -285,7 +288,7 @@ describe("GET /family-care-leaves/:id", () => {
 describe("PUT /family-care-leaves/:id", () => {
   test("updates the details of the viewer's family care leave", async () => {
     const response = await request({
-      path: `/family-care-leaves/${ownFamilyCareLeaveId}`,
+      path: `/family-care-leave/family-care-leaves/${ownFamilyCareLeaveId}`,
       token: await applicantToken(),
       method: "PUT",
       body: {
@@ -310,7 +313,7 @@ describe("PUT /family-care-leaves/:id", () => {
 
   test("returns 200 when changing only its own period (self-exclusion)", async () => {
     const response = await request({
-      path: `/family-care-leaves/${ownFamilyCareLeaveId}`,
+      path: `/family-care-leave/family-care-leaves/${ownFamilyCareLeaveId}`,
       token: await applicantToken(),
       method: "PUT",
       body: {
@@ -335,7 +338,7 @@ describe("PUT /family-care-leaves/:id", () => {
 
   test("returns 403 when updating another person's family care leave", async () => {
     const response = await request({
-      path: `/family-care-leaves/${othersFamilyCareLeaveId}`,
+      path: `/family-care-leave/family-care-leaves/${othersFamilyCareLeaveId}`,
       token: await applicantToken(),
       method: "PUT",
       body: {
@@ -351,7 +354,7 @@ describe("PUT /family-care-leaves/:id", () => {
 
   test("returns 404 for an unknown family care leave", async () => {
     const response = await request({
-      path: "/family-care-leaves/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/family-care-leave/family-care-leaves/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await applicantToken(),
       method: "PUT",
       body: {
@@ -369,7 +372,7 @@ describe("PUT /family-care-leaves/:id", () => {
 describe("DELETE /family-care-leaves/:id", () => {
   test("cancels the viewer's family care leave and returns 204", async () => {
     const response = await request({
-      path: `/family-care-leaves/${ownFamilyCareLeaveId}`,
+      path: `/family-care-leave/family-care-leaves/${ownFamilyCareLeaveId}`,
       token: await applicantToken(),
       method: "DELETE",
     })
@@ -379,7 +382,7 @@ describe("DELETE /family-care-leaves/:id", () => {
 
   test("returns 403 when cancelling another person's family care leave", async () => {
     const response = await request({
-      path: `/family-care-leaves/${othersFamilyCareLeaveId}`,
+      path: `/family-care-leave/family-care-leaves/${othersFamilyCareLeaveId}`,
       token: await applicantToken(),
       method: "DELETE",
     })
@@ -389,7 +392,7 @@ describe("DELETE /family-care-leaves/:id", () => {
 
   test("returns 404 for an unknown family care leave", async () => {
     const response = await request({
-      path: "/family-care-leaves/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/family-care-leave/family-care-leaves/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await applicantToken(),
       method: "DELETE",
     })
@@ -399,7 +402,7 @@ describe("DELETE /family-care-leaves/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: `/family-care-leaves/${ownFamilyCareLeaveId}`,
+      path: `/family-care-leave/family-care-leaves/${ownFamilyCareLeaveId}`,
       token: null,
       method: "DELETE",
     })

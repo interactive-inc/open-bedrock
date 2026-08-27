@@ -5,7 +5,7 @@ import type { AnnouncementStatus } from "@/lib/api/types/announcement-types"
 export async function getAnnouncementList(query: { status: AnnouncementStatus | null }) {
   const client = await createClient()
 
-  const response = await client.announcements.$get({
+  const response = await client["announcement"]["announcements"].$get({
     query: { status: query.status ?? undefined },
   })
 

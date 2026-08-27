@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["ringi-requests"].inbox.$get()
+    const response = await client["ringi"]["ringi-requests"].inbox.$get()
 
     const rows = await response.json()
 

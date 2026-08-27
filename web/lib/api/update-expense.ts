@@ -12,7 +12,7 @@ export async function updateExpense(
 ): Promise<ExpenseUpdatedResponse | Error> {
   const client = await createClient()
 
-  const response = await client.expenses[":id"].$put({
+  const response = await client["expense"]["expenses"][":id"].$put({
     param: { id: String(id) },
     json: request,
   })

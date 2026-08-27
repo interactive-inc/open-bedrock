@@ -74,7 +74,7 @@ describe("GET /meetings/:code", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings/board",
+      path: "/meeting/meetings/board",
       token: await memberToken(),
     })
 
@@ -93,7 +93,7 @@ describe("GET /meetings/:code", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings/nope",
+      path: "/meeting/meetings/nope",
       token: await memberToken(),
     })
 
@@ -106,7 +106,7 @@ describe("PUT /meetings/:code", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings/board",
+      path: "/meeting/meetings/board",
       token: await adminToken(),
       method: "PUT",
       body: { name: "取締役会（改称）", cadence: "四半期", description: null },
@@ -128,7 +128,7 @@ describe("PUT /meetings/:code", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings/board",
+      path: "/meeting/meetings/board",
       token: await memberToken(),
       method: "PUT",
       body: { name: "x", cadence: null, description: null },
@@ -143,7 +143,7 @@ describe("POST /meetings/:code/archive", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings/board/archive",
+      path: "/meeting/meetings/board/archive",
       token: await adminToken(),
       method: "POST",
     })
@@ -163,7 +163,7 @@ describe("POST /meetings/:code/archive", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings/board/archive",
+      path: "/meeting/meetings/board/archive",
       token: await memberToken(),
       method: "POST",
     })

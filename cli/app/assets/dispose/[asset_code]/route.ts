@@ -29,7 +29,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.assets[":code"].dispose.$post({
+    const response = await client["asset"]["assets"][":code"].dispose.$post({
       param: { code: assetCode },
       json: { reason: query.reason, disposed_on: query["disposed-on"] },
     })

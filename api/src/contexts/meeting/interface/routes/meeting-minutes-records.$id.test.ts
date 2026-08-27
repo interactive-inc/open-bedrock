@@ -101,7 +101,7 @@ describe("GET /meetings/:code/minutes", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings/board/minutes",
+      path: "/meeting/meetings/board/minutes",
       token: await otherMemberToken(),
     })
 
@@ -121,7 +121,7 @@ describe("GET /meetings/:code/minutes", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings/nope/minutes",
+      path: "/meeting/meetings/nope/minutes",
       token: await otherMemberToken(),
     })
 
@@ -134,7 +134,7 @@ describe("POST /meetings/:code/minutes", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meetings/board/minutes",
+      path: "/meeting/meetings/board/minutes",
       token: await otherMemberToken(),
       method: "POST",
       body: { held_on: "2026-03-01", title: "3月度", attendees: null, body_md: "本文" },
@@ -158,7 +158,7 @@ describe("GET /meeting-minutes-records/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meeting-minutes-records/1",
+      path: "/meeting/meeting-minutes-records/1",
       token: await otherMemberToken(),
     })
 
@@ -173,7 +173,7 @@ describe("GET /meeting-minutes-records/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meeting-minutes-records/9999",
+      path: "/meeting/meeting-minutes-records/9999",
       token: await otherMemberToken(),
     })
 
@@ -186,7 +186,7 @@ describe("PUT /meeting-minutes-records/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meeting-minutes-records/1",
+      path: "/meeting/meeting-minutes-records/1",
       token: await authorToken(),
       method: "PUT",
       body: { held_on: "2026-02-01", title: "改訂", attendees: null, body_md: "改訂本文" },
@@ -207,7 +207,7 @@ describe("PUT /meeting-minutes-records/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meeting-minutes-records/1",
+      path: "/meeting/meeting-minutes-records/1",
       token: await adminToken(),
       method: "PUT",
       body: { held_on: "2026-02-01", title: "管理者改訂", attendees: null, body_md: "本文" },
@@ -220,7 +220,7 @@ describe("PUT /meeting-minutes-records/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meeting-minutes-records/1",
+      path: "/meeting/meeting-minutes-records/1",
       token: await otherMemberToken(),
       method: "PUT",
       body: { held_on: "2026-02-01", title: "x", attendees: null, body_md: "本文" },

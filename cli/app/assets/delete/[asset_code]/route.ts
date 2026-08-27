@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.assets[":code"].$delete({
+    const response = await client["asset"]["assets"][":code"].$delete({
       param: { code: assetCode },
     })
 

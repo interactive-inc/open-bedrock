@@ -6,7 +6,7 @@ import type { FamilyCareLeaveCreateRequest } from "@/lib/api/types/family-care-l
 export async function createFamilyCareLeave(request: FamilyCareLeaveCreateRequest) {
   const client = await createClient()
 
-  const response = await client["family-care-leaves"].$post({ json: request })
+  const response = await client["family-care-leave"]["family-care-leaves"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

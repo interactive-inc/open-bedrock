@@ -1,4 +1,4 @@
-import { DecideRedemption } from "@/contexts/thanks/application/thanks-points/decide-redemption"
+import { ApproveRedemption } from "@/contexts/thanks/application/thanks-points/approve-redemption"
 import { toPositiveInt } from "@/lib/http/to-positive-int"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksRedemptionDecision } from "@/lib/app-schemas"
@@ -31,11 +31,10 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new BadRequestError("invalid redemption id")
   }
 
-  const result = await new DecideRedemption(c).run({
+  const result = await new ApproveRedemption(c).execute({
     session,
     redemptionId,
     deciderId: session.employeeId,
-    action: "approve",
     decidedAt: c.env.NOW ?? new Date().toISOString(),
   })
 

@@ -6,7 +6,7 @@ export async function getEmployeeLifecycleEvents(
   query: { from?: string; to?: string; limit?: number; cursor?: string } = {},
 ) {
   const client = await createClient()
-  const response = await client.employees[":code"]["lifecycle-events"].$get(
+  const response = await client.company["employee-lifecycle"][":code"].events.$get(
     {
       param: { code },
       query: {

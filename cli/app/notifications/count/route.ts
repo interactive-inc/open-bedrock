@@ -13,7 +13,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.system.v1.notifications["unread-count"].$get()
+    const response = await client.system.notifications["unread-count"].$get()
     if (response.status !== 200) throw new UsageError("未読件数の取得に失敗しました")
 
     const data = await response.json()

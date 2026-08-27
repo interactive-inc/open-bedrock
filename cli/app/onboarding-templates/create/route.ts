@@ -28,7 +28,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["onboarding-templates"].$post({
+    const response = await client["onboarding"]["onboarding-templates"].$post({
       json: {
         code: query.code,
         name: query.name,

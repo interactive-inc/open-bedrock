@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getMySkill(skillCode: string) {
   const client = await createClient()
 
-  const response = await client["employee-skills"].me[":skillCode"].$get({
+  const response = await client["skill"]["employee-skills"].me[":skillCode"].$get({
     param: { skillCode: skillCode },
   })
 

@@ -1,4 +1,4 @@
-import { DecideExpense } from "@/contexts/expense/application/decide-expense"
+import { ApproveExpense } from "@/contexts/expense/application/approve-expense"
 import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -35,14 +35,13 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const updated = await new DecideExpense({
+    const updated = await new ApproveExpense({
       context: c,
       notifyApprovalResult: (command) => new NotifyApprovalResult(c).run(command),
-    }).run({
+    }).execute({
       session: session,
       expenseId,
       approverId: session.employeeId,
-      action: "approve",
       comment: body.comment,
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })

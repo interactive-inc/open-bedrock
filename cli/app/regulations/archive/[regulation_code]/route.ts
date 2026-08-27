@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.regulations[":code"].archive.$post({
+    const response = await client["regulation"]["regulations"][":code"].archive.$post({
       param: { code: regulationCode },
     })
 

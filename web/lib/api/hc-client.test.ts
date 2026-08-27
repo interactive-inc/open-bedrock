@@ -26,7 +26,7 @@ describe("createClient", () => {
     vi.stubGlobal("fetch", fetchMock)
 
     const client = await createClient()
-    await client["audit-events"].$get()
+    await client["company"]["audit-events"].$get()
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const request = new Request(fetchMock.mock.calls[0]?.[0], fetchMock.mock.calls[0]?.[1])
@@ -39,7 +39,7 @@ describe("createClient", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("fixture network failure")))
 
     const client = await createClient()
-    const response = await client["audit-events"].$get()
+    const response = await client["company"]["audit-events"].$get()
 
     expect(response.status).toBe(503)
     expect(await response.json()).toEqual({ error: "api unreachable" })

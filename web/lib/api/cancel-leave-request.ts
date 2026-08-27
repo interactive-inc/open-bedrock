@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function cancelLeaveRequest(id: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["leave-requests"][":id"].$delete({
+  const response = await client["leave"]["leave-requests"][":id"].$delete({
     param: { id: String(id) },
   })
 

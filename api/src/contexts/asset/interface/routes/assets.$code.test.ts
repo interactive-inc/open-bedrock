@@ -104,7 +104,7 @@ async function request(
 
 describe("GET /assets/:code", () => {
   test("current holder reads their asset sensitive fields", async () => {
-    const response = await request("/assets/A0001", await memberToken())
+    const response = await request("/asset/assets/A0001", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -121,7 +121,7 @@ describe("GET /assets/:code", () => {
   })
 
   test("asset:manage holder reads another employee asset sensitive fields", async () => {
-    const response = await request("/assets/A0002", await tokenFor(1))
+    const response = await request("/asset/assets/A0002", await tokenFor(1))
 
     expect(response.status).toBe(200)
     expect(await response.json()).toMatchObject({
@@ -132,7 +132,7 @@ describe("GET /assets/:code", () => {
   })
 
   test("unrelated member receives only catalog fields", async () => {
-    const response = await request("/assets/A0001", await tokenFor(6))
+    const response = await request("/asset/assets/A0001", await tokenFor(6))
 
     expect(response.status).toBe(200)
     expect(await response.json()).toMatchObject({
@@ -147,13 +147,13 @@ describe("GET /assets/:code", () => {
   })
 
   test("returns 404 for a missing asset", async () => {
-    const response = await request("/assets/A9999", await memberToken())
+    const response = await request("/asset/assets/A9999", await memberToken())
 
     expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/assets/A0001", null)
+    const response = await request("/asset/assets/A0001", null)
 
     expect(response.status).toBe(401)
   })

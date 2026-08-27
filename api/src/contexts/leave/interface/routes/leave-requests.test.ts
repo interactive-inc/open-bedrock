@@ -118,7 +118,7 @@ async function request(props: {
 describe("POST /leave-requests", () => {
   test("creates a pending leave request and returns 201", async () => {
     const response = await request({
-      path: "/leave-requests",
+      path: "/leave/leave-requests",
       token: await tokenFor(5),
       method: "POST",
       body: {
@@ -154,7 +154,7 @@ describe("POST /leave-requests", () => {
     expect(seeded?.endDate).toBe("2026-06-03")
 
     const response = await request({
-      path: "/leave-requests",
+      path: "/leave/leave-requests",
       token: await tokenFor(5),
       method: "POST",
       body: {
@@ -169,7 +169,7 @@ describe("POST /leave-requests", () => {
 
   test("treats a shared boundary date as an overlap", async () => {
     const response = await request({
-      path: "/leave-requests",
+      path: "/leave/leave-requests",
       token: await tokenFor(5),
       method: "POST",
       body: {
@@ -184,7 +184,7 @@ describe("POST /leave-requests", () => {
 
   test("allows a request that starts immediately after an existing one", async () => {
     const response = await request({
-      path: "/leave-requests",
+      path: "/leave/leave-requests",
       token: await tokenFor(5),
       method: "POST",
       body: {
@@ -199,7 +199,7 @@ describe("POST /leave-requests", () => {
 
   test("returns 400 when the end date precedes the start date", async () => {
     const response = await request({
-      path: "/leave-requests",
+      path: "/leave/leave-requests",
       token: await tokenFor(5),
       method: "POST",
       body: {
@@ -214,7 +214,7 @@ describe("POST /leave-requests", () => {
 
   test("returns 400 when leave_type is invalid", async () => {
     const response = await request({
-      path: "/leave-requests",
+      path: "/leave/leave-requests",
       token: await tokenFor(5),
       method: "POST",
       body: {
@@ -229,7 +229,7 @@ describe("POST /leave-requests", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/leave-requests",
+      path: "/leave/leave-requests",
       token: null,
       method: "POST",
       body: {
@@ -245,7 +245,7 @@ describe("POST /leave-requests", () => {
   test("returns 409 at submission time when the balance is insufficient", async () => {
     // employee 5 の annual remaining は 15（seed-leave-balances.ts）。20 日分は超過するため申請自体を拒否する。
     const response = await request({
-      path: "/leave-requests",
+      path: "/leave/leave-requests",
       token: await tokenFor(5),
       method: "POST",
       body: {
@@ -261,7 +261,7 @@ describe("POST /leave-requests", () => {
   test("returns 409 at submission time when no balance record exists for the leave type", async () => {
     // employee 9 には leave_balances が一切ない（seed-leave-balances.ts は employee 5/10 のみ）。
     const response = await request({
-      path: "/leave-requests",
+      path: "/leave/leave-requests",
       token: await tokenFor(9),
       method: "POST",
       body: {
@@ -280,7 +280,7 @@ describe("POST /leave-requests", () => {
     const created = await requestWithContext({
       db,
       jwtSecret,
-      path: "/leave-requests",
+      path: "/leave/leave-requests",
       token: await tokenFor(5),
       method: "POST",
       body: {
@@ -298,7 +298,7 @@ describe("POST /leave-requests", () => {
     const approveResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: `/leave-requests/${createdBody.id}/approve`,
+      path: `/leave/leave-requests/${createdBody.id}/approve`,
       token: await tokenFor(4),
       method: "POST",
       body: { comment: null },
@@ -432,7 +432,7 @@ describe("GET /leave-requests", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/leave-requests?employee_id=20",
+      path: "/leave/leave-requests?employee_id=20",
       token: await tokenFor(2),
     })
 
@@ -453,7 +453,7 @@ describe("GET /leave-requests", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/leave-requests?employee_id=21",
+      path: "/leave/leave-requests?employee_id=21",
       token: await tokenFor(20),
     })
 
@@ -464,7 +464,7 @@ describe("GET /leave-requests", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/leave-requests?scope=reports",
+      path: "/leave/leave-requests?scope=reports",
       token: await tokenFor(2),
     })
 
@@ -489,7 +489,7 @@ describe("GET /leave-requests", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/leave-requests?scope=reports",
+      path: "/leave/leave-requests?scope=reports",
       token: await tokenFor(22),
     })
 
@@ -508,7 +508,7 @@ describe("GET /leave-requests", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/leave-requests?scope=reports",
+      path: "/leave/leave-requests?scope=reports",
       token: await tokenFor(20),
     })
 

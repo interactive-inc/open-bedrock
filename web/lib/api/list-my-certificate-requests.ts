@@ -7,7 +7,7 @@ export async function listMyCertificateRequests(): Promise<
 > {
   const client = await createClient()
 
-  const response = await client["certificate-requests"].me.$get()
+  const response = await client["certificate-request"]["certificate-requests"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load certificate requests")

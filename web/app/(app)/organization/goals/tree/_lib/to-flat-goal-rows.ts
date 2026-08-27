@@ -8,7 +8,7 @@ export type FlatGoalRow = {
   status: string
   weight: number
   departmentCode: string | null
-  employeeId: number
+  employeeId: string
 }
 
 /** ツリーを深さ付きの平坦な行に展開する。インデント表示用。親→子の順で並ぶ。 */

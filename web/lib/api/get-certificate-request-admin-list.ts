@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 
 export type CertificateRequestAdminFilter = {
   status: string | null
-  employeeId: number | null
+  employeeId: string | null
 }
 
 type Params = {
@@ -17,7 +17,7 @@ export async function getCertificateRequestAdminList(
 ) {
   const client = await createClient()
 
-  const response = await client["certificate-requests"].admin.$get({
+  const response = await client["certificate-request"]["certificate-requests"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       employee_id: filter.employeeId !== null ? String(filter.employeeId) : undefined,

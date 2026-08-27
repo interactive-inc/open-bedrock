@@ -8,7 +8,7 @@ import type { EmployeeGradeSearchQuery } from "@/lib/api/types/grade-types"
 export async function getEmployeeGradeList(query: EmployeeGradeSearchQuery) {
   const client = await createClient()
 
-  const response = await client["employee-grades"].$get({
+  const response = await client.company["employee-grades"].$get({
     query: { employee_code: query.employeeCode },
   })
 

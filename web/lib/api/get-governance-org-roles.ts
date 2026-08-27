@@ -3,7 +3,7 @@ import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
 export async function getGovernanceOrgRoles() {
   const client = await createClient()
-  const response = await client["governance-org-roles"].$get()
+  const response = await client["governance"]["governance-org-roles"].$get()
   if (response.status >= 400) {
     return toApiResponseError(response, "組織ロールの取得に失敗しました")
   }

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getPermissions() {
   const client = await createClient()
 
-  const response = await client["permission-definitions"].$get()
+  const response = await client["system"]["permission-definitions"].$get()
 
   if (response.status >= 400) {
     return new Error("failed to load permissions")

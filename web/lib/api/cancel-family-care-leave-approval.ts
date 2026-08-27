@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function cancelFamilyCareLeaveApproval(id: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["family-care-leaves"][":id"].cancel.$post({
+  const response = await client["family-care-leave"]["family-care-leaves"][":id"].cancel.$post({
     param: { id },
   })
 

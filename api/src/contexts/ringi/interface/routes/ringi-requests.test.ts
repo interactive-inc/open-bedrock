@@ -100,7 +100,7 @@ async function request(props: RequestProps): Promise<Response> {
 describe("POST /ringi-requests", () => {
   test("returns 201 with a pending ringi from the token employee", async () => {
     const response = await request({
-      path: "/ringi-requests",
+      path: "/ringi/ringi-requests",
       token: await tokenFor(5),
       method: "POST",
       body: { approver_id: "4", title: "Office chairs", amount: 90000, reason: "ergonomics" },
@@ -122,7 +122,7 @@ describe("POST /ringi-requests", () => {
 
   test("returns 401 without a token", async () => {
     const response = await request({
-      path: "/ringi-requests",
+      path: "/ringi/ringi-requests",
       token: null,
       method: "POST",
       body: { approver_id: "4", title: "x", amount: 1, reason: "y" },
@@ -133,7 +133,7 @@ describe("POST /ringi-requests", () => {
 
   test("returns 400 when approver does not exist", async () => {
     const response = await request({
-      path: "/ringi-requests",
+      path: "/ringi/ringi-requests",
       token: await tokenFor(5),
       method: "POST",
       body: { approver_id: "9999", title: "x", amount: 1, reason: "y" },
@@ -144,7 +144,7 @@ describe("POST /ringi-requests", () => {
 
   test("returns 400 when approver is the applicant", async () => {
     const response = await request({
-      path: "/ringi-requests",
+      path: "/ringi/ringi-requests",
       token: await tokenFor(5),
       method: "POST",
       body: { approver_id: "5", title: "x", amount: 1, reason: "y" },
@@ -155,7 +155,7 @@ describe("POST /ringi-requests", () => {
 
   test("returns 400 when amount is not a positive integer", async () => {
     const response = await request({
-      path: "/ringi-requests",
+      path: "/ringi/ringi-requests",
       token: await tokenFor(5),
       method: "POST",
       body: { approver_id: "4", title: "x", amount: -1, reason: "y" },
@@ -168,7 +168,7 @@ describe("POST /ringi-requests", () => {
 describe("GET /ringi-requests/me", () => {
   test("returns only the applicant's own ringi", async () => {
     const response = await request({
-      path: "/ringi-requests/me",
+      path: "/ringi/ringi-requests/me",
       token: await tokenFor(5),
     })
 
@@ -182,7 +182,7 @@ describe("GET /ringi-requests/me", () => {
 
   test("filters by status", async () => {
     const response = await request({
-      path: "/ringi-requests/me?status=approved",
+      path: "/ringi/ringi-requests/me?status=approved",
       token: await tokenFor(5),
     })
 
@@ -195,7 +195,7 @@ describe("GET /ringi-requests/me", () => {
   })
 
   test("returns 401 without a token", async () => {
-    const response = await request({ path: "/ringi-requests/me", token: null })
+    const response = await request({ path: "/ringi/ringi-requests/me", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -204,7 +204,7 @@ describe("GET /ringi-requests/me", () => {
 describe("GET /ringi-requests/inbox", () => {
   test("returns only pending ringi where the token employee is approver", async () => {
     const response = await request({
-      path: "/ringi-requests/inbox",
+      path: "/ringi/ringi-requests/inbox",
       token: await tokenFor(4),
     })
 
@@ -218,7 +218,7 @@ describe("GET /ringi-requests/inbox", () => {
 
   test("returns empty for an employee who approves nothing pending", async () => {
     const response = await request({
-      path: "/ringi-requests/inbox",
+      path: "/ringi/ringi-requests/inbox",
       token: await tokenFor(6),
     })
 
@@ -230,7 +230,7 @@ describe("GET /ringi-requests/inbox", () => {
   })
 
   test("returns 401 without a token", async () => {
-    const response = await request({ path: "/ringi-requests/inbox", token: null })
+    const response = await request({ path: "/ringi/ringi-requests/inbox", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -239,7 +239,7 @@ describe("GET /ringi-requests/inbox", () => {
 describe("POST /ringi-requests/:id/approve", () => {
   test("returns 200 and flips status to approved for the named approver", async () => {
     const response = await request({
-      path: "/ringi-requests/1/approve",
+      path: "/ringi/ringi-requests/1/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "ok" },
@@ -258,7 +258,7 @@ describe("POST /ringi-requests/:id/approve", () => {
 
   test("returns 200 without a comment (comment optional)", async () => {
     const response = await request({
-      path: "/ringi-requests/1/approve",
+      path: "/ringi/ringi-requests/1/approve",
       token: await tokenFor(4),
       method: "POST",
       body: {},
@@ -269,7 +269,7 @@ describe("POST /ringi-requests/:id/approve", () => {
 
   test("returns 403 when the token employee is not the named approver", async () => {
     const response = await request({
-      path: "/ringi-requests/1/approve",
+      path: "/ringi/ringi-requests/1/approve",
       token: await tokenFor(9),
       method: "POST",
       body: { comment: "ok" },
@@ -280,7 +280,7 @@ describe("POST /ringi-requests/:id/approve", () => {
 
   test("returns 409 when the ringi is already decided", async () => {
     const response = await request({
-      path: "/ringi-requests/2/approve",
+      path: "/ringi/ringi-requests/2/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "ok" },
@@ -291,7 +291,7 @@ describe("POST /ringi-requests/:id/approve", () => {
 
   test("returns 404 for a missing ringi", async () => {
     const response = await request({
-      path: "/ringi-requests/9999/approve",
+      path: "/ringi/ringi-requests/9999/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "ok" },
@@ -302,7 +302,7 @@ describe("POST /ringi-requests/:id/approve", () => {
 
   test("returns 401 without a token", async () => {
     const response = await request({
-      path: "/ringi-requests/1/approve",
+      path: "/ringi/ringi-requests/1/approve",
       token: null,
       method: "POST",
       body: { comment: "ok" },
@@ -315,7 +315,7 @@ describe("POST /ringi-requests/:id/approve", () => {
 describe("POST /ringi-requests/:id/reject", () => {
   test("returns 200 and flips status to rejected for the named approver", async () => {
     const response = await request({
-      path: "/ringi-requests/1/reject",
+      path: "/ringi/ringi-requests/1/reject",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "over budget" },
@@ -334,7 +334,7 @@ describe("POST /ringi-requests/:id/reject", () => {
 
   test("returns 403 when the token employee is not the named approver", async () => {
     const response = await request({
-      path: "/ringi-requests/1/reject",
+      path: "/ringi/ringi-requests/1/reject",
       token: await tokenFor(9),
       method: "POST",
       body: { comment: "no" },
@@ -345,7 +345,7 @@ describe("POST /ringi-requests/:id/reject", () => {
 
   test("returns 409 when the ringi is already decided", async () => {
     const response = await request({
-      path: "/ringi-requests/2/reject",
+      path: "/ringi/ringi-requests/2/reject",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "no" },
@@ -358,7 +358,7 @@ describe("POST /ringi-requests/:id/reject", () => {
 describe("GET /ringi-requests/admin", () => {
   test("returns the whole company list for a ringi:read:all holder", async () => {
     const response = await request({
-      path: "/ringi-requests/admin",
+      path: "/ringi/ringi-requests/admin",
       token: await tokenFor(1),
     })
 
@@ -371,7 +371,7 @@ describe("GET /ringi-requests/admin", () => {
 
   test("filters by status", async () => {
     const response = await request({
-      path: "/ringi-requests/admin?status=pending",
+      path: "/ringi/ringi-requests/admin?status=pending",
       token: await tokenFor(1),
     })
 
@@ -384,7 +384,7 @@ describe("GET /ringi-requests/admin", () => {
 
   test("filters by applicant_id", async () => {
     const response = await request({
-      path: "/ringi-requests/admin?applicant_id=10",
+      path: "/ringi/ringi-requests/admin?applicant_id=10",
       token: await tokenFor(1),
     })
 
@@ -398,7 +398,7 @@ describe("GET /ringi-requests/admin", () => {
 
   test("returns 403 for an employee without ringi:read:all", async () => {
     const response = await request({
-      path: "/ringi-requests/admin",
+      path: "/ringi/ringi-requests/admin",
       token: await tokenFor(5),
     })
 
@@ -406,7 +406,7 @@ describe("GET /ringi-requests/admin", () => {
   })
 
   test("returns 401 without a token", async () => {
-    const response = await request({ path: "/ringi-requests/admin", token: null })
+    const response = await request({ path: "/ringi/ringi-requests/admin", token: null })
 
     expect(response.status).toBe(401)
   })

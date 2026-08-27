@@ -12,7 +12,7 @@ export type ItIncidentCreateRequest = {
 export async function createItIncident(request: ItIncidentCreateRequest) {
   const client = await createClient()
 
-  const response = await client["it-incidents"].$post({ json: request })
+  const response = await client["it-incident"]["it-incidents"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "インシデントの記録に失敗しました" })

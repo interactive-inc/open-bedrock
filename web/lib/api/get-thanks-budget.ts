@@ -8,7 +8,7 @@ import type { ThanksBudgetResponse } from "@/lib/api/types/thanks-points-types"
 export async function getThanksBudget(): Promise<ThanksBudgetResponse | Error> {
   const client = await createClient()
 
-  const response = await client["thanks-point-budgets"].me.$get()
+  const response = await client["thanks"]["thanks-point-budgets"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load thanks budget")

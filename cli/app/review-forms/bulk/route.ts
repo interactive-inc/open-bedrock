@@ -7,11 +7,11 @@ import { UsageError } from "@/lib/errors"
 
 export const help = `bedrock review-forms bulk --cycle-id <id> --forms <file>
   被評価者と評価者種別の組を一括作成（360度評価・管理者）。
-  --forms は [{ "subject_employee_id": n, "reviewer_employee_id": n, "reviewer_type": "self|manager|peer|subordinate" }] 形式の JSON ファイル。`
+  --forms は [{ "subject_employee_id": "id", "reviewer_employee_id": "id", "reviewer_type": "self|manager|peer|subordinate" }] 形式の JSON ファイル。`
 
 const formSchema = z.object({
-  subject_employee_id: z.number().int().positive(),
-  reviewer_employee_id: z.number().int().positive(),
+  subject_employee_id: z.string().min(1),
+  reviewer_employee_id: z.string().min(1),
   reviewer_type: z.enum(["self", "manager", "peer", "subordinate"]),
 })
 
@@ -41,7 +41,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["review-cycles"][":cycleId"].forms.bulk.$post({
+    const response = await client["performance-review"]["review-cycles"][
+      ":cycleId"
+    ].forms.bulk.$post({
       param: { cycleId: query["cycle-id"] },
       json: { forms: parsed.data },
     })

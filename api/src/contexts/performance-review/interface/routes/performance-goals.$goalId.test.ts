@@ -124,7 +124,7 @@ async function request(props: {
 describe("GET /performance-goals/me", () => {
   test("returns only the viewer's own goals", async () => {
     const response = await request({
-      path: "/performance-goals/me",
+      path: "/performance-review/performance-goals/me",
       token: await tokenFor(5),
     })
 
@@ -145,7 +145,10 @@ describe("GET /performance-goals/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/performance-goals/me", token: null })
+    const response = await request({
+      path: "/performance-review/performance-goals/me",
+      token: null,
+    })
 
     expect(response.status).toBe(401)
   })
@@ -154,7 +157,7 @@ describe("GET /performance-goals/me", () => {
 describe("GET /performance-goals/:goalId", () => {
   test("returns the goal for its owner", async () => {
     const response = await request({
-      path: `/performance-goals/${ownGoalId}`,
+      path: `/performance-review/performance-goals/${ownGoalId}`,
       token: await tokenFor(5),
     })
 
@@ -172,7 +175,7 @@ describe("GET /performance-goals/:goalId", () => {
 
   test("privileged role can view another employee's goal", async () => {
     const response = await request({
-      path: `/performance-goals/${othersGoalId}`,
+      path: `/performance-review/performance-goals/${othersGoalId}`,
       token: await tokenFor(1),
     })
 
@@ -181,7 +184,7 @@ describe("GET /performance-goals/:goalId", () => {
 
   test("returns 403 for another person's goal as a member", async () => {
     const response = await request({
-      path: `/performance-goals/${othersGoalId}`,
+      path: `/performance-review/performance-goals/${othersGoalId}`,
       token: await tokenFor(5),
     })
 
@@ -190,7 +193,7 @@ describe("GET /performance-goals/:goalId", () => {
 
   test("manager can view a report's goal (E004 over E005's goal 1)", async () => {
     const response = await request({
-      path: `/performance-goals/${ownGoalId}`,
+      path: `/performance-review/performance-goals/${ownGoalId}`,
       token: await tokenFor(4),
     })
 
@@ -199,7 +202,7 @@ describe("GET /performance-goals/:goalId", () => {
 
   test("manager cannot view a non-report's goal (E004 not over E009's goal 3)", async () => {
     const response = await request({
-      path: `/performance-goals/${othersGoalId}`,
+      path: `/performance-review/performance-goals/${othersGoalId}`,
       token: await tokenFor(4),
     })
 
@@ -208,7 +211,7 @@ describe("GET /performance-goals/:goalId", () => {
 
   test("returns 404 for an unknown goal", async () => {
     const response = await request({
-      path: "/performance-goals/9999",
+      path: "/performance-review/performance-goals/9999",
       token: await tokenFor(5),
     })
 
@@ -219,7 +222,7 @@ describe("GET /performance-goals/:goalId", () => {
 describe("PUT /performance-goals/:goalId", () => {
   test("updates the definition of the viewer's goal", async () => {
     const response = await request({
-      path: `/performance-goals/${ownGoalId}`,
+      path: `/performance-review/performance-goals/${ownGoalId}`,
       token: await tokenFor(5),
       method: "PUT",
       body: { period: "2026-H2", title: "Updated goal", weight: 35, kpi: "New KPI" },
@@ -241,7 +244,7 @@ describe("PUT /performance-goals/:goalId", () => {
 
   test("returns 403 when updating another person's goal", async () => {
     const response = await request({
-      path: `/performance-goals/${othersGoalId}`,
+      path: `/performance-review/performance-goals/${othersGoalId}`,
       token: await tokenFor(5),
       method: "PUT",
       body: { period: "2026-H2", title: "x", weight: 10 },
@@ -252,7 +255,7 @@ describe("PUT /performance-goals/:goalId", () => {
 
   test("returns 404 for an unknown goal", async () => {
     const response = await request({
-      path: "/performance-goals/9999",
+      path: "/performance-review/performance-goals/9999",
       token: await tokenFor(5),
       method: "PUT",
       body: { period: "2026-H2", title: "x", weight: 10 },
@@ -263,7 +266,7 @@ describe("PUT /performance-goals/:goalId", () => {
 
   test("returns 409 when the goal is already finalized", async () => {
     const response = await request({
-      path: `/performance-goals/${finalizedGoalId}`,
+      path: `/performance-review/performance-goals/${finalizedGoalId}`,
       token: await tokenFor(9),
       method: "PUT",
       body: { period: "2026-H2", title: "x", weight: 10 },
@@ -274,7 +277,7 @@ describe("PUT /performance-goals/:goalId", () => {
 
   test("returns 400 when title is empty", async () => {
     const response = await request({
-      path: `/performance-goals/${ownGoalId}`,
+      path: `/performance-review/performance-goals/${ownGoalId}`,
       token: await tokenFor(5),
       method: "PUT",
       body: { period: "2026-H2", title: "", weight: 10 },
@@ -287,7 +290,7 @@ describe("PUT /performance-goals/:goalId", () => {
 describe("DELETE /performance-goals/:goalId", () => {
   test("deletes the viewer's goal and returns 204", async () => {
     const response = await request({
-      path: `/performance-goals/${ownGoalId}`,
+      path: `/performance-review/performance-goals/${ownGoalId}`,
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -297,7 +300,7 @@ describe("DELETE /performance-goals/:goalId", () => {
 
   test("returns 403 when deleting another person's goal", async () => {
     const response = await request({
-      path: `/performance-goals/${othersGoalId}`,
+      path: `/performance-review/performance-goals/${othersGoalId}`,
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -307,7 +310,7 @@ describe("DELETE /performance-goals/:goalId", () => {
 
   test("returns 404 for an unknown goal", async () => {
     const response = await request({
-      path: "/performance-goals/9999",
+      path: "/performance-review/performance-goals/9999",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -317,7 +320,7 @@ describe("DELETE /performance-goals/:goalId", () => {
 
   test("returns 409 when the goal is already finalized", async () => {
     const response = await request({
-      path: `/performance-goals/${finalizedGoalId}`,
+      path: `/performance-review/performance-goals/${finalizedGoalId}`,
       token: await tokenFor(9),
       method: "DELETE",
     })
@@ -327,7 +330,7 @@ describe("DELETE /performance-goals/:goalId", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: `/performance-goals/${ownGoalId}`,
+      path: `/performance-review/performance-goals/${ownGoalId}`,
       token: null,
       method: "DELETE",
     })

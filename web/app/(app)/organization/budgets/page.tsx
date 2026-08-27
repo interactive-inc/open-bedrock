@@ -62,7 +62,7 @@ export default async function BudgetsPage() {
 
 /** GET /department-budgets を認証付きで取得して一覧テーブルを描画する非同期 RSC。 */
 async function BudgetsTable() {
-  const budgets = await getBudgetList({ departmentId: null, fiscalPeriod: null })
+  const budgets = await getBudgetList({ organizationUnitId: null, fiscalPeriod: null })
 
   if (budgets instanceof Error) {
     return <FetchError message="予算一覧の取得に失敗しました" />
@@ -103,7 +103,7 @@ async function BudgetsTable() {
               </TableCell>
 
               <TableCell className="text-muted-foreground">
-                {budget.department_name ?? `#${budget.department_id}`}
+                {budget.organization_unit_name ?? budget.organization_unit_id}
               </TableCell>
 
               <TableCell className="text-muted-foreground">{budget.fiscal_period}</TableCell>

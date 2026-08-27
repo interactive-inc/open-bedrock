@@ -11,7 +11,7 @@ export async function createTrainingEnrollment(
 ): Promise<TrainingEnrollmentResponse | Error> {
   const client = await createClient()
 
-  const response = await client["training-enrollments"].$post({
+  const response = await client["training"]["training-enrollments"].$post({
     json: { course_code: request.course_code },
   })
 

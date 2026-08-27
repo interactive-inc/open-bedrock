@@ -2,11 +2,9 @@
 
 import { revalidatePath } from "next/cache"
 import { createEmployee } from "@/lib/api/create-employee"
-import { archiveEmployee } from "@/lib/api/archive-employee"
 import { updateEmployee } from "@/lib/api/update-employee"
 import type { EmployeeRole } from "@/lib/api/types/employee-types"
 import { canCreateEmployee } from "@/lib/employee/can-create-employee"
-import { canArchiveEmployee } from "@/lib/employee/can-archive-employee"
 import { canUpdateEmployee } from "@/lib/employee/can-update-employee"
 import { requireAuth } from "@/lib/auth/require-auth"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
@@ -21,11 +19,6 @@ export type EmployeeCreateFormState = {
 }
 
 export type EmployeeUpdateFormState = {
-  ok: boolean
-  error: string | null
-}
-
-export type EmployeeArchiveFormState = {
   ok: boolean
   error: string | null
 }
@@ -211,26 +204,5 @@ export async function updateEmployeeAction(
 
   revalidatePath(`/organization/employees/${code}`)
 
-  return { ok: true, error: null }
-}
-
-export async function archiveEmployeeAction(
-  previousState: EmployeeArchiveFormState,
-  formData: FormData,
-): Promise<EmployeeArchiveFormState> {
-  const currentUser = await requireAuth()
-  if (!canArchiveEmployee(currentUser.permissions)) {
-    return { ok: false, error: "従業員をアーカイブする権限がありません" }
-  }
-  const code = toRequiredText(formData.get("code"), {
-    label: "従業員コード",
-    max: FORM_CONSTRAINTS.employee.codeMax,
-  })
-  if (code instanceof Error) return { ok: false, error: code.message }
-  const archived = await archiveEmployee(code)
-  if (archived instanceof Error) return { ok: false, error: archived.message }
-  revalidatePath("/organization/employees")
-  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
-  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
   return { ok: true, error: null }
 }

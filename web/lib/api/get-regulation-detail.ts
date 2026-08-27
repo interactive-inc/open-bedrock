@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getRegulationDetail(code: string) {
   const client = await createClient()
 
-  const response = await client.regulations[":code"].$get({
+  const response = await client["regulation"]["regulations"][":code"].$get({
     param: { code: code },
   })
 

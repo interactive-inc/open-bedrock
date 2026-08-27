@@ -105,10 +105,15 @@ async function request(
 
 describe("POST /review-forms/:formId/submit", () => {
   test("the assigned reviewer submits an open-cycle form and returns 200", async () => {
-    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
-      score: 75,
-      answers: ["on track"],
-    })
+    const response = await request(
+      "/performance-review/review-forms/1/submit",
+      await memberToken(),
+      "POST",
+      {
+        score: 75,
+        answers: ["on track"],
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -124,11 +129,16 @@ describe("POST /review-forms/:formId/submit", () => {
   })
 
   test("comment is saved and returned in the response", async () => {
-    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
-      score: 80,
-      answers: ["good"],
-      comment: "Excellent collaboration this quarter",
-    })
+    const response = await request(
+      "/performance-review/review-forms/1/submit",
+      await memberToken(),
+      "POST",
+      {
+        score: 80,
+        answers: ["good"],
+        comment: "Excellent collaboration this quarter",
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -143,10 +153,15 @@ describe("POST /review-forms/:formId/submit", () => {
   })
 
   test("comment defaults to null when omitted", async () => {
-    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
-      score: 75,
-      answers: ["on track"],
-    })
+    const response = await request(
+      "/performance-review/review-forms/1/submit",
+      await memberToken(),
+      "POST",
+      {
+        score: 75,
+        answers: ["on track"],
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -160,73 +175,115 @@ describe("POST /review-forms/:formId/submit", () => {
   })
 
   test("a non-assigned reviewer is forbidden", async () => {
-    const response = await request("/review-forms/1/submit", await managerToken(), "POST", {
-      score: 75,
-    })
+    const response = await request(
+      "/performance-review/review-forms/1/submit",
+      await managerToken(),
+      "POST",
+      {
+        score: 75,
+      },
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for a missing form", async () => {
-    const response = await request("/review-forms/9999/submit", await memberToken(), "POST", {
-      score: 75,
-    })
+    const response = await request(
+      "/performance-review/review-forms/9999/submit",
+      await memberToken(),
+      "POST",
+      {
+        score: 75,
+      },
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("returns 409 when the cycle is not open", async () => {
-    const response = await request("/review-forms/3/submit", await managerToken(), "POST", {
-      score: 75,
-    })
+    const response = await request(
+      "/performance-review/review-forms/3/submit",
+      await managerToken(),
+      "POST",
+      {
+        score: 75,
+      },
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("rejects a negative score with 400", async () => {
-    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
-      score: -1,
-    })
+    const response = await request(
+      "/performance-review/review-forms/1/submit",
+      await memberToken(),
+      "POST",
+      {
+        score: -1,
+      },
+    )
 
     expect(response.status).toBe(400)
   })
 
   test("rejects a score above 100 with 400", async () => {
-    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
-      score: 101,
-    })
+    const response = await request(
+      "/performance-review/review-forms/1/submit",
+      await memberToken(),
+      "POST",
+      {
+        score: 101,
+      },
+    )
 
     expect(response.status).toBe(400)
   })
 
   test("rejects a non-integer score with 400", async () => {
-    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
-      score: 75.5,
-    })
+    const response = await request(
+      "/performance-review/review-forms/1/submit",
+      await memberToken(),
+      "POST",
+      {
+        score: 75.5,
+      },
+    )
 
     expect(response.status).toBe(400)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/review-forms/1/submit", null, "POST", { score: 75 })
+    const response = await request("/performance-review/review-forms/1/submit", null, "POST", {
+      score: 75,
+    })
 
     expect(response.status).toBe(401)
   })
 
   test("rejects answers exceeding the serialized size limit with 400", async () => {
-    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
-      score: 75,
-      answers: ["x".repeat(20_000)],
-    })
+    const response = await request(
+      "/performance-review/review-forms/1/submit",
+      await memberToken(),
+      "POST",
+      {
+        score: 75,
+        answers: ["x".repeat(20_000)],
+      },
+    )
 
     expect(response.status).toBe(400)
   })
 
   test("accepts answers within the serialized size limit", async () => {
-    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
-      score: 75,
-      answers: ["x".repeat(1_000)],
-    })
+    const response = await request(
+      "/performance-review/review-forms/1/submit",
+      await memberToken(),
+      "POST",
+      {
+        score: 75,
+        answers: ["x".repeat(1_000)],
+      },
+    )
 
     expect(response.status).toBe(200)
   })

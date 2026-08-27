@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["job-openings"].$get({
+    const response = await client["recruitment"]["job-openings"].$get({
       query: query.status ? { status: query.status } : {},
     })
 

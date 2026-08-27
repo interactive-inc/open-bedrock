@@ -14,7 +14,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["rental-reservations"].me.$get()
+    const response = await client["rental"]["rental-reservations"].me.$get()
 
     const reservations = await response.json()
 

@@ -18,7 +18,7 @@ export default factory.createHandlers(
     if (!templateCode) throw new UsageError("template_code が必要です")
 
     const client = await createClient()
-    await client["onboarding-templates"][":code"]["lifecycle-binding"].$delete({
+    await client["onboarding"]["onboarding-templates"][":code"]["lifecycle-binding"].$delete({
       param: { code: templateCode },
     })
     return c.json({ removed: true })

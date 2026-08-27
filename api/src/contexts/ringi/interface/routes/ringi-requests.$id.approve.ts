@@ -1,4 +1,4 @@
-import { DecideRingi } from "@/contexts/ringi/application/decide-ringi"
+import { ApproveRingi } from "@/contexts/ringi/application/approve-ringi"
 import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -31,14 +31,13 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const updated = await new DecideRingi({
+    const updated = await new ApproveRingi({
       context: c,
       notifyApprovalResult: (command) => new NotifyApprovalResult(c).run(command),
-    }).run({
+    }).execute({
       session: session,
       ringiId,
       approverId: session.employeeId,
-      action: "approve",
       comment: body.comment ?? null,
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })

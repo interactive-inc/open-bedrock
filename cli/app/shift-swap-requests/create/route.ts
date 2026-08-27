@@ -27,7 +27,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["shift-swap-requests"].$post({
+    const response = await client["shift"]["shift-swap-requests"].$post({
       json: {
         target_employee_code: query["target-employee-code"],
         date: query.date,

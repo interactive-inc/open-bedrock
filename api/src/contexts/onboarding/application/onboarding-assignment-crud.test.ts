@@ -12,7 +12,11 @@ import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastruc
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { onboardingTasks } from "@/contexts/onboarding/infrastructure/schema/onboarding"
+import {
+  onboardingTemplates,
+  onboardingTemplateTasks,
+  onboardingTasks,
+} from "@/contexts/onboarding/infrastructure/schema/onboarding"
 import { eq } from "drizzle-orm"
 import { createTestContext } from "@tests/api/support/create-test-context"
 import { makeTestSession } from "@tests/api/support/make-test-session"
@@ -256,9 +260,7 @@ describe("UncompleteOnboardingTask", () => {
 })
 
 async function seedTemplate(context: Context): Promise<void> {
-  const { onboardingTemplates: tbl, onboardingTemplateTasks: ttbl } = await import("@/schema")
-
-  await context.var.database.insert(tbl).values({
+  await context.var.database.insert(onboardingTemplates).values({
     id: template.id ?? undefined,
     code: template.code,
     name: template.name,
@@ -267,7 +269,7 @@ async function seedTemplate(context: Context): Promise<void> {
   })
 
   for (const task of template.tasks) {
-    await context.var.database.insert(ttbl).values({
+    await context.var.database.insert(onboardingTemplateTasks).values({
       templateCode: template.code,
       code: task.code,
       title: task.title,

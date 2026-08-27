@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["shift-swap-requests"][":id"].approve.$post({
+    const response = await client["shift"]["shift-swap-requests"][":id"].approve.$post({
       param: { id: id },
     })
 

@@ -2,7 +2,8 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import { describe, expect, test } from "bun:test"
 import { CreateReviewCycle } from "@/contexts/performance-review/application/review/create-review-cycle"
 import { DeleteReviewCycle } from "@/contexts/performance-review/application/review/delete-review-cycle"
-import { SetReviewCycleStatus } from "@/contexts/performance-review/application/review/set-review-cycle-status"
+import { CloseReviewCycle } from "@/contexts/performance-review/application/review/close-review-cycle"
+import { OpenReviewCycle } from "@/contexts/performance-review/application/review/open-review-cycle"
 import { SubmitReviewForm } from "@/contexts/performance-review/application/review/submit-review-form"
 import { UpdateReviewCycle } from "@/contexts/performance-review/application/review/update-review-cycle"
 import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
@@ -210,17 +211,16 @@ describe("DeleteReviewCycle", () => {
   })
 })
 
-describe("SetReviewCycleStatus", () => {
+describe("OpenReviewCycle / CloseReviewCycle", () => {
   test("transitions draft to open", async () => {
     const { context, db } = await createTestContext()
     await initializeStandardCompanyTestState(db)
 
     const cycleId = await seedCycle(context, "draft")
 
-    const result = await new SetReviewCycleStatus(context).run({
+    const result = await new OpenReviewCycle(context).execute({
       session: makeTestSession("root"),
       cycleId: cycleId,
-      status: "open",
     })
 
     expect(result).toBeInstanceOf(ReviewCycle)
@@ -237,10 +237,9 @@ describe("SetReviewCycleStatus", () => {
 
     const cycleId = await seedCycle(context, "open")
 
-    const result = await new SetReviewCycleStatus(context).run({
+    const result = await new CloseReviewCycle(context).execute({
       session: makeTestSession("root"),
       cycleId: cycleId,
-      status: "closed",
     })
 
     expect(result).toBeInstanceOf(ReviewCycle)
@@ -257,10 +256,9 @@ describe("SetReviewCycleStatus", () => {
 
     const cycleId = await seedCycle(context, "draft")
 
-    const result = await new SetReviewCycleStatus(context).run({
+    const result = await new CloseReviewCycle(context).execute({
       session: makeTestSession("root"),
       cycleId: cycleId,
-      status: "closed",
     })
 
     expectApplicationError(result, ConflictError, "invalid_transition")
@@ -271,10 +269,9 @@ describe("SetReviewCycleStatus", () => {
 
     const cycleId = await seedCycle(context, "closed")
 
-    const result = await new SetReviewCycleStatus(context).run({
+    const result = await new OpenReviewCycle(context).execute({
       session: makeTestSession("root"),
       cycleId: cycleId,
-      status: "open",
     })
 
     expectApplicationError(result, ConflictError, "invalid_transition")
@@ -283,10 +280,9 @@ describe("SetReviewCycleStatus", () => {
   test("returns cycle_not_found for a missing cycle", async () => {
     const { context } = await createTestContext()
 
-    const result = await new SetReviewCycleStatus(context).run({
+    const result = await new OpenReviewCycle(context).execute({
       session: makeTestSession("root"),
       cycleId: 9999,
-      status: "open",
     })
 
     expectApplicationError(result, NotFoundError, "cycle_not_found")
@@ -295,10 +291,9 @@ describe("SetReviewCycleStatus", () => {
   test("returns forbidden for member role", async () => {
     const { context } = await createTestContext()
 
-    const result = await new SetReviewCycleStatus(context).run({
+    const result = await new OpenReviewCycle(context).execute({
       session: makeTestSession("member"),
       cycleId: 1,
-      status: "open",
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")

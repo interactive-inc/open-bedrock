@@ -20,7 +20,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["application-templates"][":code"].$get({ param: { code } })
+    const response = await client["company"]["application-templates"][":code"].$get({
+      param: { code },
+    })
 
     return c.json(await response.json())
   },

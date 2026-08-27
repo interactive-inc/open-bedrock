@@ -8,7 +8,7 @@ import type { OneOnOneUpdateRequest } from "@/lib/api/types/oneonone-types"
 export async function updateOneOnOne(id: string, request: OneOnOneUpdateRequest) {
   const client = await createClient()
 
-  const response = await client["one-on-ones"][":id"].$put({
+  const response = await client["one-on-one"]["one-on-ones"][":id"].$put({
     param: { id },
     json: request,
   })

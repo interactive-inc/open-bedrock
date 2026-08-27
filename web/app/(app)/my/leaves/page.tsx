@@ -44,7 +44,11 @@ export default async function LeavePage() {
             ) : null}
 
             {canApprove ? (
-              <Button variant="outline" nativeButton={false} render={<Link href="/inbox/leaves" />}>
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/company/inbox/leaves" />}
+              >
                 <Inbox />
                 承認受信箱
               </Button>

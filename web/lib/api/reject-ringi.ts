@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function rejectRingi(id: number, comment: string | null) {
   const client = await createClient()
 
-  const response = await client["ringi-requests"][":id"].reject.$post({
+  const response = await client["ringi"]["ringi-requests"][":id"].reject.$post({
     param: { id: String(id) },
     json: { comment: comment },
   })

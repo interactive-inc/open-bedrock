@@ -12,7 +12,7 @@ export type AssetResponse = {
   serial: string | null
   purchased_on: string | null
   status: string
-  holder_employee_id: number | null
+  holder_employee_id: string | null
 }
 
 /** GET /assets のクエリ。kind / status で絞り込む。値なしは null。 */

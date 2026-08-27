@@ -102,7 +102,7 @@ async function request(
 
 describe("POST /training-enrollments/:id/complete", () => {
   test("the owner completes their enrollment and returns 200", async () => {
-    const response = await request("/training-enrollments/1/complete", await tokenFor(5), {
+    const response = await request("/training/training-enrollments/1/complete", await tokenFor(5), {
       method: "POST",
       body: { score: 85 },
     })
@@ -118,26 +118,34 @@ describe("POST /training-enrollments/:id/complete", () => {
 
   test("rejects an out-of-range or non-integer score with 400", async () => {
     for (const score of [150, -5, 85.5]) {
-      const response = await request("/training-enrollments/1/complete", await tokenFor(5), {
-        method: "POST",
-        body: { score: score },
-      })
+      const response = await request(
+        "/training/training-enrollments/1/complete",
+        await tokenFor(5),
+        {
+          method: "POST",
+          body: { score: score },
+        },
+      )
 
       expect(response.status).toBe(400)
     }
   })
 
   test("returns 404 for a missing enrollment", async () => {
-    const response = await request("/training-enrollments/999/complete", await tokenFor(5), {
-      method: "POST",
-      body: {},
-    })
+    const response = await request(
+      "/training/training-enrollments/999/complete",
+      await tokenFor(5),
+      {
+        method: "POST",
+        body: {},
+      },
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("a member completing another's enrollment is forbidden", async () => {
-    const response = await request("/training-enrollments/2/complete", await tokenFor(5), {
+    const response = await request("/training/training-enrollments/2/complete", await tokenFor(5), {
       method: "POST",
       body: {},
     })
@@ -146,7 +154,7 @@ describe("POST /training-enrollments/:id/complete", () => {
   })
 
   test("returns 409 when already completed", async () => {
-    const response = await request("/training-enrollments/2/complete", await tokenFor(4), {
+    const response = await request("/training/training-enrollments/2/complete", await tokenFor(4), {
       method: "POST",
       body: {},
     })
@@ -155,7 +163,7 @@ describe("POST /training-enrollments/:id/complete", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/training-enrollments/1/complete", null, {
+    const response = await request("/training/training-enrollments/1/complete", null, {
       method: "POST",
       body: {},
     })

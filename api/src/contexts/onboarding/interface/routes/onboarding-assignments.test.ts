@@ -141,7 +141,7 @@ async function request(props: {
 describe("POST /onboarding-assignments", () => {
   test("assigns a template to an employee and returns 201", async () => {
     const response = await request({
-      path: "/onboarding-assignments",
+      path: "/onboarding/onboarding-assignments",
       token: await token(2),
       method: "POST",
       body: { employee_code: "E003", template_code: "engineer_join" },
@@ -164,7 +164,7 @@ describe("POST /onboarding-assignments", () => {
 
   test("returns 404 for an unknown employee", async () => {
     const response = await request({
-      path: "/onboarding-assignments",
+      path: "/onboarding/onboarding-assignments",
       token: await token(2),
       method: "POST",
       body: { employee_code: "E999", template_code: "engineer_join" },
@@ -175,7 +175,7 @@ describe("POST /onboarding-assignments", () => {
 
   test("returns 404 for an unknown template", async () => {
     const response = await request({
-      path: "/onboarding-assignments",
+      path: "/onboarding/onboarding-assignments",
       token: await token(2),
       method: "POST",
       body: { employee_code: "E003", template_code: "missing" },
@@ -186,7 +186,7 @@ describe("POST /onboarding-assignments", () => {
 
   test("returns 400 when employee_code is missing", async () => {
     const response = await request({
-      path: "/onboarding-assignments",
+      path: "/onboarding/onboarding-assignments",
       token: await token(2),
       method: "POST",
       body: { template_code: "engineer_join" },
@@ -202,7 +202,7 @@ describe("POST /onboarding-assignments", () => {
     const secondResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding-assignments",
+      path: "/onboarding/onboarding-assignments",
       token: await token(2),
       method: "POST",
       body: { employee_code: "E005", template_code: "engineer_join" },
@@ -213,7 +213,7 @@ describe("POST /onboarding-assignments", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/onboarding-assignments",
+      path: "/onboarding/onboarding-assignments",
       token: null,
       method: "POST",
       body: { employee_code: "E003", template_code: "engineer_join" },

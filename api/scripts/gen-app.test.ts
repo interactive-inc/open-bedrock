@@ -10,6 +10,7 @@ import {
   renderRegistration,
   sortRegistrations,
   toAlias,
+  toContextUrl,
   toRouteShape,
   toUrl,
   type RouteRegistration,
@@ -44,6 +45,13 @@ describe("toUrl", () => {
   test("root直下のdot区切りrouteをURL階層へ展開する", () => {
     expect(toUrl("company.capabilities.ts")).toBe("/company/capabilities")
     expect(toUrl("system.sessions.ts")).toBe("/system/sessions")
+  })
+})
+
+describe("toContextUrl", () => {
+  test("所有contextを先頭segmentへ補い、既存prefixは重ねない", () => {
+    expect(toContextUrl("expense", "expenses.$id.ts")).toBe("/expense/expenses/:id")
+    expect(toContextUrl("company", "company.capabilities.ts")).toBe("/company/capabilities")
   })
 })
 
@@ -175,6 +183,35 @@ describe("collectRegistrations", () => {
     }
     expect(nested).toEqual([])
     expect(invalidDynamicParameters).toEqual([])
+  })
+
+  test("全URLをcontext/resource以下に置き、所有contextと先頭segmentを一致させる", async () => {
+    const registrations = await collectRegistrations()
+    const knownContexts = new Set(
+      ROUTE_MODULE_REGISTRY.filter((module) => module.tier !== "composition").map(
+        (module) => module.context,
+      ),
+    )
+    const violations: string[] = []
+
+    for (const registration of registrations) {
+      const segments = registration.url.split("/").filter(Boolean)
+      const owner = ROUTE_MODULE_REGISTRY.find((module) =>
+        registration.module.startsWith(`${module.routeImportPrefix}/`),
+      )
+      if (segments.length < 2 || !knownContexts.has(segments[0] ?? "")) {
+        violations.push(
+          `${registration.method} ${registration.url}: context/resourceではありません`,
+        )
+      }
+      if (owner !== undefined && owner.tier !== "composition" && segments[0] !== owner.context) {
+        violations.push(
+          `${registration.method} ${registration.url}: ${owner.context}のrouteではありません`,
+        )
+      }
+    }
+
+    expect(violations).toEqual([])
   })
 
   test("routes内のtestは同名のroute sourceと一対一で対応する", async () => {

@@ -11,7 +11,7 @@ export type CertificationResponse = {
 /** GET /employee-certifications の要素。 */
 export type EmployeeCertificationResponse = {
   id: number
-  employee_id: number
+  employee_id: string
   certification_id: number
   acquired_on: string
   expires_on: string | null

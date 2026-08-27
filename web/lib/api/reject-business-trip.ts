@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function rejectBusinessTrip(id: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["business-trips"][":id"].reject.$post({
+  const response = await client["business-trip"]["business-trips"][":id"].reject.$post({
     param: { id },
   })
 

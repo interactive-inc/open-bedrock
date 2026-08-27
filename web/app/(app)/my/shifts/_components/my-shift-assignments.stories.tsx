@@ -15,7 +15,7 @@ export const WithAssignments: Story = {
     assignments: [
       {
         id: 1,
-        employee_id: 101,
+        employee_id: "101",
         pattern_id: 1,
         pattern_name: "早番",
         pattern_start_time: "07:00",
@@ -26,7 +26,7 @@ export const WithAssignments: Story = {
       },
       {
         id: 2,
-        employee_id: 101,
+        employee_id: "101",
         pattern_id: 2,
         pattern_name: "遅番",
         pattern_start_time: "13:00",
@@ -37,7 +37,7 @@ export const WithAssignments: Story = {
       },
       {
         id: 3,
-        employee_id: 101,
+        employee_id: "101",
         pattern_id: null,
         pattern_name: null,
         pattern_start_time: null,

@@ -7,7 +7,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function deleteOneOnOne(id: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["one-on-ones"][":id"].$delete({
+  const response = await client["one-on-one"]["one-on-ones"][":id"].$delete({
     param: { id },
   })
 

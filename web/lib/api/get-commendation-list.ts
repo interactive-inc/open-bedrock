@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getCommendationList(query: { limit: number; offset: number }) {
   const client = await createClient()
 
-  const response = await client.commendations.$get({
+  const response = await client["commendation"]["commendations"].$get({
     query: { limit: String(query.limit), offset: String(query.offset) },
   })
 

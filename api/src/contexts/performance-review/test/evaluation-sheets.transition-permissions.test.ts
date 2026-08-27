@@ -73,7 +73,7 @@ async function createSheetWithEvaluators(
   const response = await requestWithContext({
     db,
     jwtSecret,
-    path: "/evaluation-sheets",
+    path: "/performance-review/evaluation-sheets",
     token,
     method: "POST",
     body: {
@@ -103,7 +103,7 @@ async function transition(
   return requestWithContext({
     db,
     jwtSecret,
-    path: `/evaluation-sheets/${sheetId}/transition`,
+    path: `/performance-review/evaluation-sheets/${sheetId}/transition`,
     token,
     method: "POST",
     body: {
@@ -188,7 +188,7 @@ async function seedGoals(
     const res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -481,7 +481,7 @@ describe("createWithAuditLog readback", () => {
     const createRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -505,7 +505,7 @@ describe("createWithAuditLog readback", () => {
     const getRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${created.id}`,
+      path: `/performance-review/evaluation-sheets/${created.id}`,
       token: adminTk,
       method: "GET",
     })
@@ -529,7 +529,7 @@ describe("createWithAuditLog readback", () => {
     const res1 = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -556,7 +556,7 @@ describe("createWithAuditLog readback", () => {
     const res2 = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -575,7 +575,7 @@ describe("createWithAuditLog readback", () => {
     const getRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/evaluation-sheets/${sheet2.id}`,
+      path: `/performance-review/evaluation-sheets/${sheet2.id}`,
       token: adminTk,
       method: "GET",
     })
@@ -606,7 +606,7 @@ describe("createWithAuditLog readback", () => {
     const res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -643,7 +643,7 @@ describe("weight sum validation", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -660,7 +660,7 @@ describe("weight sum validation", () => {
     const goal1Res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -677,7 +677,7 @@ describe("weight sum validation", () => {
     const goal2Res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -702,7 +702,7 @@ describe("weight sum validation", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -718,7 +718,7 @@ describe("weight sum validation", () => {
     const goal1Res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -734,7 +734,7 @@ describe("weight sum validation", () => {
     const goal2Res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -755,7 +755,7 @@ describe("weight sum validation", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -772,7 +772,7 @@ describe("weight sum validation", () => {
     const goal1Res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -787,7 +787,7 @@ describe("weight sum validation", () => {
     const goal2Res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -804,7 +804,7 @@ describe("weight sum validation", () => {
     const updateRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/performance-goals/${goal2.id}`,
+      path: `/performance-review/performance-goals/${goal2.id}`,
       token: ownerTk,
       method: "PUT",
       body: {
@@ -825,7 +825,7 @@ describe("weight sum validation", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -841,7 +841,7 @@ describe("weight sum validation", () => {
     const goal1Res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -856,7 +856,7 @@ describe("weight sum validation", () => {
     const goal2Res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -873,7 +873,7 @@ describe("weight sum validation", () => {
     const updateRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/performance-goals/${goal2.id}`,
+      path: `/performance-review/performance-goals/${goal2.id}`,
       token: ownerTk,
       method: "PUT",
       body: {
@@ -899,7 +899,7 @@ describe("sheet status guard for goals", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -922,7 +922,7 @@ describe("sheet status guard for goals", () => {
     const goalRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -947,7 +947,7 @@ describe("sheet status guard for goals", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -975,7 +975,7 @@ describe("sheet status guard for goals", () => {
     const goalsRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals?period=2026-H1&employee_id=5",
+      path: "/performance-review/performance-goals?period=2026-H1&employee_id=5",
       token: ownerTk,
       method: "GET",
     })
@@ -986,7 +986,7 @@ describe("sheet status guard for goals", () => {
     const deleteRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/performance-goals/${goalsList.data[0].id}`,
+      path: `/performance-review/performance-goals/${goalsList.data[0].id}`,
       token: ownerTk,
       method: "DELETE",
     })
@@ -1006,7 +1006,7 @@ describe("linked-goal audit logs", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -1021,7 +1021,7 @@ describe("linked-goal audit logs", () => {
     const goalRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -1060,7 +1060,7 @@ describe("linked-goal audit logs", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -1075,7 +1075,7 @@ describe("linked-goal audit logs", () => {
     const goalRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -1093,7 +1093,7 @@ describe("linked-goal audit logs", () => {
     const updateRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/performance-goals/${goal.id}`,
+      path: `/performance-review/performance-goals/${goal.id}`,
       token: ownerTk,
       method: "PUT",
       body: {
@@ -1137,7 +1137,7 @@ describe("linked-goal audit logs", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -1152,7 +1152,7 @@ describe("linked-goal audit logs", () => {
     const goalRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: ownerTk,
       method: "POST",
       body: {
@@ -1170,7 +1170,7 @@ describe("linked-goal audit logs", () => {
     const deleteRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/performance-goals/${goal.id}`,
+      path: `/performance-review/performance-goals/${goal.id}`,
       token: ownerTk,
       method: "DELETE",
     })
@@ -1207,7 +1207,7 @@ describe("atomic operations with sheet status guard", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -1227,7 +1227,7 @@ describe("atomic operations with sheet status guard", () => {
     const goalsRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals?period=2026-H1&employee_id=5",
+      path: "/performance-review/performance-goals?period=2026-H1&employee_id=5",
       token: ownerTk,
       method: "GET",
     })
@@ -1246,7 +1246,7 @@ describe("atomic operations with sheet status guard", () => {
     const deleteRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/performance-goals/${goalId}`,
+      path: `/performance-review/performance-goals/${goalId}`,
       token: ownerTk,
       method: "DELETE",
     })
@@ -1262,7 +1262,7 @@ describe("atomic operations with sheet status guard", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -1298,7 +1298,7 @@ describe("atomic operations with sheet status guard", () => {
     const sheetRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: adminTk,
       method: "POST",
       body: {
@@ -1317,7 +1317,7 @@ describe("atomic operations with sheet status guard", () => {
     const goalsRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals?period=2026-H1&employee_id=5",
+      path: "/performance-review/performance-goals?period=2026-H1&employee_id=5",
       token: ownerTk,
       method: "GET",
     })
@@ -1329,7 +1329,7 @@ describe("atomic operations with sheet status guard", () => {
     const deleteRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/performance-goals/${goal40!.id}`,
+      path: `/performance-review/performance-goals/${goal40!.id}`,
       token: ownerTk,
       method: "DELETE",
     })
@@ -1371,7 +1371,7 @@ describe("lifecycle evaluator validation", () => {
     const res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_id: "5", period: "2026-JST-BEFORE" },
@@ -1392,7 +1392,7 @@ describe("lifecycle evaluator validation", () => {
     const res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_id: "5", period: "2026-JST-AFTER" },
@@ -1412,7 +1412,7 @@ describe("lifecycle evaluator validation", () => {
     const res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_id: "5", period: "2026-H1" },
@@ -1430,7 +1430,7 @@ describe("lifecycle evaluator validation", () => {
     const res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_id: "5", period: "2026-H1" },
@@ -1447,7 +1447,7 @@ describe("lifecycle evaluator validation", () => {
     const res = await requestWithContext({
       db,
       jwtSecret,
-      path: "/evaluation-sheets",
+      path: "/performance-review/evaluation-sheets",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_id: "5", period: "2026-H1", primary_evaluator_id: "4" },

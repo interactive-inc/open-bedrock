@@ -25,7 +25,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["department-budgets"].summary.$get({
+    const response = await client["expense"]["department-budgets"].summary.$get({
       query: { fiscal_period: fiscalPeriod },
     })
 

@@ -5,7 +5,7 @@ import type { CalendarDayCreateRequest } from "@/lib/api/types/calendar-types"
 export async function createCalendarDay(request: CalendarDayCreateRequest) {
   const client = await createClient()
 
-  const response = await client["company-calendar-days"].$post({
+  const response = await client["company-calendar"]["company-calendar-days"].$post({
     json: {
       calendar_date: request.calendar_date,
       kind: request.kind,

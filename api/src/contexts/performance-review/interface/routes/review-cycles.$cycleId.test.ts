@@ -79,11 +79,16 @@ async function request(
 
 describe("PUT /review-cycles/:cycleId", () => {
   test("admin updates title/period/dueDate and returns 200", async () => {
-    const response = await request("/review-cycles/3", await adminToken(), "PUT", {
-      title: "Updated Cycle",
-      period: "2027-H1",
-      dueDate: "2027-06-30",
-    })
+    const response = await request(
+      "/performance-review/review-cycles/3",
+      await adminToken(),
+      "PUT",
+      {
+        title: "Updated Cycle",
+        period: "2027-H1",
+        dueDate: "2027-06-30",
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -99,11 +104,16 @@ describe("PUT /review-cycles/:cycleId", () => {
   })
 
   test("admin can null out dueDate", async () => {
-    const response = await request("/review-cycles/1", await adminToken(), "PUT", {
-      title: "No Due",
-      period: "2026-H1",
-      dueDate: null,
-    })
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await adminToken(),
+      "PUT",
+      {
+        title: "No Due",
+        period: "2026-H1",
+        dueDate: null,
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -117,27 +127,42 @@ describe("PUT /review-cycles/:cycleId", () => {
   })
 
   test("returns 404 for a missing cycle", async () => {
-    const response = await request("/review-cycles/9999", await adminToken(), "PUT", {
-      title: "X",
-      period: "2026-H1",
-    })
+    const response = await request(
+      "/performance-review/review-cycles/9999",
+      await adminToken(),
+      "PUT",
+      {
+        title: "X",
+        period: "2026-H1",
+      },
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("member updating a cycle is forbidden", async () => {
-    const response = await request("/review-cycles/1", await memberToken(), "PUT", {
-      title: "X",
-      period: "2026-H1",
-    })
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await memberToken(),
+      "PUT",
+      {
+        title: "X",
+        period: "2026-H1",
+      },
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("missing title is rejected with 400", async () => {
-    const response = await request("/review-cycles/1", await adminToken(), "PUT", {
-      period: "2026-H1",
-    })
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await adminToken(),
+      "PUT",
+      {
+        period: "2026-H1",
+      },
+    )
 
     expect(response.status).toBe(400)
   })
@@ -145,43 +170,71 @@ describe("PUT /review-cycles/:cycleId", () => {
 
 describe("DELETE /review-cycles/:cycleId", () => {
   test("admin deletes the cycle and returns 204", async () => {
-    const response = await request("/review-cycles/3", await adminToken(), "DELETE")
+    const response = await request(
+      "/performance-review/review-cycles/3",
+      await adminToken(),
+      "DELETE",
+    )
 
     expect(response.status).toBe(204)
   })
 
   test("returns 409 when deleting an open cycle", async () => {
-    const response = await request("/review-cycles/1", await adminToken(), "DELETE")
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await adminToken(),
+      "DELETE",
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("returns 409 when deleting a closed cycle", async () => {
-    const response = await request("/review-cycles/2", await adminToken(), "DELETE")
+    const response = await request(
+      "/performance-review/review-cycles/2",
+      await adminToken(),
+      "DELETE",
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("returns 404 for a missing cycle", async () => {
-    const response = await request("/review-cycles/9999", await adminToken(), "DELETE")
+    const response = await request(
+      "/performance-review/review-cycles/9999",
+      await adminToken(),
+      "DELETE",
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("member deleting a cycle is forbidden", async () => {
-    const response = await request("/review-cycles/1", await memberToken(), "DELETE")
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await memberToken(),
+      "DELETE",
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("open cycle cannot be deleted (409)", async () => {
-    const response = await request("/review-cycles/1", await adminToken(), "DELETE")
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await adminToken(),
+      "DELETE",
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("closed cycle cannot be deleted (409)", async () => {
-    const response = await request("/review-cycles/2", await adminToken(), "DELETE")
+    const response = await request(
+      "/performance-review/review-cycles/2",
+      await adminToken(),
+      "DELETE",
+    )
 
     expect(response.status).toBe(409)
   })

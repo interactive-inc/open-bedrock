@@ -127,7 +127,7 @@ async function request(props: {
 describe("GET /onboarding-assignments/me", () => {
   test("returns the caller own tasks", async () => {
     const response = await request({
-      path: "/onboarding-assignments/me",
+      path: "/onboarding/onboarding-assignments/me",
       token: await token(5),
     })
 
@@ -146,7 +146,7 @@ describe("GET /onboarding-assignments/me", () => {
 
   test("returns an empty list for an employee without tasks", async () => {
     const response = await request({
-      path: "/onboarding-assignments/me",
+      path: "/onboarding/onboarding-assignments/me",
       token: await token(1),
     })
 
@@ -164,7 +164,7 @@ describe("GET /onboarding-assignments/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/onboarding-assignments/me", token: null })
+    const response = await request({ path: "/onboarding/onboarding-assignments/me", token: null })
 
     expect(response.status).toBe(401)
   })

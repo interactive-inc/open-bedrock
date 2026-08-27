@@ -27,7 +27,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["rental-reservations"].$post({
+    const response = await client["rental"]["rental-reservations"].$post({
       json: {
         item_name: query.item,
         start_date: query.start,

@@ -6,7 +6,7 @@ import type { BusinessTripCreateRequest } from "@/lib/api/types/business-trip-ty
 export async function createBusinessTrip(request: BusinessTripCreateRequest) {
   const client = await createClient()
 
-  const response = await client["business-trips"].$post({ json: request })
+  const response = await client["business-trip"]["business-trips"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

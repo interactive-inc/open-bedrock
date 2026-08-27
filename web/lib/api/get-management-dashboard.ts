@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getManagementDashboard() {
   const client = await createClient()
 
-  const response = await client.dashboard.management.$get()
+  const response = await client["company"]["dashboard"].management.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load management dashboard")

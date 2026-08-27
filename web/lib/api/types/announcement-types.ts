@@ -7,7 +7,7 @@ export type AnnouncementListItem = {
   title: string
   status: string
   published_on: string | null
-  author_employee_id: number
+  author_employee_id: string
   created_at: string
 }
 
@@ -18,7 +18,7 @@ export type AnnouncementResponse = {
   body_md: string
   status: string
   published_on: string | null
-  author_employee_id: number
+  author_employee_id: string
   created_at: string
 }
 

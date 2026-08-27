@@ -6,7 +6,7 @@ import type { LeaveRequestCreateRequest } from "@/lib/api/types/leave-types"
 export async function createLeaveRequest(request: LeaveRequestCreateRequest) {
   const client = await createClient()
 
-  const response = await client["leave-requests"].$post({ json: request })
+  const response = await client["leave"]["leave-requests"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

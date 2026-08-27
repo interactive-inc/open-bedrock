@@ -9,7 +9,7 @@ import type { SalaryRevisionCreateRequest } from "@/lib/api/types/salary-revisio
 export async function createSalaryRevision(request: SalaryRevisionCreateRequest) {
   const client = await createClient()
 
-  const response = await client["salary-revisions"].$post({ json: request })
+  const response = await client["compensation-change"]["salary-revisions"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

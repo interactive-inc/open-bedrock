@@ -15,7 +15,7 @@ export async function updateCareerApplication(
 ): Promise<CareerApplication | Error> {
   const client = await createClient()
 
-  const response = await client["career-applications"][":id"].$put({
+  const response = await client["career"]["career-applications"][":id"].$put({
     param: { id: String(id) },
     json: request,
   })

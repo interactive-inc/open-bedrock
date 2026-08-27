@@ -16,7 +16,7 @@ export type AntisocialCheckUpdateRequest = {
 /** GET /antisocial-checks/me と /antisocial-checks/:id のレスポンス要素。api は snake_case で返す。 */
 export type AntisocialCheckResponse = {
   id: string
-  requester_id: number
+  requester_id: string
   partner_name: string
   partner_address: string | null
   representative_name: string | null

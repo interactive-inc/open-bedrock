@@ -1,4 +1,4 @@
-import { DecideLeaveRequest } from "@/contexts/leave/application/decide-leave-request"
+import { RejectLeaveRequest } from "@/contexts/leave/application/reject-leave-request"
 import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -35,14 +35,13 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const updated = await new DecideLeaveRequest({
+    const updated = await new RejectLeaveRequest({
       context: c,
       notifyApprovalResult: (command) => new NotifyApprovalResult(c).run(command),
-    }).run({
+    }).execute({
       session: session,
       leaveRequestId,
       approverId: session.employeeId,
-      action: "reject",
       comment: body.comment,
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })

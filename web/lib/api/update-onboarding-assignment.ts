@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function updateOnboardingAssignment(id: number, assignedAt: string) {
   const client = await createClient()
 
-  const response = await client["onboarding-assignments"][":id"].$put({
+  const response = await client["onboarding"]["onboarding-assignments"][":id"].$put({
     param: { id: String(id) },
     json: { assigned_at: assignedAt },
   })

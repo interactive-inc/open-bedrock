@@ -33,7 +33,9 @@ import {
   createSystemDecisionTask,
   type StartSystemProcedureTask,
 } from "@system/domain/policies/decision-task.policy"
-import { DecideSystemTask } from "@system/application/workflow/decide-system-task"
+import { ApproveSystemTask } from "@system/application/workflow/approve-system-task"
+import { RejectSystemTask } from "@system/application/workflow/reject-system-task"
+import { ReturnSystemTask } from "@system/application/workflow/return-system-task"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
 import type { SystemProposalView } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { systemCaseIdSchema } from "@system/domain/schemas/workflow/system-case.schema"
@@ -364,21 +366,27 @@ export async function decideSystemApplication(
   }
   const caseId = systemCaseIdSchema.safeParse(proposal.caseId)
   if (!caseId.success) return new UnexpectedError("invalid System Case ID")
-  const result = await new DecideSystemTask(
-    new SystemD1WorkflowAdapter({ env: { DB: c.env.DB } }),
-  ).run({
+  const workflow = new SystemD1WorkflowAdapter({ env: { DB: c.env.DB } })
+  const command = {
     caseId: caseId.data,
     taskKey: proposal.currentTaskKey,
     round: proposal.currentTaskRound,
     actorAccountId,
     representedAccountId,
     delegationId,
-    action: systemAction,
     proposalDigest: proposal.digest,
     comment: input.comment,
     decidedAt: input.decidedAt,
     nextTask,
-  })
+  }
+  let result
+  if (systemAction === "approve") {
+    result = await new ApproveSystemTask(workflow).execute(command)
+  } else if (systemAction === "reject") {
+    result = await new RejectSystemTask(workflow).execute(command)
+  } else {
+    result = await new ReturnSystemTask(workflow).execute(command)
+  }
   if (result instanceof Error) {
     if (
       isUniqueConstraintError(result) ||

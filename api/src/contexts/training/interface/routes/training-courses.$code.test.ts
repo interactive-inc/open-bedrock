@@ -100,7 +100,7 @@ async function request(
 
 describe("GET /training-courses/:code", () => {
   test("returns 200 with the course", async () => {
-    const response = await request("/training-courses/TR-SEC-01", await tokenFor(5))
+    const response = await request("/training/training-courses/TR-SEC-01", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -110,7 +110,7 @@ describe("GET /training-courses/:code", () => {
   })
 
   test("returns 404 for a missing course", async () => {
-    const response = await request("/training-courses/TR-NONE", await tokenFor(5))
+    const response = await request("/training/training-courses/TR-NONE", await tokenFor(5))
 
     expect(response.status).toBe(404)
   })

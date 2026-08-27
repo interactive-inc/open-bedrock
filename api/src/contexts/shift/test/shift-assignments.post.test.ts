@@ -100,7 +100,7 @@ async function request(props: RequestProps): Promise<Response> {
 describe("POST /shift-assignments", () => {
   test("privileged role assigns a shift and returns 201", async () => {
     const response = await request({
-      path: "/shift-assignments",
+      path: "/shift/shift-assignments",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E005", pattern_code: "EARLY", date: "2026-06-10" },
@@ -121,7 +121,7 @@ describe("POST /shift-assignments", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift-assignments",
+      path: "/shift/shift-assignments",
       token: await tokenFor(5),
       method: "POST",
       body: { employee_code: "E005", pattern_code: "EARLY", date: "2026-06-10" },
@@ -132,7 +132,7 @@ describe("POST /shift-assignments", () => {
 
   test("returns 404 for an unknown employee_code", async () => {
     const response = await request({
-      path: "/shift-assignments",
+      path: "/shift/shift-assignments",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E999", pattern_code: "EARLY", date: "2026-06-10" },
@@ -143,7 +143,7 @@ describe("POST /shift-assignments", () => {
 
   test("returns 404 for an unknown pattern_code", async () => {
     const response = await request({
-      path: "/shift-assignments",
+      path: "/shift/shift-assignments",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E005", pattern_code: "NOPE", date: "2026-06-10" },
@@ -154,7 +154,7 @@ describe("POST /shift-assignments", () => {
 
   test("returns 400 when date is missing", async () => {
     const response = await request({
-      path: "/shift-assignments",
+      path: "/shift/shift-assignments",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E005", pattern_code: "EARLY" },
@@ -165,7 +165,7 @@ describe("POST /shift-assignments", () => {
 
   test("returns 409 for duplicate employee + date assignment", async () => {
     const response = await request({
-      path: "/shift-assignments",
+      path: "/shift/shift-assignments",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_code: "E005", pattern_code: "EARLY", date: "2026-06-01" },
@@ -176,7 +176,7 @@ describe("POST /shift-assignments", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/shift-assignments",
+      path: "/shift/shift-assignments",
       token: null,
       method: "POST",
       body: { employee_code: "E005", pattern_code: "EARLY", date: "2026-06-10" },

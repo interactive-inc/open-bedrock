@@ -5,7 +5,7 @@ import type { AssetSearchQuery } from "@/lib/api/types/asset-types"
 export async function getAssetList(query: AssetSearchQuery) {
   const client = await createClient()
 
-  const response = await client.assets.$get({
+  const response = await client["asset"]["assets"].$get({
     query: { kind: query.kind ?? undefined, status: query.status ?? undefined },
   })
 

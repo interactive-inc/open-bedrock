@@ -27,7 +27,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["application-requests"].$post({
+    const response = await client["company"]["application-requests"].$post({
       json: { template_code: templateCode, payload },
     })
 

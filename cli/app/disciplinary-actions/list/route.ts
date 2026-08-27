@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["disciplinary-actions"].$get({
+    const response = await client["disciplinary-action"]["disciplinary-actions"].$get({
       query: query["employee-id"] ? { employee_id: query["employee-id"] } : {},
     })
 

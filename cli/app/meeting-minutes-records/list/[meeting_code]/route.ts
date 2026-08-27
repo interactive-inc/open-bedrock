@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.meetings[":code"].minutes.$get({
+    const response = await client["meeting"]["meetings"][":code"].minutes.$get({
       param: { code },
     })
 

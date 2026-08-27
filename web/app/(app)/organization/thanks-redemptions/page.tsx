@@ -55,7 +55,7 @@ export default async function AdminRedemptionsPage(props: { searchParams: Search
 
   const filter: RedemptionAdminFilter = {
     status: status,
-    employeeId: toPositiveInt(employeeIdRaw),
+    employeeId: toEmployeeId(employeeIdRaw),
     rewardId: toPositiveInt(rewardIdRaw),
     from: from,
     to: to,
@@ -195,6 +195,10 @@ function toPositiveInt(raw: string | null): number | null {
   }
 
   return parsed
+}
+
+function toEmployeeId(raw: string | null): string | null {
+  return raw === null || raw.length > 128 ? null : raw
 }
 
 function toSort(raw: string | null): RedemptionAdminSort {

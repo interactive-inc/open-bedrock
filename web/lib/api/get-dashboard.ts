@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getDashboard() {
   const client = await createClient()
 
-  const response = await client.dashboard.$get()
+  const response = await client["company"]["dashboard"].$get()
 
   if (response.status >= 400) {
     return new Error("failed to load dashboard")

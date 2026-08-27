@@ -17,7 +17,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["certificate-requests"][":id"].reject.$post({
+    const response = await client["certificate-request"]["certificate-requests"][
+      ":id"
+    ].reject.$post({
       param: { id: query.id },
     })
 

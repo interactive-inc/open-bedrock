@@ -100,7 +100,7 @@ async function request(
 
 describe("GET /training-courses", () => {
   test("returns 200 with all courses", async () => {
-    const response = await request("/training-courses", await tokenFor(5))
+    const response = await request("/training/training-courses", await tokenFor(5))
 
     expect(response.status).toBe(200)
 
@@ -116,7 +116,10 @@ describe("GET /training-courses", () => {
   })
 
   test("filters by category", async () => {
-    const response = await request("/training-courses?category=コンプライアンス", await tokenFor(5))
+    const response = await request(
+      "/training/training-courses?category=コンプライアンス",
+      await tokenFor(5),
+    )
 
     const body = z
       .object({ data: z.array(trainingCourseResponseSchema), total: z.number() })
@@ -127,7 +130,7 @@ describe("GET /training-courses", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/training-courses", null)
+    const response = await request("/training/training-courses", null)
 
     expect(response.status).toBe(401)
   })

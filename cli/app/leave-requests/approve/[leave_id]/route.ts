@@ -20,7 +20,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["leave-requests"][":id"].approve.$post({
+    const response = await client["leave"]["leave-requests"][":id"].approve.$post({
       param: { id: leaveId },
       json: { comment: query.comment ?? null },
     })

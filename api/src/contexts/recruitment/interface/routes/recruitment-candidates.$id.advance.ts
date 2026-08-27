@@ -1,4 +1,8 @@
-import { AdvanceCandidate } from "@/contexts/recruitment/application/advance-candidate"
+import { HireCandidate } from "@/contexts/recruitment/application/hire-candidate"
+import { MoveCandidateToInterview } from "@/contexts/recruitment/application/move-candidate-to-interview"
+import { MoveCandidateToOffer } from "@/contexts/recruitment/application/move-candidate-to-offer"
+import { MoveCandidateToScreening } from "@/contexts/recruitment/application/move-candidate-to-screening"
+import { RejectCandidate } from "@/contexts/recruitment/application/reject-candidate"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -16,7 +20,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      stage: z.enum(["applied", "screening", "interview", "offer", "hired", "rejected"]),
+      stage: z.enum(["screening", "interview", "offer", "hired", "rejected"]),
     }),
   ),
   async (c) => {
@@ -28,11 +32,22 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const updated = await new AdvanceCandidate(c).run({
+    const input = {
       session,
       id: validateIntParam(c.req.param("id"), "recruitment candidate"),
-      stage: json.stage,
-    })
+    }
+    let updated
+    if (json.stage === "screening") {
+      updated = await new MoveCandidateToScreening(c).execute(input)
+    } else if (json.stage === "interview") {
+      updated = await new MoveCandidateToInterview(c).execute(input)
+    } else if (json.stage === "offer") {
+      updated = await new MoveCandidateToOffer(c).execute(input)
+    } else if (json.stage === "hired") {
+      updated = await new HireCandidate(c).execute(input)
+    } else {
+      updated = await new RejectCandidate(c).execute(input)
+    }
 
     if (updated instanceof ApplicationError) {
       throw toHttpException(updated)

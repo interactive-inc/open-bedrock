@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function checkStocktakeItem(id: string, assetCode: string, locationNote?: string) {
   const client = await createClient()
 
-  const response = await client.stocktakes[":id"].assets[":code"].check.$post({
+  const response = await client["asset"]["stocktakes"][":id"].assets[":code"].check.$post({
     param: { id, code: assetCode },
     json: { location_note: locationNote },
   })

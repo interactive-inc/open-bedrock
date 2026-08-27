@@ -14,11 +14,11 @@ import type { ShiftSwapAdminSort } from "@/lib/api/get-shift-swap-admin-list"
 
 export type ShiftSwapAdminRow = {
   id: number
-  requester_employee_id: number
+  requester_employee_id: string
   requester_employee_code: string
   requester_name: string
   requester_dept_name: string | null
-  target_employee_id: number
+  target_employee_id: string
   target_employee_code: string
   target_name: string
   date: string

@@ -21,7 +21,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["training-enrollments"][":id"].complete.$post({
+    const response = await client["training"]["training-enrollments"][":id"].complete.$post({
       param: { id: id },
       json: {
         score: query.score !== undefined ? toFiniteNumber(query.score, "--score") : undefined,

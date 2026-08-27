@@ -88,7 +88,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /expenses/admin", () => {
   test("returns 200 with all expenses for admin", async () => {
-    const response = await request("/expenses/admin", await tokenFor(1))
+    const response = await request("/expense/expenses/admin", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -107,25 +107,25 @@ describe("GET /expenses/admin", () => {
   })
 
   test("returns 403 for manager", async () => {
-    const response = await request("/expenses/admin", await tokenFor(4))
+    const response = await request("/expense/expenses/admin", await tokenFor(4))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 403 for member", async () => {
-    const response = await request("/expenses/admin", await tokenFor(5))
+    const response = await request("/expense/expenses/admin", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/expenses/admin", null)
+    const response = await request("/expense/expenses/admin", null)
 
     expect(response.status).toBe(401)
   })
 
   test("filters by status", async () => {
-    const response = await request("/expenses/admin?status=approved", await tokenFor(1))
+    const response = await request("/expense/expenses/admin?status=approved", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -139,7 +139,7 @@ describe("GET /expenses/admin", () => {
   })
 
   test("filters by category", async () => {
-    const response = await request("/expenses/admin?category=transport", await tokenFor(1))
+    const response = await request("/expense/expenses/admin?category=transport", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -153,7 +153,7 @@ describe("GET /expenses/admin", () => {
   })
 
   test("filters by applicant_id", async () => {
-    const response = await request("/expenses/admin?applicant_id=5", await tokenFor(1))
+    const response = await request("/expense/expenses/admin?applicant_id=5", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -169,7 +169,7 @@ describe("GET /expenses/admin", () => {
   })
 
   test("sorts by amount desc", async () => {
-    const response = await request("/expenses/admin?sort=amount_desc", await tokenFor(1))
+    const response = await request("/expense/expenses/admin?sort=amount_desc", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -187,7 +187,7 @@ describe("GET /expenses/admin", () => {
   })
 
   test("respects limit", async () => {
-    const response = await request("/expenses/admin?limit=1", await tokenFor(1))
+    const response = await request("/expense/expenses/admin?limit=1", await tokenFor(1))
 
     expect(response.status).toBe(200)
 

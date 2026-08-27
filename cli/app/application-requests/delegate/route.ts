@@ -22,7 +22,7 @@ export default factory.createHandlers(
       throw new UsageError("--employee --start --end が必要です")
     const response = await (
       await createClient()
-    )["approval-delegations"].$post({
+    ).company["approval-delegations"].$post({
       json: {
         delegate_employee_code: query.employee,
         template_code: query.template ?? null,

@@ -71,7 +71,7 @@ async function getRequest(path: string, token: string | null): Promise<Response>
 describe("GET /attendance-records/me/summary", () => {
   test("aggregates closed records for the requested month", async () => {
     const response = await getRequest(
-      "/attendance-records/me/summary?month=2026-05",
+      "/attendance/attendance-records/me/summary?month=2026-05",
       await tokenFor(5),
     )
 
@@ -90,14 +90,17 @@ describe("GET /attendance-records/me/summary", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await getRequest("/attendance-records/me/summary?month=2026-05", null)
+    const response = await getRequest(
+      "/attendance/attendance-records/me/summary?month=2026-05",
+      null,
+    )
 
     expect(response.status).toBe(401)
   })
 
   test("returns 400 for an invalid month format", async () => {
     const response = await getRequest(
-      "/attendance-records/me/summary?month=invalid",
+      "/attendance/attendance-records/me/summary?month=invalid",
       await tokenFor(5),
     )
 
@@ -106,7 +109,7 @@ describe("GET /attendance-records/me/summary", () => {
 
   test("returns 400 for a single-digit month", async () => {
     const response = await getRequest(
-      "/attendance-records/me/summary?month=2026-1",
+      "/attendance/attendance-records/me/summary?month=2026-1",
       await tokenFor(5),
     )
 
@@ -115,7 +118,7 @@ describe("GET /attendance-records/me/summary", () => {
 
   test("returns 200 for a valid YYYY-MM month", async () => {
     const response = await getRequest(
-      "/attendance-records/me/summary?month=2024-01",
+      "/attendance/attendance-records/me/summary?month=2024-01",
       await tokenFor(5),
     )
 

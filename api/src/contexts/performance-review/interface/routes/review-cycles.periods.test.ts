@@ -67,7 +67,7 @@ async function request(token: string | null): Promise<Response> {
   return requestWithContext({
     db: await createTestDb(),
     jwtSecret,
-    path: "/review-cycles/periods",
+    path: "/performance-review/review-cycles/periods",
     token,
   })
 }

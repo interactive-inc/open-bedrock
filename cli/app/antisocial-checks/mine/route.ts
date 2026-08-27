@@ -14,7 +14,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["antisocial-checks"].me.$get()
+    const response = await client["antisocial-check"]["antisocial-checks"].me.$get()
 
     const antisocialChecks = await response.json()
 

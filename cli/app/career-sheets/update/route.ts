@@ -26,7 +26,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["career-sheets"].me.$put({ json: payload })
+    const response = await client["career"]["career-sheets"].me.$put({ json: payload })
 
     const sheet = await response.json()
 

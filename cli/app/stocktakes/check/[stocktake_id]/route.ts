@@ -29,7 +29,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    await client.stocktakes[":id"].assets[":code"].check.$post({
+    await client["asset"]["stocktakes"][":id"].assets[":code"].check.$post({
       param: { id: stocktakeId, code: query["asset-code"] },
       json: { location_note: query["location-note"] },
     })

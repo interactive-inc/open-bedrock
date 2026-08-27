@@ -34,7 +34,7 @@ export type TrainingEnrollmentResponse = {
   // 作成系は insert 直後の autoincrement id（number | null）を返す。
   id: number | null
   course_id: number
-  employee_id: number
+  employee_id: string
   status: string
   completed_at: string | null
   score: number | null

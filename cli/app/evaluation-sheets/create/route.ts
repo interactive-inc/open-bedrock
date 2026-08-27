@@ -28,23 +28,17 @@ export default factory.createHandlers(
 
     if (!query.period) throw new UsageError("--period が必要です")
 
-    const employeeId = toFiniteNumber(query["employee-id"], "--employee-id")
-
     const client = await createClient()
 
-    const response = await client["evaluation-sheets"].$post({
+    const response = await client["performance-review"]["evaluation-sheets"].$post({
       json: {
-        employee_id: employeeId,
+        employee_id: query["employee-id"],
         period: query.period,
         template_id: query["template-id"]
           ? toFiniteNumber(query["template-id"], "--template-id")
           : undefined,
-        primary_evaluator_id: query["primary-evaluator-id"]
-          ? toFiniteNumber(query["primary-evaluator-id"], "--primary-evaluator-id")
-          : undefined,
-        secondary_evaluator_id: query["secondary-evaluator-id"]
-          ? toFiniteNumber(query["secondary-evaluator-id"], "--secondary-evaluator-id")
-          : undefined,
+        primary_evaluator_id: query["primary-evaluator-id"],
+        secondary_evaluator_id: query["secondary-evaluator-id"],
       },
     })
 

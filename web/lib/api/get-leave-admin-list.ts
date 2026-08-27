@@ -9,7 +9,7 @@ export type LeaveAdminSort =
 
 export type LeaveAdminFilter = {
   status: LeaveStatus | null
-  applicantId: number | null
+  applicantId: string | null
   leaveType: LeaveType | null
   from: string | null
   to: string | null
@@ -25,7 +25,7 @@ type Params = {
 export async function getLeaveAdminList(filter: LeaveAdminFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client["leave-requests"].admin.$get({
+  const response = await client["leave"]["leave-requests"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       applicant_id: filter.applicantId !== null ? String(filter.applicantId) : undefined,

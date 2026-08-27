@@ -36,11 +36,11 @@ const app = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
-  .post("/life-events", ...createRoute.POST)
-  .get("/life-events/me", ...meRoute.GET)
-  .get("/life-events/:id", ...detailRoute.GET)
-  .put("/life-events/:id", ...detailRoute.PUT)
-  .delete("/life-events/:id", ...detailRoute.DELETE)
+  .post("/life-event/life-events", ...createRoute.POST)
+  .get("/life-event/life-events/me", ...meRoute.GET)
+  .get("/life-event/life-events/:id", ...detailRoute.GET)
+  .put("/life-event/life-events/:id", ...detailRoute.PUT)
+  .delete("/life-event/life-events/:id", ...detailRoute.DELETE)
 
 const lifeEventResponseSchema = z.object({
   id: z.string(),
@@ -136,7 +136,7 @@ async function request(props: {
 describe("POST /life-events", () => {
   test("creates a life event with status submitted", async () => {
     const response = await request({
-      path: "/life-events",
+      path: "/life-event/life-events",
       token: await applicantToken(),
       method: "POST",
       body: {
@@ -161,7 +161,7 @@ describe("POST /life-events", () => {
 
   test("creates a life event with null detail", async () => {
     const response = await request({
-      path: "/life-events",
+      path: "/life-event/life-events",
       token: await applicantToken(),
       method: "POST",
       body: {
@@ -183,7 +183,7 @@ describe("POST /life-events", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/life-events",
+      path: "/life-event/life-events",
       token: null,
       method: "POST",
       body: {
@@ -198,7 +198,10 @@ describe("POST /life-events", () => {
 
 describe("GET /life-events/me", () => {
   test("returns only the viewer's life events", async () => {
-    const response = await request({ path: "/life-events/me", token: await applicantToken() })
+    const response = await request({
+      path: "/life-event/life-events/me",
+      token: await applicantToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -229,7 +232,7 @@ describe("GET /life-events/me", () => {
     }
 
     const created = await app.request(
-      "/life-events",
+      "/life-event/life-events",
       {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
@@ -245,7 +248,7 @@ describe("GET /life-events/me", () => {
     expect(created.status).toBe(201)
 
     const limited = await app.request(
-      "/life-events/me?limit=1",
+      "/life-event/life-events/me?limit=1",
       { headers: { Authorization: `Bearer ${token}` } },
       bindings,
     )
@@ -257,7 +260,7 @@ describe("GET /life-events/me", () => {
     expect(limitedRows.data.length).toBe(1)
 
     const skipped = await app.request(
-      "/life-events/me?offset=1",
+      "/life-event/life-events/me?offset=1",
       { headers: { Authorization: `Bearer ${token}` } },
       bindings,
     )
@@ -270,7 +273,7 @@ describe("GET /life-events/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/life-events/me", token: null })
+    const response = await request({ path: "/life-event/life-events/me", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -279,7 +282,7 @@ describe("GET /life-events/me", () => {
 describe("GET /life-events/:id", () => {
   test("returns the life event for its applicant", async () => {
     const response = await request({
-      path: `/life-events/${ownLifeEventId}`,
+      path: `/life-event/life-events/${ownLifeEventId}`,
       token: await applicantToken(),
     })
 
@@ -296,7 +299,7 @@ describe("GET /life-events/:id", () => {
 
   test("returns 403 for another person's life event", async () => {
     const response = await request({
-      path: `/life-events/${othersLifeEventId}`,
+      path: `/life-event/life-events/${othersLifeEventId}`,
       token: await applicantToken(),
     })
 
@@ -305,7 +308,7 @@ describe("GET /life-events/:id", () => {
 
   test("returns 404 for an unknown life event", async () => {
     const response = await request({
-      path: "/life-events/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/life-event/life-events/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await applicantToken(),
     })
 
@@ -316,7 +319,7 @@ describe("GET /life-events/:id", () => {
 describe("PUT /life-events/:id", () => {
   test("updates the details of the viewer's life event", async () => {
     const response = await request({
-      path: `/life-events/${ownLifeEventId}`,
+      path: `/life-event/life-events/${ownLifeEventId}`,
       token: await applicantToken(),
       method: "PUT",
       body: {
@@ -340,7 +343,7 @@ describe("PUT /life-events/:id", () => {
 
   test("returns 403 when updating another person's life event", async () => {
     const response = await request({
-      path: `/life-events/${othersLifeEventId}`,
+      path: `/life-event/life-events/${othersLifeEventId}`,
       token: await applicantToken(),
       method: "PUT",
       body: {
@@ -355,7 +358,7 @@ describe("PUT /life-events/:id", () => {
 
   test("returns 404 for an unknown life event", async () => {
     const response = await request({
-      path: "/life-events/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/life-event/life-events/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await applicantToken(),
       method: "PUT",
       body: {
@@ -372,7 +375,7 @@ describe("PUT /life-events/:id", () => {
 describe("DELETE /life-events/:id", () => {
   test("cancels the viewer's life event and returns 204", async () => {
     const response = await request({
-      path: `/life-events/${ownLifeEventId}`,
+      path: `/life-event/life-events/${ownLifeEventId}`,
       token: await applicantToken(),
       method: "DELETE",
     })
@@ -382,7 +385,7 @@ describe("DELETE /life-events/:id", () => {
 
   test("returns 403 when cancelling another person's life event", async () => {
     const response = await request({
-      path: `/life-events/${othersLifeEventId}`,
+      path: `/life-event/life-events/${othersLifeEventId}`,
       token: await applicantToken(),
       method: "DELETE",
     })
@@ -392,7 +395,7 @@ describe("DELETE /life-events/:id", () => {
 
   test("returns 404 for an unknown life event", async () => {
     const response = await request({
-      path: "/life-events/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      path: "/life-event/life-events/ffffffff-ffff-ffff-ffff-ffffffffffff",
       token: await applicantToken(),
       method: "DELETE",
     })
@@ -402,7 +405,7 @@ describe("DELETE /life-events/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: `/life-events/${ownLifeEventId}`,
+      path: `/life-event/life-events/${ownLifeEventId}`,
       token: null,
       method: "DELETE",
     })

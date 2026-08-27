@@ -95,7 +95,11 @@ export default async function AdminExpensesPage(props: { searchParams: SearchPar
         breadcrumbs={[{ label: "経費", href: "/my/expenses" }, { label: "経費申請管理" }]}
         actions={
           currentUser.permissions.includes("expense:approve") ? (
-            <Button variant="outline" nativeButton={false} render={<Link href="/inbox/expenses" />}>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/company/inbox/expenses" />}
+            >
               承認受信箱
             </Button>
           ) : null
@@ -201,18 +205,8 @@ function toCategory(value: string | null): ExpenseCategory | null {
   return null
 }
 
-function toApplicantId(raw: string | null): number | null {
-  if (raw === null) {
-    return null
-  }
-
-  const parsed = Number(raw)
-
-  if (Number.isInteger(parsed) === false || parsed <= 0) {
-    return null
-  }
-
-  return parsed
+function toApplicantId(raw: string | null): string | null {
+  return raw === null || raw.length > 128 ? null : raw
 }
 
 function toSort(raw: string | null): ExpenseAdminSort {

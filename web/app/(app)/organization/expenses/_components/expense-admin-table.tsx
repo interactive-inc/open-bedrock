@@ -20,7 +20,7 @@ const amountFormatter = new Intl.NumberFormat("ja-JP")
 
 export type ExpenseAdminRow = {
   id: number
-  applicant_id: number
+  applicant_id: string
   applicant_name: string
   applicant_dept_name: string | null
   category: ExpenseCategory

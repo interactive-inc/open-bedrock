@@ -13,7 +13,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.system.v1.notifications.$patch({ json: { read: true } })
+    const response = await client.system.notifications.$patch({ json: { read: true } })
     if (response.status !== 200) throw new UsageError("通知の一括既読化に失敗しました")
 
     const data = await response.json()

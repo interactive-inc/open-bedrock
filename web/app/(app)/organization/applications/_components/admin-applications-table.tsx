@@ -18,7 +18,7 @@ export type AdminApplicationRow = {
   template_code: string
   template_name: string
   template_category: string
-  applicant_id: number
+  applicant_id: string
   applicant_name: string
   applicant_dept_name: string | null
   current_step: string | null

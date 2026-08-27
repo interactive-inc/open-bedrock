@@ -43,7 +43,7 @@ async function createAction(db: D1Database): Promise<number> {
   const response = await requestWithContext({
     db,
     jwtSecret,
-    path: "/disciplinary-actions",
+    path: "/disciplinary-action/disciplinary-actions",
     token: await tokenFor(1),
     method: "POST",
     body: { employee_id: "5", kind: "warning", summary: "policy breach", decided_on: "2026-06-01" },
@@ -65,7 +65,7 @@ describe("disciplinary actions", () => {
     const list = await requestWithContext({
       db,
       jwtSecret,
-      path: "/disciplinary-actions",
+      path: "/disciplinary-action/disciplinary-actions",
       token: await tokenFor(1),
     })
 
@@ -82,7 +82,7 @@ describe("disciplinary actions", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/disciplinary-actions",
+      path: "/disciplinary-action/disciplinary-actions",
       token: await tokenFor(5),
     })
 
@@ -93,7 +93,7 @@ describe("disciplinary actions", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/disciplinary-actions",
+      path: "/disciplinary-action/disciplinary-actions",
       token: await tokenFor(4),
     })
 
@@ -109,7 +109,7 @@ describe("disciplinary actions", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/disciplinary-actions?employee_id=5",
+      path: "/disciplinary-action/disciplinary-actions?employee_id=5",
       token: await tokenFor(5),
     })
 
@@ -120,7 +120,7 @@ describe("disciplinary actions", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/disciplinary-actions",
+      path: "/disciplinary-action/disciplinary-actions",
       token: await tokenFor(5),
       method: "POST",
       body: { employee_id: "6", kind: "warning", summary: "x", decided_on: "2026-06-01" },
@@ -133,7 +133,7 @@ describe("disciplinary actions", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/disciplinary-actions",
+      path: "/disciplinary-action/disciplinary-actions",
       token: null,
     })
 

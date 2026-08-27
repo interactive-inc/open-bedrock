@@ -44,7 +44,7 @@ async function createPosition(db: D1Database): Promise<number> {
   const response = await requestWithContext({
     db,
     jwtSecret,
-    path: "/job-openings",
+    path: "/recruitment/job-openings",
     token: await tokenFor(1),
     method: "POST",
     body: { title: "Backend Engineer", department_code: "D003" },
@@ -66,7 +66,7 @@ describe("recruitment positions", () => {
     const list = await requestWithContext({
       db,
       jwtSecret,
-      path: "/job-openings",
+      path: "/recruitment/job-openings",
       token: await tokenFor(1),
     })
 
@@ -81,7 +81,7 @@ describe("recruitment positions", () => {
     const updated = await requestWithContext({
       db,
       jwtSecret,
-      path: `/job-openings/${positionId}`,
+      path: `/recruitment/job-openings/${positionId}`,
       token: await tokenFor(1),
       method: "PUT",
       body: { title: "Backend Engineer", status: "closed" },
@@ -98,7 +98,7 @@ describe("recruitment positions", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/job-openings",
+      path: "/recruitment/job-openings",
       token: await tokenFor(5),
     })
 
@@ -109,7 +109,7 @@ describe("recruitment positions", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/job-openings",
+      path: "/recruitment/job-openings",
       token: await tokenFor(5),
       method: "POST",
       body: { title: "x" },
@@ -122,7 +122,7 @@ describe("recruitment positions", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/job-openings",
+      path: "/recruitment/job-openings",
       token: null,
     })
 
@@ -139,7 +139,7 @@ describe("recruitment candidates", () => {
     const created = await requestWithContext({
       db,
       jwtSecret,
-      path: `/job-openings/${positionId}/candidates`,
+      path: `/recruitment/job-openings/${positionId}/candidates`,
       token: await tokenFor(1),
       method: "POST",
       body: { name: "Applicant One", email: "applicant@example.com" },
@@ -154,7 +154,7 @@ describe("recruitment candidates", () => {
     const advanced = await requestWithContext({
       db,
       jwtSecret,
-      path: `/recruitment-candidates/${candidate.id}/advance`,
+      path: `/recruitment/recruitment-candidates/${candidate.id}/advance`,
       token: await tokenFor(1),
       method: "POST",
       body: { stage: "screening" },
@@ -175,7 +175,7 @@ describe("recruitment candidates", () => {
     const created = await requestWithContext({
       db,
       jwtSecret,
-      path: `/job-openings/${positionId}/candidates`,
+      path: `/recruitment/job-openings/${positionId}/candidates`,
       token: await tokenFor(1),
       method: "POST",
       body: { name: "Applicant Two" },
@@ -187,7 +187,7 @@ describe("recruitment candidates", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/recruitment-candidates/${candidate.id}/advance`,
+      path: `/recruitment/recruitment-candidates/${candidate.id}/advance`,
       token: await tokenFor(1),
       method: "POST",
       body: { stage: "interview" },
@@ -204,7 +204,7 @@ describe("recruitment candidates", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: `/job-openings/${positionId}/candidates`,
+      path: `/recruitment/job-openings/${positionId}/candidates`,
       token: await tokenFor(5),
     })
 

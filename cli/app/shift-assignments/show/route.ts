@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["shift-assignments"][":id"].$get({
+    const response = await client["shift"]["shift-assignments"][":id"].$get({
       param: { id: query.id },
     })
 

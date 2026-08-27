@@ -25,8 +25,8 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.employees.$get({
-      query: { q: query.q, dept: query.dept, status: query.status },
+    const response = await client.company["employee-directory"].$get({
+      query: { q: query.q, organization_unit: query.dept, status: query.status },
     })
 
     const rows = await response.json()

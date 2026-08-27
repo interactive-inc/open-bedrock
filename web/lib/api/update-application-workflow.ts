@@ -8,7 +8,7 @@ export async function updateApplicationWorkflow(
   expectedRevision: number,
 ) {
   const client = await createClient()
-  const response = await client["application-templates"][":code"].workflow.$put({
+  const response = await client["company"]["application-templates"][":code"].workflow.$put({
     param: { code },
     json: { ...workflow, expected_revision: expectedRevision },
   })

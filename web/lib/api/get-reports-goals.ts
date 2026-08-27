@@ -7,7 +7,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getReportsGoals() {
   const client = await createClient()
 
-  const response = await client["performance-goals"].$get({
+  const response = await client["performance-review"]["performance-goals"].$get({
     query: {
       scope: "reports",
     },

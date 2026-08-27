@@ -8,7 +8,7 @@ import type { SetSkillRequest } from "@/lib/api/types/skill-types"
 export async function putMySkill(body: SetSkillRequest) {
   const client = await createClient()
 
-  const response = await client["employee-skills"].me.$put({ json: body })
+  const response = await client["skill"]["employee-skills"].me.$put({ json: body })
 
   if (response.status >= 400) {
     return new Error("failed to update my skill")

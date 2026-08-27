@@ -8,9 +8,10 @@ export async function createOrgDepartment(
 ): Promise<OrgDepartmentResponse | Error> {
   const client = await createClient()
 
-  const response = await client.departments.$post({
-    json: request,
-  })
+  const response = await client.company["organization-units"].$post(
+    { json: request },
+    { headers: { "Idempotency-Key": crypto.randomUUID() } },
+  )
 
   if (response.status >= 400) {
     return toResponseError(response, {

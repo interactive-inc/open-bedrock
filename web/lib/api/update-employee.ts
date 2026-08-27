@@ -6,7 +6,7 @@ import type { EmployeeUpdateRequest } from "@/lib/api/types/employee-types"
 export async function updateEmployee(code: string, request: EmployeeUpdateRequest) {
   const client = await createClient()
 
-  const response = await client.employees[":code"].$put({
+  const response = await client.company["employee-directory"][":code"].$put({
     param: { code },
     json: request,
   })

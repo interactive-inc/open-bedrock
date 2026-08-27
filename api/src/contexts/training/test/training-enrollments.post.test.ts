@@ -100,7 +100,7 @@ async function request(
 
 describe("POST /training-enrollments", () => {
   test("a member enrolls themselves and returns 201", async () => {
-    const response = await request("/training-enrollments", await tokenFor(9), {
+    const response = await request("/training/training-enrollments", await tokenFor(9), {
       method: "POST",
       body: { course_code: "TR-SEC-01" },
     })
@@ -118,7 +118,7 @@ describe("POST /training-enrollments", () => {
   })
 
   test("returns 409 for a duplicate enrollment", async () => {
-    const response = await request("/training-enrollments", await tokenFor(5), {
+    const response = await request("/training/training-enrollments", await tokenFor(5), {
       method: "POST",
       body: { course_code: "TR-SEC-01" },
     })
@@ -127,7 +127,7 @@ describe("POST /training-enrollments", () => {
   })
 
   test("returns 409 when the course is archived", async () => {
-    const response = await request("/training-enrollments", await tokenFor(5), {
+    const response = await request("/training/training-enrollments", await tokenFor(5), {
       method: "POST",
       body: { course_code: "TR-OLD-01" },
     })
@@ -136,7 +136,7 @@ describe("POST /training-enrollments", () => {
   })
 
   test("returns 404 for an unknown course_code", async () => {
-    const response = await request("/training-enrollments", await tokenFor(5), {
+    const response = await request("/training/training-enrollments", await tokenFor(5), {
       method: "POST",
       body: { course_code: "TR-NONE" },
     })
@@ -145,7 +145,7 @@ describe("POST /training-enrollments", () => {
   })
 
   test("a privileged role assigns to another employee_code", async () => {
-    const response = await request("/training-enrollments", await tokenFor(1), {
+    const response = await request("/training/training-enrollments", await tokenFor(1), {
       method: "POST",
       body: { course_code: "TR-MGR-01", employee_code: "E005" },
     })
@@ -158,7 +158,7 @@ describe("POST /training-enrollments", () => {
   })
 
   test("a member assigning another employee is forbidden", async () => {
-    const response = await request("/training-enrollments", await tokenFor(5), {
+    const response = await request("/training/training-enrollments", await tokenFor(5), {
       method: "POST",
       body: { course_code: "TR-MGR-01", employee_code: "E009" },
     })
@@ -167,7 +167,7 @@ describe("POST /training-enrollments", () => {
   })
 
   test("assigning an unknown employee_code returns 404", async () => {
-    const response = await request("/training-enrollments", await tokenFor(1), {
+    const response = await request("/training/training-enrollments", await tokenFor(1), {
       method: "POST",
       body: { course_code: "TR-MGR-01", employee_code: "E999" },
     })
@@ -176,7 +176,7 @@ describe("POST /training-enrollments", () => {
   })
 
   test("returns 400 when course_code is missing", async () => {
-    const response = await request("/training-enrollments", await tokenFor(5), {
+    const response = await request("/training/training-enrollments", await tokenFor(5), {
       method: "POST",
       body: {},
     })
@@ -185,7 +185,7 @@ describe("POST /training-enrollments", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/training-enrollments", null, {
+    const response = await request("/training/training-enrollments", null, {
       method: "POST",
       body: { course_code: "TR-SEC-01" },
     })

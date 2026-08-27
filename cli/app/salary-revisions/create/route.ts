@@ -34,8 +34,6 @@ export default factory.createHandlers(
         "--employee-id と --effective-date と --previous-base-salary と --new-base-salary が必要です",
       )
 
-    const employeeId = toFiniteNumber(query["employee-id"], "--employee-id")
-
     const previousBaseSalary = toFiniteNumber(
       query["previous-base-salary"],
       "--previous-base-salary",
@@ -45,9 +43,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["salary-revisions"].$post({
+    const response = await client["compensation-change"]["salary-revisions"].$post({
       json: {
-        employee_id: employeeId,
+        employee_id: query["employee-id"],
         effective_date: query["effective-date"],
         previous_base_salary: previousBaseSalary,
         new_base_salary: newBaseSalary,

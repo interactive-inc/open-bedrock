@@ -22,7 +22,7 @@ export async function getWorkflowRepairs(
   params: { limit?: number; offset?: number } = {},
 ): Promise<WorkflowRepairList | Error> {
   const client = await createClient()
-  const response = await client["application-requests"]["workflow-repairs"].$get({
+  const response = await client["company"]["application-requests"]["workflow-repairs"].$get({
     query: {
       limit: params.limit === undefined ? undefined : String(params.limit),
       offset: params.offset === undefined ? undefined : String(params.offset),

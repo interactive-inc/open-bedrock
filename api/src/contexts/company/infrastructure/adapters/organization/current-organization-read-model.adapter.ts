@@ -33,6 +33,7 @@ export type CurrentOrganizationEmployee = {
 }
 
 export type CurrentOrganizationDepartment = {
+  id: OrganizationUnitId
   code: string
   name: string
   parentCode: string | null
@@ -60,9 +61,7 @@ function activeStatus(state: WorkforceStateAt): "active" | "leave" | null {
 }
 
 /** 現在有効なCompany Organization投影を読み込む。 */
-async function loadCurrentOrganization(
-  c: CompanyContext,
-): Promise<CurrentOrganizationReadModel | Error> {
+async function loadCurrentOrganization(c: Context): Promise<CurrentOrganizationReadModel | Error> {
   try {
     const businessDate = resolveCompanyBusinessDate({
       now: c.env.NOW ?? new Date().toISOString(),
@@ -114,6 +113,7 @@ async function loadCurrentOrganization(
           : unitById.get(unit.parentOrganizationUnitId)
 
       return {
+        id: unit.organizationUnitId,
         code: unit.code,
         name: unit.officialName,
         parentCode:

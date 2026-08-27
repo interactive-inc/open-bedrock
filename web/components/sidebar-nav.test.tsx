@@ -204,8 +204,10 @@ describe("SidebarNav space tabs", () => {
   test("moves inbox and notifications into the my space", () => {
     renderSidebar([])
 
-    expect(screen.getByRole("link", { name: "受信箱" }).getAttribute("href")).toBe("/inbox")
-    expect(screen.getByRole("link", { name: "通知" }).getAttribute("href")).toBe("/notifications")
+    expect(screen.getByRole("link", { name: "受信箱" }).getAttribute("href")).toBe("/company/inbox")
+    expect(screen.getByRole("link", { name: "通知" }).getAttribute("href")).toBe(
+      "/company/notifications",
+    )
     expect(screen.queryByRole("link", { name: "ホーム" })).toBeNull()
   })
 

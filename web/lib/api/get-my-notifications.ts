@@ -7,7 +7,7 @@ type NotificationListResult = {
 }
 
 /**
- * GET /system/v1/notifications。自分の System Account 宛て通知を取得する。
+ * GET /system/notifications。自分の System Account 宛て通知を取得する。
  * isRead を渡すと既読/未読で絞り込む（省略時はすべて）。
  */
 export async function getMyNotifications(props: {
@@ -26,7 +26,7 @@ export async function getMyNotifications(props: {
     query.read = props.isRead ? "true" : "false"
   }
 
-  const response = await client.system.v1.notifications.$get({ query })
+  const response = await client.system.notifications.$get({ query })
 
   if (response.status !== 200) {
     return new Error("failed to load my notifications")

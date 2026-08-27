@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function discloseReviewCycle(cycleId: number) {
   const client = await createClient()
 
-  const response = await client["review-cycles"][":cycleId"].disclose.$post({
+  const response = await client["performance-review"]["review-cycles"][":cycleId"].disclose.$post({
     param: { cycleId: String(cycleId) },
   })
 

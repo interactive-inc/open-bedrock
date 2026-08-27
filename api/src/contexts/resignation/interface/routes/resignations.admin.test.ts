@@ -66,7 +66,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /resignations/admin", () => {
   test("returns 200 with all resignations for admin", async () => {
-    const response = await request("/resignations/admin", await tokenFor(1))
+    const response = await request("/resignation/resignations/admin", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -80,19 +80,22 @@ describe("GET /resignations/admin", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/resignations/admin", await tokenFor(5))
+    const response = await request("/resignation/resignations/admin", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/resignations/admin", null)
+    const response = await request("/resignation/resignations/admin", null)
 
     expect(response.status).toBe(401)
   })
 
   test("filters by employee_id", async () => {
-    const response = await request("/resignations/admin?employee_id=2", await tokenFor(1))
+    const response = await request(
+      "/resignation/resignations/admin?employee_id=2",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
 

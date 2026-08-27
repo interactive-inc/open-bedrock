@@ -6,7 +6,7 @@ import type { AssetCreateRequest } from "@/lib/api/types/asset-types"
 export async function createAsset(request: AssetCreateRequest) {
   const client = await createClient()
 
-  const response = await client.assets.$post({ json: request })
+  const response = await client["asset"]["assets"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

@@ -20,7 +20,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["it-incidents"][":id"].resolve.$post({
+    const response = await client["it-incident"]["it-incidents"][":id"].resolve.$post({
       param: { id: incidentId },
     })
 

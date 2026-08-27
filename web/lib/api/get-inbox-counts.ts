@@ -5,7 +5,7 @@ import type { InboxCounts } from "@/lib/api/types/inbox-types"
 export async function getInboxCounts(): Promise<InboxCounts | Error> {
   const client = await createClient()
 
-  const response = await client.inbox.counts.$get()
+  const response = await client["company"]["inbox"].counts.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load inbox counts")

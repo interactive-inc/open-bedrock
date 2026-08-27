@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getRoomList() {
   const client = await createClient()
 
-  const response = await client.rooms.$get()
+  const response = await client["room"]["rooms"].$get()
 
   if (response.status >= 400) {
     return new Error("failed to load rooms")

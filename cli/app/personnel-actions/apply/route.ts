@@ -32,7 +32,7 @@ export default factory.createHandlers(
     }
     const action = { ...(await readJsonObjectFile(input.payload)), kind: input.type }
     const client = await createClient()
-    const endpoint = client["personnel-actions"].$post
+    const endpoint = client.company["personnel-action-executions"].$post
     type RequestJson = Parameters<typeof endpoint>[0]["json"]
     const response = await endpoint(
       {

@@ -5,7 +5,7 @@ import type { CertificationResponse } from "@/lib/api/types/certification-types"
 export async function listCertifications(): Promise<ReadonlyArray<CertificationResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["certification-definitions"].$get()
+  const response = await client["certification"]["certification-definitions"].$get()
 
   if (response.status >= 400) {
     return new Error("failed to load certifications")

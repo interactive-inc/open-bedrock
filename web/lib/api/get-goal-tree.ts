@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getGoalTree(period: string | null) {
   const client = await createClient()
 
-  const response = await client["performance-goals"].tree.$get({
+  const response = await client["performance-review"]["performance-goals"].tree.$get({
     query: { period: period ?? undefined },
   })
 

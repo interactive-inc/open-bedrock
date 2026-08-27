@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["life-events"][":id"].approve.$post({
+    const response = await client["life-event"]["life-events"][":id"].approve.$post({
       param: { id: query.id },
     })
 

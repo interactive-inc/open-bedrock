@@ -21,7 +21,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["evaluation-sheets"].me.$get({
+    const response = await client["performance-review"]["evaluation-sheets"].me.$get({
       query: {
         period: query.period,
         status: query.status,

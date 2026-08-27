@@ -14,7 +14,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["certification-definitions"].$get()
+    const response = await client["certification"]["certification-definitions"].$get()
 
     const rows = await response.json()
 

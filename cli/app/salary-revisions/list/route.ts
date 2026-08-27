@@ -23,7 +23,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["salary-revisions"].$get({
+    const response = await client["compensation-change"]["salary-revisions"].$get({
       query: { employee_id: query["employee-id"] },
     })
 

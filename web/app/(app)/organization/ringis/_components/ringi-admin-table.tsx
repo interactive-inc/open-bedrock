@@ -18,10 +18,10 @@ const amountFormatter = new Intl.NumberFormat("ja-JP")
 
 export type RingiAdminRow = {
   id: number
-  applicant_id: number
+  applicant_id: string
   applicant_name: string
   applicant_dept_name: string | null
-  approver_id: number
+  approver_id: string
   approver_name: string
   title: string
   amount: number

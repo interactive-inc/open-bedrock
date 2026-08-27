@@ -4,7 +4,9 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getOnboardingEmployee(code: string) {
   const client = await createClient()
 
-  const response = await client["onboarding-assignments"].employees[":employeeCode"].$get({
+  const response = await client["onboarding"]["onboarding-assignments"].employees[
+    ":employeeCode"
+  ].$get({
     param: { employeeCode: code },
   })
 

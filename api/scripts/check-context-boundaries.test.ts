@@ -4,6 +4,7 @@ import {
   classifyContextModule,
   classifyContextSource,
   inspectApiRootPath,
+  inspectCompanyAreaManifest,
   inspectCompanyRootPath,
   inspectCompanyAreaPath,
   inspectContextSource,
@@ -235,6 +236,14 @@ describe("ownership manifest", () => {
     expect(
       inspectCompanyAreaPath("src/contexts/company/domain/expense/expense.entity.ts"),
     ).not.toEqual([])
+  })
+
+  test("Companyの領域manifestを実ディレクトリと完全一致させる", () => {
+    const domainAreas = ["catalogs", "definitions", "entities", "policies", "values"]
+
+    expect(inspectCompanyAreaManifest("domain", domainAreas)).toEqual([])
+    expect(inspectCompanyAreaManifest("domain", domainAreas.slice(1))).not.toEqual([])
+    expect(inspectCompanyAreaManifest("domain", [...domainAreas, "expense"])).not.toEqual([])
   })
 
   test("業務routeを宣言済みcontextへ固定する", () => {

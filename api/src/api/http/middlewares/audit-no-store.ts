@@ -2,7 +2,9 @@ import { factory } from "@/api/http/factory"
 
 function isAuditResponsePath(path: string): boolean {
   return (
-    path === "/audit-events" || path.startsWith("/audit-events/") || path === "/audit-event-exports"
+    path === "/company/audit-events" ||
+    path.startsWith("/company/audit-events/") ||
+    path === "/company/audit-event-exports"
   )
 }
 

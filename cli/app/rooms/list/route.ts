@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.rooms.$get()
+    const response = await client["room"]["rooms"].$get()
 
     return c.json(await response.json())
   },

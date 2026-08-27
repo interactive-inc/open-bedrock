@@ -8,7 +8,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getFeatureAvailability(): Promise<ReadonlyArray<string>> {
   const client = await createClient()
 
-  const response = await client.features.$get()
+  const response = await client["company"]["features"].$get()
 
   if (response.status >= 400) {
     return []

@@ -26,7 +26,7 @@ export async function getThanksList(props?: {
     query.offset = String(props.offset)
   }
 
-  const response = await client["thanks-messages"].$get({ query })
+  const response = await client["thanks"]["thanks-messages"].$get({ query })
 
   if (response.status >= 400) {
     return new Error("failed to load thanks list")

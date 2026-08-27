@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function cancelCertificateRequest(id: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["certificate-requests"][":id"].$delete({
+  const response = await client["certificate-request"]["certificate-requests"][":id"].$delete({
     param: { id },
   })
 

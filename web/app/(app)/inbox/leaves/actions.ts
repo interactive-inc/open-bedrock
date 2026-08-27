@@ -78,7 +78,7 @@ export async function decideLeaveRequestAction(
     return result
   }
 
-  revalidatePath("/inbox/leaves")
+  revalidatePath("/company/inbox/leaves")
   revalidatePath("/my/leaves")
 
   return result

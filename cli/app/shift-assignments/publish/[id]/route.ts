@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["shift-assignments"][":id"].publish.$post({
+    const response = await client["shift"]["shift-assignments"][":id"].publish.$post({
       param: { id: id },
     })
 

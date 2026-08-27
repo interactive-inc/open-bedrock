@@ -8,9 +8,10 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function deleteOrgDepartment(code: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.departments[":code"].$delete({
-    param: { code },
-  })
+  const response = await client.company["organization-units"][":code"].$delete(
+    { param: { code } },
+    { headers: { "Idempotency-Key": crypto.randomUUID() } },
+  )
 
   if (response.status >= 400) {
     return toResponseError(response, {

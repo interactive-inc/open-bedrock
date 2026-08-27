@@ -6,7 +6,7 @@ import type { ApplicationSubmitRequest } from "@/lib/api/types/application-types
 export async function submitApplication(body: ApplicationSubmitRequest) {
   const client = await createClient()
 
-  const response = await client["application-requests"].$post({ json: body })
+  const response = await client["company"]["application-requests"].$post({ json: body })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "申請の提出に失敗しました" })

@@ -3,7 +3,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 
 export async function getEmployeeLifecycleState(code: string, asOf?: string) {
   const client = await createClient()
-  const response = await client.employees[":code"]["lifecycle-state"].$get(
+  const response = await client.company["employee-lifecycle"][":code"].state.$get(
     { param: { code }, query: { as_of: asOf } },
     { init: { cache: "no-store" } },
   )

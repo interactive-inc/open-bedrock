@@ -12,7 +12,7 @@ export type MeetingMinutesCreateRequest = {
 export async function createMeetingMinutes(code: string, request: MeetingMinutesCreateRequest) {
   const client = await createClient()
 
-  const response = await client.meetings[":code"].minutes.$post({
+  const response = await client["meeting"]["meetings"][":code"].minutes.$post({
     param: { code: code },
     json: request,
   })

@@ -22,7 +22,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["shift-assignments"].$get({
+    const response = await client["shift"]["shift-assignments"].$get({
       query: {
         from: query.from,
         to: query.to,

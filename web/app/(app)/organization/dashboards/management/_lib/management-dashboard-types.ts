@@ -6,7 +6,7 @@ import type { ApiClient } from "api/app"
  * API 側のフィールド変更をコンパイルエラーとして検知する
  */
 export type ManagementDashboard = InferResponseType<
-  ApiClient["dashboard"]["management"]["$get"],
+  ApiClient["company"]["dashboard"]["management"]["$get"],
   200
 >
 

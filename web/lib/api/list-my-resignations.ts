@@ -5,7 +5,7 @@ import type { ResignationResponse } from "@/lib/api/types/resignation-types"
 export async function listMyResignations(): Promise<ReadonlyArray<ResignationResponse> | Error> {
   const client = await createClient()
 
-  const response = await client.resignations.me.$get()
+  const response = await client["resignation"]["resignations"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load resignations")

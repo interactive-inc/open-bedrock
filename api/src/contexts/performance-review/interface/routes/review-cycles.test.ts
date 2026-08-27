@@ -58,7 +58,7 @@ async function createCycle(period: string): Promise<Response> {
   return requestWithContext({
     db: await createTestDb(),
     jwtSecret,
-    path: "/review-cycles",
+    path: "/performance-review/review-cycles",
     token: await adminToken(),
     method: "POST",
     body: { title: "期間書式の検証", period },
@@ -69,7 +69,7 @@ async function updateCycle(period: string): Promise<Response> {
   return requestWithContext({
     db: await createTestDb(),
     jwtSecret,
-    path: "/review-cycles/3",
+    path: "/performance-review/review-cycles/3",
     token: await adminToken(),
     method: "PUT",
     body: { title: "期間書式の検証", period },

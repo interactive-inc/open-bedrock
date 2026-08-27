@@ -8,7 +8,7 @@ import type { CareerPosting } from "@/lib/api/types/career-types"
 export async function getCareerPosting(postingId: number): Promise<CareerPosting | Error> {
   const client = await createClient()
 
-  const response = await client["career-postings"][":postingId"].$get({
+  const response = await client["career"]["career-postings"][":postingId"].$get({
     param: { postingId: String(postingId) },
   })
 

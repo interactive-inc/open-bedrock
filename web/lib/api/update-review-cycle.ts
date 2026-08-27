@@ -11,7 +11,7 @@ export async function updateReviewCycle(cycleId: number, request: ReviewCycleUpd
       ? { title: request.title, period: request.period }
       : { title: request.title, period: request.period, dueDate: request.dueDate }
 
-  const response = await client["review-cycles"][":cycleId"].$put({
+  const response = await client["performance-review"]["review-cycles"][":cycleId"].$put({
     param: { cycleId: String(cycleId) },
     json,
   })

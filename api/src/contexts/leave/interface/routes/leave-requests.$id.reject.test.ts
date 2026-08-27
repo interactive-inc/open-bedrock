@@ -136,7 +136,7 @@ describe("POST /leave-requests/:id/reject", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave-requests/1/reject",
+      path: "/leave/leave-requests/1/reject",
       token: managerToken,
       method: "POST",
       body: { comment: "not this time" },
@@ -162,7 +162,7 @@ describe("POST /leave-requests/:id/reject", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave-balances/me",
+      path: "/leave/leave-balances/me",
       token: ownerToken,
     })
 
@@ -175,7 +175,7 @@ describe("POST /leave-requests/:id/reject", () => {
 
   test("returns 400 when comment is empty", async () => {
     const response = await request({
-      path: "/leave-requests/1/reject",
+      path: "/leave/leave-requests/1/reject",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "" },
@@ -186,7 +186,7 @@ describe("POST /leave-requests/:id/reject", () => {
 
   test("returns 400 when comment is null", async () => {
     const response = await request({
-      path: "/leave-requests/1/reject",
+      path: "/leave/leave-requests/1/reject",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: null },
@@ -197,7 +197,7 @@ describe("POST /leave-requests/:id/reject", () => {
 
   test("returns 400 when comment is omitted", async () => {
     const response = await request({
-      path: "/leave-requests/1/reject",
+      path: "/leave/leave-requests/1/reject",
       token: await tokenFor(4),
       method: "POST",
       body: {},
@@ -208,7 +208,7 @@ describe("POST /leave-requests/:id/reject", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/leave-requests/1/reject",
+      path: "/leave/leave-requests/1/reject",
       token: await tokenFor(5),
       method: "POST",
       body: { comment: "rejected" },

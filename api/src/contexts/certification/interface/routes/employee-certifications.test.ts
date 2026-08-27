@@ -75,7 +75,10 @@ async function request(props: {
 
 describe("GET /employee-certifications", () => {
   test("member can read their own records without employee_id", async () => {
-    const response = await request({ path: "/employee-certifications", token: await tokenFor(5) })
+    const response = await request({
+      path: "/certification/employee-certifications",
+      token: await tokenFor(5),
+    })
 
     expect(response.status).toBe(200)
 
@@ -91,7 +94,7 @@ describe("GET /employee-certifications", () => {
 
   test("member can read their own records with own employee_id", async () => {
     const response = await request({
-      path: "/employee-certifications?employee_id=5",
+      path: "/certification/employee-certifications?employee_id=5",
       token: await tokenFor(5),
     })
 
@@ -100,7 +103,7 @@ describe("GET /employee-certifications", () => {
 
   test("member is 403 when requesting another employee's records", async () => {
     const response = await request({
-      path: "/employee-certifications?employee_id=5",
+      path: "/certification/employee-certifications?employee_id=5",
       token: await tokenFor(6),
     })
 
@@ -109,7 +112,7 @@ describe("GET /employee-certifications", () => {
 
   test("admin (certification:read:all) can read another employee's records", async () => {
     const response = await request({
-      path: "/employee-certifications?employee_id=5",
+      path: "/certification/employee-certifications?employee_id=5",
       token: await tokenFor(1),
     })
 
@@ -125,7 +128,7 @@ describe("GET /employee-certifications", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/employee-certifications", token: null })
+    const response = await request({ path: "/certification/employee-certifications", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -134,7 +137,7 @@ describe("GET /employee-certifications", () => {
 describe("POST /employee-certifications", () => {
   test("creates a record for admin (certification:manage)", async () => {
     const response = await request({
-      path: "/employee-certifications",
+      path: "/certification/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_id: "6", certification_id: 1, acquired_on: "2025-04-01" },
@@ -145,7 +148,7 @@ describe("POST /employee-certifications", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/employee-certifications",
+      path: "/certification/employee-certifications",
       token: await tokenFor(5),
       method: "POST",
       body: { employee_id: "5", certification_id: 1, acquired_on: "2025-04-01" },
@@ -156,7 +159,7 @@ describe("POST /employee-certifications", () => {
 
   test("returns 409 on duplicate (employee, certification, acquired_on)", async () => {
     const response = await request({
-      path: "/employee-certifications",
+      path: "/certification/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_id: "5", certification_id: 1, acquired_on: "2024-04-01" },
@@ -167,7 +170,7 @@ describe("POST /employee-certifications", () => {
 
   test("returns 404 when certification master is missing", async () => {
     const response = await request({
-      path: "/employee-certifications",
+      path: "/certification/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_id: "6", certification_id: 999, acquired_on: "2025-04-01" },
@@ -180,7 +183,7 @@ describe("POST /employee-certifications", () => {
 describe("DELETE /employee-certifications/:id", () => {
   test("deletes a record for admin (certification:manage)", async () => {
     const response = await request({
-      path: "/employee-certifications/1",
+      path: "/certification/employee-certifications/1",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -190,7 +193,7 @@ describe("DELETE /employee-certifications/:id", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/employee-certifications/1",
+      path: "/certification/employee-certifications/1",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -200,7 +203,7 @@ describe("DELETE /employee-certifications/:id", () => {
 
   test("returns 404 for a missing record", async () => {
     const response = await request({
-      path: "/employee-certifications/999",
+      path: "/certification/employee-certifications/999",
       token: await tokenFor(1),
       method: "DELETE",
     })

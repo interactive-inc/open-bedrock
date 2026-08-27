@@ -7,8 +7,8 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getOrgReportingLine(employeeCode: string) {
   const client = await createClient()
 
-  const response = await client.employees[":code"]["reporting-line"].$get({
-    param: { code: employeeCode },
+  const response = await client.company["reporting-lines"][":employeeCode"].$get({
+    param: { employeeCode },
   })
 
   if (response.status >= 400) {

@@ -8,7 +8,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function withdrawCareerApplication(id: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["career-applications"][":id"].$delete({
+  const response = await client["career"]["career-applications"][":id"].$delete({
     param: { id: String(id) },
   })
 

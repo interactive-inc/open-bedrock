@@ -94,7 +94,7 @@ async function request(
 }
 
 async function submit(db: D1Database, reason: string): Promise<number> {
-  const response = await request(db, toWorkforceEmployeeId(5), "/application-requests", {
+  const response = await request(db, toWorkforceEmployeeId(5), "/company/application-requests", {
     method: "POST",
     body: { template_code: "system_test_request", payload: { reason } },
   })
@@ -112,7 +112,7 @@ describe("System application API composition", () => {
     const templates = await request(
       db,
       toWorkforceEmployeeId(5),
-      "/application-templates?category=test",
+      "/company/application-templates?category=test",
     )
     expect(templates.status).toBe(200)
     expect(await templates.json()).toMatchObject({
@@ -124,7 +124,7 @@ describe("System application API composition", () => {
     const ownerDetail = await request(
       db,
       toWorkforceEmployeeId(5),
-      `/application-requests/${number}`,
+      `/company/application-requests/${number}`,
     )
     expect(ownerDetail.status).toBe(200)
     expect(await ownerDetail.json()).toMatchObject({
@@ -134,16 +134,17 @@ describe("System application API composition", () => {
       payload: { reason: "Need a safe decision" },
     })
     expect(
-      (await request(db, toWorkforceEmployeeId(6), `/application-requests/${number}`)).status,
+      (await request(db, toWorkforceEmployeeId(6), `/company/application-requests/${number}`))
+        .status,
     ).toBe(403)
 
-    const inbox = await request(db, toWorkforceEmployeeId(1), "/application-requests/inbox")
+    const inbox = await request(db, toWorkforceEmployeeId(1), "/company/application-requests/inbox")
     expect(inbox.status).toBe(200)
     expect(await inbox.json()).toMatchObject({ data: [{ id: number, status: "pending" }] })
     const approved = await request(
       db,
       toWorkforceEmployeeId(1),
-      `/application-requests/${number}/approve`,
+      `/company/application-requests/${number}/approve`,
       {
         method: "POST",
         body: { comment: "approved" },
@@ -170,11 +171,16 @@ describe("System application API composition", () => {
   test("freezes a proposal after candidate resolution and lets the owner withdraw it", async () => {
     const db = await createDb()
     const number = await submit(db, "first")
-    const edited = await request(db, toWorkforceEmployeeId(5), `/application-requests/${number}`, {
-      method: "PUT",
-      body: { payload: { reason: "second" } },
-      at: "2026-01-01T00:01:00.000Z",
-    })
+    const edited = await request(
+      db,
+      toWorkforceEmployeeId(5),
+      `/company/application-requests/${number}`,
+      {
+        method: "PUT",
+        body: { payload: { reason: "second" } },
+        at: "2026-01-01T00:01:00.000Z",
+      },
+    )
     expect(edited.status).toBe(409)
     expect(
       await db
@@ -189,7 +195,7 @@ describe("System application API composition", () => {
     const withdrawn = await request(
       db,
       toWorkforceEmployeeId(5),
-      `/application-requests/${number}`,
+      `/company/application-requests/${number}`,
       {
         method: "DELETE",
         at: "2026-01-01T00:02:00.000Z",
@@ -197,13 +203,14 @@ describe("System application API composition", () => {
     )
     expect(withdrawn.status).toBe(204)
     expect(
-      (await request(db, toWorkforceEmployeeId(5), `/application-requests/${number}`)).status,
+      (await request(db, toWorkforceEmployeeId(5), `/company/application-requests/${number}`))
+        .status,
     ).toBe(404)
   })
 
   test("creates a procedure-scoped System delegation through Company identity", async () => {
     const db = await createDb()
-    const created = await request(db, toWorkforceEmployeeId(1), "/approval-delegations", {
+    const created = await request(db, toWorkforceEmployeeId(1), "/company/approval-delegations", {
       method: "POST",
       body: {
         delegate_employee_code: "E004",
@@ -222,7 +229,7 @@ describe("System application API composition", () => {
     ) {
       throw new Error("delegation ID is missing")
     }
-    const listed = await request(db, toWorkforceEmployeeId(1), "/approval-delegations")
+    const listed = await request(db, toWorkforceEmployeeId(1), "/company/approval-delegations")
     expect(listed.status).toBe(200)
     expect(await listed.json()).toMatchObject({
       data: [{ id: body.id, template_code: "system_test_request", can_delete: true }],
@@ -239,7 +246,7 @@ describe("System application API composition", () => {
     ).toBe(1)
     expect(
       (
-        await request(db, toWorkforceEmployeeId(1), `/approval-delegations/${body.id}`, {
+        await request(db, toWorkforceEmployeeId(1), `/company/approval-delegations/${body.id}`, {
           method: "DELETE",
           at: "2026-01-01T00:01:00.000Z",
         })
@@ -260,8 +267,8 @@ describe("System application API composition", () => {
     } as const
 
     const responses = await Promise.all([
-      request(db, toWorkforceEmployeeId(1), "/approval-delegations", input),
-      request(db, toWorkforceEmployeeId(1), "/approval-delegations", input),
+      request(db, toWorkforceEmployeeId(1), "/company/approval-delegations", input),
+      request(db, toWorkforceEmployeeId(1), "/company/approval-delegations", input),
     ])
 
     expect(

@@ -36,7 +36,7 @@ import type { ShiftAssignmentResponse } from "@/lib/api/types/shift-types"
 type Props = {
   assignments: Array<ShiftAssignmentResponse>
   canManage: boolean
-  employeeNameMap: Record<number, string>
+  employeeNameMap: Record<string, string>
   patternNameMap: Record<number, string>
 }
 

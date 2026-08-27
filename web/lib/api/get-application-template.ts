@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getApplicationTemplate(code: string) {
   const client = await createClient()
 
-  const response = await client["application-templates"][":code"].$get({
+  const response = await client["company"]["application-templates"][":code"].$get({
     param: { code: code },
   })
 

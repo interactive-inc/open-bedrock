@@ -58,7 +58,7 @@ export function SidebarUserMenu(props: Props) {
             ? `通知（未読 ${props.unreadNotificationCount} 件）`
             : "通知"
         }
-        render={<Link href="/notifications" />}
+        render={<Link href="/company/notifications" />}
       >
         <Bell />
 

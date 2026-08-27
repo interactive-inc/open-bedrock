@@ -26,7 +26,7 @@ export async function getMyRedemptions(props?: {
     query.offset = String(props.offset)
   }
 
-  const response = await client["thanks-redemptions"].me.$get({ query })
+  const response = await client["thanks"]["thanks-redemptions"].me.$get({ query })
 
   if (response.status >= 400) {
     return new Error("failed to load my redemptions")

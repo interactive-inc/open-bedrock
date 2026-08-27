@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getSurveySummary(surveyId: number) {
   const client = await createClient()
 
-  const response = await client.surveys[":surveyId"].summary.$get({
+  const response = await client["survey"]["surveys"][":surveyId"].summary.$get({
     param: { surveyId: String(surveyId) },
   })
 

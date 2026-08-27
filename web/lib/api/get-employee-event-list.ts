@@ -8,7 +8,7 @@ import type { EmployeeEventSearchQuery } from "@/lib/api/types/employee-event-ty
 export async function getEmployeeEventList(query: EmployeeEventSearchQuery) {
   const client = await createClient()
 
-  const response = await client["employee-events"].$get({
+  const response = await client.company["employee-events"].$get({
     query: {
       employee_code: query.employeeCode,
       kind: query.kind ?? undefined,

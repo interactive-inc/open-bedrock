@@ -8,7 +8,9 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function archivePartner(id: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.partners[":id"].archive.$post({ param: { id: String(id) } })
+  const response = await client["partner"]["partners"][":id"].archive.$post({
+    param: { id: String(id) },
+  })
 
   if (response.status >= 400) {
     return toResponseError(response, {

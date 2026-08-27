@@ -34,7 +34,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.meetings[":code"].minutes.$post({
+    const response = await client["meeting"]["meetings"][":code"].minutes.$post({
       param: { code },
       json: {
         held_on: heldOn,

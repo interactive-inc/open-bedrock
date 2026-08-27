@@ -96,7 +96,7 @@ async function request(props: {
 describe("POST /career-postings/:postingId/apply", () => {
   test("returns 201 with the created application", async () => {
     const response = await request({
-      path: "/career-postings/1/apply",
+      path: "/career/career-postings/1/apply",
       token: await tokenForEmployee(2),
       method: "POST",
       body: { message: "I would like to apply" },
@@ -118,7 +118,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
   test("returns 201 with a null message when omitted", async () => {
     const response = await request({
-      path: "/career-postings/1/apply",
+      path: "/career/career-postings/1/apply",
       token: await tokenForEmployee(2),
       method: "POST",
       body: { message: null },
@@ -137,7 +137,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/career-postings/1/apply",
+      path: "/career/career-postings/1/apply",
       token: null,
       method: "POST",
       body: { message: null },
@@ -148,7 +148,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
   test("returns 404 when the posting id is not a positive integer", async () => {
     const response = await request({
-      path: "/career-postings/abc/apply",
+      path: "/career/career-postings/abc/apply",
       token: await tokenForEmployee(2),
       method: "POST",
       body: { message: null },
@@ -159,7 +159,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
   test("returns 404 when the posting does not exist", async () => {
     const response = await request({
-      path: "/career-postings/9999/apply",
+      path: "/career/career-postings/9999/apply",
       token: await tokenForEmployee(2),
       method: "POST",
       body: { message: null },
@@ -170,7 +170,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
   test("returns 404 when the posting is closed", async () => {
     const response = await request({
-      path: "/career-postings/3/apply",
+      path: "/career/career-postings/3/apply",
       token: await tokenForEmployee(2),
       method: "POST",
       body: { message: null },
@@ -181,7 +181,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
   test("returns 409 when the applicant already applied", async () => {
     const response = await request({
-      path: "/career-postings/1/apply",
+      path: "/career/career-postings/1/apply",
       token: await tokenForEmployee(6),
       method: "POST",
       body: { message: "Duplicate application" },

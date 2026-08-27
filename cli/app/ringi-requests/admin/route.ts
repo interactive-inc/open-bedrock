@@ -24,7 +24,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["ringi-requests"].admin.$get({
+    const response = await client["ringi"]["ringi-requests"].admin.$get({
       query: {
         status: query.status,
         applicant_id: query["applicant-id"],

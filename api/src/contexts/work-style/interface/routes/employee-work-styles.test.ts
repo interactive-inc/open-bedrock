@@ -69,7 +69,7 @@ describe("GET /employee-work-styles", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/employee-work-styles?employee_id=5",
+      path: "/work-style/employee-work-styles?employee_id=5",
       token: await tokenFor(5),
     })
 
@@ -91,7 +91,7 @@ describe("GET /employee-work-styles", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/employee-work-styles?employee_id=9",
+      path: "/work-style/employee-work-styles?employee_id=9",
       token: await tokenFor(5),
     })
 
@@ -102,7 +102,7 @@ describe("GET /employee-work-styles", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/employee-work-styles?employee_id=5",
+      path: "/work-style/employee-work-styles?employee_id=5",
       token: await tokenFor(1),
     })
 
@@ -113,7 +113,7 @@ describe("GET /employee-work-styles", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/employee-work-styles?employee_id=5",
+      path: "/work-style/employee-work-styles?employee_id=5",
       token: null,
     })
 
@@ -126,7 +126,7 @@ describe("POST /employee-work-styles", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/employee-work-styles",
+      path: "/work-style/employee-work-styles",
       token: await tokenFor(1),
       method: "POST",
       body: {
@@ -153,7 +153,7 @@ describe("POST /employee-work-styles", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/employee-work-styles",
+      path: "/work-style/employee-work-styles",
       token: await tokenFor(5),
       method: "POST",
       body: { employee_id: "5", style: "flextime", starts_on: "2026-07-01" },
@@ -166,7 +166,7 @@ describe("POST /employee-work-styles", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/employee-work-styles",
+      path: "/work-style/employee-work-styles",
       token: await tokenFor(1),
       method: "POST",
       body: { employee_id: "5", style: "remote", starts_on: "2026-07-01" },

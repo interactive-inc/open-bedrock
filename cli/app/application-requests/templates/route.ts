@@ -19,7 +19,7 @@ export default factory.createHandlers(json(), async (c) => {
 
   const client = await createClient()
 
-  const response = await client["application-templates"].$get({
+  const response = await client["company"]["application-templates"].$get({
     query: { category: query.category as string | undefined },
   })
 

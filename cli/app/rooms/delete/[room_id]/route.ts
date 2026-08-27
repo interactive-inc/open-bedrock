@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.rooms[":id"].$delete({ param: { id: roomId } })
+    const response = await client["room"]["rooms"][":id"].$delete({ param: { id: roomId } })
 
     if (response.status !== 204) {
       throw new UsageError("会議室の削除に失敗しました")

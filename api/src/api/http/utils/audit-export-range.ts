@@ -1,4 +1,4 @@
-import { auditOutcomeSchema } from "@/api/http/audit/company-audit-event.definition"
+import { auditOutcomeSchema } from "@/api/http/audit/company-audit-record.definition"
 import type { AuditEventFilters } from "@/api/http/audit/audit-event.adapter"
 import { parseExactSecond } from "@/api/http/utils/parse-exact-second"
 import { ValidationError } from "@/lib/errors"

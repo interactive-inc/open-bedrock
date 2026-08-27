@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["department-budgets"][":id"].$get({
+    const response = await client["expense"]["department-budgets"][":id"].$get({
       param: { id: budgetId },
     })
 

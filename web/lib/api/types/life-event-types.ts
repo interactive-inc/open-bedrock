@@ -24,7 +24,7 @@ export type LifeEventUpdateRequest = {
 /** GET /life-events/me と /life-events/:id のレスポンス要素。api は snake_case で返す。 */
 export type LifeEventResponse = {
   id: string
-  employee_id: number
+  employee_id: string
   event_type: LifeEventType
   event_date: string
   detail: string | null

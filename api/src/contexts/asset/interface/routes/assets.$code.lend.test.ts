@@ -104,7 +104,7 @@ async function request(
 
 describe("POST /assets/:code/lend", () => {
   test("privileged role lends an in_stock asset and returns 200", async () => {
-    const response = await request("/assets/A0003/lend", await adminToken(), "POST", {
+    const response = await request("/asset/assets/A0003/lend", await adminToken(), "POST", {
       employee_code: "E005",
     })
 
@@ -121,7 +121,7 @@ describe("POST /assets/:code/lend", () => {
   })
 
   test("returns 404 for an unknown employee_code", async () => {
-    const response = await request("/assets/A0003/lend", await adminToken(), "POST", {
+    const response = await request("/asset/assets/A0003/lend", await adminToken(), "POST", {
       employee_code: "E999",
     })
 
@@ -129,7 +129,7 @@ describe("POST /assets/:code/lend", () => {
   })
 
   test("returns 409 when the asset is already lent", async () => {
-    const response = await request("/assets/A0001/lend", await adminToken(), "POST", {
+    const response = await request("/asset/assets/A0001/lend", await adminToken(), "POST", {
       employee_code: "E009",
     })
 
@@ -137,7 +137,7 @@ describe("POST /assets/:code/lend", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/assets/A0003/lend", await memberToken(), "POST", {
+    const response = await request("/asset/assets/A0003/lend", await memberToken(), "POST", {
       employee_code: "E009",
     })
 
@@ -145,13 +145,13 @@ describe("POST /assets/:code/lend", () => {
   })
 
   test("returns 400 when employee_code is missing", async () => {
-    const response = await request("/assets/A0003/lend", await adminToken(), "POST", {})
+    const response = await request("/asset/assets/A0003/lend", await adminToken(), "POST", {})
 
     expect(response.status).toBe(400)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/assets/A0003/lend", null, "POST", {
+    const response = await request("/asset/assets/A0003/lend", null, "POST", {
       employee_code: "E005",
     })
 

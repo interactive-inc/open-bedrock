@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.rooms.reservations[":id"].$delete({
+    const response = await client["room"]["rooms"].reservations[":id"].$delete({
       param: { id: query.id },
     })
 

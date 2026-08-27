@@ -12,7 +12,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["leave-balances"].me.$get()
+    const response = await client["leave"]["leave-balances"].me.$get()
 
     const rows = await response.json()
 

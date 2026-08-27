@@ -92,7 +92,10 @@ async function request(props: {
 
 describe("GET /employee-skills/me", () => {
   test("returns 200 with joined snake_case skills for the token employee", async () => {
-    const response = await request({ path: "/employee-skills/me", token: await memberToken() })
+    const response = await request({
+      path: "/skill/employee-skills/me",
+      token: await memberToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -115,7 +118,7 @@ describe("GET /employee-skills/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/employee-skills/me", token: null })
+    const response = await request({ path: "/skill/employee-skills/me", token: null })
 
     expect(response.status).toBe(401)
   })

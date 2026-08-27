@@ -7,7 +7,7 @@ export type StocktakeItemResponse = {
   asset_name: string
   kind: string
   checked_at: string | null
-  checker_employee_id: number | null
+  checker_employee_id: string | null
   location_note: string | null
 }
 

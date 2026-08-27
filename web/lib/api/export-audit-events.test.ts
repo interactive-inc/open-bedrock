@@ -19,7 +19,9 @@ describe("exportAuditEvents", () => {
       blob: vi.fn(),
     }
     const post = vi.fn().mockResolvedValue(response)
-    mocks.createClient.mockResolvedValue({ "audit-event-exports": { $post: post } })
+    mocks.createClient.mockResolvedValue({
+      company: { "audit-event-exports": { $post: post } },
+    })
     const request = {
       actor_account_id: "account_01JY2M3N4P5Q6R7S8T9V0W1X2Y",
       action: "custom.action",

@@ -50,10 +50,10 @@ export async function createBudgetAction(
     return { ok: false, error: "予算を管理する権限がありません" }
   }
 
-  const departmentId = toPositiveInt(formData.get("department_id"))
+  const organizationUnitId = toText(formData.get("organization_unit_id")).trim()
 
-  if (departmentId === null) {
-    return { ok: false, error: "部署 ID は正の整数で入力してください" }
+  if (organizationUnitId === "") {
+    return { ok: false, error: "組織単位 ID を入力してください" }
   }
 
   const fiscalPeriod = toText(formData.get("fiscal_period"))
@@ -91,7 +91,7 @@ export async function createBudgetAction(
   const note = typeof noteValue === "string" && noteValue !== "" ? noteValue : undefined
 
   const created = await createBudget({
-    department_id: departmentId,
+    organization_unit_id: organizationUnitId,
     fiscal_period: fiscalPeriod,
     period_start: periodStart,
     period_end: periodEnd,

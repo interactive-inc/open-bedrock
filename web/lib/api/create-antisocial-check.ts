@@ -5,7 +5,7 @@ import type { AntisocialCheckCreateRequest } from "@/lib/api/types/antisocial-ch
 export async function createAntisocialCheck(request: AntisocialCheckCreateRequest) {
   const client = await createClient()
 
-  const response = await client["antisocial-checks"].$post({ json: request })
+  const response = await client["antisocial-check"]["antisocial-checks"].$post({ json: request })
 
   if (response.status >= 400) {
     return new Error("failed to create antisocial check")

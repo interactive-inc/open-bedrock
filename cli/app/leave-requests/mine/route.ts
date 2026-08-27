@@ -20,7 +20,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["leave-requests"].me.$get({
+    const response = await client["leave"]["leave-requests"].me.$get({
       query: { status: query.status },
     })
 

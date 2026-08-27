@@ -78,7 +78,10 @@ const attendanceListResponseSchema = z.object({
 
 describe("GET /attendance-records/me", () => {
   test("returns own records and ignores employee_id", async () => {
-    const response = await getRequest("/attendance-records/me?employee_id=9", await tokenFor(5))
+    const response = await getRequest(
+      "/attendance/attendance-records/me?employee_id=9",
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(200)
 
@@ -97,7 +100,7 @@ describe("GET /attendance-records/me", () => {
 
   test("filters own records by from/to", async () => {
     const response = await getRequest(
-      "/attendance-records/me?from=2026-05-26&to=2026-05-26",
+      "/attendance/attendance-records/me?from=2026-05-26&to=2026-05-26",
       await tokenFor(5),
     )
 
@@ -115,19 +118,25 @@ describe("GET /attendance-records/me", () => {
   })
 
   test("returns 400 when from is not a valid date format", async () => {
-    const response = await getRequest("/attendance-records/me?from=aaa", await tokenFor(5))
+    const response = await getRequest(
+      "/attendance/attendance-records/me?from=aaa",
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(400)
   })
 
   test("returns 400 when to is not a valid date format", async () => {
-    const response = await getRequest("/attendance-records/me?to=2026/06/01", await tokenFor(5))
+    const response = await getRequest(
+      "/attendance/attendance-records/me?to=2026/06/01",
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(400)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await getRequest("/attendance-records/me", null)
+    const response = await getRequest("/attendance/attendance-records/me", null)
 
     expect(response.status).toBe(401)
   })

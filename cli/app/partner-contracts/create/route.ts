@@ -33,7 +33,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["partner-contracts"].$post({
+    const response = await client["partner"]["partner-contracts"].$post({
       json: {
         partner_id: partnerId,
         title: query.title,

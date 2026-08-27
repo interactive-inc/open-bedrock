@@ -5,7 +5,7 @@ import type { ReviewCycleResponse } from "@/lib/api/types/review-types"
 export async function getReviewCycles(): Promise<Array<ReviewCycleResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["review-cycles"].$get()
+  const response = await client["performance-review"]["review-cycles"].$get()
 
   if (response.status >= 400) {
     return new Error("failed to load review cycles")

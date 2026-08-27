@@ -14,7 +14,7 @@ import { statusLabel } from "@/lib/status-label"
 
 type Row = {
   id: string
-  requester_id: number
+  requester_id: string
   certificate_type: string
   submit_to: string | null
   needed_by: string | null

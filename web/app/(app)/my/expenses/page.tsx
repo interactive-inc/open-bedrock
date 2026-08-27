@@ -59,7 +59,7 @@ export default async function MyExpensesPage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/inbox/expenses" />}
+                render={<Link href="/company/inbox/expenses" />}
               >
                 <Inbox />
                 承認受信箱

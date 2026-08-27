@@ -4,8 +4,8 @@ export type ShiftSwapAdminSort = "date_desc" | "date_asc" | "id_desc" | "id_asc"
 
 export type ShiftSwapAdminFilter = {
   status: string | null
-  requesterId: number | null
-  targetId: number | null
+  requesterId: string | null
+  targetId: string | null
   from: string | null
   to: string | null
 }
@@ -23,7 +23,7 @@ type Params = {
 export async function getShiftSwapAdminList(filter: ShiftSwapAdminFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client["shift-swap-requests"].admin.$get({
+  const response = await client["shift"]["shift-swap-requests"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       requester_id: filter.requesterId !== null ? String(filter.requesterId) : undefined,

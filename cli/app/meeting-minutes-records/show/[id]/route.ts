@@ -18,7 +18,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["meeting-minutes-records"][":id"].$get({ param: { id } })
+    const response = await client["meeting"]["meeting-minutes-records"][":id"].$get({
+      param: { id },
+    })
 
     const minutes = await response.json()
 

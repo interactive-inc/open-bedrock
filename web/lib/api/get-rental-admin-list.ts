@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 
 export type RentalAdminFilter = {
   status: string | null
-  employeeId: number | null
+  employeeId: string | null
 }
 
 type Params = {
@@ -14,7 +14,7 @@ type Params = {
 export async function getRentalAdminList(filter: RentalAdminFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client["rental-reservations"].admin.$get({
+  const response = await client["rental"]["rental-reservations"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       employee_id: filter.employeeId !== null ? String(filter.employeeId) : undefined,

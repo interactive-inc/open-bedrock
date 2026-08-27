@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 
 export type SalaryRevisionSearchQuery = {
   employeeCode?: string
-  employeeId?: number
+  employeeId?: string
 }
 
 /**
@@ -12,7 +12,7 @@ export type SalaryRevisionSearchQuery = {
 export async function getSalaryRevisionList(query: SalaryRevisionSearchQuery) {
   const client = await createClient()
 
-  const response = await client["salary-revisions"].$get({
+  const response = await client["compensation-change"]["salary-revisions"].$get({
     query: {
       employee_code: query.employeeCode,
       employee_id: query.employeeId !== undefined ? String(query.employeeId) : undefined,

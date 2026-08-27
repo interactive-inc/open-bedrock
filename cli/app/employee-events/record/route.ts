@@ -1,7 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -39,14 +38,14 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["employee-events"].$post({
+    const response = await client.company["employee-events"].$post({
       json: {
-        employee_id: toFiniteNumber(query["employee-id"], "--employee-id"),
+        employee_id: query["employee-id"],
         kind: kind.data,
         effective_date: query["effective-date"],
-        from_department_code: query.from ?? null,
-        to_department_code: query.to ?? null,
-        note: query.note ?? null,
+        from_department_code: query.from,
+        to_department_code: query.to,
+        note: query.note,
       },
     })
 

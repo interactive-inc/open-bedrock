@@ -5,7 +5,7 @@ import type { StocktakeStatus } from "@/lib/api/types/stocktake-types"
 export async function getStocktakeList(status: StocktakeStatus | null) {
   const client = await createClient()
 
-  const response = await client.stocktakes.$get({
+  const response = await client["asset"]["stocktakes"].$get({
     query: { status: status ?? undefined },
   })
 

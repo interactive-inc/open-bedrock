@@ -98,7 +98,7 @@ async function request(props: {
 describe("GET /employee-skills/me/:skillCode", () => {
   test("returns 200 with the joined skill the token employee registered", async () => {
     const response = await request({
-      path: "/employee-skills/me/typescript",
+      path: "/skill/employee-skills/me/typescript",
       token: await memberToken(),
     })
 
@@ -119,7 +119,7 @@ describe("GET /employee-skills/me/:skillCode", () => {
 
   test("returns 404 when the employee has not registered the skill", async () => {
     const response = await request({
-      path: "/employee-skills/me/typescript",
+      path: "/skill/employee-skills/me/typescript",
       token: await otherMemberToken(),
     })
 
@@ -128,7 +128,7 @@ describe("GET /employee-skills/me/:skillCode", () => {
 
   test("returns 404 when the skill code does not exist", async () => {
     const response = await request({
-      path: "/employee-skills/me/missing",
+      path: "/skill/employee-skills/me/missing",
       token: await memberToken(),
     })
 
@@ -136,7 +136,7 @@ describe("GET /employee-skills/me/:skillCode", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/employee-skills/me/typescript", token: null })
+    const response = await request({ path: "/skill/employee-skills/me/typescript", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -149,7 +149,7 @@ describe("DELETE /employee-skills/me/:skillCode", () => {
     const db = await createTestDb()
 
     const deleteResponse = await request({
-      path: "/employee-skills/me/typescript",
+      path: "/skill/employee-skills/me/typescript",
       token,
       method: "DELETE",
       db,
@@ -157,14 +157,14 @@ describe("DELETE /employee-skills/me/:skillCode", () => {
 
     expect(deleteResponse.status).toBe(204)
 
-    const getResponse = await request({ path: "/employee-skills/me/typescript", token, db })
+    const getResponse = await request({ path: "/skill/employee-skills/me/typescript", token, db })
 
     expect(getResponse.status).toBe(404)
   })
 
   test("returns 404 when the employee has not registered the skill", async () => {
     const response = await request({
-      path: "/employee-skills/me/typescript",
+      path: "/skill/employee-skills/me/typescript",
       token: await otherMemberToken(),
       method: "DELETE",
     })
@@ -174,7 +174,7 @@ describe("DELETE /employee-skills/me/:skillCode", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/employee-skills/me/typescript",
+      path: "/skill/employee-skills/me/typescript",
       token: null,
       method: "DELETE",
     })

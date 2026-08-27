@@ -6,7 +6,7 @@ import type { CareerApplyRequest } from "@/lib/api/types/career-types"
 export async function applyCareerPosting(postingId: number, body: CareerApplyRequest) {
   const client = await createClient()
 
-  const response = await client["career-postings"][":postingId"].apply.$post({
+  const response = await client["career"]["career-postings"][":postingId"].apply.$post({
     param: { postingId: String(postingId) },
     json: body,
   })

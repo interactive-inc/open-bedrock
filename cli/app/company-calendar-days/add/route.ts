@@ -26,7 +26,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["company-calendar-days"].$post({
+    const response = await client["company-calendar"]["company-calendar-days"].$post({
       json: {
         calendar_date: query.date,
         kind: query.kind,

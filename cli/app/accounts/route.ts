@@ -16,7 +16,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.system.v1.accounts.$get()
+    const response = await client.system.accounts.$get()
     if (response.status !== 200) throw new UsageError("アカウント一覧の取得に失敗しました")
 
     const body = await response.json()

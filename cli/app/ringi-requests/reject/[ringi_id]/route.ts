@@ -22,7 +22,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["ringi-requests"][":id"].reject.$post({
+    const response = await client["ringi"]["ringi-requests"][":id"].reject.$post({
       param: { id: ringiId },
       json: { comment: query.comment as string },
     })

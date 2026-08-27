@@ -80,7 +80,10 @@ async function request(
 
 describe("GET /salary-revisions", () => {
   test("returns 200 for admin viewing an employee's history", async () => {
-    const response = await request("/salary-revisions?employee_id=5", await tokenFor(1))
+    const response = await request(
+      "/compensation-change/salary-revisions?employee_id=5",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
 
@@ -95,13 +98,16 @@ describe("GET /salary-revisions", () => {
   })
 
   test("returns 403 for a member viewing their own history (no self exception)", async () => {
-    const response = await request("/salary-revisions?employee_id=5", await tokenFor(5))
+    const response = await request(
+      "/compensation-change/salary-revisions?employee_id=5",
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/salary-revisions?employee_id=5", null)
+    const response = await request("/compensation-change/salary-revisions?employee_id=5", null)
 
     expect(response.status).toBe(401)
   })
@@ -109,13 +115,18 @@ describe("GET /salary-revisions", () => {
 
 describe("POST /salary-revisions", () => {
   test("creates a salary revision as admin", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
-      employee_id: "1",
-      effective_date: "2026-04-01",
-      previous_base_salary: 280000,
-      new_base_salary: 300000,
-      reason: "annual_raise",
-    })
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_id: "1",
+        effective_date: "2026-04-01",
+        previous_base_salary: 280000,
+        new_base_salary: 300000,
+        reason: "annual_raise",
+      },
+    )
 
     expect(response.status).toBe(201)
 
@@ -129,46 +140,66 @@ describe("POST /salary-revisions", () => {
   })
 
   test("returns 409 on duplicate employee + effective_date", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
-      employee_id: "5",
-      effective_date: "2025-04-01",
-      previous_base_salary: 280000,
-      new_base_salary: 300000,
-    })
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_id: "5",
+        effective_date: "2025-04-01",
+        previous_base_salary: 280000,
+        new_base_salary: 300000,
+      },
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/salary-revisions", await tokenFor(5), "POST", {
-      employee_id: "1",
-      effective_date: "2026-05-01",
-      previous_base_salary: 1,
-      new_base_salary: 2,
-    })
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(5),
+      "POST",
+      {
+        employee_id: "1",
+        effective_date: "2026-05-01",
+        previous_base_salary: 1,
+        new_base_salary: 2,
+      },
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for an unknown employee", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
-      employee_id: "9999",
-      effective_date: "2026-05-01",
-      previous_base_salary: 1,
-      new_base_salary: 2,
-    })
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_id: "9999",
+        effective_date: "2026-05-01",
+        previous_base_salary: 1,
+        new_base_salary: 2,
+      },
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("creates a salary revision by employee_code", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
-      employee_code: "E001",
-      effective_date: "2026-04-01",
-      previous_base_salary: 280000,
-      new_base_salary: 300000,
-      reason: "annual_raise",
-    })
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_code: "E001",
+        effective_date: "2026-04-01",
+        previous_base_salary: 280000,
+        new_base_salary: 300000,
+        reason: "annual_raise",
+      },
+    )
 
     expect(response.status).toBe(201)
 
@@ -182,34 +213,49 @@ describe("POST /salary-revisions", () => {
   })
 
   test("returns 404 for an unknown employee_code", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
-      employee_code: "E999",
-      effective_date: "2026-05-01",
-      previous_base_salary: 1,
-      new_base_salary: 2,
-    })
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_code: "E999",
+        effective_date: "2026-05-01",
+        previous_base_salary: 1,
+        new_base_salary: 2,
+      },
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("returns 400 when both employee_id and employee_code are given", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
-      employee_id: "1",
-      employee_code: "E001",
-      effective_date: "2026-05-01",
-      previous_base_salary: 1,
-      new_base_salary: 2,
-    })
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_id: "1",
+        employee_code: "E001",
+        effective_date: "2026-05-01",
+        previous_base_salary: 1,
+        new_base_salary: 2,
+      },
+    )
 
     expect(response.status).toBe(400)
   })
 
   test("returns 400 when neither employee_id nor employee_code is given", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1), "POST", {
-      effective_date: "2026-05-01",
-      previous_base_salary: 1,
-      new_base_salary: 2,
-    })
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        effective_date: "2026-05-01",
+        previous_base_salary: 1,
+        new_base_salary: 2,
+      },
+    )
 
     expect(response.status).toBe(400)
   })

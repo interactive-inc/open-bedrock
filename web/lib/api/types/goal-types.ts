@@ -1,7 +1,7 @@
 /** api/src/goal/goal-schema.ts と同形。 */
 export type Goal = {
   id: number
-  employeeId: number
+  employeeId: string
   period: string
   title: string
   kpi: string | null
@@ -13,7 +13,7 @@ export type Goal = {
 export type GoalEvaluation = {
   id: number
   goalId: number
-  evaluatorId: number
+  evaluatorId: string
   kind: GoalEvaluationKind
   score: number | null
   comment: string | null
@@ -26,7 +26,7 @@ export type GoalEvaluationKind = "self" | "manager" | "final"
 /** GET /performance-goals のクエリ。未指定は本人の目標を返す。 */
 export type GoalSearchQuery = {
   period: string | null
-  employeeId: number | null
+  employeeId: string | null
 }
 
 /**
@@ -35,7 +35,7 @@ export type GoalSearchQuery = {
  */
 export type GoalResponse = {
   id: number | null
-  employee_id: number
+  employee_id: string
   period: string
   title: string
   kpi: string | null

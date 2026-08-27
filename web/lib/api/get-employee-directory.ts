@@ -15,10 +15,10 @@ type Params = {
 export async function getEmployeeDirectory(filter: Filter = {}, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client.directory.employees.$get({
+  const response = await client.company["employee-directory"].$get({
     query: {
       q: filter.q ?? undefined,
-      dept: filter.dept ?? undefined,
+      organization_unit: filter.dept ?? undefined,
       limit: params.limit === undefined ? undefined : String(params.limit),
       offset: params.offset === undefined ? undefined : String(params.offset),
     },
@@ -35,7 +35,7 @@ export async function getEmployeeDirectory(filter: Filter = {}, params: Params =
       (employee): EmployeeListItem => ({
         code: employee.code,
         name: employee.name,
-        deptName: employee.dept_name,
+        deptName: employee.organization_unit_name,
         position: employee.position,
         email: "",
         status: "active",

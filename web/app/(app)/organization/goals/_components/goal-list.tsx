@@ -23,11 +23,9 @@ type Props = {
  * 各行は詳細 (/goals/[id]) へのリンクで、status はバッジ表示する。
  */
 export async function GoalList(props: Props) {
-  const employeeId = props.employeeId !== null ? Number(props.employeeId) : null
-
   const goals = await getGoalList({
     period: props.period,
-    employeeId: employeeId !== null && Number.isInteger(employeeId) ? employeeId : null,
+    employeeId: props.employeeId,
   })
 
   if (goals instanceof Error) {

@@ -101,7 +101,7 @@ describe("POST /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: await tokenFor(5),
       method: "POST",
       body: { period: "2026-H2", title: "New goal", weight: 25 },
@@ -127,7 +127,7 @@ describe("POST /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: await tokenFor(5),
       method: "POST",
       body: { period: "2026-H2", title: "Goal without weight" },
@@ -148,7 +148,7 @@ describe("POST /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: await tokenFor(5),
       method: "POST",
       body: { period: "2026-H2" },
@@ -161,7 +161,7 @@ describe("POST /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: null,
       method: "POST",
       body: { period: "2026-H2", title: "x" },
@@ -174,7 +174,7 @@ describe("POST /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: await tokenFor(1),
       method: "POST",
       body: { period: "2026-H1", title: "Company OKR", owner_type: "company" },
@@ -198,7 +198,7 @@ describe("POST /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: await tokenFor(5),
       method: "POST",
       body: { period: "2026-H1", title: "Company OKR", owner_type: "company" },
@@ -212,7 +212,7 @@ describe("POST /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: await tokenFor(4),
       method: "POST",
       body: {
@@ -243,7 +243,7 @@ describe("POST /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: await tokenFor(4),
       method: "POST",
       body: {
@@ -261,7 +261,7 @@ describe("POST /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-review/performance-goals",
       token: await tokenFor(5),
       method: "POST",
       body: {

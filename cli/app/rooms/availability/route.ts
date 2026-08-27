@@ -25,7 +25,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.rooms.availability.$get({
+    const response = await client["room"]["rooms"].availability.$get({
       query: {
         start_at: query.start,
         end_at: query.end,

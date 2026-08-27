@@ -9,7 +9,7 @@ async function tryRefresh(
   refreshToken: string,
 ): Promise<{ access_token: string; refresh_token: string | null } | null> {
   try {
-    const url = new URL("/system/v1/sessions", baseUrl)
+    const url = new URL("/system/sessions", baseUrl)
 
     const res = await fetch(url, {
       method: "PATCH",

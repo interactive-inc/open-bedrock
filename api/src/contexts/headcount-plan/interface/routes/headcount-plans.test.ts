@@ -60,7 +60,7 @@ async function createPlan(
   return requestWithContext({
     db,
     jwtSecret,
-    path: "/headcount-plans",
+    path: "/headcount-plan/headcount-plans",
     token: await tokenFor(1),
     method: "POST",
     body,
@@ -83,7 +83,7 @@ describe("headcount plans", () => {
     const list = await requestWithContext({
       db,
       jwtSecret,
-      path: "/headcount-plans",
+      path: "/headcount-plan/headcount-plans",
       token: await tokenFor(1),
     })
 
@@ -109,7 +109,7 @@ describe("headcount plans", () => {
     const list = await requestWithContext({
       db,
       jwtSecret,
-      path: "/headcount-plans",
+      path: "/headcount-plan/headcount-plans",
       token: await tokenFor(1),
     })
 
@@ -155,7 +155,7 @@ describe("headcount plans", () => {
     const updated = await requestWithContext({
       db,
       jwtSecret,
-      path: `/headcount-plans/${plan.id}`,
+      path: `/headcount-plan/headcount-plans/${plan.id}`,
       token: await tokenFor(1),
       method: "PUT",
       body: { planned_count: 6 },
@@ -172,7 +172,7 @@ describe("headcount plans", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/headcount-plans",
+      path: "/headcount-plan/headcount-plans",
       token: await tokenFor(5),
     })
 
@@ -183,7 +183,7 @@ describe("headcount plans", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/headcount-plans",
+      path: "/headcount-plan/headcount-plans",
       token: await tokenFor(5),
       method: "POST",
       body: { fiscal_year: 2026, department_code: "D003", planned_count: 4 },
@@ -196,7 +196,7 @@ describe("headcount plans", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/headcount-plans",
+      path: "/headcount-plan/headcount-plans",
       token: null,
     })
 

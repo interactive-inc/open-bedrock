@@ -2,102 +2,120 @@
   "version": 2,
   "groups": [
     {
-      "routePrefix": "application-requests",
+      "routePrefix": "attendance.attendance-records",
+      "participants": ["attendance", "company", "company-calendar"],
+      "routes": ["attendance.attendance-records.overtime-summary"],
+      "reason": "Attendance実績、Company可視範囲、Company Calendar営業日を残業集計へ合成する"
+    },
+    {
+      "routePrefix": "company.account-directory",
+      "participants": ["company", "system"],
+      "routes": ["company.account-directory"],
+      "reason": "System Account・IdentityとCompany従業員プロフィールをアカウントディレクトリwireへ合成する"
+    },
+    {
+      "routePrefix": "company.application-requests",
       "participants": ["company", "system"],
       "routes": [
-        "application-requests",
-        "application-requests.$id",
-        "application-requests.$id.approve",
-        "application-requests.$id.reassign-workflow-step",
-        "application-requests.$id.reject",
-        "application-requests.$id.resubmit",
-        "application-requests.admin",
-        "application-requests.inbox",
-        "application-requests.me",
-        "application-requests.workflow-repairs"
+        "company.application-requests",
+        "company.application-requests.$id",
+        "company.application-requests.$id.approve",
+        "company.application-requests.$id.reassign-workflow-step",
+        "company.application-requests.$id.reject",
+        "company.application-requests.$id.resubmit",
+        "company.application-requests.admin",
+        "company.application-requests.inbox",
+        "company.application-requests.me",
+        "company.application-requests.workflow-repairs"
       ],
       "reason": "System procedure workflowとCompanyの従業員資格・表示情報を申請wireへ合成する"
     },
     {
-      "routePrefix": "application-templates",
+      "routePrefix": "company.application-templates",
       "participants": ["company", "system"],
       "routes": [
-        "application-templates",
-        "application-templates.$code",
-        "application-templates.$code.workflow"
+        "company.application-templates",
+        "company.application-templates.$code",
+        "company.application-templates.$code.workflow"
       ],
       "reason": "System procedure definitionとCompany組織上の参照制約を申請テンプレートwireへ合成する"
     },
     {
-      "routePrefix": "approval-delegations",
+      "routePrefix": "company.approval-delegations",
       "participants": ["company", "system"],
-      "routes": ["approval-delegations", "approval-delegations.$id"],
+      "routes": ["company.approval-delegations", "company.approval-delegations.$id"],
       "reason": "System delegationとCompany従業員資格・表示情報を承認委任wireへ合成する"
     },
     {
-      "routePrefix": "attendance-records",
-      "participants": ["attendance", "company", "company-calendar"],
-      "routes": ["attendance-records.overtime-summary"],
-      "reason": "Attendance実績、Company可視範囲、Company Calendar営業日を残業集計へ合成する"
-    },
-    {
-      "routePrefix": "audit-event-exports",
+      "routePrefix": "company.audit-event-exports",
       "participants": ["company", "system"],
-      "routes": ["audit-event-exports"],
+      "routes": ["company.audit-event-exports"],
       "reason": "System監査イベントとCompany可視範囲・CSV表現を監査出力wireへ合成する"
     },
     {
-      "routePrefix": "audit-events",
+      "routePrefix": "company.audit-events",
       "participants": ["company", "system"],
-      "routes": ["audit-events", "audit-events.$eventId"],
+      "routes": ["company.audit-events", "company.audit-events.$eventId"],
       "reason": "System監査イベントとCompany可視範囲・表示情報を監査閲覧wireへ合成する"
     },
     {
-      "routePrefix": "dashboard",
+      "routePrefix": "company.current-profile",
+      "participants": ["company", "system"],
+      "routes": ["company.current-profile"],
+      "reason": "System SessionとCompany従業員情報を現在利用者の表示profileへ合成する"
+    },
+    {
+      "routePrefix": "company.dashboard",
       "participants": ["company", "performance-review", "survey", "system"],
-      "routes": ["dashboard", "dashboard.management"],
+      "routes": ["company.dashboard", "company.dashboard.management"],
       "reason": "System workflowとCompany・評価・Surveyの集計を製品ダッシュボードへ合成する"
     },
     {
-      "routePrefix": "directory",
-      "participants": ["administration", "company", "system"],
-      "routes": ["directory.accounts"],
-      "reason": "System Account・IdentityとCompany従業員プロフィールを管理用ディレクトリwireへ合成する"
+      "routePrefix": "company.employee-registrations",
+      "participants": ["company", "system"],
+      "routes": ["company.employee-registrations"],
+      "reason": "Company従業員・入社発令とSystem Account・Identity・Roleを一つの登録transactionへ合成する"
     },
     {
-      "routePrefix": "features",
+      "routePrefix": "company.features",
       "participants": ["company", "system"],
-      "routes": ["features"],
+      "routes": ["company.features"],
       "reason": "System capabilityとCompany製品設定をfeature responseへ合成する"
     },
     {
-      "routePrefix": "governance-documents",
-      "participants": ["company", "governance", "training"],
-      "routes": ["governance-documents.impact", "governance-documents.sync"],
-      "reason": "Governance文書、Company資格、Training参照を同期・影響分析wireへ合成する"
-    },
-    {
-      "routePrefix": "inbox",
+      "routePrefix": "company.inbox",
       "participants": ["company", "expense", "leave", "shift", "thanks"],
-      "routes": ["inbox.counts"],
+      "routes": ["company.inbox.counts"],
       "reason": "Company主体と複数業務contextの未処理件数を一つの受信箱wireへ合成する"
     },
     {
-      "routePrefix": "notifications",
+      "routePrefix": "company.notifications",
       "participants": ["company", "system"],
-      "routes": ["notifications"],
+      "routes": ["company.notifications"],
       "reason": "System通知配送とCompany宛先資格・製品payloadを通知送信wireへ合成する"
     },
     {
-      "routePrefix": "permission-definitions",
+      "routePrefix": "company.personnel-action-requests",
       "participants": ["company", "system"],
-      "routes": ["permission-definitions"],
-      "reason": "System権限とCompany権限を管理画面の権限カタログへ合成する"
+      "routes": ["company.personnel-action-requests"],
+      "reason": "Company人事変更申請とSystem判断手続を同じtransactionへ合成する"
     },
     {
-      "routePrefix": "provisioning",
+      "routePrefix": "governance.governance-documents",
+      "participants": ["company", "governance", "training"],
+      "routes": ["governance.governance-documents.impact", "governance.governance-documents.sync"],
+      "reason": "Governance文書、Company資格、Training参照を同期・影響分析wireへ合成する"
+    },
+    {
+      "routePrefix": "system.permission-definitions",
       "participants": ["company", "system"],
-      "routes": ["provisioning.identities"],
+      "routes": ["system.permission-definitions"],
+      "reason": "System権限とCompany権限を権限カタログへ合成する"
+    },
+    {
+      "routePrefix": "system.provisioning",
+      "participants": ["company", "system"],
+      "routes": ["system.provisioning.identities"],
       "reason": "System IdentityとCompany従業員資格を外部provisioning wireへ合成する"
     }
   ]

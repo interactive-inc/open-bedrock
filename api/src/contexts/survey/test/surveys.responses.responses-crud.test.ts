@@ -42,10 +42,10 @@ const testApp = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
-  .get("/surveys/responses/me", ...responseMineRoute.GET)
-  .get("/surveys/responses/:responseId", ...responseDetailRoute.GET)
-  .put("/surveys/responses/:responseId", ...responseDetailRoute.PUT)
-  .delete("/surveys/responses/:responseId", ...responseDetailRoute.DELETE)
+  .get("/survey/surveys/responses/me", ...responseMineRoute.GET)
+  .get("/survey/surveys/responses/:responseId", ...responseDetailRoute.GET)
+  .put("/survey/surveys/responses/:responseId", ...responseDetailRoute.PUT)
+  .delete("/survey/surveys/responses/:responseId", ...responseDetailRoute.DELETE)
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
@@ -143,7 +143,10 @@ async function request(props: {
 
 describe("GET /surveys/responses/me", () => {
   test("returns only the viewer's responses", async () => {
-    const response = await request({ path: "/surveys/responses/me", token: await ownerToken() })
+    const response = await request({
+      path: "/survey/surveys/responses/me",
+      token: await ownerToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -160,7 +163,7 @@ describe("GET /surveys/responses/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/surveys/responses/me", token: null })
+    const response = await request({ path: "/survey/surveys/responses/me", token: null })
 
     expect(response.status).toBe(401)
   })
@@ -168,7 +171,10 @@ describe("GET /surveys/responses/me", () => {
 
 describe("GET /surveys/responses/:responseId", () => {
   test("returns the response for its respondent", async () => {
-    const response = await request({ path: "/surveys/responses/1", token: await ownerToken() })
+    const response = await request({
+      path: "/survey/surveys/responses/1",
+      token: await ownerToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -182,13 +188,19 @@ describe("GET /surveys/responses/:responseId", () => {
   })
 
   test("returns 403 for another person's response", async () => {
-    const response = await request({ path: "/surveys/responses/1", token: await otherToken() })
+    const response = await request({
+      path: "/survey/surveys/responses/1",
+      token: await otherToken(),
+    })
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for an unknown response", async () => {
-    const response = await request({ path: "/surveys/responses/9999", token: await ownerToken() })
+    const response = await request({
+      path: "/survey/surveys/responses/9999",
+      token: await ownerToken(),
+    })
 
     expect(response.status).toBe(404)
   })
@@ -197,7 +209,7 @@ describe("GET /surveys/responses/:responseId", () => {
 describe("PUT /surveys/responses/:responseId", () => {
   test("updates the answers of the viewer's response while the survey is open", async () => {
     const response = await request({
-      path: "/surveys/responses/1",
+      path: "/survey/surveys/responses/1",
       token: await ownerToken(),
       method: "PUT",
       body: { answers_json: { q1: 2, q2: 3, q3: "Revised" } },
@@ -216,7 +228,7 @@ describe("PUT /surveys/responses/:responseId", () => {
 
   test("returns 403 when updating another person's response", async () => {
     const response = await request({
-      path: "/surveys/responses/1",
+      path: "/survey/surveys/responses/1",
       token: await otherToken(),
       method: "PUT",
       body: { answers_json: { q1: 1 } },
@@ -227,7 +239,7 @@ describe("PUT /surveys/responses/:responseId", () => {
 
   test("returns 404 for an unknown response", async () => {
     const response = await request({
-      path: "/surveys/responses/9999",
+      path: "/survey/surveys/responses/9999",
       token: await ownerToken(),
       method: "PUT",
       body: { answers_json: { q1: 1 } },
@@ -238,7 +250,7 @@ describe("PUT /surveys/responses/:responseId", () => {
 
   test("returns 400 when answers_json is missing", async () => {
     const response = await request({
-      path: "/surveys/responses/1",
+      path: "/survey/surveys/responses/1",
       token: await ownerToken(),
       method: "PUT",
       body: {},
@@ -251,7 +263,7 @@ describe("PUT /surveys/responses/:responseId", () => {
 describe("DELETE /surveys/responses/:responseId", () => {
   test("withdraws the viewer's response and returns 204", async () => {
     const response = await request({
-      path: "/surveys/responses/1",
+      path: "/survey/surveys/responses/1",
       token: await ownerToken(),
       method: "DELETE",
     })
@@ -261,7 +273,7 @@ describe("DELETE /surveys/responses/:responseId", () => {
 
   test("returns 403 when withdrawing another person's response", async () => {
     const response = await request({
-      path: "/surveys/responses/1",
+      path: "/survey/surveys/responses/1",
       token: await otherToken(),
       method: "DELETE",
     })
@@ -271,7 +283,7 @@ describe("DELETE /surveys/responses/:responseId", () => {
 
   test("returns 404 for an unknown response", async () => {
     const response = await request({
-      path: "/surveys/responses/9999",
+      path: "/survey/surveys/responses/9999",
       token: await ownerToken(),
       method: "DELETE",
     })
@@ -281,7 +293,7 @@ describe("DELETE /surveys/responses/:responseId", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/surveys/responses/1",
+      path: "/survey/surveys/responses/1",
       token: null,
       method: "DELETE",
     })

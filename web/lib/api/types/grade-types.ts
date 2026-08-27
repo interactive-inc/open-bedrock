@@ -27,7 +27,7 @@ export type GradeUpdateRequest = {
 /** GET /employee-grades のレスポンス要素（従業員の等級付与履歴）。 */
 export type EmployeeGradeResponse = {
   id: number
-  employee_id: number
+  employee_id: string
   grade_id: number
   effective_date: string
   reason: string | null
@@ -41,7 +41,7 @@ export type EmployeeGradeSearchQuery = {
 
 /** POST /employee-grades のリクエストボディ。reason は未指定可。 */
 export type EmployeeGradeCreateRequest = {
-  employee_id: number
+  employee_id: string
   grade_id: number
   effective_date: string
   reason?: string

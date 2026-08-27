@@ -14,7 +14,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["thanks-rewards"].$get()
+    const response = await client["thanks"]["thanks-rewards"].$get()
 
     return c.json(await response.json())
   },

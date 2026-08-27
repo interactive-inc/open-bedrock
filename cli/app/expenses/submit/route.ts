@@ -44,7 +44,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.expenses.$post({
+    const response = await client["expense"]["expenses"].$post({
       json: {
         category,
         amount: toFiniteNumber(amount, "--amount"),

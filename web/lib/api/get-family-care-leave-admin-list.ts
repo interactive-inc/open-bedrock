@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 
 export type FamilyCareLeaveAdminFilter = {
   status: string | null
-  employeeId: number | null
+  employeeId: string | null
 }
 
 type Params = {
@@ -17,7 +17,7 @@ export async function getFamilyCareLeaveAdminList(
 ) {
   const client = await createClient()
 
-  const response = await client["family-care-leaves"].admin.$get({
+  const response = await client["family-care-leave"]["family-care-leaves"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       employee_id: filter.employeeId !== null ? String(filter.employeeId) : undefined,

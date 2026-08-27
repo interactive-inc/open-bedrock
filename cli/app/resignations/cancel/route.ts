@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.resignations[":id"].$delete({
+    const response = await client["resignation"]["resignations"][":id"].$delete({
       param: { id: query.id },
     })
 

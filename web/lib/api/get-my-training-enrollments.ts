@@ -7,7 +7,7 @@ export async function getMyTrainingEnrollments(): Promise<
 > {
   const client = await createClient()
 
-  const response = await client["training-enrollments"].me.$get()
+  const response = await client["training"]["training-enrollments"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load my training enrollments")

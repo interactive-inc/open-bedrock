@@ -28,7 +28,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["review-forms"][":formId"].submit.$post({
+    const response = await client["performance-review"]["review-forms"][":formId"].submit.$post({
       param: { formId: formId },
       json: {
         score: query.score !== undefined ? toFiniteNumber(query.score, "--score") : undefined,

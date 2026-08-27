@@ -10,7 +10,7 @@ type Props = {
 export async function postOnboardingAssign(props: Props) {
   const client = await createClient()
 
-  const response = await client["onboarding-assignments"].$post({
+  const response = await client["onboarding"]["onboarding-assignments"].$post({
     json: {
       employee_code: props.employeeCode,
       template_code: props.templateCode,

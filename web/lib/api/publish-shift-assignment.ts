@@ -8,7 +8,7 @@ export async function publishShiftAssignment(
 ): Promise<ShiftAssignmentResponse | Error> {
   const client = await createClient()
 
-  const response = await client["shift-assignments"][":id"].publish.$post({
+  const response = await client["shift"]["shift-assignments"][":id"].publish.$post({
     param: { id: String(assignmentId) },
   })
 

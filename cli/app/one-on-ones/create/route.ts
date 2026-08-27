@@ -39,7 +39,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["one-on-ones"].$post({ json })
+    const response = await client["one-on-one"]["one-on-ones"].$post({ json })
 
     return c.json(await response.json())
   },

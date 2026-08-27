@@ -17,7 +17,7 @@ const pointFormatter = new Intl.NumberFormat("ja-JP")
 
 export type RedemptionAdminRow = {
   id: number
-  employee_id: number
+  employee_id: string
   employee_name: string
   employee_dept_name: string | null
   reward_id: number
@@ -26,7 +26,7 @@ export type RedemptionAdminRow = {
   status: RedemptionStatus
   created_at: string
   decided_at: string | null
-  decider_id: number | null
+  decider_id: string | null
 }
 
 type Props = {

@@ -25,7 +25,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["antisocial-checks"].$post({
+    const response = await client["antisocial-check"]["antisocial-checks"].$post({
       json: {
         partner_name: query.partner,
         partner_address: query.address ?? null,

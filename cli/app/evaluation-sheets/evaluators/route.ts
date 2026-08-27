@@ -31,21 +31,17 @@ export default factory.createHandlers(
 
     if (!query["expected-revision"]) throw new UsageError("--expected-revision が必要です")
 
-    const primaryEvaluatorId = toFiniteNumber(
-      query["primary-evaluator-id"],
-      "--primary-evaluator-id",
-    )
     const expectedRevision = toFiniteNumber(query["expected-revision"], "--expected-revision")
 
     const client = await createClient()
 
-    const response = await client["evaluation-sheets"][":sheetId"].evaluators.$put({
+    const response = await client["performance-review"]["evaluation-sheets"][
+      ":sheetId"
+    ].evaluators.$put({
       param: { sheetId: query.id },
       json: {
-        primary_evaluator_id: primaryEvaluatorId,
-        secondary_evaluator_id: query["secondary-evaluator-id"]
-          ? toFiniteNumber(query["secondary-evaluator-id"], "--secondary-evaluator-id")
-          : undefined,
+        primary_evaluator_id: query["primary-evaluator-id"],
+        secondary_evaluator_id: query["secondary-evaluator-id"],
         expected_revision: expectedRevision,
       },
     })

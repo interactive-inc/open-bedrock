@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-/** PATCH /system/v1/roles/:roleId。custom System Role を更新する。 */
+/** PATCH /system/roles/:roleId。custom System Role を更新する。 */
 export async function updateRole(
   roleId: string,
   request: {
@@ -11,7 +11,7 @@ export async function updateRole(
 ): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.system.v1.roles[":roleId"].$patch({
+  const response = await client.system.roles[":roleId"].$patch({
     param: { roleId },
     json: {
       name: request.name,

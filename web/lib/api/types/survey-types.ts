@@ -31,7 +31,7 @@ export type SubmitSurveyResponseRequest = {
 export type SurveySubmission = {
   id: number
   survey_id: number
-  respondent_id: number
+  respondent_id: string
   answers_json: unknown
   submitted_at: string
 }
@@ -43,7 +43,7 @@ export type SurveySubmission = {
 export type SurveyResponseItem = {
   id: number | null
   survey_id: number
-  respondent_id: number
+  respondent_id: string
   answers_json?: unknown
   submitted_at: string
 }

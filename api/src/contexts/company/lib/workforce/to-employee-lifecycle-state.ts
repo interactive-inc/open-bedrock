@@ -1,6 +1,5 @@
 import { resolveLifecycleAssignment } from "@/contexts/company/lib/workforce/resolve-lifecycle-assignment"
 import { toLifecycleStatus } from "@/contexts/company/lib/workforce/to-lifecycle-status"
-import { toLifecycleStorageId } from "@/contexts/company/lib/workforce/to-lifecycle-storage-id"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
 import type {
   EmployeeLifecycleState,
@@ -14,12 +13,7 @@ type Props = Readonly<{
 
 /** 共通Workforceの判断へ、既存APIだけが必要とする表示値とrevisionを合成する。 */
 export function toEmployeeLifecycleState(props: Props): EmployeeLifecycleState | Error {
-  const employmentPeriodId =
-    props.workforce.employmentId === null
-      ? null
-      : toLifecycleStorageId(String(props.workforce.employmentId), "employment:")
-
-  if (employmentPeriodId instanceof Error) return employmentPeriodId
+  const employmentPeriodId = props.workforce.employmentId
   if (props.projection.employmentPeriodId !== employmentPeriodId) {
     return new Error("workforce employment differs from the lifecycle projection")
   }
@@ -51,17 +45,25 @@ export function toEmployeeLifecycleState(props: Props): EmployeeLifecycleState |
   }
 
   const responsibilityDepartmentCodes: string[] = []
+  const matchedResponsibilityPeriods = new Set<string>()
 
   for (const responsibility of props.workforce.responsibilities) {
     // 旧wireのdepartment codesは部門管理責務だけを表す。
     if (responsibility.responsibilityType !== "MANAGER") continue
-    const departmentCode = toLifecycleStorageId(
-      String(responsibility.organizationUnitId),
-      "department:",
+    const projection = props.projection.responsibilities.find(
+      (candidate) => candidate.periodId === responsibility.periodId,
     )
-
-    if (departmentCode instanceof Error) return departmentCode
-    responsibilityDepartmentCodes.push(departmentCode)
+    if (
+      projection === undefined ||
+      projection.employmentPeriodId !== responsibility.employmentId ||
+      projection.organizationUnitId !== responsibility.organizationUnitId ||
+      projection.startsOn !== responsibility.startsOn ||
+      projection.endsOn !== responsibility.endsOn
+    ) {
+      return new Error("workforce responsibility differs from the lifecycle projection")
+    }
+    matchedResponsibilityPeriods.add(projection.periodId)
+    responsibilityDepartmentCodes.push(projection.departmentCode)
   }
 
   responsibilityDepartmentCodes.sort()
@@ -70,6 +72,7 @@ export function toEmployeeLifecycleState(props: Props): EmployeeLifecycleState |
   ].sort()
   if (
     responsibilityDepartmentCodes.length !== projectedResponsibilityDepartmentCodes.length ||
+    matchedResponsibilityPeriods.size !== props.projection.responsibilities.length ||
     responsibilityDepartmentCodes.some(
       (departmentCode, index) => departmentCode !== projectedResponsibilityDepartmentCodes[index],
     )
@@ -84,6 +87,7 @@ export function toEmployeeLifecycleState(props: Props): EmployeeLifecycleState |
     employmentPeriodId,
     primaryAssignment,
     concurrentAssignments,
+    responsibilities: props.projection.responsibilities,
     responsibilityDepartmentCodes,
   }
 }

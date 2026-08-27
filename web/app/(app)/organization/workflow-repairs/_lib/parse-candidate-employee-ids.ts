@@ -1,30 +1,24 @@
 const MAX_CANDIDATES = 20
 
-/** UI のカンマ・空白区切り入力を API の正整数配列に変換する。 */
-export function parseCandidateEmployeeIds(raw: string): ReadonlyArray<number> | null {
+/** UI のカンマ・空白区切り入力を API の従業員ID配列に変換する。 */
+export function parseCandidateEmployeeIds(raw: string): ReadonlyArray<string> | null {
   const values = raw.trim().split(/[\s,]+/)
 
   if (values.length === 0 || values[0] === "") {
     return null
   }
 
-  const candidates: number[] = []
-  const seen = new Set<number>()
+  const candidates: string[] = []
+  const seen = new Set<string>()
 
   for (const value of values) {
-    if (/^\d+$/.test(value) === false) {
+    if (value.length > 128) {
       return null
     }
 
-    const candidate = Number(value)
-
-    if (Number.isSafeInteger(candidate) === false || candidate <= 0) {
-      return null
-    }
-
-    if (seen.has(candidate) === false) {
-      seen.add(candidate)
-      candidates.push(candidate)
+    if (seen.has(value) === false) {
+      seen.add(value)
+      candidates.push(value)
     }
   }
 

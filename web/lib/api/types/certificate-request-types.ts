@@ -17,7 +17,7 @@ export type CertificateRequestUpdateRequest = {
 /** GET /certificate-requests/me と /certificate-requests/:id のレスポンス要素。api は snake_case で返す。 */
 export type CertificateRequestResponse = {
   id: string
-  requester_id: number
+  requester_id: string
   certificate_type: string
   submit_to: string | null
   needed_by: string | null

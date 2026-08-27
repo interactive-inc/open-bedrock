@@ -9,7 +9,7 @@ import type { EmployeeEventCreateRequest } from "@/lib/api/types/employee-event-
 export async function createEmployeeEvent(request: EmployeeEventCreateRequest) {
   const client = await createClient()
 
-  const response = await client["employee-events"].$post({ json: request })
+  const response = await client.company["employee-events"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

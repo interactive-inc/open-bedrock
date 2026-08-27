@@ -40,11 +40,7 @@ export default async function EmployeeDetailPage(props: Props) {
       />
 
       <Suspense fallback={<DetailSkeleton fields={5} />}>
-        <EmployeeDetail
-          code={params.employee}
-          permissions={currentUser.permissions}
-          currentUserCode={currentUser.code}
-        />
+        <EmployeeDetail code={params.employee} permissions={currentUser.permissions} />
       </Suspense>
 
       <Suspense fallback={<Skeleton className="h-40 w-full" />}>

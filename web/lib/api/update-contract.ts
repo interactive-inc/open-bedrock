@@ -9,7 +9,7 @@ import type { ContractUpdateRequest } from "@/lib/api/types/contract-types"
 export async function updateContract(id: number, request: ContractUpdateRequest) {
   const client = await createClient()
 
-  const response = await client["partner-contracts"][":id"].$put({
+  const response = await client["partner"]["partner-contracts"][":id"].$put({
     param: { id: String(id) },
     json: request,
   })

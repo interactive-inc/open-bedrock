@@ -104,7 +104,7 @@ async function request(props: {
 describe("GET /leave-requests/me", () => {
   test("returns only the caller's requests", async () => {
     const response = await request({
-      path: "/leave-requests/me",
+      path: "/leave/leave-requests/me",
       token: await tokenFor(5),
     })
 
@@ -124,7 +124,7 @@ describe("GET /leave-requests/me", () => {
 
   test("filters by status", async () => {
     const response = await request({
-      path: "/leave-requests/me?status=approved",
+      path: "/leave/leave-requests/me?status=approved",
       token: await tokenFor(5),
     })
 
@@ -142,7 +142,7 @@ describe("GET /leave-requests/me", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/leave-requests/me", token: null })
+    const response = await request({ path: "/leave/leave-requests/me", token: null })
 
     expect(response.status).toBe(401)
   })

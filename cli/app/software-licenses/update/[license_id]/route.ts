@@ -36,13 +36,11 @@ export default factory.createHandlers(
     const seats = query.seats === undefined ? undefined : toFiniteNumber(query.seats, "--seats")
 
     const ownerEmployeeId =
-      query["owner-employee-id"] === undefined
-        ? undefined
-        : toFiniteNumber(query["owner-employee-id"], "--owner-employee-id")
+      query["owner-employee-id"] === undefined ? undefined : query["owner-employee-id"]
 
     const client = await createClient()
 
-    const response = await client["software-licenses"][":id"].$put({
+    const response = await client["software-license"]["software-licenses"][":id"].$put({
       param: { id: licenseId },
       json: {
         name: query.name,

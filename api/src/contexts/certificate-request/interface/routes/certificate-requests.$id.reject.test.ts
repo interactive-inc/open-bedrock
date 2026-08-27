@@ -67,7 +67,7 @@ describe("POST /certificate-requests/:id/reject", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/certificate-requests/${seedId}/reject`,
+      path: `/certificate-request/certificate-requests/${seedId}/reject`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -87,7 +87,7 @@ describe("POST /certificate-requests/:id/reject", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/certificate-requests/${seedId}/reject`,
+      path: `/certificate-request/certificate-requests/${seedId}/reject`,
       token: await tokenFor(5),
       method: "POST",
     })
@@ -101,7 +101,7 @@ describe("POST /certificate-requests/:id/reject", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: `/certificate-requests/${seedId}/reject`,
+      path: `/certificate-request/certificate-requests/${seedId}/reject`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -111,7 +111,7 @@ describe("POST /certificate-requests/:id/reject", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: `/certificate-requests/${seedId}/reject`,
+      path: `/certificate-request/certificate-requests/${seedId}/reject`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -123,7 +123,7 @@ describe("POST /certificate-requests/:id/reject", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/certificate-requests/${seedId}/reject`,
+      path: `/certificate-request/certificate-requests/${seedId}/reject`,
       token: null,
       method: "POST",
     })

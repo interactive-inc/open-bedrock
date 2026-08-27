@@ -6,7 +6,7 @@ export async function getShiftSwapInbox(): Promise<
 > {
   const client = await createClient()
 
-  const response = await client["shift-swap-requests"].$get({ query: { limit: "100" } })
+  const response = await client["shift"]["shift-swap-requests"].$get({ query: { limit: "100" } })
 
   if (response.status >= 400) {
     return new Error("failed to load shift swap inbox")

@@ -20,7 +20,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["company-calendar-days"].$get({
+    const response = await client["company-calendar"]["company-calendar-days"].$get({
       query: { year: query.year },
     })
 

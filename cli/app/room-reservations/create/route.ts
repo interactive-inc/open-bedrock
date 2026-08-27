@@ -28,7 +28,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.rooms.reservations.$post({
+    const response = await client["room"]["rooms"].reservations.$post({
       json: {
         room_id: toFiniteNumber(query["room-id"], "--room-id"),
         start_at: query.start,

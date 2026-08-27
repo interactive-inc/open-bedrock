@@ -23,7 +23,7 @@ export async function submitReviewForm(props: Props) {
     json.comment = props.request.comment
   }
 
-  const response = await client["review-forms"][":formId"].submit.$post({
+  const response = await client["performance-review"]["review-forms"][":formId"].submit.$post({
     param: { formId: String(props.formId) },
     json,
   })

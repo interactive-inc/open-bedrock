@@ -137,7 +137,11 @@ function classNameFromFile(file: string): string {
 }
 
 function isApplicationErrorFile(file: string): boolean {
-  return file.includes("/application/") && /\/errors(?:\/|(?:\.shared)?\.ts$)/.test(file)
+  return file.endsWith("/application/errors.ts")
+}
+
+function isLayerErrorCollection(file: string): boolean {
+  return /\/(?:application|domain|infrastructure|interface)\/errors\.ts$/.test(file)
 }
 
 describe("Context file responsibility contract", () => {
@@ -146,15 +150,28 @@ describe("Context file responsibility contract", () => {
   })
 
   test("production fileはclassを最大1つだけ定義する", () => {
-    const violations = allContextProductionFiles.flatMap((file) => {
-      const source = readFileSync(new URL(file, contextsDirectory), "utf8")
-      const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true)
-      const classes = classDeclarations(sourceFile)
+    const violations = allContextProductionFiles
+      .filter((file) => !isLayerErrorCollection(file))
+      .flatMap((file) => {
+        const source = readFileSync(new URL(file, contextsDirectory), "utf8")
+        const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true)
+        const classes = classDeclarations(sourceFile)
 
-      return classes.length <= 1 ? [] : [`${file}: ${classes.length} classes`]
-    })
+        return classes.length <= 1 ? [] : [`${file}: ${classes.length} classes`]
+      })
 
     expect(violations).toEqual([])
+  })
+
+  test("Contextのerror定義は各layer直下のerrors.tsにまとめる", () => {
+    expect(
+      allContextProductionFiles.filter(
+        (file) =>
+          file.includes("/errors/") ||
+          file.endsWith("/errors.shared.ts") ||
+          file.endsWith(".error.ts"),
+      ),
+    ).toEqual([])
   })
 
   test("Application・Repository・Adapterのconstructorはc: Contextだけを受け取る", () => {
@@ -196,7 +213,7 @@ describe("Context file responsibility contract", () => {
   })
 
   test("Infrastructure直下のdirectoryは技術的責務だけにする", () => {
-    const allowedDirectoryNames = new Set(["adapters", "errors", "repositories", "schema"])
+    const allowedDirectoryNames = new Set(["adapters", "repositories", "schema"])
 
     expect(
       infrastructureChildDirectories.filter(
@@ -215,8 +232,7 @@ describe("Context file responsibility contract", () => {
             file.includes("/infrastructure/adapters/") &&
             (file.endsWith(".adapter.ts") || file.endsWith(".shared.ts"))
           ) &&
-          !(file.includes("/infrastructure/errors/") && file.endsWith(".error.ts")) &&
-          !/^[^/]+\/infrastructure\/errors(?:\.shared)?\.ts$/.test(file),
+          !file.endsWith("/infrastructure/errors.ts"),
       ),
     ).toEqual([])
   })

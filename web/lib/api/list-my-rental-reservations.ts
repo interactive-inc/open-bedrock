@@ -7,7 +7,7 @@ export async function listMyRentalReservations(): Promise<
 > {
   const client = await createClient()
 
-  const response = await client["rental-reservations"].me.$get()
+  const response = await client["rental"]["rental-reservations"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load rental reservations")

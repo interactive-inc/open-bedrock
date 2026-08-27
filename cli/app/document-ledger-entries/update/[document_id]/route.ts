@@ -33,7 +33,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["document-ledger-entries"][":id"].$put({
+    const response = await client["document"]["document-ledger-entries"][":id"].$put({
       param: { id: documentId },
       json: {
         title: query.title,

@@ -100,7 +100,7 @@ async function request(
 
 describe("POST /training-courses", () => {
   test("privileged role creates a course and returns 201", async () => {
-    const response = await request("/training-courses", await tokenFor(1), {
+    const response = await request("/training/training-courses", await tokenFor(1), {
       method: "POST",
       body: { code: "TR-NEW-01", title: "New Course", category: "skill" },
     })
@@ -118,7 +118,7 @@ describe("POST /training-courses", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/training-courses", await tokenFor(5), {
+    const response = await request("/training/training-courses", await tokenFor(5), {
       method: "POST",
       body: { code: "TR-NEW-02", title: "X", category: "skill" },
     })
@@ -127,7 +127,7 @@ describe("POST /training-courses", () => {
   })
 
   test("duplicate code returns 409", async () => {
-    const response = await request("/training-courses", await tokenFor(1), {
+    const response = await request("/training/training-courses", await tokenFor(1), {
       method: "POST",
       body: { code: "TR-SEC-01", title: "Duplicate", category: "compliance" },
     })
@@ -136,7 +136,7 @@ describe("POST /training-courses", () => {
   })
 
   test("returns 400 when a required field is missing", async () => {
-    const response = await request("/training-courses", await tokenFor(1), {
+    const response = await request("/training/training-courses", await tokenFor(1), {
       method: "POST",
       body: { code: "TR-NEW-03", category: "skill" },
     })
@@ -145,7 +145,7 @@ describe("POST /training-courses", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/training-courses", null, {
+    const response = await request("/training/training-courses", null, {
       method: "POST",
       body: { code: "TR-NEW-04", title: "X", category: "skill" },
     })

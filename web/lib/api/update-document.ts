@@ -6,7 +6,7 @@ import type { DocumentUpdateRequest } from "@/lib/api/types/document-types"
 export async function updateDocument(id: number, request: DocumentUpdateRequest) {
   const client = await createClient()
 
-  const response = await client["document-ledger-entries"][":id"].$put({
+  const response = await client["document"]["document-ledger-entries"][":id"].$put({
     param: { id: String(id) },
     json: request,
   })

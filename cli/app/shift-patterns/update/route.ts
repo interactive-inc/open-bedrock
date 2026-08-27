@@ -31,7 +31,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["shift-patterns"][":id"].$put({
+    const response = await client["shift"]["shift-patterns"][":id"].$put({
       param: { id: query.id },
       json: {
         code: query.code,

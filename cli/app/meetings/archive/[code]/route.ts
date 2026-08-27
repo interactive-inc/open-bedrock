@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.meetings[":code"].archive.$post({ param: { code } })
+    const response = await client["meeting"]["meetings"][":code"].archive.$post({ param: { code } })
 
     return c.json(await response.json())
   },

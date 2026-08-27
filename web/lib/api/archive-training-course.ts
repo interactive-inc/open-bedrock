@@ -7,7 +7,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function archiveTrainingCourse(code: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client["training-courses"][":code"].$delete({
+  const response = await client["training"]["training-courses"][":code"].$delete({
     param: { code: code },
   })
 

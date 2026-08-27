@@ -42,7 +42,7 @@ export type RoomReservationCreateRequest = {
 export type RoomReservationCreated = {
   id: string
   room_id: number
-  reserver_id: number
+  reserver_id: string
   start_at: string
   end_at: string
   purpose: string | null
@@ -52,7 +52,7 @@ export type RoomReservationCreated = {
 export type RoomReservationResponse = {
   id: string
   room_id: number
-  reserver_id: number
+  reserver_id: string
   start_at: string
   end_at: string
   purpose: string | null

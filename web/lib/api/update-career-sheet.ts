@@ -5,7 +5,7 @@ import type { CareerSheetUpdateRequest } from "@/lib/api/types/career-types"
 export async function updateCareerSheet(body: CareerSheetUpdateRequest) {
   const client = await createClient()
 
-  const response = await client["career-sheets"].me.$put({ json: body })
+  const response = await client["career"]["career-sheets"].me.$put({ json: body })
 
   if (response.status >= 400) {
     return new Error("キャリアシートの更新に失敗しました")

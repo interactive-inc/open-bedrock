@@ -20,7 +20,7 @@ export default factory.createHandlers(
     if (input.help) return c.text(help)
     if (!input.code) throw new UsageError("--code が必要です")
     const client = await createClient()
-    const response = await client.employees[":code"]["lifecycle-state"].$get({
+    const response = await client.company["employee-lifecycle"][":code"].state.$get({
       param: { code: input.code },
       query: { as_of: input["as-of"] },
     })

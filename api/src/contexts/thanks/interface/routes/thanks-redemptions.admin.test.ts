@@ -125,7 +125,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /thanks-redemptions/admin", () => {
   test("returns 200 with all redemptions for admin", async () => {
-    const response = await request("/thanks-redemptions/admin", await tokenFor(1))
+    const response = await request("/thanks/thanks-redemptions/admin", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -144,25 +144,28 @@ describe("GET /thanks-redemptions/admin", () => {
   })
 
   test("returns 403 for manager", async () => {
-    const response = await request("/thanks-redemptions/admin", await tokenFor(4))
+    const response = await request("/thanks/thanks-redemptions/admin", await tokenFor(4))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 403 for member", async () => {
-    const response = await request("/thanks-redemptions/admin", await tokenFor(5))
+    const response = await request("/thanks/thanks-redemptions/admin", await tokenFor(5))
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/thanks-redemptions/admin", null)
+    const response = await request("/thanks/thanks-redemptions/admin", null)
 
     expect(response.status).toBe(401)
   })
 
   test("filters by status", async () => {
-    const response = await request("/thanks-redemptions/admin?status=fulfilled", await tokenFor(1))
+    const response = await request(
+      "/thanks/thanks-redemptions/admin?status=fulfilled",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
 
@@ -176,7 +179,10 @@ describe("GET /thanks-redemptions/admin", () => {
   })
 
   test("filters by employee_id", async () => {
-    const response = await request("/thanks-redemptions/admin?employee_id=5", await tokenFor(1))
+    const response = await request(
+      "/thanks/thanks-redemptions/admin?employee_id=5",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
 
@@ -192,7 +198,10 @@ describe("GET /thanks-redemptions/admin", () => {
   })
 
   test("filters by reward_id", async () => {
-    const response = await request("/thanks-redemptions/admin?reward_id=1", await tokenFor(1))
+    const response = await request(
+      "/thanks/thanks-redemptions/admin?reward_id=1",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
 

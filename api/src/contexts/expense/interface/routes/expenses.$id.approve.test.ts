@@ -107,7 +107,7 @@ async function request(props: RequestProps): Promise<Response> {
 describe("POST /expenses/:id/approve", () => {
   test("returns 200 and flips status to approved", async () => {
     const response = await request({
-      path: "/expenses/1/approve",
+      path: "/expense/expenses/1/approve",
       token: await tokenFor(2),
       method: "POST",
       body: { comment: "looks fine" },
@@ -126,7 +126,7 @@ describe("POST /expenses/:id/approve", () => {
 
   test("accepts a null comment", async () => {
     const response = await request({
-      path: "/expenses/1/approve",
+      path: "/expense/expenses/1/approve",
       token: await tokenFor(2),
       method: "POST",
       body: { comment: null },
@@ -144,7 +144,7 @@ describe("POST /expenses/:id/approve", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: "/expenses/1/approve",
+      path: "/expense/expenses/1/approve",
       token,
       method: "POST",
       body: { comment: null },
@@ -155,7 +155,7 @@ describe("POST /expenses/:id/approve", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: "/expenses/1/reject",
+      path: "/expense/expenses/1/reject",
       token,
       method: "POST",
       body: { comment: "too late" },
@@ -172,7 +172,7 @@ describe("POST /expenses/:id/approve", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/expenses/1/approve",
+      path: "/expense/expenses/1/approve",
       token: await tokenFor(5),
       method: "POST",
       body: { comment: null },
@@ -183,7 +183,7 @@ describe("POST /expenses/:id/approve", () => {
 
   test("returns 400 when comment is omitted", async () => {
     const response = await request({
-      path: "/expenses/1/approve",
+      path: "/expense/expenses/1/approve",
       token: await tokenFor(2),
       method: "POST",
       body: {},
@@ -194,7 +194,7 @@ describe("POST /expenses/:id/approve", () => {
 
   test("returns 404 for an unknown id", async () => {
     const response = await request({
-      path: "/expenses/9999/approve",
+      path: "/expense/expenses/9999/approve",
       token: await tokenFor(2),
       method: "POST",
       body: { comment: null },
@@ -205,7 +205,7 @@ describe("POST /expenses/:id/approve", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/expenses/1/approve",
+      path: "/expense/expenses/1/approve",
       token: null,
       method: "POST",
       body: { comment: null },

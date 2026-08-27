@@ -5,7 +5,7 @@ import { ApiResponseError } from "@/lib/api/api-response-error"
 export async function getSurvey(surveyId: number) {
   const client = await createClient()
 
-  const response = await client.surveys[":surveyId"].$get({
+  const response = await client["survey"]["surveys"][":surveyId"].$get({
     param: { surveyId: String(surveyId) },
   })
 

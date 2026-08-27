@@ -28,7 +28,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    await client.assets[":code"].lend.$post({
+    await client["asset"]["assets"][":code"].lend.$post({
       param: { code: assetCode },
       json: { employee_code: query["employee-code"] },
     })

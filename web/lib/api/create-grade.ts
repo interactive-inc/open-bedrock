@@ -9,7 +9,7 @@ import type { GradeCreateRequest } from "@/lib/api/types/grade-types"
 export async function createGrade(request: GradeCreateRequest) {
   const client = await createClient()
 
-  const response = await client["grade-definitions"].$post({ json: request })
+  const response = await client.company["grade-definitions"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

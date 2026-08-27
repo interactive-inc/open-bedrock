@@ -28,7 +28,6 @@ import {
   PartyPopper,
   Plane,
   ScrollText,
-  Settings,
   ShieldCheck,
   Sparkles,
   Target,
@@ -70,7 +69,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     group: "overview",
     icon: Inbox,
     prefetch: null,
-    routes: [{ space: "my", label: "受信箱", href: "/inbox", visibility: everyone }],
+    routes: [{ space: "my", label: "受信箱", href: "/company/inbox", visibility: everyone }],
   },
   {
     slug: "notifications",
@@ -79,7 +78,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     group: "overview",
     icon: Bell,
     prefetch: null,
-    routes: [{ space: "my", label: "通知", href: "/notifications", visibility: everyone }],
+    routes: [{ space: "my", label: "通知", href: "/company/notifications", visibility: everyone }],
   },
   {
     slug: "attendance",
@@ -1101,16 +1100,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
       },
     ],
   },
-  {
-    slug: "settings",
-    tier: "system",
-    status: "available",
-    group: "settings",
-    icon: Settings,
-    prefetch: null,
-    // 設定の入口はサイドバー下部のユーザーメニュー（設定モーダル）へ寄せたため、ここには出さない。
-    routes: [],
-  },
 ]
 
 export const featureGroupOrder: ReadonlyArray<FeatureGroup> = [
@@ -1123,7 +1112,6 @@ export const featureGroupOrder: ReadonlyArray<FeatureGroup> = [
   "workplace",
   "governance",
   "system",
-  "settings",
 ]
 
 export const featureGroupLabels: Record<FeatureGroup, string> = {
@@ -1136,7 +1124,6 @@ export const featureGroupLabels: Record<FeatureGroup, string> = {
   workplace: "資産と施設",
   governance: "経営と統制",
   system: "システム運用",
-  settings: "個人設定",
 }
 
 export const featureTierLabels: Record<FeatureTier, string> = {

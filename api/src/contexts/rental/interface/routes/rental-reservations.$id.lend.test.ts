@@ -67,7 +67,7 @@ describe("POST /rental-reservations/:id/lend", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/rental-reservations/${seedId}/lend`,
+      path: `/rental/rental-reservations/${seedId}/lend`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -87,7 +87,7 @@ describe("POST /rental-reservations/:id/lend", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/rental-reservations/${seedId}/lend`,
+      path: `/rental/rental-reservations/${seedId}/lend`,
       token: await tokenFor(5),
       method: "POST",
     })
@@ -101,7 +101,7 @@ describe("POST /rental-reservations/:id/lend", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: `/rental-reservations/${seedId}/lend`,
+      path: `/rental/rental-reservations/${seedId}/lend`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -111,7 +111,7 @@ describe("POST /rental-reservations/:id/lend", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: `/rental-reservations/${seedId}/lend`,
+      path: `/rental/rental-reservations/${seedId}/lend`,
       token: await tokenFor(99),
       method: "POST",
     })
@@ -123,7 +123,7 @@ describe("POST /rental-reservations/:id/lend", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: `/rental-reservations/${seedId}/lend`,
+      path: `/rental/rental-reservations/${seedId}/lend`,
       token: null,
       method: "POST",
     })

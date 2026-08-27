@@ -6,7 +6,7 @@ import type { DocumentRegisterRequest } from "@/lib/api/types/document-types"
 export async function registerDocument(request: DocumentRegisterRequest) {
   const client = await createClient()
 
-  const response = await client["document-ledger-entries"].$post({ json: request })
+  const response = await client["document"]["document-ledger-entries"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "文書の登録に失敗しました" })

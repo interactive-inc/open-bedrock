@@ -24,7 +24,7 @@ export default factory.createHandlers(
 
     const query = c.req.valid("json")
     const client = await createClient()
-    const response = await client["application-requests"]["workflow-repairs"].$get({
+    const response = await client["company"]["application-requests"]["workflow-repairs"].$get({
       query: { limit: query.limit, offset: query.offset },
     })
     await ensureOk(response)

@@ -6,7 +6,7 @@ export async function applyPersonnelAction(
   idempotencyKey: string,
 ) {
   const client = await createClient()
-  const endpoint = client["personnel-actions"].$post
+  const endpoint = client.company["personnel-action-executions"].$post
   type RequestJson = Parameters<typeof endpoint>[0]["json"]
   const response = await endpoint(
     { json: request as RequestJson },

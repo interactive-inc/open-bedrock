@@ -90,8 +90,8 @@ function filterSections(
 
 const SPACE_PREFIXES: ReadonlyArray<{ key: SpaceKey; prefix: string }> = [
   { key: "my", prefix: "/my" },
-  { key: "my", prefix: "/inbox" },
-  { key: "my", prefix: "/notifications" },
+  { key: "my", prefix: "/company/inbox" },
+  { key: "my", prefix: "/company/notifications" },
   { key: "teams", prefix: "/teams" },
   { key: "organization", prefix: "/organization" },
   { key: "system", prefix: "/system" },
@@ -167,8 +167,8 @@ export function SidebarNav(props: Props) {
     props.inboxCounts.thanks
 
   const badgeMap: Record<string, number> = {
-    "/inbox": inboxTotal,
-    "/notifications": props.unreadNotificationCount,
+    "/company/inbox": inboxTotal,
+    "/company/notifications": props.unreadNotificationCount,
   }
 
   const myBadgeTotal = inboxTotal + props.unreadNotificationCount

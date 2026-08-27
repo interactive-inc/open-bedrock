@@ -59,20 +59,8 @@ function toText(value: FormDataEntryValue | null): string | null {
   return trimmed === "" ? null : trimmed
 }
 
-function toEmployeeId(value: FormDataEntryValue | null): number | null {
-  const text = toText(value)
-
-  if (text === null) {
-    return null
-  }
-
-  const parsed = Number(text)
-
-  if (Number.isInteger(parsed) === false || parsed <= 0) {
-    return null
-  }
-
-  return parsed
+function toEmployeeId(value: FormDataEntryValue | null): string | null {
+  return toText(value)
 }
 
 function toSeverity(value: FormDataEntryValue | null): "minor" | "serious" | null {

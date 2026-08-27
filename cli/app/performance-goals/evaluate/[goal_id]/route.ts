@@ -31,7 +31,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["performance-goals"][":goalId"].evaluations.$post({
+    const response = await client["performance-review"]["performance-goals"][
+      ":goalId"
+    ].evaluations.$post({
       param: { goalId: goalId },
       json: {
         kind: query.kind,

@@ -6,7 +6,7 @@ type RingiStatus = "pending" | "approved" | "rejected"
 export async function getMyRingi(status: RingiStatus | null) {
   const client = await createClient()
 
-  const response = await client["ringi-requests"].me.$get({
+  const response = await client["ringi"]["ringi-requests"].me.$get({
     query: { status: status ?? undefined },
   })
 

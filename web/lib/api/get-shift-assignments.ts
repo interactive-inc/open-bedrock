@@ -13,7 +13,7 @@ export async function getShiftAssignments(
 ): Promise<Array<ShiftAssignmentResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["shift-assignments"].$get({
+  const response = await client["shift"]["shift-assignments"].$get({
     query: {
       from: props.from ?? undefined,
       to: props.to ?? undefined,

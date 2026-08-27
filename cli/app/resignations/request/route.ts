@@ -25,7 +25,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.resignations.$post({
+    const response = await client["resignation"]["resignations"].$post({
       json: {
         resignation_date: query.date,
         last_working_date: query.last ?? null,

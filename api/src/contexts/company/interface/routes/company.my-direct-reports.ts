@@ -1,0 +1,58 @@
+import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
+import {
+  CompanyAuthenticationRequiredError,
+  CompanyDatabaseUnavailableError,
+  CompanyReadForbiddenError,
+  CompanyReadUnavailableError,
+} from "@/contexts/company/interface/errors"
+import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
+import { createFactory } from "hono/factory"
+
+const factory = createFactory<CompanyHttpEnvironment>()
+
+// @authorization owner - 本人が現在管理する直属のCompany従業員だけを返す
+export const GET = factory.createHandlers(async (context) => {
+  const actor = context.var.companyActor
+  if (actor === undefined) throw new CompanyAuthenticationRequiredError()
+  if (!actor.hasCapability("company:read")) throw new CompanyReadForbiddenError()
+  if (actor.employeeId === null) return context.json({ data: [] }, 200)
+  if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()
+
+  const organization = await new CurrentOrganizationReadModelAdapter({
+    env: {
+      DB: context.env.DB,
+      COMPANY_TIME_ZONE: context.env.COMPANY_TIME_ZONE,
+      ...(context.var.companyClock === undefined
+        ? {}
+        : { NOW: context.var.companyClock().toISOString() }),
+    },
+    var: { database: context.var.database, auditContext: context.var.auditContext },
+  }).loadCurrentOrganization()
+  if (organization instanceof Error) throw new CompanyReadUnavailableError(organization)
+
+  const viewer = [...organization.employeesByCode.values()].find(
+    (employee) => employee.id === actor.employeeId,
+  )
+  if (viewer === undefined) return context.json({ data: [] }, 200)
+  const nameByCode = new Map(
+    organization.departments.map((department) => [department.code, department.name] as const),
+  )
+  const data = [...organization.employeesByCode.values()]
+    .filter(
+      (employee) =>
+        employee.status === "active" &&
+        employee.assignments.some((assignment) => assignment.managerEmployeeCode === viewer.code),
+    )
+    .sort((left, right) => left.code.localeCompare(right.code))
+    .map((employee) => ({
+      code: employee.code,
+      name: employee.name,
+      dept_name:
+        employee.primaryDepartmentCode === null
+          ? null
+          : (nameByCode.get(employee.primaryDepartmentCode) ?? null),
+      position: employee.position,
+    }))
+
+  return context.json({ data }, 200)
+})

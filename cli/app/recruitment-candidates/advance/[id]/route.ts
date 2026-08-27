@@ -11,7 +11,7 @@ export default factory.createHandlers(
     "json",
     z.object({
       help: z.string().optional(),
-      stage: z.enum(["applied", "screening", "interview", "offer", "hired", "rejected"]).optional(),
+      stage: z.enum(["screening", "interview", "offer", "hired", "rejected"]).optional(),
     }),
   ),
   zValidator("param", z.object({ id: z.string().optional() })),
@@ -28,7 +28,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["recruitment-candidates"][":id"].advance.$post({
+    const response = await client["recruitment"]["recruitment-candidates"][":id"].advance.$post({
       param: { id },
       json: { stage: query.stage },
     })

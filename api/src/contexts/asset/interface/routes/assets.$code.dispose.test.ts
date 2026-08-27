@@ -108,7 +108,7 @@ async function request(
 
 describe("POST /assets/:code/dispose", () => {
   test("privileged role disposes an in_stock asset and returns 200", async () => {
-    const response = await request("/assets/A0003/dispose", await adminToken(), "POST", {
+    const response = await request("/asset/assets/A0003/dispose", await adminToken(), "POST", {
       reason: "故障のため廃棄",
       disposed_on: "2026-07-01",
     })
@@ -128,7 +128,7 @@ describe("POST /assets/:code/dispose", () => {
   })
 
   test("returns 409 when the asset is lent", async () => {
-    const response = await request("/assets/A0001/dispose", await adminToken(), "POST", {
+    const response = await request("/asset/assets/A0001/dispose", await adminToken(), "POST", {
       reason: "廃棄",
     })
 
@@ -136,7 +136,7 @@ describe("POST /assets/:code/dispose", () => {
   })
 
   test("returns 409 when the asset is already disposed", async () => {
-    const response = await request("/assets/A0011/dispose", await adminToken(), "POST", {
+    const response = await request("/asset/assets/A0011/dispose", await adminToken(), "POST", {
       reason: "廃棄",
     })
 
@@ -144,7 +144,7 @@ describe("POST /assets/:code/dispose", () => {
   })
 
   test("returns 404 for an unknown asset", async () => {
-    const response = await request("/assets/A9999/dispose", await adminToken(), "POST", {
+    const response = await request("/asset/assets/A9999/dispose", await adminToken(), "POST", {
       reason: "廃棄",
     })
 
@@ -152,7 +152,7 @@ describe("POST /assets/:code/dispose", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/assets/A0003/dispose", await memberToken(), "POST", {
+    const response = await request("/asset/assets/A0003/dispose", await memberToken(), "POST", {
       reason: "廃棄",
     })
 
@@ -160,13 +160,13 @@ describe("POST /assets/:code/dispose", () => {
   })
 
   test("returns 400 when reason is missing", async () => {
-    const response = await request("/assets/A0003/dispose", await adminToken(), "POST", {})
+    const response = await request("/asset/assets/A0003/dispose", await adminToken(), "POST", {})
 
     expect(response.status).toBe(400)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/assets/A0003/dispose", null, "POST", {
+    const response = await request("/asset/assets/A0003/dispose", null, "POST", {
       reason: "廃棄",
     })
 
@@ -176,7 +176,7 @@ describe("POST /assets/:code/dispose", () => {
 
 describe("POST /assets/:code/lend after dispose", () => {
   test("returns 409 when trying to lend a disposed asset", async () => {
-    const response = await request("/assets/A0011/lend", await adminToken(), "POST", {
+    const response = await request("/asset/assets/A0011/lend", await adminToken(), "POST", {
       employee_code: "E005",
     })
 

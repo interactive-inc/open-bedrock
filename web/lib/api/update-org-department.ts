@@ -12,10 +12,10 @@ export async function updateOrgDepartment(
 ): Promise<OrgDepartmentResponse | Error> {
   const client = await createClient()
 
-  const response = await client.departments[":code"].$put({
-    param: { code },
-    json: request,
-  })
+  const response = await client.company["organization-units"][":code"].$put(
+    { param: { code }, json: request },
+    { headers: { "Idempotency-Key": crypto.randomUUID() } },
+  )
 
   if (response.status >= 400) {
     return toResponseError(response, {

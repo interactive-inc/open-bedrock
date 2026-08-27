@@ -28,12 +28,12 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["position-definitions"].$post({
+    const response = await client.company["position-definitions"].$post({
       json: {
         code: query.code,
         name: query.name,
         rank: toFiniteNumber(query.rank, "--rank"),
-        description: query.description ?? null,
+        description: query.description,
       },
     })
 

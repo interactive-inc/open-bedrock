@@ -2,9 +2,9 @@
 export type ThanksResponse = {
   // 作成系は insert 直後の autoincrement id（number | null）を返す。
   id: number | null
-  sender_employee_id: number
+  sender_employee_id: string
   sender_name: string
-  recipient_employee_id: number
+  recipient_employee_id: string
   recipient_name: string
   message: string
   // 感謝に添えたサンクスポイント。0 はメッセージのみの感謝。

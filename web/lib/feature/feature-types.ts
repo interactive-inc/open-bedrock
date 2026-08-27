@@ -14,7 +14,6 @@ export type FeatureGroup =
   | "workplace"
   | "governance"
   | "system"
-  | "settings"
 
 export type FeatureSpace = "my" | "teams" | "organization" | "system"
 

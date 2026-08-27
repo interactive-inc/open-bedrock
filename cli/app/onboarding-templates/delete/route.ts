@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["onboarding-templates"][":code"].$delete({
+    const response = await client["onboarding"]["onboarding-templates"][":code"].$delete({
       param: { code: query.code },
     })
 

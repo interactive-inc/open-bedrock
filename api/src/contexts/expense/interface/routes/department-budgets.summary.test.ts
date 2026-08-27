@@ -101,7 +101,7 @@ async function request(props: { path: string; token: string | null }): Promise<R
 describe("GET /department-budgets/summary", () => {
   test("returns per-department budget, consumption and remaining for the fiscal period", async () => {
     const response = await request({
-      path: "/department-budgets/summary?fiscal_period=2026",
+      path: "/expense/department-budgets/summary?fiscal_period=2026",
       token: await tokenFor(1),
     })
 
@@ -131,7 +131,7 @@ describe("GET /department-budgets/summary", () => {
 
   test("returns 400 without fiscal_period", async () => {
     const response = await request({
-      path: "/department-budgets/summary",
+      path: "/expense/department-budgets/summary",
       token: await tokenFor(1),
     })
 
@@ -140,7 +140,7 @@ describe("GET /department-budgets/summary", () => {
 
   test("returns 403 without budget:manage", async () => {
     const response = await request({
-      path: "/department-budgets/summary?fiscal_period=2026",
+      path: "/expense/department-budgets/summary?fiscal_period=2026",
       token: await tokenFor(2),
     })
 

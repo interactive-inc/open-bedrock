@@ -5,7 +5,7 @@ import { ApiResponseError } from "@/lib/api/api-response-error"
 export async function getBudgetDetail(id: number) {
   const client = await createClient()
 
-  const response = await client["department-budgets"][":id"].$get({
+  const response = await client["expense"]["department-budgets"][":id"].$get({
     param: { id: String(id) },
   })
 

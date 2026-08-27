@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getHeadcountPlanList(query: { fiscalYear?: number }) {
   const client = await createClient()
 
-  const response = await client["headcount-plans"].$get({
+  const response = await client["headcount-plan"]["headcount-plans"].$get({
     query: {
       fiscal_year: query.fiscalYear === undefined ? undefined : String(query.fiscalYear),
     },

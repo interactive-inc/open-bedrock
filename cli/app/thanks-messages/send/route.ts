@@ -29,7 +29,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["thanks-messages"].$post({
+    const response = await client["thanks"]["thanks-messages"].$post({
       json: {
         recipient_employee_code: query.to,
         message: query.message,

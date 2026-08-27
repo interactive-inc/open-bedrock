@@ -9,7 +9,7 @@ import type { AttendanceSummaryQuery } from "@/lib/api/types/attendance-types"
 export async function getMyAttendanceSummary(query: AttendanceSummaryQuery) {
   const client = await createClient()
 
-  const response = await client["attendance-records"].me.summary.$get({
+  const response = await client["attendance"]["attendance-records"].me.summary.$get({
     query: {
       month: query.month ?? undefined,
     },

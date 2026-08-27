@@ -14,7 +14,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["certificate-requests"].me.$get()
+    const response = await client["certificate-request"]["certificate-requests"].me.$get()
 
     const certificateRequests = await response.json()
 

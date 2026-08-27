@@ -28,9 +28,9 @@ export default factory.createHandlers(
     const code = c.req.param("code") ?? query.code
     if (!code) throw new UsageError("template_code が必要です")
     const client = (await createClient()) as unknown as {
-      "application-templates": { ":code": { workflow: WorkflowEndpoint } }
+      company: { "application-templates": { ":code": { workflow: WorkflowEndpoint } } }
     }
-    const endpoint = client["application-templates"][":code"].workflow
+    const endpoint = client.company["application-templates"][":code"].workflow
     if (query.definition === undefined) {
       const response = await endpoint.$get({ param: { code } })
       await ensureOk(response)

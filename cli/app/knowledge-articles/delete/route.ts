@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["knowledge-articles"][":id"].$delete({
+    const response = await client["knowledge"]["knowledge-articles"][":id"].$delete({
       param: { id: query.id },
     })
 

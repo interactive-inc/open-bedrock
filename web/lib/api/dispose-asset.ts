@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function disposeAsset(code: string, reason: string, disposedOn?: string) {
   const client = await createClient()
 
-  const response = await client.assets[":code"].dispose.$post({
+  const response = await client["asset"]["assets"][":code"].dispose.$post({
     param: { code },
     json: { reason, disposed_on: disposedOn },
   })

@@ -13,6 +13,7 @@ import * as attachmentsPurgeUnlinked from "@system/interface/routes/system.attac
 import * as auditEvents from "@system/interface/routes/system.audit-events"
 import * as auditEventsEventId from "@system/interface/routes/system.audit-events.$eventId"
 import * as authPasswordReset from "@system/interface/routes/system.auth.password.reset"
+import * as batchJobs from "@system/interface/routes/system.batch-jobs"
 import * as bootstrap from "@system/interface/routes/system.bootstrap"
 import * as browserLoginCodes from "@system/interface/routes/system.browser-login-codes"
 import * as browserSessions from "@system/interface/routes/system.browser-sessions"
@@ -61,6 +62,7 @@ export const systemPublicRoutes = new Hono<SystemHonoEnv>()
   .get("/audit-events/:eventId", ...auditEventsEventId.GET)
   .post("/auth/password/reset", ...authPasswordReset.POST)
   .patch("/auth/password/reset", ...authPasswordReset.PATCH)
+  .get("/batch-jobs", ...batchJobs.GET)
   .post("/bootstrap", ...bootstrap.POST)
   .post("/browser-login-codes", ...browserLoginCodes.POST)
   .post("/browser-sessions", ...browserSessions.POST)

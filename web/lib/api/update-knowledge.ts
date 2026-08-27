@@ -6,7 +6,7 @@ import type { KnowledgeUpdateRequest } from "@/lib/api/types/knowledge-types"
 export async function updateKnowledge(id: number, request: KnowledgeUpdateRequest) {
   const client = await createClient()
 
-  const response = await client["knowledge-articles"][":id"].$put({
+  const response = await client["knowledge"]["knowledge-articles"][":id"].$put({
     param: { id: String(id) },
     json: request,
   })

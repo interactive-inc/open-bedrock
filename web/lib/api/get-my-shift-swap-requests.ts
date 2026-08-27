@@ -5,7 +5,7 @@ import type { MyShiftSwapRequestResponse } from "@/lib/api/types/shift-types"
 export async function getMyShiftSwapRequests(): Promise<Array<MyShiftSwapRequestResponse> | Error> {
   const client = await createClient()
 
-  const response = await client["shift-swap-requests"].me.$get()
+  const response = await client["shift"]["shift-swap-requests"].me.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load my shift swap requests")

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getDecisionList(query: { limit: number; offset: number }) {
   const client = await createClient()
 
-  const response = await client["decision-records"].$get({
+  const response = await client["meeting"]["decision-records"].$get({
     query: {
       limit: String(query.limit),
       offset: String(query.offset),

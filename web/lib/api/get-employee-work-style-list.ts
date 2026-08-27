@@ -8,7 +8,7 @@ import type { WorkStyleSearchQuery } from "@/lib/api/types/work-style-types"
 export async function getEmployeeWorkStyleList(query: WorkStyleSearchQuery) {
   const client = await createClient()
 
-  const response = await client["employee-work-styles"].$get({
+  const response = await client["work-style"]["employee-work-styles"].$get({
     query: { employee_code: query.employeeCode },
   })
 

@@ -18,7 +18,9 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["onboarding-assignments"].employees[":employeeCode"].$get({
+    const response = await client["onboarding"]["onboarding-assignments"].employees[
+      ":employeeCode"
+    ].$get({
       param: { employeeCode: employeeCode },
     })
 

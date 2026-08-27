@@ -17,9 +17,11 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["certificate-requests"][":id"].issue.$post({
-      param: { id: query.id },
-    })
+    const response = await client["certificate-request"]["certificate-requests"][":id"].issue.$post(
+      {
+        param: { id: query.id },
+      },
+    )
 
     if (response.status !== 200) {
       throw new UsageError("証明書発行依頼の発行に失敗しました")

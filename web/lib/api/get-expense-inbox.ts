@@ -4,7 +4,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getExpenseInbox() {
   const client = await createClient()
 
-  const response = await client.expenses.inbox.$get()
+  const response = await client["expense"]["expenses"].inbox.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load expense inbox")

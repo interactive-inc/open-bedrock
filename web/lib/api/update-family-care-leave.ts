@@ -12,7 +12,7 @@ export async function updateFamilyCareLeave(
 ): Promise<FamilyCareLeaveResponse | Error> {
   const client = await createClient()
 
-  const response = await client["family-care-leaves"][":id"].$put({
+  const response = await client["family-care-leave"]["family-care-leaves"][":id"].$put({
     param: { id },
     json: request,
   })

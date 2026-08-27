@@ -98,7 +98,7 @@ describe("POST /attendance-records/clock-out", () => {
     const inResponse = await send({
       db,
       method: "POST",
-      path: "/attendance-records/clock-in",
+      path: "/attendance/attendance-records/clock-in",
       token,
       now: "2026-05-29T09:00:00Z",
       body: {},
@@ -109,7 +109,7 @@ describe("POST /attendance-records/clock-out", () => {
     const outResponse = await send({
       db,
       method: "POST",
-      path: "/attendance-records/clock-out",
+      path: "/attendance/attendance-records/clock-out",
       token,
       now: "2026-05-29T18:30:00Z",
       body: {},
@@ -132,7 +132,7 @@ describe("POST /attendance-records/clock-out", () => {
     const response = await send({
       db: await createTestDb(),
       method: "POST",
-      path: "/attendance-records/clock-out",
+      path: "/attendance/attendance-records/clock-out",
       token: await tokenFor(5),
       now: "2026-05-29T18:30:00Z",
       body: {},
@@ -155,7 +155,7 @@ describe("POST /attendance-records/clock-out", () => {
     const response = await send({
       db,
       method: "POST",
-      path: "/attendance-records/clock-out",
+      path: "/attendance/attendance-records/clock-out",
       token: await tokenFor(10),
       now: "2026-05-30T18:00:00Z",
       body: {},
@@ -173,7 +173,7 @@ describe("POST /attendance-records/clock-out", () => {
     await send({
       db,
       method: "POST",
-      path: "/attendance-records/clock-in",
+      path: "/attendance/attendance-records/clock-in",
       token,
       now: "2026-05-29T09:00:00Z",
       body: {},
@@ -183,7 +183,7 @@ describe("POST /attendance-records/clock-out", () => {
     const first = await send({
       db,
       method: "POST",
-      path: "/attendance-records/clock-out",
+      path: "/attendance/attendance-records/clock-out",
       token,
       now: "2026-05-29T18:00:00Z",
       body: {},
@@ -195,7 +195,7 @@ describe("POST /attendance-records/clock-out", () => {
     const second = await send({
       db,
       method: "POST",
-      path: "/attendance-records/clock-out",
+      path: "/attendance/attendance-records/clock-out",
       token,
       now: "2026-05-29T18:30:00Z",
       body: {},
@@ -212,7 +212,7 @@ describe("POST /attendance-records/clock-out", () => {
     await send({
       db,
       method: "POST",
-      path: "/attendance-records/clock-in",
+      path: "/attendance/attendance-records/clock-in",
       token,
       now: "2026-05-29T09:00:00Z",
       body: {},
@@ -221,7 +221,7 @@ describe("POST /attendance-records/clock-out", () => {
     const outResponse = await send({
       db,
       method: "POST",
-      path: "/attendance-records/clock-out",
+      path: "/attendance/attendance-records/clock-out",
       token,
       now: "2026-05-29T18:30:00Z",
       body: { note: "leaving early" },
@@ -244,7 +244,7 @@ describe("POST /attendance-records/clock-out", () => {
     await send({
       db,
       method: "POST",
-      path: "/attendance-records/clock-in",
+      path: "/attendance/attendance-records/clock-in",
       token,
       now: "2026-05-29T09:00:00Z",
       body: { note: "morning" },
@@ -253,7 +253,7 @@ describe("POST /attendance-records/clock-out", () => {
     const outResponse = await send({
       db,
       method: "POST",
-      path: "/attendance-records/clock-out",
+      path: "/attendance/attendance-records/clock-out",
       token,
       now: "2026-05-29T18:30:00Z",
       body: {},
@@ -272,7 +272,7 @@ describe("POST /attendance-records/clock-out", () => {
     const response = await send({
       db: await createTestDb(),
       method: "POST",
-      path: "/attendance-records/clock-out",
+      path: "/attendance/attendance-records/clock-out",
       token: null,
       now: "2026-05-29T18:30:00Z",
       body: {},

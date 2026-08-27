@@ -1,9 +1,21 @@
 {
   "companyAreasByLayer": {
-    "domain": ["catalogs", "definitions", "entities", "errors", "policies", "schemas", "values"],
-    "application": ["account-profile", "core", "employee-lifecycle", "organization"],
+    "domain": ["catalogs", "definitions", "entities", "policies", "values"],
+    "application": [
+      "account-employee-links",
+      "account-profile",
+      "definitions",
+      "employee-history",
+      "employee-lifecycle",
+      "employees",
+      "employments",
+      "organization",
+      "people",
+      "personnel-actions",
+      "profile"
+    ],
     "infrastructure": ["adapters", "repositories", "schema"],
-    "interface": ["capabilities", "errors", "operations", "request-environment", "routes"]
+    "interface": ["capabilities", "operations", "request-environment", "routes"]
   },
   "businessAreaOwners": {
     "announcement": "announcement",

@@ -5,7 +5,7 @@ import type { RoomCreateRequest } from "@/lib/api/types/room-types"
 export async function createRoom(request: RoomCreateRequest) {
   const client = await createClient()
 
-  const response = await client.rooms.$post({ json: request })
+  const response = await client["room"]["rooms"].$post({ json: request })
 
   if (response.status >= 400) {
     return new Error("会議室の登録に失敗しました")

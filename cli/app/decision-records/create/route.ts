@@ -30,7 +30,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["decision-records"].$post({
+    const response = await client["meeting"]["decision-records"].$post({
       json: {
         title: query.title,
         decided_on: decidedOn,

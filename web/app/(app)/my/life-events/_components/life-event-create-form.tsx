@@ -21,7 +21,7 @@ type Props = {
  * ライフイベント届出フォーム。native form + Server Action を useActionState で呼び、結果を sonner で通知する。
  * reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
  * 転居のときだけ変更理由・郵便番号・新住所・電話番号を追加入力させ、詳細欄はサーバー側で合成する。
- * 電話番号は /my/settings に登録済みの値を初期値にする。
+ * 電話番号は個人設定に登録済みの値を初期値にする。
  */
 export function LifeEventCreateForm(props: Props) {
   const router = useRouter()

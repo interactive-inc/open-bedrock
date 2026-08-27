@@ -30,7 +30,9 @@ export class DeleteCareerPosting {
       return new ForbiddenError("cannot manage career postings", "forbidden")
     }
 
-    const current: CareerPosting | null | Error = await postingRepository.findById(command.postingId)
+    const current: CareerPosting | null | Error = await postingRepository.findById(
+      command.postingId,
+    )
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find career posting", { cause: current })

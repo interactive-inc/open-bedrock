@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["evaluation-sheets"][":sheetId"].$get({
+    const response = await client["performance-review"]["evaluation-sheets"][":sheetId"].$get({
       param: { sheetId: query.id },
     })
 

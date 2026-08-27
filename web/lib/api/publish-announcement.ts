@@ -5,7 +5,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 export async function publishAnnouncement(id: number) {
   const client = await createClient()
 
-  const response = await client.announcements[":id"].publish.$post({
+  const response = await client["announcement"]["announcements"][":id"].publish.$post({
     param: { id: String(id) },
   })
 
