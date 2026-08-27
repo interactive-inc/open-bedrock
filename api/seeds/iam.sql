@@ -12,22 +12,22 @@ INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) 
   ('13', 'active', 0, 0, 0),
   ('16', 'active', 0, 0, 0);
 
-INSERT INTO account_employee_links (account_id, employee_id) VALUES
-  ('1', 1),
-  ('2', 2),
-  ('3', 3),
-  ('4', 4),
-  ('5', 5),
-  ('9', 9),
-  ('10', 10),
-  ('13', 13),
-  ('16', 16);
+INSERT INTO company_account_employee_links (account_id, employee_id) VALUES
+  ('1', '1'),
+  ('2', '2'),
+  ('3', '3'),
+  ('4', '4'),
+  ('5', '5'),
+  ('9', '9'),
+  ('10', '10'),
+  ('13', '13'),
+  ('16', '16');
 
 INSERT INTO company_account_profiles
   (organization_id, account_id, display_name, created_at, updated_at)
-SELECT 'organization:default', link.account_id, employee.name, 0, 0
-FROM account_employee_links link
-INNER JOIN employees employee ON employee.id = link.employee_id;
+SELECT 'organization:default', link.account_id, employee.official_name, 0, 0
+FROM company_account_employee_links link
+INNER JOIN company_employees employee ON employee.id = link.employee_id;
 
 INSERT INTO system_identity_bindings
   (id, account_id, provider, subject, created_at, activated_at, revoked_at)
