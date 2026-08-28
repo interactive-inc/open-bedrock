@@ -150,11 +150,12 @@ Lucide React を使用。以下の使い分けに従う。
 
 #### ナビゲーションアイコン
 
-| アイコン                       | 用途               |
-| ------------------------------ | ------------------ |
-| `ArrowLeft`                    | 戻る               |
-| `ChevronLeft` / `ChevronRight` | ページネーション   |
-| `ChevronDown`                  | ドロップダウン展開 |
+| アイコン                       | 用途                             |
+| ------------------------------ | -------------------------------- |
+| `ArrowLeft`                    | 戻る                             |
+| `ChevronLeft` / `ChevronRight` | ページネーション                 |
+| `ChevronRight`                 | 前進するリンクの目印（下記参照） |
+| `ChevronDown`                  | ドロップダウン展開               |
 
 #### ステータスアイコン
 
@@ -182,6 +183,34 @@ Lucide React を使用。以下の使い分けに従う。
 | ナレッジ   | `BookOpen`       |
 | 通知       | `Bell`           |
 | 設定       | `Settings`       |
+
+### リンク
+
+押せることが一目で分かるよう、前進するリンクには `ChevronRight` を添える。アイコンは
+`text-muted-foreground/40` で薄く置き、文字より目立たせない。
+
+| 種類           | コンポーネント | アイコンの位置           |
+| -------------- | -------------- | ------------------------ |
+| カードリンク   | `CardLink`     | カードの右下（絶対配置） |
+| テキストリンク | `TextLink`     | 文末（インライン）       |
+
+構成ルール:
+
+- カード全体をリンクにするときは `CardLink` を使う。`Card` と `Link` を直接組み合わせない
+- 「〇〇を開く」のような文章型・CTA 型のリンクは `TextLink` を使う
+- 一覧テーブルの識別子リンク（従業員名・申請番号など）には `TextLink` を使わない。行ごとに記号が並んで一覧が読みにくくなるため、素の `Link` のままにする
+- 「一覧へ戻る」のような後退する導線には `ChevronRight` を付けない。`BackButton`（`ArrowLeft`）を使う
+- 監査・証跡画面では `CardLink` / `TextLink` にも `prefetch={false}` を渡す
+
+### カーソル
+
+押せる・選べる要素は必ず `cursor: pointer` にする。Tailwind v4 で `button` の既定が
+`default` に変わったため、`app/globals.css` の `@layer base` でまとめて指定している。
+
+- 新しいプリミティブを追加するときは、`role` が base 層の列挙に含まれるか確認する
+- 含まれない場合は base 層に追記する。コンポーネント側で個別に当てない
+- `cursor-default` を明示しない。base 層の指定に勝ってしまう
+- 無効時は `disabled:cursor-not-allowed` か `disabled:pointer-events-none` のどちらかを当てる
 
 ## レイアウトパターン
 

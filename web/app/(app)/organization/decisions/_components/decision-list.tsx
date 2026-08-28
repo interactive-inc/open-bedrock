@@ -1,9 +1,8 @@
-import Link from "next/link"
 import { FetchError } from "@/components/fetch-error"
+import { CardLink } from "@/components/card-link"
 import { EmptyState } from "@/components/empty-state"
 import { TablePagination } from "@/components/table-pagination"
 import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
 import { getDecisionList } from "@/lib/api/get-decision-list"
 
 const PAGE_SIZE = 20
@@ -36,26 +35,25 @@ export async function DecisionList(props: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         {result.data.map((decision) => (
-          <Card key={decision.id} className="p-0 gap-0">
-            <Link
-              href={`/organization/decisions/${decision.id}`}
-              className="flex flex-col gap-2 p-4 transition-colors hover:bg-muted/50"
-            >
-              <div className="flex items-center gap-3">
-                {decision.status === "superseded" ? (
-                  <Badge variant="outline">置き換え済み</Badge>
-                ) : (
-                  <Badge variant="secondary">有効</Badge>
-                )}
+          <CardLink
+            key={decision.id}
+            href={`/organization/decisions/${decision.id}`}
+            className="flex flex-col gap-2"
+          >
+            <div className="flex items-center gap-3">
+              {decision.status === "superseded" ? (
+                <Badge variant="outline">置き換え済み</Badge>
+              ) : (
+                <Badge variant="secondary">有効</Badge>
+              )}
 
-                <span className="text-base font-medium">{decision.title}</span>
+              <span className="text-base font-medium">{decision.title}</span>
 
-                <span className="text-sm text-muted-foreground">{decision.decided_on}</span>
-              </div>
+              <span className="text-sm text-muted-foreground">{decision.decided_on}</span>
+            </div>
 
-              <p className="line-clamp-2 text-sm text-muted-foreground">{decision.decision}</p>
-            </Link>
-          </Card>
+            <p className="line-clamp-2 text-sm text-muted-foreground">{decision.decision}</p>
+          </CardLink>
         ))}
       </div>
 

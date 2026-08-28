@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { Suspense } from "react"
 import {
   CalendarClock,
@@ -12,7 +11,9 @@ import {
   Target,
   TimerReset,
 } from "lucide-react"
+import { CardLink } from "@/components/card-link"
 import { PageHeader } from "@/components/page-header"
+import { TextLink } from "@/components/text-link"
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
@@ -83,16 +84,15 @@ export default async function MePage() {
             const Icon = resource.icon
 
             return (
-              <Card key={resource.href} className="gap-0 p-0">
-                <Link
-                  href={resource.href}
-                  className="flex min-h-20 flex-col items-center justify-center gap-2 p-4 text-center transition-colors hover:bg-muted/50"
-                >
-                  <Icon className="size-5 text-muted-foreground" />
+              <CardLink
+                key={resource.href}
+                href={resource.href}
+                className="flex min-h-20 flex-col items-center justify-center gap-2 pr-4 text-center"
+              >
+                <Icon className="size-5 text-muted-foreground" />
 
-                  <span className="text-sm font-medium">{resource.label}</span>
-                </Link>
-              </Card>
+                <span className="text-sm font-medium">{resource.label}</span>
+              </CardLink>
             )
           })}
         </div>
@@ -127,12 +127,7 @@ async function TodayAttendanceCard() {
           </CardDescription>
         )}
 
-        <Link
-          href="/my/attendances"
-          className="text-sm text-primary underline-offset-4 hover:underline"
-        >
-          勤怠を開く
-        </Link>
+        <TextLink href="/my/attendances">勤怠を開く</TextLink>
       </CardContent>
     </Card>
   )
@@ -164,9 +159,7 @@ async function LeaveBalanceCard() {
           </CardDescription>
         )}
 
-        <Link href="/my/leaves" className="text-sm text-primary underline-offset-4 hover:underline">
-          休暇を開く
-        </Link>
+        <TextLink href="/my/leaves">休暇を開く</TextLink>
       </CardContent>
     </Card>
   )
@@ -204,12 +197,7 @@ async function RecentApplicationsCard() {
           </ul>
         )}
 
-        <Link
-          href="/my/applications"
-          className="text-sm text-primary underline-offset-4 hover:underline"
-        >
-          申請を開く
-        </Link>
+        <TextLink href="/my/applications">申請を開く</TextLink>
       </CardContent>
     </Card>
   )

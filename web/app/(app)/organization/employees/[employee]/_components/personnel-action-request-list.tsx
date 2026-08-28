@@ -1,8 +1,8 @@
 import { formatLifecycleKind } from "@/app/(app)/organization/employees/[employee]/_lib/format-lifecycle-kind"
+import { TextLink } from "@/components/text-link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { PersonnelActionRequests } from "@/lib/api/list-personnel-action-requests"
-import Link from "next/link"
 
 export function PersonnelActionRequestList(props: { data: PersonnelActionRequests }) {
   if (props.data.requests.length === 0) return null
@@ -28,13 +28,13 @@ export function PersonnelActionRequestList(props: { data: PersonnelActionRequest
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="outline">承認待ち</Badge>
-                <Link
+                <TextLink
                   href={`/organization/applications/${request.application_id}`}
                   prefetch={false}
-                  className="text-sm font-medium underline underline-offset-4"
+                  className="font-medium"
                 >
                   申請を見る
-                </Link>
+                </TextLink>
               </div>
             </li>
           ))}

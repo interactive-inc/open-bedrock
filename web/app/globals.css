@@ -130,14 +130,29 @@
   html {
     @apply font-sans;
   }
+  /*
+   * 押せる・選べる要素は必ず pointer にする。Tailwind v4 で button の既定が
+   * default に変わったことへの対処に加え、role で表現されるメニュー項目や、
+   * a として描画されるボタンも取りこぼさないよう列挙する。
+   * disabled は各コンポーネント側で not-allowed / pointer-events-none を当てる。
+   */
   button,
   select,
+  label:has(input:not([disabled])),
   [type="checkbox"],
   [type="radio"],
   [role="checkbox"],
   [role="switch"],
   [role="tab"],
   [role="combobox"],
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"],
+  [role="option"],
+  [role="radio"],
+  [role="slider"],
+  [role="treeitem"],
+  a[href],
   summary {
     cursor: pointer;
   }

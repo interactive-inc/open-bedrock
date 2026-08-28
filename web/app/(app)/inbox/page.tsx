@@ -1,6 +1,6 @@
-import Link from "next/link"
+import { CardLink } from "@/components/card-link"
 import { EmptyState } from "@/components/empty-state"
-import { Card, CardDescription, CardTitle } from "@/components/ui/card"
+import { CardDescription, CardTitle } from "@/components/ui/card"
 import { getInboxCounts } from "@/lib/api/get-inbox-counts"
 import { getMe } from "@/lib/api/get-me"
 import { inboxCountFor } from "@/lib/inbox/inbox-count-for"
@@ -45,28 +45,27 @@ export default async function InboxPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map((card) => (
-            <Card key={card.inboxType.key} className="gap-0 p-0">
-              <Link
-                href={card.inboxType.href}
-                className="flex min-h-24 flex-col justify-between gap-2 p-4 transition-colors hover:bg-muted/50"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-base">{card.inboxType.label}</CardTitle>
+            <CardLink
+              key={card.inboxType.key}
+              href={card.inboxType.href}
+              className="flex min-h-24 flex-col justify-between gap-2"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <CardTitle className="text-base">{card.inboxType.label}</CardTitle>
 
-                  {card.count !== null ? (
-                    <span className="text-2xl font-semibold tabular-nums">{card.count}</span>
-                  ) : null}
-                </div>
+                {card.count !== null ? (
+                  <span className="text-2xl font-semibold tabular-nums">{card.count}</span>
+                ) : null}
+              </div>
 
-                <CardDescription>
-                  {card.count === null
-                    ? "受信箱を開く"
-                    : card.count === 0
-                      ? "対応待ちはありません"
-                      : `${card.count} 件の対応待ち`}
-                </CardDescription>
-              </Link>
-            </Card>
+              <CardDescription>
+                {card.count === null
+                  ? "受信箱を開く"
+                  : card.count === 0
+                    ? "対応待ちはありません"
+                    : `${card.count} 件の対応待ち`}
+              </CardDescription>
+            </CardLink>
           ))}
         </div>
       )}

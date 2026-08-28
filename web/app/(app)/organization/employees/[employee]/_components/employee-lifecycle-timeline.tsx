@@ -1,4 +1,5 @@
 import { formatLifecycleDate } from "@/app/(app)/organization/employees/[employee]/_lib/format-lifecycle-date"
+import { TextLink } from "@/components/text-link"
 import { formatLifecycleDisplayStatus } from "@/app/(app)/organization/employees/[employee]/_lib/format-lifecycle-display-status"
 import { formatLifecycleKind } from "@/app/(app)/organization/employees/[employee]/_lib/format-lifecycle-kind"
 import { summarizeLifecycleEvent } from "@/app/(app)/organization/employees/[employee]/_lib/summarize-lifecycle-event"
@@ -6,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import type { EmployeeLifecycleEvents } from "@/lib/api/get-employee-lifecycle-events"
-import Link from "next/link"
 
 export function EmployeeLifecycleTimeline(props: {
   code: string
@@ -59,13 +59,13 @@ export function EmployeeLifecycleTimeline(props: {
         )}
         {props.events.next_cursor !== null ? (
           <div className="mt-4">
-            <Link
+            <TextLink
               href={`/organization/employees/${encodeURIComponent(props.code)}/timeline?cursor=${encodeURIComponent(props.events.next_cursor)}`}
               prefetch={false}
-              className="text-sm font-medium underline underline-offset-4"
+              className="font-medium"
             >
               さらに履歴を表示
-            </Link>
+            </TextLink>
           </div>
         ) : null}
       </CardContent>
