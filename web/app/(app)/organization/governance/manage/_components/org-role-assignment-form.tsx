@@ -33,7 +33,7 @@ export function OrgRoleAssignmentForm(props: { roles: ReadonlyArray<Role>; today
   const manualRoles = props.roles.filter((role) => role.assignmentMode === "manual")
 
   return (
-    <form action={action} className="rounded-xl border p-4">
+    <form action={action} className="rounded-xl bg-card border p-4">
       <FieldGroup className="gap-4 md:grid md:grid-cols-2">
         <Field>
           <FieldLabel htmlFor="org-role-code">組織ロール</FieldLabel>

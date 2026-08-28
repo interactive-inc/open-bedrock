@@ -52,7 +52,7 @@ export function ReviewCycleCreateForm() {
           />
         </Field>
 
-        <fieldset className="flex flex-col gap-3 rounded-lg border p-4">
+        <fieldset className="flex flex-col gap-3 rounded-lg bg-card border p-4">
           <legend className="px-1 text-sm font-medium">評価者の自動割当</legend>
 
           <PolicySwitch

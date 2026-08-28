@@ -13,7 +13,7 @@ type Props = {
  */
 export function PartnerFilterForm(props: Props) {
   return (
-    <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl border p-4">
+    <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl bg-card border p-4">
       <div className="flex flex-col gap-2">
         <Label htmlFor="filter-q">キーワード</Label>
 

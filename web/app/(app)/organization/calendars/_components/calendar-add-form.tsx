@@ -37,7 +37,10 @@ export function CalendarAddForm() {
   const isPending = action[2]
 
   return (
-    <form action={formAction} className="flex flex-wrap items-end gap-3 rounded-2xl border p-4">
+    <form
+      action={formAction}
+      className="flex flex-wrap items-end gap-3 rounded-2xl bg-card border p-4"
+    >
       <Field className="w-44">
         <FieldLabel htmlFor="calendar-date">日付</FieldLabel>
 

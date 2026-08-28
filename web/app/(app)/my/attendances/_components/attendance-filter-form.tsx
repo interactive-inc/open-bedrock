@@ -16,7 +16,7 @@ type Props = {
  */
 export function AttendanceFilterForm(props: Props) {
   return (
-    <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl border p-4">
+    <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl bg-card border p-4">
       {props.withEmployeeId ? (
         <div className="flex flex-col gap-2">
           <Label htmlFor="filter-employee-id">従業員 ID</Label>

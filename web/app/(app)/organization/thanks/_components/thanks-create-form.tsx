@@ -58,7 +58,7 @@ export function ThanksCreateForm() {
   const isPending = action[2]
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 rounded-2xl border p-4">
+    <form action={formAction} className="flex flex-col gap-4 rounded-2xl bg-card border p-4">
       <h2 className="text-lg font-medium">感謝を送る</h2>
 
       <FieldGroup>

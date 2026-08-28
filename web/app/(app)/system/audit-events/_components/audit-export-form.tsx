@@ -111,7 +111,7 @@ export function AuditExportForm(props: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full rounded-xl border p-3 sm:min-w-xl">
+    <form onSubmit={handleSubmit} className="w-full rounded-xl bg-card border p-3 sm:min-w-xl">
       <FieldSet disabled={pending} className="gap-3">
         <FieldLegend>CSV出力</FieldLegend>
         <FieldGroup className="grid gap-3 sm:grid-cols-2">

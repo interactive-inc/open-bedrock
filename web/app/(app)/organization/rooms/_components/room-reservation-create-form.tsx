@@ -50,7 +50,7 @@ export function RoomReservationCreateForm(props: Props) {
   const availableRooms = props.availabilities.filter((availability) => availability.available)
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 rounded-2xl border p-4">
+    <form action={formAction} className="flex flex-col gap-4 rounded-2xl bg-card border p-4">
       <h2 className="text-lg font-medium">会議室を予約</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

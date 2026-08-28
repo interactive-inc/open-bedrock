@@ -30,7 +30,7 @@ export async function OvertimeSummarySection(props: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-dashed bg-card p-4 text-sm text-muted-foreground">
         <p>
           対象月: {summary.month} / 営業日: {summary.business_days} 日 / 所定:{" "}
           {toDurationLabel(summary.daily_regular_minutes)} / 日

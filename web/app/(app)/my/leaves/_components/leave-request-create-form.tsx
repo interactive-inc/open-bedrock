@@ -60,7 +60,7 @@ export function LeaveRequestCreateForm() {
   const isPending = action[2]
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 rounded-2xl border p-4">
+    <form action={formAction} className="flex flex-col gap-4 rounded-2xl bg-card border p-4">
       <h3 className="text-lg font-medium">休暇を申請</h3>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

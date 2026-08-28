@@ -21,7 +21,7 @@ export function GoalTreeView(props: Props) {
       {rows.map((row) => (
         <li
           key={row.id}
-          className="flex items-center gap-3 rounded-md border p-3"
+          className="flex items-center gap-3 rounded-md bg-card border p-3"
           style={{ marginInlineStart: `${row.depth * 24}px` }}
         >
           <Badge variant={row.ownerType === "individual" ? "outline" : "default"}>

@@ -14,7 +14,7 @@ export function EmptyState(props: Props) {
   const Icon = props.icon
 
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed py-12 text-center">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed bg-card py-12 text-center">
       {Icon !== undefined ? (
         <div className="rounded-full bg-muted p-3">
           <Icon className="size-5 text-muted-foreground" />

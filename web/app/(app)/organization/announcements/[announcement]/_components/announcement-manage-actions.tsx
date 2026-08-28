@@ -38,7 +38,7 @@ export function AnnouncementManageActions(props: Props) {
   const archivePending = archive[2]
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border p-4">
+    <div className="flex flex-col gap-3 rounded-lg bg-card border p-4">
       <div className="flex flex-wrap gap-3">
         {props.status === "draft" ? (
           <form action={publishAction}>

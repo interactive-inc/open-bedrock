@@ -20,7 +20,7 @@ function displayJson(value: string | null): string {
 
 export function AuditJsonView(props: Props) {
   return (
-    <Collapsible className="rounded-xl border">
+    <Collapsible className="rounded-xl bg-card border">
       <CollapsibleTrigger
         render={
           <Button variant="ghost" className="h-auto w-full justify-between rounded-xl px-4 py-3" />

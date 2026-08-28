@@ -129,7 +129,7 @@ function WorkflowRepairCard(props: { repair: WorkflowRepair }) {
 
               <Field>
                 <FieldTitle>対象ステップ</FieldTitle>
-                <div className="rounded-md border px-3 py-2 text-sm">
+                <div className="rounded-md bg-card border px-3 py-2 text-sm">
                   {repair.step_key}（ラウンド {repair.round}）
                 </div>
               </Field>
