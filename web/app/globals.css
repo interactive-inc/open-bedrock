@@ -153,6 +153,12 @@
   label:has(input:not([disabled])),
   [type="checkbox"],
   [type="radio"],
+  /* 日付・時刻は枠のどこを押してもピッカーが開く（components/ui/input.tsx）。 */
+  [type="date"],
+  [type="datetime-local"],
+  [type="month"],
+  [type="time"],
+  [type="week"],
   [role="checkbox"],
   [role="switch"],
   [role="tab"],
