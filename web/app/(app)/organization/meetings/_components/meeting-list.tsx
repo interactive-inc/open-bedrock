@@ -1,9 +1,8 @@
-import Link from "next/link"
 import { FetchError } from "@/components/fetch-error"
+import { CardLink } from "@/components/card-link"
 import { EmptyState } from "@/components/empty-state"
 import { TablePagination } from "@/components/table-pagination"
 import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
 import { getMeetingList } from "@/lib/api/get-meeting-list"
 
 const PAGE_SIZE = 20
@@ -36,28 +35,27 @@ export async function MeetingList(props: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         {result.data.map((meeting) => (
-          <Card key={meeting.code} className="p-0 gap-0">
-            <Link
-              href={`/organization/meetings/${meeting.code}`}
-              className="flex flex-col gap-2 p-4 transition-colors hover:bg-muted/50"
-            >
-              <div className="flex items-center gap-3">
-                {meeting.status === "archived" ? (
-                  <Badge variant="outline">アーカイブ</Badge>
-                ) : (
-                  <Badge variant="secondary">{meeting.cadence ?? "随時"}</Badge>
-                )}
-
-                <span className="text-base font-medium">{meeting.name}</span>
-
-                <span className="text-sm text-muted-foreground">{meeting.code}</span>
-              </div>
-
-              {meeting.description === null ? null : (
-                <p className="line-clamp-2 text-sm text-muted-foreground">{meeting.description}</p>
+          <CardLink
+            key={meeting.code}
+            href={`/organization/meetings/${meeting.code}`}
+            className="flex flex-col gap-2"
+          >
+            <div className="flex items-center gap-3">
+              {meeting.status === "archived" ? (
+                <Badge variant="outline">アーカイブ</Badge>
+              ) : (
+                <Badge variant="secondary">{meeting.cadence ?? "随時"}</Badge>
               )}
-            </Link>
-          </Card>
+
+              <span className="text-base font-medium">{meeting.name}</span>
+
+              <span className="text-sm text-muted-foreground">{meeting.code}</span>
+            </div>
+
+            {meeting.description === null ? null : (
+              <p className="line-clamp-2 text-sm text-muted-foreground">{meeting.description}</p>
+            )}
+          </CardLink>
         ))}
       </div>
 

@@ -1,8 +1,7 @@
-import Link from "next/link"
 import { EmptyState } from "@/components/empty-state"
+import { CardLink } from "@/components/card-link"
 import { FetchError } from "@/components/fetch-error"
 import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
 import { getRecruitmentPositionList } from "@/lib/api/get-recruitment-position-list"
 
 /**
@@ -28,24 +27,23 @@ export async function PositionList() {
   return (
     <div className="flex flex-col gap-3">
       {positions.map((position) => (
-        <Card key={position.id} className="gap-0 p-0">
-          <Link
-            href={`/organization/recruitments/${position.id}`}
-            className="flex items-center gap-3 p-4 transition-colors hover:bg-muted/50"
-          >
-            {position.status === "open" ? (
-              <Badge variant="secondary">募集中</Badge>
-            ) : (
-              <Badge variant="outline">終了</Badge>
-            )}
+        <CardLink
+          key={position.id}
+          href={`/organization/recruitments/${position.id}`}
+          className="flex items-center gap-3"
+        >
+          {position.status === "open" ? (
+            <Badge variant="secondary">募集中</Badge>
+          ) : (
+            <Badge variant="outline">終了</Badge>
+          )}
 
-            <span className="text-base font-medium">{position.title}</span>
+          <span className="text-base font-medium">{position.title}</span>
 
-            {position.department_code === null ? null : (
-              <span className="text-sm text-muted-foreground">{position.department_code}</span>
-            )}
-          </Link>
-        </Card>
+          {position.department_code === null ? null : (
+            <span className="text-sm text-muted-foreground">{position.department_code}</span>
+          )}
+        </CardLink>
       ))}
     </div>
   )

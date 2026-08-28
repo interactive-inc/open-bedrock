@@ -1,8 +1,7 @@
-import Link from "next/link"
 import { EmptyState } from "@/components/empty-state"
+import { CardLink } from "@/components/card-link"
 import { FetchError } from "@/components/fetch-error"
 import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
 import { getCareerPostings } from "@/lib/api/get-career-postings"
 
 type Props = {
@@ -30,33 +29,29 @@ export async function CareerPostingsSection(props: Props) {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {visible.map((posting) => (
-        <Link
+        <CardLink
           key={posting.id ?? posting.title}
           href={
             posting.id !== null
               ? `/organization/job-postings/${posting.id}`
               : "/organization/job-postings"
           }
-          className="block"
+          className="flex flex-col gap-2"
         >
-          <Card className="p-0 gap-0 transition-colors hover:bg-muted/40">
-            <div className="flex flex-col gap-2 p-4">
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-semibold">{posting.title}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-semibold">{posting.title}</h3>
 
-                <Badge variant="secondary">{posting.status === "closed" ? "締切" : "募集中"}</Badge>
-              </div>
+            <Badge variant="secondary">{posting.status === "closed" ? "締切" : "募集中"}</Badge>
+          </div>
 
-              <p className="text-sm text-muted-foreground">{posting.dept_name ?? "部署未設定"}</p>
+          <p className="text-sm text-muted-foreground">{posting.dept_name ?? "部署未設定"}</p>
 
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-muted-foreground">必要スキル</span>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">必要スキル</span>
 
-                <span className="text-sm">{posting.required_skills ?? "指定なし"}</span>
-              </div>
-            </div>
-          </Card>
-        </Link>
+            <span className="text-sm">{posting.required_skills ?? "指定なし"}</span>
+          </div>
+        </CardLink>
       ))}
     </div>
   )

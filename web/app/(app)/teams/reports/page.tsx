@@ -1,5 +1,5 @@
-import Link from "next/link"
 import { Suspense } from "react"
+import { CardLink } from "@/components/card-link"
 import { CalendarOff, Target, TimerReset, Users } from "lucide-react"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
@@ -102,19 +102,18 @@ async function ReportsGrid() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {result.data.map((report) => (
-        <Card key={report.code} className="gap-0 p-0">
-          <Link
-            href={`/organization/employees/${report.code}`}
-            className="flex min-h-24 flex-col gap-1 p-4 transition-colors hover:bg-muted/50"
-          >
-            <CardTitle className="text-base">{report.name}</CardTitle>
+        <CardLink
+          key={report.code}
+          href={`/organization/employees/${report.code}`}
+          className="flex min-h-24 flex-col gap-1"
+        >
+          <CardTitle className="text-base">{report.name}</CardTitle>
 
-            <CardDescription>
-              {[report.dept_name, report.position].filter((value) => value !== null).join(" / ") ||
-                "所属未設定"}
-            </CardDescription>
-          </Link>
-        </Card>
+          <CardDescription>
+            {[report.dept_name, report.position].filter((value) => value !== null).join(" / ") ||
+              "所属未設定"}
+          </CardDescription>
+        </CardLink>
       ))}
     </div>
   )

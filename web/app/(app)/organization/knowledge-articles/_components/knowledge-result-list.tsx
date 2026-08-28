@@ -1,10 +1,9 @@
 import { FetchError } from "@/components/fetch-error"
-import Link from "next/link"
+import { CardLink } from "@/components/card-link"
 import { EmptyState } from "@/components/empty-state"
 import { TablePagination } from "@/components/table-pagination"
 import { PAGE_SIZE_OPTIONS } from "@/lib/pagination/parse-page-size"
 import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
 import { getKnowledgeList } from "@/lib/api/get-knowledge-list"
 
 type Props = {
@@ -43,20 +42,19 @@ export async function KnowledgeResultList(props: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         {result.data.map((article) => (
-          <Card key={article.id} className="p-0 gap-0">
-            <Link
-              href={`/organization/knowledge-articles/${article.id}`}
-              className="flex flex-col gap-2 p-4 transition-colors hover:bg-muted/50"
-            >
-              <div className="flex items-center gap-3">
-                <Badge variant="secondary">{article.category}</Badge>
+          <CardLink
+            key={article.id}
+            href={`/organization/knowledge-articles/${article.id}`}
+            className="flex flex-col gap-2"
+          >
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary">{article.category}</Badge>
 
-                <span className="text-base font-medium">{article.title}</span>
-              </div>
+              <span className="text-base font-medium">{article.title}</span>
+            </div>
 
-              <p className="line-clamp-2 text-sm text-muted-foreground">{article.snippet}</p>
-            </Link>
-          </Card>
+            <p className="line-clamp-2 text-sm text-muted-foreground">{article.snippet}</p>
+          </CardLink>
         ))}
       </div>
 
