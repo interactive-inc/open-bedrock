@@ -17,7 +17,7 @@ export function PersonnelActionRequestList(props: { data: PersonnelActionRequest
           {props.data.requests.map((request) => (
             <li
               key={request.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card border p-4"
             >
               <div className="min-w-0">
                 <p className="font-medium break-words">{formatLifecycleKind(request.kind)}</p>

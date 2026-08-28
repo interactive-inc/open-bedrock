@@ -31,7 +31,7 @@ export function EmployeeLifecycleTimeline(props: {
             {props.events.data.map((event) => {
               const details = summarizeLifecycleEvent(event.summary)
               return (
-                <li key={event.id} className="min-w-0 rounded-xl border p-4">
+                <li key={event.id} className="min-w-0 rounded-xl bg-card border p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium break-words">{formatLifecycleKind(event.kind)}</p>

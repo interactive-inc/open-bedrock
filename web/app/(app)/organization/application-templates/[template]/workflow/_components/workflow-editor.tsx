@@ -274,7 +274,7 @@ export function WorkflowEditor(props: {
         </Button>
       </FieldSet>
 
-      <details className="rounded-lg border p-4">
+      <details className="rounded-lg bg-card border p-4">
         <summary className="cursor-pointer font-medium">
           詳細設定（条件分岐・エスカレーション・JSON）
         </summary>

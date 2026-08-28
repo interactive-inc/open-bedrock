@@ -32,7 +32,7 @@ export function GoalEvaluationList(props: Props) {
           <p className="text-muted-foreground">評価はまだ登録されていません</p>
         ) : (
           props.evaluations.map((evaluation) => (
-            <div key={evaluation.id} className="flex flex-col gap-1 rounded-2xl border p-3">
+            <div key={evaluation.id} className="flex flex-col gap-1 rounded-2xl bg-card border p-3">
               <div className="flex items-center gap-2">
                 <Badge variant={evaluation.kind === "final" ? "secondary" : "outline"}>
                   {evaluationKindLabel(evaluation.kind)}

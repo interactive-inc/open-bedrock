@@ -136,7 +136,7 @@ function WorkflowProgress(props: { workflow: ApplicationWorkflowProgress }) {
                       ? Clock3
                       : Circle
             return (
-              <li key={step.key} className="flex items-center gap-3 rounded-lg border p-3">
+              <li key={step.key} className="flex items-center gap-3 rounded-lg bg-card border p-3">
                 <Icon className="size-4 shrink-0" aria-hidden />
                 <div>
                   <div className="text-xs text-muted-foreground">ステップ {index + 1}</div>

@@ -39,7 +39,7 @@ export function RegulationManageActions(props: Props) {
   const archivePending = archive[2]
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border p-4">
+    <div className="flex flex-col gap-4 rounded-lg bg-card border p-4">
       <form action={addAction} className="flex flex-col gap-4">
         <input type="hidden" name="code" value={props.code} />
 

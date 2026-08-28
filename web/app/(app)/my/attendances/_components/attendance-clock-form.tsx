@@ -52,9 +52,10 @@ export function AttendanceClockForm(props: Props) {
 
   const isPending = action[2]
 
+  // 打刻成功時だけ緑を敷く。それ以外はコンテンツ背景に沈まないよう白を敷く。
   const borderClass = state.ok
     ? "border-green-500/50 bg-green-50/50 dark:border-green-500/30 dark:bg-green-950/20"
-    : ""
+    : "bg-card"
 
   return (
     <form
@@ -81,11 +82,8 @@ export function AttendanceClockForm(props: Props) {
       {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
 
       <Field orientation="horizontal">
-        <Button
-          type="submit"
-          variant={state.ok ? "secondary" : isClockIn ? "default" : "outline"}
-          disabled={isPending}
-        >
+        {/* 出勤・退勤とも主要操作なので既定の黒。打刻済みだけ secondary に落とす。 */}
+        <Button type="submit" variant={state.ok ? "secondary" : "default"} disabled={isPending}>
           {isPending ? (
             <>
               <Loader2 className="size-4 animate-spin" />

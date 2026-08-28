@@ -92,7 +92,7 @@ export default async function GovernancePage(props: Props) {
       </form>
 
       {result.data.length === 0 ? (
-        <div className="flex min-h-52 flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-center">
+        <div className="flex min-h-52 flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-card text-center">
           <FileCheck2 className="size-8 text-muted-foreground" />
           <p className="font-medium">表示できる文書がありません</p>
           <p className="text-sm text-muted-foreground">

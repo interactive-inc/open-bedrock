@@ -40,6 +40,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-content: var(--content);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -56,11 +57,20 @@
   --popover-foreground: oklch(0.147 0.004 49.3);
   --primary: oklch(0.214 0.009 43.1);
   --primary-foreground: oklch(0.986 0.002 67.8);
-  --secondary: oklch(0.96 0.002 17.2);
+  /*
+   * コンテンツ領域はサイドバーより一段暗くして境界を作る。カード・入力欄は
+   * --card（白）のままなので、面が浮いて見える。
+   */
+  --content: oklch(0.978 0 0);
+  /*
+   * secondary / muted / accent はコンテンツ背景の上に置かれる。--content との
+   * 差が足りないと面が消えるので、白背景時代より一段濃くしている。
+   */
+  --secondary: oklch(0.93 0.003 17.2);
   --secondary-foreground: oklch(0.214 0.009 43.1);
-  --muted: oklch(0.96 0.002 17.2);
+  --muted: oklch(0.93 0.003 17.2);
   --muted-foreground: oklch(0.547 0.021 43.1);
-  --accent: oklch(0.96 0.002 17.2);
+  --accent: oklch(0.93 0.003 17.2);
   --accent-foreground: oklch(0.214 0.009 43.1);
   --destructive: oklch(0.577 0.245 27.325);
   --feature-development: oklch(0.666 0.179 58.318);
@@ -88,6 +98,8 @@
 .dark {
   --background: oklch(0.147 0.004 49.3);
   --foreground: oklch(0.986 0.002 67.8);
+  /* ライトと逆に、暗い側ではコンテンツを一段明るくして境界を作る。 */
+  --content: oklch(0.19 0.004 49.3);
   --card: oklch(0.214 0.009 43.1);
   --card-foreground: oklch(0.986 0.002 67.8);
   --popover: oklch(0.214 0.009 43.1);
