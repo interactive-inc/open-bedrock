@@ -2,12 +2,12 @@ import { AssignOnboarding } from "@/contexts/onboarding/application/assign-onboa
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppOnboardingAssignment } from "@/lib/app-schemas"
+import { zAppOnboardingAssignment } from "@/contexts/onboarding/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /onboarding-assignments — テンプレートを社員へ割り当てる */

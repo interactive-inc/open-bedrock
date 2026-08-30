@@ -12,7 +12,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppSurveyResponseList } from "@/lib/app-schemas"
+import { zAppSurveyResponseList } from "@/contexts/survey/interface/http/response-schemas"
 import { surveyResponses } from "@/contexts/survey/infrastructure/schema/survey"
 import { count, eq } from "drizzle-orm"
 

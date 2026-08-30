@@ -1,7 +1,7 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { lifeEventTypeSchema } from "@/lib/schemas"
-import type { LifeEventType } from "@/lib/schemas"
+import { lifeEventTypeSchema } from "@/contexts/life-event/domain/definitions/life-event-type.definition"
+import type { LifeEventType } from "@/contexts/life-event/domain/definitions/life-event-type.definition"
 import type { LifeEventRow } from "@/contexts/life-event/infrastructure/schema/life-event"
 import { z } from "zod"
 

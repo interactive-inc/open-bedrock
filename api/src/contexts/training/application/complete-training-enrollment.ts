@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { canCompleteEnrollment } from "@/contexts/training/domain/policies/enrollment-completion.policy"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -9,7 +9,7 @@ import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure
 export type Command = {
   enrollmentId: number
   viewerEmployeeId: EmployeeId
-  session: Session
+  session: CompanySessionValue
   score: number | null
   completedAt: string
 }

@@ -1,14 +1,14 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { CompanyCalendarDay } from "@/contexts/company-calendar/domain/entities/company-calendar-day.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { CalendarDayKind } from "@/lib/schemas"
+import type { CalendarDayKind } from "@/contexts/company-calendar/domain/definitions/calendar-day-kind.definition"
 import type { Context } from "@/env"
 import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/repositories/calendar/company-calendar-day.repository"
 import { UniqueConstraintError } from "@/lib/d1/errors"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   calendarDate: string
   kind: CalendarDayKind
   name: string | null

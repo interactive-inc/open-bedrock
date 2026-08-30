@@ -2,7 +2,7 @@ import { PERMISSION_CATALOG } from "@/api/http/permissions/permission.catalog"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppPermissionList } from "@/lib/app-schemas"
+import { zAppPermissionList } from "@/api/http/system/response-schemas"
 
 // @authorization permission - 権限キーで判定する
 /**

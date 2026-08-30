@@ -1,7 +1,7 @@
 import { RequestRedemption } from "@/contexts/thanks/application/thanks-points/request-redemption"
 import { toPositiveInt } from "@/lib/http/to-positive-int"
 import { ApplicationError } from "@/lib/errors"
-import { zAppThanksRedemption } from "@/lib/app-schemas"
+import { zAppThanksRedemption } from "@/contexts/thanks/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { BadRequestError, UnauthorizedError } from "@/lib/http/errors"
 import { verifyBearer } from "@/api/http/verify-bearer"

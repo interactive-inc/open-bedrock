@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -6,7 +6,7 @@ import { ReviewCycleRepository } from "@/contexts/performance-review/infrastruct
 import type { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 
 export type Input = {
-  session: Session
+  session: CompanySessionValue
   cycleId: number
 }
 

@@ -9,7 +9,10 @@ import { CreateGoalEvaluation } from "@/contexts/performance-review/application/
 import { factory } from "@/api/http/factory"
 import { goalEvaluationKindSchema } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
 import { ApplicationError } from "@/lib/errors"
-import { zAppGoalEvaluation, zAppGoalEvaluationList } from "@/lib/app-schemas"
+import {
+  zAppGoalEvaluation,
+  zAppGoalEvaluationList,
+} from "@/contexts/performance-review/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"

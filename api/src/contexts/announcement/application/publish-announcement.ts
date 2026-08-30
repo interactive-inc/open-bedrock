@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Announcement } from "@/contexts/announcement/domain/entities/announcement.entity"
 import type { Context } from "@/env"
 import { AnnouncementRepository } from "@/contexts/announcement/infrastructure/repositories/announcement.repository"
@@ -7,7 +7,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { PublishAnnouncementNotificationAdapter } from "@/contexts/announcement/infrastructure/adapters/publish-announcement-notification.adapter"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   announcementId: number
   publishedOn: string
   createdAt: string

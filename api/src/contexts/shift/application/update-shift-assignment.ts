@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import type { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
@@ -7,7 +7,7 @@ import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repos
 import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
 
 export type Input = {
-  session: Session
+  session: CompanySessionValue
   assignmentId: number
   patternCode: string | null
   date: string

@@ -3,7 +3,7 @@ import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
 import { verifyProvisioningKey } from "@/api/http/middlewares/verify-provisioning-key"
-import { zAppProvisioningSummary } from "@/lib/app-schemas"
+import { zAppProvisioningSummary } from "@/api/http/system/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { z } from "zod"

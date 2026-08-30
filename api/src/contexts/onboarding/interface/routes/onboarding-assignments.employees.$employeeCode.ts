@@ -1,5 +1,5 @@
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppOnboardingAssignmentList } from "@/lib/app-schemas"
+import { zAppOnboardingAssignmentList } from "@/contexts/onboarding/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

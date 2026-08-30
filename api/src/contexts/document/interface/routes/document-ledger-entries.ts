@@ -5,7 +5,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppDocument, zAppDocumentList } from "@/lib/app-schemas"
+import { zAppDocument, zAppDocumentList } from "@/contexts/document/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

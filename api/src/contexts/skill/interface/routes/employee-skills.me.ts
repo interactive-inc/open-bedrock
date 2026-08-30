@@ -10,9 +10,12 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { SetMySkill } from "@/contexts/skill/application/set-my-skill"
 import { employeeSkills, skills } from "@/contexts/skill/infrastructure/schema/skill"
-import { zAppEmployeeSkill, zAppEmployeeSkillList } from "@/lib/app-schemas"
+import {
+  zAppEmployeeSkill,
+  zAppEmployeeSkillList,
+} from "@/contexts/skill/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 import { zValidator } from "@hono/zod-validator"
 import { count, eq } from "drizzle-orm"
 import { z } from "zod"

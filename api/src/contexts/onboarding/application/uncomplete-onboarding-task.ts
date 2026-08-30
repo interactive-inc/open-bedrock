@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { canCompleteTask } from "@/contexts/onboarding/domain/policies/task-completion.policy"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -8,7 +8,7 @@ import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastruc
 
 export type Command = {
   taskId: number
-  session: Session
+  session: CompanySessionValue
 }
 
 /**

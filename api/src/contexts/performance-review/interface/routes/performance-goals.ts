@@ -8,8 +8,8 @@ import {
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
-import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
-import { listReportEmployeeIds } from "@/api/http/utils/list-report-employee-ids"
+import { listDepartmentEmployeeIds } from "@/api/http/company-employees/list-department-employee-ids"
+import { listReportEmployeeIds } from "@/api/http/company-employees/list-report-employee-ids"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -21,7 +21,10 @@ import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goa
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { canWriteDepartmentGoal } from "@/contexts/performance-review/interface/http/performance-goals/can-write-department-goal"
 import { resolveEmployeeDepartmentCode } from "@/contexts/performance-review/interface/http/performance-goals/resolve-employee-department-code"
-import { zAppGoal, zAppGoalList } from "@/lib/app-schemas"
+import {
+  zAppGoal,
+  zAppGoalList,
+} from "@/contexts/performance-review/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { and, count, eq, inArray, type SQL } from "drizzle-orm"

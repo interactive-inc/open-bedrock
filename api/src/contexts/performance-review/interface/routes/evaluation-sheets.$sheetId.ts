@@ -1,5 +1,5 @@
 import { factory } from "@/api/http/factory"
-import { zAppEvaluationSheet } from "@/lib/app-schemas"
+import { zAppEvaluationSheet } from "@/contexts/performance-review/interface/http/response-schemas"
 import { evaluationSheets } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { eq } from "drizzle-orm"

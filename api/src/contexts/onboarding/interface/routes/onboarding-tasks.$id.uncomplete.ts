@@ -2,7 +2,7 @@ import { UncompleteOnboardingTask } from "@/contexts/onboarding/application/unco
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppOnboardingTask } from "@/lib/app-schemas"
+import { zAppOnboardingTask } from "@/contexts/onboarding/interface/http/response-schemas"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"

@@ -4,7 +4,7 @@ import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppApplicationAdminList } from "@/lib/app-schemas"
+import { zAppApplicationAdminList } from "@/api/http/company/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Document } from "@/contexts/document/domain/entities/document.entity"
 import type { Context } from "@/env"
 import { DocumentRepository } from "@/contexts/document/infrastructure/repositories/document.repository"
@@ -6,7 +6,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   documentId: number
   title: string
   category: string | null

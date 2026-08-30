@@ -7,7 +7,10 @@ import type { Context } from "@/env"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
-import type { LeaveType, LeaveUnit } from "@/lib/schemas"
+import type {
+  LeaveType,
+  LeaveUnit,
+} from "@/contexts/leave/domain/definitions/leave-request.definition"
 
 export type Command = {
   employeeId: EmployeeId

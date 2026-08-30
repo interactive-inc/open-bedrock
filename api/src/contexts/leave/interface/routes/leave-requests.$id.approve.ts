@@ -3,7 +3,7 @@ import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-r
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppLeaveRequest } from "@/lib/app-schemas"
+import { zAppLeaveRequest } from "@/contexts/leave/interface/http/response-schemas"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"

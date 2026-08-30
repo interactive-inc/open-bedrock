@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { GovernanceMetadata } from "@/contexts/governance/domain/definitions/governance-document.definition"
 import type { Context as HonoContext } from "@/env"
 import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
@@ -6,7 +6,7 @@ import { ResolveGovernanceOrgRoleAdapter } from "@/contexts/governance/infrastru
 
 type Context = {
   context: HonoContext
-  session: Session
+  session: CompanySessionValue
 }
 
 /**

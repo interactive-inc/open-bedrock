@@ -3,7 +3,7 @@ import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters
 import { factory } from "@/api/http/factory"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { toGovernanceDocumentResponse } from "@/contexts/governance/interface/lib/to-governance-document-response"
+import { toGovernanceDocumentResponse } from "@/contexts/governance/interface/http/governance-documents/to-governance-document-response"
 
 // @authorization service - session を application service に渡して判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

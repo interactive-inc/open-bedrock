@@ -9,16 +9,16 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { toEmployeeNameMap } from "@/api/http/utils/to-employee-name-map"
+import { toEmployeeNameMap } from "@/api/http/company-employees/to-employee-name-map"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { zAppThanks, zAppThanksList } from "@/lib/app-schemas"
+import { zAppThanks, zAppThanksList } from "@/contexts/thanks/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
 import { thanks as thanksTable } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { zValidator } from "@hono/zod-validator"
 import { count, desc } from "drizzle-orm"
 import { z } from "zod"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ

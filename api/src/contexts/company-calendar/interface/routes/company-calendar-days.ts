@@ -10,9 +10,13 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { zAppCompanyCalendarDay, zAppCompanyCalendarDayList } from "@/lib/app-schemas"
+import {
+  zAppCompanyCalendarDay,
+  zAppCompanyCalendarDayList,
+} from "@/contexts/company-calendar/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { calendarDayKindSchema, isoDate } from "@/lib/schemas"
+import { calendarDayKindSchema } from "@/contexts/company-calendar/domain/definitions/calendar-day-kind.definition"
+import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

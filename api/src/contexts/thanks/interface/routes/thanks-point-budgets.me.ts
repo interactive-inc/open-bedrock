@@ -3,7 +3,7 @@ import { UnexpectedError } from "@/lib/errors"
 import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-point-budget.repository"
 
 import { ApplicationError } from "@/lib/errors"
-import { zAppThanksBudget } from "@/lib/app-schemas"
+import { zAppThanksBudget } from "@/contexts/thanks/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { verifyBearer } from "@/api/http/verify-bearer"

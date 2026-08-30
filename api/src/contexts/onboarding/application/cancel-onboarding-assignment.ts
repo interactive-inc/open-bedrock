@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
@@ -7,7 +7,7 @@ import type { OnboardingAssignment } from "@/contexts/onboarding/domain/entities
 
 export type Command = {
   assignmentId: number
-  session: Session
+  session: CompanySessionValue
 }
 
 export type Cancelled = { reason: "cancelled" }

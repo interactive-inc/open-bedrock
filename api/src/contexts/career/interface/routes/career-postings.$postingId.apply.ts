@@ -6,7 +6,7 @@ import { zValidator } from "@hono/zod-validator"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppCareerApplication } from "@/lib/app-schemas"
+import { zAppCareerApplication } from "@/contexts/career/interface/http/response-schemas"
 import { z } from "zod"
 
 // @authorization owner - 本人のリソースに限定する

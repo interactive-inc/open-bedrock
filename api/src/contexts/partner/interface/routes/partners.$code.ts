@@ -3,7 +3,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { partners } from "@/contexts/partner/infrastructure/schema/partner"
 import { eq } from "drizzle-orm"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppPartner } from "@/lib/app-schemas"
+import { zAppPartner } from "@/contexts/partner/interface/http/response-schemas"
 import { validateCodeParam } from "@/lib/http/validate-code-param"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ

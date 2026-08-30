@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
@@ -7,7 +7,7 @@ import { UniqueConstraintError } from "@/lib/d1/errors"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   code: string
   title: string
   category: string

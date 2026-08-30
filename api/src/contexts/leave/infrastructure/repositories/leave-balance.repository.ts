@@ -1,7 +1,7 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LeaveBalance } from "@/contexts/leave/domain/entities/leave-balance.entity"
 import type { Context } from "@/env"
-import type { LeaveType } from "@/lib/schemas"
+import type { LeaveType } from "@/contexts/leave/domain/definitions/leave-request.definition"
 import { leaveBalances } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, eq, gte, sql } from "drizzle-orm"
 

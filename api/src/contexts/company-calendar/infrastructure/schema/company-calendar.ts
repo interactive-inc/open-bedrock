@@ -1,4 +1,4 @@
-import type { CalendarDayKind } from "@/lib/schemas"
+import type { CalendarDayKind } from "@/contexts/company-calendar/domain/definitions/calendar-day-kind.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 

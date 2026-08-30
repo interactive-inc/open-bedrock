@@ -5,7 +5,7 @@ import { UpdateOnboardingTemplate } from "@/contexts/onboarding/application/upda
 import type { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppOnboardingTemplate } from "@/lib/app-schemas"
+import { zAppOnboardingTemplate } from "@/contexts/onboarding/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"

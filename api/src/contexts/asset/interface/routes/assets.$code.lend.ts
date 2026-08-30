@@ -5,10 +5,10 @@ import { zValidator } from "@hono/zod-validator"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppAsset } from "@/lib/app-schemas"
+import { zAppAsset } from "@/contexts/asset/interface/http/response-schemas"
 import { validateCodeParam } from "@/lib/http/validate-code-param"
 import { z } from "zod"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /assets/:code/lend — 在庫中の資産を従業員へ貸し出す（権限が必要） */

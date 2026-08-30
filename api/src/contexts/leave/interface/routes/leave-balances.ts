@@ -4,7 +4,7 @@ import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructur
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppLeaveBalanceList } from "@/lib/app-schemas"
+import { zAppLeaveBalanceList } from "@/contexts/leave/interface/http/response-schemas"
 import { leaveBalances } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"

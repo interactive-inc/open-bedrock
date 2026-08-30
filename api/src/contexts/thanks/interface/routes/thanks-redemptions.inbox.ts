@@ -1,4 +1,4 @@
-import { zAppThanksRedemptionAdminList } from "@/lib/app-schemas"
+import { zAppThanksRedemptionAdminList } from "@/contexts/thanks/interface/http/response-schemas"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import {
   DEFAULT_LIST_LIMIT,
@@ -11,7 +11,7 @@ import { factory } from "@/api/http/factory"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { thanksRedemptions, thanksRewards } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { and, count, desc, eq, ne } from "drizzle-orm"
-import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
+import { loadCurrentEmployeeDepartmentNames } from "@/api/http/company-employees/current-employee-departments"
 import { InternalError } from "@/lib/http/errors"
 
 // @authorization permission - 権限キーで判定する

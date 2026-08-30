@@ -2,7 +2,7 @@ import { UnexpectedError } from "@/lib/errors"
 import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
 
 import { ApplicationError } from "@/lib/errors"
-import { zAppLifeEventList } from "@/lib/app-schemas"
+import { zAppLifeEventList } from "@/contexts/life-event/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,

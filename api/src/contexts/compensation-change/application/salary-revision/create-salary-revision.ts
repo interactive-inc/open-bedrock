@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { SalaryRevision } from "@/contexts/compensation-change/domain/entities/salary-revision.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -9,7 +9,7 @@ import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastr
 import { UniqueConstraintError } from "@/lib/d1/errors"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   employeeId: EmployeeId
   effectiveDate: string
   previousBaseSalary: number

@@ -1,7 +1,7 @@
 import { ApproveRedemption } from "@/contexts/thanks/application/thanks-points/approve-redemption"
 import { toPositiveInt } from "@/lib/http/to-positive-int"
 import { ApplicationError } from "@/lib/errors"
-import { zAppThanksRedemptionDecision } from "@/lib/app-schemas"
+import { zAppThanksRedemptionDecision } from "@/contexts/thanks/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import {
   BadRequestError,

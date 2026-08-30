@@ -1,7 +1,7 @@
 import { factory } from "@/api/http/factory"
 import { likeKeyword } from "@/lib/database/like-keyword"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppSkillList } from "@/lib/app-schemas"
+import { zAppSkillList } from "@/contexts/skill/interface/http/response-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { skills } from "@/contexts/skill/infrastructure/schema/skill"
 import { and, count, eq, or } from "drizzle-orm"

@@ -1,5 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
-import { Session } from "@/lib/auth/session"
+import { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { describe, expect, test } from "bun:test"
 import { canWriteDepartmentGoal } from "@/contexts/performance-review/interface/http/performance-goals/can-write-department-goal"
 import { makeTestSession } from "@tests/api/support/make-test-session"
@@ -10,8 +10,8 @@ import { testAccountId } from "@tests/api/support/test-account-id"
  * system role の manager は review:administer も持つため、部門スコープの限定を確かめるには
  * この最小権限セッションを使う。
  */
-function reportsManagerSession(): Session {
-  return new Session({
+function reportsManagerSession(): CompanySessionValue {
+  return new CompanySessionValue({
     accountId: testAccountId(1),
     employeeId: toWorkforceEmployeeId(1),
     employmentStatus: "ACTIVE",

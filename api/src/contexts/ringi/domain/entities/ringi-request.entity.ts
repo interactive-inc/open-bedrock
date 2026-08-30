@@ -1,6 +1,6 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { ringiStatusSchema } from "@/lib/schemas"
+import { ringiStatusSchema } from "@/contexts/ringi/domain/definitions/ringi-status.definition"
 import type { RingiRequestRow } from "@/contexts/ringi/infrastructure/schema/ringi"
 import { z } from "zod"
 

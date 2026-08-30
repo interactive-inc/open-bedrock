@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
@@ -6,7 +6,7 @@ import { CareerPostingRepository } from "@/contexts/career/infrastructure/reposi
 import type { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   postingId: number
 }
 

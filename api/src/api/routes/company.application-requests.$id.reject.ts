@@ -6,7 +6,7 @@ import { zValidator } from "@hono/zod-validator"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppApplicationDecision } from "@/lib/app-schemas"
+import { zAppApplicationDecision } from "@/api/http/company/response-schemas"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する

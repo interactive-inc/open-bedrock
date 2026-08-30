@@ -5,7 +5,7 @@ import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructur
 import type { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import { factory } from "@/api/http/factory"
 import { UnexpectedError } from "@/lib/errors"
-import { zAppGoalTree } from "@/lib/app-schemas"
+import { zAppGoalTree } from "@/contexts/performance-review/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"

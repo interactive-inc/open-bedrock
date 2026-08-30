@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { DisciplinaryAction } from "@/contexts/disciplinary-action/domain/entities/disciplinary-action.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -7,7 +7,7 @@ import type { Context } from "@/env"
 import { DisciplinaryActionRepository } from "@/contexts/disciplinary-action/infrastructure/repositories/disciplinary-action.repository"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   employeeId: EmployeeId
   kind: string
   summary: string

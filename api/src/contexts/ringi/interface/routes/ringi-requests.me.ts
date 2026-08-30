@@ -1,12 +1,12 @@
 import { factory } from "@/api/http/factory"
-import { zAppRingiMineList } from "@/lib/app-schemas"
+import { zAppRingiMineList } from "@/contexts/ringi/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { ringiStatusSchema } from "@/lib/schemas"
+import { ringiStatusSchema } from "@/contexts/ringi/domain/definitions/ringi-status.definition"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { ringiRequests } from "@/contexts/ringi/infrastructure/schema/ringi"

@@ -3,7 +3,10 @@ import type { CareerPosting } from "@/contexts/career/domain/entities/career-pos
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppCareerPosting, zAppCareerPostingList } from "@/lib/app-schemas"
+import {
+  zAppCareerPosting,
+  zAppCareerPostingList,
+} from "@/contexts/career/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

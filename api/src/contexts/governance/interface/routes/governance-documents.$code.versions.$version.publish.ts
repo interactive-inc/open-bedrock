@@ -4,8 +4,8 @@ import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { parseGovernanceCode } from "@/api/http/utils/parse-governance-code"
-import { parseGovernanceVersion } from "@/api/http/utils/parse-governance-version"
+import { parseGovernanceCode } from "@/contexts/governance/interface/http/parse-governance-code"
+import { parseGovernanceVersion } from "@/contexts/governance/interface/http/parse-governance-version"
 import { verifyBearer } from "@/api/http/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する

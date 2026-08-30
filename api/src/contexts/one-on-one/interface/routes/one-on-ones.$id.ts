@@ -5,7 +5,7 @@ import type { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.
 import type { Context } from "@/env"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppOneOnOne } from "@/lib/app-schemas"
+import { zAppOneOnOne } from "@/contexts/one-on-one/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"

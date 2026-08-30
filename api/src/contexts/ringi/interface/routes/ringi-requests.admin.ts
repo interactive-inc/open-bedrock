@@ -7,8 +7,8 @@ import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppRingiAdminList } from "@/lib/app-schemas"
-import { ringiStatusSchema } from "@/lib/schemas"
+import { zAppRingiAdminList } from "@/contexts/ringi/interface/http/response-schemas"
+import { ringiStatusSchema } from "@/contexts/ringi/domain/definitions/ringi-status.definition"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -17,7 +17,7 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { z } from "zod"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
-import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
+import { loadCurrentEmployeeDepartmentNames } from "@/api/http/company-employees/current-employee-departments"
 import { InternalError } from "@/lib/http/errors"
 
 /** 並び順ホワイトリスト。未知の値は created_at desc にフォールバックする。 */

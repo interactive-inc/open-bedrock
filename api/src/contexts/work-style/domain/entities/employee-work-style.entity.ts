@@ -1,7 +1,7 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { EmployeeWorkStyleRow } from "@/contexts/work-style/infrastructure/schema/work-style"
-import { workStyleSchema } from "@/lib/schemas"
+import { workStyleSchema } from "@/contexts/work-style/domain/definitions/work-style.definition"
 import { z } from "zod"
 
 const zProps = z.object({

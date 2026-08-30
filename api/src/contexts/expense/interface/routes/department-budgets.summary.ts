@@ -3,7 +3,7 @@ import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infras
 import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { factory } from "@/api/http/factory"
 import { UnexpectedError } from "@/lib/errors"
-import { zAppBudgetSummary } from "@/lib/app-schemas"
+import { zAppBudgetSummary } from "@/contexts/expense/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"

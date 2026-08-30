@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -6,7 +6,7 @@ import type { Context } from "@/env"
 import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   code: string
   details: {
     name: string

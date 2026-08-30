@@ -3,7 +3,7 @@ import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infras
 import { UpdateBudget } from "@/contexts/expense/application/budget/update-budget"
 import { factory } from "@/api/http/factory"
 import { ApplicationError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { zAppBudget, zAppBudgetDetail } from "@/lib/app-schemas"
+import { zAppBudget, zAppBudgetDetail } from "@/contexts/expense/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { verifyBearer } from "@/api/http/verify-bearer"

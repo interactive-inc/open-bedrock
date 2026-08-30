@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import {
   ApplicationError,
@@ -15,7 +15,7 @@ import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure
 
 export type Command = {
   viewerEmployeeId: EmployeeId
-  session: Session
+  session: CompanySessionValue
   courseCode: string
   enrolleeEmployeeCode: string | null
   dueDate: string | null

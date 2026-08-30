@@ -1,10 +1,13 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { CreateEmployeeWorkStyle } from "@/contexts/work-style/application/create-employee-work-style"
 import { canReadWorkStylesOf } from "@/contexts/work-style/interface/http/employee-work-styles/can-read-work-styles-of"
-import { resolveTargetEmployeeId } from "@/api/http/utils/resolve-target-employee-id"
+import { resolveTargetEmployeeId } from "@/api/http/company-employees/resolve-target-employee-id"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppEmployeeWorkStyle, zAppEmployeeWorkStyleList } from "@/lib/app-schemas"
+import {
+  zAppEmployeeWorkStyle,
+  zAppEmployeeWorkStyleList,
+} from "@/contexts/work-style/interface/http/response-schemas"
 import { EmployeeWorkStyleRepository } from "@/contexts/work-style/infrastructure/repositories/employee-work-style.repository"
 import {
   DEFAULT_LIST_LIMIT,
@@ -14,7 +17,8 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { isoDate, workStyleSchema } from "@/lib/schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
+import { workStyleSchema } from "@/contexts/work-style/domain/definitions/work-style.definition"
 import { zValidator } from "@hono/zod-validator"
 import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { z } from "zod"

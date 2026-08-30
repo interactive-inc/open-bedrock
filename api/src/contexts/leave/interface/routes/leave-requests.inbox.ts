@@ -7,7 +7,7 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppLeaveRequestInboxList } from "@/lib/app-schemas"
+import { zAppLeaveRequestInboxList } from "@/contexts/leave/interface/http/response-schemas"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm"

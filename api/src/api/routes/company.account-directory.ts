@@ -8,7 +8,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { zAppAccountDirectoryList } from "@/lib/app-schemas"
+import { zAppAccountDirectoryList } from "@/api/http/company/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

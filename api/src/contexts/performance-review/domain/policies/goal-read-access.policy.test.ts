@@ -1,12 +1,12 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
-import { Session } from "@/lib/auth/session"
+import { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import { describe, expect, test } from "bun:test"
 import { testAccountId } from "@tests/api/support/test-account-id"
 
-function sessionWith(permissions: ReadonlyArray<string>): Session {
-  return new Session({
+function sessionWith(permissions: ReadonlyArray<string>): CompanySessionValue {
+  return new CompanySessionValue({
     accountId: testAccountId(1),
     employeeId: toWorkforceEmployeeId(1),
     employmentStatus: "ACTIVE",

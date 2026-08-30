@@ -1,11 +1,11 @@
 import { CreateCertificateRequest } from "@/contexts/certificate-request/application/create-certificate-request"
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
-import { zAppCertificateRequest } from "@/lib/app-schemas"
+import { zAppCertificateRequest } from "@/contexts/certificate-request/interface/http/response-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { isoDate } from "@/lib/schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

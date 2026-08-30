@@ -1,4 +1,4 @@
-import { yearMonth } from "@/lib/schemas"
+import { yearMonth } from "@/contexts/attendance/interface/http/year-month.schema"
 import { z } from "zod"
 
 export const attendanceSummaryQuerySchema = z.object({

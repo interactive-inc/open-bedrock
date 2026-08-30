@@ -8,8 +8,11 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppRegulation, zAppRegulationList } from "@/lib/app-schemas"
-import { codeSchema } from "@/lib/schemas"
+import {
+  zAppRegulation,
+  zAppRegulationList,
+} from "@/contexts/regulation/interface/http/response-schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

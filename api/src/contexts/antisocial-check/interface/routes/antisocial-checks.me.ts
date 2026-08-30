@@ -12,7 +12,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppAntisocialCheckList } from "@/lib/app-schemas"
+import { zAppAntisocialCheckList } from "@/contexts/antisocial-check/interface/http/response-schemas"
 import { antisocialChecks } from "@/contexts/antisocial-check/infrastructure/schema/antisocial-check"
 import { count, eq } from "drizzle-orm"
 

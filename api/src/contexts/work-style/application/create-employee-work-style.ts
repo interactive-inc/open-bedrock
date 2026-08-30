@@ -1,14 +1,14 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { EmployeeWorkStyle } from "@/contexts/work-style/domain/entities/employee-work-style.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { WorkStyle } from "@/lib/schemas"
+import type { WorkStyle } from "@/contexts/work-style/domain/definitions/work-style.definition"
 import type { Context } from "@/env"
 import { EmployeeWorkStyleRepository } from "@/contexts/work-style/infrastructure/repositories/employee-work-style.repository"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   employeeId: EmployeeId
   style: WorkStyle
   startsOn: string

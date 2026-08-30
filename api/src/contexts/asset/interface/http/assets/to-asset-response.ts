@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { AssetRow } from "@/contexts/asset/infrastructure/schema/asset"
 
 type AssetResponse = {
@@ -16,7 +16,7 @@ type AssetResponse = {
  * 資産カタログの共通レスポンスを組み立てる。
  * 管理権限者または現在の保有者以外には、台帳上の機微項目を返さない。
  */
-export function toAssetResponse(row: AssetRow, session: Session): AssetResponse {
+export function toAssetResponse(row: AssetRow, session: CompanySessionValue): AssetResponse {
   const canViewSensitiveFields =
     session.hasPermission("asset:manage") || row.holderEmployeeId === session.employeeId
 

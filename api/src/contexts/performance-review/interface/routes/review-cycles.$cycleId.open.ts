@@ -1,7 +1,7 @@
 import { OpenReviewCycle } from "@/contexts/performance-review/application/review/open-review-cycle"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppReviewCycle } from "@/lib/app-schemas"
+import { zAppReviewCycle } from "@/contexts/performance-review/interface/http/response-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"

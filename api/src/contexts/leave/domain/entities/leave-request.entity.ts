@@ -1,7 +1,14 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { leaveStatusSchema, leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
-import type { LeaveType, LeaveUnit } from "@/lib/schemas"
+import {
+  leaveStatusSchema,
+  leaveTypeSchema,
+  leaveUnitSchema,
+} from "@/contexts/leave/domain/definitions/leave-request.definition"
+import type {
+  LeaveType,
+  LeaveUnit,
+} from "@/contexts/leave/domain/definitions/leave-request.definition"
 import type { LeaveRequestRow } from "@/contexts/leave/infrastructure/schema/leave"
 import { z } from "zod"
 

@@ -11,7 +11,10 @@ import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/repo
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppItIncident, zAppItIncidentList } from "@/lib/app-schemas"
+import {
+  zAppItIncident,
+  zAppItIncidentList,
+} from "@/contexts/it-incident/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

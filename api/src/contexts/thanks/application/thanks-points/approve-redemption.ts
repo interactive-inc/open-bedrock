@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import type { FulfilledWithStockError } from "@/contexts/thanks/application/thanks-points/errors"
@@ -9,7 +9,7 @@ import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/rep
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   redemptionId: number
   deciderId: EmployeeId
   decidedAt: string

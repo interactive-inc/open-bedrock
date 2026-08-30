@@ -17,11 +17,14 @@ src/contexts/<context>/
 - 全コンテキストの合成と route 登録は `src/api` が担い、コンテキストから API root へ逆依存しない。
 - `src/lib` はコンテキスト、API、DBに依存しない中立な共通処理だけを持つ。
 - Interface は Hono、Infrastructure は Drizzle・D1などの実装技術を利用してよい。
-- Infrastructure 直下は技術的責務の `repositories/`、`adapters/`、`schema/`、`errors/` だけにする。業務機能名のディレクトリは `repositories/` または `adapters/` の内側へ置く。
+- Infrastructure 直下は技術的責務の `repositories/`、`adapters/`、`schema/` と、必要な所有単位の `errors.ts` だけにする。業務機能名のディレクトリは `repositories/` または `adapters/` の内側へ置く。
 - `*.repository.ts` は集約ルートまたは Entity の永続化を担う、ファイル名と一致した単一の `XxxRepository` class だけに使う。照会、外部通信、通知、base64変換などは `adapters/` の単一 `XxxAdapter` class にする。
 - Application は Domain model を生成または更新する write class だけを1ファイル1クラスで置き、D1、Drizzle、Infrastructure schemaへ直接依存しない。
 - Application、Repository、Adapter の constructor は、必要な依存をまとめた `constructor(private readonly c: Context)` だけにする。
 - 型のためだけの `contracts` 層は作らず、型の所有レイヤーから `import type` する。
+- `lib` は利用する最小のresourceまで下げる。`interface/lib`、`application/lib`、`http/utils`のようにlayer全体を覆う汎用bucketは作らない。
+- Error classと失敗型は所有単位の`errors.ts`にまとめる。`errors/`、`*.error.ts`、`*.errors.ts`は作らず、別ファイルからre-exportしない。
+- re-exportは禁止する。利用側は定義元を直接importする。
 - 単一層のテストは実装の隣、複数層を横断するテストはcontext直下の単数形 `test/` に置く。複数形 `tests/` は作らない。
 
 機能を削除するときは、対象コンテキストのディレクトリと API root の登録だけを削除する。他のコンテキストの変更を必要とする依存は追加しない。

@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { AttendanceSearchQuery } from "@/contexts/attendance/interface/http/attendance-records/attendance-search-query"
 import { canReadAttendanceOf } from "@/contexts/attendance/interface/http/attendance-records/can-read-attendance-of"
@@ -10,7 +10,7 @@ export type Props = {
   requestedEmployeeId: EmployeeId | null
   from: string | null
   to: string | null
-  session: Session
+  session: CompanySessionValue
   relation: EmployeeRelation | null
 }
 

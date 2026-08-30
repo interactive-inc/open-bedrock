@@ -17,7 +17,7 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
 import { validateIntParam } from "@/lib/http/validate-int-param"
-import { zAppEvaluationSheet } from "@/lib/app-schemas"
+import { zAppEvaluationSheet } from "@/contexts/performance-review/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { evaluationSheets } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 

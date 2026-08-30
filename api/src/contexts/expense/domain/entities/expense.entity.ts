@@ -1,7 +1,10 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
-import { expenseCategorySchema, expenseStatusSchema } from "@/lib/schemas"
+import {
+  expenseCategorySchema,
+  expenseStatusSchema,
+} from "@/contexts/expense/domain/definitions/expense.definition"
 import type { ExpenseRow } from "@/contexts/expense/infrastructure/schema/expense"
 import { z } from "zod"
 

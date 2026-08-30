@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ExpenseApproval } from "@/contexts/expense/domain/entities/expense-approval.entity"
 import type { Context as HonoContext } from "@/env"
 import { ExpenseRepository } from "@/contexts/expense/infrastructure/repositories/expense.repository"
@@ -8,7 +8,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   expenseId: number
   approverId: EmployeeId
   comment: string | null

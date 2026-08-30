@@ -1,7 +1,10 @@
 import { CreateCertification } from "@/contexts/certification/application/create-certification"
 import { CertificationRepository } from "@/contexts/certification/infrastructure/repositories/certification.repository"
 import { factory } from "@/api/http/factory"
-import { zAppCertification, zAppCertificationList } from "@/lib/app-schemas"
+import {
+  zAppCertification,
+  zAppCertificationList,
+} from "@/contexts/certification/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"

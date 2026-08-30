@@ -2,7 +2,7 @@ import { UnauthorizedError } from "@/lib/http/errors"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
-import { zAppReviewPeriodList } from "@/lib/app-schemas"
+import { zAppReviewPeriodList } from "@/contexts/performance-review/interface/http/response-schemas"
 import { asc } from "drizzle-orm"
 
 // @authorization authenticated - 期間ラベルだけを返すので、ログインしていれば誰でも読める

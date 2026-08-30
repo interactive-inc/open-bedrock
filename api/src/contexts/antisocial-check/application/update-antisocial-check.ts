@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
 import type { Context } from "@/env"
 import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
@@ -7,7 +7,7 @@ import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   antisocialCheckId: string
-  session: Session
+  session: CompanySessionValue
   partnerName: string
   partnerAddress: string | null
   representativeName: string | null

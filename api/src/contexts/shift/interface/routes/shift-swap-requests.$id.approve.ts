@@ -5,7 +5,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppShiftSwapRequest } from "@/lib/app-schemas"
+import { zAppShiftSwapRequest } from "@/contexts/shift/interface/http/response-schemas"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 
 // @authorization service - session を application service に渡して判定する

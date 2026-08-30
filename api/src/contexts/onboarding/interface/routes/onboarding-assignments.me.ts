@@ -7,7 +7,7 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppOnboardingTaskList } from "@/lib/app-schemas"
+import { zAppOnboardingTaskList } from "@/contexts/onboarding/interface/http/response-schemas"
 import {
   onboardingAssignments,
   onboardingTasks,

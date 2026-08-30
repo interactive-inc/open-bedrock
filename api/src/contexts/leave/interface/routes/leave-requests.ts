@@ -7,13 +7,20 @@ import {
   UnauthorizedError,
   UnprocessableEntityError,
 } from "@/lib/http/errors"
-import { zAppLeaveRequest, zAppLeaveRequestAdminList } from "@/lib/app-schemas"
+import {
+  zAppLeaveRequest,
+  zAppLeaveRequestAdminList,
+} from "@/contexts/leave/interface/http/response-schemas"
 import { canReadLeaveOf } from "@/contexts/leave/interface/http/leave-requests/can-read-leave-of"
-import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
-import { listReportEmployeeIds } from "@/api/http/utils/list-report-employee-ids"
+import { listDepartmentEmployeeIds } from "@/api/http/company-employees/list-department-employee-ids"
+import { listReportEmployeeIds } from "@/api/http/company-employees/list-report-employee-ids"
 import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import { factory } from "@/api/http/factory"
-import { isoDate, leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
+import {
+  leaveTypeSchema,
+  leaveUnitSchema,
+} from "@/contexts/leave/domain/definitions/leave-request.definition"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -28,7 +35,7 @@ import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
-import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
+import { loadCurrentEmployeeDepartmentNames } from "@/api/http/company-employees/current-employee-departments"
 
 // @authorization permission - 権限キーで判定する
 /**

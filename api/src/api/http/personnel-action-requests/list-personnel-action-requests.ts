@@ -5,7 +5,7 @@ import type {
 import { personnelActionInputSchema } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { UnexpectedError } from "@/lib/errors"
 import { ReadSystemWorkflowReferencesAdapter } from "@system/infrastructure/adapters/workflow/read-system-workflow-references.adapter"
 
@@ -22,7 +22,7 @@ export class ListPersonnelActionRequests {
   }
 
   async execute(
-    session: Session,
+    session: CompanySessionValue,
     filters: Filters,
   ): Promise<ReadonlyArray<PersonnelActionRequestRecord> | UnexpectedError> {
     try {

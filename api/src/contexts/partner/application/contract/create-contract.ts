@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { Contract } from "@/contexts/partner/domain/entities/contract.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -7,7 +7,7 @@ import { ContractRepository } from "@/contexts/partner/infrastructure/repositori
 import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   contract: {
     partnerId: number
     title: string

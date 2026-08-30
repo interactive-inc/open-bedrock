@@ -1,7 +1,7 @@
 import { CancelLicense } from "@/contexts/software-license/application/license/cancel-license"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppLicense } from "@/lib/app-schemas"
+import { zAppLicense } from "@/contexts/software-license/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { verifyBearer } from "@/api/http/verify-bearer"

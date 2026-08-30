@@ -3,7 +3,7 @@ import { CertificateRequestRepository } from "@/contexts/certificate-request/inf
 
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
-import { zAppCertificateRequestList } from "@/lib/app-schemas"
+import { zAppCertificateRequestList } from "@/contexts/certificate-request/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

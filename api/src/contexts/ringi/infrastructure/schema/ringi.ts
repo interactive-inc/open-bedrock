@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { RingiStatus } from "@/lib/schemas"
+import type { RingiStatus } from "@/contexts/ringi/domain/definitions/ringi-status.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 

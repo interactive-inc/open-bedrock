@@ -12,7 +12,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppCareerApplicationList } from "@/lib/app-schemas"
+import { zAppCareerApplicationList } from "@/contexts/career/interface/http/response-schemas"
 import { careerApplications } from "@/contexts/career/infrastructure/schema/career"
 import { count, eq } from "drizzle-orm"
 

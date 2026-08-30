@@ -2,7 +2,7 @@ import { ApproveFamilyCareLeave } from "@/contexts/family-care-leave/application
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppFamilyCareLeave } from "@/lib/app-schemas"
+import { zAppFamilyCareLeave } from "@/contexts/family-care-leave/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"

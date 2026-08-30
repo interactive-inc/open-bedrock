@@ -116,8 +116,8 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 
 ディレクトリの構成は以下のとおり。
 
-- `api/src/contexts/<context>/` … contextごとの domain / application / infrastructure / interface の4層。interface の `routes/` はURLをdotで表すflat file（例: `employees.$code.ts`）とし、動的segmentは`$name`で表す。同じURLのHTTP methodは同じファイルから`GET`、`POST`などをexportする。`api/src/api/app.ts`は`bun run gen:app`の生成物なので手で編集しない。ルート横断のコードは内容を表す名前のディレクトリに置く（`middlewares/`、`utils/`、`test-helpers/`など。`shared/`のような中身のわからない名前は禁止）。APIレスポンスは`lib/app-schemas.ts`のzAppスキーマでparseしてから返す（1ファイル1スキーマ規約の例外として集約）
-- `api/src/api/` … HTTP runtimeのcomposition root。手書きmiddleware、route registry、生成app、複数contextを正本なしで集約するrouteだけを置く。Domainや業務実装は置かない
+- `api/src/contexts/<context>/` … contextごとの domain / application / infrastructure / interface の4層。interface の `routes/` はURLをdotで表すflat file（例: `employees.$code.ts`）とし、動的segmentは`$name`で表す。同じURLのHTTP methodは同じファイルから`GET`、`POST`などをexportする。`api/src/api/app.ts`は`bun run gen:app`の生成物なので手で編集しない。APIレスポンスのZod schemaは所有contextの`interface/http/response-schemas.ts`へ置き、横断routeのschemaだけを`api/src/api/http/<責務>/response-schemas.ts`へ置く。全contextのschemaを束ねる集約ファイルは作らない
+- `api/src/api/` … HTTP runtimeのcomposition root。手書きmiddleware、route registry、生成app、複数contextを正本なしで集約するrouteだけを置く。横断処理は`audit/`や`company-employees/`のように責務を表す最小のディレクトリへ置き、`utils/`のような汎用bucketは作らない。Domainや業務実装は置かない
 - `api/tests/` … context・層を横断するAPIテストだけを`api/`、構造契約を`contracts/`、共有ハーネスを`api/support/`へ置く。単一のproduction moduleを検証するtestは対象sourceへ近接配置する。CLIとMCPのworkspace横断testはそれぞれ`cli/tests/`、`mcp/tests/`へ置く
 - `api/src/lib/` … context中立で、context・API root・DB所有schemaへ依存しない技術部品だけを置く
 - `lib` は利用者が共有する最も深い階層へ置き、上位へ広げない。複数の兄弟領域から必要な場合だけ、その最小共通祖先の `lib/` を使う

@@ -1,5 +1,5 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
-import { leaveTypeSchema } from "@/lib/schemas"
+import { leaveTypeSchema } from "@/contexts/leave/domain/definitions/leave-request.definition"
 import type { LeaveBalanceRow } from "@/contexts/leave/infrastructure/schema/leave"
 import { z } from "zod"
 

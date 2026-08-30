@@ -1,7 +1,7 @@
 import { SubmitReviewForm } from "@/contexts/performance-review/application/review/submit-review-form"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppReviewForm } from "@/lib/app-schemas"
+import { zAppReviewForm } from "@/contexts/performance-review/interface/http/response-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"

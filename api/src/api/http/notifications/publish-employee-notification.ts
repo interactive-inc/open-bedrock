@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { CompanyNotificationKind } from "@/api/http/notifications/notification-kind.definition"
 import type { PublishedEmployeeNotification } from "@/api/http/notifications/employee-notification.adapter"
 import type { Context } from "@/env"
@@ -9,7 +9,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   recipientEmployeeCode: string
   kind: CompanyNotificationKind
   title: string

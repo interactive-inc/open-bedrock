@@ -10,9 +10,9 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { toEmployeeNameMap } from "@/api/http/utils/to-employee-name-map"
+import { toEmployeeNameMap } from "@/api/http/company-employees/to-employee-name-map"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { zAppThanksList } from "@/lib/app-schemas"
+import { zAppThanksList } from "@/contexts/thanks/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { thanks as thanksTable } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { count, eq } from "drizzle-orm"

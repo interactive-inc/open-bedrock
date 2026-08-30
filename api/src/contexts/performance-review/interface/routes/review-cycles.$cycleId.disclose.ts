@@ -1,7 +1,7 @@
 import { DiscloseReviewCycle } from "@/contexts/performance-review/application/review/disclose-review-cycle"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppReviewDiscloseResult } from "@/lib/app-schemas"
+import { zAppReviewDiscloseResult } from "@/contexts/performance-review/interface/http/response-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"

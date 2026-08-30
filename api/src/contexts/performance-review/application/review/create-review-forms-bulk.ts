@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
@@ -16,7 +16,7 @@ export type BulkFormInput = {
 }
 
 export type Input = {
-  session: Session
+  session: CompanySessionValue
   cycleId: number
   forms: ReadonlyArray<BulkFormInput>
 }

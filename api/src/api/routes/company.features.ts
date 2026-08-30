@@ -1,7 +1,7 @@
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppFeatureAvailability } from "@/lib/app-schemas"
+import { zAppFeatureAvailability } from "@/api/http/company/response-schemas"
 import { resolveDisabledFeatureKeys } from "@/lib/feature/resolve-disabled-feature-keys"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ

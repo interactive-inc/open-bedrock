@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
 import { ApplicationError, ValidationError } from "@/lib/errors"
-import { isoDate } from "@/lib/schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
 
 /**
  * 初期基準日と会社タイムゾーンを検証する。問題があれば ValidationError、正常なら undefined を返す

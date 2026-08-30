@@ -3,8 +3,8 @@ import { ResolveGovernanceOrgRoleAdapter } from "@/contexts/governance/infrastru
 import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { factory } from "@/api/http/factory"
 import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { parseGovernanceCode } from "@/api/http/utils/parse-governance-code"
-import { toGovernanceDocumentResponse } from "@/contexts/governance/interface/lib/to-governance-document-response"
+import { parseGovernanceCode } from "@/contexts/governance/interface/http/parse-governance-code"
+import { toGovernanceDocumentResponse } from "@/contexts/governance/interface/http/governance-documents/to-governance-document-response"
 import { verifyBearer } from "@/api/http/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する

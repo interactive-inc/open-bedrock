@@ -1,5 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
-import { Session } from "@/lib/auth/session"
+import { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { canReadAttendanceOf } from "@/contexts/attendance/interface/http/attendance-records/can-read-attendance-of"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import { makeTestSession } from "@tests/api/support/make-test-session"
@@ -14,8 +14,8 @@ const sameDept: EmployeeRelation = { isSelf: false, isReport: false, isSameDepar
 
 const stranger: EmployeeRelation = { isSelf: false, isReport: false, isSameDepartment: false }
 
-function sessionWith(permissions: ReadonlyArray<string>): Session {
-  return new Session({
+function sessionWith(permissions: ReadonlyArray<string>): CompanySessionValue {
+  return new CompanySessionValue({
     accountId: testAccountId(1),
     employeeId: toWorkforceEmployeeId(1),
     employmentStatus: "ACTIVE",

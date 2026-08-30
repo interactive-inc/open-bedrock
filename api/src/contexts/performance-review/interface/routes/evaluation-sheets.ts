@@ -11,7 +11,10 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { CreateEvaluationSheet } from "@/contexts/performance-review/application/evaluation-sheet/create-evaluation-sheet"
 import { evaluationSheets } from "@/contexts/performance-review/infrastructure/schema/performance-review"
-import { zAppEvaluationSheet, zAppEvaluationSheetList } from "@/lib/app-schemas"
+import {
+  zAppEvaluationSheet,
+  zAppEvaluationSheetList,
+} from "@/contexts/performance-review/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, eq, type SQL } from "drizzle-orm"

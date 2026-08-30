@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { HeadcountPlan } from "@/contexts/headcount-plan/domain/entities/headcount-plan.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -7,7 +7,7 @@ import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructur
 import { UniqueConstraintError } from "@/lib/d1/errors"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   fiscalYear: number
   departmentCode: string | null
   plannedCount: number

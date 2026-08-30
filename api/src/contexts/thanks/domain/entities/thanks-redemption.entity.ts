@@ -1,6 +1,6 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { redemptionStatusSchema } from "@/lib/schemas"
+import { redemptionStatusSchema } from "@/contexts/thanks/domain/definitions/redemption-status.definition"
 import type { ThanksRedemptionRow } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { z } from "zod"
 

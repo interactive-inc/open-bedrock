@@ -7,7 +7,7 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppTrainingEnrollmentList } from "@/lib/app-schemas"
+import { zAppTrainingEnrollmentList } from "@/contexts/training/interface/http/response-schemas"
 import { trainingEnrollments } from "@/contexts/training/infrastructure/schema/training"
 import { asc, count, eq } from "drizzle-orm"
 

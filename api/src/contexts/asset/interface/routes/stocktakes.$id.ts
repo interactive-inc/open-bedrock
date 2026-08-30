@@ -2,7 +2,7 @@ import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { StocktakeRepository } from "@/contexts/asset/infrastructure/repositories/stocktake/stocktake.repository"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppStocktake } from "@/lib/app-schemas"
+import { zAppStocktake } from "@/contexts/asset/interface/http/response-schemas"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ

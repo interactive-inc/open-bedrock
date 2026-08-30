@@ -1,5 +1,5 @@
-import { AuditExportRange } from "@/api/http/utils/audit-export-range"
-import { throwAuditRouteError } from "@/api/http/utils/throw-audit-route-error"
+import { AuditExportRange } from "@/api/http/audit/audit-export-range"
+import { throwAuditRouteError } from "@/api/http/audit/throw-audit-route-error"
 import { factory } from "@/api/http/factory"
 
 type AuditExportValidationInput = {

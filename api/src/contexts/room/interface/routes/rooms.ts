@@ -7,7 +7,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppRoom, zAppRoomList } from "@/lib/app-schemas"
+import { zAppRoom, zAppRoomList } from "@/contexts/room/interface/http/response-schemas"
 import { rooms } from "@/contexts/room/infrastructure/schema/room"
 import { count } from "drizzle-orm"
 import {

@@ -3,7 +3,7 @@ import { ReviewCycle } from "@/contexts/performance-review/domain/entities/revie
 import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import { toReviewResultView } from "@/contexts/performance-review/interface/http/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
 import { factory } from "@/api/http/factory"
-import { zAppReviewResult } from "@/lib/app-schemas"
+import { zAppReviewResult } from "@/contexts/performance-review/interface/http/response-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import {

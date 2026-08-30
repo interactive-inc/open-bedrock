@@ -6,7 +6,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { zAppReviewFormList } from "@/lib/app-schemas"
+import { zAppReviewFormList } from "@/contexts/performance-review/interface/http/response-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { reviewForms } from "@/contexts/performance-review/infrastructure/schema/performance-review"

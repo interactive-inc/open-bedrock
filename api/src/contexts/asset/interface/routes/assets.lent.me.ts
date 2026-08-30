@@ -1,5 +1,5 @@
 import { factory } from "@/api/http/factory"
-import { zAppAssetList } from "@/lib/app-schemas"
+import { zAppAssetList } from "@/contexts/asset/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

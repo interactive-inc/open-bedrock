@@ -7,7 +7,7 @@ import { UpdateGoal } from "@/contexts/performance-review/application/goal/updat
 import type { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppGoal } from "@/lib/app-schemas"
+import { zAppGoal } from "@/contexts/performance-review/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { verifyBearer } from "@/api/http/verify-bearer"

@@ -9,7 +9,7 @@ import { validateIntParam } from "@/lib/http/validate-int-param"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppCareerPosting } from "@/lib/app-schemas"
+import { zAppCareerPosting } from "@/contexts/career/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
