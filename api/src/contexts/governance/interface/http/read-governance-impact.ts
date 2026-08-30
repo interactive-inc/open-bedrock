@@ -2,7 +2,7 @@ import { ResolveGovernanceOrgRoleAdapter } from "@/contexts/governance/infrastru
 import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
 import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
-import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { governanceDocuments } from "@/contexts/governance/infrastructure/schema/governance"

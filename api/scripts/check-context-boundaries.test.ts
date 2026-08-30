@@ -14,6 +14,7 @@ import {
   inspectRetiredContextPath,
   inspectRetiredLayerFirstRootPath,
   inspectRouteOwnershipPath,
+  inspectSourceOrganization,
 } from "./check-context-boundaries"
 import { describe, expect, test } from "bun:test"
 
@@ -25,6 +26,7 @@ describe("API root structure", () => {
     expect(inspectApiRootPath("src/api/database-middleware.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/route-module.registry.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/http/dashboard/get-dashboard.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/error-response/handle-api-error.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/routes/inbox/counts/route.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/test/app.test.ts")).not.toEqual([])
     expect(inspectApiRootPath("src/api/system/auth/repository.ts")).not.toEqual([])
@@ -46,6 +48,32 @@ test("所有者不明のcomposition・platform rootへの再配置を拒否す�
   expect(inspectDisallowedRuntimeRootPath("src/platform/database.ts")).not.toEqual([])
   expect(inspectDisallowedRuntimeRootPath("src/api/app.ts")).toEqual([])
   expect(inspectDisallowedRuntimeRootPath("src/lib/time/clock.ts")).toEqual([])
+})
+
+describe("source organization", () => {
+  test("Error定義を所有単位のerrors.tsへまとめる", () => {
+    expect(
+      inspectSourceOrganization(
+        "src/lib/identity/errors.ts",
+        "export class InvalidIdValueError extends Error {}",
+      ),
+    ).toEqual([])
+    expect(
+      inspectSourceOrganization(
+        "src/lib/identity/invalid-id-value.error.ts",
+        "export class InvalidIdValueError extends Error {}",
+      ),
+    ).not.toEqual([])
+  })
+
+  test("re-exportをproductionとtestの両方で拒否する", () => {
+    expect(
+      inspectSourceOrganization("src/lib/index.ts", 'export { value } from "./value"'),
+    ).not.toEqual([])
+    expect(
+      inspectSourceOrganization("src/lib/index.test.ts", 'export * from "./fixture"'),
+    ).not.toEqual([])
+  })
 })
 
 test("context横断テストを単数形testへ配置する", () => {

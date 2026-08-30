@@ -2,7 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { Context } from "@/env"
 import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
-import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 
 export type GovernanceOrgRoleAssignee = {
   assignment_id: number | null

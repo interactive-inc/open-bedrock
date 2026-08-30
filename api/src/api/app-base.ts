@@ -1,5 +1,5 @@
 import { HTTPException } from "hono/http-exception"
-import { handleApiError } from "@/api/http/handle-api-error"
+import { handleApiError } from "@/api/error-response/handle-api-error"
 import { companyValidationErrorMiddleware } from "@/api/http/company-validation-error-middleware"
 import { bodyLimit } from "hono/body-limit"
 import { cors } from "hono/cors"

@@ -137,11 +137,15 @@ function classNameFromFile(file: string): string {
 }
 
 function isApplicationErrorFile(file: string): boolean {
-  return file.endsWith("/application/errors.ts")
+  return /\/application\/(?:.*\/)?errors\.ts$/.test(file)
 }
 
 function isLayerErrorCollection(file: string): boolean {
-  return /\/(?:application|domain|infrastructure|interface)\/errors\.ts$/.test(file)
+  return /\/(?:application|domain|infrastructure|interface)\/(?:.*\/)?errors\.ts$/.test(file)
+}
+
+function isLayerLibFile(file: string, layer: "application" | "infrastructure"): boolean {
+  return file.includes(`/${layer}/`) && file.includes("/lib/")
 }
 
 describe("Context file responsibility contract", () => {
@@ -163,13 +167,13 @@ describe("Context file responsibility contract", () => {
     expect(violations).toEqual([])
   })
 
-  test("Contextのerror定義は各layer直下のerrors.tsにまとめる", () => {
+  test("Contextのerror定義は最小の所有単位のerrors.tsにまとめる", () => {
     expect(
       allContextProductionFiles.filter(
         (file) =>
           file.includes("/errors/") ||
           file.endsWith("/errors.shared.ts") ||
-          file.endsWith(".error.ts"),
+          /\.errors?\.tsx?$/.test(file),
       ),
     ).toEqual([])
   })
@@ -179,6 +183,8 @@ describe("Context file responsibility contract", () => {
       .filter(
         (file) =>
           !isApplicationErrorFile(file) &&
+          !isLayerLibFile(file, "application") &&
+          !isLayerLibFile(file, "infrastructure") &&
           (file.includes("/application/") ||
             file.endsWith(".repository.ts") ||
             file.endsWith(".adapter.ts")),
@@ -232,7 +238,8 @@ describe("Context file responsibility contract", () => {
             file.includes("/infrastructure/adapters/") &&
             (file.endsWith(".adapter.ts") || file.endsWith(".shared.ts"))
           ) &&
-          !file.endsWith("/infrastructure/errors.ts"),
+          !isLayerErrorCollection(file) &&
+          !isLayerLibFile(file, "infrastructure"),
       ),
     ).toEqual([])
   })
@@ -304,7 +311,12 @@ describe("Context file responsibility contract", () => {
     const readOperationName =
       /^(?:Read|List|Get|Find|Resolve|Fetch|Query|Search|Download|Preview|Generate|Export|Authenticate|Assert|Prepare)/
     const violations = productionFiles
-      .filter((file) => file.includes("/application/") && !isApplicationErrorFile(file))
+      .filter(
+        (file) =>
+          file.includes("/application/") &&
+          !isApplicationErrorFile(file) &&
+          !isLayerLibFile(file, "application"),
+      )
       .flatMap((file) => {
         const source = readFileSync(new URL(file, contextsDirectory), "utf8")
         const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true)
@@ -370,7 +382,7 @@ describe("Context file responsibility contract", () => {
     expect(violations).toEqual([])
   })
 
-  test("Applicationのerrors fileはError classとerror変換functionだけを公開する", () => {
+  test("Applicationのerrors.tsは失敗型・Error class・error変換functionだけを公開する", () => {
     const violations = productionFiles
       .filter((file) => file.includes("/application/") && isApplicationErrorFile(file))
       .flatMap((file) => {

@@ -1,7 +1,7 @@
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { CreateOidcAuthorizationCodeAdapter } from "@system/infrastructure/adapters/identity/create-oidc-authorization-code.adapter"
-import { hashOidcSecret } from "@system/lib/identity/hash-oidc-secret"
+import { hashOidcSecret } from "@system/application/auth/identity/lib/hash-oidc-secret"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"

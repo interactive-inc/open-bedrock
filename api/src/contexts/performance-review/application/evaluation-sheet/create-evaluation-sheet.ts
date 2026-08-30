@@ -7,7 +7,7 @@ import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import { ResolveDirectManagerIdAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-direct-manager-id.adapter"
 import { ResolveDepartmentManagerIdAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-department-manager-id.adapter"
 import { ValidateEmployeeActiveAdapter } from "@/contexts/company/infrastructure/adapters/organization/validate-employee-active.adapter"
-import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { EvaluationParticipantAdapter } from "@/contexts/performance-review/infrastructure/adapters/evaluation-sheet/evaluation-participant.adapter"
 
 export type Command = {

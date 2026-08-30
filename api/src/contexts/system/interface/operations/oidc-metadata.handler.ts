@@ -1,8 +1,8 @@
 import { OidcScopeValue } from "@system/domain/values/oauth/oidc-scope.value"
 import { oidcSigningAlgorithm } from "@system/domain/values/oauth/oidc-signing-algorithm.value"
 import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
-import { getOidcPublicKeys } from "@system/lib/identity/get-oidc-public-keys"
-import { parseOidcSigningKeys } from "@system/lib/identity/parse-oidc-signing-keys"
+import { getOidcPublicKeys } from "@system/application/auth/identity/lib/get-oidc-public-keys"
+import { parseOidcSigningKeys } from "@system/application/auth/identity/lib/parse-oidc-signing-keys"
 import {
   OIDCMetadataNotFoundError,
   OIDCMethodNotAllowedError,

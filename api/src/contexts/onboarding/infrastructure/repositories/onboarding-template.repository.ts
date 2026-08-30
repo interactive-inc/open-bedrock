@@ -4,7 +4,7 @@ import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import {
   onboardingTemplates,
   onboardingTemplateTasks,

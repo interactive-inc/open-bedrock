@@ -2,7 +2,7 @@ import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendan
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { attendanceRecords } from "@/contexts/attendance/infrastructure/schema/attendance"
 import { and, asc, eq } from "drizzle-orm"
 

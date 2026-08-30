@@ -10,10 +10,8 @@ const allowedRootEntries = new Set([
   "schemas",
   "catalogs",
   "definitions",
-  "errors",
   "policies",
   "errors.ts",
-  "errors.shared.ts",
 ])
 
 describe("bounded context domain structure", () => {
@@ -38,22 +36,23 @@ describe("bounded context domain structure", () => {
     expect(violations).toEqual([])
   })
 
-  test("Domain Errorをerrors directoryの一クラス一ファイルに限定する", () => {
+  test("Domainの失敗型とError classをerrors.tsへ集約する", () => {
     const violations: string[] = []
 
-    for (const path of new Glob("*/domain/errors/**/*.ts").scanSync({
+    for (const path of new Glob("*/domain/**/*.ts").scanSync({
       cwd: contextsRoot,
       onlyFiles: true,
     })) {
-      const filename = basename(path)
-      const source = readFileSync(resolve(contextsRoot, path), "utf8")
-      const errorClasses = source.match(/export (?:abstract )?class \w*Error extends \w+/gu) ?? []
+      if (/\.(?:test|spec)\.ts$/u.test(path)) continue
 
-      if (!/\.error(?:\.test)?\.ts$/u.test(filename)) {
-        violations.push(`${path}: Domain Error suffix`)
+      const source = readFileSync(resolve(contextsRoot, path), "utf8")
+      const hasErrorDefinition = /(?:class|interface|type)\s+\w+(?:Error|Exception)\b/u.test(source)
+
+      if (path.includes("/errors/") || /\.errors?\.ts$/u.test(path)) {
+        violations.push(`${path}: Domain Errorはdomain/errors.tsへ集約する`)
       }
-      if (!filename.endsWith(".test.ts") && errorClasses.length !== 1) {
-        violations.push(`${path}: Domain Error class count ${errorClasses.length}`)
+      if (!path.endsWith("/domain/errors.ts") && hasErrorDefinition) {
+        violations.push(`${path}: 失敗型とError classはdomain/errors.tsへ集約する`)
       }
     }
 

@@ -2,7 +2,7 @@ import { Regulation } from "@/contexts/regulation/domain/entities/regulation.ent
 import { RegulationVersion } from "@/contexts/regulation/domain/entities/regulation-version.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import {
   regulations,
   regulationVersions,

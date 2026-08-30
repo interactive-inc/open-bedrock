@@ -14,7 +14,7 @@ const OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "context-ownership.json")
 const RETIRED_CONTEXT_NAMES = new Set(["request"])
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
-const API_ROOT_DIRECTORIES = new Set(["http", "routes"])
+const API_ROOT_DIRECTORIES = new Set(["error-response", "http", "routes"])
 const API_ROOT_FILES = new Set([
   "api-route-module.ts",
   "app-base.ts",
@@ -46,6 +46,65 @@ export type ContextBoundaryViolation = Readonly<{
   file: string
   reason: string
 }>
+
+function isTestFile(file: string): boolean {
+  return /\.(?:test|spec)\.tsx?$/.test(file)
+}
+
+export function inspectSourceOrganization(
+  file: string,
+  sourceText: string,
+): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+  const sourceFile = ts.createSourceFile(
+    normalized,
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true,
+    normalized.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  )
+  const violations: ContextBoundaryViolation[] = []
+
+  if (
+    sourceFile.statements.some(
+      (statement) => ts.isExportDeclaration(statement) && statement.moduleSpecifier !== undefined,
+    )
+  ) {
+    violations.push({ file, reason: "re-exportは禁止です。定義元を直接importしてください" })
+  }
+
+  if (isTestFile(normalized) || normalized.endsWith(".d.ts")) return violations
+
+  if (/\/errors\//.test(normalized) || /(?:^|\/)[^/]+\.errors?\.tsx?$/.test(normalized)) {
+    violations.push({
+      file,
+      reason: "Error定義はerrors/や*.error.tsへ分割せず、所有単位のerrors.tsへまとめてください",
+    })
+  }
+
+  const definitions = sourceFile.statements.flatMap((statement) => {
+    if (
+      (ts.isClassDeclaration(statement) ||
+        ts.isInterfaceDeclaration(statement) ||
+        ts.isTypeAliasDeclaration(statement)) &&
+      statement.name !== undefined &&
+      /(?:Error|Exception)$/.test(statement.name.text)
+    ) {
+      return [statement.name.text]
+    }
+
+    return []
+  })
+
+  if (!normalized.endsWith("/errors.ts") && definitions.length > 0) {
+    violations.push({
+      file,
+      reason: `失敗型とError classは所有単位のerrors.tsへまとめてください: ${definitions.join(", ")}`,
+    })
+  }
+
+  return violations
+}
 
 /** Company直下をDDDの4層と横断testだけに限定し、互換directoryの残存を拒否する。 */
 export function inspectCompanyRootPath(file: string): ContextBoundaryViolation[] {
@@ -503,6 +562,13 @@ export function inspectLibSource(file: string, sourceText: string): ContextBound
 /** 移行済みのcontext-first sourceと中立libを自動検査する。 */
 export async function collectContextBoundaryViolations(): Promise<ContextBoundaryViolation[]> {
   const violations: ContextBoundaryViolation[] = [...inspectOwnershipManifest()]
+
+  for await (const file of new Glob("**/*.{ts,tsx}").scan(SOURCE_ROOT)) {
+    const path = resolve(SOURCE_ROOT, file)
+    violations.push(
+      ...inspectSourceOrganization(relative(PROJECT_ROOT, path), readFileSync(path, "utf8")),
+    )
+  }
 
   for (const rootName of ["domain", "application", "infrastructure", "interface"]) {
     for (const root of [resolve(SOURCE_ROOT, rootName), resolve(SOURCE_ROOT, "api", rootName)]) {

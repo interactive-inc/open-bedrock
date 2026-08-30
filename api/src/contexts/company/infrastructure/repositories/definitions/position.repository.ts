@@ -3,7 +3,7 @@ import { CompanyUniqueConstraintError } from "@/contexts/company/domain/errors"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { organizationAssignmentPeriodVersions } from "@/contexts/company/infrastructure/schema/organization"
 import { positions } from "@/contexts/company/infrastructure/schema/position"
-import { isCompanyUniqueConstraintError } from "@/contexts/company/lib/employee/is-company-unique-constraint-error"
+import { isCompanyUniqueConstraintError } from "@/contexts/company/infrastructure/repositories/employee/lib/is-company-unique-constraint-error"
 import { and, asc, count, eq, sql } from "drizzle-orm"
 
 type Context = CompanyContext

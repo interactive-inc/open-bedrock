@@ -24,7 +24,11 @@ const allContextProductionFiles = [
   .sort()
 
 function isLayerErrorFile(file: string, layer: "application" | "infrastructure"): boolean {
-  return file.endsWith(`/${layer}/errors.ts`)
+  return new RegExp(`/${layer}/(?:.*/)?errors\\.ts$`).test(file)
+}
+
+function isLayerLibFile(file: string, layer: "application" | "infrastructure"): boolean {
+  return file.includes(`/${layer}/`) && file.includes("/lib/")
 }
 
 function usesDomainModel(source: string): boolean {
@@ -70,7 +74,8 @@ describe("Context file responsibility contract", () => {
           file.includes("/infrastructure/") &&
           !file.endsWith(".repository.ts") &&
           !(file.includes("/infrastructure/adapters/") && file.endsWith(".adapter.ts")) &&
-          !isLayerErrorFile(file, "infrastructure"),
+          !isLayerErrorFile(file, "infrastructure") &&
+          !isLayerLibFile(file, "infrastructure"),
       ),
     ).toEqual([])
   })
@@ -79,7 +84,12 @@ describe("Context file responsibility contract", () => {
     const ambiguousOperationName =
       /^(?:Advance|Decide|Handle|Manage|Process|Save|Transition|Upsert|Write)(?:$|[A-Z])/
     const violations = productionFiles
-      .filter((file) => file.includes("/application/") && !isLayerErrorFile(file, "application"))
+      .filter(
+        (file) =>
+          file.includes("/application/") &&
+          !isLayerErrorFile(file, "application") &&
+          !isLayerLibFile(file, "application"),
+      )
       .flatMap((file) => {
         const source = readFileSync(new URL(file, contextsDirectory), "utf8")
         const classes = [...source.matchAll(/^export class (?!\w*Error\b)(\w+)/gm)].map(

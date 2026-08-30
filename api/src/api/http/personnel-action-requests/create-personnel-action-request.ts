@@ -20,7 +20,7 @@ import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastru
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { FindPersonnelActionRequestAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/find-personnel-action-request.adapter"
 import { GetLifecycleState } from "@/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state"
-import { createCompanySystemAuditEvent } from "@/contexts/company/lib/audit/create-company-system-audit-event"
+import { createCompanySystemAuditEvent } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/create-company-system-audit-event"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"

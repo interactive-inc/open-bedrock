@@ -1,7 +1,7 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 

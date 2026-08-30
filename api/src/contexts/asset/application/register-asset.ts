@@ -4,7 +4,7 @@ import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 
 export type Command = {
   session: Session

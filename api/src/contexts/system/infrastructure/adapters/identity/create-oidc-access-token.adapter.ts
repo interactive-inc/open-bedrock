@@ -4,8 +4,8 @@ import type {
   SystemClockContext,
   SystemDatabaseContext,
 } from "@system/configuration/system-context"
-import { createOidcSecret } from "@system/lib/identity/create-oidc-secret"
-import { hashOidcSecret } from "@system/lib/identity/hash-oidc-secret"
+import { createOidcSecret } from "@system/application/auth/identity/lib/create-oidc-secret"
+import { hashOidcSecret } from "@system/application/auth/identity/lib/hash-oidc-secret"
 import { systemOidcAccessTokens } from "@system/infrastructure/schema/system-core"
 import { lte } from "drizzle-orm"
 

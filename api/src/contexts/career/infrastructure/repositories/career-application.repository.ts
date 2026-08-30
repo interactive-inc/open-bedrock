@@ -1,14 +1,13 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
+import type {
+  AlreadyAppliedError,
+  ApplicationDecidedError,
+  PostingClosedError,
+} from "@/contexts/career/infrastructure/repositories/errors"
 import type { Context } from "@/env"
 import { careerApplications } from "@/contexts/career/infrastructure/schema/career"
 import { and, asc, count, eq, sql } from "drizzle-orm"
-
-export type AlreadyAppliedError = { reason: "already_applied" }
-
-export type PostingClosedError = { reason: "posting_closed" }
-
-export type ApplicationDecidedError = { reason: "application_decided" }
 
 export class CareerApplicationRepository {
   constructor(private readonly c: Context) {}

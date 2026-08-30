@@ -3,7 +3,7 @@ import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entit
 import type { Context } from "@/env"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

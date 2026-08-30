@@ -2,7 +2,7 @@ import { CompanyCalendarDay } from "@/contexts/company-calendar/domain/entities/
 import type { Context } from "@/env"
 import { companyCalendarDays } from "@/contexts/company-calendar/infrastructure/schema/company-calendar"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { and, asc, count, eq, gte, lte } from "drizzle-orm"
 
 export class CompanyCalendarDayRepository {

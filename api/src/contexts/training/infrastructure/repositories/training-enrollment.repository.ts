@@ -1,13 +1,13 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
+import type {
+  AlreadyEnrolledError,
+  CourseArchivedError,
+} from "@/contexts/training/infrastructure/repositories/errors"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { trainingEnrollments } from "@/contexts/training/infrastructure/schema/training"
 import { and, eq, ne, sql } from "drizzle-orm"
-
-export type AlreadyEnrolledError = { reason: "already_enrolled" }
-
-export type CourseArchivedError = { reason: "course_archived" }
 
 export class TrainingEnrollmentRepository {
   constructor(private readonly c: Context) {}

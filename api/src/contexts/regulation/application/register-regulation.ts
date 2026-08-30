@@ -3,7 +3,7 @@ import { Regulation } from "@/contexts/regulation/domain/entities/regulation.ent
 import { RegulationVersion } from "@/contexts/regulation/domain/entities/regulation-version.entity"
 import type { Context } from "@/env"
 import { RegulationRepository } from "@/contexts/regulation/infrastructure/repositories/regulation.repository"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

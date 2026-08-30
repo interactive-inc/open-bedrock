@@ -1,5 +1,5 @@
 import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
-import type { LifecycleAssignmentState } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle-read.adapter"
+import type { LifecycleAssignmentState } from "@/contexts/company/lib/workforce/employee-lifecycle-state"
 
 type Props = Readonly<{
   assignment: OrgAssignmentPeriod

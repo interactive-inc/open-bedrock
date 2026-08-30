@@ -4,7 +4,7 @@ import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolv
 import type {
   EmployeeLifecycleState,
   LifecycleAssignmentState,
-} from "@/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle-read.adapter"
+} from "@/contexts/company/lib/workforce/employee-lifecycle-state"
 
 type Props = Readonly<{
   workforce: WorkforceStateAt

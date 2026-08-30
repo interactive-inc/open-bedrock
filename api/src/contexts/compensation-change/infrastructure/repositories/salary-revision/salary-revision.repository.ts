@@ -4,7 +4,7 @@ import type { Context } from "@/env"
 import { salaryRevisions } from "@/contexts/compensation-change/infrastructure/schema/compensation-change"
 import { count, desc, eq } from "drizzle-orm"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 
 export class SalaryRevisionRepository {
   constructor(private readonly c: Context) {}
