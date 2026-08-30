@@ -1,7 +1,7 @@
 import { HeadcountPlan } from "@/contexts/headcount-plan/domain/entities/headcount-plan.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { headcountPlans } from "@/contexts/headcount-plan/infrastructure/schema/headcount-plan"
 import { and, asc, count, eq, isNull } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"

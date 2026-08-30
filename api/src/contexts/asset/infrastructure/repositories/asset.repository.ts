@@ -5,7 +5,7 @@ import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { parseD1Row } from "@/lib/d1/parse-d1-row"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { assets } from "@/contexts/asset/infrastructure/schema/asset"
 import { eq } from "drizzle-orm"
 

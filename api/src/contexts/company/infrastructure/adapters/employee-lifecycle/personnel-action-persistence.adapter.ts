@@ -1,4 +1,4 @@
-import { createCompanySystemAuditEvent } from "@/contexts/company/lib/audit/create-company-system-audit-event"
+import { createCompanySystemAuditEvent } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/create-company-system-audit-event"
 import { containsDate } from "@/contexts/company/domain/definitions/contains-date.definition"
 import type { DirectPersonnelActionCommand } from "@/contexts/company/domain/definitions/direct-personnel-action-command.definition"
 import type {
@@ -12,7 +12,7 @@ import type { CompanyContext } from "@/contexts/company/configuration/company-co
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import type { PersonnelActionRecord } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action.adapter"
 import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/company/infrastructure/adapters/database/abort-when-previous-statement-changed-no-rows.adapter"
-import { isAbortedByGuard } from "@/contexts/company/lib/database/is-aborted-by-guard"
+import { isAbortedByGuard } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-aborted-by-guard"
 import {
   CompanyConflictError,
   CompanyOperationError,

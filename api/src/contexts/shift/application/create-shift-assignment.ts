@@ -4,7 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
 import type { Context } from "@/env"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
 import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
 

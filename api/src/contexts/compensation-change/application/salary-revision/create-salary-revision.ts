@@ -6,7 +6,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/repositories/salary-revision/salary-revision.repository"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 
 export type Command = {
   session: Session

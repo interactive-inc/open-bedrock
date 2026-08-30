@@ -4,18 +4,17 @@ import {
   GoalEvaluation,
   goalEvaluationKindSchema,
 } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
+import type {
+  AlreadyEvaluatedError,
+  AlreadyFinalizedError,
+  GoalDoneError,
+} from "@/contexts/performance-review/infrastructure/repositories/goal/errors"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { goalEvaluations } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { asc, eq } from "drizzle-orm"
-
-export type AlreadyEvaluatedError = { reason: "already_evaluated" }
-
-export type GoalDoneError = { reason: "goal_done" }
-
-export type AlreadyFinalizedError = { reason: "already_finalized" }
 
 export class GoalEvaluationRepository {
   constructor(private readonly c: Context) {}

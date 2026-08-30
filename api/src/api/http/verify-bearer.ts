@@ -12,7 +12,7 @@ import { AccessTokenService } from "@system/lib/auth/access-token-service"
 import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/lib/auth/system-access-token-profile"
 import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
 import { SystemD1AuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-authorization.adapter"
-import { readBearerAuthorization } from "@system/interface/lib/authorization/bearer-authorization"
+import { readBearerAuthorization } from "@system/interface/authorization/lib/bearer-authorization"
 import { createMiddleware } from "hono/factory"
 
 /**

@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ShiftPattern } from "@/contexts/shift/domain/entities/shift-pattern.entity"
 import type { Context } from "@/env"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
 
 export type Input = {

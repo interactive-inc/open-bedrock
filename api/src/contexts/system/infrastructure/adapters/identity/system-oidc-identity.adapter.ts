@@ -1,6 +1,6 @@
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { SystemDatabaseContext } from "@system/configuration/system-context"
-import type { OidcIdentity } from "@system/lib/identity/oidc-id-token-service"
+import type { OidcIdentity } from "@system/application/auth/identity/lib/oidc-id-token-service"
 import {
   systemAccounts,
   systemIdentityBindings,

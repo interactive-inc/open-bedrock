@@ -4,8 +4,8 @@ import type { NotificationDeliveryId } from "@system/domain/schemas/notification
 import type { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import type { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import type { SystemD1Context } from "@system/configuration/system-context"
-import { toSystemNotificationDelivery } from "@system/lib/notifications/to-system-notification-delivery"
-import { toSystemNotificationMessage } from "@system/lib/notifications/to-system-notification-message"
+import { toSystemNotificationDelivery } from "@system/infrastructure/repositories/notifications/lib/to-system-notification-delivery"
+import { toSystemNotificationMessage } from "@system/infrastructure/repositories/notifications/lib/to-system-notification-message"
 
 const maximumPublicationPayloadBytes = 1_000_000
 

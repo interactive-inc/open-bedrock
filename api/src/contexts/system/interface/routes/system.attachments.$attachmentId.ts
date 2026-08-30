@@ -1,7 +1,7 @@
-import { decryptAttachment } from "@system/lib/attachments/decrypt-attachment"
+import { decryptAttachment } from "@system/application/attachments/lib/decrypt-attachment"
 import { SystemAttachmentError } from "@system/domain/errors"
-import { toSha256Hex } from "@system/lib/attachments/to-sha256-hex"
-import { AttachmentKekRegistry } from "@system/lib/attachments/attachment-kek-registry"
+import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
+import { AttachmentKekRegistry } from "@system/application/attachments/lib/attachment-kek-registry"
 import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
 /** /attachments/:attachmentId */
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"

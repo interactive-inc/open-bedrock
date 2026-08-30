@@ -5,7 +5,8 @@ export const COMPANY_PERMISSION_ENTRIES = [
     category: "org",
     appliesTo: "org",
     name: "会社参照",
-    description: "会社情報と組織構成を閲覧できます。",
+    description:
+      "法人向け画面（法人ホーム・サマリーなど）の入口を開きます。各画面内のデータを閲覧するには、その画面が扱うデータの参照権限が別途必要になります。",
   },
   {
     key: "org:write",

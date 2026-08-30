@@ -1,11 +1,10 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
+import type { AlreadyRequestedError } from "@/contexts/resignation/infrastructure/repositories/errors"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { resignations } from "@/contexts/resignation/infrastructure/schema/resignation"
 import { and, asc, eq } from "drizzle-orm"
-
-export type AlreadyRequestedError = { kind: "already_requested" }
 
 export class ResignationRepository {
   constructor(private readonly c: Context) {}

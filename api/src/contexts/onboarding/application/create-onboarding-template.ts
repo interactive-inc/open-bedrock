@@ -4,7 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import type { Context } from "@/env"
 import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 
 export type Command = {
   session: Session

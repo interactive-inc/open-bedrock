@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
 import type { Context } from "@/env"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
 
 export type Command = {

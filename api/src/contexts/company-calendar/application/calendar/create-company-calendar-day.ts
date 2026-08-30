@@ -5,7 +5,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { CalendarDayKind } from "@/lib/schemas"
 import type { Context } from "@/env"
 import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/repositories/calendar/company-calendar-day.repository"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 
 export type Command = {
   session: Session

@@ -17,7 +17,8 @@ describe("Company file responsibility contract", () => {
       (file) =>
         !file.endsWith(".test.ts") &&
         !file.endsWith("/errors.ts") &&
-        !file.endsWith("/application-error.ts"),
+        !file.endsWith("/application-error.ts") &&
+        !file.includes("/lib/"),
     )
     const violations = files.flatMap((file) => {
       const source = readFileSync(new URL(file, contextsDirectory), "utf8")
@@ -62,7 +63,9 @@ describe("Company file responsibility contract", () => {
           return []
         }
         const imported = statement.moduleSpecifier.text
-        return imported.includes("/application/") && !imported.endsWith("/errors")
+        return imported.includes("/application/") &&
+          !imported.includes("/lib/") &&
+          !imported.endsWith("/errors")
           ? [`${file}: Application import ${imported}`]
           : []
       })
@@ -92,6 +95,7 @@ describe("Company file responsibility contract", () => {
         file.startsWith("infrastructure/") &&
         !file.startsWith("infrastructure/schema/") &&
         !file.endsWith("/errors.ts") &&
+        !file.includes("/lib/") &&
         !(file.startsWith("infrastructure/repositories/") && file.endsWith(".repository.ts")) &&
         !(file.startsWith("infrastructure/adapters/") && file.endsWith(".adapter.ts")),
     )

@@ -2,7 +2,7 @@ import { GradeEntity } from "@/contexts/company/domain/entities/grade.entity"
 import { CompanyUniqueConstraintError } from "@/contexts/company/domain/errors"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { employeeGrades, grades } from "@/contexts/company/infrastructure/schema/grade"
-import { isCompanyUniqueConstraintError } from "@/contexts/company/lib/employee/is-company-unique-constraint-error"
+import { isCompanyUniqueConstraintError } from "@/contexts/company/infrastructure/repositories/employee/lib/is-company-unique-constraint-error"
 import { asc, count, eq } from "drizzle-orm"
 
 type Context = CompanyContext

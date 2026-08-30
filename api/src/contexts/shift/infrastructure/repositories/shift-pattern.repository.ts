@@ -1,7 +1,7 @@
 import { ShiftPattern } from "@/contexts/shift/domain/entities/shift-pattern.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { shiftPatterns } from "@/contexts/shift/infrastructure/schema/shift"
 import { eq, sql } from "drizzle-orm"
 

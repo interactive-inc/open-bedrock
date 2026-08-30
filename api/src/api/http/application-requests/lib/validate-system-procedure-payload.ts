@@ -1,3 +1,5 @@
+import { InvalidApplicationPayloadError } from "@/api/http/application-requests/lib/errors"
+
 type JsonObject = Record<string, unknown>
 
 type FormFieldDefinition = {
@@ -5,13 +7,6 @@ type FormFieldDefinition = {
   type: "text" | "textarea" | "number" | "date" | "select"
   required: boolean
   options: ReadonlyArray<string> | null
-}
-
-export class InvalidApplicationPayloadError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "InvalidApplicationPayloadError"
-  }
 }
 
 /**

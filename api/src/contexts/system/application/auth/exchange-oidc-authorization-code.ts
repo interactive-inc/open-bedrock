@@ -15,8 +15,8 @@ import type {
 } from "@system/configuration/system-context"
 import { CreateOidcAccessTokenAdapter } from "@system/infrastructure/adapters/identity/create-oidc-access-token.adapter"
 import { ConsumeOidcAuthorizationCodeAdapter } from "@system/infrastructure/adapters/identity/consume-oidc-authorization-code.adapter"
-import { OidcIdTokenService } from "@system/lib/identity/oidc-id-token-service"
-import { parseOidcSigningKeys } from "@system/lib/identity/parse-oidc-signing-keys"
+import { OidcIdTokenService } from "@system/application/auth/identity/lib/oidc-id-token-service"
+import { parseOidcSigningKeys } from "@system/application/auth/identity/lib/parse-oidc-signing-keys"
 import { SystemOidcIdentityAdapter } from "@system/infrastructure/adapters/identity/system-oidc-identity.adapter"
 
 type Props = Readonly<{

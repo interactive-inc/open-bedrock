@@ -1,16 +1,16 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
+import type {
+  AlreadySubmittedError,
+  SurveyNotOpenError,
+} from "@/contexts/survey/infrastructure/repositories/errors"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { surveyResponses, surveys } from "@/contexts/survey/infrastructure/schema/survey"
 import { and, asc, count, eq, sql } from "drizzle-orm"
-
-export type SurveyNotOpenError = { reason: "survey_not_open" }
-
-export type AlreadySubmittedError = { reason: "already_submitted" }
 
 export type SurveyDeleteConflict = { reason: "not_deletable" | "not_found" }
 

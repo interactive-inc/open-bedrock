@@ -1,8 +1,8 @@
-import { encryptAttachment } from "@system/lib/attachments/encrypt-attachment"
+import { encryptAttachment } from "@system/application/attachments/lib/encrypt-attachment"
 import { SystemAttachmentError } from "@system/domain/errors"
 import type { AttachmentBytes } from "@system/domain/definitions/attachments/attachment-bytes.definition"
 import { validateAttachmentContent } from "@system/domain/policies/attachment-content.policy"
-import { AttachmentKekRegistry } from "@system/lib/attachments/attachment-kek-registry"
+import { AttachmentKekRegistry } from "@system/application/attachments/lib/attachment-kek-registry"
 import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
 import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
 import type {

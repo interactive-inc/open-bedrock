@@ -1,14 +1,13 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import type { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
+import type { CycleNotOpenError } from "@/contexts/performance-review/infrastructure/repositories/review/errors"
 import type { Context } from "@/env"
 import {
   reviewCycles,
   reviewForms,
 } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { and, asc, eq, inArray, ne } from "drizzle-orm"
-
-export type CycleNotOpenError = { reason: "cycle_not_open" }
 
 /** 一括作成する評価フォームの下書き（未採番）。 */
 export type ReviewFormDraft = {

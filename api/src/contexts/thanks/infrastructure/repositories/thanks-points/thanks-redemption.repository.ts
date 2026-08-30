@@ -1,6 +1,12 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
+import type {
+  InsufficientBalanceError,
+  OutOfStockError,
+  PendingExistsError,
+  RewardInactiveError,
+} from "@/contexts/thanks/infrastructure/repositories/thanks-points/errors"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/lib/d1/parse-d1-row"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
@@ -24,14 +30,6 @@ import { z } from "zod"
  * 原子的に評価する必要があるためで、重複は意図的なもの。式を変えるときは両方を必ず揃える。
  */
 const settledStatus = "fulfilled"
-
-export type PendingExistsError = { reason: "pending_exists" }
-
-export type InsufficientBalanceError = { reason: "insufficient_balance" }
-
-export type OutOfStockError = { reason: "out_of_stock" }
-
-export type RewardInactiveError = { reason: "reward_inactive" }
 
 const thanksRedemptionD1RowSchema = z.object({
   id: z.number(),

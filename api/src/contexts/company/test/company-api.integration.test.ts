@@ -155,6 +155,26 @@ describe("canonical Company API", () => {
     })
   })
 
+  test("company:writeだけのactorは従業員系のPeople POSTを従来どおり実行できる", async () => {
+    const database = createCompanyD1TestDatabase(companySql)
+    const client = createClient(
+      database,
+      CompanyActorValue.restore({
+        accountId: actor.accountId,
+        employeeId: actor.employeeId,
+        organizationIds: actor.organizationIds,
+        capabilities: ["company:write"],
+      }),
+    )
+
+    const response = await client.company.people.$post({
+      header: writeHeaders("command:employee-write", 0),
+      json: { reason: "employee write", resources: [person] },
+    })
+
+    expect(response.status).toBe(201)
+  })
+
   test("同じidempotency keyの別commandを409へ閉じる", async () => {
     const client = createClient(createCompanyD1TestDatabase(companySql))
     const header = writeHeaders("command:1", 0)

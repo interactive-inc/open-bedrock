@@ -3,10 +3,8 @@ import { ReadWorkforceState } from "@/contexts/company/lib/workforce/read-workfo
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import {
-  EmployeeLifecycleReadAdapter,
-  type EmployeeLifecycleState,
-} from "@/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle-read.adapter"
+import { EmployeeLifecycleReadAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle-read.adapter"
+import type { EmployeeLifecycleState } from "@/contexts/company/lib/workforce/employee-lifecycle-state"
 import { EmployeeLifecycleWorkforceAdapter } from "@/contexts/company/infrastructure/adapters/workforce/employee-lifecycle-workforce.adapter"
 import { OrganizationUnitReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/organization-unit-read.adapter"
 import { toEmployeeLifecycleState } from "@/contexts/company/lib/workforce/to-employee-lifecycle-state"

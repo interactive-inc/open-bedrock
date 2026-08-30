@@ -4,7 +4,12 @@ import type { CompanyPermissionKey } from "@/contexts/company/domain/catalogs/ia
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
-export const companyCapabilities = ["company:read", "company:write", "company:admin"] as const
+export const companyCapabilities = [
+  "company:read",
+  "company:write",
+  "company:master:write",
+  "company:admin",
+] as const
 
 export type CompanyCapability = (typeof companyCapabilities)[number]
 

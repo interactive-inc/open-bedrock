@@ -1,11 +1,11 @@
-import { decryptAttachment } from "@system/lib/attachments/decrypt-attachment"
-import { encryptAttachment } from "@system/lib/attachments/encrypt-attachment"
-import { fromBase64 } from "@system/lib/attachments/from-base64"
-import { rewrapAttachmentKey } from "@system/lib/attachments/rewrap-attachment-key"
-import { toSha256Hex } from "@system/lib/attachments/to-sha256-hex"
+import { decryptAttachment } from "@system/application/attachments/lib/decrypt-attachment"
+import { encryptAttachment } from "@system/application/attachments/lib/encrypt-attachment"
+import { fromBase64 } from "@system/application/attachments/lib/from-base64"
+import { rewrapAttachmentKey } from "@system/application/attachments/lib/rewrap-attachment-key"
+import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
 import { describe, expect, test } from "bun:test"
-import { AttachmentKekRegistry } from "@system/lib/attachments/attachment-kek-registry"
+import { AttachmentKekRegistry } from "@system/application/attachments/lib/attachment-kek-registry"
 
 function receiptBytes(): Uint8Array<ArrayBuffer> {
   return new TextEncoder().encode("%PDF-1.7 領収書 12,800円")

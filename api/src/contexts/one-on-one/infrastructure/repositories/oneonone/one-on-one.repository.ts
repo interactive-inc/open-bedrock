@@ -2,7 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
-import { UniqueConstraintError } from "@/lib/d1/unique-constraint-error"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { oneOnOnes } from "@/contexts/one-on-one/infrastructure/schema/one-on-one"
 import { desc, eq, or } from "drizzle-orm"
 

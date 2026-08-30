@@ -120,6 +120,9 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 - `api/src/api/` … HTTP runtimeのcomposition root。手書きmiddleware、route registry、生成app、複数contextを正本なしで集約するrouteだけを置く。Domainや業務実装は置かない
 - `api/tests/` … context・層を横断するAPIテストだけを`api/`、構造契約を`contracts/`、共有ハーネスを`api/support/`へ置く。単一のproduction moduleを検証するtestは対象sourceへ近接配置する。CLIとMCPのworkspace横断testはそれぞれ`cli/tests/`、`mcp/tests/`へ置く
 - `api/src/lib/` … context中立で、context・API root・DB所有schemaへ依存しない技術部品だけを置く
+- `lib` は利用者が共有する最も深い階層へ置き、上位へ広げない。複数の兄弟領域から必要な場合だけ、その最小共通祖先の `lib/` を使う
+- Error classと失敗型は所有単位の `errors.ts` にまとめる。`errors/`、`*.error.ts`、`*.errors.ts` は作らない
+- re-exportは禁止する。利用側は定義元を直接importし、barrelや移行用の互換exportを作らない
 - `cli/app/` … コマンド群。`<command>/.../route.ts` で定義し、`cli/app/index.ts` が POST ルートとして集約する。ルート追加時は index.ts への登録を忘れない（未登録だと catch-all に落ちて使用不可）。共通処理は `cli/lib/`
 - `web/app/(app|auth)/` … ルートグループ。ルート直下は `page.tsx` / `actions.ts` などの規約ファイルのみ。画面コンポーネントは各ルートの `_components/`、表示用純関数は `_lib/` に collocation する。`components/ui` は shadcn 生成物（直接編集しない）、独自コンポーネントは別ファイルでラップする
 - `web/lib/api/` … API クライアント関数（1 関数 1 ファイル）。`api/app` の型（`api/dist/api/app.d.ts`）で型付けされる。レスポンスの手書き型は `web/lib/api/types/` に置く（api と疎結合に保つため z.infer を参照せず同形を手書きする）
