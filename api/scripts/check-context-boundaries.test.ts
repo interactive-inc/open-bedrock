@@ -9,6 +9,8 @@ import {
   inspectCompanyAreaPath,
   inspectContextSource,
   inspectContextTestDirectory,
+  inspectContextLibraryContract,
+  inspectContextRootLibrarySource,
   inspectDisallowedRuntimeRootPath,
   inspectLibSource,
   inspectRetiredContextPath,
@@ -315,6 +317,31 @@ describe("lib boundary", () => {
     ]) {
       expect(inspectLibSource("src/lib/example.ts", source)).not.toEqual([])
     }
+  })
+
+  test("context直下のlibraryへ責務文書と直接テストを要求する", () => {
+    expect(inspectContextLibraryContract("src/contexts/system/lib/auth", true, true)).toEqual([])
+    expect(inspectContextLibraryContract("src/contexts/system/lib/auth", false, true)).toHaveLength(
+      1,
+    )
+    expect(inspectContextLibraryContract("src/contexts/system/lib/auth", true, false)).toHaveLength(
+      1,
+    )
+  })
+
+  test("context直下のlibraryをHTTP・DB・runtime実装から独立させる", () => {
+    expect(
+      inspectContextRootLibrarySource(
+        "src/contexts/company/lib/workforce/resolve.ts",
+        'import type { Employee } from "@/contexts/company/domain/employee"',
+      ),
+    ).toEqual([])
+    expect(
+      inspectContextRootLibrarySource(
+        "src/contexts/company/lib/workforce/resolve.ts",
+        'import { employees } from "@/contexts/company/infrastructure/schema/company"',
+      ),
+    ).not.toEqual([])
   })
 })
 

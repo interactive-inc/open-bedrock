@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "32a6423cf8a4e1da4c2d485d94014b6c739f95a36b63bfd0ace020d75a99549a",
+    "company-context.manifest.json": "4c7ca1f076ac1e95619ce327dab59cb16a495e903b25a338ddb89f5e4329169f",
     "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -328,6 +328,7 @@
     "src/contexts/company/interface/routes/company.profile.ts": "1384d50b3977cfb218686f8c17b911c736f8bea5f328dd75d04fecb0fbc756e5",
     "src/contexts/company/interface/routes/company.reporting-lines.$employeeCode.ts": "7f361432849565db9dfbd08de68a95860c3ed0619a18ab7cb7fd626297e82a1b",
     "src/contexts/company/interface/routes/company.ts": "5532c0c59abacf5e1b8882bc3db41c96132646286cccfb6f6abb1f72a97f8a89",
+    "src/contexts/company/lib/workforce/CLAUDE.md": "fbdf55de84b7848a96e85c4d166d1a6b886fd799835e736ae56d61309522fcb2",
     "src/contexts/company/lib/workforce/apply-organization-workforce-changes.ts": "36a92b7029da22a5df92f76935e3256f373b9fcd46a5ffda939ff795cfd8a75f",
     "src/contexts/company/lib/workforce/employee-lifecycle-state.ts": "43e33a70de7dbb68a3ce3f36c38a5d9b0011afb02f21616e1e9cf3e753eef586",
     "src/contexts/company/lib/workforce/organization-period-row.adapter.ts": "8123b11486b38ccf32c9727c7aabd29b162bfff36d726fd3e2da6b9cb03c4a17",
@@ -338,6 +339,7 @@
     "src/contexts/company/lib/workforce/resolve-lifecycle-assignment.ts": "5905aea9cca2a57712ed4211aed0a2a9109fd483f1c36ab465f53eb04881df9c",
     "src/contexts/company/lib/workforce/resolve-organization-authority.ts": "559918d41a3819a504e86551c792b2aa26c8699658564fa0f8d0facc6f55b11f",
     "src/contexts/company/lib/workforce/to-employee-lifecycle-state.ts": "a694651e53a3b60f8f45f092244c62feaa5329be0f9a50f8fc0803988013833f",
+    "src/contexts/company/lib/workforce/to-lifecycle-status.test.ts": "dd564cb1df037a32017bbf78d6b6a5afd9df4240c965f1755d1c365980df7411",
     "src/contexts/company/lib/workforce/to-lifecycle-status.ts": "8f36e7277388433b24048a2a0432257456aabaf4284db189e344ee010bd68b4c",
     "src/contexts/company/lib/workforce/validate-organization-change.ts": "5ed5dcf8d80dbfe5bdb99e49cbb61961bde72d9188d0ee0faa8104f41de1c512",
     "src/contexts/company/test/company-account-profile.integration.test.ts": "4b160e7a7029567bed1bb381d3f095caa74d93c865e265e70224254d2da4d394",
