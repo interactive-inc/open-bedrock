@@ -352,6 +352,7 @@
     "src/contexts/system/interface/routes/system.sessions.test.ts": "e476dfc5e59f40834bc4502a441475f9afec5e21586a054cbda89a4697d1f423",
     "src/contexts/system/interface/routes/system.sessions.ts": "4bd75cd53398597df1e42e52509d8d1264642136262d67c2812a013a0cda7db8",
     "src/contexts/system/interface/routes/system.ts": "f69e222d3acc7118092e7f0262c74ecdc123a3dd2cc5b4f1a47a12618d9bb92f",
+    "src/contexts/system/lib/auth/CLAUDE.md": "dc006086e47683b6a19879c449e5c3db5c209efe15e6362b54493b5b0427793a",
     "src/contexts/system/lib/auth/access-token-service.test.ts": "3ba7ee1e9f8f2e7eee055883eb950dd20d2a2ad9c38e3eb73faf2eba67cdaad7",
     "src/contexts/system/lib/auth/access-token-service.ts": "785af58ef67ded0b35444a0fd67897c9d7af937691033b66d1a3dcc1d18fbade",
     "src/contexts/system/lib/auth/create-mcp-grant-token.ts": "f34fa75952f646897526f3e893937f1c342fac7e15673f747b99a6af3decb96e",

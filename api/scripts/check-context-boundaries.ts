@@ -51,6 +51,113 @@ function isTestFile(file: string): boolean {
   return /\.(?:test|spec)\.tsx?$/.test(file)
 }
 
+export function inspectContextLibraryContract(
+  resourcePath: string,
+  hasDocumentation: boolean,
+  hasDirectTest: boolean,
+): ContextBoundaryViolation[] {
+  const violations: ContextBoundaryViolation[] = []
+
+  if (!hasDocumentation) {
+    violations.push({
+      file: resourcePath,
+      reason: "context直下のlibraryはCLAUDE.mdに責務・対象外・公開入口・検証方法を記載してください",
+    })
+  }
+
+  if (!hasDirectTest) {
+    violations.push({
+      file: resourcePath,
+      reason: "context直下のlibraryはlibraryを直接実行するテストを少なくとも1つ置いてください",
+    })
+  }
+
+  return violations
+}
+
+export function inspectContextRootLibrarySource(
+  file: string,
+  sourceText: string,
+): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+  if (!/^src\/contexts\/[^/]+\/lib\/[^/]+\//.test(normalized)) return []
+
+  const violations: ContextBoundaryViolation[] = []
+  const sourceFile = ts.createSourceFile(
+    normalized,
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true,
+    normalized.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  )
+
+  function visit(node: ts.Node): void {
+    const moduleSpecifier = getModuleSpecifier(node)
+
+    if (moduleSpecifier instanceof Error) {
+      violations.push({ file, reason: moduleSpecifier.message })
+    } else if (
+      moduleSpecifier !== null &&
+      (/^@\/contexts\/[^/]+\/(?:application|configuration|infrastructure|interface)(?:\/|$)/.test(
+        moduleSpecifier,
+      ) ||
+        /^@system\/(?:application|configuration|infrastructure|interface)(?:\/|$)/.test(
+          moduleSpecifier,
+        ) ||
+        /^(?:hono|drizzle-orm|xlsx|xlsx-js-style)(?:\/|$)/.test(moduleSpecifier) ||
+        /^@\/(?:api|components|database)(?:\/|$)/.test(moduleSpecifier))
+    ) {
+      violations.push({
+        file,
+        reason: `context直下のlibraryからruntime実装へ依存しています: ${moduleSpecifier}`,
+      })
+    }
+
+    ts.forEachChild(node, visit)
+  }
+
+  visit(sourceFile)
+  return violations
+}
+
+function containsDirectLibraryTest(directory: string): boolean {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = resolve(directory, entry.name)
+
+    if (entry.isDirectory() && containsDirectLibraryTest(path)) return true
+    if (entry.isFile() && isTestFile(entry.name)) return true
+  }
+
+  return false
+}
+
+function collectContextLibraryContractViolations(): ContextBoundaryViolation[] {
+  const violations: ContextBoundaryViolation[] = []
+
+  for (const contextEntry of readdirSync(CONTEXTS_ROOT, { withFileTypes: true })) {
+    if (!contextEntry.isDirectory()) continue
+
+    const libraryRoot = resolve(CONTEXTS_ROOT, contextEntry.name, "lib")
+    if (!existsSync(libraryRoot)) continue
+
+    for (const resourceEntry of readdirSync(libraryRoot, { withFileTypes: true })) {
+      if (!resourceEntry.isDirectory()) continue
+
+      const resourceDirectory = resolve(libraryRoot, resourceEntry.name)
+      const resourcePath = relative(PROJECT_ROOT, resourceDirectory)
+      violations.push(
+        ...inspectContextLibraryContract(
+          resourcePath,
+          existsSync(resolve(resourceDirectory, "CLAUDE.md")),
+          containsDirectLibraryTest(resourceDirectory),
+        ),
+      )
+    }
+  }
+
+  return violations
+}
+
 export function inspectSourceOrganization(
   file: string,
   sourceText: string,
@@ -596,6 +703,8 @@ export async function collectContextBoundaryViolations(): Promise<ContextBoundar
   }
 
   if (existsSync(CONTEXTS_ROOT)) {
+    violations.push(...collectContextLibraryContractViolations())
+
     for await (const file of new Glob("**/*.{ts,tsx}").scan(CONTEXTS_ROOT)) {
       const path = resolve(CONTEXTS_ROOT, file)
       const projectRelativePath = relative(PROJECT_ROOT, path)
@@ -608,6 +717,9 @@ export async function collectContextBoundaryViolations(): Promise<ContextBoundar
 
       if (/\.(?:test|spec)\.tsx?$/.test(file)) continue
 
+      violations.push(
+        ...inspectContextRootLibrarySource(projectRelativePath, readFileSync(path, "utf8")),
+      )
       violations.push(...inspectContextSource(projectRelativePath, readFileSync(path, "utf8")))
     }
   }

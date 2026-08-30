@@ -23,6 +23,7 @@ src/contexts/<context>/
 - Application、Repository、Adapter の constructor は、必要な依存をまとめた `constructor(private readonly c: Context)` だけにする。
 - 型のためだけの `contracts` 層は作らず、型の所有レイヤーから `import type` する。
 - `lib` は利用する最小のresourceまで下げる。`interface/lib`、`application/lib`、`http/utils`のようにlayer全体を覆う汎用bucketは作らない。
+- context直下の各libraryはresource直下に`CLAUDE.md`と直接テストを持ち、責務、対象外、公開入口、検証方法を固定する。配置だけを`lib`へ変えず、純粋な入力と出力、独立した変更理由、consumerが必要とする最小の公開面を維持する。
 - Error classと失敗型は所有単位の`errors.ts`にまとめる。`errors/`、`*.error.ts`、`*.errors.ts`は作らず、別ファイルからre-exportしない。
 - re-exportは禁止する。利用側は定義元を直接importする。
 - 単一層のテストは実装の隣、複数層を横断するテストはcontext直下の単数形 `test/` に置く。複数形 `tests/` は作らない。
