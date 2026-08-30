@@ -3,7 +3,7 @@ import { UnexpectedError } from "@/lib/errors"
 
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppOneOnOneList } from "@/lib/app-schemas"
+import { zAppOneOnOneList } from "@/contexts/one-on-one/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
 import {

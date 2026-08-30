@@ -8,7 +8,7 @@ import {
   thanksRedemptions,
   thanksRewards,
 } from "@/contexts/thanks/infrastructure/schema/thanks"
-import type { RedemptionStatus } from "@/lib/schemas"
+import type { RedemptionStatus } from "@/contexts/thanks/domain/definitions/redemption-status.definition"
 import { describe, expect, test } from "bun:test"
 
 /** 受領を作る（recipient に points を贈る thanks 行を直接挿入する）。 */

@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
@@ -7,7 +7,7 @@ import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastruc
 import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   code: string
 }
 

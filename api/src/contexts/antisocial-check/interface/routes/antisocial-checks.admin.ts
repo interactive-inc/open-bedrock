@@ -7,7 +7,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppAntisocialCheckAdminList } from "@/lib/app-schemas"
+import { zAppAntisocialCheckAdminList } from "@/contexts/antisocial-check/interface/http/response-schemas"
 import { antisocialChecks } from "@/contexts/antisocial-check/infrastructure/schema/antisocial-check"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { zValidator } from "@hono/zod-validator"

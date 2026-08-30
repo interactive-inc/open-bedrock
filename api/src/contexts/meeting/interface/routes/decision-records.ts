@@ -4,7 +4,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppDecision, zAppDecisionList } from "@/lib/app-schemas"
+import { zAppDecision, zAppDecisionList } from "@/contexts/meeting/interface/http/response-schemas"
 import { decisions } from "@/contexts/meeting/infrastructure/schema/meeting"
 import { count, desc } from "drizzle-orm"
 import {

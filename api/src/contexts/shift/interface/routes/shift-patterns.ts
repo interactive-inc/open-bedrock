@@ -10,9 +10,12 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { CreateShiftPattern } from "@/contexts/shift/application/create-shift-pattern"
 import { shiftPatterns } from "@/contexts/shift/infrastructure/schema/shift"
-import { zAppShiftPattern, zAppShiftPatternList } from "@/lib/app-schemas"
+import {
+  zAppShiftPattern,
+  zAppShiftPatternList,
+} from "@/contexts/shift/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 import { zValidator } from "@hono/zod-validator"
 import { count } from "drizzle-orm"
 import { z } from "zod"

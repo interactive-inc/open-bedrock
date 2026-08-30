@@ -6,7 +6,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppEmployeeSkill } from "@/lib/app-schemas"
+import { zAppEmployeeSkill } from "@/contexts/skill/interface/http/response-schemas"
 import { validateCodeParam } from "@/lib/http/validate-code-param"
 
 // @authorization owner - 本人のリソースに限定する

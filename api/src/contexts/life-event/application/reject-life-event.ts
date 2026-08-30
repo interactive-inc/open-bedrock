@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -6,7 +6,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   lifeEventId: string
 }
 

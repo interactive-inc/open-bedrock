@@ -10,7 +10,10 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { CreateEvaluationTemplate } from "@/contexts/performance-review/application/evaluation-template/create-evaluation-template"
 import { evaluationTemplates } from "@/contexts/performance-review/infrastructure/schema/performance-review"
-import { zAppEvaluationTemplate, zAppEvaluationTemplateList } from "@/lib/app-schemas"
+import {
+  zAppEvaluationTemplate,
+  zAppEvaluationTemplateList,
+} from "@/contexts/performance-review/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, eq, type SQL } from "drizzle-orm"

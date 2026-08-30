@@ -3,7 +3,7 @@ import { ActivateEvaluationTemplate } from "@/contexts/performance-review/applic
 import { ArchiveEvaluationTemplate } from "@/contexts/performance-review/application/evaluation-template/archive-evaluation-template"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppEvaluationTemplate } from "@/lib/app-schemas"
+import { zAppEvaluationTemplate } from "@/contexts/performance-review/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { evaluationTemplates } from "@/contexts/performance-review/infrastructure/schema/performance-review"

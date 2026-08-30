@@ -1,4 +1,4 @@
-import type { LeaveUnit } from "@/lib/schemas"
+import type { LeaveUnit } from "@/contexts/leave/domain/definitions/leave-request.definition"
 
 const STANDARD_WORK_HOURS_PER_DAY = 8
 

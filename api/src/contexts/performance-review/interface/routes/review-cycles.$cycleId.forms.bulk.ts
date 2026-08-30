@@ -2,7 +2,7 @@ import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-
 import { CreateReviewFormsBulk } from "@/contexts/performance-review/application/review/create-review-forms-bulk"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppReviewFormBulkResult } from "@/lib/app-schemas"
+import { zAppReviewFormBulkResult } from "@/contexts/performance-review/interface/http/response-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"

@@ -8,7 +8,7 @@ import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { validateIntParam } from "@/lib/http/validate-int-param"
-import { zAppSurveySummary } from "@/lib/app-schemas"
+import { zAppSurveySummary } from "@/contexts/survey/interface/http/response-schemas"
 import { surveyResponses, surveys } from "@/contexts/survey/infrastructure/schema/survey"
 import { count, eq } from "drizzle-orm"
 

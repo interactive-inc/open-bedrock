@@ -1,5 +1,5 @@
 import type { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
-import type { AppGoalTreeNode } from "@/lib/app-schemas"
+import type { GoalTreeNode } from "@/contexts/performance-review/domain/definitions/goal-tree-node.definition"
 
 export type Props = {
   /** 表示対象の目標(閲覧不可の個人目標は事前に除外済みであること)。 */
@@ -7,7 +7,7 @@ export type Props = {
 }
 
 /** 目標 1 件を子なしのツリーノードに写す。 */
-function toNode(goal: Goal): AppGoalTreeNode {
+function toNode(goal: Goal): GoalTreeNode {
   return {
     id: goal.id ?? 0,
     employee_id: goal.employeeId,
@@ -24,7 +24,7 @@ function toNode(goal: Goal): AppGoalTreeNode {
 }
 
 /** 親候補が存在し、かつ親が自分より上位の階層(company>department>individual)なら親 id を返す。 */
-function toParentId(goal: Goal, nodesById: Map<number, AppGoalTreeNode>): number | null {
+function toParentId(goal: Goal, nodesById: Map<number, GoalTreeNode>): number | null {
   if (goal.parentGoalId === null) {
     return null
   }
@@ -36,8 +36,8 @@ function toParentId(goal: Goal, nodesById: Map<number, AppGoalTreeNode>): number
  * 目標の集合を parent_goal_id で全社→部門→個人のツリーに組む。
  * 親が集合内に無い目標はルートとして扱う。循環は id ベースの走査で作らない。
  */
-export function buildGoalTree(props: Props): ReadonlyArray<AppGoalTreeNode> {
-  const nodesById = new Map<number, AppGoalTreeNode>()
+export function buildGoalTree(props: Props): ReadonlyArray<GoalTreeNode> {
+  const nodesById = new Map<number, GoalTreeNode>()
 
   for (const goal of props.goals) {
     if (goal.id !== null) {
@@ -45,7 +45,7 @@ export function buildGoalTree(props: Props): ReadonlyArray<AppGoalTreeNode> {
     }
   }
 
-  const roots: Array<AppGoalTreeNode> = []
+  const roots: Array<GoalTreeNode> = []
 
   for (const goal of props.goals) {
     if (goal.id === null) {

@@ -1,5 +1,5 @@
 import { factory } from "@/api/http/factory"
-import { zAppMyShiftAssignmentList } from "@/lib/app-schemas"
+import { zAppMyShiftAssignmentList } from "@/contexts/shift/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

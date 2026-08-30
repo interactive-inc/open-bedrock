@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import {
   GoalEvaluation,
   type GoalEvaluationKind,
@@ -19,7 +19,7 @@ export type Command = {
   score: number | null
   comment: string | null
   evaluatorId: EmployeeId
-  session: Session
+  session: CompanySessionValue
   createdAt: string
 }
 

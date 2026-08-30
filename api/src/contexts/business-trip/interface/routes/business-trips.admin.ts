@@ -5,7 +5,7 @@ import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppBusinessTripList } from "@/lib/app-schemas"
+import { zAppBusinessTripList } from "@/contexts/business-trip/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

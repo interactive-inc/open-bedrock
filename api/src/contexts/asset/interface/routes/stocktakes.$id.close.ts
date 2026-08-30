@@ -5,7 +5,7 @@ import { StocktakeRepository } from "@/contexts/asset/infrastructure/repositorie
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppStocktake } from "@/lib/app-schemas"
+import { zAppStocktake } from "@/contexts/asset/interface/http/response-schemas"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 
 // @authorization service - session を application service に渡して判定する

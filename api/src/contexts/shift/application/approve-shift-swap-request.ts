@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftSwapRequest } from "@/contexts/shift/domain/entities/shift-swap-request.entity"
@@ -8,7 +8,7 @@ import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repos
 import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/repositories/shift-swap-request.repository"
 
 export type Input = {
-  session: Session
+  session: CompanySessionValue
   approverId: EmployeeId
   swapRequestId: number
   approvedAt: string

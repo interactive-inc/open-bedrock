@@ -2,7 +2,7 @@ import { factory } from "@/api/http/factory"
 import { roomAvailabilityQuerySchema } from "@/contexts/room/interface/http/rooms/availability/room-availability-query"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { BadRequestError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppRoomAvailabilityList } from "@/lib/app-schemas"
+import { zAppRoomAvailabilityList } from "@/contexts/room/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

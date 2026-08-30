@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
-import { zAppAuthMe } from "@/lib/app-schemas"
+import { zAppAuthMe } from "@/api/http/company/response-schemas"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 
 /** System SessionとCompany従業員を現在利用者の表示profileへ合成する。 */

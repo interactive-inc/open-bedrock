@@ -9,13 +9,16 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/repositories/salary-revision/salary-revision.repository"
-import { resolveTargetEmployeeId } from "@/api/http/utils/resolve-target-employee-id"
-import { resolveEmployeeIdFromBody } from "@/api/http/utils/resolve-employee-id-from-body"
+import { resolveTargetEmployeeId } from "@/api/http/company-employees/resolve-target-employee-id"
+import { resolveEmployeeIdFromBody } from "@/api/http/company-employees/resolve-employee-id-from-body"
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppSalaryRevision, zAppSalaryRevisionList } from "@/lib/app-schemas"
-import { isoDate } from "@/lib/schemas"
+import {
+  zAppSalaryRevision,
+  zAppSalaryRevisionList,
+} from "@/contexts/compensation-change/interface/http/response-schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

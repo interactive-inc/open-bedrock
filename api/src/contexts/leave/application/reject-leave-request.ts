@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { toFiscalYear } from "@/contexts/leave/domain/definitions/fiscal-year.definition"
 import type { Context as HonoContext } from "@/env"
@@ -15,7 +15,7 @@ import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/reposito
 import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   leaveRequestId: number
   approverId: EmployeeId
   comment: string | null

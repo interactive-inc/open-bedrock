@@ -11,9 +11,12 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppCommendation, zAppCommendationList } from "@/lib/app-schemas"
+import {
+  zAppCommendation,
+  zAppCommendationList,
+} from "@/contexts/commendation/interface/http/response-schemas"
 import { CommendationRepository } from "@/contexts/commendation/infrastructure/repositories/commendation.repository"
-import { isoDate } from "@/lib/schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

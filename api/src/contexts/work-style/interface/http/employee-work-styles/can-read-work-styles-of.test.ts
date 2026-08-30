@@ -1,11 +1,14 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
-import { Session } from "@/lib/auth/session"
+import { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { canReadWorkStylesOf } from "@/contexts/work-style/interface/http/employee-work-styles/can-read-work-styles-of"
 import { describe, expect, test } from "bun:test"
 import { testAccountId } from "@tests/api/support/test-account-id"
 
-function sessionWith(props: { employeeId: number; permissions: ReadonlyArray<string> }): Session {
-  return new Session({
+function sessionWith(props: {
+  employeeId: number
+  permissions: ReadonlyArray<string>
+}): CompanySessionValue {
+  return new CompanySessionValue({
     accountId: testAccountId(1),
     employeeId: toWorkforceEmployeeId(props.employeeId),
     employmentStatus: "ACTIVE",

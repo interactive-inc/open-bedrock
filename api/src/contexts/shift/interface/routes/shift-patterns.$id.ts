@@ -4,7 +4,7 @@ import { DeleteShiftPattern } from "@/contexts/shift/application/delete-shift-pa
 import { UpdateShiftPattern } from "@/contexts/shift/application/update-shift-pattern"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppShiftPattern } from "@/lib/app-schemas"
+import { zAppShiftPattern } from "@/contexts/shift/interface/http/response-schemas"
 import type { ShiftPattern } from "@/contexts/shift/domain/entities/shift-pattern.entity"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -12,7 +12,7 @@ import { UnauthorizedError } from "@/lib/http/errors"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 
 /** パターンをレスポンス用の snake_case に整形する。 */
 function toResponseBody(pattern: ShiftPattern) {

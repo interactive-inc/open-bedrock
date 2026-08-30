@@ -11,9 +11,12 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppDisciplinaryAction, zAppDisciplinaryActionList } from "@/lib/app-schemas"
+import {
+  zAppDisciplinaryAction,
+  zAppDisciplinaryActionList,
+} from "@/contexts/disciplinary-action/interface/http/response-schemas"
 import { DisciplinaryActionRepository } from "@/contexts/disciplinary-action/infrastructure/repositories/disciplinary-action.repository"
-import { isoDate } from "@/lib/schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

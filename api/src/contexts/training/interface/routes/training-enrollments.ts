@@ -12,9 +12,13 @@ import {
 import { EnrollTraining } from "@/contexts/training/application/enroll-training"
 import { trainingEnrollments } from "@/contexts/training/infrastructure/schema/training"
 import { type Variables } from "@/env"
-import { zAppTrainingEnrollment, zAppTrainingEnrollmentList } from "@/lib/app-schemas"
+import {
+  zAppTrainingEnrollment,
+  zAppTrainingEnrollmentList,
+} from "@/contexts/training/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { codeSchema, isoDate } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
+import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
 import { asc, count, eq } from "drizzle-orm"
 import { z } from "zod"

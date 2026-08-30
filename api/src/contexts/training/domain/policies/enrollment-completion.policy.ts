@@ -1,9 +1,9 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 
 export type Props = {
   enrollmentEmployeeId: EmployeeId
   viewerEmployeeId: EmployeeId
-  session: Session
+  session: CompanySessionValue
 }
 
 /** 本人、または管理権限を持つ者だけが受講を完了にできる。 */

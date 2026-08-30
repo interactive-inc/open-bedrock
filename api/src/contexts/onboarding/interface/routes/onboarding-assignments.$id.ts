@@ -8,7 +8,7 @@ import type { OnboardingAssignment } from "@/contexts/onboarding/domain/entities
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppOnboardingAssignment } from "@/lib/app-schemas"
+import { zAppOnboardingAssignment } from "@/contexts/onboarding/interface/http/response-schemas"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"

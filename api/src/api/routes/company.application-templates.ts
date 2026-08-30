@@ -16,9 +16,12 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { zAppApplicationTemplateDetail, zAppApplicationTemplateList } from "@/lib/app-schemas"
+import {
+  zAppApplicationTemplateDetail,
+  zAppApplicationTemplateList,
+} from "@/api/http/company/response-schemas"
 import { ConflictError as ApplicationConflictError, UnprocessableError } from "@/lib/errors"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

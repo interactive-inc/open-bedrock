@@ -1,5 +1,5 @@
 import { factory } from "@/api/http/factory"
-import { zAppExpenseInboxList } from "@/lib/app-schemas"
+import { zAppExpenseInboxList } from "@/contexts/expense/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

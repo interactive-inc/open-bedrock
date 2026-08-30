@@ -13,7 +13,10 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { ConflictError as ApplicationConflictError, UnprocessableError } from "@/lib/errors"
-import { zAppApplicationTemplate, zAppApplicationTemplateDetail } from "@/lib/app-schemas"
+import {
+  zAppApplicationTemplate,
+  zAppApplicationTemplateDetail,
+} from "@/api/http/company/response-schemas"
 import { validateCodeParam } from "@/lib/http/validate-code-param"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { zValidator } from "@hono/zod-validator"

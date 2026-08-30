@@ -1,4 +1,4 @@
-import type { LeaveUnit } from "@/lib/schemas"
+import type { LeaveUnit } from "@/contexts/leave/domain/definitions/leave-request.definition"
 
 /** unit と申請内容の整合性を検証する。hourly は hours 必須、半休は単日のみ。 */
 export function validateLeaveUnit(props: {

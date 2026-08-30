@@ -1,6 +1,6 @@
 import { GetManagementDashboard } from "@/api/http/dashboard/management/get-management-dashboard"
 import { ApplicationError } from "@/lib/errors"
-import { zAppManagementDashboard } from "@/lib/app-schemas"
+import { zAppManagementDashboard } from "@/api/http/company/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { factory } from "@/api/http/factory"

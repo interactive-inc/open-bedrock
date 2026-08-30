@@ -2,7 +2,7 @@ import { factory } from "@/api/http/factory"
 import { RegulationRepository } from "@/contexts/regulation/infrastructure/repositories/regulation.repository"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppRegulationDetail } from "@/lib/app-schemas"
+import { zAppRegulationDetail } from "@/contexts/regulation/interface/http/response-schemas"
 import { validateCodeParam } from "@/lib/http/validate-code-param"
 import type { RegulationVersion } from "@/contexts/regulation/domain/entities/regulation-version.entity"
 

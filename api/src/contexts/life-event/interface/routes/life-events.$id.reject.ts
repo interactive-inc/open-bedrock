@@ -2,7 +2,7 @@ import { RejectLifeEvent } from "@/contexts/life-event/application/reject-life-e
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppLifeEvent } from "@/lib/app-schemas"
+import { zAppLifeEvent } from "@/contexts/life-event/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"

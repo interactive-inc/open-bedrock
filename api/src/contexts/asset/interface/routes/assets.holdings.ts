@@ -4,7 +4,7 @@ import { assetLendings, assets } from "@/contexts/asset/infrastructure/schema/as
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { and, asc, count, eq, isNull } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppAssetHoldingList } from "@/lib/app-schemas"
+import { zAppAssetHoldingList } from "@/contexts/asset/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

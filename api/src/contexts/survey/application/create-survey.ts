@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
@@ -6,7 +6,7 @@ import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   title: string
   status: "open" | "closed"
   questionsJson: ReadonlyArray<unknown>

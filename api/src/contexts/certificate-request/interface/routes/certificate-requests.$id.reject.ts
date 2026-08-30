@@ -2,7 +2,7 @@ import { RejectCertificateRequest } from "@/contexts/certificate-request/applica
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppCertificateRequest } from "@/lib/app-schemas"
+import { zAppCertificateRequest } from "@/contexts/certificate-request/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"

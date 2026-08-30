@@ -6,7 +6,7 @@ import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq, gte, lte } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppThanksRedemptionAdminList } from "@/lib/app-schemas"
+import { zAppThanksRedemptionAdminList } from "@/contexts/thanks/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -15,7 +15,7 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { z } from "zod"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
-import { loadCurrentEmployeeDepartmentNames } from "@/api/http/utils/current-employee-departments"
+import { loadCurrentEmployeeDepartmentNames } from "@/api/http/company-employees/current-employee-departments"
 import { InternalError } from "@/lib/http/errors"
 
 const SORT_OPTIONS = {

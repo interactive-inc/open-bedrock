@@ -3,7 +3,7 @@ import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/rep
 
 import type { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { ApplicationError } from "@/lib/errors"
-import { zAppThanksRedemptionList } from "@/lib/app-schemas"
+import { zAppThanksRedemptionList } from "@/contexts/thanks/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
 import {

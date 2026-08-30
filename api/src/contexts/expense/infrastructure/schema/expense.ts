@@ -2,7 +2,11 @@ import type {
   EmployeeId,
   OrganizationUnitId,
 } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { ExpenseApprovalAction, ExpenseCategory, ExpenseStatus } from "@/lib/schemas"
+import type {
+  ExpenseApprovalAction,
+  ExpenseCategory,
+  ExpenseStatus,
+} from "@/contexts/expense/domain/definitions/expense.definition"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { organizationUnits } from "@/contexts/company/infrastructure/schema/organization"
 import type { InferSelectModel } from "drizzle-orm"

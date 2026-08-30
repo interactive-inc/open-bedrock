@@ -1,4 +1,4 @@
-import type { LeaveType } from "@/lib/schemas"
+import type { LeaveType } from "@/contexts/leave/domain/definitions/leave-request.definition"
 
 const BALANCE_TRACKED_LEAVE_TYPES: ReadonlySet<LeaveType> = new Set([
   "annual",

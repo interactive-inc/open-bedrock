@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Context } from "@/env"
 import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 import { ApplicationError, ForbiddenError, UnexpectedError } from "@/lib/errors"
@@ -10,7 +10,7 @@ export class RemoveLifecycleTemplateBinding {
   }
 
   async run(command: {
-    session: Session
+    session: CompanySessionValue
     templateCode: string
   }): Promise<{ removed: boolean } | ApplicationError> {
     if (!command.session.hasPermission("onboarding:manage")) {

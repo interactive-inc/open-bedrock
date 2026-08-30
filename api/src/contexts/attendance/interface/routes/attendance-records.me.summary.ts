@@ -5,7 +5,7 @@ import { toMonthRange } from "@/contexts/attendance/interface/http/attendance-re
 import { attendanceSummaryQuerySchema } from "@/contexts/attendance/interface/http/attendance-records/me/summary/attendance-summary-query"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
-import { zAppAttendanceSummary } from "@/lib/app-schemas"
+import { zAppAttendanceSummary } from "@/contexts/attendance/interface/http/response-schemas"
 import { attendanceRecords } from "@/contexts/attendance/infrastructure/schema/attendance"
 import { and, asc, eq, gte, lte } from "drizzle-orm"
 import { BadRequestError, UnauthorizedError } from "@/lib/http/errors"

@@ -1,10 +1,10 @@
 import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Context } from "@/env"
 
 export type CanReadExpenseInput = Readonly<{
-  session: Session
+  session: CompanySessionValue
   applicantEmployeeId: EmployeeId
 }>
 

@@ -8,7 +8,7 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppApplicationMineList } from "@/lib/app-schemas"
+import { zAppApplicationMineList } from "@/api/http/company/response-schemas"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
 import {
   parseSystemApplicationBody,

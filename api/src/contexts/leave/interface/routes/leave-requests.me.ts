@@ -6,7 +6,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { zAppLeaveRequestSummaryList } from "@/lib/app-schemas"
+import { zAppLeaveRequestSummaryList } from "@/contexts/leave/interface/http/response-schemas"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"

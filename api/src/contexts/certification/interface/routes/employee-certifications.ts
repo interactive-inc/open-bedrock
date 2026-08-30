@@ -2,8 +2,11 @@ import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-
 import { CreateEmployeeCertification } from "@/contexts/certification/application/create-employee-certification"
 import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/repositories/employee-certification.repository"
 import { factory } from "@/api/http/factory"
-import { isoDate } from "@/lib/schemas"
-import { zAppEmployeeCertification, zAppEmployeeCertificationList } from "@/lib/app-schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
+import {
+  zAppEmployeeCertification,
+  zAppEmployeeCertificationList,
+} from "@/contexts/certification/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"

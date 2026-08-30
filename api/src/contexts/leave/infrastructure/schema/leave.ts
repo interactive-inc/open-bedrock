@@ -1,5 +1,9 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { LeaveStatus, LeaveType, LeaveUnit } from "@/lib/schemas"
+import type {
+  LeaveStatus,
+  LeaveType,
+  LeaveUnit,
+} from "@/contexts/leave/domain/definitions/leave-request.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core"
 

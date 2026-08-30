@@ -12,7 +12,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppRoomReservationList } from "@/lib/app-schemas"
+import { zAppRoomReservationList } from "@/contexts/room/interface/http/response-schemas"
 import { roomReservations } from "@/contexts/room/infrastructure/schema/room"
 import { count, eq } from "drizzle-orm"
 

@@ -4,7 +4,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppRegulation } from "@/lib/app-schemas"
+import { zAppRegulation } from "@/contexts/regulation/interface/http/response-schemas"
 import { validateCodeParam } from "@/lib/http/validate-code-param"
 
 // @authorization service - session を application service に渡して判定する

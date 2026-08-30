@@ -12,7 +12,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppFamilyCareLeaveList } from "@/lib/app-schemas"
+import { zAppFamilyCareLeaveList } from "@/contexts/family-care-leave/interface/http/response-schemas"
 import { familyCareLeaves } from "@/contexts/family-care-leave/infrastructure/schema/family-care-leave"
 import { count, eq } from "drizzle-orm"
 

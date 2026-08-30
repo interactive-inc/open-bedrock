@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { canEvaluateGoalOf } from "@/contexts/performance-review/domain/policies/goal-evaluation-access.policy"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import type { GoalEvaluationKind } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
@@ -10,7 +10,7 @@ export type Props = {
   kind: GoalEvaluationKind
   goalEmployeeId: EmployeeId
   viewerEmployeeId: EmployeeId
-  session: Session
+  session: CompanySessionValue
   relation: EmployeeRelation
 }
 

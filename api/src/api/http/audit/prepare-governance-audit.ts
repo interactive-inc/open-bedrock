@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { AuditJsonValue } from "@/api/http/audit/company-audit-record.definition"
 import {
   createAuditEvent,
@@ -10,7 +10,7 @@ import { AuditEventAdapter } from "@/api/http/audit/audit-event.adapter"
 
 export function prepareGovernanceAudit(props: {
   c: Context
-  session: Session
+  session: CompanySessionValue
   action: AuditAction
   targetType: AuditTargetType
   targetId: string

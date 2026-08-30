@@ -13,7 +13,10 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppKnowledge, zAppKnowledgeWritten } from "@/lib/app-schemas"
+import {
+  zAppKnowledge,
+  zAppKnowledgeWritten,
+} from "@/contexts/knowledge/interface/http/response-schemas"
 import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
@@ -11,7 +11,7 @@ import {
 import { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
 
 export type Input = {
-  session: Session
+  session: CompanySessionValue
   title: string
   period: string
   dueDate: string | null

@@ -1,5 +1,5 @@
 import type { CompanyCalendarDayRow } from "@/contexts/company-calendar/infrastructure/schema/company-calendar"
-import { calendarDayKindSchema } from "@/lib/schemas"
+import { calendarDayKindSchema } from "@/contexts/company-calendar/domain/definitions/calendar-day-kind.definition"
 import { z } from "zod"
 
 const zProps = z.object({

@@ -2,7 +2,7 @@ import { ReturnRentalReservation } from "@/contexts/rental/application/return-re
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppRentalReservation } from "@/lib/app-schemas"
+import { zAppRentalReservation } from "@/contexts/rental/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"

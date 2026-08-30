@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
 import type { Context as HonoContext } from "@/env"
 import {
@@ -10,7 +10,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 type Context = Readonly<{
   context: HonoContext
   prepareAudit: (props: {
-    session: Session
+    session: CompanySessionValue
     action: "governance.org_role.revoked"
     targetType: "governance_org_role"
     targetId: string
@@ -24,7 +24,7 @@ export class RevokeGovernanceOrgRole {
     Object.freeze(this)
   }
 
-  async execute(props: { session: Session; assignmentId: number }) {
+  async execute(props: { session: CompanySessionValue; assignmentId: number }) {
     if (!props.session.permissions.has("governance:manage")) {
       return new ForbiddenError("組織責任を解除する権限がありません", "governance_role_forbidden")
     }

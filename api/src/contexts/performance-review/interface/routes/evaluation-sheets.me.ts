@@ -1,5 +1,5 @@
 import { factory } from "@/api/http/factory"
-import { zAppEvaluationSheetList } from "@/lib/app-schemas"
+import { zAppEvaluationSheetList } from "@/contexts/performance-review/interface/http/response-schemas"
 import { evaluationSheets } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import {
   DEFAULT_LIST_LIMIT,

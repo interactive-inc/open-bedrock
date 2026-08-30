@@ -3,7 +3,7 @@ import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/repo
 
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppItIncident } from "@/lib/app-schemas"
+import { zAppItIncident } from "@/contexts/it-incident/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { verifyBearer } from "@/api/http/verify-bearer"

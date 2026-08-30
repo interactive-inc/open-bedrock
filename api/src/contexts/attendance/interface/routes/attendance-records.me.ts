@@ -7,7 +7,7 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
-import { zAppAttendanceRecordList } from "@/lib/app-schemas"
+import { zAppAttendanceRecordList } from "@/contexts/attendance/interface/http/response-schemas"
 import { attendanceRecords } from "@/contexts/attendance/infrastructure/schema/attendance"
 import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, gte, lte } from "drizzle-orm"

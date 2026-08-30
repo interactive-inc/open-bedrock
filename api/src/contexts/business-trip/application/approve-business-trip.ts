@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -6,7 +6,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   businessTripId: string
 }
 

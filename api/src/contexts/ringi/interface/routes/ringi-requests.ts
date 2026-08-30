@@ -2,7 +2,7 @@ import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-
 import { SubmitRingi } from "@/contexts/ringi/application/submit-ringi"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppRingi } from "@/lib/app-schemas"
+import { zAppRingi } from "@/contexts/ringi/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"

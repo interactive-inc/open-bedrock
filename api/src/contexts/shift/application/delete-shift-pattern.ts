@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
@@ -6,7 +6,7 @@ import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/reposito
 import type { ShiftPattern } from "@/contexts/shift/domain/entities/shift-pattern.entity"
 
 export type Input = {
-  session: Session
+  session: CompanySessionValue
   patternId: number
 }
 

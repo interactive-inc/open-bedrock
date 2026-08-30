@@ -6,7 +6,7 @@ import { factory } from "@/api/http/factory"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppSurveyResponse } from "@/lib/app-schemas"
+import { zAppSurveyResponse } from "@/contexts/survey/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

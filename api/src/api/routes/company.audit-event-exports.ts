@@ -2,8 +2,8 @@ import {
   createCompanyAuditEventAdapter,
   type CompanyAuditExportRows,
 } from "@/api/http/audit-events/create-company-audit-event-adapter"
-import { AuditTrail } from "@/api/http/utils/audit-trail"
-import { throwAuditRouteError } from "@/api/http/utils/throw-audit-route-error"
+import { AuditTrail } from "@/api/http/audit/audit-trail"
+import { throwAuditRouteError } from "@/api/http/audit/throw-audit-route-error"
 import { auditExportPermission } from "@/api/http/middlewares/audit-export-permission"
 import { auditExportValidation } from "@/api/http/middlewares/audit-export-validation"
 import { verifyBearer } from "@/api/http/verify-bearer"

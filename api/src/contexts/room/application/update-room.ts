@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Room } from "@/contexts/room/domain/entities/room.entity"
@@ -6,7 +6,7 @@ import type { Context } from "@/env"
 import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   roomId: number
   details: {
     name: string

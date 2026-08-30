@@ -1,11 +1,11 @@
 import { CreateResignation } from "@/contexts/resignation/application/create-resignation"
 import { factory } from "@/api/http/factory"
-import { isoDate } from "@/lib/schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError, ValidationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppResignation } from "@/lib/app-schemas"
+import { zAppResignation } from "@/contexts/resignation/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

@@ -1,6 +1,6 @@
 import { CloseWorkAccident } from "@/contexts/work-accident/application/close-work-accident"
 import { factory } from "@/api/http/factory"
-import { zAppWorkAccident } from "@/lib/app-schemas"
+import { zAppWorkAccident } from "@/contexts/work-accident/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"

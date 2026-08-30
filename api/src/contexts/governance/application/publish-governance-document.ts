@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
 import type { Context as HonoContext } from "@/env"
 import {
@@ -17,7 +17,7 @@ import {
 type Context = Readonly<{
   context: HonoContext
   prepareAudit: (props: {
-    session: Session
+    session: CompanySessionValue
     action: "governance.document.published"
     targetType: "governance_version"
     targetId: string
@@ -32,7 +32,7 @@ export class PublishGovernanceDocument {
   }
 
   async execute(props: {
-    session: Session
+    session: CompanySessionValue
     code: string
     version: string
   }): Promise<{ state: "published"; version_id: string } | Error> {

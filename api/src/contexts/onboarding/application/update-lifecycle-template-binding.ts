@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Context } from "@/env"
 import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 import {
@@ -16,7 +16,7 @@ export class UpdateLifecycleTemplateBinding {
   }
 
   async run(command: {
-    session: Session
+    session: CompanySessionValue
     templateCode: string
     effectType: "hire" | "retired"
   }): Promise<{ effectType: "hire" | "retired"; templateCode: string } | ApplicationError> {

@@ -4,7 +4,10 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppOnboardingTemplate, zAppOnboardingTemplateList } from "@/lib/app-schemas"
+import {
+  zAppOnboardingTemplate,
+  zAppOnboardingTemplateList,
+} from "@/contexts/onboarding/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -19,7 +22,7 @@ import {
 import { zValidator } from "@hono/zod-validator"
 import { count, eq, inArray } from "drizzle-orm"
 import { z } from "zod"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 
 const kindQuerySchema = z.enum(["join", "leave"]).optional()
 

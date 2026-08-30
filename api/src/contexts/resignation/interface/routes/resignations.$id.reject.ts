@@ -2,7 +2,7 @@ import { RejectResignation } from "@/contexts/resignation/application/reject-res
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppResignation } from "@/lib/app-schemas"
+import { zAppResignation } from "@/contexts/resignation/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"

@@ -10,9 +10,12 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { CreateTrainingCourse } from "@/contexts/training/application/create-training-course"
 import { trainingCourses } from "@/contexts/training/infrastructure/schema/training"
-import { zAppTrainingCourse, zAppTrainingCourseList } from "@/lib/app-schemas"
+import {
+  zAppTrainingCourse,
+  zAppTrainingCourseList,
+} from "@/contexts/training/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, eq, type SQL } from "drizzle-orm"
 import { z } from "zod"

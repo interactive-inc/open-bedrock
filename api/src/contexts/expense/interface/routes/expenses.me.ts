@@ -1,12 +1,12 @@
 import { factory } from "@/api/http/factory"
-import { zAppExpenseMineList } from "@/lib/app-schemas"
+import { zAppExpenseMineList } from "@/contexts/expense/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { expenseStatusSchema } from "@/lib/schemas"
+import { expenseStatusSchema } from "@/contexts/expense/domain/definitions/expense.definition"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { zValidator } from "@hono/zod-validator"

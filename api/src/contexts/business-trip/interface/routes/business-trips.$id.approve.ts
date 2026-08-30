@@ -2,7 +2,7 @@ import { ApproveBusinessTrip } from "@/contexts/business-trip/application/approv
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { zAppBusinessTrip } from "@/lib/app-schemas"
+import { zAppBusinessTrip } from "@/contexts/business-trip/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"

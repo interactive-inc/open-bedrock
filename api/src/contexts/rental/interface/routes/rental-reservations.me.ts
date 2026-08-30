@@ -3,7 +3,7 @@ import { RentalReservationRepository } from "@/contexts/rental/infrastructure/re
 
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
-import { zAppRentalReservationList } from "@/lib/app-schemas"
+import { zAppRentalReservationList } from "@/contexts/rental/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

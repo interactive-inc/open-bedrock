@@ -2,7 +2,7 @@ import { toFiscalYear } from "@/contexts/leave/domain/definitions/fiscal-year.de
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppLeaveBalanceList } from "@/lib/app-schemas"
+import { zAppLeaveBalanceList } from "@/contexts/leave/interface/http/response-schemas"
 import { leaveBalances } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, eq } from "drizzle-orm"
 

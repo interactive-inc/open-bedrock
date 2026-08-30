@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "ca2ecc1083d0e38181a68f5e5a4a51acfd0acb2570b24bf09e17d2cebd68c314",
+    "company-context.manifest.json": "32a6423cf8a4e1da4c2d485d94014b6c739f95a36b63bfd0ace020d75a99549a",
     "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -216,6 +216,7 @@
     "src/contexts/company/domain/policies/workforce-periods-overlap.policy.ts": "e2eaae24f0860ecd797f0415b899324eb5ac34dae1d527304526ac4c3259e2a2",
     "src/contexts/company/domain/values/company-actor.value.test.ts": "f0b4ff325d17e8e222253a318e849e46bf683de3cda89ad31d542512d0341374",
     "src/contexts/company/domain/values/company-actor.value.ts": "dcffb5740784600e937acba48462214ec1ce89b4218b02e5e7e74f7a1e492338",
+    "src/contexts/company/domain/values/company-session.value.ts": "b247e585b37b750d9f5cbd1cfcaf975b33c1338fa0f04ee08380fabd13e1a927",
     "src/contexts/company/domain/values/organization-invariant-violation.value.ts": "ec0131a8f58b831c1f33d972a8279298d349bf8b6697ac840999b5cb369dc548",
     "src/contexts/company/domain/values/organization-profile.value.ts": "cd85b0e3ba3a99aaa82e711d02939ce7a552e358001676f3c3b4be9420cbf9f2",
     "src/contexts/company/domain/values/organization-structure.value.test.ts": "94cbda2c0e933705bbb47608b191d151ec17d94e6427b8d292f89c5399222916",
@@ -331,7 +332,6 @@
     "src/contexts/company/lib/workforce/employee-lifecycle-state.ts": "43e33a70de7dbb68a3ce3f36c38a5d9b0011afb02f21616e1e9cf3e753eef586",
     "src/contexts/company/lib/workforce/organization-period-row.adapter.ts": "8123b11486b38ccf32c9727c7aabd29b162bfff36d726fd3e2da6b9cb03c4a17",
     "src/contexts/company/lib/workforce/organization-unit-row.adapter.ts": "f65b810d0ed058abed56176a95fec495d424e037ee115b76943f7192c43cff05",
-    "src/contexts/company/lib/workforce/read-organization-state.ts": "9230e1fe4ad37bc2a7d0c6ae32197d3a86f6f807056f9a5183fda0084c25033a",
     "src/contexts/company/lib/workforce/read-organization-workforce-state.ts": "649bd47737deee9d592905dbd6d98a10cc4d802bbcd03c649857d42f49f8f739",
     "src/contexts/company/lib/workforce/read-workforce-state.ts": "75e97992605f87ae53c0a7b7a8d4a9457bfadc1eda46fbfddca9afa6d5f9bbb3",
     "src/contexts/company/lib/workforce/resolve-account-employee-link.ts": "27d80b7bc87e0f194897fda19a3caeeb481c224820d7d4d729daba096432dedf",

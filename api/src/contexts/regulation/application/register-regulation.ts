@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { Regulation } from "@/contexts/regulation/domain/entities/regulation.entity"
 import { RegulationVersion } from "@/contexts/regulation/domain/entities/regulation-version.entity"
 import type { Context } from "@/env"
@@ -8,7 +8,7 @@ import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   code: string
   title: string
   category: string | null

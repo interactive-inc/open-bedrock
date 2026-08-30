@@ -12,8 +12,11 @@ import { LicenseRepository } from "@/contexts/software-license/infrastructure/re
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppLicense, zAppLicenseList } from "@/lib/app-schemas"
-import { isoDate } from "@/lib/schemas"
+import {
+  zAppLicense,
+  zAppLicenseList,
+} from "@/contexts/software-license/interface/http/response-schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

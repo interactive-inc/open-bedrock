@@ -4,7 +4,10 @@ import { CreateReward } from "@/contexts/thanks/application/thanks-points/create
 import { rewardPointCostSchema } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
 import type { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
 import { ApplicationError } from "@/lib/errors"
-import { zAppThanksReward, zAppThanksRewardList } from "@/lib/app-schemas"
+import {
+  zAppThanksReward,
+  zAppThanksRewardList,
+} from "@/contexts/thanks/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import {

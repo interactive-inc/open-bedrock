@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { LifeEventType } from "@/lib/schemas"
+import type { LifeEventType } from "@/contexts/life-event/domain/definitions/life-event-type.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { sqliteTable, text } from "drizzle-orm/sqlite-core"
 

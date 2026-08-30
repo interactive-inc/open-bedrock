@@ -3,7 +3,7 @@ import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/repo
 
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppMyShiftSwapRequestList } from "@/lib/app-schemas"
+import { zAppMyShiftSwapRequestList } from "@/contexts/shift/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,

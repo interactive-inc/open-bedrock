@@ -2,7 +2,7 @@ import { UpdateReward } from "@/contexts/thanks/application/thanks-points/update
 import { toPositiveInt } from "@/lib/http/to-positive-int"
 import { rewardPointCostSchema } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
 import { ApplicationError } from "@/lib/errors"
-import { zAppThanksReward } from "@/lib/app-schemas"
+import { zAppThanksReward } from "@/contexts/thanks/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { verifyBearer } from "@/api/http/verify-bearer"

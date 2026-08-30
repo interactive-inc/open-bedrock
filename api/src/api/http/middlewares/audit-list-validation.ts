@@ -1,5 +1,5 @@
-import { AuditListQuery } from "@/api/http/utils/audit-list-query"
-import { throwAuditRouteError } from "@/api/http/utils/throw-audit-route-error"
+import { AuditListQuery } from "@/api/http/audit/audit-list-query"
+import { throwAuditRouteError } from "@/api/http/audit/throw-audit-route-error"
 import { factory } from "@/api/http/factory"
 
 type AuditListValidationInput = {

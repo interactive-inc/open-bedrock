@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { Announcement } from "@/contexts/announcement/domain/entities/announcement.entity"
 import type { Context } from "@/env"
 import { AnnouncementRepository } from "@/contexts/announcement/infrastructure/repositories/announcement.repository"
@@ -7,7 +7,7 @@ import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   title: string
   bodyMd: string
   authorEmployeeId: EmployeeId

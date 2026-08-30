@@ -13,13 +13,13 @@ import {
   type GovernanceImpactReport,
 } from "@/contexts/governance/domain/policies/governance-impact.policy"
 import type { GovernanceReferenceCatalog } from "@/contexts/governance/application/sync-governance-markdown"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Context } from "@/env"
 
 /** Governanceのimpact read modelをHTTP composition境界へ公開する。 */
 export async function readGovernanceImpact(
   c: Context,
-  session: Session,
+  session: CompanySessionValue,
   referenceCatalog: GovernanceReferenceCatalog = {},
 ): Promise<GovernanceImpactReport | Error> {
   if (!session.permissions.has("governance:manage")) {

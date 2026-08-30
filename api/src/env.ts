@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type { schema } from "@/schema"
 import type {
@@ -73,12 +73,12 @@ export type Bindings = {
 
 export type RequestAuditContext = SystemRequestAudit
 
-/** リクエストスコープの変数。database に Drizzle、session に本人（Session。認可判定は session.hasPermission）を載せる。 */
+/** リクエストスコープの変数。database に Drizzle、session に本人（CompanySessionValue。認可判定は session.hasPermission）を載せる。 */
 export type Variables = {
   companyActor?: CompanyActorValue
   companyClock?: () => Date
   database: DrizzleD1Database<typeof schema>
-  session: Session | null
+  session: CompanySessionValue | null
   auditContext: RequestAuditContext
   now: () => Date
   userId: string

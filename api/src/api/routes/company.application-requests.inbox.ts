@@ -9,7 +9,7 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppApplicationInboxList } from "@/lib/app-schemas"
+import { zAppApplicationInboxList } from "@/api/http/company/response-schemas"
 import { systemProposalQuery } from "@/api/http/application-requests/lib/system-application-operation"
 import {
   toApplicationCurrentStep,

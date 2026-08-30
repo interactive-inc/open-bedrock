@@ -1,7 +1,7 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 
 export type Props = {
-  session: Session
+  session: CompanySessionValue
   /** 対象部門コード。 */
   departmentCode: string
   /** viewer が基準日時点で所属するcanonical組織単位コード。無所属ならnull。 */

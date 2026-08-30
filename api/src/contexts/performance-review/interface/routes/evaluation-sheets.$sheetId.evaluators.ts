@@ -2,7 +2,7 @@ import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-
 import { ChangeEvaluators } from "@/contexts/performance-review/application/evaluation-sheet/change-evaluators"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppEvaluationSheet } from "@/lib/app-schemas"
+import { zAppEvaluationSheet } from "@/contexts/performance-review/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"

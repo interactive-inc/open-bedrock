@@ -1,9 +1,12 @@
 import { CreateShiftSwapRequest } from "@/contexts/shift/application/create-shift-swap-request"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppShiftSwapRequest, zAppShiftSwapRequestPendingList } from "@/lib/app-schemas"
+import {
+  zAppShiftSwapRequest,
+  zAppShiftSwapRequestPendingList,
+} from "@/contexts/shift/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
-import { isoDate } from "@/lib/schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import {
   DEFAULT_LIST_LIMIT,
@@ -18,7 +21,7 @@ import { zValidator } from "@hono/zod-validator"
 import { and, count, eq, ne } from "drizzle-orm"
 import { alias } from "drizzle-orm/sqlite-core"
 import { z } from "zod"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 
 // @authorization permission - 権限キーで判定する
 /** GET /shift-swap-requests — 承認権限者向けの保留中のシフト交代申請一覧 */

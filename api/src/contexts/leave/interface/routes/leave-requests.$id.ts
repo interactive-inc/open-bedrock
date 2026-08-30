@@ -11,10 +11,14 @@ import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.ent
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppLeaveRequestDetail } from "@/lib/app-schemas"
+import { zAppLeaveRequestDetail } from "@/contexts/leave/interface/http/response-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
-import { isoDate, leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
+import {
+  leaveTypeSchema,
+  leaveUnitSchema,
+} from "@/contexts/leave/domain/definitions/leave-request.definition"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

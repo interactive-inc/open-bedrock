@@ -4,7 +4,7 @@ import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError, NotFoundError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { parseGovernanceCode } from "@/api/http/utils/parse-governance-code"
+import { parseGovernanceCode } from "@/contexts/governance/interface/http/parse-governance-code"
 import { verifyBearer } from "@/api/http/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する

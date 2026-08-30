@@ -5,7 +5,10 @@ import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { validateCodeParam } from "@/lib/http/validate-code-param"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppMeetingMinutes, zAppMeetingMinutesList } from "@/lib/app-schemas"
+import {
+  zAppMeetingMinutes,
+  zAppMeetingMinutesList,
+} from "@/contexts/meeting/interface/http/response-schemas"
 import { meetingMinutes, meetings } from "@/contexts/meeting/infrastructure/schema/meeting"
 import { count, desc, eq } from "drizzle-orm"
 import {

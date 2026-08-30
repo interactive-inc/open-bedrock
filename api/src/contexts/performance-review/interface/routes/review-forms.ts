@@ -1,5 +1,5 @@
 import { filterFormsForSubjectViewer } from "@/contexts/performance-review/interface/http/review-forms/filter-forms-for-subject-viewer"
-import { toReviewerTypeSummary } from "@/contexts/performance-review/interface/lib/to-reviewer-type-summary"
+import { toReviewerTypeSummary } from "@/contexts/performance-review/interface/http/to-reviewer-type-summary"
 import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -7,7 +7,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { zAppReviewResult } from "@/lib/app-schemas"
+import { zAppReviewResult } from "@/contexts/performance-review/interface/http/response-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-form.repository"

@@ -4,7 +4,7 @@ import type { Context } from "@/env"
 import { ExpenseRepository } from "@/contexts/expense/infrastructure/repositories/expense.repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { ExpenseCategory } from "@/lib/schemas"
+import type { ExpenseCategory } from "@/contexts/expense/domain/definitions/expense.definition"
 import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { ValidationError } from "@/lib/errors"
 

@@ -5,7 +5,10 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppAnnouncement, zAppAnnouncementList } from "@/lib/app-schemas"
+import {
+  zAppAnnouncement,
+  zAppAnnouncementList,
+} from "@/contexts/announcement/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

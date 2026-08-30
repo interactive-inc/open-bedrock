@@ -3,8 +3,11 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { CreateHealthCheckup } from "@/contexts/health-checkup/application/create-health-checkup"
 import { HealthCheckupRepository } from "@/contexts/health-checkup/infrastructure/repositories/health-checkup.repository"
 import { factory } from "@/api/http/factory"
-import { isoDate } from "@/lib/schemas"
-import { zAppHealthCheckup, zAppHealthCheckupList } from "@/lib/app-schemas"
+import { isoDate } from "@/lib/validation/iso-date.schema"
+import {
+  zAppHealthCheckup,
+  zAppHealthCheckupList,
+} from "@/contexts/health-checkup/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import {
@@ -14,7 +17,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/lib/http/errors"
-import { resolveEmployeeIdFromBody } from "@/api/http/utils/resolve-employee-id-from-body"
+import { resolveEmployeeIdFromBody } from "@/api/http/company-employees/resolve-employee-id-from-body"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

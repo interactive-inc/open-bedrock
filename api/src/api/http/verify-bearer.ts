@@ -1,4 +1,4 @@
-import { Session } from "@/lib/auth/session"
+import { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { HonoEnv } from "@/env"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { resolveLiveEmployeeAccess } from "@/api/http/employees/resolve-live-employee-access"
@@ -100,7 +100,7 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
 
   c.set(
     "session",
-    new Session({
+    new CompanySessionValue({
       accountId: accountId.data,
       employeeId: account.link.employeeId,
       employmentStatus: access.status,

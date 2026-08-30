@@ -3,7 +3,7 @@ import { GoalRepository } from "@/contexts/performance-review/infrastructure/rep
 
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppGoalList } from "@/lib/app-schemas"
+import { zAppGoalList } from "@/contexts/performance-review/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import {
   DEFAULT_LIST_LIMIT,

@@ -5,7 +5,7 @@ import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { validateIntParam } from "@/lib/http/validate-int-param"
-import { zAppAnnouncement } from "@/lib/app-schemas"
+import { zAppAnnouncement } from "@/contexts/announcement/interface/http/response-schemas"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /announcements/:id/archive — アナウンスをアーカイブ（announcement:manage）。 */

@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
@@ -7,7 +7,7 @@ import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructu
 import { UniqueConstraintError } from "@/lib/d1/errors"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   code: string
   name: string
   kind: "join" | "leave"

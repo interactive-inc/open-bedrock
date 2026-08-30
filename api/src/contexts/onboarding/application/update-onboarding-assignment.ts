@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -9,7 +9,7 @@ import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastruc
 
 export type Command = {
   assignmentId: number
-  session: Session
+  session: CompanySessionValue
   assignedAt: string
 }
 

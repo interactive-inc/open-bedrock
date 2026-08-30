@@ -1,5 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { License } from "@/contexts/software-license/domain/entities/license.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -7,7 +7,7 @@ import type { Context } from "@/env"
 import { LicenseRepository } from "@/contexts/software-license/infrastructure/repositories/license/license.repository"
 
 export type Command = {
-  session: Session
+  session: CompanySessionValue
   license: {
     name: string
     vendor: string | null

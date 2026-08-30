@@ -1,7 +1,7 @@
 import { PublishShiftAssignment } from "@/contexts/shift/application/publish-shift-assignment"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppShiftAssignment } from "@/lib/app-schemas"
+import { zAppShiftAssignment } from "@/contexts/shift/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"

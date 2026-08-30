@@ -3,12 +3,12 @@ import { companyNotificationKindSchema } from "@/api/http/notifications/notifica
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppNotification } from "@/lib/app-schemas"
+import { zAppNotification } from "@/api/http/company/response-schemas"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /notifications — 権限を持つ役割が通知を作成する */

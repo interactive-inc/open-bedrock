@@ -1,8 +1,8 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 import type { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
-import type { ReviewerTypeSummary } from "@/contexts/performance-review/interface/lib/to-reviewer-type-summary"
-import { toReviewerTypeSummary } from "@/contexts/performance-review/interface/lib/to-reviewer-type-summary"
+import type { ReviewerTypeSummary } from "@/contexts/performance-review/interface/http/to-reviewer-type-summary"
+import { toReviewerTypeSummary } from "@/contexts/performance-review/interface/http/to-reviewer-type-summary"
 
 export type ReviewResultView = {
   cycleId: number

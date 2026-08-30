@@ -21,16 +21,16 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
 import { jsonPayloadSchema } from "@/lib/http/json-payload-schema"
-import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
+import { listDepartmentEmployeeIds } from "@/api/http/company-employees/list-department-employee-ids"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { zAppApplication, zAppApplicationAdminList } from "@/lib/app-schemas"
+import { zAppApplication, zAppApplicationAdminList } from "@/api/http/company/response-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

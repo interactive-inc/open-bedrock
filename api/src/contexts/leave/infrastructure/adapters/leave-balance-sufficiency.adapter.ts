@@ -5,7 +5,7 @@ import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { hasLeaveBalanceTracking } from "@/contexts/leave/domain/policies/has-balance-tracking.policy"
 import { toFiscalYear } from "@/contexts/leave/domain/definitions/fiscal-year.definition"
-import type { LeaveType } from "@/lib/schemas"
+import type { LeaveType } from "@/contexts/leave/domain/definitions/leave-request.definition"
 
 /** 残高管理対象の種別のみ、申請時点で残数が足りるか確認する。対象外の種別は常に null（許可）。 */
 export class LeaveBalanceSufficiencyAdapter {

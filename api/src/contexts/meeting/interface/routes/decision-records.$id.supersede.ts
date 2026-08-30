@@ -5,7 +5,7 @@ import { UnauthorizedError } from "@/lib/http/errors"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppDecision } from "@/lib/app-schemas"
+import { zAppDecision } from "@/contexts/meeting/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

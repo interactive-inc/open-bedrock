@@ -1,4 +1,4 @@
-import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
+import { listDepartmentEmployeeIds } from "@/api/http/company-employees/list-department-employee-ids"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -11,9 +11,13 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { CreateShiftAssignment } from "@/contexts/shift/application/create-shift-assignment"
 import { shiftAssignments } from "@/contexts/shift/infrastructure/schema/shift"
-import { zAppShiftAssignment, zAppShiftAssignmentList } from "@/lib/app-schemas"
+import {
+  zAppShiftAssignment,
+  zAppShiftAssignmentList,
+} from "@/contexts/shift/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { codeSchema, isoDate } from "@/lib/schemas"
+import { codeSchema } from "@/lib/validation/code.schema"
+import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
 import { and, count, gte, inArray, lte, type SQL } from "drizzle-orm"
 import { z } from "zod"

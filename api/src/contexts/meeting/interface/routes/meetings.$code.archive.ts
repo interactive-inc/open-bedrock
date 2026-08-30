@@ -5,7 +5,7 @@ import { UnauthorizedError } from "@/lib/http/errors"
 import { validateCodeParam } from "@/lib/http/validate-code-param"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppMeeting } from "@/lib/app-schemas"
+import { zAppMeeting } from "@/contexts/meeting/interface/http/response-schemas"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /meetings/:code/archive — 会議体をアーカイブする（meeting:manage） */

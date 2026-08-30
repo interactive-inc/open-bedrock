@@ -3,7 +3,10 @@ import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppRecruitmentPosition, zAppRecruitmentPositionList } from "@/lib/app-schemas"
+import {
+  zAppRecruitmentPosition,
+  zAppRecruitmentPositionList,
+} from "@/contexts/recruitment/interface/http/response-schemas"
 import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/repositories/recruitment.repository"
 import {
   DEFAULT_LIST_LIMIT,

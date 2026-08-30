@@ -2,11 +2,11 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { countBusinessDays } from "@/contexts/company-calendar/domain/policies/count-business-days.policy"
 import { toOvertimeEntries } from "@/contexts/attendance/domain/policies/to-overtime-entries.policy"
 import { toMonthRange } from "@/contexts/attendance/interface/http/attendance-records/to-month-range"
-import { listReportEmployeeIds } from "@/api/http/utils/list-report-employee-ids"
+import { listReportEmployeeIds } from "@/api/http/company-employees/list-report-employee-ids"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
-import { zAppOvertimeSummary } from "@/lib/app-schemas"
-import { yearMonth } from "@/lib/schemas"
+import { zAppOvertimeSummary } from "@/api/http/attendance/response-schemas"
+import { yearMonth } from "@/contexts/attendance/interface/http/year-month.schema"
 import { readOvertimeSummaryInput } from "@/api/http/attendance-records/overtime-summary/read-overtime-summary-input"
 import {
   BadRequestError,

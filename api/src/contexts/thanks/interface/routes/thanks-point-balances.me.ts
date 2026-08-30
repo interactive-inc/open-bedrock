@@ -1,6 +1,6 @@
 import { ThanksPointBalanceAdapter } from "@/contexts/thanks/infrastructure/adapters/thanks-points/thanks-point-balance.adapter"
 import { UnexpectedError } from "@/lib/errors"
-import { zAppThanksBalance } from "@/lib/app-schemas"
+import { zAppThanksBalance } from "@/contexts/thanks/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { verifyBearer } from "@/api/http/verify-bearer"

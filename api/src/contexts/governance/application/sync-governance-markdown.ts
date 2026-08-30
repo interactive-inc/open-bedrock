@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import {
   parseGovernanceMarkdown,
   type GovernanceReference,
@@ -47,7 +47,7 @@ type Context = Readonly<{
   context: HonoContext
   permissionKeys: ReadonlyArray<string>
   prepareAudit: (props: {
-    session: Session
+    session: CompanySessionValue
     action: "governance.document.synced"
     targetType: "governance_document"
     targetId: string
@@ -61,7 +61,7 @@ export class SyncGovernanceMarkdown {
   }
 
   async run(props: {
-    session: Session
+    session: CompanySessionValue
     documents: ReadonlyArray<GovernanceMarkdownInput>
     referenceCatalog?: GovernanceReferenceCatalog
   }): Promise<ReadonlyArray<GovernanceSyncResult> | Error> {

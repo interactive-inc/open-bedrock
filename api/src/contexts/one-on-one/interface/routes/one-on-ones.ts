@@ -1,8 +1,11 @@
 import { CreateOneOnOne } from "@/contexts/one-on-one/application/oneonone/create-one-on-one"
-import { listDepartmentEmployeeIds } from "@/api/http/utils/list-department-employee-ids"
+import { listDepartmentEmployeeIds } from "@/api/http/company-employees/list-department-employee-ids"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppOneOnOne, zAppOneOnOneList } from "@/lib/app-schemas"
+import {
+  zAppOneOnOne,
+  zAppOneOnOneList,
+} from "@/contexts/one-on-one/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import {
