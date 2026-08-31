@@ -378,6 +378,94 @@ export class SystemIdentityUnavailableError extends SystemHTTPException {
   }
 }
 
+export class SystemIntegrationInvalidError extends SystemHTTPException {
+  constructor(cause?: unknown) {
+    super({
+      status: 400,
+      code: "integration_invalid",
+      detail: "integration input is invalid",
+      cause,
+    })
+  }
+}
+
+export class SystemIntegrationConflictError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "integration_conflict", detail: "integration conflict" })
+  }
+}
+
+export class SystemIntegrationNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "integration_not_found", detail: "integration record not found" })
+  }
+}
+
+export class SystemIntegrationUnavailableError extends SystemHTTPException {
+  constructor(cause?: unknown) {
+    super({
+      status: 503,
+      code: "integration_unavailable",
+      detail: "integration service unavailable",
+      cause,
+    })
+  }
+}
+
+export class SystemPrincipalConflictError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "principal_conflict", detail: "principal conflict" })
+  }
+}
+
+export class SystemPrincipalInvalidError extends SystemHTTPException {
+  constructor(cause?: unknown) {
+    super({ status: 400, code: "principal_invalid", detail: "principal input is invalid", cause })
+  }
+}
+
+export class SystemPrincipalNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "principal_not_found", detail: "principal not found" })
+  }
+}
+
+export class SystemPrincipalUnavailableError extends SystemHTTPException {
+  constructor(cause?: unknown) {
+    super({ status: 503, code: "principal_unavailable", detail: "principal unavailable", cause })
+  }
+}
+
+export class SystemStepUpRequiredError extends SystemHTTPException {
+  constructor() {
+    super({ status: 403, code: "step_up_required", detail: "step-up authentication required" })
+  }
+}
+
+export class SystemDeliveryConflictError extends SystemHTTPException {
+  constructor() {
+    super({ status: 409, code: "delivery_conflict", detail: "delivery conflict" })
+  }
+}
+
+export class SystemDeliveryInvalidError extends SystemHTTPException {
+  constructor(cause?: unknown) {
+    super({ status: 400, code: "delivery_invalid", detail: "delivery input is invalid", cause })
+  }
+}
+
+export class SystemDeliveryNotFoundError extends SystemHTTPException {
+  constructor() {
+    super({ status: 404, code: "delivery_not_found", detail: "delivery not found" })
+  }
+}
+
+export class SystemDeliveryUnavailableError extends SystemHTTPException {
+  constructor(cause?: unknown) {
+    super({ status: 503, code: "delivery_unavailable", detail: "delivery unavailable", cause })
+  }
+}
+
 export class SystemInternalServerError extends SystemHTTPException {
   constructor(cause: unknown) {
     super({

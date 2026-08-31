@@ -167,8 +167,11 @@ export const POST = factory.createHandlers(
               attributes: z
                 .object({
                   officialName: z.string().trim().min(1).max(2_000),
+                  jurisdictionCountryCode: z.string().regex(/^[A-Z]{2}$/),
+                  registrationNumber: z.string().trim().min(1).max(255).nullable(),
+                  defaultCurrencyCode: z.string().regex(/^[A-Z]{3}$/),
                 })
-                .catchall(z.json()),
+                .strict(),
             }),
             z.object({
               organizationId: z.string().regex(/^\S{1,255}$/),
@@ -181,8 +184,11 @@ export const POST = factory.createHandlers(
               attributes: z
                 .object({
                   displayName: z.string().trim().min(1).max(2_000),
+                  locale: z.string().regex(/^[a-z]{2,3}(?:-[A-Z]{2})?$/),
+                  timeZone: z.string().regex(/^(?:UTC|[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)+)$/),
+                  fiscalYearStartMonth: z.number().int().min(1).max(12),
                 })
-                .catchall(z.json()),
+                .strict(),
             }),
           ]),
         )

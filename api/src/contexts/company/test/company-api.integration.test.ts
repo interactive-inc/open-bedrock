@@ -3,6 +3,10 @@ import { CompanyActorValue } from "@/contexts/company/domain/values/company-acto
 import { POST as POST_ORGANIZATION_CHANGE } from "@/contexts/company/interface/routes/company.organization-changes"
 import { GET, POST } from "@/contexts/company/interface/routes/company.people"
 import {
+  GET as GET_DEFINITIONS,
+  POST as POST_DEFINITIONS,
+} from "@/contexts/company/interface/routes/company.definitions"
+import {
   GET as GET_ORGANIZATION_PROFILE,
   PUT as PUT_ORGANIZATION_PROFILE,
 } from "@/contexts/company/interface/routes/company.organization-profile"
@@ -42,6 +46,8 @@ function createClient(database: D1Database, currentActor: CompanyActorValue = ac
     })
     .get("/company/people", ...GET)
     .post("/company/people", ...POST)
+    .get("/company/definitions", ...GET_DEFINITIONS)
+    .post("/company/definitions", ...POST_DEFINITIONS)
     .post("/company/organization-changes", ...POST_ORGANIZATION_CHANGE)
     .get("/company/organization-profile", ...GET_ORGANIZATION_PROFILE)
     .put("/company/organization-profile", ...PUT_ORGANIZATION_PROFILE)
@@ -153,6 +159,132 @@ describe("canonical Company API", () => {
       organizationRevision: 1,
       resources: [person],
     })
+  })
+
+  test("LegalEntity配下のSiteとSite配下のWorkplaceを同じ版で登録する", async () => {
+    const database = createCompanyD1TestDatabase(companySql)
+    await seedLegalEntity(database)
+    const client = createClient(database)
+    const site = {
+      organizationId: "organization:default",
+      type: "site" as const,
+      id: "site:main",
+      revision: 1,
+      state: "active" as const,
+      effectiveFrom: "2026-01-01",
+      effectiveTo: null,
+      attributes: {
+        code: "MAIN",
+        officialName: "Main Site",
+        legalEntityId: "legal-entity:primary",
+        kind: "physical" as const,
+        timeZone: "Asia/Tokyo",
+        countryCode: "JP",
+      },
+    }
+    const workplace = {
+      organizationId: "organization:default",
+      type: "workplace" as const,
+      id: "workplace:main-office",
+      revision: 1,
+      state: "active" as const,
+      effectiveFrom: "2026-01-01",
+      effectiveTo: null,
+      attributes: {
+        code: "MAIN-OFFICE",
+        officialName: "Main Office",
+        siteId: "site:main",
+        kind: "office" as const,
+        organizationUnitId: null,
+      },
+    }
+
+    const created = await client.company.definitions.$post({
+      header: writeHeaders("command:places", 1),
+      json: { reason: "register places", resources: [site, workplace] },
+    })
+    expect(created.status).toBe(201)
+    const read = await client.company.definitions.$get({ header: readHeaders, query: {} })
+    expect(read.status).toBe(200)
+    expect(await read.json()).toMatchObject({
+      organizationRevision: 2,
+      resources: [site, workplace],
+    })
+  })
+
+  test("職務・責務scope・合議体を依存順に並べ替えて一つのcommandで登録する", async () => {
+    const database = createCompanyD1TestDatabase(companySql)
+    await seedOrganization(database)
+    const client = createClient(database)
+    const job = {
+      organizationId: "organization:default",
+      type: "job" as const,
+      id: "job:engineer",
+      revision: 1,
+      state: "active" as const,
+      effectiveFrom: "2026-01-01",
+      effectiveTo: null,
+      attributes: { code: "ENGINEER", officialName: "Engineer" },
+    }
+    const position = {
+      organizationId: "organization:default",
+      type: "position" as const,
+      id: "position:engineer",
+      revision: 1,
+      state: "active" as const,
+      effectiveFrom: "2026-01-01",
+      effectiveTo: null,
+      attributes: {
+        code: "ENGINEER",
+        officialName: "Engineer Position",
+        jobId: "job:engineer",
+      },
+    }
+    const authorityScope = {
+      organizationId: "organization:default",
+      type: "authority-scope" as const,
+      id: "authority-scope:region",
+      revision: 1,
+      state: "active" as const,
+      effectiveFrom: "2026-01-01",
+      effectiveTo: null,
+      attributes: { scopeType: "region" as const, regionCode: "NORTH" },
+    }
+    const collectiveBody = {
+      organizationId: "organization:default",
+      type: "collective-body" as const,
+      id: "collective-body:board",
+      revision: 1,
+      state: "active" as const,
+      effectiveFrom: "2026-01-01",
+      effectiveTo: null,
+      attributes: {
+        code: "BOARD",
+        officialName: "Board",
+        quorumType: "percentage" as const,
+        quorumValue: 50,
+        decisionRule: "majority" as const,
+      },
+    }
+
+    const created = await client.company.definitions.$post({
+      header: writeHeaders("command:governance-definitions", 0),
+      json: {
+        reason: "register governance definitions",
+        resources: [position, collectiveBody, authorityScope, job],
+      },
+    })
+    expect(created.status).toBe(201)
+
+    const read = await client.company.definitions.$get({ header: readHeaders, query: {} })
+    const body = await read.json()
+    expect(read.status).toBe(200)
+    expect(body.resources).toHaveLength(4)
+    const serializedResources = JSON.stringify(body.resources)
+    expect(serializedResources).toContain('"type":"authority-scope"')
+    expect(serializedResources).toContain('"type":"collective-body"')
+    expect(serializedResources).toContain('"type":"job"')
+    expect(serializedResources).toContain('"type":"position"')
   })
 
   test("company:writeだけのactorは従業員系のPeople POSTを従来どおり実行できる", async () => {
@@ -356,3 +488,31 @@ describe("canonical Company API", () => {
     expect(client.company.people.$url()).toBeInstanceOf(URL)
   })
 })
+
+async function seedLegalEntity(database: D1Database): Promise<void> {
+  await seedOrganization(database)
+  await database.batch([
+    database.prepare(
+      `INSERT INTO company_resource_revisions
+         (organization_id, resource_type, resource_id, revision, organization_revision,
+          state, effective_from, effective_to, attributes_json, command_id,
+          actor_account_id, reason, recorded_at)
+       VALUES ('organization:default', 'legal-entity', 'legal-entity:primary', 1, 1,
+         'active', '2026-01-01', NULL,
+         '{"officialName":"Example Corporation","jurisdictionCountryCode":"US","registrationNumber":null,"defaultCurrencyCode":"USD"}',
+         'command:legal-entity', 'account:1', 'register legal entity', 1)`,
+    ),
+    database.prepare(
+      `INSERT INTO company_resource_heads
+         (organization_id, resource_type, resource_id, revision, organization_revision,
+          state, effective_from, effective_to, attributes_json, updated_at)
+       VALUES ('organization:default', 'legal-entity', 'legal-entity:primary', 1, 1,
+         'active', '2026-01-01', NULL,
+         '{"officialName":"Example Corporation","jurisdictionCountryCode":"US","registrationNumber":null,"defaultCurrencyCode":"USD"}', 1)`,
+    ),
+    database.prepare(
+      `UPDATE company_organizations SET revision = 1, updated_at = 1
+       WHERE id = 'organization:default' AND revision = 0`,
+    ),
+  ])
+}

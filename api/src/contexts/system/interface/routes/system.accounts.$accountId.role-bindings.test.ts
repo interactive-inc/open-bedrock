@@ -1,6 +1,7 @@
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
+import { seedSystemStepUpGrant } from "@system/test/seed-system-step-up-grant.test-support"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { DELETE } from "@system/interface/routes/system.accounts.$accountId.role-bindings.$bindingId"
 import { GET, POST } from "@system/interface/routes/system.accounts.$accountId.role-bindings"
@@ -21,6 +22,7 @@ describe("System Role Binding HTTP", () => {
          VALUES (?1, 'active', 0, ?3, ?3), (?2, 'active', 0, ?3, ?3)`,
       )
       .run(rootAccountId, targetAccountId, now.getTime())
+    const stepUpToken = await seedSystemStepUpGrant(fixture, rootAccountId, now)
     fixture.sqlite
       .query(
         `INSERT INTO system_identity_bindings
@@ -88,7 +90,10 @@ describe("System Role Binding HTTP", () => {
       })
     const client = hc<typeof app>("http://system.test", {
       fetch: request,
-      headers: { authorization: `Bearer ${issuance.accessToken}` },
+      headers: {
+        authorization: `Bearer ${issuance.accessToken}`,
+        "x-system-step-up": stepUpToken,
+      },
     })
 
     const created = await client.system.accounts[":accountId"]["role-bindings"].$post({

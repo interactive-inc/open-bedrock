@@ -219,6 +219,8 @@ CREATE TABLE _company_schema_rebuild_validation (
   CHECK (source_count = staged_count)
 );
 
+DROP VIEW company_audit_event_details;
+
 CREATE TABLE __new_company_audit_event_employee_contexts (
   audit_event_id INTEGER PRIMARY KEY,
   employee_id TEXT NOT NULL
@@ -235,6 +237,29 @@ VALUES (
 DROP TABLE company_audit_event_employee_contexts;
 ALTER TABLE __new_company_audit_event_employee_contexts
   RENAME TO company_audit_event_employee_contexts;
+
+CREATE VIEW company_audit_event_details AS
+SELECT
+  event.id,
+  event.event_id,
+  event.request_id,
+  event.actor_account_id,
+  employee_context.employee_id AS actor_employee_id,
+  event.action,
+  event.target_type,
+  event.target_id,
+  event.outcome,
+  event.reason_code,
+  event.authorization_json,
+  event.before_json,
+  event.after_json,
+  event.metadata_json,
+  event.client_ip,
+  event.client_name,
+  event.created_at
+FROM company_audit_events event
+LEFT JOIN company_audit_event_employee_contexts employee_context
+  ON employee_context.audit_event_id = event.id;
 
 CREATE TABLE __new_company_audit_event_appends (
   staging_id INTEGER PRIMARY KEY AUTOINCREMENT,

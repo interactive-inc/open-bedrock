@@ -5,6 +5,8 @@
 # api は「未設定」「16 文字未満」「-change-me で終わる値」を実行時に拒否する。
 JWT_SECRET=
 AUDIT_HMAC_SECRET=
+# local seedのpassword hash専用。本番では必ず別のランダムsecretを設定する。
+PEPPER_SECRET="open-bedrock-local-seed-pepper"
 # 添付の DEK を包む KEK。{"version": "base64 32 バイト"} 形式で、最大 version が現行鍵。
 # ローテーション中は旧 version も残す。未設定なら添付 API は 503 を返す。
 ATTACHMENT_KEKS=

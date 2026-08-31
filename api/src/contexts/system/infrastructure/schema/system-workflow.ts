@@ -77,6 +77,12 @@ export const systemDecisionTasks = sqliteTable(
       enum: ["approved", "rejected", "returned", "cancelled"],
     }),
     closedAt: integer("closed_at", { mode: "timestamp_ms" }),
+    requiredParticipants: integer("required_participants").notNull(),
+    negativeDecisionRule: text("negative_decision_rule", {
+      enum: ["any-reject", "approval-impossible"],
+    }).notNull(),
+    delegationPolicy: text("delegation_policy", { enum: ["allowed", "forbidden"] }).notNull(),
+    returnPolicy: text("return_policy", { enum: ["allowed", "forbidden"] }).notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.caseId, table.taskKey, table.round] }),
@@ -88,6 +94,22 @@ export const systemDecisionTasks = sqliteTable(
     check(
       "system_decision_tasks_required_approvals",
       sql`${table.requiredApprovals} BETWEEN 1 AND 100`,
+    ),
+    check(
+      "system_decision_tasks_required_participants",
+      sql`${table.requiredParticipants} BETWEEN 1 AND 100`,
+    ),
+    check(
+      "system_decision_tasks_negative_decision_rule",
+      sql`${table.negativeDecisionRule} IN ('any-reject', 'approval-impossible')`,
+    ),
+    check(
+      "system_decision_tasks_delegation_policy",
+      sql`${table.delegationPolicy} IN ('allowed', 'forbidden')`,
+    ),
+    check(
+      "system_decision_tasks_return_policy",
+      sql`${table.returnPolicy} IN ('allowed', 'forbidden')`,
     ),
     check(
       "system_decision_tasks_digest",

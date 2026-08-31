@@ -80,4 +80,4 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 
 初期化はcanonical organizationがrevision 0のときだけbaseline revision 1を作る。runtime consumerはcanonical System・CompanyまたはAPI compositionへ接続し、移行専用context、別API adapter、ownership例外を設けない。
 
-`company-context.manifest.json`の`sourcePaths`はCompanyの全sourceを列挙し、`company-context.lock.json`はその全pathとhashを固定する。HIRACTとOpen BedrockはDomain、Application、Infrastructure、Interface、testを含むCompanyディレクトリ全体を同一内容に保ち、CIは欠落、余分なpath、内容差を拒否する。製品差はCompanyの外側にあるAPI compositionだけで吸収する。
+`company-context.manifest.json`の`sourcePaths`はCompanyの全sourceを列挙し、`company-context.lock.json`はその全pathとhashを固定する。本リポジトリと共有先はDomain、Application、Infrastructure、Interface、testを含むCompanyディレクトリ全体を同一内容に保ち、CIは欠落、余分なpath、内容差を拒否する。製品差はCompanyの外側にあるAPI compositionだけで吸収する。

@@ -170,7 +170,7 @@ export const POST = factory.createHandlers(
                 employmentType: z.string().trim().min(1).max(255).optional(),
                 officialName: z.string().trim().min(1).max(2_000).optional(),
               })
-              .catchall(z.json()),
+              .strict(),
           }),
         )
         .min(1)

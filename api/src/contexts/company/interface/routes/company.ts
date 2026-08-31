@@ -1,6 +1,7 @@
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { Hono } from "hono"
 import * as accountEmployeeLinks from "@/contexts/company/interface/routes/company.account-employee-links"
+import * as authorityResolutions from "@/contexts/company/interface/routes/company.authority-resolutions"
 import * as bootstrap from "@/contexts/company/interface/routes/company.bootstrap"
 import * as capabilities from "@/contexts/company/interface/routes/company.capabilities"
 import * as definitions from "@/contexts/company/interface/routes/company.definitions"
@@ -35,6 +36,7 @@ import * as reportingLinesEmployeeCode from "@/contexts/company/interface/routes
 // `bun run gen:app` の生成物。手で編集せず、routeは所有contextのinterface/route-manifest.tsへ足す。
 export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/account-employee-links", ...accountEmployeeLinks.GET)
+  .post("/authority-resolutions", ...authorityResolutions.POST)
   .post("/bootstrap", ...bootstrap.POST)
   .get("/capabilities", ...capabilities.GET)
   .get("/definitions", ...definitions.GET)

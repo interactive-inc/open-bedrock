@@ -12,6 +12,14 @@ const schema = readFileSync(
   new URL("../infrastructure/schema/system-core.sql", import.meta.url),
   "utf8",
 )
+const integrationSchema = readFileSync(
+  new URL("../infrastructure/schema/system-integration.sql", import.meta.url),
+  "utf8",
+)
+const principalSchema = readFileSync(
+  new URL("../infrastructure/schema/system-principal.sql", import.meta.url),
+  "utf8",
+)
 const now = new Date("2026-08-19T00:00:00.000Z")
 const passwordHash = "pbkdf2$sha256$test-password-hash"
 const databases: Database[] = []
@@ -29,6 +37,8 @@ function createFixture(): {
   databases.push(database)
   database.run("PRAGMA foreign_keys = ON")
   database.exec(schema)
+  database.exec(integrationSchema)
+  database.exec(principalSchema)
   const repository = new D1SystemRootBootstrapAdapter({
     env: { DB: wrapSystemD1TestDatabase(database) },
   })

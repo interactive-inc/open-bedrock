@@ -1,5 +1,5 @@
 -- canonical System IAM seed。AccountとEmployeeは別identityとしてCompanyのlinkだけで対応する。
--- 平文パスワードは全員 "password"（seed-password-hash.tsと同じ固定salt PBKDF2）。
+-- 平文パスワードは全員 "password"。local seed専用pepperと16 byte固定saltで生成する。
 
 INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES
   ('1', 'active', 0, 0, 0),
@@ -51,7 +51,7 @@ INSERT INTO system_password_credentials
   (identity_id, password_hash, changed_at, created_at, updated_at)
 SELECT
   id,
-  'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=',
+  'pbkdf2$sha256$100000$b3Blbi1rYXJ0ZS1zZWVkIQ==$sYkpSyzEAo8/92M5Kp/hy+SXkV6on7BZn92/QejpyKw=',
   0,
   0,
   0

@@ -14,6 +14,7 @@ import { SystemAuditEventRepository } from "@system/infrastructure/repositories/
 import { hashPassword } from "@system/lib/auth/hash-password"
 import { SystemPasswordResetAdapter } from "@system/infrastructure/adapters/auth/system-password-reset.adapter"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+import { requireSystemStepUp } from "@system/interface/middlewares/require-system-step-up"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -21,6 +22,7 @@ import { z } from "zod"
 // @authorization permission iam:write - credential変更・token失効・監査を同じtransactionで確定する
 export const PATCH = systemFactory.createHandlers(
   authenticateSystemAccessToken,
+  requireSystemStepUp,
   zValidator("json", z.object({ password: z.string().min(12).max(200) }).strict()),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {

@@ -14,11 +14,13 @@ import { SystemAuditEventRepository } from "@system/infrastructure/repositories/
 import { SystemRoleCatalogRepository } from "@system/infrastructure/repositories/iam/system-role-catalog.repository"
 import { SystemRoleBindingRepository } from "@system/infrastructure/repositories/iam/system-role-binding.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+import { requireSystemStepUp } from "@system/interface/middlewares/require-system-step-up"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 
 // @authorization permission iam:write - live権限・token失効・last-rootを同じ更新境界で検査する
 export const DELETE = systemFactory.createHandlers(
   authenticateSystemAccessToken,
+  requireSystemStepUp,
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
       throw new SystemForbiddenError()

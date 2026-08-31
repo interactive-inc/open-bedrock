@@ -31,4 +31,16 @@ export class ResolveActiveSystemAccountIdAdapter {
   async resolveActiveSystemAccountId(accountIdInput: string): Promise<AccountId | Error> {
     return resolveActiveSystemAccountId(this.c, accountIdInput)
   }
+
+  async isActiveSystemAccount(accountIdInput: string): Promise<boolean | Error> {
+    const accountId = zAccountId.safeParse(accountIdInput)
+    if (!accountId.success) return new Error("canonical System Account ID is invalid")
+    const account = await new SystemAccountRepository({ database: this.c.env.DB }).findById(
+      accountId.data,
+    )
+    if (account instanceof Error) {
+      return new Error("failed to resolve canonical System Account", { cause: account })
+    }
+    return account?.status === "active"
+  }
 }

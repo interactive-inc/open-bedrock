@@ -41,6 +41,7 @@ type InspectionTarget = Readonly<{
   repair: WorkflowRepair
   createdByAccountId: AccountId
   requiredApprovals: number
+  requiredParticipants: number
   candidateAccountIds: ReadonlyArray<AccountId>
 }>
 
@@ -122,6 +123,7 @@ export const GET = factory.createHandlers(
         },
         createdByAccountId: proposal.createdByAccountId,
         requiredApprovals: current.requiredApprovals,
+        requiredParticipants: current.requiredParticipants,
         candidateAccountIds,
       })
     }
@@ -153,7 +155,7 @@ export const GET = factory.createHandlers(
         .filter(
           (participant) => participant.status === "ACTIVE" || participant.status === "ON_LEAVE",
         ).length
-      if (reachable >= target.requiredApprovals) continue
+      if (reachable >= Math.max(target.requiredApprovals, target.requiredParticipants)) continue
 
       const owners = participantsByAccountId.get(target.createdByAccountId) ?? []
       repairs.push({ ...target.repair, applicant_name: owners.at(0)?.employeeName ?? null })

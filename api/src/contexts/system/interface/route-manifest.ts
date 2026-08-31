@@ -2,6 +2,246 @@
 export const systemRouteManifest = [
   {
     method: "POST",
+    path: "/system/dead-letters/:deadLetterId/requeue",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.dead-letters.$deadLetterId.requeue",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/dead-letters",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.dead-letters",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/deliveries",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.deliveries",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/deliveries",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.deliveries",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "PATCH",
+    path: "/system/deliveries/:deliveryId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.deliveries.$deliveryId",
+      exportName: "PATCH",
+    },
+  },
+  {
+    method: "PATCH",
+    path: "/system/inbox-messages/:messageId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.inbox-messages.$messageId",
+      exportName: "PATCH",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/machine-sessions",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.machine-sessions",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/principals",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.principals",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/principals",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.principals",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/principals/:principalId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.principals.$principalId",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "PATCH",
+    path: "/system/principals/:principalId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.principals.$principalId",
+      exportName: "PATCH",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/principals/:principalId/machine-credentials",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.principals.$principalId.machine-credentials",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/principals/:principalId/machine-credentials",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.principals.$principalId.machine-credentials",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/system/principals/:principalId/machine-credentials/:credentialId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.machine-credentials.$credentialId",
+      exportName: "DELETE",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/step-up-grants",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.step-up-grants",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/connectors",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.connectors",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/connectors",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.connectors",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "PATCH",
+    path: "/system/connectors/:connectorId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.connectors.$connectorId",
+      exportName: "PATCH",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/integration-exchanges",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.integration-exchanges",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/integration-exchanges",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.integration-exchanges",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/integration-exchanges/:exchangeId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.integration-exchanges.$exchangeId",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "PATCH",
+    path: "/system/integration-exchanges/:exchangeId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.integration-exchanges.$exchangeId",
+      exportName: "PATCH",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/integration-exchanges/:exchangeId/reconciliations",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.integration-exchanges.$exchangeId.reconciliations",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/integration-exchanges/:exchangeId/reconciliations",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.integration-exchanges.$exchangeId.reconciliations",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
     path: "/system/attachments",
     phase: "public",
     handler: {

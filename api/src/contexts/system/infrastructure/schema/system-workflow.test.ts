@@ -7,6 +7,10 @@ import { readReleasedSystemMigration } from "@system/test/read-released-system-m
 
 const coreSchemaSql = readFileSync(new URL("./system-core.sql", import.meta.url), "utf8")
 const workflowSchemaSql = readFileSync(new URL("./system-workflow.sql", import.meta.url), "utf8")
+const decisionPolicySchemaSql = readFileSync(
+  new URL("./system-decision-policy.sql", import.meta.url),
+  "utf8",
+)
 const digest = "a".repeat(64)
 const evidenceDigest = "b".repeat(64)
 
@@ -15,6 +19,7 @@ function createDatabase(): Database {
   database.exec("PRAGMA foreign_keys = ON")
   database.exec(coreSchemaSql)
   database.exec(workflowSchemaSql)
+  database.exec(decisionPolicySchemaSql)
 
   return database
 }
@@ -40,13 +45,31 @@ function insertCase(database: Database, id: string = "case-1"): void {
 
 function insertTask(
   database: Database,
-  props: Readonly<{ caseId?: string; taskKey?: string; requiredApprovals?: number }> = {},
+  props: Readonly<{
+    caseId?: string
+    taskKey?: string
+    requiredApprovals?: number
+    requiredParticipants?: number
+    negativeDecisionRule?: "any-reject" | "approval-impossible"
+    delegationPolicy?: "allowed" | "forbidden"
+    returnPolicy?: "allowed" | "forbidden"
+  }> = {},
 ): void {
   database.run(
     `INSERT INTO system_decision_tasks
-       (case_id, task_key, round, required_approvals, proposal_digest, opened_at)
-     VALUES (?, ?, 1, ?, ?, 100)`,
-    [props.caseId ?? "case-1", props.taskKey ?? "review", props.requiredApprovals ?? 1, digest],
+       (case_id, task_key, round, required_approvals, required_participants,
+        negative_decision_rule, delegation_policy, return_policy, proposal_digest, opened_at)
+     VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, 100)`,
+    [
+      props.caseId ?? "case-1",
+      props.taskKey ?? "review",
+      props.requiredApprovals ?? 1,
+      props.requiredParticipants ?? props.requiredApprovals ?? 1,
+      props.negativeDecisionRule ?? "any-reject",
+      props.delegationPolicy ?? "allowed",
+      props.returnPolicy ?? "allowed",
+      digest,
+    ],
   )
 }
 
@@ -115,6 +138,7 @@ describe("System workflow schema", () => {
     const releasedMigrationSql = readReleasedSystemMigration("system_workflow")
 
     expect(releasedMigrationSql).toBe(workflowSchemaSql)
+    expect(readReleasedSystemMigration("system_decision_policy")).toBe(decisionPolicySchemaSql)
   })
 
   test("Drizzle宣言とDDLのtable・column・indexを一致させ、System外FKを持たない", () => {
@@ -214,6 +238,80 @@ describe("System workflow schema", () => {
     expect(database.query("SELECT status FROM system_cases WHERE id = 'case-1'").get()).toEqual({
       status: "approved",
     })
+    database.close()
+  })
+
+  test("合議体の参加定足数と否決成立条件をDB制約でも強制する", () => {
+    const database = createDatabase()
+    for (const accountId of ["creator", "member-1", "member-2", "member-3"]) {
+      insertAccount(database, accountId)
+    }
+    insertCase(database)
+    insertTask(database, {
+      requiredApprovals: 2,
+      requiredParticipants: 3,
+      negativeDecisionRule: "approval-impossible",
+    })
+    for (const accountId of ["member-1", "member-2", "member-3"]) {
+      insertCandidate(database, { accountId })
+    }
+
+    insertAttestation(database, { id: "approve-1", actorAccountId: "member-1" })
+    insertAttestation(database, { id: "approve-2", actorAccountId: "member-2" })
+    expect(() =>
+      database.run(
+        `UPDATE system_decision_tasks
+         SET outcome = 'approved', closed_at = 120
+         WHERE case_id = 'case-1' AND task_key = 'review' AND round = 1`,
+      ),
+    ).toThrow()
+    insertAttestation(database, {
+      id: "reject-1",
+      actorAccountId: "member-3",
+      action: "reject",
+    })
+    database.run(
+      `UPDATE system_decision_tasks
+       SET outcome = 'approved', closed_at = 120
+       WHERE case_id = 'case-1' AND task_key = 'review' AND round = 1`,
+    )
+
+    expect(
+      database.query("SELECT outcome FROM system_decision_tasks WHERE case_id = 'case-1'").get(),
+    ).toEqual({ outcome: "approved" })
+    database.close()
+  })
+
+  test("Taskで禁止した代理判断と差戻しを証明の保存前に拒否する", () => {
+    const database = createDatabase()
+    for (const accountId of ["creator", "represented", "delegate"]) {
+      insertAccount(database, accountId)
+    }
+    insertCase(database)
+    insertTask(database, { delegationPolicy: "forbidden", returnPolicy: "forbidden" })
+    insertCandidate(database, { accountId: "represented" })
+    database.run(
+      `INSERT INTO system_delegations
+         (id, delegator_account_id, delegate_account_id, scope_context, scope_kind,
+          scope_id, scope_version, starts_at, ends_at, created_at)
+       VALUES ('delegation:1', 'represented', 'delegate', NULL, NULL, NULL, NULL, 100, 200, 100)`,
+    )
+
+    expect(() =>
+      insertAttestation(database, {
+        id: "delegated",
+        actorAccountId: "delegate",
+        representedAccountId: "represented",
+        delegationId: "delegation:1",
+      }),
+    ).toThrow()
+    expect(() =>
+      insertAttestation(database, {
+        id: "returned",
+        actorAccountId: "represented",
+        action: "return",
+      }),
+    ).toThrow()
     database.close()
   })
 
@@ -380,8 +478,9 @@ describe("System workflow schema", () => {
     expect(() =>
       database.run(
         `INSERT INTO system_decision_tasks
-           (case_id, task_key, round, required_approvals, proposal_digest, opened_at)
-         VALUES ('case-1', 'review', 2, 1, ?, 110)`,
+           (case_id, task_key, round, required_approvals, required_participants,
+            negative_decision_rule, proposal_digest, opened_at)
+         VALUES ('case-1', 'review', 2, 1, 1, 'any-reject', ?, 110)`,
         [digest],
       ),
     ).toThrow()
@@ -393,8 +492,9 @@ describe("System workflow schema", () => {
     )
     database.run(
       `INSERT INTO system_decision_tasks
-         (case_id, task_key, round, required_approvals, proposal_digest, opened_at)
-       VALUES ('case-1', 'review', 2, 1, ?, 110)`,
+         (case_id, task_key, round, required_approvals, required_participants,
+          negative_decision_rule, proposal_digest, opened_at)
+       VALUES ('case-1', 'review', 2, 1, 1, 'any-reject', ?, 110)`,
       [digest],
     )
     database.run(

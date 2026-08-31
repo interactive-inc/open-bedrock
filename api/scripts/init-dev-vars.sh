@@ -25,6 +25,7 @@ generate_secret() {
 cat >"$TARGET" <<EOF
 JWT_SECRET="$(generate_secret)"
 AUDIT_HMAC_SECRET="$(generate_secret)"
+PEPPER_SECRET="open-bedrock-local-seed-pepper"
 ATTACHMENT_KEKS='{"1": "$(generate_secret)"}'
 COMPANY_TIME_ZONE="Asia/Tokyo"
 PROVISIONING_API_KEY=
@@ -38,4 +39,4 @@ EOF
 
 chmod 600 "$TARGET"
 
-echo "$TARGET を生成した。JWT_SECRET・AUDIT_HMAC_SECRET・ATTACHMENT_KEKS はランダム値。"
+echo "$TARGET を生成した。署名・暗号鍵はランダム値、PEPPER_SECRET はlocal seed専用値。"

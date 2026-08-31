@@ -20,7 +20,7 @@ type Context = Readonly<{
   repository: CompanyResourceRepository
 }>
 
-/** 職位・等級・責務・合議体の定義を削除する。 */
+/** 拠点・職場・職位・等級・責務・合議体の定義を削除する。 */
 export class DeleteCompanyDefinitions {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -44,9 +44,14 @@ export class DeleteCompanyDefinitions {
     }
 
     const resourceTypes: ReadonlyArray<CompanyResourceType> = [
+      "site",
+      "workplace",
+      "job",
       "position",
       "grade",
+      "organizational-office",
       "responsibility",
+      "authority-scope",
       "collective-body",
     ]
     if (

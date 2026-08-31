@@ -64,7 +64,7 @@ export const POST = factory.createHandlers(
                     .regex(/^\S{1,255}$/)
                     .nullable(),
                 })
-                .catchall(z.json()),
+                .strict(),
             }),
             z.object({
               organizationId: z.string().regex(/^\S{1,255}$/),
@@ -82,7 +82,7 @@ export const POST = factory.createHandlers(
                   assignmentType: z.enum(["PRIMARY", "CONCURRENT"]),
                   positionTitle: z.string().trim().min(1).max(200).nullable().optional(),
                 })
-                .catchall(z.json()),
+                .strict(),
             }),
             z.object({
               organizationId: z.string().regex(/^\S{1,255}$/),
@@ -98,7 +98,61 @@ export const POST = factory.createHandlers(
                   managerEmployeeId: z.string().regex(/^\S{1,255}$/),
                   organizationUnitId: z.string().regex(/^\S{1,255}$/),
                 })
-                .catchall(z.json()),
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("office-assignment"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  employeeId: z.string().regex(/^\S{1,255}$/),
+                  employmentId: z.string().regex(/^\S{1,255}$/),
+                  organizationalOfficeId: z.string().regex(/^\S{1,255}$/),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("responsibility-assignment"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  responsibilityId: z.string().regex(/^\S{1,255}$/),
+                  holderType: z.enum(["employee", "organizational-office", "collective-body"]),
+                  holderId: z.string().regex(/^\S{1,255}$/),
+                  authorityScopeId: z
+                    .string()
+                    .regex(/^\S{1,255}$/)
+                    .nullable(),
+                  delegationAllowed: z.boolean(),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("collective-body-membership"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  collectiveBodyId: z.string().regex(/^\S{1,255}$/),
+                  employeeId: z.string().regex(/^\S{1,255}$/),
+                  role: z.enum(["chair", "member", "secretary"]),
+                  voting: z.boolean(),
+                })
+                .strict(),
             }),
             z.object({
               organizationId: z.string().regex(/^\S{1,255}$/),
@@ -112,11 +166,11 @@ export const POST = factory.createHandlers(
                 .object({
                   employeeId: z.string().regex(/^\S{1,255}$/),
                   employmentId: z.string().regex(/^\S{1,255}$/),
-                  scopeType: z.literal("organization-unit"),
+                  scopeType: z.enum(["organization-unit", "authority-scope"]),
                   scopeId: z.string().regex(/^\S{1,255}$/),
                   authority: z.string().trim().min(1).max(255),
                 })
-                .catchall(z.json()),
+                .strict(),
             }),
           ]),
         )

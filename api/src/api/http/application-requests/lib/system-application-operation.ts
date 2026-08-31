@@ -496,7 +496,10 @@ export async function reassignSystemApplicationTask(
       "workflow_quorum_mismatch",
     )
   }
-  if (candidateEmployeeIds.length < requiredApprovals) {
+  if (
+    candidateEmployeeIds.length < requiredApprovals ||
+    candidateEmployeeIds.length < currentTask.requiredParticipants
+  ) {
     return new UnprocessableError(
       "repair candidates cannot satisfy the frozen quorum",
       "workflow_unresolvable",
@@ -564,6 +567,10 @@ export async function reassignSystemApplicationTask(
     task: {
       key: proposal.currentTaskKey,
       requiredApprovals,
+      requiredParticipants: currentTask.requiredParticipants,
+      negativeDecisionRule: currentTask.negativeDecisionRule,
+      delegationPolicy: currentTask.delegationPolicy,
+      returnPolicy: currentTask.returnPolicy,
       openedAt: input.reassignedAt,
       dueAt: null,
       candidates,

@@ -107,6 +107,13 @@ export class D1SystemRootBootstrapAdapter {
       ),
       database
         .prepare(
+          `INSERT INTO system_principals
+             (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
+           VALUES (?1, ?2, 'human', ?3, NULL, 1, ?4, ?4)`,
+        )
+        .bind(crypto.randomUUID(), write.accountId, write.email, write.occurredAt.getTime()),
+      database
+        .prepare(
           `INSERT INTO system_identity_bindings
              (id, account_id, provider, subject, created_at, activated_at, revoked_at)
            VALUES (?1, ?2, 'password', ?3, ?4, ?4, NULL)`,

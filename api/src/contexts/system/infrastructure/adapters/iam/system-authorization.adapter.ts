@@ -2,6 +2,7 @@ import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { IamRoleEntity } from "@system/domain/entities/iam-role.entity"
 import { RoleBindingEntity } from "@system/domain/entities/role-binding.entity"
 import type { RoleBindingResource } from "@system/domain/schemas/iam/role-binding.schema"
+import { systemResourceScopeKey } from "@system/domain/definitions/system-resource-scope-key.definition"
 import type { SystemD1Context } from "@system/configuration/system-context"
 
 export type SystemAuthorizationGraph = Readonly<{
@@ -11,6 +12,7 @@ export type SystemAuthorizationGraph = Readonly<{
 
 export type ResolvedSystemAuthorization = Readonly<{
   permissionKeys: ReadonlySet<string>
+  scopedPermissionKeys: ReadonlyMap<string, ReadonlySet<string>>
   roleKeys: ReadonlyArray<string>
 }>
 type Context = SystemD1Context
@@ -109,9 +111,21 @@ export class SystemD1AuthorizationAdapter {
       const invalid = [...roles, ...bindings].find((value) => value instanceof Error)
       if (invalid instanceof Error) return invalid
 
+      const restoredRoles = roles as Array<IamRoleEntity>
+      const restoredBindings = bindings as Array<RoleBindingEntity>
+      const rolesById = new Map(restoredRoles.map((role) => [role.id, role]))
+      if (
+        restoredBindings.some((binding) => {
+          const role = rolesById.get(binding.roleId)
+          return !role?.acceptsBindingResource(binding.resource?.type ?? null)
+        })
+      ) {
+        return new Error("System IAM role binding resource is invalid")
+      }
+
       return Object.freeze({
-        roles: Object.freeze(roles as Array<IamRoleEntity>),
-        bindings: Object.freeze(bindings as Array<RoleBindingEntity>),
+        roles: Object.freeze(restoredRoles),
+        bindings: Object.freeze(restoredBindings),
       })
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to resolve System authorization")
@@ -131,17 +145,31 @@ export class SystemD1AuthorizationAdapter {
     if (graph === null || graph instanceof Error) return graph
 
     const rolesById = new Map(graph.roles.map((role) => [role.id, role]))
-    const activeRoles = new Map(
-      graph.bindings.flatMap((binding) => {
-        if (!binding.isActiveAt(command.at) || !binding.appliesTo(command.resource)) return []
+    const activeBindings = graph.bindings.filter((binding) => binding.isActiveAt(command.at))
+    const effectiveRoles = new Map(
+      activeBindings.flatMap((binding) => {
+        if (!binding.appliesTo(command.resource)) return []
         const role = rolesById.get(binding.roleId)
         return role === undefined ? [] : [[role.id, role] as const]
       }),
     ).values()
-    const roles = [...activeRoles]
+    const roles = [...effectiveRoles]
+    const scopedPermissionKeys = new Map<string, Set<string>>()
+    for (const binding of activeBindings) {
+      if (binding.resource === null) continue
+      const role = rolesById.get(binding.roleId)
+      if (role === undefined) continue
+      const key = systemResourceScopeKey(binding.resource)
+      const permissions = scopedPermissionKeys.get(key) ?? new Set<string>()
+      for (const permission of role.permissionKeys) permissions.add(permission)
+      scopedPermissionKeys.set(key, permissions)
+    }
 
     return Object.freeze({
       permissionKeys: new Set(roles.flatMap((role) => role.permissionKeys)),
+      scopedPermissionKeys: new Map(
+        [...scopedPermissionKeys].map(([key, permissions]) => [key, new Set(permissions)]),
+      ),
       roleKeys: Object.freeze(roles.map((role) => role.key).sort()),
     })
   }

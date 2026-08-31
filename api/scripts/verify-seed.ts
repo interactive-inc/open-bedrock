@@ -1,6 +1,7 @@
 import { Database } from "bun:sqlite"
 import { readFileSync, readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
+import { verifyPassword } from "../src/contexts/system/lib/auth/verify-password"
 import { executeSql } from "./sql-statements"
 
 const root = join(import.meta.dir, "..")
@@ -92,7 +93,7 @@ const statusCount = (
     count: number
   }
 ).count
-const statusEligibleEmploymentCount = (
+const assignmentEligibleEmploymentCount = (
   db
     .query("SELECT COUNT(*) AS count FROM company_employments WHERE status != 'TERMINATED'")
     .get() as { count: number }
@@ -102,15 +103,31 @@ const accountLinkCount = (
     count: number
   }
 ).count
+const localSeedCredential = db
+  .query(
+    `SELECT credential.password_hash AS passwordHash
+     FROM system_identity_bindings identity
+     INNER JOIN system_password_credentials credential ON credential.identity_id = identity.id
+     WHERE identity.provider = 'password' AND identity.subject = 'you+e001@example.com'`,
+  )
+  .get() as { passwordHash: string } | null
+const localSeedCredentialValid =
+  localSeedCredential !== null &&
+  (await verifyPassword(
+    "password",
+    localSeedCredential.passwordHash,
+    "open-bedrock-local-seed-pepper",
+  ))
 
 if (
   baselineCount !== employeeCount ||
   employmentCount !== employeeCount ||
   lifecycleEmploymentCount !== employeeCount ||
-  statusCount !== statusEligibleEmploymentCount ||
-  accountLinkCount > employeeCount
+  statusCount !== employmentCount ||
+  accountLinkCount > employeeCount ||
+  !localSeedCredentialValid
 ) {
-  throw new Error("employee lifecycle seed is incomplete")
+  throw new Error("employee lifecycle or local login seed is incomplete")
 }
 
 const pendingOrganizationChanges = (
@@ -201,7 +218,7 @@ if (
   pendingOrganizationChanges !== 0 ||
   organizationRevision !== 27 ||
   organizationUnitCount !== 7 ||
-  organizationAssignmentCount !== statusEligibleEmploymentCount ||
+  organizationAssignmentCount !== assignmentEligibleEmploymentCount ||
   managerResponsibilityCount !== 6 ||
   peopleOperationsCount !== 1 ||
   orphanedWorkforceRows !== 0 ||
@@ -211,7 +228,7 @@ if (
   throw new Error(
     `Company organization seed is incomplete: pending=${pendingOrganizationChanges}, ` +
       `revision=${organizationRevision}/27, units=${organizationUnitCount}/7, ` +
-      `assignments=${organizationAssignmentCount}/${statusEligibleEmploymentCount}, ` +
+      `assignments=${organizationAssignmentCount}/${assignmentEligibleEmploymentCount}, ` +
       `managers=${managerResponsibilityCount}/6, ` +
       `peopleOperations=${peopleOperationsCount}/1, ` +
       `orphanedWorkforce=${orphanedWorkforceRows}, ` +

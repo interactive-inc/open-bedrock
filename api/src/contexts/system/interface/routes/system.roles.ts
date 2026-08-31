@@ -14,6 +14,7 @@ import { IamRoleEntity } from "@system/domain/entities/iam-role.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import { SystemRoleCatalogRepository } from "@system/infrastructure/repositories/iam/system-role-catalog.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+import { requireSystemStepUp } from "@system/interface/middlewares/require-system-step-up"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -52,6 +53,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
 // @authorization permission iam:write - actorが保持しないpermissionをRoleへ追加できない
 export const POST = systemFactory.createHandlers(
   authenticateSystemAccessToken,
+  requireSystemStepUp,
   zValidator(
     "json",
     z

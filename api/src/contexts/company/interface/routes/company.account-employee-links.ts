@@ -168,7 +168,7 @@ export const POST = factory.createHandlers(
                 accountId: z.string().regex(/^\S{1,255}$/),
                 employeeId: z.string().regex(/^\S{1,255}$/),
               })
-              .catchall(z.json()),
+              .strict(),
           }),
         )
         .min(1)

@@ -1,7 +1,6 @@
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
-import { companyResourceRequiredAttributes } from "@/contexts/company/domain/catalogs/company-resource-required-attributes.catalog"
 import {
   companyResourceTypes,
   type CompanyResourceType,
@@ -11,6 +10,7 @@ import {
   type OrganizationUnitPeriod,
 } from "@/contexts/company/domain/values/organization-structure.value"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { isCanonicalCompanyResourceAttributes } from "@/contexts/company/domain/definitions/is-canonical-company-resource-attributes.definition"
 
 export type CompanyResourceState = "active" | "void"
 export type CompanyJson =
@@ -74,17 +74,7 @@ export class CompanyResourceEntity {
     if (!isCompanyJson(props.attributes)) {
       return new CompanyResourceValidationError("invalid_attributes")
     }
-    if (
-      !companyResourceRequiredAttributes[props.type].every((key) => {
-        const value = props.attributes[key]
-        return (
-          typeof value === "string" &&
-          value.length >= 1 &&
-          value.length <= 2_000 &&
-          value.trim() === value
-        )
-      })
-    ) {
+    if (!isCanonicalCompanyResourceAttributes(props.type, props.attributes)) {
       return new CompanyResourceValidationError("invalid_resource")
     }
 

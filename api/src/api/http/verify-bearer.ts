@@ -93,6 +93,7 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   if (account.kind !== "found") throw new UnauthorizedError("account not found")
 
   c.set("accountTokenVersion", authentication.account.tokenVersion)
+  c.set("scopedPermissions", accountAuthorization.scopedPermissionKeys)
   const access = await resolveLiveEmployeeAccess(c, account.link.employeeId)
   if (access === null || access instanceof Error) {
     throw new UnauthorizedError("employee is unavailable")

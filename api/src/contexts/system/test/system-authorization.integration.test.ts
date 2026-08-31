@@ -1,5 +1,6 @@
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
+import { systemResourceScopeKey } from "@system/domain/definitions/system-resource-scope-key.definition"
 import { SystemD1AuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-authorization.adapter"
 import { describe, expect, test } from "bun:test"
 
@@ -54,6 +55,11 @@ describe("canonical System authorization", () => {
     if (global === null || global instanceof Error) throw global
     expect([...global.permissionKeys]).toEqual(["iam:read"])
     expect(global.roleKeys).toEqual(["system:operator"])
+    expect([
+      ...(global.scopedPermissionKeys.get(
+        systemResourceScopeKey({ type: "example:organization", id: "org-1" }),
+      ) ?? []),
+    ]).toEqual(["example:write"])
 
     const scoped = await repository.resolveForAccount({
       accountId: zAccountId.parse("account-1"),
@@ -63,6 +69,13 @@ describe("canonical System authorization", () => {
     expect(scoped).not.toBeInstanceOf(Error)
     if (scoped === null || scoped instanceof Error) throw scoped
     expect([...scoped.permissionKeys].sort()).toEqual(["example:write", "iam:read"])
+
+    await database.exec(`
+      INSERT INTO system_iam_roles VALUES ('role-broken', 'example:broken', 'custom', 'example:site', 'Broken', 1000, 1000);
+      INSERT INTO system_iam_role_permissions VALUES ('role-broken', 'example:write');
+      INSERT INTO system_role_bindings VALUES ('binding-broken', 'account-1', 'role-broken', 'example:organization', 'org-1', 1000, NULL);
+    `)
+    expect(await repository.loadForAccount(zAccountId.parse("account-1"))).toBeInstanceOf(Error)
   })
 
   test("inactiveまたは欠損Accountを同じnullへ畳み、DB障害はErrorにする", async () => {

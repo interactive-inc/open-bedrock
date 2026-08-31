@@ -25,7 +25,7 @@ System は業務内容と会社組織から独立した、停止不能な実行�
 - password、session、access token、refresh token、失効、rotation
 - machine credential、step-up authentication、credential recovery
 
-現行実装には Account、Identity、password、外部 identity、session、token rotation がある。Principal kind、Agent、Service、Connector の独立した認証と step-up は未完成である。
+現行実装には Human、Agent、Service、Connector の Principal、Account、Identity、password、外部 identity、session、token rotation、machine credential、password または外部 identity による短期 step-up がある。machine credential は raw secret を返却時以外に保持せず、ConnectorPrincipal は対応する connector の停止と同時に認証不能になる。
 
 ### 技術的認可
 
@@ -34,7 +34,7 @@ System は業務内容と会社組織から独立した、停止不能な実行�
 - 職務分離、緊急アクセス、代理操作の制限
 - request 時と実行直前の再評価
 
-現行実装には permission、role、account role と route ごとの認可がある。field policy、共通 scope policy、職務分離、緊急アクセスの一貫した強制は未完成である。
+現行実装には permission、role、role binding、global と resource scope の認可、field、purpose、有効期間、会社上の authority evidence、職務分離条件を同じ fail-closed policy で評価する経路がある。connector と外部交換 route は resource scope を強制し、IAM、Principal、connector、dead letter の高リスク変更は step-up を要求する。永続的な field policy 配布と BreakGlassAccessGrant の発行・事後 review は未実装である。
 
 ### 案件と判断
 
@@ -48,7 +48,7 @@ System は業務内容と会社組織から独立した、停止不能な実行�
 
 専用業務の内容は各 App が所有する。System は対象コンテキスト、resource kind、resource ID、resource version、proposal digest を保存し、任意 JSON を業務上の正本にしない。特定業務の正本を必要としない汎用手続きだけは、版付きの正規化済み Proposal body として System が所有する。
 
-System には版付き ProcedureDefinition と Proposal、Case、DecisionTask、候補と除外の資格 snapshot、HumanAttestation、Delegation、ExecutionAuthorization がある。公開、提出、編集、判断、取消、再割当、委任、参照の application service と repository、および quorum、自己判断禁止、append-only 証跡、一回実行を強制する永続化制約がある。application request の HTTP 契約はこの System workflow を直接使用し、旧 request model は削除済みである。
+System には版付き ProcedureDefinition と Proposal、Case、DecisionTask、候補と除外の資格 snapshot、HumanAttestation、Delegation、ExecutionAuthorization がある。公開、提出、編集、判断、取消、再割当、委任、参照の application service と repository、および参加定足数、成立賛成数、否決条件、代理可否、差戻し可否、自己判断禁止、append-only 証跡、一回実行を強制する永続化制約がある。application request の HTTP 契約はこの System workflow を直接使用し、旧 request model は削除済みである。
 
 ### 記録と証拠
 
@@ -58,7 +58,7 @@ System には版付き ProcedureDefinition と Proposal、Case、DecisionTask、
 - revision、supersession、correction、retention、legal hold、開示制御
 - 外部 Assertion と社内での acceptance、dispute
 
-現行実装には追記監査と安定 JSON がある。全 operation の監査、証拠、保持、開示、actor chain、訂正経路は未完成である。
+現行実装には追記監査、安定 JSON、request correlation、actor、対象、変更前後を保持する監査 event がある。Principal、machine credential、connector、外部交換、照合、dead letter 再投入の重要変更は状態更新と同じ D1 batch で監査される。保持、legal hold、開示制御を運用設定として強制する機構は未実装である。
 
 ### 非同期実行と通知
 
@@ -67,7 +67,7 @@ System には版付き ProcedureDefinition と Proposal、Case、DecisionTask、
 - notification message、delivery、既読
 - timeout、重複、順序逆転、部分失敗の回復
 
-現行実装には batch、通知、限定された outbox がある。汎用 job lifecycle、inbox、dead letter、再実行と照合の統一基盤は未完成である。
+現行実装には batch、通知、冪等な Job 登録、lease、heartbeat、成功、retry、dead letter、step-up 付き再投入、outbox、重複排除する inbox がある。lease token と lease Account の両方を検査し、別主体による完了、期限外完了、二重再投入を拒否する。
 
 ### 外部接続
 
@@ -76,7 +76,7 @@ System には版付き ProcedureDefinition と Proposal、Case、DecisionTask、
 - external assertion、acceptance、reconciliation、exception case
 - API version、schema version、rate limit、circuit breaking
 
-現行実装には個別の外部参照と callback がある。交換可能な connector、共通 outbox、外部結果の照合基盤は未完成である。
+現行実装には版付き connector、ConnectorPrincipal、方向と operation と idempotency key を固定した交換、外部 Assertion、reconciliation run と item、共通 outbox と inbox がある。connector と交換の変更、Assertion と照合結果は監査され、connector の停止、重複、retry、異なる connector の Assertion 混入を拒否する。transport 固有の署名検証、rate limit、circuit breaker、mapping 実装は connector adapter の責任として残る。
 
 ### 運用
 
@@ -98,7 +98,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - 事業所、勤務場所、法人、拠点、組織単位の区別
 - 外部 master との識別子対応と source
 
-現行実装には明示的な Company profile と LegalEntity record がなく、timezone などは deployment 設定へ分散しているため未完成である。
+現行実装には LegalEntity、CompanyProfile、Site、Workplace があり、法域、locale、timezone、通貨、会計年度開始月と外部識別子を版付き Company resource として保持する。CompanyProfile を未設定の組織は profile 読取を存在しない状態へ閉じる。
 
 ### 人と雇用
 
@@ -118,7 +118,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 
 現行実装には opaque OrgUnit identity、名称・kind・親子関係の period version、期間付き Assignment、organization revision、atomic change operation がある。単一 root、code 重複、親期間、循環、主務重複、上司在籍、部分適用を Domain と DB の両方で拒否する。旧部署表と membership は既存 wire の互換 projection に限定し、検証済み lifecycle の判断正本には使わない。
 
-`/company/v1` はLegalEntity、CompanyProfile、Person、Employee、Employment、OrgUnit、Assignment、ReportingRelation、Position、Grade、Responsibility、CollectiveBody、OrganizationalAuthority、AccountEmployeeLink、PersonnelActionを同じresource、revision、半開期間、command契約で公開する。readはD1 atomic batchで一つのorganization revisionへ固定し、writeはexpected revision、resource revision、SHA-256 fingerprint付きidempotency receipt、append-only履歴を強制する。契約と失敗条件は [Company API](./company-api.md) に定める。
+`/company/v1` は LegalEntity、CompanyProfile、Site、Workplace、Person、Employee、Employment、OrgUnit、Assignment、ReportingRelation、Job、Position、Grade、OrganizationalOffice、OfficeAssignment、Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody、CollectiveBodyMembership、OrganizationalAuthority、AccountEmployeeLink、PersonnelAction を同じ resource、revision、半開期間、command 契約で公開する。read は D1 atomic batch で一つの organization revision へ固定し、write は expected revision、resource revision、SHA-256 fingerprint 付き idempotency receipt、append-only 履歴を強制する。契約と失敗条件は [Company API](./company-api.md) に定める。
 
 ### 職務と責任
 
@@ -128,7 +128,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - CollectiveBody、構成員、定足数、決議方式
 - 委任可能性と継続責任主体
 
-現行実装には position、grade、governance role、期間付きの汎用 Responsibility と、直属上司、部門責任者、任意責務、管理系列を時点解決する OrganizationalAuthority resolver がある。resolver は候補 Account と使用した組織投影、営業日、organization revision、根拠を snapshot として返す。Account role は操作権限に限定し、workflow 未定義や旧 role selector を会社上の資格として補完しない。法人、地域、金額等の条件 scope と合議体を一貫して強制するモデルは未完成である。
+現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。Company resolver は法人、組織単位、拠点、勤務場所、地域、金額の scope、在籍、active な System Account、対象本人の除外を同一 revision と時点で評価する。合議体の参加定足数、全会一致、過半数、特別多数、委任可否は Company snapshot から System DecisionTask へ変換され、曖昧な複数 assignment を一つの合議へ混ぜず拒否する。Account role は操作権限に限定し、workflow 未定義や旧 role selector を会社上の資格として補完しない。
 
 ### System との対応
 
@@ -137,7 +137,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - System の Case に対する会社上の判断資格の解決
 - 判断時点の Employment、Membership、ResponsibilityAssignment の snapshot
 
-現行実装には Account と Employee の一対一対応と、それを在籍・組織資格、active な canonical System Account と同時に検査する Company resolver がある。System workflow の候補解決はこの resolver を利用し、Company snapshot を証拠へ保存する。System TaskとCompany APIにはopaqueな文字列IDだけを渡し、canonicalな組織状態を評価できない場合は推測せず停止する。
+現行実装には Account と Employee の一対一対応と、それを在籍・組織資格、active な canonical System Account と同時に検査する Company resolver がある。System workflow の候補解決はこの resolver を利用し、Company resource revision、責務 assignment、scope、雇用、Account 対応、合議規則を候補ごとの digest 付き証拠へ保存する。System Task と Company API には opaque な文字列 ID だけを渡し、System Account の読取障害、参照切れ、複数対応、候補ゼロ、成立不能な定足数を推測で補わず停止する。
 
 ### 雇用事実と人事発令
 

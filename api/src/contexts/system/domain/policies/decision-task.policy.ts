@@ -21,6 +21,10 @@ export type StartSystemProcedureTaskCandidate = Readonly<{
 export type StartSystemProcedureTask = Readonly<{
   key: string
   requiredApprovals: number
+  requiredParticipants?: number
+  negativeDecisionRule?: "any-reject" | "approval-impossible"
+  delegationPolicy?: "allowed" | "forbidden"
+  returnPolicy?: "allowed" | "forbidden"
   openedAt: Date
   dueAt: Date | null
   candidates: ReadonlyArray<StartSystemProcedureTaskCandidate>
@@ -53,6 +57,10 @@ export function createSystemDecisionTask(
     candidateAccountIds: candidates.map((candidate) => candidate.accountId),
     excludedAccountIds,
     requiredApprovals: input.task.requiredApprovals,
+    requiredParticipants: input.task.requiredParticipants ?? input.task.requiredApprovals,
+    negativeDecisionRule: input.task.negativeDecisionRule ?? "any-reject",
+    delegationPolicy: input.task.delegationPolicy ?? "allowed",
+    returnPolicy: input.task.returnPolicy ?? "allowed",
     proposalDigest: input.proposalDigest,
     openedAt: input.task.openedAt,
     dueAt: input.task.dueAt,

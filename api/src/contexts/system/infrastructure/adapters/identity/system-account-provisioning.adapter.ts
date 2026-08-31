@@ -74,6 +74,13 @@ export class SystemAccountProvisioningAdapter {
     const identityStatements = [
       database
         .prepare(
+          `INSERT INTO system_principals
+             (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
+           VALUES (?1, ?2, 'human', ?3, NULL, 1, ?4, ?4)`,
+        )
+        .bind(crypto.randomUUID(), accountId.data, input.email, input.now.getTime()),
+      database
+        .prepare(
           `WITH actor_permissions AS (
              SELECT DISTINCT permission.permission_key AS key
              FROM system_accounts account

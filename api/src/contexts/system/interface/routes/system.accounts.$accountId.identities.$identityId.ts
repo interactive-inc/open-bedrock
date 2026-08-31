@@ -14,6 +14,7 @@ import { zIdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import { SystemIdentityCatalogRepository } from "@system/infrastructure/repositories/identity/system-identity-catalog.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+import { requireSystemStepUp } from "@system/interface/middlewares/require-system-step-up"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 
 // @authorization permission iam:read - 一つのIdentity bindingと公開profileだけを読む
@@ -57,6 +58,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
 // @authorization permission iam:write - last active Identityとlast-rootを原子的に保護する
 export const DELETE = systemFactory.createHandlers(
   authenticateSystemAccessToken,
+  requireSystemStepUp,
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
       throw new SystemForbiddenError()

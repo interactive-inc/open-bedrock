@@ -114,6 +114,11 @@ export class SystemAccountCatalogRepository {
           `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
            VALUES (?1, 'active', 0, ?2, ?2)`,
         ).bind(accountId, now.getTime()),
+        this.c.env.DB.prepare(
+          `INSERT INTO system_principals
+             (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
+           VALUES (?1, ?2, 'human', ?2, NULL, 1, ?3, ?3)`,
+        ).bind(crypto.randomUUID(), accountId, now.getTime()),
         ...auditStatements,
       ]
       const executions = await this.c.env.DB.batch(statements)

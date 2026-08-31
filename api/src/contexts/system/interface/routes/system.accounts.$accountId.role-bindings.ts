@@ -19,6 +19,7 @@ import { SystemAccountCatalogRepository } from "@system/infrastructure/repositor
 import { SystemRoleCatalogRepository } from "@system/infrastructure/repositories/iam/system-role-catalog.repository"
 import { SystemRoleBindingRepository } from "@system/infrastructure/repositories/iam/system-role-binding.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+import { requireSystemStepUp } from "@system/interface/middlewares/require-system-step-up"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -70,6 +71,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
 // @authorization permission iam:write - 自己付与とactor未保有permissionの付与を拒否する
 export const POST = systemFactory.createHandlers(
   authenticateSystemAccessToken,
+  requireSystemStepUp,
   zValidator(
     "json",
     z
