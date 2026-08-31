@@ -141,6 +141,20 @@ describe("SidebarNav space tabs", () => {
     expect(screen.getByRole("tab", { name: "システム" })).toBeTruthy()
   })
 
+  test("orders the spaces as system, company, and other work", () => {
+    renderSidebar(["batch:view"])
+
+    const spaceTabs = screen.getAllByRole("tab")
+
+    expect(spaceTabs.map((tab) => tab.getAttribute("aria-label"))).toEqual([
+      "システム",
+      "会社",
+      "その他の業務（おまけ）",
+    ])
+    expect(spaceTabs.every((tab) => tab.querySelector("svg") !== null)).toBe(true)
+    expect(spaceTabs.every((tab) => tab.textContent === "")).toBe(true)
+  })
+
   test("shows the selector even with a single membership", () => {
     pathnameMock.mockReturnValue("/teams/D001/members")
 
@@ -198,10 +212,14 @@ describe("SidebarNav space tabs", () => {
     expect(screen.getByRole("link", { name: "目標" }).getAttribute("href")).toBe(
       "/teams/D001/goals",
     )
-    expect(screen.queryByRole("link", { name: "勤怠" })).toBeNull()
+    expect(
+      screen
+        .getAllByRole("link", { name: "勤怠" })
+        .some((link) => link.getAttribute("href") === "/teams/D001/attendances"),
+    ).toBe(false)
   })
 
-  test("moves inbox and notifications into the my space", () => {
+  test("keeps inbox and notifications in the other work space", () => {
     renderSidebar([])
 
     expect(screen.getByRole("link", { name: "受信箱" }).getAttribute("href")).toBe("/company/inbox")
@@ -216,7 +234,9 @@ describe("SidebarNav space tabs", () => {
 
     renderSidebar([])
 
-    expect(screen.getByRole("tab", { name: "部署" }).getAttribute("aria-selected")).toBe("true")
+    expect(
+      screen.getByRole("tab", { name: "その他の業務（おまけ）" }).getAttribute("aria-selected"),
+    ).toBe("true")
   })
 
   test("shows my items on the default space without leaking other spaces", () => {
@@ -228,14 +248,15 @@ describe("SidebarNav space tabs", () => {
 })
 
 describe("SidebarNav feature registry", () => {
-  test("shows development with a semantic icon color and a text badge", () => {
+  test("keeps development metadata without rendering a legend", () => {
     pathnameMock.mockReturnValue("/my/attendances")
 
     renderSidebar([])
 
     const link = screen.getByRole("link", { name: "勤怠" })
     expect(link.querySelector("svg")?.classList.contains("text-feature-development")).toBe(true)
-    expect(screen.getByText("琥珀色のアイコン")).toBeTruthy()
+    expect(screen.queryByText("開発中")).toBeNull()
+    expect(screen.queryByText("琥珀色のアイコン")).toBeNull()
     expect(link.getAttribute("aria-description")).toBe("app-default・開発中")
   })
 

@@ -337,8 +337,8 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
           .prepare(
             `UPDATE system_decision_tasks
              SET outcome = CASE
-                   WHEN ?5 = 'reject' THEN 'rejected'
                    WHEN ?5 = 'return' THEN 'returned'
+                   WHEN ?5 = 'reject' THEN 'rejected'
                    ELSE 'approved'
                  END,
                  closed_at = ?6
@@ -346,13 +346,31 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
                AND proposal_digest = ?4
                AND outcome IS NULL
                AND (
-                 ?5 IN ('reject', 'return')
+                 ?5 = 'return'
+                 OR (
+                   ?5 = 'reject'
+                   AND (
+                     negative_decision_rule = 'any-reject'
+                     OR (
+                       SELECT count(*) FROM system_human_attestations
+                       WHERE case_id = ?1 AND task_key = ?2 AND round = ?3
+                         AND action = 'reject'
+                     ) > (
+                       SELECT count(*) FROM system_decision_task_candidates
+                       WHERE case_id = ?1 AND task_key = ?2 AND round = ?3
+                     ) - required_approvals
+                   )
+                 )
                  OR (
                    ?5 = 'approve'
                    AND (
                      SELECT count(*) FROM system_human_attestations
                      WHERE case_id = ?1 AND task_key = ?2 AND round = ?3 AND action = 'approve'
                    ) >= required_approvals
+                   AND (
+                     SELECT count(*) FROM system_human_attestations
+                     WHERE case_id = ?1 AND task_key = ?2 AND round = ?3
+                   ) >= required_participants
                  )
                )`,
           )
@@ -416,13 +434,19 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
   private prepareTaskInsert(input: SystemDecisionTaskBundle): D1PreparedStatement {
     return this.c.env.DB.prepare(
       `INSERT INTO system_decision_tasks
-           (case_id, task_key, round, required_approvals, proposal_digest, opened_at, due_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+           (case_id, task_key, round, required_approvals, required_participants,
+            negative_decision_rule, delegation_policy, return_policy,
+            proposal_digest, opened_at, due_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`,
     ).bind(
       input.task.caseId,
       input.task.key,
       input.task.round,
       input.task.requiredApprovals,
+      input.task.requiredParticipants,
+      input.task.negativeDecisionRule,
+      input.task.delegationPolicy,
+      input.task.returnPolicy,
       input.task.proposalDigest,
       input.task.openedAt.getTime(),
       input.task.dueAt?.getTime() ?? null,
@@ -491,17 +515,23 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
     const task = input.nextTask
     const conditionalTaskInsert = this.c.env.DB.prepare(
       `INSERT INTO system_decision_tasks
-           (case_id, task_key, round, required_approvals, proposal_digest, opened_at, due_at)
-         SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7
+           (case_id, task_key, round, required_approvals, required_participants,
+            negative_decision_rule, delegation_policy, return_policy,
+            proposal_digest, opened_at, due_at)
+         SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11
          WHERE EXISTS (
            SELECT 1 FROM system_decision_tasks
-           WHERE case_id = ?1 AND task_key = ?8 AND round = ?9 AND outcome = 'approved'
+           WHERE case_id = ?1 AND task_key = ?12 AND round = ?13 AND outcome = 'approved'
          )`,
     ).bind(
       task.task.caseId,
       task.task.key,
       task.task.round,
       task.task.requiredApprovals,
+      task.task.requiredParticipants,
+      task.task.negativeDecisionRule,
+      task.task.delegationPolicy,
+      task.task.returnPolicy,
       task.task.proposalDigest,
       task.task.openedAt.getTime(),
       task.task.dueAt?.getTime() ?? null,

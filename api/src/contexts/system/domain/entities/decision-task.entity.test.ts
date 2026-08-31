@@ -99,6 +99,69 @@ describe("DecisionTaskEntity", () => {
     expect(task.evaluate([returned])).toBe("returned")
   })
 
+  test("合議では参加定足数を満たし、成立不能になるまで少数の反対で閉じない", () => {
+    const task = requireTask(
+      taskInput({
+        candidateAccountIds: ["account-2", "account-3", "account-4", "account-5"],
+        requiredApprovals: 3,
+        requiredParticipants: 3,
+        negativeDecisionRule: "approval-impossible",
+      }),
+    )
+    const rejection = requireAttestation({
+      id: "decision-1",
+      actorAccountId: "account-2",
+      representedAccountId: "account-2",
+      delegationId: null,
+      action: "reject",
+    })
+    const secondRejection = requireAttestation({
+      id: "decision-2",
+      actorAccountId: "account-3",
+      representedAccountId: "account-3",
+      delegationId: null,
+      action: "reject",
+    })
+
+    expect(task.evaluate([rejection])).toBe("pending")
+    expect(task.evaluate([rejection, secondRejection])).toBe("rejected")
+  })
+
+  test("賛成数だけでなく参加定足数も満たしてから合議を承認する", () => {
+    const task = requireTask(
+      taskInput({
+        candidateAccountIds: ["account-2", "account-3", "account-4"],
+        requiredApprovals: 2,
+        requiredParticipants: 3,
+        negativeDecisionRule: "approval-impossible",
+      }),
+    )
+    const first = requireAttestation({
+      id: "decision-1",
+      actorAccountId: "account-2",
+      representedAccountId: "account-2",
+      delegationId: null,
+      action: "approve",
+    })
+    const second = requireAttestation({
+      id: "decision-2",
+      actorAccountId: "account-3",
+      representedAccountId: "account-3",
+      delegationId: null,
+      action: "approve",
+    })
+    const third = requireAttestation({
+      id: "decision-3",
+      actorAccountId: "account-4",
+      representedAccountId: "account-4",
+      delegationId: null,
+      action: "reject",
+    })
+
+    expect(task.evaluate([first, second])).toBe("pending")
+    expect(task.evaluate([first, second, third])).toBe("approved")
+  })
+
   test("候補重複、除外主体、quorum超過を拒否する", () => {
     expect(
       DecisionTaskEntity.create(taskInput({ candidateAccountIds: ["account-2", "account-2"] })),

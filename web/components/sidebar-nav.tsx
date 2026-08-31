@@ -1,6 +1,6 @@
 "use client"
 
-import { Building2, Circle, type LucideIcon, User, Users, Wrench } from "lucide-react"
+import { Blocks, Building2, type LucideIcon, Wrench } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
@@ -14,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { featureStatusLabels, featureTierLabels } from "@/lib/feature/feature-registry"
 import { getFeatureNavigationItems } from "@/lib/feature/get-feature-navigation-items"
 import { getFeatureNavigationSections } from "@/lib/feature/get-feature-navigation-sections"
@@ -40,7 +41,7 @@ type Props = {
   disabledFeatures: ReadonlyArray<string>
 }
 
-type SpaceKey = "my" | "teams" | "organization" | "system"
+type SpaceKey = "system" | "organization" | "other"
 
 type Space = {
   key: SpaceKey
@@ -89,13 +90,17 @@ function filterSections(
 }
 
 const SPACE_PREFIXES: ReadonlyArray<{ key: SpaceKey; prefix: string }> = [
-  { key: "my", prefix: "/my" },
-  { key: "my", prefix: "/company/inbox" },
-  { key: "my", prefix: "/company/notifications" },
-  { key: "teams", prefix: "/teams" },
-  { key: "organization", prefix: "/organization" },
   { key: "system", prefix: "/system" },
+  { key: "organization", prefix: "/organization" },
+  { key: "other", prefix: "/my" },
+  { key: "other", prefix: "/company/inbox" },
+  { key: "other", prefix: "/company/notifications" },
+  { key: "other", prefix: "/teams" },
 ]
+
+function isSpaceKey(value: unknown): value is SpaceKey {
+  return value === "system" || value === "organization" || value === "other"
+}
 
 function spaceFromPath(pathname: string): SpaceKey | null {
   for (const entry of SPACE_PREFIXES) {
@@ -134,7 +139,7 @@ function isItemActive(pathname: string, item: FeatureNavigationItem): boolean {
 }
 
 /**
- * 空間タブ（自分 / 部署 / 会社 / システム）を最上部に置き、選んだ空間の項目を
+ * 空間タブ（システム / 会社 / その他の業務）を最上部に置き、選んだ空間の項目を
  * 機能レジストリのグループ別に表示するサイドバーナビ。
  */
 export function SidebarNav(props: Props) {
@@ -154,7 +159,7 @@ export function SidebarNav(props: Props) {
   const activeSpace =
     selectedSpace !== null && selectedSpace.forPath === pathname
       ? selectedSpace.space
-      : (spaceFromPath(pathname) ?? selectedSpace?.space ?? "my")
+      : (spaceFromPath(pathname) ?? selectedSpace?.space ?? "other")
 
   const permissionSet = new Set(props.permissions)
 
@@ -171,10 +176,12 @@ export function SidebarNav(props: Props) {
     "/company/notifications": props.unreadNotificationCount,
   }
 
-  const myBadgeTotal = inboxTotal + props.unreadNotificationCount
+  const otherBadgeTotal = inboxTotal + props.unreadNotificationCount
 
   // 部署 Select の現在値。URL の部署 → 手動選択 → 主配属 → 全部署の先頭、の順で決める。
   const pathTeam = teamCodeFromPath(pathname)
+
+  const isTeamPath = pathname === "/teams" || pathname.startsWith("/teams/")
 
   const currentTeam =
     pathTeam ??
@@ -196,19 +203,11 @@ export function SidebarNav(props: Props) {
 
   const spaces: ReadonlyArray<Space> = [
     {
-      key: "my",
-      label: "自分",
-      icon: User,
+      key: "system",
+      label: "システム",
+      icon: Wrench,
       sections: getFeatureNavigationSections(
-        getFeatureNavigationItems("my", null, props.disabledFeatures),
-      ),
-    },
-    {
-      key: "teams",
-      label: "部署",
-      icon: Users,
-      sections: getFeatureNavigationSections(
-        getFeatureNavigationItems("teams", currentTeam, props.disabledFeatures),
+        getFeatureNavigationItems("system", null, props.disabledFeatures),
       ),
     },
     {
@@ -220,12 +219,13 @@ export function SidebarNav(props: Props) {
       ),
     },
     {
-      key: "system",
-      label: "システム",
-      icon: Wrench,
-      sections: getFeatureNavigationSections(
-        getFeatureNavigationItems("system", null, props.disabledFeatures),
-      ),
+      key: "other",
+      label: "その他の業務（おまけ）",
+      icon: Blocks,
+      sections: getFeatureNavigationSections([
+        ...getFeatureNavigationItems("my", null, props.disabledFeatures),
+        ...getFeatureNavigationItems("teams", currentTeam, props.disabledFeatures),
+      ]),
     },
   ]
 
@@ -252,6 +252,12 @@ export function SidebarNav(props: Props) {
     setSelectedTeam(code)
 
     router.push(`/teams/${code}/members`)
+  }
+
+  const handleSpaceChange = (space: unknown) => {
+    if (!isSpaceKey(space)) return
+
+    setSelectedSpace({ space, forPath: pathname })
   }
 
   const renderItem = (item: FeatureNavigationItem) => {
@@ -299,61 +305,45 @@ export function SidebarNav(props: Props) {
     <>
       <SidebarGroup>
         <SidebarGroupContent>
-          <div className="flex flex-col gap-2">
-            <div
-              role="tablist"
+          <Tabs value={currentSpace?.key} onValueChange={handleSpaceChange} className="gap-0">
+            <TabsList
               aria-label="メニューの空間"
-              className="grid grid-cols-4 gap-1 rounded-lg bg-sidebar-accent p-1"
+              className={cn(
+                "grid h-auto w-full",
+                visibleSpaces.length === 3 ? "grid-cols-3" : "grid-cols-2",
+              )}
             >
               {visibleSpaces.map((space) => {
                 const SpaceIcon = space.icon
 
                 return (
-                  <button
+                  <TabsTrigger
                     key={space.key}
-                    type="button"
-                    role="tab"
-                    aria-selected={space.key === currentSpace?.key}
+                    value={space.key}
                     aria-label={space.label}
+                    aria-description={
+                      space.key === "other" && otherBadgeTotal > 0
+                        ? `未処理と未読 ${otherBadgeTotal} 件`
+                        : undefined
+                    }
                     title={space.label}
-                    className={cn(
-                      "relative flex items-center justify-center rounded-md py-1.5 text-sidebar-foreground",
-                      space.key === currentSpace?.key
-                        ? "bg-sidebar shadow-sm"
-                        : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
-                    )}
-                    onClick={() => setSelectedSpace({ space: space.key, forPath: pathname })}
                   >
-                    <SpaceIcon className="size-4" />
+                    <SpaceIcon aria-hidden="true" />
 
-                    {space.key === "my" && myBadgeTotal > 0 ? (
-                      <span
-                        aria-label={`未処理と未読 ${myBadgeTotal} 件`}
-                        className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground"
-                      >
-                        {myBadgeTotal > 9 ? "9+" : myBadgeTotal}
-                      </span>
+                    {space.key === "other" && otherBadgeTotal > 0 ? (
+                      <Badge aria-hidden="true" className="absolute -top-1 -right-1 min-w-4 px-1">
+                        {otherBadgeTotal > 9 ? "9+" : otherBadgeTotal}
+                      </Badge>
                     ) : null}
-                  </button>
+                  </TabsTrigger>
                 )
               })}
-            </div>
-
-            <div className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
-              <Badge variant="outline">
-                <Circle
-                  data-icon="inline-start"
-                  className="fill-feature-development text-feature-development"
-                />
-                開発中
-              </Badge>
-              <span>琥珀色のアイコン</span>
-            </div>
-          </div>
+            </TabsList>
+          </Tabs>
         </SidebarGroupContent>
       </SidebarGroup>
 
-      {currentSpace?.key === "teams" && currentTeam !== null ? (
+      {currentSpace?.key === "other" && isTeamPath && currentTeam !== null ? (
         <SidebarGroup>
           <SidebarGroupContent>
             {isMyDepartment && props.myDepartments.length >= 1 ? (

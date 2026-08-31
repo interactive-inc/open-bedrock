@@ -167,7 +167,7 @@ export const POST = factory.createHandlers(
               .object({
                 actionType: z.string().trim().min(1).max(255),
               })
-              .catchall(z.json()),
+              .strict(),
           }),
         )
         .min(1)

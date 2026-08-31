@@ -9,6 +9,7 @@ export const SYSTEM_CAPABILITY_NAMES = [
   "iam",
   "idempotency",
   "identity",
+  "integration",
   "notifications",
   "oauth",
   "workflow",

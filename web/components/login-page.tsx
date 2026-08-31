@@ -4,14 +4,16 @@ import { LoginForm } from "@/components/login-form"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTranslator } from "@/lib/i18n/use-translator"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 type Props = {
-  onAuthenticated: () => void
+  onAuthenticated?: () => void
 }
 
 /**
- * AuthError を受けた root error boundary が、現在の URL のまま表示するログイン画面。
- * サインイン後は boundary を reset して同じページを再描画する。
+ * 未認証の保護領域または AuthError の root error boundary が、現在の URL のまま表示する
+ * ログイン画面。サインイン後は呼び出し元の reset、または現在の route の refresh で再描画する。
  *
  * ビルド時環境変数でログイン手段を出し分ける:
  * - NEXT_PUBLIC_IDENTITY_LOGIN_URL … 設定時、PKCEを開始する内部routeへの
@@ -23,6 +25,9 @@ type Props = {
  */
 export function LoginPage(props: Props) {
   const t = useTranslator()
+  const router = useRouter()
+
+  const onAuthenticated = props.onAuthenticated ?? (() => router.refresh())
 
   const loginHidden = process.env.NEXT_PUBLIC_LOGIN_HIDDEN === "1"
 
@@ -47,7 +52,9 @@ export function LoginPage(props: Props) {
     <div className="flex min-h-screen flex-1 items-center justify-center bg-muted/40 p-6">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>{t("open-karte にサインイン")}</CardTitle>
+          <CardTitle>
+            {appName === null ? t("open-karte にサインイン") : `${appName} にサインイン`}
+          </CardTitle>
 
           <CardDescription>
             {passwordLoginHidden
@@ -57,12 +64,10 @@ export function LoginPage(props: Props) {
         </CardHeader>
 
         <CardContent className="flex flex-col gap-4">
-          {passwordLoginHidden === false ? (
-            <LoginForm onAuthenticated={props.onAuthenticated} />
-          ) : null}
+          {passwordLoginHidden === false ? <LoginForm onAuthenticated={onAuthenticated} /> : null}
 
           {identityLoginUrl !== null ? (
-            <Button nativeButton={false} render={<a href="/auth/broker/login" />}>
+            <Button nativeButton={false} render={<Link href="/auth/broker/login" />}>
               {t("ログインする")}
             </Button>
           ) : null}

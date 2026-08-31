@@ -12,6 +12,7 @@ import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-s
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import { SystemAccountCatalogRepository } from "@system/infrastructure/repositories/iam/system-account-catalog.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+import { requireSystemStepUp } from "@system/interface/middlewares/require-system-step-up"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -51,6 +52,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
 // @authorization permission iam:write - live権限・自己停止・last-rootを同じ更新境界で検査する
 export const PATCH = systemFactory.createHandlers(
   authenticateSystemAccessToken,
+  requireSystemStepUp,
   zValidator("json", z.object({ status: z.enum(["active", "suspended", "locked"]) }).strict()),
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {

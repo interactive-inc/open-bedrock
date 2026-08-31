@@ -193,14 +193,14 @@ Personnel Action はCompanyへの人事入力adapterであり、所属または�
 
 ## 現行実装
 
-`api/src/contexts/company/domain/policies/organizational-authority.policy.ts` が、固定済み Workforce state と AccountEmployeeLink だけから資格候補を解決する正本である。DB、Hono、Worker、System schema、暗黙の時計を読まない。criterion、snapshot、candidate、evidence は opaque ID と判別可能な union だけで表し、storage IDや自由形式のDB evidenceを公開しない。
+`api/src/contexts/company/domain/policies/company-governance-authority.policy.ts` は、固定済み Company resource と active な System Account ID の集合から資格候補を解決する。DB、Hono、Worker、暗黙の時計を読まず、criterion、scope、snapshot、candidate、qualification は opaque ID と明示型だけで表す。
 
-純粋 resolver は同じ `asOf`、Employee state の一意性、period の所有者と有効期間、Account と Employee の一対一対応、参照先 Employee、組織全体の管理循環を先に検査する。候補が存在しない正常結果と、組織事実を安全に評価できない `OrganizationalAuthorityError` を区別する。候補探索は criterion 順、opaque ID、period IDで決定的に行い、入力配列やDB読取順へ依存しない。
+resolver は同じ `asOf` と organization revision に属する active resource だけを受理する。Account と Employee の一対一対応、Employment、Responsibility、ResponsibilityAssignment、OrganizationalOffice、OfficeAssignment、CollectiveBodyMembership、AuthorityScope の参照を検査し、候補が存在しない正常結果と、安全に評価できない `CompanyGovernanceAuthorityError` を区別する。候補探索と qualification は criterion、assignment、Account の順で決定的に並べる。
 
-`api/src/contexts/company/infrastructure/organization/resolve-organizational-authority-candidates.repository.ts` はcanonical OrgUnit、Assignment、Responsibilityだけを読み、同じ解決内で一つの`asOf`とorganization revisionを固定してから純粋resolverを呼ぶ。canonical stateを検証できなければ停止し、Account roleを候補資格として読まない。
+`D1CompanyResourceRepository` は LegalEntity、Site、Workplace、Employee、Employment、OrgUnit、OrganizationalOffice、OfficeAssignment、Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody、CollectiveBodyMembership、AccountEmployeeLink を一つの `asOf` と organization revision へ固定して読む。System Account の状態を読めない場合は候補ゼロへ畳まず unavailable として停止し、Account role を候補資格として読まない。
 
-`api/src/contexts/company/infrastructure/organization/resolve-company-procedure-task.repository.ts` は procedure selector から Company criterion への adapter である。候補列挙、在籍判定、組織探索、Account 対応を自分では実装せず、Company resolver の証拠を System Task の候補 snapshot へ変換する。
+`CreateCompanyGovernanceProcedureTask` は解決済み Company qualification を System Task の候補証拠へ変換する。個人または役職の責任は一名承認、合議体は参加定足数、必要賛成数、成立不能による否決、代理禁止、差戻し禁止として固定する。異なる assignment、個人資格、合議資格が同じ criterion で混在し意味を一意に決められない場合は Task を作成しない。
 
-現行実装はOrgUnit identity、期間付き階層、Assignment、汎用Responsibility、organization revision、atomic operation、Company資格候補、時点snapshot、canonical System Account ID、System TaskとCompany APIへの接続を実装した。正規条件の探索と検証は共通の純粋resolverへ収束し、Personnel Actionも共通の変更validatorに接続した。法人、地域、金額などOrgUnit以外の条件scopeと合議体は、必要になった時点で別の明示型として拡張する。
+現行実装は OrgUnit identity、期間付き階層、Assignment、Job、Position、Grade、OrganizationalOffice、OfficeAssignment、Responsibility、ResponsibilityAssignment、AuthorityScope、CollectiveBody、organization revision、atomic operation、Company 資格候補、時点 snapshot、canonical System Account ID、System Task と Company API への接続を実装する。scope は法人、組織単位、拠点、勤務場所、地域、通貨付き金額を明示型で評価する。Personnel Action も共通の変更 validator に接続する。
 
 判断時の Employee 対応と在籍の再検査は Company の公開 resolver を経由し、Account 状態の正本は canonical `system_accounts` である。System HumanAttestation は Company table を直接読まず、API composition が Company の live な主体対応と System の候補資格を合成する。

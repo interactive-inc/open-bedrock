@@ -169,7 +169,7 @@ export const POST = factory.createHandlers(
                 email: z.email().nullable().optional(),
                 phone: z.string().trim().min(1).max(255).nullable().optional(),
               })
-              .catchall(z.json()),
+              .strict(),
           }),
         )
         .min(1)

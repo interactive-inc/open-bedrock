@@ -1,5 +1,8 @@
 import { systemAttachmentSchema } from "@/contexts/system/infrastructure/schema/system-attachment"
 import { systemCoreSchema } from "@/contexts/system/infrastructure/schema/system-core"
+import { systemDeliverySchema } from "@/contexts/system/infrastructure/schema/system-delivery"
+import { systemIntegrationSchema } from "@/contexts/system/infrastructure/schema/system-integration"
+import { systemPrincipalSchema } from "@/contexts/system/infrastructure/schema/system-principal"
 import { systemProcedureDelegationSchema } from "@/contexts/system/infrastructure/schema/system-procedure-delegation"
 import { systemProcedureSchema } from "@/contexts/system/infrastructure/schema/system-procedure"
 import { systemWorkflowSchema } from "@/contexts/system/infrastructure/schema/system-workflow"
@@ -59,6 +62,9 @@ import * as ownedSchema50 from "@/contexts/work-style/infrastructure/schema/work
 export const schema = {
   ...systemAttachmentSchema,
   ...systemCoreSchema,
+  ...systemDeliverySchema,
+  ...systemIntegrationSchema,
+  ...systemPrincipalSchema,
   ...systemProcedureDelegationSchema,
   ...systemProcedureSchema,
   ...systemWorkflowSchema,

@@ -71,8 +71,7 @@ SELECT
   0,
   'seed-lifecycle-action-' || employment.employee_id,
   1767225600
-FROM company_employments employment
-WHERE employment.status != 'TERMINATED';
+FROM company_employments employment;
 
 INSERT INTO company_employee_lifecycle_revisions (employee_id, revision, updated_at)
 SELECT id, 0, 1767225600 FROM company_employees;

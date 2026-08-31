@@ -73,13 +73,13 @@ digest は内容の同一性を検査するが、内容の妥当性を証明し�
 
 ## Task と資格 snapshot
 
-`DecisionTask` は Case 内の判断単位である。task key、round、required approvals、proposal digest、開始、期限を固定する。候補者は canonical System Account ID で保存し、Employee ID または組織語彙を保存しない。
+`DecisionTask` は Case 内の判断単位である。task key、round、required approvals、required participants、negative decision rule、代理可否、差戻し可否、proposal digest、開始、期限を固定する。候補者は canonical System Account ID で保存し、Employee ID または組織語彙を保存しない。
 
 各候補者には、Company または別の資格所有 context が返した evidence context、kind、ID、version、eligibility digest、resolved at を保存する。System は証拠の意味を解釈しないが、どの証拠版に基づく候補だったかを変更不能な形で保持する。
 
 組織変更は進行中 Task の候補者を暗黙変更しない。候補の変更が必要な場合、開いている round を取消し、根拠を再解決して次の round を作る。最初の attestation 後に候補または除外を追加してはならない。
 
-required approvals は候補者数以下でなければならない。実行時は保存された候補 snapshot を使い、現在の組織だけから過去の資格を再計算して置換してはならない。
+required approvals と required participants は候補者数以下でなければならない。通常の承認は一件の reject で否決できる。合議は approval-impossible を指定し、必要賛成数を満たせなくなる数の reject が揃うまで pending を維持する。実行時は保存された候補 snapshot を使い、現在の組織だけから過去の資格を再計算して置換してはならない。
 
 ## 技術的認可と会社上の資格
 
@@ -101,7 +101,7 @@ TechnicalPermission は API operation を呼び出せる上限である。Organi
 
 HumanAttestation は追記専用とする。訂正は既存行の更新または削除では行わず、Task を終端させ、必要な根拠を保存して次の round または新しい Case で行う。
 
-HumanAttestation という名前だけでは人間性を保証しない。API は HumanPrincipal の認証、Account の有効状態、必要な step-up、session の失効、TechnicalPermission を確認してから作成する。現行の System Account は Principal kind と step-up を独立表現していないため、現行 route がこの要件を満たすとは扱わない。
+HumanAttestation という名前だけでは人間性を保証しない。API は HumanPrincipal の認証、Account の有効状態、必要な step-up、session の失効、TechnicalPermission を確認してから作成する。System は Principal kind と短期 step-up grant を独立して保持し、Company または App の composition は HumanPrincipal 以外を human quorum へ入れてはならない。
 
 ## 自己判断と除外
 
@@ -115,7 +115,7 @@ System は対象参照から本人または利益相反を推測できない。`
 
 Task は、すべての attestation が同じ case、task、round、digest に属し、actor と represented Account が重複せず、represented Account が候補であることを確認してから結果を評価する。一件でも不正な attestation が混ざる場合、正しい attestation だけを選んで結果を出さず、Task 全体を拒否する。
 
-有効な reject が一件でもあれば rejected とする。reject がなく、有効な return が一件でもあれば returned とする。いずれもなく、異なる represented Account による approve が required approvals 以上なら approved とする。それ以外は pending とする。この優先順位により、入力順で結果が変わらない。
+return が許可された Task で有効な return が一件でもあれば returned とする。negative decision rule が any-reject なら有効な reject 一件で rejected とし、approval-impossible なら残る候補全員が approve しても required approvals を満たせなくなった時点で rejected とする。reject が否決条件へ達せず、異なる represented Account の参加数が required participants 以上、approve が required approvals 以上なら approved とする。それ以外は pending とする。この評価は入力順で変化してはならない。
 
 Case を approved にできるのは、必要な Task が一件以上存在し、すべて approved の場合だけである。Case を rejected または returned にできるのは、すべての Task が終端し、対応する否定判断が存在する場合だけである。Case 全体でも reject は return より優先する。Case を cancelled にできるのは、開いている Task がない場合だけである。
 
@@ -182,6 +182,7 @@ domain object の検証だけに依存してはならない。複数 command が
 - 版付き `ProcedureDefinition`、`Proposal`、`SystemCase`、`DecisionTask`、`Decision`、`HumanAttestation`、`Delegation`、`ExecutionAuthorization` の domain 型
 - 汎用 Proposal body、opaque な対象版、proposal digest、候補、除外、資格証拠参照を持つ System table
 - monotonic lifecycle、自己判断禁止、候補と除外の固定、quorum、代理 scope、append-only、一回実行を強制する database 制約
+- 参加定足数、必要賛成数、通常承認と合議の否決条件、代理可否、差戻し可否を Task ごとに固定する domain 型と database 制約
 - Procedure の公開、提案開始、判断、取消、再割当、委任、参照、実行許可の application service と D1 repository
 - canonical DDL、migration、Drizzle schema の対応と、それらの一致を検査する test
 - 従来の application request HTTP 契約を System Proposal と Case へ直接接続する API composition route
@@ -196,11 +197,9 @@ Company の人事変更申請は、Company が業務 subject と payload fingerp
 
 現行の System workflow に残る不足は次である。
 
-- HumanPrincipal kind、step-up、共通 policy evaluation と attestation 作成経路
-- すべての内部業務に対する共通 Execution Gateway と idempotency 契約
-- 外部 connector に対する outbox、Assertion、照合の接続
-- Company の汎用 Responsibility scope と職務分離 policy
-- Principal 単位の同一人物性と、複数 Account による quorum 水増しを拒否する共通契約
+- すべての内部業務に対する共通 Execution Gateway と業務更新の接続
+- すべての transport adapter に対する署名、rate limit、circuit breaker の共通実装
+- 永続的な field policy 配布、BreakGlassAccessGrant、事後 review
 
 これらは System 手続きへの切替不足ではなく、今後追加する基盤能力である。現行の汎用申請と人事変更申請は System workflow を正本として利用し、独立した `request` コンテキストを必要としない。
 

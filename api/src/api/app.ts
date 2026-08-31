@@ -87,6 +87,7 @@ import * as commendationsIdRoute from "@/contexts/commendation/interface/routes/
 import * as companyCalendarDaysRoute from "@/contexts/company-calendar/interface/routes/company-calendar-days"
 import * as companyCalendarDaysIdRoute from "@/contexts/company-calendar/interface/routes/company-calendar-days.$id"
 import * as companyAccountEmployeeLinksRoute from "@/contexts/company/interface/routes/company.account-employee-links"
+import * as companyAuthorityResolutionsRoute from "@/contexts/company/interface/routes/company.authority-resolutions"
 import * as companyBootstrapRoute from "@/contexts/company/interface/routes/company.bootstrap"
 import * as companyCapabilitiesRoute from "@/contexts/company/interface/routes/company.capabilities"
 import * as companyDefinitionsRoute from "@/contexts/company/interface/routes/company.definitions"
@@ -318,8 +319,20 @@ import * as systemBrowserSessionsRoute from "@system/interface/routes/system.bro
 import * as systemCliAuthorizationCallbackRoute from "@system/interface/routes/system.cli-authorization-callback"
 import * as systemCliAuthorizationsRoute from "@system/interface/routes/system.cli-authorizations"
 import * as systemCliSessionsRoute from "@system/interface/routes/system.cli-sessions"
+import * as systemConnectorsRoute from "@system/interface/routes/system.connectors"
+import * as systemConnectorsConnectorIdRoute from "@system/interface/routes/system.connectors.$connectorId"
+import * as systemDeadLettersRoute from "@system/interface/routes/system.dead-letters"
+import * as systemDeadLettersDeadLetterIdRequeueRoute from "@system/interface/routes/system.dead-letters.$deadLetterId.requeue"
+import * as systemDeliveriesRoute from "@system/interface/routes/system.deliveries"
+import * as systemDeliveriesDeliveryIdRoute from "@system/interface/routes/system.deliveries.$deliveryId"
 import * as systemHealthRoute from "@system/interface/routes/system.health"
 import * as systemIdentitySessionsRoute from "@system/interface/routes/system.identity-sessions"
+import * as systemInboxMessagesMessageIdRoute from "@system/interface/routes/system.inbox-messages.$messageId"
+import * as systemIntegrationExchangesRoute from "@system/interface/routes/system.integration-exchanges"
+import * as systemIntegrationExchangesExchangeIdRoute from "@system/interface/routes/system.integration-exchanges.$exchangeId"
+import * as systemIntegrationExchangesExchangeIdReconciliationsRoute from "@system/interface/routes/system.integration-exchanges.$exchangeId.reconciliations"
+import * as systemMachineCredentialsCredentialIdRoute from "@system/interface/routes/system.machine-credentials.$credentialId"
+import * as systemMachineSessionsRoute from "@system/interface/routes/system.machine-sessions"
 import * as systemNotificationsRoute from "@system/interface/routes/system.notifications"
 import * as systemNotificationsIdRoute from "@system/interface/routes/system.notifications.$id"
 import * as systemNotificationsUnreadCountRoute from "@system/interface/routes/system.notifications.unread-count"
@@ -327,9 +340,13 @@ import * as systemOauthAuthorizationsRoute from "@system/interface/routes/system
 import * as systemOauthMcpGrantsRoute from "@system/interface/routes/system.oauth.mcp-grants"
 import * as systemOauthTokenRoute from "@system/interface/routes/system.oauth.token"
 import * as systemOauthUserinfoRoute from "@system/interface/routes/system.oauth.userinfo"
+import * as systemPrincipalsRoute from "@system/interface/routes/system.principals"
+import * as systemPrincipalsPrincipalIdRoute from "@system/interface/routes/system.principals.$principalId"
+import * as systemPrincipalsPrincipalIdMachineCredentialsRoute from "@system/interface/routes/system.principals.$principalId.machine-credentials"
 import * as systemRolesRoute from "@system/interface/routes/system.roles"
 import * as systemRolesRoleIdRoute from "@system/interface/routes/system.roles.$roleId"
 import * as systemSessionsRoute from "@system/interface/routes/system.sessions"
+import * as systemStepUpGrantsRoute from "@system/interface/routes/system.step-up-grants"
 
 const routePart0 = createRouteApp()
   .get("/announcement/announcements", ...announcementsRoute.GET)
@@ -537,6 +554,7 @@ const routePart25 = createRouteApp()
   .post("/company/audit-event-exports", ...companyAuditEventExportsRoute.POST)
   .get("/company/audit-events", ...companyAuditEventsRoute.GET)
   .get("/company/audit-events/:eventId", ...companyAuditEventsEventIdRoute.GET)
+  .post("/company/authority-resolutions", ...companyAuthorityResolutionsRoute.POST)
   .post("/company/bootstrap", ...companyBootstrapRoute.POST)
   .get("/company/capabilities", ...companyCapabilitiesRoute.GET)
   .get("/company/current-profile", ...companyCurrentProfileRoute.GET)
@@ -581,19 +599,23 @@ const routePart25 = createRouteApp()
   .get("/company/organization-units/:code/members", ...companyOrganizationUnitsCodeMembersRoute.GET)
   .get("/company/people", ...companyPeopleRoute.GET)
   .post("/company/people", ...companyPeopleRoute.POST)
-  .post("/company/personnel-action-executions", ...companyPersonnelActionExecutionsRoute.POST)
 
-const routePart26 = createRouteApp().get(
+const routePart26 = createRouteApp().post(
+  "/company/personnel-action-executions",
+  ...companyPersonnelActionExecutionsRoute.POST,
+)
+
+const routePart27 = createRouteApp().get(
   "/company/personnel-action-requests",
   ...companyPersonnelActionRequestsRoute.GET,
 )
 
-const routePart27 = createRouteApp().post(
+const routePart28 = createRouteApp().post(
   "/company/personnel-action-requests",
   ...companyPersonnelActionRequestsRoute.POST,
 )
 
-const routePart28 = createRouteApp()
+const routePart29 = createRouteApp()
   .get("/company/personnel-actions", ...companyPersonnelActionsRoute.GET)
   .post("/company/personnel-actions", ...companyPersonnelActionsRoute.POST)
   .get("/company/position-definitions", ...companyPositionDefinitionsRoute.GET)
@@ -646,7 +668,7 @@ const routePart28 = createRouteApp()
   .post("/governance/governance-documents/sync", ...governanceGovernanceDocumentsSyncRoute.POST)
   .get("/governance/governance-documents/:code", ...governanceDocumentsCodeRoute.GET)
 
-const routePart29 = createRouteApp()
+const routePart30 = createRouteApp()
   .post(
     "/governance/governance-documents/:code/acknowledge",
     ...governanceDocumentsCodeAcknowledgeRoute.POST,
@@ -714,7 +736,7 @@ const routePart29 = createRouteApp()
   .get("/meeting/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.GET)
   .put("/meeting/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.PUT)
 
-const routePart30 = createRouteApp()
+const routePart31 = createRouteApp()
   .get("/meeting/meetings", ...meetingsRoute.GET)
   .post("/meeting/meetings", ...meetingsRoute.POST)
   .get("/meeting/meetings/:code", ...meetingsCodeRoute.GET)
@@ -788,7 +810,7 @@ const routePart30 = createRouteApp()
   )
   .get("/performance-review/performance-goals", ...performanceGoalsRoute.GET)
 
-const routePart31 = createRouteApp()
+const routePart32 = createRouteApp()
   .post("/performance-review/performance-goals", ...performanceGoalsRoute.POST)
   .get("/performance-review/performance-goals/me", ...performanceGoalsMeRoute.GET)
   .get("/performance-review/performance-goals/tree", ...performanceGoalsTreeRoute.GET)
@@ -862,7 +884,7 @@ const routePart31 = createRouteApp()
   .get("/resignation/resignations/me", ...resignationsMeRoute.GET)
   .get("/resignation/resignations/:id", ...resignationsIdRoute.GET)
 
-const routePart32 = createRouteApp()
+const routePart33 = createRouteApp()
   .put("/resignation/resignations/:id", ...resignationsIdRoute.PUT)
   .delete("/resignation/resignations/:id", ...resignationsIdRoute.DELETE)
   .post("/resignation/resignations/:id/accept", ...resignationsIdAcceptRoute.POST)
@@ -912,7 +934,7 @@ const routePart32 = createRouteApp()
   .post("/software-license/software-licenses", ...softwareLicensesRoute.POST)
   .put("/software-license/software-licenses/:id", ...softwareLicensesIdRoute.PUT)
 
-const routePart33 = createRouteApp()
+const routePart34 = createRouteApp()
   .post("/software-license/software-licenses/:id/cancel", ...softwareLicensesIdCancelRoute.POST)
   .get("/survey/surveys", ...surveysRoute.GET)
   .post("/survey/surveys", ...surveysRoute.POST)
@@ -966,8 +988,45 @@ const routePart33 = createRouteApp()
   .get("/system/cli-authorization-callback", ...systemCliAuthorizationCallbackRoute.GET)
   .get("/system/cli-authorizations", ...systemCliAuthorizationsRoute.GET)
   .post("/system/cli-sessions", ...systemCliSessionsRoute.POST)
+  .get("/system/connectors", ...systemConnectorsRoute.GET)
+  .post("/system/connectors", ...systemConnectorsRoute.POST)
+  .patch("/system/connectors/:connectorId", ...systemConnectorsConnectorIdRoute.PATCH)
+  .get("/system/dead-letters", ...systemDeadLettersRoute.GET)
+  .post(
+    "/system/dead-letters/:deadLetterId/requeue",
+    ...systemDeadLettersDeadLetterIdRequeueRoute.POST,
+  )
+  .get("/system/deliveries", ...systemDeliveriesRoute.GET)
+  .post("/system/deliveries", ...systemDeliveriesRoute.POST)
+  .patch("/system/deliveries/:deliveryId", ...systemDeliveriesDeliveryIdRoute.PATCH)
   .get("/system/health", ...systemHealthRoute.GET)
   .post("/system/identity-sessions", ...systemIdentitySessionsRoute.POST)
+
+const routePart35 = createRouteApp()
+  .patch("/system/inbox-messages/:messageId", ...systemInboxMessagesMessageIdRoute.PATCH)
+  .get("/system/integration-exchanges", ...systemIntegrationExchangesRoute.GET)
+  .post("/system/integration-exchanges", ...systemIntegrationExchangesRoute.POST)
+  .get(
+    "/system/integration-exchanges/:exchangeId",
+    ...systemIntegrationExchangesExchangeIdRoute.GET,
+  )
+  .patch(
+    "/system/integration-exchanges/:exchangeId",
+    ...systemIntegrationExchangesExchangeIdRoute.PATCH,
+  )
+  .get(
+    "/system/integration-exchanges/:exchangeId/reconciliations",
+    ...systemIntegrationExchangesExchangeIdReconciliationsRoute.GET,
+  )
+  .post(
+    "/system/integration-exchanges/:exchangeId/reconciliations",
+    ...systemIntegrationExchangesExchangeIdReconciliationsRoute.POST,
+  )
+  .delete(
+    "/system/machine-credentials/:credentialId",
+    ...systemMachineCredentialsCredentialIdRoute.DELETE,
+  )
+  .post("/system/machine-sessions", ...systemMachineSessionsRoute.POST)
   .get("/system/notifications", ...systemNotificationsRoute.GET)
   .post("/system/notifications", ...systemNotificationsRoute.POST)
   .patch("/system/notifications", ...systemNotificationsRoute.PATCH)
@@ -976,12 +1035,22 @@ const routePart33 = createRouteApp()
   .patch("/system/notifications/:id", ...systemNotificationsIdRoute.PATCH)
   .delete("/system/notifications/:id", ...systemNotificationsIdRoute.DELETE)
   .post("/system/oauth/authorizations", ...systemOauthAuthorizationsRoute.POST)
-
-const routePart34 = createRouteApp()
   .post("/system/oauth/mcp-grants", ...systemOauthMcpGrantsRoute.POST)
   .post("/system/oauth/token", ...systemOauthTokenRoute.POST)
   .get("/system/oauth/userinfo", ...systemOauthUserinfoRoute.GET)
   .get("/system/permission-definitions", ...systemPermissionDefinitionsRoute.GET)
+  .get("/system/principals", ...systemPrincipalsRoute.GET)
+  .post("/system/principals", ...systemPrincipalsRoute.POST)
+  .get("/system/principals/:principalId", ...systemPrincipalsPrincipalIdRoute.GET)
+  .patch("/system/principals/:principalId", ...systemPrincipalsPrincipalIdRoute.PATCH)
+  .get(
+    "/system/principals/:principalId/machine-credentials",
+    ...systemPrincipalsPrincipalIdMachineCredentialsRoute.GET,
+  )
+  .post(
+    "/system/principals/:principalId/machine-credentials",
+    ...systemPrincipalsPrincipalIdMachineCredentialsRoute.POST,
+  )
   .post("/system/provisioning/identities", ...systemProvisioningIdentitiesRoute.POST)
   .get("/system/roles", ...systemRolesRoute.GET)
   .post("/system/roles", ...systemRolesRoute.POST)
@@ -992,6 +1061,7 @@ const routePart34 = createRouteApp()
   .post("/system/sessions", ...systemSessionsRoute.POST)
   .patch("/system/sessions", ...systemSessionsRoute.PATCH)
   .delete("/system/sessions", ...systemSessionsRoute.DELETE)
+  .post("/system/step-up-grants", ...systemStepUpGrantsRoute.POST)
   .get("/thanks/thanks-messages", ...thanksMessagesRoute.GET)
   .post("/thanks/thanks-messages", ...thanksMessagesRoute.POST)
   .get("/thanks/thanks-messages/me", ...thanksMessagesMeRoute.GET)
@@ -1002,6 +1072,8 @@ const routePart34 = createRouteApp()
   .get("/thanks/thanks-redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)
   .get("/thanks/thanks-redemptions/me", ...thanksRedemptionsMeRoute.GET)
   .post("/thanks/thanks-redemptions/:id/approve", ...thanksRedemptionsIdApproveRoute.POST)
+
+const routePart36 = createRouteApp()
   .post("/thanks/thanks-redemptions/:id/reject", ...thanksRedemptionsIdRejectRoute.POST)
   .get("/thanks/thanks-rewards", ...thanksRewardsRoute.GET)
   .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
@@ -1060,6 +1132,8 @@ export const app = appBase
   .route("/", routePart32)
   .route("/", routePart33)
   .route("/", routePart34)
+  .route("/", routePart35)
+  .route("/", routePart36)
 
 export type AppType = typeof app
 
@@ -1103,6 +1177,8 @@ type ApiClientPart31 = ReturnType<typeof hc<typeof routePart31>>
 type ApiClientPart32 = ReturnType<typeof hc<typeof routePart32>>
 type ApiClientPart33 = ReturnType<typeof hc<typeof routePart33>>
 type ApiClientPart34 = ReturnType<typeof hc<typeof routePart34>>
+type ApiClientPart35 = ReturnType<typeof hc<typeof routePart35>>
+type ApiClientPart36 = ReturnType<typeof hc<typeof routePart36>>
 export type ApiClient = ApiClientPart0 &
   ApiClientPart1 &
   ApiClientPart2 &
@@ -1137,4 +1213,6 @@ export type ApiClient = ApiClientPart0 &
   ApiClientPart31 &
   ApiClientPart32 &
   ApiClientPart33 &
-  ApiClientPart34
+  ApiClientPart34 &
+  ApiClientPart35 &
+  ApiClientPart36

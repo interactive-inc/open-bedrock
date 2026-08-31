@@ -16,6 +16,7 @@ import { iamRoleIdSchema } from "@system/domain/schemas/iam/iam-role.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import { SystemRoleCatalogRepository } from "@system/infrastructure/repositories/iam/system-role-catalog.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+import { requireSystemStepUp } from "@system/interface/middlewares/require-system-step-up"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -58,6 +59,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
 // @authorization permission iam:write - managed Role不変・permission昇格・last-rootを検査する
 export const PATCH = systemFactory.createHandlers(
   authenticateSystemAccessToken,
+  requireSystemStepUp,
   zValidator(
     "json",
     z
@@ -195,6 +197,7 @@ export const PATCH = systemFactory.createHandlers(
 // @authorization permission iam:write - active bindingを持つRoleとmanaged Roleは削除しない
 export const DELETE = systemFactory.createHandlers(
   authenticateSystemAccessToken,
+  requireSystemStepUp,
   async (context) => {
     if (!context.var.permissions.has("system:admin") && !context.var.permissions.has("iam:write")) {
       throw new SystemForbiddenError()

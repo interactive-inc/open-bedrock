@@ -17,6 +17,7 @@ export type Bindings = {
   DB: D1Database
   JWT_SECRET: string
   OIDC_SIGNING_KEYS?: string
+  // password hash用pepper。本番ではlocal seed値と異なるsecretを必ず設定する。未設定時は認証を拒否する。
   PEPPER_SECRET?: string
   EMAIL?: SystemEmailSender
   EMAIL_SENDER_NAME?: string
@@ -84,6 +85,7 @@ export type Variables = {
   userId: string
   accountTokenVersion: number
   permissions: ReadonlySet<string>
+  scopedPermissions?: ReadonlyMap<string, ReadonlySet<string>>
   role: string
   roleKeys?: ReadonlyArray<string>
   oidcClientRegistry: OidcClientRegistryValue

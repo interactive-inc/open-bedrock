@@ -5,6 +5,7 @@ import { CompanyResourceValidationError } from "@/contexts/company/domain/errors
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { OrganizationRelation } from "@/contexts/company/domain/definitions/organization-relation.definition"
 import { orgAssignmentTypes } from "@/contexts/company/domain/definitions/org-assignment-type.definition"
+import type { CompanyResourceType } from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
 
 function hasContainingOrganizationUnit(
   resource: CompanyResourceEntity,
@@ -15,6 +16,28 @@ function hasContainingOrganizationUnit(
     (unit) =>
       unit.readText("organizationUnitId") === organizationUnitId && unit.containsPeriod(resource),
   )
+}
+
+function hasContainingResource(
+  resource: CompanyResourceEntity,
+  type: CompanyResourceType,
+  id: string,
+  resources: ReadonlyArray<CompanyResourceEntity>,
+): boolean {
+  return resources.some(
+    (candidate) =>
+      candidate.type === type &&
+      candidate.id === id &&
+      candidate.state === "active" &&
+      candidate.containsPeriod(resource),
+  )
+}
+
+function activeResourcesOfType(
+  resources: ReadonlyArray<CompanyResourceEntity>,
+  type: CompanyResourceType,
+): ReadonlyArray<CompanyResourceEntity> {
+  return resources.filter((resource) => resource.type === type && resource.state === "active")
 }
 
 function relationsHaveManagementCycle(
@@ -136,6 +159,110 @@ export function validateCompanyOrganizationChange(
     return new CompanyResourceValidationError("invalid_organization")
   }
 
+  const officeAssignments = activeResourcesOfType(resources, "office-assignment")
+  for (const assignment of officeAssignments) {
+    const employeeId = assignment.readText("employeeId")
+    const employmentId = assignment.readText("employmentId")
+    const officeId = assignment.readText("organizationalOfficeId")
+    if (
+      employeeId === null ||
+      employmentId === null ||
+      officeId === null ||
+      !hasContainingResource(assignment, "employee", employeeId, resources) ||
+      !hasContainingResource(assignment, "employment", employmentId, resources) ||
+      !hasContainingResource(assignment, "organizational-office", officeId, resources)
+    ) {
+      return new CompanyResourceValidationError("invalid_organization")
+    }
+    if (
+      officeAssignments.some(
+        (candidate) =>
+          candidate.id !== assignment.id &&
+          candidate.readText("organizationalOfficeId") === officeId &&
+          candidate.overlaps(assignment),
+      )
+    ) {
+      return new CompanyResourceValidationError("invalid_organization")
+    }
+  }
+
+  for (const scope of activeResourcesOfType(resources, "authority-scope")) {
+    const scopeType = scope.readText("scopeType")
+    if (
+      scopeType === "organization-unit" ||
+      scopeType === "legal-entity" ||
+      scopeType === "site" ||
+      scopeType === "workplace"
+    ) {
+      const scopeId = scope.readText("scopeId")
+      if (scopeId === null || !hasContainingResource(scope, scopeType, scopeId, resources)) {
+        return new CompanyResourceValidationError("invalid_organization")
+      }
+    }
+  }
+
+  const responsibilityAssignments = activeResourcesOfType(resources, "responsibility-assignment")
+  for (const assignment of responsibilityAssignments) {
+    const responsibilityId = assignment.readText("responsibilityId")
+    const holderType = assignment.readText("holderType")
+    const holderId = assignment.readText("holderId")
+    const authorityScopeId = assignment.readNullableText("authorityScopeId")
+    const holderResourceType =
+      holderType === "employee"
+        ? "employee"
+        : holderType === "organizational-office"
+          ? "organizational-office"
+          : holderType === "collective-body"
+            ? "collective-body"
+            : null
+    if (
+      responsibilityId === null ||
+      holderId === null ||
+      holderResourceType === null ||
+      authorityScopeId === undefined ||
+      !hasContainingResource(assignment, "responsibility", responsibilityId, resources) ||
+      !hasContainingResource(assignment, holderResourceType, holderId, resources) ||
+      (authorityScopeId !== null &&
+        !hasContainingResource(assignment, "authority-scope", authorityScopeId, resources))
+    ) {
+      return new CompanyResourceValidationError("invalid_organization")
+    }
+    if (
+      responsibilityAssignments.some(
+        (candidate) =>
+          candidate.id !== assignment.id &&
+          candidate.readText("responsibilityId") === responsibilityId &&
+          candidate.readText("holderType") === holderType &&
+          candidate.readText("holderId") === holderId &&
+          candidate.readNullableText("authorityScopeId") === authorityScopeId &&
+          candidate.overlaps(assignment),
+      )
+    ) {
+      return new CompanyResourceValidationError("invalid_organization")
+    }
+  }
+
+  const memberships = activeResourcesOfType(resources, "collective-body-membership")
+  for (const membership of memberships) {
+    const collectiveBodyId = membership.readText("collectiveBodyId")
+    const employeeId = membership.readText("employeeId")
+    if (
+      collectiveBodyId === null ||
+      employeeId === null ||
+      !hasContainingResource(membership, "collective-body", collectiveBodyId, resources) ||
+      !hasContainingResource(membership, "employee", employeeId, resources) ||
+      memberships.some(
+        (candidate) =>
+          candidate.id !== membership.id &&
+          candidate.readText("collectiveBodyId") === collectiveBodyId &&
+          candidate.readText("employeeId") === employeeId &&
+          candidate.overlaps(membership),
+      )
+    ) {
+      return new CompanyResourceValidationError("invalid_organization")
+    }
+  }
+
   for (const authority of resources.filter(
     (resource) => resource.type === "organizational-authority" && resource.state === "active",
   )) {
@@ -147,15 +274,18 @@ export function validateCompanyOrganizationChange(
     if (
       employeeId === null ||
       employmentId === null ||
-      scopeType !== "organization-unit" ||
+      (scopeType !== "organization-unit" && scopeType !== "authority-scope") ||
       scopeId === null ||
       authorityType === null ||
-      !hasContainingOrganizationUnit(authority, scopeId, activeUnits) ||
+      (scopeType === "organization-unit"
+        ? !hasContainingOrganizationUnit(authority, scopeId, activeUnits)
+        : !hasContainingResource(authority, "authority-scope", scopeId, resources)) ||
       !assignments.some(
         (assignment) =>
           assignment.readText("employeeId") === employeeId &&
           assignment.readText("employmentId") === employmentId &&
-          assignment.readText("organizationUnitId") === scopeId &&
+          (scopeType !== "organization-unit" ||
+            assignment.readText("organizationUnitId") === scopeId) &&
           assignment.containsPeriod(authority),
       )
     ) {

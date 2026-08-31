@@ -28,9 +28,22 @@ export class ApplyOrganizationChange {
 
   async execute(change: Omit<CompanyResourceChangeProps, "actorAccountId">): Promise<Result> {
     const organizationResourceTypes = [
+      "legal-entity",
+      "site",
+      "workplace",
+      "employee",
+      "employment",
       "organization-unit",
       "assignment",
       "reporting-relation",
+      "position",
+      "organizational-office",
+      "office-assignment",
+      "responsibility",
+      "authority-scope",
+      "responsibility-assignment",
+      "collective-body",
+      "collective-body-membership",
       "organizational-authority",
     ] as const
     const organizationId = change.resources[0]?.organizationId ?? ""

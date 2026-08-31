@@ -64,6 +64,10 @@ export type SystemDecisionTaskView = Readonly<{
   key: string
   round: number
   requiredApprovals: number
+  requiredParticipants: number
+  negativeDecisionRule: "any-reject" | "approval-impossible"
+  delegationPolicy: "allowed" | "forbidden"
+  returnPolicy: "allowed" | "forbidden"
   openedAt: Date
   dueAt: Date | null
   outcome: "pending" | "approved" | "rejected" | "returned" | "cancelled"
@@ -388,7 +392,8 @@ export class SystemD1ProposalAdapter implements SystemProposalQuery {
   async listTasks(caseId: string): Promise<ReadonlyArray<SystemDecisionTaskView> | Error> {
     try {
       const rows = await this.c.env.DB.prepare(
-        `SELECT task_key, round, required_approvals, opened_at, due_at,
+        `SELECT task_key, round, required_approvals, required_participants,
+                negative_decision_rule, delegation_policy, return_policy, opened_at, due_at,
                 coalesce(outcome, 'pending') AS outcome, closed_at
          FROM system_decision_tasks
          WHERE case_id = ?1
@@ -399,6 +404,10 @@ export class SystemD1ProposalAdapter implements SystemProposalQuery {
           task_key: string
           round: number
           required_approvals: number
+          required_participants: number
+          negative_decision_rule: "any-reject" | "approval-impossible"
+          delegation_policy: "allowed" | "forbidden"
+          return_policy: "allowed" | "forbidden"
           opened_at: number
           due_at: number | null
           outcome: "pending" | "approved" | "rejected" | "returned" | "cancelled"
@@ -409,6 +418,10 @@ export class SystemD1ProposalAdapter implements SystemProposalQuery {
         key: row.task_key,
         round: row.round,
         requiredApprovals: row.required_approvals,
+        requiredParticipants: row.required_participants,
+        negativeDecisionRule: row.negative_decision_rule,
+        delegationPolicy: row.delegation_policy,
+        returnPolicy: row.return_policy,
         openedAt: new Date(row.opened_at),
         dueAt: row.due_at === null ? null : new Date(row.due_at),
         outcome: row.outcome,

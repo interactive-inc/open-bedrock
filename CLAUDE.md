@@ -141,7 +141,7 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 
 - まず `bun install` を必ず実行する（飛ばすと web が `Module not found: 'zod'` 等の依存解決エラーになる）
 - 初回は `cd api && bun run db:migrate:local` でローカル D1 を作成し、`bun run db:seed:local` で seed を投入する
-- `cd api && bun run setup:dev-vars` で `.dev.vars` を生成する（`JWT_SECRET` と `AUDIT_HMAC_SECRET` をランダムに作る。既存ファイルは上書きしない。`.dev.vars` は gitignore 済み）。api は未設定・16 文字未満・`-change-me` で終わる秘密値を実行時に拒否するので、`.dev.vars.example` をそのままコピーしても動かない
+- `cd api && bun run setup:dev-vars` で `.dev.vars` を生成する（署名・暗号鍵はランダムに作り、`PEPPER_SECRET` はlocal seedのhashと一致する開発専用値を設定する。既存ファイルは上書きしない。`.dev.vars` はgitignore済み）。本番の`PEPPER_SECRET`は必ず別のランダムsecretを使う。apiは未設定・16文字未満・`-change-me`で終わる秘密値を実行時に拒否するので、空の例示値では動かない
 - `.dev.vars` には `ENABLED_OPT_IN_APPS="all"` も必要（無いと opt-in App が既定で無効になり API が 404 を返す。正本は `.docs/feature-tiers.md`）
 - リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://bedrock.localhost`、api は `https://api.bedrock.localhost`（実体は `localhost:18787`）。ホスト名の正本は `portless.json`。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
 - ログインは seed の `you+e001@example.com` / `password`（`E001` が admin）。ダッシュボード・従業員一覧まで表示されれば web→api→D1 の通し動作 OK

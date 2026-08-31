@@ -4,6 +4,7 @@ import type { CompanyResourceType } from "@/contexts/company/domain/catalogs/com
 import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
+import { compareCompanyResourcePersistence } from "@/contexts/company/domain/definitions/compare-company-resource-persistence.definition"
 
 export type CompanyResourceQuery = Readonly<{
   organizationId: string
@@ -256,7 +257,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         ),
     )
 
-    for (const resource of change.resources) {
+    for (const resource of change.resources.toSorted(compareCompanyResourcePersistence)) {
       const attributesJson = CanonicalSystemJsonValue.create(resource.attributes)
       if (attributesJson instanceof Error) return { kind: "unavailable", cause: attributesJson }
       const values = [

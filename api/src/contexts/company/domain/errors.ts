@@ -25,6 +25,14 @@ export type OrganizationalAuthorityErrorCode =
   | "organizational_authority_account_employee_missing"
   | "organizational_authority_manager_cycle"
 
+export type CompanyGovernanceAuthorityErrorCode =
+  | "governance_authority_snapshot_invalid"
+  | "governance_authority_resource_ambiguous"
+  | "governance_authority_reference_missing"
+  | "governance_authority_account_link_ambiguous"
+  | "governance_authority_collective_body_invalid"
+  | "governance_authority_task_invalid"
+
 export type WorkforceStateResolutionCode =
   | "employment_state_ambiguous"
   | "status_state_missing"
@@ -67,6 +75,13 @@ export class CompanyOperationError extends DomainError {
 export class CompanyConflictError extends CompanyOperationError {
   constructor(message: string, code: string, options?: ErrorOptions) {
     super(message, code, options)
+  }
+}
+
+export class CompanyGovernanceAuthorityError extends DomainError {
+  constructor(readonly code: CompanyGovernanceAuthorityErrorCode) {
+    super(code)
+    this.name = "CompanyGovernanceAuthorityError"
   }
 }
 

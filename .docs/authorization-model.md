@@ -171,6 +171,10 @@ AI の prompt 全文または秘密を監査記録へ保存してはならない
 
 ## 現行実装差分
 
-現行 API は HumanPrincipal 相当の account と employee を中心に認証し、route ごとに Permission、本人関係、組織関係、案件候補を評価する。System には `HumanAttestation` と `ExecutionAuthorization` の domain 型と永続化制約があるが、Principal kind、step-up、共通 policy evaluation、application service、repository、Execution Gateway、既存 route からの利用は未実装である。`AgentPrincipal` と `ConnectorPrincipal` の独立した認証も未実装である。
+現行 System は Human、Agent、Service、Connector の Principal、Account 対応、machine credential、password または外部 identity による短期 step-up を保持する。permission、role、global と resource scope の role binding を live に解決し、field、purpose、有効期間、authority evidence、職務分離条件を共通 policy evaluation へ合成する。Principal、IAM、connector、dead letter の高リスク変更は step-up を要求し、connector の停止は対応する ConnectorPrincipal の新規認証を拒否する。
+
+System workflow は候補、除外、参加定足数、必要賛成数、否決条件、代理可否、差戻し可否を Task に固定し、HumanAttestation と ExecutionAuthorization を database 制約でも検証する。Company は責務、scope、在籍、Account 対応、合議体を同じ時点で解決し、System Task へ digest 付き証拠だけを渡す。
+
+永続的な field policy 配布、BreakGlassAccessGrant、事後 review、すべての内部業務を一つの Execution Gateway へ接続する処理は未実装である。該当条件を必要とする操作は、所有 context が policy 入力と実行直前の再検査を提供できない限り許可しない。
 
 System workflow の責任と利用済みと判定する条件は [System workflow](./system-workflow.md) に従う。差分は [能力台帳](./capability-map.md)、コード、migration、テストで追跡する。domain 型または空 table の存在だけで利用経路を実装済みとして扱ってはならない。

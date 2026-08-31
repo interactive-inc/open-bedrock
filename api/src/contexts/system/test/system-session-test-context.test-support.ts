@@ -1,6 +1,20 @@
 import type { SystemD1Context } from "@system/configuration/system-context"
 import { wrapSystemD1TestDatabase } from "@system/test/wrap-system-d1-test-database.test-support"
 import { Database } from "bun:sqlite"
+import { readFileSync } from "node:fs"
+
+const integrationSchema = readFileSync(
+  new URL("../infrastructure/schema/system-integration.sql", import.meta.url),
+  "utf8",
+)
+const principalSchema = readFileSync(
+  new URL("../infrastructure/schema/system-principal.sql", import.meta.url),
+  "utf8",
+)
+const deliverySchema = readFileSync(
+  new URL("../infrastructure/schema/system-delivery.sql", import.meta.url),
+  "utf8",
+)
 
 const schema = `
   PRAGMA foreign_keys = ON;
@@ -266,6 +280,9 @@ export class SystemSessionTestContext {
 
   constructor() {
     this.sqlite.exec(schema)
+    this.sqlite.exec(integrationSchema)
+    this.sqlite.exec(principalSchema)
+    this.sqlite.exec(deliverySchema)
     this.context = Object.freeze({
       env: Object.freeze({ DB: wrapSystemD1TestDatabase(this.sqlite) }),
     })

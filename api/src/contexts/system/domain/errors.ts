@@ -146,6 +146,28 @@ export type InvalidSystemPasswordReason = "password_too_long" | "password_too_sh
 
 export type InvalidSystemAccessTokenSecretReason = "missing" | "placeholder" | "too_short"
 
+export type InvalidSystemIntegrationReason =
+  | "duplicate_item"
+  | "invalid_shape"
+  | "invalid_transition"
+  | "update_before_creation"
+  | "update_before_last_update"
+
+export type InvalidSystemPrincipalReason =
+  | "invalid_shape"
+  | "invalid_subject"
+  | "invalid_transition"
+  | "update_before_creation"
+  | "update_before_last_update"
+
+export type InvalidSystemDeliveryReason =
+  | "invalid_shape"
+  | "invalid_transition"
+  | "lease_mismatch"
+  | "outside_lease"
+  | "update_before_creation"
+  | "update_before_last_update"
+
 /** Domain層で予想可能な業務エラーの共通基底。 */
 export class DomainError extends Error {
   readonly layer = "domain"
@@ -388,6 +410,45 @@ export class InvalidSystemWorkflowError extends DomainError {
   ) {
     super("invalid_system_workflow", { cause })
     this.name = "InvalidSystemWorkflowError"
+    Object.freeze(this)
+  }
+}
+
+export class InvalidSystemIntegrationError extends DomainError {
+  readonly code = "invalid_system_integration" as const
+
+  constructor(
+    readonly reason: InvalidSystemIntegrationReason,
+    cause?: unknown,
+  ) {
+    super("invalid_system_integration", { cause })
+    this.name = "InvalidSystemIntegrationError"
+    Object.freeze(this)
+  }
+}
+
+export class InvalidSystemPrincipalError extends DomainError {
+  readonly code = "invalid_system_principal" as const
+
+  constructor(
+    readonly reason: InvalidSystemPrincipalReason,
+    cause?: unknown,
+  ) {
+    super("invalid_system_principal", { cause })
+    this.name = "InvalidSystemPrincipalError"
+    Object.freeze(this)
+  }
+}
+
+export class InvalidSystemDeliveryError extends DomainError {
+  readonly code = "invalid_system_delivery" as const
+
+  constructor(
+    readonly reason: InvalidSystemDeliveryReason,
+    cause?: unknown,
+  ) {
+    super("invalid_system_delivery", { cause })
+    this.name = "InvalidSystemDeliveryError"
     Object.freeze(this)
   }
 }

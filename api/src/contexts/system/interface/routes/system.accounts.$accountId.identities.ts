@@ -18,6 +18,7 @@ import { SystemAuditEventRepository } from "@system/infrastructure/repositories/
 import { SystemAccountCatalogRepository } from "@system/infrastructure/repositories/iam/system-account-catalog.repository"
 import { SystemIdentityCatalogRepository } from "@system/infrastructure/repositories/identity/system-identity-catalog.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+import { requireSystemStepUp } from "@system/interface/middlewares/require-system-step-up"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -71,6 +72,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
 // @authorization permission iam:write - provider credentialをIdentityと同じtransactionで作る
 export const POST = systemFactory.createHandlers(
   authenticateSystemAccessToken,
+  requireSystemStepUp,
   zValidator(
     "json",
     z.discriminatedUnion("provider", [

@@ -19,6 +19,10 @@ const propsSchema = z
     candidateAccountIds: z.array(zAccountId).min(1).max(100),
     excludedAccountIds: z.array(zAccountId).max(100),
     requiredApprovals: z.number().int().positive().max(100),
+    requiredParticipants: z.number().int().positive().max(100).default(1),
+    negativeDecisionRule: z.enum(["any-reject", "approval-impossible"]).default("any-reject"),
+    delegationPolicy: z.enum(["allowed", "forbidden"]).default("allowed"),
+    returnPolicy: z.enum(["allowed", "forbidden"]).default("allowed"),
     proposalDigest: proposalDigestSchema,
     openedAt: z.date(),
     dueAt: z.date().nullable(),
@@ -37,6 +41,10 @@ export class DecisionTaskEntity {
   readonly candidateAccountIds: ReadonlyArray<AccountId>
   readonly excludedAccountIds: ReadonlyArray<AccountId>
   readonly requiredApprovals: number
+  readonly requiredParticipants: number
+  readonly negativeDecisionRule: "any-reject" | "approval-impossible"
+  readonly delegationPolicy: "allowed" | "forbidden"
+  readonly returnPolicy: "allowed" | "forbidden"
   readonly proposalDigest: ProposalDigest
   readonly #openedAtEpochMilliseconds: number
   readonly #dueAtEpochMilliseconds: number | null
@@ -48,6 +56,10 @@ export class DecisionTaskEntity {
     this.candidateAccountIds = Object.freeze([...props.candidateAccountIds])
     this.excludedAccountIds = Object.freeze([...props.excludedAccountIds])
     this.requiredApprovals = props.requiredApprovals
+    this.requiredParticipants = props.requiredParticipants
+    this.negativeDecisionRule = props.negativeDecisionRule
+    this.delegationPolicy = props.delegationPolicy
+    this.returnPolicy = props.returnPolicy
     this.proposalDigest = props.proposalDigest
     this.#openedAtEpochMilliseconds = props.openedAt.getTime()
     this.#dueAtEpochMilliseconds = props.dueAt?.getTime() ?? null
@@ -71,7 +83,10 @@ export class DecisionTaskEntity {
     ) {
       return new InvalidSystemWorkflowError("candidate_excluded")
     }
-    if (parsed.data.requiredApprovals > parsed.data.candidateAccountIds.length) {
+    if (
+      parsed.data.requiredApprovals > parsed.data.candidateAccountIds.length ||
+      parsed.data.requiredParticipants > parsed.data.candidateAccountIds.length
+    ) {
       return new InvalidSystemWorkflowError("invalid_shape")
     }
     if (
@@ -100,6 +115,12 @@ export class DecisionTaskEntity {
 
     for (const attestation of attestations) {
       if (
+        (this.delegationPolicy === "forbidden" && attestation.delegationId !== null) ||
+        (this.returnPolicy === "forbidden" && attestation.action === "return")
+      ) {
+        return new InvalidSystemWorkflowError("attestation_mismatch")
+      }
+      if (
         attestation.caseId !== this.caseId ||
         attestation.taskKey !== this.key ||
         attestation.round !== this.round ||
@@ -121,9 +142,24 @@ export class DecisionTaskEntity {
       representedAccountIds.add(attestation.representedAccountId)
     }
 
-    if (attestations.some((attestation) => attestation.action === "reject")) return "rejected"
     if (attestations.some((attestation) => attestation.action === "return")) return "returned"
+    const approvalCount = attestations.filter(
+      (attestation) => attestation.action === "approve",
+    ).length
+    const rejectionCount = attestations.filter(
+      (attestation) => attestation.action === "reject",
+    ).length
+    if (
+      rejectionCount > 0 &&
+      (this.negativeDecisionRule === "any-reject" ||
+        rejectionCount > this.candidateAccountIds.length - this.requiredApprovals)
+    ) {
+      return "rejected"
+    }
 
-    return representedAccountIds.size >= this.requiredApprovals ? "approved" : "pending"
+    return approvalCount >= this.requiredApprovals &&
+      representedAccountIds.size >= this.requiredParticipants
+      ? "approved"
+      : "pending"
   }
 }

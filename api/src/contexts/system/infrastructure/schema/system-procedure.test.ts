@@ -7,6 +7,10 @@ import { readReleasedSystemMigration } from "@system/test/read-released-system-m
 
 const coreSchemaSql = readFileSync(new URL("./system-core.sql", import.meta.url), "utf8")
 const workflowSchemaSql = readFileSync(new URL("./system-workflow.sql", import.meta.url), "utf8")
+const decisionPolicySchemaSql = readFileSync(
+  new URL("./system-decision-policy.sql", import.meta.url),
+  "utf8",
+)
 const procedureSchemaSql = readFileSync(new URL("./system-procedure.sql", import.meta.url), "utf8")
 const digest = "a".repeat(64)
 
@@ -15,6 +19,7 @@ function createDatabase(): Database {
   database.exec("PRAGMA foreign_keys = ON")
   database.exec(coreSchemaSql)
   database.exec(workflowSchemaSql)
+  database.exec(decisionPolicySchemaSql)
   database.exec(procedureSchemaSql)
   database.run(
     `INSERT INTO system_accounts

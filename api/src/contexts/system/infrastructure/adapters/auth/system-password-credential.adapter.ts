@@ -90,6 +90,45 @@ export class SystemPasswordCredentialAdapter {
     }
   }
 
+  async findByAccountId(accountId: AccountId): Promise<SystemPasswordCredential | null | Error> {
+    try {
+      const database =
+        "select" in this.c.database ? this.c.database : createDatabase(this.c.database)
+      const rows = await database
+        .select({
+          account: systemAccounts,
+          identity: systemIdentityBindings,
+          passwordHash: systemPasswordCredentials.passwordHash,
+        })
+        .from(systemIdentityBindings)
+        .innerJoin(
+          systemPasswordCredentials,
+          eq(systemPasswordCredentials.identityId, systemIdentityBindings.id),
+        )
+        .innerJoin(systemAccounts, eq(systemAccounts.id, systemIdentityBindings.accountId))
+        .where(
+          and(
+            eq(systemIdentityBindings.accountId, accountId),
+            eq(systemIdentityBindings.provider, "password"),
+          ),
+        )
+        .limit(1)
+      const row = rows.at(0)
+
+      if (row === undefined) return null
+      const account = AccountEntity.create(row.account)
+      if (account instanceof Error) return account
+      const identity = IdentityBindingEntity.create(row.identity)
+      if (identity instanceof Error) return identity
+
+      return Object.freeze({ account, identity, passwordHash: row.passwordHash })
+    } catch (caught) {
+      return caught instanceof Error
+        ? caught
+        : new Error("failed to find System password credential")
+    }
+  }
+
   async authenticate(
     command: Readonly<{ subject: IdentitySubject; password: string; now: Date }>,
     passwordMaterialService: SystemPasswordMaterialService,
@@ -101,6 +140,39 @@ export class SystemPasswordCredentialAdapter {
     const credential = await this.findBySubject(command.subject)
     if (credential instanceof Error) return credential
 
+    const verified = await passwordMaterialService.verify(
+      command.password,
+      credential?.passwordHash ?? passwordMaterialService.dummyHash,
+    )
+    if (verified instanceof Error) return verified
+    if (
+      credential === null ||
+      !verified ||
+      credential.account.status !== "active" ||
+      !credential.identity.wasActiveAt(command.now)
+    ) {
+      return Object.freeze({ kind: "rejected" as const, reason: "invalid_credentials" as const })
+    }
+
+    return Object.freeze({
+      kind: "authenticated" as const,
+      accountId: credential.account.id,
+      identityId: credential.identity.id,
+      requiresPasswordRehash: passwordMaterialService.needsRehash(credential.passwordHash),
+      tokenVersion: credential.account.tokenVersion,
+    })
+  }
+
+  async authenticateAccount(
+    command: Readonly<{ accountId: AccountId; password: string; now: Date }>,
+    passwordMaterialService: SystemPasswordMaterialService,
+  ): Promise<SystemPasswordAuthentication | Error> {
+    if (!Number.isSafeInteger(command.now.getTime())) {
+      return new Error("System password authentication time is invalid")
+    }
+
+    const credential = await this.findByAccountId(command.accountId)
+    if (credential instanceof Error) return credential
     const verified = await passwordMaterialService.verify(
       command.password,
       credential?.passwordHash ?? passwordMaterialService.dummyHash,

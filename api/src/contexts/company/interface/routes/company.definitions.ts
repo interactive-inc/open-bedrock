@@ -89,7 +89,17 @@ export const GET = factory.createHandlers(
     const effectiveOn = requestQuery.effective_on ?? requestQuery.as_of
     const query = {
       organizationId: headers["x-company-organization-id"],
-      types: ["position", "grade", "responsibility", "collective-body"] as const,
+      types: [
+        "site",
+        "workplace",
+        "job",
+        "position",
+        "grade",
+        "organizational-office",
+        "responsibility",
+        "authority-scope",
+        "collective-body",
+      ] as const,
       ...(ids.length === 0 ? {} : { ids }),
       ...(effectiveOn === undefined ? {} : { effectiveOn: restoreCalendarDate(effectiveOn) }),
     }
@@ -158,7 +168,48 @@ export const POST = factory.createHandlers(
           z.discriminatedUnion("type", [
             z.object({
               organizationId: z.string().regex(/^\S{1,255}$/),
-              type: z.literal("position"),
+              type: z.literal("site"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  code: z.string().regex(/^[A-Z0-9][A-Z0-9._-]{0,63}$/),
+                  officialName: z.string().trim().min(1).max(2_000),
+                  legalEntityId: z.string().regex(/^\S{1,255}$/),
+                  kind: z.enum(["physical", "virtual"]),
+                  timeZone: z.string().regex(/^(?:UTC|[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)+)$/),
+                  countryCode: z.string().regex(/^[A-Z]{2}$/),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("workplace"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  code: z.string().regex(/^[A-Z0-9][A-Z0-9._-]{0,63}$/),
+                  officialName: z.string().trim().min(1).max(2_000),
+                  siteId: z.string().regex(/^\S{1,255}$/),
+                  kind: z.enum(["office", "store", "plant", "warehouse", "remote", "other"]),
+                  organizationUnitId: z
+                    .string()
+                    .regex(/^\S{1,255}$/)
+                    .nullable()
+                    .optional(),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("job"),
               id: z.string().regex(/^\S{1,255}$/),
               revision: z.number().int().min(1),
               state: z.enum(["active", "void"]),
@@ -169,7 +220,27 @@ export const POST = factory.createHandlers(
                   code: z.string().trim().min(1).max(255),
                   officialName: z.string().trim().min(1).max(2_000),
                 })
-                .catchall(z.json()),
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("position"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  code: z.string().trim().min(1).max(255),
+                  officialName: z.string().trim().min(1).max(2_000),
+                  jobId: z
+                    .string()
+                    .regex(/^\S{1,255}$/)
+                    .nullable()
+                    .optional(),
+                })
+                .strict(),
             }),
             z.object({
               organizationId: z.string().regex(/^\S{1,255}$/),
@@ -184,7 +255,24 @@ export const POST = factory.createHandlers(
                   code: z.string().trim().min(1).max(255),
                   officialName: z.string().trim().min(1).max(2_000),
                 })
-                .catchall(z.json()),
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("organizational-office"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  code: z.string().trim().min(1).max(255),
+                  officialName: z.string().trim().min(1).max(2_000),
+                  organizationUnitId: z.string().regex(/^\S{1,255}$/),
+                  positionId: z.string().regex(/^\S{1,255}$/),
+                })
+                .strict(),
             }),
             z.object({
               organizationId: z.string().regex(/^\S{1,255}$/),
@@ -199,7 +287,62 @@ export const POST = factory.createHandlers(
                   code: z.string().trim().min(1).max(255),
                   officialName: z.string().trim().min(1).max(2_000),
                 })
-                .catchall(z.json()),
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("authority-scope"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z.discriminatedUnion("scopeType", [
+                z
+                  .object({
+                    scopeType: z.literal("organization-unit"),
+                    scopeId: z.string().regex(/^\S{1,255}$/),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    scopeType: z.literal("legal-entity"),
+                    scopeId: z.string().regex(/^\S{1,255}$/),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    scopeType: z.literal("site"),
+                    scopeId: z.string().regex(/^\S{1,255}$/),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    scopeType: z.literal("workplace"),
+                    scopeId: z.string().regex(/^\S{1,255}$/),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    scopeType: z.literal("region"),
+                    regionCode: z.string().trim().min(1).max(255),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    scopeType: z.literal("amount"),
+                    currencyCode: z.string().regex(/^[A-Z]{3}$/),
+                    minimumAmount: z.number().finite().nonnegative().nullable(),
+                    maximumAmount: z.number().finite().positive().nullable(),
+                  })
+                  .strict()
+                  .refine(
+                    (scope) =>
+                      scope.minimumAmount === null ||
+                      scope.maximumAmount === null ||
+                      scope.minimumAmount <= scope.maximumAmount,
+                  ),
+              ]),
             }),
             z.object({
               organizationId: z.string().regex(/^\S{1,255}$/),
@@ -211,9 +354,13 @@ export const POST = factory.createHandlers(
               effectiveTo: z.string().date().nullable(),
               attributes: z
                 .object({
+                  code: z.string().trim().min(1).max(255),
                   officialName: z.string().trim().min(1).max(2_000),
+                  quorumType: z.enum(["count", "percentage"]),
+                  quorumValue: z.number().int().positive().max(100),
+                  decisionRule: z.enum(["unanimity", "majority", "qualified-majority"]),
                 })
-                .catchall(z.json()),
+                .strict(),
             }),
           ]),
         )

@@ -18,6 +18,10 @@ import { readFileSync } from "node:fs"
 const schema = [
   readFileSync(new URL("../infrastructure/schema/system-core.sql", import.meta.url), "utf8"),
   readFileSync(new URL("../infrastructure/schema/system-workflow.sql", import.meta.url), "utf8"),
+  readFileSync(
+    new URL("../infrastructure/schema/system-decision-policy.sql", import.meta.url),
+    "utf8",
+  ),
   readFileSync(new URL("../infrastructure/schema/system-procedure.sql", import.meta.url), "utf8"),
 ].join("\n")
 const evidenceDigest = proposalDigestSchema.parse("b".repeat(64))

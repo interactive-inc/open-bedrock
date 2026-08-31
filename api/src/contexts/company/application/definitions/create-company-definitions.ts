@@ -20,7 +20,7 @@ type Context = Readonly<{
   repository: CompanyResourceRepository
 }>
 
-/** 職位・等級・責務・合議体の定義を作成する。 */
+/** 会社・拠点・職務・責務・合議体の定義を作成する。 */
 export class CreateCompanyDefinitions {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -44,9 +44,14 @@ export class CreateCompanyDefinitions {
     }
 
     const resourceTypes: ReadonlyArray<CompanyResourceType> = [
+      "site",
+      "workplace",
+      "job",
       "position",
       "grade",
+      "organizational-office",
       "responsibility",
+      "authority-scope",
       "collective-body",
     ]
     if (

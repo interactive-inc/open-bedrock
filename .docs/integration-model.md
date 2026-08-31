@@ -155,4 +155,6 @@ open-karte は支払提案、社内判断、外部指示、外部参照、結果
 
 ## 現行実装差分
 
-connector registry、外部 Principal、汎用 outbox と inbox、mapping version、reconciliation は横断基盤として未完成である。外部 SDK を domain または route へ直接組み込んではならない。個別連携より先に接続契約と adapter 境界を実装する。
+現行実装には connector registry、ConnectorPrincipal と machine credential、operation と idempotency key を固定した交換、外部 Assertion、reconciliation run と item、lease 付き Job、outbox、重複排除する inbox、retry、dead letter がある。connector の停止は対応 Principal の新規 token 発行を止め、交換、Assertion、照合、再投入は revision と監査証跡を残す。
+
+transport 固有の署名検証、外部資格情報の取得、mapping、rate limit、circuit breaker、raw payload の mask と retention は adapter が実装する。これらを共通基盤が代行したと扱わず、外部 SDK を domain または route へ直接組み込んではならない。
