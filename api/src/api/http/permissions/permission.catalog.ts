@@ -44,7 +44,7 @@ import type { PermissionKey } from "@/api/http/permissions/permission-key.catalo
 type PermissionEntry = {
   key: PermissionKey
   category: string
-  featureKey?: string | null
+  featureKey: string | null
   description: string
 }
 

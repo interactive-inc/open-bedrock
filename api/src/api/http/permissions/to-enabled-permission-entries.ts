@@ -21,12 +21,10 @@ export function toEnabledPermissionEntries(props: Props): ReadonlyArray<Permissi
   )
 
   return PERMISSION_CATALOG.filter((entry) => {
-    const featureKey = "featureKey" in entry ? entry.featureKey : null
-
-    if (featureKey === null) {
+    if (entry.featureKey === null) {
       return true
     }
 
-    return disabledFeatureKeys.has(featureKey) === false
+    return disabledFeatureKeys.has(entry.featureKey) === false
   })
 }
