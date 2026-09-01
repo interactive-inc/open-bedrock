@@ -1,6 +1,5 @@
 import { ResolveGovernanceOrgRoleAdapter } from "@/contexts/governance/infrastructure/adapters/resolve-governance-org-role.adapter"
 import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
-import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
 import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
@@ -16,11 +15,15 @@ import type { GovernanceReferenceCatalog } from "@/contexts/governance/applicati
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Context } from "@/env"
 
-/** Governanceのimpact read modelをHTTP composition境界へ公開する。 */
+/**
+ * Governanceのimpact read modelをHTTP composition境界へ公開する。
+ * 参照先の語彙はcontextが所有しないため、permissionを含めてcomposition rootから受け取る。
+ * permissionを省略できるようにすると全permission参照がdangling扱いになるので必須にする。
+ */
 export async function readGovernanceImpact(
   c: Context,
   session: CompanySessionValue,
-  referenceCatalog: GovernanceReferenceCatalog = {},
+  referenceCatalog: GovernanceReferenceCatalog & { permission: ReadonlySet<string> },
 ): Promise<GovernanceImpactReport | Error> {
   if (!session.permissions.has("governance:manage")) {
     return new ForbiddenError(
@@ -65,7 +68,7 @@ export async function readGovernanceImpact(
   const known = {
     capability: new Set(capabilities.map((item) => item.code)),
     org_role: new Set(roles.map((item) => item.code)),
-    permission: new Set<string>(PERMISSION_KEYS),
+    permission: referenceCatalog.permission,
     training: referenceCatalog.training ?? new Set<string>(),
     policy: new Set(documents.filter((item) => item.kind === "policy").map((item) => item.code)),
     procedure: new Set(

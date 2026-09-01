@@ -52,9 +52,21 @@ export function RoleEditForm(props: Props) {
 
   const categories = [...new Set(props.permissions.map((permission) => permission.category))]
 
+  const shownKeys = new Set(props.permissions.map((permission) => permission.key))
+
+  // 画面に出ない付与済み権限（無効なAppの権限、操作者が持たない権限）。
+  // checkboxが無いと送信されず、保存のたびに黙って剥がれるため hidden で持ち越す。
+  const hiddenGrantedKeys = props.grantedPermissionKeys.filter(
+    (permissionKey) => shownKeys.has(permissionKey) === false,
+  )
+
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="role_id" value={props.roleId} />
+
+      {hiddenGrantedKeys.map((permissionKey) => (
+        <input key={permissionKey} type="hidden" name="permission_keys" value={permissionKey} />
+      ))}
 
       <Field>
         <FieldLabel htmlFor="name">名前</FieldLabel>

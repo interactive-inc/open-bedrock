@@ -1,4 +1,5 @@
 import type { InboxCounts } from "@/lib/api/types/inbox-types"
+import type { PermissionKey } from "@/lib/api/types/permission-key"
 
 /**
  * 受信箱の種類定義。inbox layout のタブとサイドバーの inbox children が同じ集合になるよう
@@ -9,7 +10,7 @@ export type InboxType = {
   key: string
   label: string
   href: string
-  requiredPermission?: string
+  requiredPermission?: PermissionKey
   countKey?: keyof InboxCounts
 }
 

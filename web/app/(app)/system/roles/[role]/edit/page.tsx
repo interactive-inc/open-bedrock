@@ -53,7 +53,8 @@ export default async function AdminRoleEditPage(props: Props) {
     )
   }
 
-  const actorPermissionKeys = new Set(currentUser.permissions)
+  // roleが保持するkeyはapi側の文字列なので、webが知らないkeyとも比較できるようstringで持つ。
+  const actorPermissionKeys = new Set<string>(currentUser.permissions)
 
   const canManageTarget = role.permission_keys.every((permissionKey) =>
     actorPermissionKeys.has(permissionKey),

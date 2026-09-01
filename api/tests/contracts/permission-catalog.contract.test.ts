@@ -3,6 +3,42 @@ import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
 import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
 import { loadSchema } from "@tests/api/support/load-schema"
 import { describe, expect, test } from "bun:test"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
+import ts from "typescript"
+
+const repositoryRoot = resolve(import.meta.dir, "../../..")
+
+/** webはapiと疎結合に保つため権限キーを手書きする。ここが唯一の追従検査。 */
+const webPermissionKeyPath = "web/lib/api/types/permission-key.ts"
+
+/** permissionKeys配列のstring literal要素を読み出す。 */
+function toWebPermissionKeys(sourceFile: ts.SourceFile): ReadonlyArray<string> {
+  const keys: Array<string> = []
+
+  const visit = (node: ts.Node): void => {
+    if (ts.isVariableDeclaration(node) && node.name.getText() === "permissionKeys") {
+      const initializer = node.initializer
+
+      const literal =
+        initializer !== undefined && ts.isAsExpression(initializer)
+          ? initializer.expression
+          : initializer
+
+      if (literal !== undefined && ts.isArrayLiteralExpression(literal)) {
+        for (const element of literal.elements) {
+          if (ts.isStringLiteral(element)) keys.push(element.text)
+        }
+      }
+    }
+
+    ts.forEachChild(node, visit)
+  }
+
+  visit(sourceFile)
+
+  return keys
+}
 
 function toDuplicates(values: ReadonlyArray<string>): ReadonlyArray<string> {
   const seen = new Set<string>()
@@ -50,5 +86,26 @@ describe("permission catalog contract", () => {
       .sort()
 
     expect(unknownKeys).toEqual([])
+  })
+
+  test("webの手書きPermissionKeyとPERMISSION_KEYSが一致する", () => {
+    const source = readFileSync(resolve(repositoryRoot, webPermissionKeyPath), "utf8")
+    const sourceFile = ts.createSourceFile(
+      webPermissionKeyPath,
+      source,
+      ts.ScriptTarget.Latest,
+      true,
+    )
+
+    const webKeys = toWebPermissionKeys(sourceFile)
+    const webKeySet = new Set<string>(webKeys)
+    const keySet = new Set<string>(PERMISSION_KEYS)
+
+    expect(toDuplicates(webKeys)).toEqual([])
+
+    const inApiOnly = toMissing(PERMISSION_KEYS, webKeySet)
+    const inWebOnly = toMissing(webKeys, keySet)
+
+    expect({ inApiOnly, inWebOnly }).toEqual({ inApiOnly: [], inWebOnly: [] })
   })
 })

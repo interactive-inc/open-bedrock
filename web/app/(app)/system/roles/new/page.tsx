@@ -42,7 +42,8 @@ export default async function AdminRoleNewPage() {
     )
   }
 
-  const actorPermissionKeys = new Set(currentUser.permissions)
+  // カタログのkeyはapi側の文字列なので、webが知らないkeyとも比較できるようstringで持つ。
+  const actorPermissionKeys = new Set<string>(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">

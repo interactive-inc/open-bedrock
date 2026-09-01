@@ -1,3 +1,5 @@
+import type { PermissionKey } from "@/lib/api/types/permission-key"
+
 /**
  * api/src/auth の *-response-schema.ts と同形の手書き type。
  * api と疎結合にするため import しない。
@@ -26,6 +28,6 @@ export type MeResponse = {
   dept_name: string | null
   position: string | null
   phone: string | null
-  permissions: ReadonlyArray<string>
+  permissions: ReadonlyArray<PermissionKey>
   role_keys: ReadonlyArray<string>
 }
