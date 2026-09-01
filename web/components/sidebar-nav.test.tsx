@@ -166,7 +166,7 @@ describe("SidebarNav space tabs", () => {
       "/teams/D001/members",
     )
     expect(screen.queryByRole("link", { name: "概要" })).toBeNull()
-    expect(screen.queryByRole("link", { name: "目標" })).toBeNull()
+    expect(screen.queryByRole("link", { name: "部署の目標" })).toBeNull()
     expect(screen.queryByRole("link", { name: "組織図" })).toBeNull()
   })
 
@@ -209,14 +209,10 @@ describe("SidebarNav space tabs", () => {
 
     renderSidebar(["goal:read:department"])
 
-    expect(screen.getByRole("link", { name: "目標" }).getAttribute("href")).toBe(
+    expect(screen.getByRole("link", { name: "部署の目標" }).getAttribute("href")).toBe(
       "/teams/D001/goals",
     )
-    expect(
-      screen
-        .getAllByRole("link", { name: "勤怠" })
-        .some((link) => link.getAttribute("href") === "/teams/D001/attendances"),
-    ).toBe(false)
+    expect(screen.queryByRole("link", { name: "部署の勤怠" })).toBeNull()
   })
 
   test("keeps inbox and notifications in the other work space", () => {

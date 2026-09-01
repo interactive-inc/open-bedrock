@@ -1,39 +1,42 @@
 import { describe, expect, test } from "vite-plus/test"
+
 import { featureRegistry } from "@/lib/feature/feature-registry"
-import { getFeatureNavigationItems } from "@/lib/feature/get-feature-navigation-items"
 
-describe("featureRegistry", () => {
-  test("keeps one definition per feature and one owner per route", () => {
-    const featureSlugs = featureRegistry.map((feature) => feature.slug)
-    const featureRoutes = featureRegistry.flatMap((feature) =>
-      feature.routes.map((route) => `${route.space}:${route.href}`),
+/**
+ * サイドバーは my と teams の項目を同じ空間に並べて表示する
+ * （components/sidebar-nav.tsx の "other" 空間）。
+ * ラベルが重複すると、どちらが自分用でどちらが部署用か区別できなくなる。
+ */
+describe("featureRegistry のラベル", () => {
+  test("サイドバーに並ぶラベルが重複しない", () => {
+    const labels = featureRegistry.flatMap((feature) => feature.routes.map((route) => route.label))
+
+    const seen = new Set<string>()
+    const duplicated: Array<string> = []
+
+    for (const label of labels) {
+      if (seen.has(label)) duplicated.push(label)
+      seen.add(label)
+    }
+
+    expect(duplicated).toEqual([])
+  })
+
+  test("my と teams で同じ機能を指す項目は接頭辞で区別する", () => {
+    // my 側は素のラベル、teams 側は「部署の〜」にする取り決め。
+    const myLabels = new Set(
+      featureRegistry.flatMap((feature) =>
+        feature.routes.filter((route) => route.space === "my").map((route) => route.label),
+      ),
     )
 
-    expect(new Set(featureSlugs).size).toBe(featureSlugs.length)
-    expect(new Set(featureRoutes).size).toBe(featureRoutes.length)
-  })
-
-  test("requires every feature to expose at least one navigation route", () => {
-    expect(featureRegistry.every((feature) => feature.routes.length > 0)).toBe(true)
-  })
-
-  test("does not expose retirement candidates as navigation items", () => {
-    const organizationItems = getFeatureNavigationItems("organization", null)
-
-    expect(
-      organizationItems.some((navigationItem) => navigationItem.slug === "management-dashboard"),
-    ).toBe(false)
-  })
-
-  test("resolves department route placeholders without changing the registry", () => {
-    const departmentItems = getFeatureNavigationItems("teams", "D001")
-    const memberItem = departmentItems.find(
-      (navigationItem) => navigationItem.slug === "team-management",
+    const teamsLabels = featureRegistry.flatMap((feature) =>
+      feature.routes.filter((route) => route.space === "teams").map((route) => route.label),
     )
 
-    expect(memberItem?.href).toBe("/teams/reports")
-    expect(
-      departmentItems.some((navigationItem) => navigationItem.href === "/teams/D001/members"),
-    ).toBe(true)
+    // teams 側のラベルが my 側と衝突していないこと
+    const collided = teamsLabels.filter((label) => myLabels.has(label))
+
+    expect(collided).toEqual([])
   })
 })

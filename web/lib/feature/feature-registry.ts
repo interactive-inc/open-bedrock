@@ -91,7 +91,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
       { space: "my", label: "勤怠", href: "/my/attendances", visibility: everyone },
       {
         space: "teams",
-        label: "勤怠",
+        label: "部署の勤怠",
         href: "/teams/:team/attendances",
         visibility: {
           kind: "any-permission",
@@ -123,7 +123,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
       { space: "my", label: "休暇", href: "/my/leaves", visibility: everyone },
       {
         space: "teams",
-        label: "休暇",
+        label: "部署の休暇",
         href: "/teams/:team/leaves",
         visibility: {
           kind: "any-permission",
@@ -194,7 +194,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
       { space: "my", label: "申請", href: "/my/applications", visibility: everyone },
       {
         space: "teams",
-        label: "申請",
+        label: "部署の申請",
         href: "/teams/:team/applications",
         visibility: {
           kind: "any-permission",
@@ -618,7 +618,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     routes: [
       {
         space: "teams",
-        label: "目標",
+        label: "部署の目標",
         href: "/teams/:team/goals",
         visibility: {
           kind: "any-permission",
@@ -627,7 +627,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
       },
       {
         space: "organization",
-        label: "目標",
+        label: "全社の目標",
         href: "/organization/goals",
         visibility: everyone,
       },
@@ -695,7 +695,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
       { space: "my", label: "1on1", href: "/my/oneonones", visibility: everyone },
       {
         space: "teams",
-        label: "1on1",
+        label: "部署の1on1",
         href: "/teams/:team/oneonones",
         visibility: {
           kind: "any-permission",
