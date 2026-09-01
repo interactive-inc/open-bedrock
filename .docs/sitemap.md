@@ -213,10 +213,10 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 
 ## システム管理
 
-- `/system/roles` はロールの一覧と割当済み権限を確認する管理画面(`iam:manage_roles`)。
+- `/system/roles` はロールの一覧と割当済み権限を確認する管理画面(`iam:read`)。
 - `/system/roles/new` は権限を選んで新しいロールを作成する画面。
 - `/system/roles/[role]/edit` はロールの名称と権限の割当を変更する画面。
-- `/system/accounts` はアカウントの状態確認、ロール割当、停止、パスワードリセットを行う管理画面(`account:manage`)。
+- `/system/accounts` はアカウントの状態確認、ロール割当、停止、パスワードリセットを行う管理画面。閲覧は `iam:read`、変更は `iam:write` を要求する。
 - `/system/audit-events` は重要操作と認可判断の監査イベントを検索し、権限がある場合は検索結果を書き出す画面。
 - `/system/audit-events/[event]` は監査イベントの認可情報、変更内容、request 情報を確認する画面。
 - `/system/licenses` はライセンス・SaaS 台帳を確認、管理する画面(`license:read:all`)。

@@ -325,8 +325,8 @@ commands:
   salary-revisions list                       給与改定履歴 (--employee-id) ※最機微・salary_revision 権限のみ
   salary-revisions create                     給与改定を記録 (--employee-id --effective-date --previous-base-salary --new-base-salary [--reason])
   batch                                       バッチ状況
-  roles                                       ロール一覧（iam:manage_roles）
-  accounts                                    アカウント一覧（account:manage）
+  roles                                       ロール一覧（iam:read）
+  accounts                                    アカウント一覧（iam:read）
   dashboard                                   ダッシュボード集計
 
 options:

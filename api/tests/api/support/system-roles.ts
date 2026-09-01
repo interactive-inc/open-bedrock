@@ -1,5 +1,4 @@
 import type { PermissionKey } from "@/api/http/permissions/permission-key.catalog"
-import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/api/http/permissions/effective-root-permission-key.catalog"
 
 /** 全従業員が持つガバナンスの基本権限。 */
 const MEMBER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
@@ -112,7 +111,8 @@ const ROOT_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "system:admin",
   "iam:read",
   "iam:write",
-  ...EFFECTIVE_ROOT_PERMISSION_KEYS,
+  "employee:assign_role",
+  "account:manage",
   "audit:read",
   "audit:export",
   "governance:read:restricted",
@@ -141,9 +141,7 @@ const ROOT_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "it_incident:read:all",
   "budget:manage",
   "budget:read:all",
-  // 基盤の運用系。トークン発行とエクスポートは root に限定する。
-  "api_token:manage",
-  "access_review:view",
+  // 基盤の運用系。エクスポートは root に限定する。
   "export:run",
 ]
 

@@ -260,14 +260,14 @@ const commands: ReadonlyArray<CommandEntry> = [
     href: "/system/roles",
     icon: KeyRound,
     group: "システム",
-    requiredPermission: "iam:manage_roles",
+    requiredPermission: "iam:read",
   },
   {
     label: "アカウント管理",
     href: "/system/accounts",
     icon: UserCog,
     group: "システム",
-    requiredPermission: "account:manage",
+    requiredPermission: "iam:read",
   },
 ]
 

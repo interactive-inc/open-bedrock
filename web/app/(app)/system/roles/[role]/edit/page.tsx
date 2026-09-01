@@ -13,7 +13,7 @@ type Props = {
 }
 
 /**
- * ロール編集画面。現在のロールと権限カタログを取得してフォームに渡す（iam:manage_roles が必要）。
+ * ロール編集画面。現在のロールと権限カタログを取得してフォームに渡す（iam:write が必要）。
  * 権限が無いユーザーには 404 を返す。
  */
 export default async function AdminRoleEditPage(props: Props) {

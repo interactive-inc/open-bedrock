@@ -8,7 +8,7 @@ import { notFound } from "next/navigation"
 export const metadata = { title: "ロール作成" }
 
 /**
- * ロール作成画面。権限カタログを取得してチェックボックスフォームに渡す（iam:manage_roles が必要）。
+ * ロール作成画面。権限カタログを取得してチェックボックスフォームに渡す（iam:write が必要）。
  * 権限が無いユーザーには 404 を返す。
  */
 export default async function AdminRoleNewPage() {

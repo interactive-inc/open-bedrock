@@ -338,16 +338,6 @@ export const PERMISSION_CATALOG = [
     category: "dashboard",
     description: "経営ダッシュボードを閲覧する",
   },
-  {
-    key: "api_token:manage",
-    category: "iam",
-    description: "機械用トークン(サービスアカウント)を管理する",
-  },
-  {
-    key: "access_review:view",
-    category: "iam",
-    description: "アクセス権の棚卸(アカウント×権限の一覧)を閲覧する",
-  },
   { key: "export:run", category: "iam", description: "全データのエクスポートを実行する" },
   {
     key: "year_end_adjustment:manage",
@@ -391,8 +381,6 @@ export const PERMISSION_CATALOG = [
     category: "governance",
     description: "適用対象となる規程版の確認を記録する",
   },
-  { key: "iam:manage_roles", category: "iam", description: "ロールと権限を管理する" },
-  { key: "iam:assign_roles", category: "iam", description: "アカウントにロールを割り当てる" },
   {
     key: "account:manage",
     category: "iam",
