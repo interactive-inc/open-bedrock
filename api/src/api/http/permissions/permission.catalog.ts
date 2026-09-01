@@ -9,9 +9,10 @@ type PermissionEntry = {
 /**
  * 全 permission のカタログ。認可の唯一の正(SSOT)で、key とカテゴリ(UI グルーピング用)の対応。
  * permission は "<domain>:<action>[:<scope>]" 形式の機械可読キー。
- * system_iam_role_permissions の seed 行との一致は
- * api/tests/contracts/permission-catalog.contract.test.ts が照合する。self スコープ
- * (本人==操作対象)は permission に載せず、所有者判定としてコードの不変条件に残す
+ * PERMISSION_KEYS との key 集合の一致、および system_iam_role_permissions の
+ * seed 行がこの集合に含まれることは api/tests/contracts/permission-catalog.contract.test.ts
+ * が検査する。self スコープ(本人==操作対象)は permission に載せず、
+ * 所有者判定としてコードの不変条件に残す
  */
 export const PERMISSION_CATALOG = [
   { key: "system:admin", category: "system", description: "System全体を管理する" },
