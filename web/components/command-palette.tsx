@@ -1,5 +1,6 @@
 "use client"
 
+import type { PermissionKey } from "@/lib/api/types/permission-key"
 import {
   BookOpen,
   Boxes,
@@ -57,7 +58,7 @@ type CommandEntry = {
   href: string
   icon: LucideIcon
   group: string
-  requiredPermission?: string
+  requiredPermission?: PermissionKey
   requiresWorkflowRepairAccess?: boolean
   workflowApplicationInbox?: boolean
 }
@@ -273,7 +274,7 @@ const commands: ReadonlyArray<CommandEntry> = [
 
 type Props = {
   inboxCounts: InboxCounts
-  permissions: ReadonlyArray<string>
+  permissions: ReadonlyArray<PermissionKey>
 }
 
 /**

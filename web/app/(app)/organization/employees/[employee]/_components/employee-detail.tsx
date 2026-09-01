@@ -1,3 +1,4 @@
+import type { PermissionKey } from "@/lib/api/types/permission-key"
 import { FetchError } from "@/components/fetch-error"
 import { notFound } from "next/navigation"
 import { EmployeeEditForm } from "@/app/(app)/organization/employees/_components/employee-edit-form"
@@ -17,7 +18,7 @@ import { getPositionList } from "@/lib/api/get-position-list"
 
 type Props = {
   code: string
-  permissions: ReadonlyArray<string>
+  permissions: ReadonlyArray<PermissionKey>
 }
 
 /**
