@@ -7,6 +7,7 @@ import {
 } from "@system/interface/errors"
 /** /system/notifications */
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
+import { SystemFeaturePermission } from "@system/domain/catalogs/iam/system-feature-permission.catalog"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
@@ -103,7 +104,7 @@ export const POST = systemFactory.createHandlers(
   async (context) => {
     if (
       !context.var.permissions.has("system:admin") &&
-      !context.var.permissions.has("notification:send")
+      !context.var.permissions.has(SystemFeaturePermission.NOTIFICATION_SEND.key)
     ) {
       throw new SystemForbiddenError()
     }

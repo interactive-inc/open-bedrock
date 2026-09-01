@@ -4,6 +4,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import { SystemAuditEventQueryAdapter } from "@system/infrastructure/adapters/audit/system-audit-event-query.adapter"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { SystemFeaturePermission } from "@system/domain/catalogs/iam/system-feature-permission.catalog"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { zValidator } from "@hono/zod-validator"
@@ -33,14 +34,14 @@ export const GET = systemFactory.createHandlers(
     }
     const auditRepository = new SystemAuditEventRepository({ env: { DB: context.env.DB } })
     const authorizationJson = StableSystemAuditJsonValue.create({
-      required_permission_keys: ["audit:read"],
+      required_permission_keys: [SystemFeaturePermission.AUDIT_READ.key],
     })
     if (authorizationJson instanceof Error) {
       throw new SystemAuditUnavailableError()
     }
     if (
       !context.var.permissions.has("system:admin") &&
-      !context.var.permissions.has("audit:read")
+      !context.var.permissions.has(SystemFeaturePermission.AUDIT_READ.key)
     ) {
       const deniedAudit = SystemAuditEventEntity.create({
         actorAccountId: context.var.userId,

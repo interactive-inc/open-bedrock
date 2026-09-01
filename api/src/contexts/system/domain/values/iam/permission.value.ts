@@ -9,7 +9,7 @@ export const permissionKeySchema = z
 /**
  * System が所有する、名前空間付き権限キーの汎用値オブジェクト。
  *
- * 権限語彙そのものは利用側の bounded context が所有する。System は個別のキー一覧や
+ * 業務語彙は利用側の bounded context が所有する。System は自身の機能権限の語彙だけを持ち、
  * リソーススコープを知らず、構文と等価性だけを保証する。
  */
 export class PermissionValue {
