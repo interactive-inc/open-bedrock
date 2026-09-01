@@ -3,6 +3,7 @@
 import { Eye, EyeOff } from "lucide-react"
 import { useActionState, useEffect, useState } from "react"
 import { loginAction } from "@/lib/auth/login-action"
+import { resolveLoginDefaults } from "@/lib/auth/resolve-login-defaults"
 import type { LoginState } from "@/lib/auth/login-action"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -14,6 +15,7 @@ const initialState: LoginState = { ok: false, error: null }
 /**
  * メール + パスワードでサインインするフォーム。`useActionState` で `loginAction` を呼び、
  * 成功時は Server Action 内で cookie を立て、現在の error boundary を再描画する。
+ * `next dev` のときだけローカル seed の資格情報を初期入力する（resolveLoginDefaults）。
  */
 type Props = {
   onAuthenticated: () => void
@@ -31,6 +33,8 @@ export function LoginForm(props: Props) {
   const isPending = action[2]
 
   const [showPassword, setShowPassword] = useState(false)
+
+  const defaults = resolveLoginDefaults(process.env.NODE_ENV)
 
   useEffect(() => {
     if (state.ok) {
@@ -50,6 +54,7 @@ export function LoginForm(props: Props) {
             type="email"
             autoComplete="email"
             spellCheck={false}
+            defaultValue={defaults?.email}
             required
           />
         </Field>
@@ -63,6 +68,7 @@ export function LoginForm(props: Props) {
               name="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
+              defaultValue={defaults?.password}
               required
               className="pr-10"
             />
