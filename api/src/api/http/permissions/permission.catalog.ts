@@ -1,390 +1,102 @@
+import { API_COMPOSITION_PERMISSION_ENTRIES } from "@/api/http/permissions/api-composition-permission-entry.catalog"
+import { SYSTEM_PERMISSION_ENTRIES } from "@/api/http/permissions/system-permission-entry.catalog"
+import { ANNOUNCEMENT_PERMISSION_ENTRIES } from "@/contexts/announcement/domain/catalogs/iam/announcement-permission-entry.catalog"
+import { ANTISOCIAL_CHECK_PERMISSION_ENTRIES } from "@/contexts/antisocial-check/domain/catalogs/iam/antisocial-check-permission-entry.catalog"
+import { ASSET_PERMISSION_ENTRIES } from "@/contexts/asset/domain/catalogs/iam/asset-permission-entry.catalog"
+import { ATTENDANCE_PERMISSION_ENTRIES } from "@/contexts/attendance/domain/catalogs/iam/attendance-permission-entry.catalog"
+import { BUSINESS_TRIP_PERMISSION_ENTRIES } from "@/contexts/business-trip/domain/catalogs/iam/business-trip-permission-entry.catalog"
+import { CAREER_PERMISSION_ENTRIES } from "@/contexts/career/domain/catalogs/iam/career-permission-entry.catalog"
+import { CERTIFICATE_REQUEST_PERMISSION_ENTRIES } from "@/contexts/certificate-request/domain/catalogs/iam/certificate-request-permission-entry.catalog"
+import { CERTIFICATION_PERMISSION_ENTRIES } from "@/contexts/certification/domain/catalogs/iam/certification-permission-entry.catalog"
+import { COMMENDATION_PERMISSION_ENTRIES } from "@/contexts/commendation/domain/catalogs/iam/commendation-permission-entry.catalog"
+import { COMPANY_CALENDAR_PERMISSION_ENTRIES } from "@/contexts/company-calendar/domain/catalogs/iam/company-calendar-permission-entry.catalog"
+import { COMPENSATION_CHANGE_PERMISSION_ENTRIES } from "@/contexts/compensation-change/domain/catalogs/iam/compensation-change-permission-entry.catalog"
+import { DISCIPLINARY_ACTION_PERMISSION_ENTRIES } from "@/contexts/disciplinary-action/domain/catalogs/iam/disciplinary-action-permission-entry.catalog"
+import { DOCUMENT_PERMISSION_ENTRIES } from "@/contexts/document/domain/catalogs/iam/document-permission-entry.catalog"
+import { EXPENSE_PERMISSION_ENTRIES } from "@/contexts/expense/domain/catalogs/iam/expense-permission-entry.catalog"
+import { FAMILY_CARE_LEAVE_PERMISSION_ENTRIES } from "@/contexts/family-care-leave/domain/catalogs/iam/family-care-leave-permission-entry.catalog"
+import { GOVERNANCE_PERMISSION_ENTRIES } from "@/contexts/governance/domain/catalogs/iam/governance-permission-entry.catalog"
+import { HEADCOUNT_PLAN_PERMISSION_ENTRIES } from "@/contexts/headcount-plan/domain/catalogs/iam/headcount-plan-permission-entry.catalog"
+import { HEALTH_CHECKUP_PERMISSION_ENTRIES } from "@/contexts/health-checkup/domain/catalogs/iam/health-checkup-permission-entry.catalog"
+import { IT_INCIDENT_PERMISSION_ENTRIES } from "@/contexts/it-incident/domain/catalogs/iam/it-incident-permission-entry.catalog"
+import { LEAVE_PERMISSION_ENTRIES } from "@/contexts/leave/domain/catalogs/iam/leave-permission-entry.catalog"
+import { LIFE_EVENT_PERMISSION_ENTRIES } from "@/contexts/life-event/domain/catalogs/iam/life-event-permission-entry.catalog"
+import { MEETING_PERMISSION_ENTRIES } from "@/contexts/meeting/domain/catalogs/iam/meeting-permission-entry.catalog"
+import { ONBOARDING_PERMISSION_ENTRIES } from "@/contexts/onboarding/domain/catalogs/iam/onboarding-permission-entry.catalog"
+import { ONE_ON_ONE_PERMISSION_ENTRIES } from "@/contexts/one-on-one/domain/catalogs/iam/one-on-one-permission-entry.catalog"
+import { PARTNER_PERMISSION_ENTRIES } from "@/contexts/partner/domain/catalogs/iam/partner-permission-entry.catalog"
+import { PERFORMANCE_REVIEW_PERMISSION_ENTRIES } from "@/contexts/performance-review/domain/catalogs/iam/performance-review-permission-entry.catalog"
+import { RECRUITMENT_PERMISSION_ENTRIES } from "@/contexts/recruitment/domain/catalogs/iam/recruitment-permission-entry.catalog"
+import { REGULATION_PERMISSION_ENTRIES } from "@/contexts/regulation/domain/catalogs/iam/regulation-permission-entry.catalog"
+import { RENTAL_PERMISSION_ENTRIES } from "@/contexts/rental/domain/catalogs/iam/rental-permission-entry.catalog"
+import { RESIGNATION_PERMISSION_ENTRIES } from "@/contexts/resignation/domain/catalogs/iam/resignation-permission-entry.catalog"
+import { RINGI_PERMISSION_ENTRIES } from "@/contexts/ringi/domain/catalogs/iam/ringi-permission-entry.catalog"
+import { ROOM_PERMISSION_ENTRIES } from "@/contexts/room/domain/catalogs/iam/room-permission-entry.catalog"
+import { SHIFT_PERMISSION_ENTRIES } from "@/contexts/shift/domain/catalogs/iam/shift-permission-entry.catalog"
+import { SOFTWARE_LICENSE_PERMISSION_ENTRIES } from "@/contexts/software-license/domain/catalogs/iam/software-license-permission-entry.catalog"
+import { SURVEY_PERMISSION_ENTRIES } from "@/contexts/survey/domain/catalogs/iam/survey-permission-entry.catalog"
+import { THANKS_PERMISSION_ENTRIES } from "@/contexts/thanks/domain/catalogs/iam/thanks-permission-entry.catalog"
+import { TRAINING_PERMISSION_ENTRIES } from "@/contexts/training/domain/catalogs/iam/training-permission-entry.catalog"
+import { WORK_ACCIDENT_PERMISSION_ENTRIES } from "@/contexts/work-accident/domain/catalogs/iam/work-accident-permission-entry.catalog"
+import { WORK_STYLE_PERMISSION_ENTRIES } from "@/contexts/work-style/domain/catalogs/iam/work-style-permission-entry.catalog"
 import type { PermissionKey } from "@/api/http/permissions/permission-key.catalog"
 
 type PermissionEntry = {
   key: PermissionKey
   category: string
+  featureKey?: string | null
   description: string
 }
 
 /**
- * 全 permission のカタログ。認可の唯一の正(SSOT)で、key とカテゴリ(UI グルーピング用)の対応。
- * permission は "<domain>:<action>[:<scope>]" 形式の機械可読キー。
- * PERMISSION_KEYS との key 集合の一致、および system_iam_role_permissions の
- * seed 行がこの集合に含まれることは api/tests/contracts/permission-catalog.contract.test.ts
- * が検査する。self スコープ(本人==操作対象)は permission に載せず、
+ * 全permissionのカタログ。keyとカテゴリ(UIグルーピング用)の対応を、所有contextから合成する。
+ * permissionは "<domain>:<action>[:<scope>]" 形式の機械可読キー。
+ * 語彙と表示メタデータの正本は所有するApp contextのentry catalogで、ここは束ねるだけにする。
+ * PERMISSION_KEYSとのkey集合の一致、およびsystem_iam_role_permissionsの
+ * seed行がこの集合に含まれることは api/tests/contracts/permission-catalog.contract.test.ts
+ * が検査する。selfスコープ(本人==操作対象)はpermissionに載せず、
  * 所有者判定としてコードの不変条件に残す
  */
 export const PERMISSION_CATALOG = [
-  { key: "system:admin", category: "system", description: "System全体を管理する" },
-  { key: "iam:read", category: "iam", description: "IAM設定と割当を閲覧する" },
-  { key: "iam:write", category: "iam", description: "IAM設定と割当を変更する" },
-  { key: "dashboard:view", category: "general", description: "ダッシュボードを閲覧する" },
-  { key: "employee:read", category: "employee", description: "従業員を閲覧する" },
-  { key: "employee:create", category: "employee", description: "従業員を登録する" },
-  {
-    key: "employee:update",
-    category: "employee",
-    description: "許可された対象範囲の従業員を更新する",
-  },
-  { key: "employee:delete", category: "employee", description: "従業員を削除する" },
-  { key: "employee:assign_role", category: "employee", description: "従業員のロールを割り当てる" },
-  {
-    key: "employee:lifecycle:request",
-    category: "employee",
-    description: "組織スコープ内の人事変更を申請する",
-  },
-  {
-    key: "employee:lifecycle:apply",
-    category: "employee",
-    description: "許可された対象範囲の人事変更を確定する",
-  },
-  {
-    key: "employee:lifecycle:read:all",
-    category: "employee",
-    description: "全社の人事履歴を横断で閲覧する",
-  },
-  { key: "employee:archive", category: "employee", description: "退職済み従業員をアーカイブする" },
-  { key: "org:manage", category: "org", description: "組織・部署を管理する" },
-  {
-    key: "application:approve",
-    category: "application",
-    description: "組織スコープ内の互換申請を承認・却下する",
-  },
-  {
-    key: "application:read:all",
-    category: "application",
-    description: "全社の申請を横断で閲覧する",
-  },
-  {
-    key: "application:read:department",
-    category: "application",
-    description: "同じ部署の申請を閲覧する",
-  },
-  {
-    key: "application_template:manage",
-    category: "application",
-    description: "申請テンプレートを管理する",
-  },
-  { key: "expense:approve", category: "expense", description: "経費申請を承認・却下する" },
-  { key: "expense:read:all", category: "expense", description: "全社の経費申請を横断で閲覧する" },
-  { key: "budget:manage", category: "budget", description: "部署予算を管理する" },
-  { key: "leave:approve", category: "leave", description: "休暇申請を承認・却下する" },
-  { key: "leave:read:all", category: "leave", description: "全社の休暇申請を横断で閲覧する" },
-  { key: "notification:send", category: "notification", description: "通知を送信する" },
-  { key: "oneonone:create", category: "oneonone", description: "1on1 を作成する" },
-  {
-    key: "oneonone:read:department",
-    category: "oneonone",
-    description: "同じ部署の 1on1 を閲覧する",
-  },
-  { key: "review:administer", category: "review", description: "評価サイクルを運営する" },
-  {
-    key: "career_posting:manage",
-    category: "career",
-    description: "社内公募を管理する",
-  },
-  { key: "room:manage", category: "room", description: "会議室を管理する" },
-  { key: "asset:manage", category: "asset", description: "資産を管理する" },
-  { key: "training:manage", category: "training", description: "研修コースを管理する" },
-  { key: "shift:manage", category: "shift", description: "シフトを管理する" },
-  { key: "shift_swap:approve", category: "shift", description: "シフト交代を承認する" },
-  {
-    key: "shift_swap:read:all",
-    category: "shift",
-    description: "全社のシフト交代申請を横断で閲覧する",
-  },
-  { key: "survey:manage", category: "survey", description: "アンケートを管理する" },
-  {
-    key: "antisocial_check:manage",
-    category: "antisocial-check",
-    description: "反社チェックを管理する",
-  },
-  { key: "batch:view", category: "batch", description: "バッチジョブを閲覧する" },
-  { key: "onboarding:manage", category: "onboarding", description: "オンボーディングを管理する" },
-  {
-    key: "onboarding:view:all",
-    category: "onboarding",
-    description: "全従業員のオンボーディングを閲覧する",
-  },
-  { key: "thanks_reward:manage", category: "thanks", description: "サンクスの交換景品を管理する" },
-  {
-    key: "thanks_redemption:approve",
-    category: "thanks",
-    description: "サンクスの交換申請を承認する",
-  },
-  {
-    key: "thanks_redemption:read:all",
-    category: "thanks",
-    description: "全社のサンクス交換申請を横断で閲覧する",
-  },
-  { key: "goal:read:all", category: "goal", description: "全社の目標を閲覧する" },
-  {
-    key: "goal:read:reports",
-    category: "goal",
-    description: "レポートライン配下の目標を閲覧する",
-  },
-  {
-    key: "goal:read:department",
-    category: "goal",
-    description: "同じ部署の目標を閲覧する",
-  },
-  { key: "goal:evaluate", category: "goal", description: "全社の目標を評価する" },
-  {
-    key: "goal:evaluate:reports",
-    category: "goal",
-    description: "レポートライン配下の目標を評価する",
-  },
-  {
-    key: "evaluation:administer",
-    category: "evaluation",
-    description: "評価テンプレート管理、評価シートの最終確定・再オープン・評価者変更を行う",
-  },
-  { key: "attendance:read:all", category: "attendance", description: "全従業員の勤怠を閲覧する" },
-  {
-    key: "attendance:read:reports",
-    category: "attendance",
-    description: "レポートライン配下の勤怠を閲覧する",
-  },
-  {
-    key: "attendance:read:department",
-    category: "attendance",
-    description: "同じ部署の勤怠を閲覧する",
-  },
-  {
-    key: "certificate_request:read:all",
-    category: "certificate-request",
-    description: "全社の証明書発行依頼を横断で閲覧する",
-  },
-  {
-    key: "certificate_request:manage",
-    category: "certificate-request",
-    description: "証明書発行依頼の状態を代理で進める",
-  },
-  {
-    key: "resignation:manage",
-    category: "resignation",
-    description: "退職手続きの状態を代理で進める",
-  },
-  {
-    key: "life_event:manage",
-    category: "life-event",
-    description: "ライフイベント届の状態を代理で進める",
-  },
-  {
-    key: "family_care_leave:manage",
-    category: "family-care-leave",
-    description: "産休・育休・介護休業の申出の状態を代理で進める",
-  },
-  {
-    key: "business_trip:manage",
-    category: "business-trip",
-    description: "出張申請の状態を代理で進める",
-  },
-  {
-    key: "rental:manage",
-    category: "rental",
-    description: "貸与品予約の状態を代理で進める",
-  },
-  {
-    key: "leave:read:reports",
-    category: "leave",
-    description: "レポートライン配下の休暇申請を閲覧する",
-  },
-  {
-    key: "leave:read:department",
-    category: "leave",
-    description: "同じ部署の休暇申請を閲覧する",
-  },
-  { key: "grade:manage", category: "grade", description: "等級マスタと等級の割当を管理する" },
-  { key: "grade:read:all", category: "grade", description: "全社の等級を閲覧する" },
-  { key: "position:manage", category: "position", description: "役職マスタを管理する" },
-  {
-    key: "grade:read:reports",
-    category: "grade",
-    description: "レポートライン配下の等級を閲覧する",
-  },
-  {
-    key: "employee_event:manage",
-    category: "employee",
-    description: "異動・在籍イベントの履歴を記録する",
-  },
-  {
-    key: "employee_event:read:all",
-    category: "employee",
-    description: "全社の異動・在籍イベント履歴を閲覧する",
-  },
-  {
-    key: "resignation:read:all",
-    category: "resignation",
-    description: "全社の退職手続きを横断で閲覧する",
-  },
-  {
-    key: "life_event:read:all",
-    category: "life-event",
-    description: "全社のライフイベント届を横断で閲覧する",
-  },
-  {
-    key: "family_care_leave:read:all",
-    category: "family-care-leave",
-    description: "全社の産休・育休・介護休業の申出を横断で閲覧する",
-  },
-  {
-    key: "business_trip:read:all",
-    category: "business-trip",
-    description: "全社の出張申請を横断で閲覧する",
-  },
-  {
-    key: "rental:read:all",
-    category: "rental",
-    description: "全社の貸与品予約を横断で閲覧する",
-  },
-  { key: "announcement:manage", category: "announcement", description: "社内アナウンスを管理する" },
-  { key: "regulation:manage", category: "regulation", description: "規程集を管理する" },
-  { key: "document:manage", category: "document", description: "文書台帳を管理する" },
-  { key: "document:read:all", category: "document", description: "文書台帳を閲覧する" },
-  { key: "calendar:manage", category: "calendar", description: "会社カレンダーを管理する" },
-  { key: "work_style:manage", category: "attendance", description: "勤務形態の属性を管理する" },
-  {
-    key: "work_style:read:all",
-    category: "attendance",
-    description: "全社の勤務形態の属性を閲覧する",
-  },
-  {
-    key: "certification:manage",
-    category: "certification",
-    description: "資格・免許の台帳を管理する",
-  },
-  {
-    key: "certification:read:all",
-    category: "certification",
-    description: "全社の資格・免許を閲覧する",
-  },
-  {
-    key: "health_checkup:manage",
-    category: "health",
-    description: "健康診断の実施記録を管理する",
-  },
-  {
-    key: "health_checkup:read:all",
-    category: "health",
-    description: "全社の健康診断の実施記録を閲覧する",
-  },
-  {
-    key: "work_accident:manage",
-    category: "health",
-    description: "労災・事故の発生記録を管理する",
-  },
-  {
-    key: "work_accident:read:all",
-    category: "health",
-    description: "全社の労災・事故記録を閲覧する",
-  },
-  { key: "license:manage", category: "license", description: "ライセンス・SaaS台帳を管理する" },
-  { key: "license:read:all", category: "license", description: "ライセンス・SaaS台帳を閲覧する" },
-  { key: "it_incident:manage", category: "license", description: "インシデント記録を管理する" },
-  {
-    key: "it_incident:read:all",
-    category: "license",
-    description: "全社のインシデント記録を閲覧する",
-  },
-  { key: "budget:read:all", category: "budget", description: "予算枠の記録を閲覧する" },
-  {
-    key: "salary_revision:manage",
-    category: "salary",
-    description: "給与改定の事実記録を管理する",
-  },
-  {
-    key: "salary_revision:read:all",
-    category: "salary",
-    description: "全社の給与改定記録を閲覧する",
-  },
-  { key: "recruitment:manage", category: "recruitment", description: "採用(応募者管理)を扱う" },
-  { key: "commendation:manage", category: "employee", description: "表彰の記録を管理する" },
-  {
-    key: "disciplinary_action:manage",
-    category: "employee",
-    description: "懲戒の記録を管理する",
-  },
-  {
-    key: "disciplinary_action:read:all",
-    category: "employee",
-    description: "懲戒の記録を閲覧する",
-  },
-  {
-    key: "headcount_plan:manage",
-    category: "headcount",
-    description: "人員計画を管理する",
-  },
-  {
-    key: "headcount_plan:read:all",
-    category: "headcount",
-    description: "人員計画を閲覧する",
-  },
-  { key: "ringi:read:all", category: "ringi", description: "全社の稟議を横断で閲覧する" },
-  { key: "partner:manage", category: "partner", description: "取引先台帳を管理する" },
-  { key: "contract:manage", category: "partner", description: "契約記録を管理する" },
-  {
-    key: "contract:read:all",
-    category: "partner",
-    description: "全社の契約記録を横断で閲覧する",
-  },
-  { key: "meeting:manage", category: "meeting", description: "会議体マスタを管理する" },
-  {
-    key: "decision:manage",
-    category: "decision",
-    description: "会社の意思決定記録を記録・更新する",
-  },
-  {
-    key: "management_dashboard:view",
-    category: "dashboard",
-    description: "経営ダッシュボードを閲覧する",
-  },
-  { key: "export:run", category: "iam", description: "全データのエクスポートを実行する" },
-  {
-    key: "year_end_adjustment:manage",
-    category: "year-end",
-    description: "年末調整の提出状況を管理する",
-  },
-  {
-    key: "year_end_adjustment:read:all",
-    category: "year-end",
-    description: "全社の年末調整の提出状況を閲覧する",
-  },
-  { key: "audit:read", category: "audit", description: "監査イベントを閲覧する" },
-  { key: "audit:export", category: "audit", description: "監査イベントを CSV 出力する" },
-  {
-    key: "governance:read",
-    category: "governance",
-    description: "公開済みの規程・手続き・統制を閲覧する",
-  },
-  {
-    key: "governance:read:restricted",
-    category: "governance",
-    description: "機密又は限定公開の規程を横断閲覧する",
-  },
-  {
-    key: "governance:manage",
-    category: "governance",
-    description: "規程原本、能力、組織ロールと割当を管理する",
-  },
-  {
-    key: "governance:review",
-    category: "governance",
-    description: "候補者となった規程版を審査する",
-  },
-  {
-    key: "governance:publish",
-    category: "governance",
-    description: "審査要件を満たした規程版を公開する",
-  },
-  {
-    key: "governance:acknowledge",
-    category: "governance",
-    description: "適用対象となる規程版の確認を記録する",
-  },
-  {
-    key: "account:manage",
-    category: "iam",
-    description: "アカウントを管理する(作成・停止・失効・identity)",
-  },
+  ...SYSTEM_PERMISSION_ENTRIES,
+  ...API_COMPOSITION_PERMISSION_ENTRIES,
+  ...ANNOUNCEMENT_PERMISSION_ENTRIES,
+  ...ANTISOCIAL_CHECK_PERMISSION_ENTRIES,
+  ...ASSET_PERMISSION_ENTRIES,
+  ...ATTENDANCE_PERMISSION_ENTRIES,
+  ...BUSINESS_TRIP_PERMISSION_ENTRIES,
+  ...CAREER_PERMISSION_ENTRIES,
+  ...CERTIFICATE_REQUEST_PERMISSION_ENTRIES,
+  ...CERTIFICATION_PERMISSION_ENTRIES,
+  ...COMMENDATION_PERMISSION_ENTRIES,
+  ...COMPANY_CALENDAR_PERMISSION_ENTRIES,
+  ...COMPENSATION_CHANGE_PERMISSION_ENTRIES,
+  ...DISCIPLINARY_ACTION_PERMISSION_ENTRIES,
+  ...DOCUMENT_PERMISSION_ENTRIES,
+  ...EXPENSE_PERMISSION_ENTRIES,
+  ...FAMILY_CARE_LEAVE_PERMISSION_ENTRIES,
+  ...GOVERNANCE_PERMISSION_ENTRIES,
+  ...HEADCOUNT_PLAN_PERMISSION_ENTRIES,
+  ...HEALTH_CHECKUP_PERMISSION_ENTRIES,
+  ...IT_INCIDENT_PERMISSION_ENTRIES,
+  ...LEAVE_PERMISSION_ENTRIES,
+  ...LIFE_EVENT_PERMISSION_ENTRIES,
+  ...MEETING_PERMISSION_ENTRIES,
+  ...ONBOARDING_PERMISSION_ENTRIES,
+  ...ONE_ON_ONE_PERMISSION_ENTRIES,
+  ...PARTNER_PERMISSION_ENTRIES,
+  ...PERFORMANCE_REVIEW_PERMISSION_ENTRIES,
+  ...RECRUITMENT_PERMISSION_ENTRIES,
+  ...REGULATION_PERMISSION_ENTRIES,
+  ...RENTAL_PERMISSION_ENTRIES,
+  ...RESIGNATION_PERMISSION_ENTRIES,
+  ...RINGI_PERMISSION_ENTRIES,
+  ...ROOM_PERMISSION_ENTRIES,
+  ...SHIFT_PERMISSION_ENTRIES,
+  ...SOFTWARE_LICENSE_PERMISSION_ENTRIES,
+  ...SURVEY_PERMISSION_ENTRIES,
+  ...THANKS_PERMISSION_ENTRIES,
+  ...TRAINING_PERMISSION_ENTRIES,
+  ...WORK_ACCIDENT_PERMISSION_ENTRIES,
+  ...WORK_STYLE_PERMISSION_ENTRIES,
 ] satisfies ReadonlyArray<PermissionEntry>
