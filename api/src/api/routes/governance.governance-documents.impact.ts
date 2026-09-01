@@ -1,3 +1,4 @@
+import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -12,6 +13,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (session === null) throw new UnauthorizedError()
 
   const result = await readGovernanceImpact(c, session, {
+    permission: new Set<string>(PERMISSION_KEYS),
     training: await readTrainingCourseCodeSet(c),
   })
   if (result instanceof ApplicationError) throw toHttpException(result)
