@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { UsageError } from "@/lib/errors"
 import { factory } from "@/factory"
 
-export const help = `bedrock roles — ロール一覧（iam:manage_roles が必要）
+export const help = `bedrock roles — ロール一覧（iam:read が必要）
 
 usage:
   bedrock roles`
