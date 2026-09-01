@@ -55,7 +55,7 @@ evaluation:administer はスコープなしの管理権限。評価シート(MBO
 
 - 新しいドメインを作るときは、必ず所有 context に can- ヘルパーを permission キーで実装し、ロール文字列で判定しない
 - web の出し分けも /auth/me の permissions を使う(web/lib 配下の can- ヘルパー)。ロール名での判定は動的ロールに追従できないため禁止
-- permission を追加したら所有する context のkey catalog、System IAMのmetadata catalog、migrationのseedに書く。ownership testが重複と欠落を拒否し、起動時のsubset checkがDB投影との乖離を検出する
+- permission を追加したら所有する context のkey catalog、System IAMのmetadata catalog、migrationのseedに書く。ownership testが重複と欠落を拒否し、permission-catalog.contract.testがDB投影との乖離を検出する
 - 機微項目は従業員台帳のカラムに追加せず、別資源のドメインに分離して権限を貼る。等級は grade ドメインの割当履歴として持ち、権限が無ければ API も画面も見えない
 - 役職マスタの管理 `position:manage` は grade:manage と同じく hr と root に付与する(0028_position_master_permission.sql)。マスタ一覧の閲覧に専用 permission は設けず、全認証者が読める。役職の割当履歴は持たず、期間付き履歴は人事発令に一元化する
 
@@ -64,7 +64,7 @@ evaluation:administer はスコープなしの管理権限。評価シート(MBO
 構造上の制約を記録する。具体的な値や現行実装は code、migration、生成型を正とする。
 
 - D1 に外部キー制約がなく、孤児行はアプリ層の検査、index、監査で防ぐ
-- permission catalog は code(SSOT)と DB 投影で二重定義になるため、起動時の subset 検査で同期ズレを検出する
+- permission catalog は code(SSOT)と system_iam_role_permissions の seed で二重定義になるため、CIのpermission-catalog.contract.testで同期ズレを検出する
 - per-template の approver_roles に未知の role key が混ざる可能性があり、突合で検出する
 - root の実効全許可を code に固定するため、柔軟性と硬直がトレードオフになる
 - 認可解決は request ごとに account と role を join するため、レイテンシ増を許容する
