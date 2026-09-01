@@ -55,7 +55,7 @@ evaluation:administer はスコープなしの管理権限。評価シート(MBO
 
 - 新しいドメインを作るときは、必ず所有 context に can- ヘルパーを permission キーで実装し、ロール文字列で判定しない
 - web の出し分けも /auth/me の permissions を使う(web/lib 配下の can- ヘルパー)。ロール名での判定は動的ロールに追従できないため禁止
-- permission を追加したら所有する App context の `domain/catalogs/iam/` に key と、category・featureKey・description を持つ entry を書く。API composition 層は各 context の catalog を束ねるだけで、語彙を定義しない
+- permission を追加したら所有する context の `domain/catalogs/iam/` に key と、category・featureKey・description を持つ entry を書く。System 自身の機能権限も System context がこの形で所有する。API composition 層は各 context の catalog を束ねるだけで、語彙を定義しない
 - 所有する App が無い permission だけを `api/src/api/http/permissions/` の api-composition catalog に置き、entry の reason にどこが判定しているかを書く
 - entry の featureKey は機能ゲートの登録名を指す。無効化された App の permission はロール編集の選択肢から外れる。featureKey が null の permission は機能ゲートの対象外で常に残る
 - web は permission キーを `web/lib/api/types/permission-key.ts` に手書きし、can- ヘルパーと requirePermission がこの型で受ける。api の PERMISSION_KEYS との一致は permission-catalog.contract.test が検査する

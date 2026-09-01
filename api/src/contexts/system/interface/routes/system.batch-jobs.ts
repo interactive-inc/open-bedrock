@@ -1,5 +1,6 @@
 /** /system/batch-jobs */
 import { ReadSystemBatchJobsAdapter } from "@system/infrastructure/adapters/batch/read-system-batch-jobs.adapter"
+import { SystemFeaturePermission } from "@system/domain/catalogs/iam/system-feature-permission.catalog"
 import { SystemBatchUnavailableError, SystemForbiddenError } from "@system/interface/errors"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
@@ -19,7 +20,7 @@ export const GET = systemFactory.createHandlers(
   async (context) => {
     if (
       !context.var.permissions.has("system:admin") &&
-      !context.var.permissions.has("batch:view")
+      !context.var.permissions.has(SystemFeaturePermission.BATCH_VIEW.key)
     ) {
       throw new SystemForbiddenError()
     }

@@ -1,5 +1,6 @@
 import { API_COMPOSITION_PERMISSION_ENTRIES } from "@/api/http/permissions/api-composition-permission-entry.catalog"
 import { SYSTEM_PERMISSION_ENTRIES } from "@/api/http/permissions/system-permission-entry.catalog"
+import { SYSTEM_FEATURE_PERMISSION_ENTRIES } from "@system/domain/catalogs/iam/system-feature-permission-entry.catalog"
 import { ANNOUNCEMENT_PERMISSION_ENTRIES } from "@/contexts/announcement/domain/catalogs/iam/announcement-permission-entry.catalog"
 import { ANTISOCIAL_CHECK_PERMISSION_ENTRIES } from "@/contexts/antisocial-check/domain/catalogs/iam/antisocial-check-permission-entry.catalog"
 import { ASSET_PERMISSION_ENTRIES } from "@/contexts/asset/domain/catalogs/iam/asset-permission-entry.catalog"
@@ -59,6 +60,7 @@ type PermissionEntry = {
  */
 export const PERMISSION_CATALOG = [
   ...SYSTEM_PERMISSION_ENTRIES,
+  ...SYSTEM_FEATURE_PERMISSION_ENTRIES,
   ...API_COMPOSITION_PERMISSION_ENTRIES,
   ...ANNOUNCEMENT_PERMISSION_ENTRIES,
   ...ANTISOCIAL_CHECK_PERMISSION_ENTRIES,

@@ -1,6 +1,6 @@
 import { API_COMPOSITION_PERMISSION_KEYS } from "@/api/http/permissions/api-composition-permission-key.catalog"
 import { BUSINESS_PERMISSION_KEYS } from "@/api/http/permissions/business-permission-key.catalog"
-import { SYSTEM_CAPABILITY_PERMISSION_KEYS } from "@/api/http/permissions/system-capability-permission-key.catalog"
+import { SYSTEM_FEATURE_PERMISSION_KEYS } from "@system/domain/catalogs/iam/system-feature-permission-key.catalog"
 import { SYSTEM_PERMISSION_KEYS } from "@system/domain/catalogs/iam/system-permission-key.catalog"
 import { ANNOUNCEMENT_PERMISSION_KEYS } from "@/contexts/announcement/domain/catalogs/iam/announcement-permission-key.catalog"
 import { ANTISOCIAL_CHECK_PERMISSION_KEYS } from "@/contexts/antisocial-check/domain/catalogs/iam/antisocial-check-permission-key.catalog"
@@ -46,7 +46,7 @@ import { z } from "zod"
 /** 各bounded contextが所有する権限語彙を、APIとDB投影のために合成する。 */
 export const PERMISSION_KEYS = [
   ...SYSTEM_PERMISSION_KEYS,
-  ...SYSTEM_CAPABILITY_PERMISSION_KEYS,
+  ...SYSTEM_FEATURE_PERMISSION_KEYS,
   ...API_COMPOSITION_PERMISSION_KEYS,
   ...BUSINESS_PERMISSION_KEYS,
 ] as const
@@ -56,7 +56,7 @@ export const PERMISSION_KEYS = [
  * api-compositionは所有するApp contextが無く、API compositionに残るkey。
  */
 export const PERMISSION_KEYS_BY_CONTEXT = {
-  system: [...SYSTEM_PERMISSION_KEYS, ...SYSTEM_CAPABILITY_PERMISSION_KEYS],
+  system: [...SYSTEM_PERMISSION_KEYS, ...SYSTEM_FEATURE_PERMISSION_KEYS],
   "api-composition": API_COMPOSITION_PERMISSION_KEYS,
   announcement: ANNOUNCEMENT_PERMISSION_KEYS,
   "antisocial-check": ANTISOCIAL_CHECK_PERMISSION_KEYS,
