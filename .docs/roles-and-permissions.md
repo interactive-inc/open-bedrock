@@ -55,7 +55,11 @@ evaluation:administer はスコープなしの管理権限。評価シート(MBO
 
 - 新しいドメインを作るときは、必ず所有 context に can- ヘルパーを permission キーで実装し、ロール文字列で判定しない
 - web の出し分けも /auth/me の permissions を使う(web/lib 配下の can- ヘルパー)。ロール名での判定は動的ロールに追従できないため禁止
-- permission を追加したら所有する context のkey catalog、System IAMのmetadata catalog、migrationのseedに書く。ownership testが重複と欠落を拒否し、permission-catalog.contract.testがDB投影との乖離を検出する
+- permission を追加したら所有する App context の `domain/catalogs/iam/` に key と、category・featureKey・description を持つ entry を書く。API composition 層は各 context の catalog を束ねるだけで、語彙を定義しない
+- 所有する App が無い permission だけを `api/src/api/http/permissions/` の api-composition catalog に置き、entry の reason にどこが判定しているかを書く
+- entry の featureKey は機能ゲートの登録名を指す。無効化された App の permission はロール編集の選択肢から外れる。featureKey が null の permission は機能ゲートの対象外で常に残る
+- web は permission キーを `web/lib/api/types/permission-key.ts` に手書きし、can- ヘルパーと requirePermission がこの型で受ける。api の PERMISSION_KEYS との一致は permission-catalog.contract.test が検査する
+- permission は migration の seed にも書く。ownership testが重複と欠落を拒否し、permission-catalog.contract.testがDB投影との乖離を検出する
 - 機微項目は従業員台帳のカラムに追加せず、別資源のドメインに分離して権限を貼る。等級は grade ドメインの割当履歴として持ち、権限が無ければ API も画面も見えない
 - 役職マスタの管理 `position:manage` は grade:manage と同じく hr と root に付与する(0028_position_master_permission.sql)。マスタ一覧の閲覧に専用 permission は設けず、全認証者が読める。役職の割当履歴は持たず、期間付き履歴は人事発令に一元化する
 
