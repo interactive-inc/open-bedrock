@@ -18,6 +18,12 @@ import { verifyPassword } from "@system/lib/auth/verify-password"
 import { SystemAccountProvisioningAdapter } from "@system/infrastructure/adapters/identity/system-account-provisioning.adapter"
 import { SystemRoleCatalogRepository } from "@system/infrastructure/repositories/iam/system-role-catalog.repository"
 
+/**
+ * 登録時に既定で割り当てるrole key。このroleは全従業員が持つ基準の権限集合なので、
+ * 割り当てにemployee:assign_roleを要求しない。
+ */
+const BASELINE_REGISTRATION_ROLE_KEY = "member"
+
 /** Company採用、System Account、Identity、Role、両者のlinkを一つのD1 batchで作る。 */
 export class RegisterEmployee {
   constructor(private readonly c: Context) {
@@ -56,7 +62,10 @@ export class RegisterEmployee {
         "forbidden",
       )
     }
-    if (input.roleKey !== "member" && !session.hasPermission("employee:assign_role")) {
+    if (
+      input.roleKey !== BASELINE_REGISTRATION_ROLE_KEY &&
+      !session.hasPermission("employee:assign_role")
+    ) {
       return new ForbiddenError("このRoleを割り当てる権限がありません", "forbidden")
     }
     const company = {
