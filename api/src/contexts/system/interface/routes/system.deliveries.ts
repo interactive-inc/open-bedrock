@@ -4,6 +4,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import { SystemDeliveryRepository } from "@system/infrastructure/repositories/events/system-delivery.repository"
+import { SystemFeaturePermission } from "@system/domain/catalogs/iam/system-feature-permission.catalog"
 import { authorizeSystemOperation } from "@system/interface/authorization/authorize-system-operation"
 import {
   SystemDeliveryConflictError,
@@ -70,7 +71,13 @@ export const GET = systemFactory.createHandlers(
       .strict(),
   ),
   async (context) => {
-    if (!authorizeSystemOperation(context.var.permissions, "batch:view", context.var.now())) {
+    if (
+      !authorizeSystemOperation(
+        context.var.permissions,
+        SystemFeaturePermission.BATCH_VIEW.key,
+        context.var.now(),
+      )
+    ) {
       throw new SystemForbiddenError()
     }
     const query = context.req.valid("query")
