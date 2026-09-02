@@ -23,6 +23,15 @@ export type ExternalAccessTokenAccountResolution =
   | Readonly<{ kind: "rejected" }>
   | Readonly<{ kind: "unavailable" }>
 
+export function hasExternalAccessTokenHeader(token: string): boolean {
+  try {
+    const header = decodeProtectedHeader(token)
+    return header.alg === "EdDSA" && header.typ === "at+jwt"
+  } catch {
+    return false
+  }
+}
+
 function hasExternalAccessTokenConfiguration(env: Bindings): boolean {
   const issuer = env.IDENTITY_ACCESS_TOKEN_ISSUER ?? env.IDENTITY_ISSUER
 
@@ -40,12 +49,7 @@ export async function resolveExternalAccessTokenAccount(props: {
   env: Bindings
   now: Date
 }): Promise<ExternalAccessTokenAccountResolution> {
-  try {
-    const header = decodeProtectedHeader(props.token)
-    if (header.alg !== "EdDSA" || header.typ !== "at+jwt") return { kind: "not_external" }
-  } catch {
-    return { kind: "not_external" }
-  }
+  if (!hasExternalAccessTokenHeader(props.token)) return { kind: "not_external" }
 
   if (!hasExternalAccessTokenConfiguration(props.env)) return { kind: "rejected" }
 

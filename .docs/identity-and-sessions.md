@@ -89,6 +89,16 @@ access tokenは受理しない。署名鍵は`IDENTITY_JWKS`、未設定ならac
 OpenID Connect discoveryにある`jwks_uri`から取得する。identityログインとAPI access tokenの
 issuerは別々に設定でき、従来のSystem sessionは同時に利用できる。
 
+## APIトークンからWebセッションへの引き継ぎ
+
+認証済みCLIは`POST /system/browser-login-codes`へAPI access tokenを送り、60秒だけ有効な
+one-time codeを取得できる。このrouteは外部access tokenと従来のSystem sessionの両方を受理し、
+どちらもactiveなSystem Accountと現在のIAM状態をrequestごとに確認する。
+
+one-time codeはSystem Accountへ紐づけ、D1にはhashだけを保存する。Webは
+`POST /system/browser-sessions`でcodeを一度だけ交換し、API自身が発行するWeb用access tokenと
+refresh tokenを受け取る。外部access tokenをURLやブラウザへ渡さない。
+
 ## 失敗時の結果
 
 - 外部 identity 設定、JWKS、署名、claim、state、PKCE、code、account 状態を検証できなければ session を発行しない。

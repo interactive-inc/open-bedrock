@@ -12,6 +12,7 @@ import { requestContextMiddleware } from "@/api/http/middlewares/request-context
 import { factory } from "@/api/http/factory"
 import { auditNoStore } from "@/api/http/middlewares/audit-no-store"
 import { verifyBearer } from "@/api/http/verify-bearer"
+import { issueSystemBrowserLoginCode } from "@/api/http/issue-system-browser-login-code"
 import {
   CompanyActorValue,
   type CompanyCapability,
@@ -211,6 +212,7 @@ export const appBase = factory
   .use("*", systemContextMiddleware)
   .use("*", featureGate)
   .use("*", databaseMiddleware)
+  .use("/system/browser-login-codes", issueSystemBrowserLoginCode)
   .use("/system/oauth/authorizations", verifyBearer)
   .use("/system/oauth/authorizations", systemAuthorizationMiddleware)
   .use("/system/oauth/mcp-grants", verifyBearer)
