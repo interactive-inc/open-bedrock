@@ -16,6 +16,7 @@ export type Props = {
   identityJwks?: string
   identityIssuer?: string
   identityAudience?: string
+  identityAccessTokenAudience?: string
   identityLoginUrl?: string
   apiOrigin?: string
   enabledOptInApps?: string
@@ -55,6 +56,7 @@ export function requestWithContext(props: Props): Promise<Response> {
     IDENTITY_JWKS: props.identityJwks,
     IDENTITY_ISSUER: props.identityIssuer,
     IDENTITY_AUDIENCE: props.identityAudience,
+    IDENTITY_ACCESS_TOKEN_AUDIENCE: props.identityAccessTokenAudience,
     IDENTITY_LOGIN_URL: props.identityLoginUrl,
     API_ORIGIN: props.apiOrigin,
     // 既存の route テストは全機能有効を前提に書かれているため、テストの既定は "all" にする。
