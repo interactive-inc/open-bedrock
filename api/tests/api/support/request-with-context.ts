@@ -16,6 +16,7 @@ export type Props = {
   identityJwks?: string
   identityIssuer?: string
   identityAudience?: string
+  identityAccessTokenIssuer?: string
   identityAccessTokenAudience?: string
   identityLoginUrl?: string
   apiOrigin?: string
@@ -56,6 +57,7 @@ export function requestWithContext(props: Props): Promise<Response> {
     IDENTITY_JWKS: props.identityJwks,
     IDENTITY_ISSUER: props.identityIssuer,
     IDENTITY_AUDIENCE: props.identityAudience,
+    IDENTITY_ACCESS_TOKEN_ISSUER: props.identityAccessTokenIssuer,
     IDENTITY_ACCESS_TOKEN_AUDIENCE: props.identityAccessTokenAudience,
     IDENTITY_LOGIN_URL: props.identityLoginUrl,
     API_ORIGIN: props.apiOrigin,
