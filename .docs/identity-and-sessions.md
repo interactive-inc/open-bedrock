@@ -73,7 +73,9 @@ loopback に返す code は 60 秒で失効し、D1 には hash と解決済み 
 
 - `IDENTITY_ISSUER`: identity token の `iss` と JWKS origin
 - `IDENTITY_AUDIENCE`: Web の identity login が期待する `aud`
-- `IDENTITY_ACCESS_TOKEN_AUDIENCE`: 同じissuerが発行するAPI access tokenをBearerとして
+- `IDENTITY_ACCESS_TOKEN_ISSUER`: API access token の `iss` と JWKS origin。未設定なら
+  `IDENTITY_ISSUER` を使う
+- `IDENTITY_ACCESS_TOKEN_AUDIENCE`: API access tokenをBearerとして
   直接受理するときに期待する`aud`。未設定ならこの経路は無効
 - `IDENTITY_LOGIN_URL`: broker のログイン入口
 - `API_ORIGIN`: CLI callback URL と CLI identity token の `aud` の基準
@@ -83,8 +85,9 @@ loopback に返す code は 60 秒で失効し、D1 には hash と解決済み 
 
 API access tokenの直接受理では、`alg=EdDSA`、`typ=at+jwt`、issuer、audience、期限、
 verified emailを検証し、既存のactiveなOIDC identity bindingへ解決する。ID tokenや別API向け
-access tokenは受理しない。署名鍵は`IDENTITY_JWKS`、未設定ならOpenID Connect discoveryの
-`jwks_uri`から取得する。従来のSystem sessionは同時に利用できる。
+access tokenは受理しない。署名鍵は`IDENTITY_JWKS`、未設定ならaccess token issuerの
+OpenID Connect discoveryにある`jwks_uri`から取得する。identityログインとAPI access tokenの
+issuerは別々に設定でき、従来のSystem sessionは同時に利用できる。
 
 ## 失敗時の結果
 

@@ -9,7 +9,8 @@ import { describe, expect, test } from "bun:test"
 import { SignJWT } from "jose"
 
 const jwtSecret = "verify-bearer-test-secret"
-const issuer = "https://identity-provider.example"
+const identityIssuer = "https://identity-broker.example"
+const accessTokenIssuer = "https://identity-provider.example"
 const audience = "https://api.example.com"
 const now = "2026-01-01T00:00:00.000Z"
 const identityKey = await createSystemIdentityTestKey("external-access-key")
@@ -54,7 +55,7 @@ function externalToken(
       kid: key.keyId,
       typ: overrides.type ?? "at+jwt",
     })
-    .setIssuer(issuer)
+    .setIssuer(accessTokenIssuer)
     .setAudience(overrides.audience ?? audience)
     .setSubject(overrides.subject ?? "external-subject-5")
     .setJti(crypto.randomUUID())
@@ -70,7 +71,8 @@ function externalRequest(props: { db: D1Database; token: string }): Promise<Resp
     path: "/company/current-profile",
     token: props.token,
     now,
-    identityIssuer: issuer,
+    identityIssuer,
+    identityAccessTokenIssuer: accessTokenIssuer,
     identityAccessTokenAudience: audience,
     identityJwks: identityKey.jwks,
   })
@@ -81,6 +83,21 @@ describe("verifyBearer", () => {
     const response = await externalRequest({
       db: await createTestDb(),
       token: await externalToken(),
+    })
+
+    expect(response.status).toBe(200)
+  })
+
+  test("access token専用issuer未設定なら従来のidentity issuerを使う", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/company/current-profile",
+      token: await externalToken(),
+      now,
+      identityIssuer: accessTokenIssuer,
+      identityAccessTokenAudience: audience,
+      identityJwks: identityKey.jwks,
     })
 
     expect(response.status).toBe(200)
@@ -155,7 +172,7 @@ describe("verifyBearer", () => {
       path: "/company/current-profile",
       token: await externalToken(),
       now,
-      identityIssuer: issuer,
+      identityIssuer: accessTokenIssuer,
       identityJwks: identityKey.jwks,
     })
 

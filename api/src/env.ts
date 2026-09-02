@@ -59,8 +59,11 @@ export type Bindings = {
   IDENTITY_ISSUER?: string
   // 外部 identity トークンに期待する aud（想定受信者）。未設定なら identity ログインを拒否する。
   IDENTITY_AUDIENCE?: string
-  // IDENTITY_ISSUERが発行するresource-bound access tokenをAPI Bearerとして直接受理するとき
-  // だけ設定する。未設定なら従来のSystem sessionだけを受理する。
+  // API access tokenの発行者。identityログインと異なるIdPを使う場合に設定する。
+  // 未設定なら後方互換としてIDENTITY_ISSUERを使う。
+  IDENTITY_ACCESS_TOKEN_ISSUER?: string
+  // resource-bound access tokenをAPI Bearerとして直接受理するときだけ設定する。
+  // 未設定なら従来のSystem sessionだけを受理する。
   IDENTITY_ACCESS_TOKEN_AUDIENCE?: string
   // 初期 ROOT 作成用。`wrangler secret put BOOTSTRAP_TOKEN` で登録し、初期化完了後は削除を推奨。
   // 未設定時は機能無効（POST /system/bootstrap は 404 を返す）。
