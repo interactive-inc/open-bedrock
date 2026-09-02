@@ -1,37 +1,13 @@
 import { SystemBrowserLoginCodeUnavailableError } from "@system/interface/errors"
 /** /system/browser-login-codes */
-import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
-import { CreateSystemBrowserLoginCodeAdapter } from "@system/infrastructure/adapters/auth/create-system-browser-login-code.adapter"
-import { systemLoginCodeHash } from "@system/lib/auth/system-login-code-hash"
+import { CreateSystemBrowserLoginCode } from "@system/application/auth/create-system-browser-login-code"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 
-const CODE_TTL_MILLISECONDS = 60_000
-
 // @authorization owner - 認証済みSystem Account自身へだけone-time codeを発行する
 export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
-  const now = context.var.now()
-  const accountId = zAccountId.safeParse(context.var.userId)
-  if (!Number.isSafeInteger(now.getTime()) || !accountId.success) {
-    throw new SystemBrowserLoginCodeUnavailableError()
-  }
+  const creation = await new CreateSystemBrowserLoginCode(context).execute(context.var.userId)
+  if (creation instanceof Error) throw new SystemBrowserLoginCodeUnavailableError()
 
-  const rawCode = crypto.randomUUID()
-  const codeHash = await systemLoginCodeHash(rawCode)
-  if (codeHash instanceof Error) {
-    throw new SystemBrowserLoginCodeUnavailableError()
-  }
-  const creation = await new CreateSystemBrowserLoginCodeAdapter({
-    env: { DB: context.env.DB },
-  }).createSystemBrowserLoginCode({
-    codeHash,
-    accountId: accountId.data,
-    createdAt: now,
-    expiresAt: new Date(now.getTime() + CODE_TTL_MILLISECONDS),
-  })
-  if (creation instanceof Error) {
-    throw new SystemBrowserLoginCodeUnavailableError()
-  }
-
-  return context.json({ code: rawCode, expires_in: CODE_TTL_MILLISECONDS / 1_000 }, 201)
+  return context.json({ code: creation.code, expires_in: creation.expiresInSeconds }, 201)
 })
