@@ -18,6 +18,9 @@ IDENTITY_ISSUER="http://localhost:18790"
 IDENTITY_AUDIENCE="http://localhost:3000"
 IDENTITY_LOGIN_URL="http://localhost:18790"
 API_ORIGIN="http://localhost:18787"
+# IDENTITY_ISSUERのAPI access tokenを直接受理するときだけ、そのaudienceを設定する。
+# 署名鍵はIDENTITY_JWKS、未設定ならissuerのOpenID Connect discoveryから取得する。
+IDENTITY_ACCESS_TOKEN_AUDIENCE=
 # 初期 ROOT の作成時だけ設定し、作成後は削除する。未設定なら POST /system/bootstrap は 404。
 BOOTSTRAP_TOKEN=
 # 有効化する opt-in App 機能。"all" か機能キーのカンマ区切り。正本は .docs/feature-tiers.md。
