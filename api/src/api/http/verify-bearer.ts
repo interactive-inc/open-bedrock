@@ -6,10 +6,9 @@ import { AccountEmployeeLinkReadAdapter } from "@/contexts/company/infrastructur
 import { ResolveAccountEmployeeLink } from "@/contexts/company/lib/workforce/resolve-account-employee-link"
 import type { SystemAccountId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { SystemD1AuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-authorization.adapter"
-import { readBearerAuthorization } from "@system/interface/authorization/lib/bearer-authorization"
 import { createMiddleware } from "hono/factory"
-import { resolveBearerAccount } from "@/api/http/resolve-bearer-account"
+import { authenticateSystemBearer } from "@/api/http/authenticate-system-bearer"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 /**
  * Bearer トークンを検証し、本人と権限を c.var.session に載せる。
@@ -22,48 +21,23 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     return
   }
 
-  const now = new Date(c.env.NOW ?? Date.now())
-  if (!Number.isSafeInteger(now.getTime())) {
-    throw new UnauthorizedError("account authorization is unavailable")
-  }
-
-  const authorization = readBearerAuthorization(c.req.header("authorization"))
-  if (authorization.kind !== "token") throw new UnauthorizedError("invalid token")
-
-  const bearerAccount = await resolveBearerAccount({
-    token: authorization.token,
-    env: c.env,
-    now,
-  })
-  if (bearerAccount.kind === "unavailable") {
-    throw new UnauthorizedError("account authentication is unavailable")
-  }
-  if (bearerAccount.kind === "rejected") throw new UnauthorizedError(bearerAccount.reason)
-
-  const accountAuthorization = await new SystemD1AuthorizationAdapter({
-    env: { DB: c.env.DB },
-  }).resolveForAccount({ accountId: bearerAccount.accountId, resource: null, at: now })
-  if (accountAuthorization instanceof Error) {
-    throw new UnauthorizedError("account authorization is unavailable")
-  }
-  if (accountAuthorization === null) throw new UnauthorizedError("invalid token")
-
+  await authenticateSystemBearer(c)
+  const accountId = zAccountId.parse(c.var.userId)
+  const workforceAccountId = restoreWorkforceId("system_account", accountId)
   const account = await new ResolveAccountEmployeeLink(new AccountEmployeeLinkReadAdapter(c), {
     evaluate: async (candidate: SystemAccountId) => ({
       ok: true as const,
-      eligible: candidate === restoreWorkforceId("system_account", bearerAccount.accountId),
+      eligible: candidate === workforceAccountId,
     }),
   }).execute({
     kind: "by_account",
-    accountId: restoreWorkforceId("system_account", bearerAccount.accountId),
+    accountId: workforceAccountId,
   })
   if (account.kind === "unavailable" || account.kind === "invalid_link") {
     throw new UnauthorizedError("account authentication is unavailable")
   }
   if (account.kind !== "found") throw new UnauthorizedError("account not found")
 
-  c.set("accountTokenVersion", bearerAccount.tokenVersion)
-  c.set("scopedPermissions", accountAuthorization.scopedPermissionKeys)
   const access = await resolveLiveEmployeeAccess(c, account.link.employeeId)
   if (access === null || access instanceof Error) {
     throw new UnauthorizedError("employee is unavailable")
@@ -72,11 +46,11 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   c.set(
     "session",
     new CompanySessionValue({
-      accountId: bearerAccount.accountId,
+      accountId,
       employeeId: account.link.employeeId,
       employmentStatus: access.status,
-      permissions: accountAuthorization.permissionKeys,
-      roleKeys: accountAuthorization.roleKeys.map((key) => key.replace(/^company:/, "")),
+      permissions: c.var.permissions,
+      roleKeys: (c.var.roleKeys ?? []).map((key) => key.replace(/^company:/, "")),
     }),
   )
 
