@@ -24,9 +24,11 @@ export type ExternalAccessTokenAccountResolution =
   | Readonly<{ kind: "unavailable" }>
 
 function hasExternalAccessTokenConfiguration(env: Bindings): boolean {
+  const issuer = env.IDENTITY_ACCESS_TOKEN_ISSUER ?? env.IDENTITY_ISSUER
+
   return (
-    env.IDENTITY_ISSUER !== undefined &&
-    env.IDENTITY_ISSUER.length > 0 &&
+    issuer !== undefined &&
+    issuer.length > 0 &&
     env.IDENTITY_ACCESS_TOKEN_AUDIENCE !== undefined &&
     env.IDENTITY_ACCESS_TOKEN_AUDIENCE.length > 0
   )
@@ -47,7 +49,7 @@ export async function resolveExternalAccessTokenAccount(props: {
 
   if (!hasExternalAccessTokenConfiguration(props.env)) return { kind: "rejected" }
 
-  const issuer = props.env.IDENTITY_ISSUER
+  const issuer = props.env.IDENTITY_ACCESS_TOKEN_ISSUER ?? props.env.IDENTITY_ISSUER
   const audience = props.env.IDENTITY_ACCESS_TOKEN_AUDIENCE
   if (issuer === undefined || audience === undefined) return { kind: "unavailable" }
 
