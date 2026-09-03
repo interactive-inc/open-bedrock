@@ -270,6 +270,10 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
   // --- thanks ---
   { source: "/thanks/admin", destination: "/thanks/thanks-redemptions", permanent: false },
   { source: "/thanks/inbox", destination: "/inbox/thanks-redemptions", permanent: false },
+  // context 名と resource 名が同じなので `/thanks/:path*` は作れない。
+  // 現行 URL を食わないよう、旧 base だけを exact で転送する。
+  { source: "/thanks", destination: "/my/thanks", permanent: false },
+  { source: "/governance", destination: "/governance/governance-documents", permanent: false },
   // --- review ---
   {
     source: "/review/manage",

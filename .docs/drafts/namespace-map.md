@@ -221,7 +221,7 @@ URL は所有区分または有効状態を経路に含めない。`/apps/thanks
 
 ### 変更しないもの
 
-`/employees`、`/directory/employees`、`/accounts`、`/roles`、`/system/notifications`、`/announcements`、`/regulations`、`/partners`、`/assets`、`/stocktakes`、`/rooms`、`/surveys`、`/expenses`、`/resignations`、`/business-trips`、`/life-events`、`/family-care-leaves`、`/certificate-requests`、`/antisocial-checks`、`/commendations`、`/disciplinary-actions`、`/headcount-plans`、`/health-checkups`、`/work-accidents`、`/it-incidents`、`/employee-events`、`/employee-certifications`、`/salary-revisions`、`/review-cycles`、`/review-forms`、`/application-templates`、`/approval-delegations`、`/personnel-actions`、`/personnel-action-requests`、`/meetings`、`/audit-event-exports`、`/provisioning/identities`、`/me`、`/inbox`、`/dashboard`、`/auth`、`/batch`、`/bootstrap`。
+`/employees`、`/directory/employees`、`/accounts`、`/roles`、`/notifications`、`/announcements`、`/regulations`、`/partners`、`/assets`、`/stocktakes`、`/rooms`、`/surveys`、`/expenses`、`/resignations`、`/business-trips`、`/life-events`、`/family-care-leaves`、`/certificate-requests`、`/antisocial-checks`、`/commendations`、`/disciplinary-actions`、`/headcount-plans`、`/health-checkups`、`/work-accidents`、`/it-incidents`、`/employee-events`、`/employee-certifications`、`/salary-revisions`、`/review-cycles`、`/review-forms`、`/application-templates`、`/approval-delegations`、`/personnel-actions`、`/personnel-action-requests`、`/meetings`、`/audit-event-exports`、`/provisioning/identities`、`/me`、`/inbox`、`/dashboard`、`/auth`、`/batch`、`/bootstrap`。
 
 `/me`、`/inbox`、`/dashboard`、`/auth`、`/batch`、`/bootstrap` はリソースの集合ではなく視点または操作の入口である。複数形化の対象としない。
 

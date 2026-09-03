@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs"
+import { existsSync, readdirSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, test } from "vite-plus/test"
 import { featureRegistry } from "@/lib/feature/feature-registry"
@@ -111,8 +111,6 @@ describe("urlRedirects", () => {
  */
 describe("feature-registry の href", () => {
   test("すべての href に page.tsx が実在する", () => {
-    const appRoot = path.join(import.meta.dirname, "..", "..", "app", "(app)")
-
     const missing = featureRegistry
       .flatMap((feature) => feature.routes.map((route) => route.href))
       .filter((href) => {
@@ -126,4 +124,43 @@ describe("feature-registry の href", () => {
 
     expect(missing).toEqual([])
   })
+
+  test("ナビに出ない画面も転送元に食われない", () => {
+    // registry の href だけを見る検査では、詳細・new・manage・export のような
+    // 導線を持たない画面が redirect に食われても緑のまま通る。
+    const eaten = toPageUrls(appRoot)
+      .map((url) => ({ url, destination: applyOnce(url) }))
+      .filter((entry) => entry.destination !== null)
+
+    expect(eaten).toEqual([])
+  })
 })
+
+const appRoot = path.join(import.meta.dirname, "..", "..", "app", "(app)")
+
+/**
+ * `app/(app)` 配下の page.tsx を URL に直す。
+ * 動的 segment `[name]` は照合用に 1 セグメントの固定値へ置き換える。
+ */
+function toPageUrls(
+  directory: string,
+  segments: ReadonlyArray<string> = [],
+): ReadonlyArray<string> {
+  const urls: Array<string> = []
+
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (entry.isFile() && entry.name === "page.tsx") {
+      urls.push(`/${segments.join("/")}`)
+      continue
+    }
+
+    if (entry.isDirectory() === false) continue
+    if (entry.name.startsWith("_")) continue
+
+    const segment = entry.name.startsWith("[") ? "x" : entry.name
+
+    urls.push(...toPageUrls(path.join(directory, entry.name), [...segments, segment]))
+  }
+
+  return urls
+}
