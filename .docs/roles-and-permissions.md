@@ -11,6 +11,7 @@
 - JWT に権限を載せない。リクエスト毎に DB から解決するため、ロール変更は即時反映される
 - self(自分のデータ)は permission にせず、本人一致の判定としてコードに残す。「自分の申請を見る」のに権限は要らない
 - ロール・権限の変更は audit_events に append-only で記録される
+- ロールの作成、変更、削除は再認証を要求する。POST /system/step-up-grants でパスワードを再検証して5分間有効な grant を得て、`x-system-step-up` ヘッダで送る。grant が無い、または失効している要求は 403 `step_up_required` で拒否する
 - knowledge、skill には管理 permission がなく、認証済み利用者の操作として実装されている。oneonone は作成(oneonone:create)と部署閲覧(oneonone:read:department)がある
 
 ## システムロール
