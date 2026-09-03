@@ -13,7 +13,7 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageRentals } from "@/lib/rental/can-manage-rentals"
 import { canViewAllRentalReservations } from "@/lib/rental/can-view-all-rental-reservations"
 
-export const metadata = { title: "貸与品予約管理" }
+export const metadata = { title: "レンタルの横断" }
 
 const PAGE_SIZE = 20
 
@@ -61,7 +61,7 @@ export default async function AdminRentalsPage(props: { searchParams: SearchPara
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="貸与品予約管理"
+        title="レンタルの横断"
         actions={
           <Button variant="secondary" nativeButton={false} render={<Link href="/rental/rentals" />}>
             自分の予約

@@ -16,7 +16,7 @@ export default async function BatchPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="バッチジョブ状況" />
+      <PageHeader title="バッチ" />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <BatchJobList />

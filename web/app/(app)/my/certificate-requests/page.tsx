@@ -6,7 +6,7 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 
-export const metadata = { title: "証明書発行依頼" }
+export const metadata = { title: "証明書" }
 
 /**
  * 証明書発行依頼の自分の依頼一覧画面。新規依頼は /new に分離。
@@ -15,7 +15,7 @@ export default function CertificateRequestsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="証明書発行依頼"
+        title="証明書"
         actions={
           <Button nativeButton={false} render={<Link href="/my/certificate-requests/new" />}>
             <Plus />

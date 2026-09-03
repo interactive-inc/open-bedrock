@@ -10,7 +10,7 @@ import { canManageWorkflowRepairs } from "@/lib/application/can-manage-workflow-
 import { getMe } from "@/lib/api/get-me"
 import { getWorkflowRepairs } from "@/lib/api/get-workflow-repairs"
 
-export const metadata = { title: "承認フロー修復" }
+export const metadata = { title: "ワークフロー修復" }
 
 type Props = {
   searchParams: Promise<{ page?: string; size?: string }>
@@ -32,7 +32,7 @@ export default async function WorkflowRepairsPage(props: Props) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="承認フロー修復"
+        title="ワークフロー修復"
         actions={
           <Button
             variant="secondary"

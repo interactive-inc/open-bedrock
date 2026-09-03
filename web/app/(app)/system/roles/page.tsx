@@ -7,10 +7,10 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-export const metadata = { title: "ロール管理" }
+export const metadata = { title: "ロール" }
 
 /**
- * ロール管理画面。managed role と custom role の一覧を表示する（iam:read が必要）。
+ * ロール画面。managed role と custom role の一覧を表示する（iam:read が必要）。
  * 権限が無いユーザーには 404 を返し、管理機能の存在を露出しない。
  */
 export default async function AdminRolesPage() {
@@ -27,7 +27,7 @@ export default async function AdminRolesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <PageHeader title="ロール管理" />
+        <PageHeader title="ロール" />
 
         {currentUser.permissions.includes("system:admin") ||
         currentUser.permissions.includes("iam:write") ? (

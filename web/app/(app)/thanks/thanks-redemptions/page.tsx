@@ -18,7 +18,7 @@ import {
 } from "@/lib/api/get-redemption-admin-list"
 import { canViewAllRedemptions } from "@/lib/thanks/can-view-all-redemptions"
 
-export const metadata = { title: "交換申請管理" }
+export const metadata = { title: "サンクス交換の横断" }
 
 const SORT_VALUES: ReadonlyArray<RedemptionAdminSort> = ["created_at_desc", "created_at_asc"]
 
@@ -82,7 +82,7 @@ export default async function AdminRedemptionsPage(props: { searchParams: Search
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="交換申請管理"
+        title="サンクス交換の横断"
         actions={
           currentUser.permissions.includes("thanks_reward:manage") ? (
             <Button

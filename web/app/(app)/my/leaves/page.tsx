@@ -38,7 +38,7 @@ export default async function LeavePage() {
                 nativeButton={false}
                 render={<Link href="/leave/leaves" />}
               >
-                休暇申請管理
+                全社の休暇
               </Button>
             ) : null}
 

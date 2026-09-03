@@ -17,16 +17,13 @@ import {
 } from "@/components/ui/table"
 import { getMyLentAssets } from "@/lib/api/get-my-lent-assets"
 
-export const metadata = { title: "貸出中の備品" }
+export const metadata = { title: "貸与品" }
 
 /** 自分の貸与品一覧画面。RSC で GET /assets/lent/me を取得してテーブル表示する。 */
 export default function MyLentAssetsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="自分の貸与品"
-        actions={<BackButton href="/asset/assets" label="備品一覧へ" />}
-      />
+      <PageHeader title="貸与品" actions={<BackButton href="/asset/assets" label="備品一覧へ" />} />
 
       <Suspense fallback={<ListSkeleton rows={4} />}>
         <MyLentAssetsTable />

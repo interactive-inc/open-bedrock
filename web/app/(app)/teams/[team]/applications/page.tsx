@@ -1,6 +1,7 @@
+import { DepartmentName } from "@/app/(app)/teams/[team]/_components/department-name"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { EmptyState } from "@/components/empty-state"
-import { SubPageHeader } from "@/components/sub-page-header"
+import { PageHeader } from "@/components/page-header"
 import {
   Table,
   TableBody,
@@ -29,7 +30,9 @@ export default async function DepartmentApplicationsPage(props: Props) {
   if (applications instanceof Error) {
     return (
       <div className="flex flex-col gap-6">
-        <SubPageHeader title="申請" />
+        <PageHeader title="部署の申請" />
+
+        <DepartmentName team={params.team} />
 
         <EmptyState title="この部署の申請を閲覧する権限がありません" />
       </div>
@@ -38,7 +41,9 @@ export default async function DepartmentApplicationsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <SubPageHeader title="申請" />
+      <PageHeader title="部署の申請" />
+
+      <DepartmentName team={params.team} />
 
       {applications.length === 0 ? (
         <EmptyState title="この部署の申請はまだありません" />

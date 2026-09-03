@@ -4,13 +4,13 @@ import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
-export const metadata = { title: "自分のオンボーディング" }
+export const metadata = { title: "オンボーディング" }
 
 /** 自分のオンボーディングタスク一覧画面（/onboarding/me）。 */
 export default function OnboardingMePage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="自分のオンボーディングタスク" />
+      <PageHeader title="オンボーディング" />
 
       <Card>
         <CardHeader>

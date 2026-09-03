@@ -243,7 +243,7 @@ const commands: ReadonlyArray<CommandEntry> = [
     requiredPermission: "audit:read",
   },
   {
-    label: "承認フロー修復",
+    label: "ワークフロー修復",
     href: "/system/workflow-repairs",
     icon: Workflow,
     group: "システム",
@@ -257,14 +257,14 @@ const commands: ReadonlyArray<CommandEntry> = [
     requiredPermission: "batch:view",
   },
   {
-    label: "ロール管理",
+    label: "ロール",
     href: "/system/roles",
     icon: KeyRound,
     group: "システム",
     requiredPermission: "iam:read",
   },
   {
-    label: "アカウント管理",
+    label: "アカウント",
     href: "/system/accounts",
     icon: UserCog,
     group: "システム",

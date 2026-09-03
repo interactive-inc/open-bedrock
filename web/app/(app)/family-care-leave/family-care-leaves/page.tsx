@@ -16,7 +16,7 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageFamilyCareLeaves } from "@/lib/family-care-leave/can-manage-family-care-leaves"
 import { canViewAllFamilyCareLeaves } from "@/lib/family-care-leave/can-view-all-family-care-leaves"
 
-export const metadata = { title: "産休・育休・介護休業管理" }
+export const metadata = { title: "休業の横断" }
 
 const PAGE_SIZE = 20
 
@@ -64,7 +64,7 @@ export default async function AdminFamilyCareLeavesPage(props: { searchParams: S
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="産休・育休・介護休業管理"
+        title="休業の横断"
         actions={
           <Button
             variant="secondary"
