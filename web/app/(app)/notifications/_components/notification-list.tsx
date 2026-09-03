@@ -66,7 +66,7 @@ export function NotificationList(props: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">
         <form action={markAllDispatch}>
-          <Button type="submit" variant="outline" disabled={isMarkingAll}>
+          <Button type="submit" variant="secondary" disabled={isMarkingAll}>
             すべて既読にする
           </Button>
         </form>

@@ -42,7 +42,7 @@ export function TemplateManagement(props: Props) {
   return (
     <div className="flex items-center gap-2">
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         nativeButton={false}
         render={<Link href={`/system/application-templates/${props.template.code}/workflow`} />}
@@ -72,9 +72,9 @@ function UpdateTemplateDialog(props: { template: ManagedTemplate }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>テンプレートを変更</DialogTitle>
 

@@ -43,7 +43,7 @@ export function OneOnOneList(props: Props) {
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="flex flex-col gap-3 text-sm">
+          <CardContent className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground">トピック</span>
               <span className="whitespace-pre-wrap">{oneOnOne.topics ?? "-"}</span>

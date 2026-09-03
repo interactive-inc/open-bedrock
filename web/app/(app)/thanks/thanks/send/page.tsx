@@ -16,7 +16,7 @@ export default function SendThanksPage() {
         actions={<BackButton href="/thanks/thanks" label="感謝に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <ThanksCreateForm />
         </CardContent>

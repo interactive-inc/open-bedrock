@@ -54,7 +54,7 @@ export function MyBusinessTripsList(props: Props) {
       <div className="flex flex-col gap-3">
         {props.businessTrips.map((businessTrip) => (
           <Card key={businessTrip.id}>
-            <CardContent className="flex flex-col gap-2 text-sm">
+            <CardContent className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">{businessTrip.destination}</span>
                 <span className="text-muted-foreground">{statusLabel(businessTrip.status)}</span>
@@ -100,7 +100,7 @@ export function MyBusinessTripsList(props: Props) {
         <TableBody>
           {props.businessTrips.map((businessTrip) => (
             <TableRow key={businessTrip.id}>
-              <TableCell className="font-medium">{businessTrip.destination}</TableCell>
+              <TableCell>{businessTrip.destination}</TableCell>
 
               <TableCell>{businessTrip.start_date}</TableCell>
 
@@ -150,7 +150,7 @@ function UpdateBusinessTripDialog(props: { businessTrip: BusinessTripResponse })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

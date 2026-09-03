@@ -71,7 +71,7 @@ export function AuditEventTable(props: Props) {
                 {formatAuditDateTime(event.created_at)}
               </time>
             </TableCell>
-            <TableCell className="max-w-72 whitespace-normal">
+            <TableCell className="whitespace-normal">
               <div className="flex min-w-0 flex-col gap-1">
                 <span className="break-words">{auditActionLabel(event.action)}</span>
                 <code className="break-all text-xs text-muted-foreground" translate="no">
@@ -84,10 +84,8 @@ export function AuditEventTable(props: Props) {
                 {auditOutcomeLabel(event.outcome)}
               </Badge>
             </TableCell>
-            <TableCell className="font-mono text-xs" translate="no">
-              {actorLabel(event)}
-            </TableCell>
-            <TableCell className="max-w-64 whitespace-normal">
+            <TableCell translate="no">{actorLabel(event)}</TableCell>
+            <TableCell className="whitespace-normal">
               <span>{auditTargetTypeLabel(event.target_type)}</span>
               {event.target_id === null ? null : (
                 <code className="block break-all text-xs text-muted-foreground" translate="no">
@@ -95,7 +93,7 @@ export function AuditEventTable(props: Props) {
                 </code>
               )}
             </TableCell>
-            <TableCell className="max-w-56 whitespace-normal break-words">
+            <TableCell className="whitespace-normal break-words">
               {auditReasonLabel(event.reason_code)}
             </TableCell>
             <TableCell className="hidden xl:table-cell">
@@ -106,7 +104,7 @@ export function AuditEventTable(props: Props) {
             </TableCell>
             <TableCell>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 nativeButton={false}
                 render={

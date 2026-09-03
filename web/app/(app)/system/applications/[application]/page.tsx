@@ -57,7 +57,7 @@ export default async function ApplicationDetailPage(props: Props) {
         returned={application.workflow?.returned === true}
       />
 
-      <Card className="p-0 gap-0">
+      <Card className="gap-0">
         <dl className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
           <DetailField label="申請者">{application.applicant_name}</DetailField>
 
@@ -69,7 +69,7 @@ export default async function ApplicationDetailPage(props: Props) {
         </dl>
       </Card>
 
-      <Card className="p-0 gap-0">
+      <Card className="gap-0">
         <div className="flex flex-col gap-2 p-4">
           <span className="text-sm font-medium">申請内容</span>
 
@@ -80,7 +80,7 @@ export default async function ApplicationDetailPage(props: Props) {
       </Card>
 
       {application.status === "pending" && application.approver_roles.length > 0 ? (
-        <Card className="p-0 gap-0">
+        <Card className="gap-0">
           <div className="flex flex-col gap-2 p-4">
             <span className="text-sm font-medium">次の承認者</span>
 
@@ -108,7 +108,7 @@ export default async function ApplicationDetailPage(props: Props) {
 
 function WorkflowProgress(props: { workflow: ApplicationWorkflowProgress }) {
   return (
-    <Card className="p-0 gap-0">
+    <Card className="gap-0">
       <div className="flex flex-col gap-4 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-sm font-medium">承認フロー</span>
@@ -196,7 +196,7 @@ function ApprovalHistory(props: { approvals: ReadonlyArray<ApplicationApprovalEn
   }
 
   return (
-    <Card className="p-0 gap-0">
+    <Card className="gap-0">
       <div className="flex flex-col gap-3 p-4">
         <span className="text-sm font-medium">承認履歴</span>
 

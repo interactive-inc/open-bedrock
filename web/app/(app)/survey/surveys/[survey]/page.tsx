@@ -58,7 +58,7 @@ export default async function SurveyAnswerPage(props: Props) {
           currentUser instanceof Error ||
           canManageSurveys(currentUser.permissions) === false ? null : (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               nativeButton={false}
               render={<Link href={`/survey/surveys/${survey.id}/summary`} />}

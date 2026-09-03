@@ -56,9 +56,7 @@ export async function MySkillList() {
               </TableCell>
               <TableCell>{mySkill.level}</TableCell>
               <TableCell>{mySkill.years === null ? "-" : `${mySkill.years}年`}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {mySkill.note === null ? "-" : mySkill.note}
-              </TableCell>
+              <TableCell>{mySkill.note === null ? "-" : mySkill.note}</TableCell>
             </TableRow>
           ))}
         </TableBody>

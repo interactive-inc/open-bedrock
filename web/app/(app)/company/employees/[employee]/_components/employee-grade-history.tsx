@@ -61,13 +61,11 @@ export async function EmployeeGradeHistory(props: Props) {
                 <TableRow key={assignment.id}>
                   <TableCell>{assignment.effective_date}</TableCell>
 
-                  <TableCell className="font-medium">
+                  <TableCell>
                     {gradeLabelById.get(assignment.grade_id) ?? `#${assignment.grade_id}`}
                   </TableCell>
 
-                  <TableCell className="text-muted-foreground">
-                    {assignment.reason ?? "-"}
-                  </TableCell>
+                  <TableCell>{assignment.reason ?? "-"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

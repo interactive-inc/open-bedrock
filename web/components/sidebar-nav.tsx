@@ -308,10 +308,7 @@ export function SidebarNav(props: Props) {
           <Tabs value={currentSpace?.key} onValueChange={handleSpaceChange} className="gap-0">
             <TabsList
               aria-label="メニューの空間"
-              className={cn(
-                "grid h-auto w-full",
-                spaceGridColumns[visibleSpaces.length] ?? "grid-cols-4",
-              )}
+              className={cn("grid w-full", spaceGridColumns[visibleSpaces.length] ?? "grid-cols-4")}
             >
               {visibleSpaces.map((space) => {
                 const SpaceIcon = space.icon
@@ -331,7 +328,7 @@ export function SidebarNav(props: Props) {
                     <SpaceIcon aria-hidden="true" />
 
                     {space.key === "my" && myBadgeTotal > 0 ? (
-                      <Badge aria-hidden="true" className="absolute -top-1 -right-1 min-w-4 px-1">
+                      <Badge aria-hidden="true" className="absolute -top-1 -right-1">
                         {myBadgeTotal > 9 ? "9+" : myBadgeTotal}
                       </Badge>
                     ) : null}

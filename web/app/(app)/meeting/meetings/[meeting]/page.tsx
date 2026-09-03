@@ -43,7 +43,7 @@ export default async function MeetingDetailPage(props: Props) {
       </div>
 
       {meeting.description === null ? null : (
-        <Card className="p-0 gap-0">
+        <Card className="gap-0">
           <p className="whitespace-pre-wrap p-4 text-sm text-muted-foreground">
             {meeting.description}
           </p>
@@ -58,7 +58,7 @@ export default async function MeetingDetailPage(props: Props) {
         </Suspense>
       </div>
 
-      <Card className="max-w-3xl">
+      <Card>
         <CardContent>
           <h2 className="mb-4 text-lg font-medium">議事録を記録</h2>
 

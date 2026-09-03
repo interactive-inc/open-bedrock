@@ -19,7 +19,7 @@ type Props = {
 
 export function CardLink(props: Props) {
   return (
-    <Card className="gap-0 p-0">
+    <Card className="gap-0">
       <Link
         href={props.href}
         prefetch={props.prefetch}

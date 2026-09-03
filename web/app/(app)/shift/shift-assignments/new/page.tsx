@@ -36,7 +36,7 @@ export default async function ShiftAssignmentNewPage() {
         actions={<BackButton href="/shift/shift-assignments" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-2xl">
+      <Card>
         <CardContent>
           <ShiftAssignmentCreateForm employees={employees} />
         </CardContent>

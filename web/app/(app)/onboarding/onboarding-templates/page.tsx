@@ -44,7 +44,7 @@ export default async function OnboardingTemplatesPage() {
 
       <Card>
         <CardContent>
-          <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+          <Suspense fallback={<Skeleton className="w-full" />}>
             <OnboardingTemplatesTable />
           </Suspense>
         </CardContent>

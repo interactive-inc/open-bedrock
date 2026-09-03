@@ -29,9 +29,9 @@ export default async function NewOnboardingAssignmentPage() {
         }
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
-          <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+          <Suspense fallback={<Skeleton className="w-full" />}>
             <AssignFormSection />
           </Suspense>
         </CardContent>

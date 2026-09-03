@@ -38,7 +38,7 @@ export default async function MyApplicationsPage(props: { searchParams: SearchPa
           <>
             {canViewAll ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/system/applications" />}
               >
@@ -47,7 +47,7 @@ export default async function MyApplicationsPage(props: { searchParams: SearchPa
             ) : null}
 
             <Button
-              variant="outline"
+              variant="secondary"
               nativeButton={false}
               render={<Link href="/inbox/applications" />}
             >

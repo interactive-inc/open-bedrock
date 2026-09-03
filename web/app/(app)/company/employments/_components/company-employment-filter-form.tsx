@@ -18,22 +18,24 @@ export function CompanyEmploymentFilterForm(props: Props) {
     <form method="get" action="/company/employments">
       <FieldSet>
         <FieldGroup className="flex-row flex-wrap items-end gap-4">
-          <Field className="w-full sm:w-48">
-            <FieldLabel htmlFor="company-employment-status">在籍区分</FieldLabel>
+          <div className="sm:w-48">
+            <Field className="w-full">
+              <FieldLabel htmlFor="company-employment-status">在籍区分</FieldLabel>
 
-            <select
-              id="company-employment-status"
-              name="status"
-              defaultValue={props.status ?? ""}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-            >
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <select
+                id="company-employment-status"
+                name="status"
+                defaultValue={props.status ?? ""}
+                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
 
           <Button type="submit">絞り込み</Button>
         </FieldGroup>

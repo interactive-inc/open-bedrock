@@ -57,7 +57,7 @@ export default async function AnnouncementDetailPage(props: Props) {
         <AnnouncementManageActions announcementId={announcement.id} status={announcement.status} />
       ) : null}
 
-      <Card className="p-0 gap-0">
+      <Card className="gap-0">
         <article className="whitespace-pre-wrap p-6 text-sm leading-relaxed">
           {announcement.body_md}
         </article>

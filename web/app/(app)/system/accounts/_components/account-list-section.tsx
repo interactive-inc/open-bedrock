@@ -60,7 +60,7 @@ export async function AccountListSection(props: {
         <TableBody>
           {accounts.map((account) => (
             <TableRow key={account.id}>
-              <TableCell className="font-mono text-xs">{account.id}</TableCell>
+              <TableCell>{account.id}</TableCell>
               <TableCell>
                 <Badge variant={account.status === "active" ? "secondary" : "outline"}>
                   {account.status}
@@ -80,7 +80,7 @@ export async function AccountListSection(props: {
                       )
 
                     return (
-                      <Badge key={binding.id} variant="outline" className="font-mono text-xs">
+                      <Badge key={binding.id} variant="outline">
                         {roleLabel}
                         {canRevoke ? (
                           <RevokeRoleButton

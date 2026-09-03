@@ -69,7 +69,7 @@ export function RegulationManageActions(props: Props) {
 
         {addState.ok ? <p className="text-sm text-muted-foreground">新版を追加しました</p> : null}
 
-        <Button type="submit" disabled={addPending} className="w-fit">
+        <Button type="submit" disabled={addPending}>
           {addPending ? "追加中..." : "新版を追加"}
         </Button>
       </form>
@@ -78,7 +78,7 @@ export function RegulationManageActions(props: Props) {
         <form action={archiveAction}>
           <input type="hidden" name="code" value={props.code} />
 
-          <Button type="submit" variant="outline" disabled={archivePending}>
+          <Button type="submit" variant="secondary" disabled={archivePending}>
             {archivePending ? "アーカイブ中..." : "規程をアーカイブ"}
           </Button>
         </form>

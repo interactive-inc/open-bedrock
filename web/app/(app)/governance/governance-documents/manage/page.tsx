@@ -198,7 +198,7 @@ function MetricCard(props: {
           {props.icon}
           <CardDescription>{props.title}</CardDescription>
         </div>
-        <CardTitle className="text-2xl">{props.value}</CardTitle>
+        <CardTitle>{props.value}</CardTitle>
       </CardHeader>
     </Card>
   )

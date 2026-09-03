@@ -38,7 +38,6 @@ export function InboxDecisionForm(props: Props) {
         rows={2}
         placeholder="コメント (却下時は必須)"
         aria-label="コメント (却下時は必須)"
-        className="min-w-64"
         aria-invalid={state.error !== null}
       />
 

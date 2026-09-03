@@ -57,7 +57,7 @@ export function MyResponsesList(props: Props) {
           <TableRow>
             <TableHead>アンケート</TableHead>
             <TableHead>提出日時</TableHead>
-            <TableHead className="w-48 text-right">操作</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -72,7 +72,7 @@ export function MyResponsesList(props: Props) {
 
             return (
               <TableRow key={responseId}>
-                <TableCell className="font-medium">
+                <TableCell>
                   {props.surveyTitleMap[response.survey_id] ?? `#${response.survey_id}`}
                 </TableCell>
 
@@ -109,7 +109,7 @@ function UpdateResponseDialog(props: { responseId: number; response: SurveyRespo
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

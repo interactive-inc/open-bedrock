@@ -66,7 +66,7 @@ export function RegulationCreateForm() {
 
       {state.ok ? <p className="text-sm text-muted-foreground">規程を登録しました</p> : null}
 
-      <Button type="submit" disabled={pending} className="w-fit">
+      <Button type="submit" disabled={pending}>
         {pending ? "登録中..." : "規程を登録"}
       </Button>
     </form>

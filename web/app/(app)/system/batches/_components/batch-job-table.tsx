@@ -35,7 +35,7 @@ export function BatchJobTable(props: Props) {
         <TableBody>
           {props.jobs.map((job) => (
             <TableRow key={job.id}>
-              <TableCell className="font-medium">{job.name}</TableCell>
+              <TableCell>{job.name}</TableCell>
 
               <TableCell>
                 <Badge variant={toBatchStatusVariant(job.status)}>
@@ -45,7 +45,7 @@ export function BatchJobTable(props: Props) {
 
               <TableCell>{job.finished_at ?? job.started_at ?? "-"}</TableCell>
 
-              <TableCell className="text-muted-foreground">{job.message ?? "-"}</TableCell>
+              <TableCell>{job.message ?? "-"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

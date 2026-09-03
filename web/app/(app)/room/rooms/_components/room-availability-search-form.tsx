@@ -16,40 +16,46 @@ export function RoomAvailabilitySearchForm(props: Props) {
     <form method="get" action="/room/rooms">
       <FieldSet>
         <FieldGroup className="flex-row flex-wrap items-end gap-4">
-          <Field className="w-full sm:w-60">
-            <FieldLabel htmlFor="room-search-start">開始日時</FieldLabel>
+          <div className="sm:w-60">
+            <Field className="w-full">
+              <FieldLabel htmlFor="room-search-start">開始日時</FieldLabel>
 
-            <Input
-              id="room-search-start"
-              name="start_at"
-              type="datetime-local"
-              defaultValue={props.search.startAt ?? ""}
-            />
-          </Field>
+              <Input
+                id="room-search-start"
+                name="start_at"
+                type="datetime-local"
+                defaultValue={props.search.startAt ?? ""}
+              />
+            </Field>
+          </div>
 
-          <Field className="w-full sm:w-60">
-            <FieldLabel htmlFor="room-search-end">終了日時</FieldLabel>
+          <div className="sm:w-60">
+            <Field className="w-full">
+              <FieldLabel htmlFor="room-search-end">終了日時</FieldLabel>
 
-            <Input
-              id="room-search-end"
-              name="end_at"
-              type="datetime-local"
-              defaultValue={props.search.endAt ?? ""}
-            />
-          </Field>
+              <Input
+                id="room-search-end"
+                name="end_at"
+                type="datetime-local"
+                defaultValue={props.search.endAt ?? ""}
+              />
+            </Field>
+          </div>
 
-          <Field className="w-full sm:w-32">
-            <FieldLabel htmlFor="room-search-capacity">最低定員</FieldLabel>
+          <div className="sm:w-32">
+            <Field className="w-full">
+              <FieldLabel htmlFor="room-search-capacity">最低定員</FieldLabel>
 
-            <Input
-              id="room-search-capacity"
-              name="capacity"
-              type="number"
-              min={0}
-              defaultValue={props.search.capacity ?? ""}
-              placeholder="0"
-            />
-          </Field>
+              <Input
+                id="room-search-capacity"
+                name="capacity"
+                type="number"
+                min={0}
+                defaultValue={props.search.capacity ?? ""}
+                placeholder="0"
+              />
+            </Field>
+          </div>
 
           <Button type="submit">空きを検索</Button>
         </FieldGroup>

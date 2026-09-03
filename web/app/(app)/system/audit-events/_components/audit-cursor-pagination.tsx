@@ -31,7 +31,7 @@ export function AuditCursorPagination(props: Props) {
         <DisabledDirection direction="previous" />
       ) : (
         <Button
-          variant="outline"
+          variant="secondary"
           nativeButton={false}
           render={
             <Link href={buildAuditEventsHref(props.query, props.previousCursor)} prefetch={false} />
@@ -46,7 +46,7 @@ export function AuditCursorPagination(props: Props) {
         <DisabledDirection direction="next" />
       ) : (
         <Button
-          variant="outline"
+          variant="secondary"
           nativeButton={false}
           render={
             <Link href={buildAuditEventsHref(props.query, props.nextCursor)} prefetch={false} />

@@ -25,7 +25,7 @@ export default async function NewDecisionPage() {
         actions={<BackButton href="/meeting/decisions" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-3xl">
+      <Card>
         <CardContent>
           <DecisionNewForm />
         </CardContent>

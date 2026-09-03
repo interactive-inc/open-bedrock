@@ -38,14 +38,14 @@ export default async function EditTrainingCoursePage(props: Props) {
         actions={<BackButton href={`/training/trainings/${course.code}`} label="詳細に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <UpdateCourseForm course={course} />
         </CardContent>
       </Card>
 
       {course.status === "active" ? (
-        <Card className="max-w-xl">
+        <Card>
           <CardContent className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
               アーカイブすると新規受講の申込みができなくなります。

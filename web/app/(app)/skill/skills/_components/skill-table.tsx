@@ -42,7 +42,7 @@ export async function SkillTable(props: Props) {
         <TableBody>
           {skills.map((skill) => (
             <TableRow key={skill.code}>
-              <TableCell className="font-mono text-xs">{skill.code}</TableCell>
+              <TableCell>{skill.code}</TableCell>
               <TableCell>{skill.name}</TableCell>
               <TableCell>
                 <Badge variant="secondary">{skill.category}</Badge>

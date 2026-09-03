@@ -70,13 +70,13 @@ async function DocumentsTable() {
         <TableBody>
           {documents.map((document) => (
             <TableRow key={document.id}>
-              <TableCell className="font-medium">{document.title}</TableCell>
+              <TableCell>{document.title}</TableCell>
 
-              <TableCell className="text-muted-foreground">{document.category ?? "-"}</TableCell>
+              <TableCell>{document.category ?? "-"}</TableCell>
 
-              <TableCell className="text-muted-foreground">{document.location}</TableCell>
+              <TableCell>{document.location}</TableCell>
 
-              <TableCell className="text-muted-foreground">{document.expires_on ?? "-"}</TableCell>
+              <TableCell>{document.expires_on ?? "-"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

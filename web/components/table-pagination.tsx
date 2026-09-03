@@ -119,7 +119,7 @@ export function TablePagination(props: Props) {
               {hasGap ? <span className="px-1 text-muted-foreground">…</span> : null}
 
               {isActive ? (
-                <Button variant="outline" size="sm" disabled aria-current="page">
+                <Button variant="secondary" size="sm" disabled aria-current="page">
                   {page}
                 </Button>
               ) : (

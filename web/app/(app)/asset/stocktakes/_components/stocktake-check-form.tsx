@@ -48,14 +48,9 @@ export function StocktakeCheckForm(props: Props) {
 
       <input type="hidden" name="asset_code" value={props.assetCode} />
 
-      <Input
-        name="location_note"
-        placeholder="所在メモ（任意）"
-        aria-label="所在メモ"
-        className="w-40"
-      />
+      <Input name="location_note" placeholder="所在メモ（任意）" aria-label="所在メモ" />
 
-      <Button type="submit" size="sm" variant="outline" disabled={isPending}>
+      <Button type="submit" size="sm" variant="secondary" disabled={isPending}>
         {isPending ? "記録中..." : props.checked ? "再確認" : "確認"}
       </Button>
     </form>

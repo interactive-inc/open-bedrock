@@ -41,72 +41,82 @@ export function AdminApplicationsFilterForm(props: Props) {
     <form method="get" action="/system/applications">
       <FieldSet>
         <FieldGroup className="flex-row flex-wrap items-end gap-4">
-          <Field className="w-full sm:w-40">
-            <FieldLabel htmlFor="admin-app-status">ステータス</FieldLabel>
+          <div className="sm:w-40">
+            <Field className="w-full">
+              <FieldLabel htmlFor="admin-app-status">ステータス</FieldLabel>
 
-            <select
-              id="admin-app-status"
-              name="status"
-              defaultValue={props.statusValue}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-            >
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <select
+                id="admin-app-status"
+                name="status"
+                defaultValue={props.statusValue}
+                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
 
-          <Field className="w-full sm:w-56">
-            <FieldLabel htmlFor="admin-app-template">申請テンプレート</FieldLabel>
+          <div className="sm:w-56">
+            <Field className="w-full">
+              <FieldLabel htmlFor="admin-app-template">申請テンプレート</FieldLabel>
 
-            <select
-              id="admin-app-template"
-              name="template_code"
-              defaultValue={props.templateCodeValue}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-            >
-              <option value="">すべて</option>
-              {props.templates.map((template) => (
-                <option key={template.code} value={template.code}>
-                  {template.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <select
+                id="admin-app-template"
+                name="template_code"
+                defaultValue={props.templateCodeValue}
+                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+              >
+                <option value="">すべて</option>
+                {props.templates.map((template) => (
+                  <option key={template.code} value={template.code}>
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
 
-          <Field className="w-full sm:w-40">
-            <FieldLabel htmlFor="admin-app-applicant">申請者 ID</FieldLabel>
+          <div className="sm:w-40">
+            <Field className="w-full">
+              <FieldLabel htmlFor="admin-app-applicant">申請者 ID</FieldLabel>
 
-            <Input
-              id="admin-app-applicant"
-              name="applicant_id"
-              type="text"
-              inputMode="numeric"
-              defaultValue={props.applicantIdValue}
-              placeholder="例: 5"
-            />
-          </Field>
+              <Input
+                id="admin-app-applicant"
+                name="applicant_id"
+                type="text"
+                inputMode="numeric"
+                defaultValue={props.applicantIdValue}
+                placeholder="例: 5"
+              />
+            </Field>
+          </div>
 
-          <Field className="w-full sm:w-44">
-            <FieldLabel htmlFor="admin-app-from">申請日 (以降)</FieldLabel>
+          <div className="sm:w-44">
+            <Field className="w-full">
+              <FieldLabel htmlFor="admin-app-from">申請日 (以降)</FieldLabel>
 
-            <Input id="admin-app-from" name="from" type="date" defaultValue={props.fromValue} />
-          </Field>
+              <Input id="admin-app-from" name="from" type="date" defaultValue={props.fromValue} />
+            </Field>
+          </div>
 
-          <Field className="w-full sm:w-44">
-            <FieldLabel htmlFor="admin-app-to">申請日 (以前)</FieldLabel>
+          <div className="sm:w-44">
+            <Field className="w-full">
+              <FieldLabel htmlFor="admin-app-to">申請日 (以前)</FieldLabel>
 
-            <Input id="admin-app-to" name="to" type="date" defaultValue={props.toValue} />
-          </Field>
+              <Input id="admin-app-to" name="to" type="date" defaultValue={props.toValue} />
+            </Field>
+          </div>
 
           <div className="flex items-end gap-2">
             <Button type="submit">絞り込み</Button>
 
             {hasActiveFilter ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/system/applications" />}
               >

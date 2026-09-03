@@ -72,7 +72,7 @@ export function EmployeeEventCreateForm(props: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>
         <Plus />
         記録を追加
       </DialogTrigger>

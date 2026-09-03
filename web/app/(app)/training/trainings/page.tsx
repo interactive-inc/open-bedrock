@@ -40,7 +40,7 @@ export default async function TrainingPage(props: { searchParams: SearchParams }
         title="研修"
         actions={
           <>
-            <Button variant="outline" nativeButton={false} render={<Link href="/my/trainings" />}>
+            <Button variant="secondary" nativeButton={false} render={<Link href="/my/trainings" />}>
               自分の受講
             </Button>
 

@@ -97,7 +97,7 @@ export function DeleteRoleButton(props: Props) {
 
   return (
     <AlertDialog open={isConfirmOpen} onOpenChange={setConfirmOpen}>
-      <AlertDialogTrigger render={<Button variant="outline" size="sm" disabled={isPending} />}>
+      <AlertDialogTrigger render={<Button variant="secondary" size="sm" disabled={isPending} />}>
         削除
       </AlertDialogTrigger>
 

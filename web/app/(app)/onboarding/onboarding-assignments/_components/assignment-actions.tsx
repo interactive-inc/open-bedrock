@@ -70,13 +70,7 @@ export function AssignmentActions(props: Props) {
             <p className="text-sm text-muted-foreground">{reschedule[0].message}</p>
           ) : null}
 
-          <Button
-            type="submit"
-            size="sm"
-            variant="outline"
-            disabled={reschedule[2]}
-            className="w-fit"
-          >
+          <Button type="submit" size="sm" variant="secondary" disabled={reschedule[2]}>
             {reschedule[2] ? "変更中..." : "割当日を変更"}
           </Button>
         </FieldGroup>
@@ -84,7 +78,7 @@ export function AssignmentActions(props: Props) {
 
       <AlertDialog>
         <AlertDialogTrigger
-          render={<Button size="sm" variant="destructive" className="w-fit" disabled={cancel[2]} />}
+          render={<Button size="sm" variant="destructive" disabled={cancel[2]} />}
         >
           割り当てを取り消す
         </AlertDialogTrigger>

@@ -63,7 +63,7 @@ export default async function AdminRentalsPage(props: { searchParams: SearchPara
       <PageHeader
         title="貸与品予約管理"
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/rental/rentals" />}>
+          <Button variant="secondary" nativeButton={false} render={<Link href="/rental/rentals" />}>
             自分の予約
           </Button>
         }

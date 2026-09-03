@@ -42,7 +42,7 @@ export function StocktakeCloseButton(props: Props) {
     <form action={formAction}>
       <input type="hidden" name="id" value={props.id} />
 
-      <Button type="submit" size="sm" variant="outline" disabled={isPending}>
+      <Button type="submit" size="sm" variant="secondary" disabled={isPending}>
         {isPending ? "締め中..." : "棚卸しを締める"}
       </Button>
     </form>

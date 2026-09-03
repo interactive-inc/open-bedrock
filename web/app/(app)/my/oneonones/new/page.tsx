@@ -29,7 +29,7 @@ export default async function NewOneOnOnePage() {
         actions={<BackButton href="/my/oneonones" label="履歴に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <OneOnOneCreateForm employees={employees} />
         </CardContent>

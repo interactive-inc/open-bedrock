@@ -54,7 +54,7 @@ export function AppShell(props: Props) {
         本文へスキップ
       </a>
 
-      <Sidebar collapsible="offcanvas" className="border-none">
+      <Sidebar collapsible="offcanvas">
         <SidebarHeader>
           <Link
             href="/"
@@ -79,7 +79,7 @@ export function AppShell(props: Props) {
           />
         </SidebarContent>
 
-        <SidebarFooter className="border-t border-border/70 bg-muted/60">
+        <SidebarFooter>
           <div className="flex items-center gap-1">
             {/* 設定の入口は隣のユーザーメニューに寄せたので、氏名はリンクにしない。 */}
             <div className="flex min-w-0 flex-1 flex-col gap-0.5 px-2 py-1">

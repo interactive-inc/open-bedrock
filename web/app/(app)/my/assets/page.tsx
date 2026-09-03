@@ -73,7 +73,7 @@ async function MyLentAssetsTable() {
 
               <TableCell>{asset.name}</TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <AssetKindLabel kind={asset.kind} />
               </TableCell>
 

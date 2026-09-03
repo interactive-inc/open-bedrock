@@ -92,7 +92,7 @@ export default async function AdminShiftSwapsPage(props: { searchParams: SearchP
       <PageHeader
         title="シフト交代管理"
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/my/shifts" />}>
+          <Button variant="secondary" nativeButton={false} render={<Link href="/my/shifts" />}>
             自分のシフトへ
           </Button>
         }

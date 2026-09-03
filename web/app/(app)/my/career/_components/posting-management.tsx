@@ -20,7 +20,7 @@ export function PostingManagement(props: Props) {
     <div className="flex items-center gap-2">
       {props.posting.id !== null ? (
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           nativeButton={false}
           render={<Link href={`/career/job-postings/${props.posting.id}/edit`} />}

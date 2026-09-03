@@ -36,7 +36,7 @@ export default async function BudgetsPage() {
         actions={
           <>
             <Button
-              variant="outline"
+              variant="secondary"
               nativeButton={false}
               render={<Link href="/expense/budgets/summary" />}
             >
@@ -101,13 +101,11 @@ async function BudgetsTable() {
                 </Link>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {budget.organization_unit_name ?? budget.organization_unit_id}
-              </TableCell>
+              <TableCell>{budget.organization_unit_name ?? budget.organization_unit_id}</TableCell>
 
-              <TableCell className="text-muted-foreground">{budget.fiscal_period}</TableCell>
+              <TableCell>{budget.fiscal_period}</TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {formatDate(budget.period_start)} 〜 {formatDate(budget.period_end)}
               </TableCell>
 

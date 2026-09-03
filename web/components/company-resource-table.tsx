@@ -55,13 +55,9 @@ export function CompanyResourceTable(props: Props) {
                 <TableCell key={column.header}>{column.toValue(resource)}</TableCell>
               ))}
 
-              <TableCell className="text-muted-foreground whitespace-nowrap">
-                {toResourcePeriodLabel(resource)}
-              </TableCell>
+              <TableCell className="whitespace-nowrap">{toResourcePeriodLabel(resource)}</TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {resource.state === "active" ? "有効" : "無効"}
-              </TableCell>
+              <TableCell>{resource.state === "active" ? "有効" : "無効"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

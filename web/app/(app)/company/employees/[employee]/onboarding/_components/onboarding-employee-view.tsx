@@ -69,7 +69,7 @@ export async function OnboardingEmployeeView(props: Props) {
               <Table aria-label="一覧">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">#</TableHead>
+                    <TableHead>#</TableHead>
                     <TableHead>タスク</TableHead>
                     <TableHead>状態</TableHead>
                     <TableHead className="text-right">完了日時</TableHead>
@@ -79,9 +79,9 @@ export async function OnboardingEmployeeView(props: Props) {
                 <TableBody>
                   {assignment.tasks.map((task) => (
                     <TableRow key={task.id}>
-                      <TableCell className="text-muted-foreground">{task.order}</TableCell>
+                      <TableCell>{task.order}</TableCell>
 
-                      <TableCell className="font-medium">{task.title}</TableCell>
+                      <TableCell>{task.title}</TableCell>
 
                       <TableCell>
                         <Badge variant={task.status === "done" ? "secondary" : "outline"}>
@@ -89,7 +89,7 @@ export async function OnboardingEmployeeView(props: Props) {
                         </Badge>
                       </TableCell>
 
-                      <TableCell className="text-right text-xs text-muted-foreground">
+                      <TableCell className="text-right">
                         {formatDateTime(task.completed_at)}
                       </TableCell>
                     </TableRow>

@@ -25,7 +25,7 @@ export default async function NewMeetingPage() {
         actions={<BackButton href="/meeting/meetings" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-3xl">
+      <Card>
         <CardContent>
           <MeetingNewForm />
         </CardContent>

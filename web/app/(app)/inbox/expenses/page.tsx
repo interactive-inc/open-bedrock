@@ -32,7 +32,7 @@ export default async function ExpenseInboxPage() {
       <SubPageHeader
         title="承認待ちの経費"
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/my/expenses" />}>
+          <Button variant="secondary" nativeButton={false} render={<Link href="/my/expenses" />}>
             自分の経費へ
           </Button>
         }
@@ -74,7 +74,7 @@ async function ExpenseInboxTable() {
         <TableBody>
           {expenses.map((expense) => (
             <TableRow key={expense.id}>
-              <TableCell className="font-medium">{expense.applicant_name}</TableCell>
+              <TableCell>{expense.applicant_name}</TableCell>
 
               <TableCell>{toExpenseCategoryLabel(expense.category)}</TableCell>
 
@@ -82,9 +82,7 @@ async function ExpenseInboxTable() {
                 {amountFormatter.format(expense.amount)} 円
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {formatDate(expense.spent_at)}
-              </TableCell>
+              <TableCell>{formatDate(expense.spent_at)}</TableCell>
 
               <TableCell>
                 <ExpenseStatusBadge status={expense.status} />
@@ -93,7 +91,7 @@ async function ExpenseInboxTable() {
               <TableCell className="text-right">
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   nativeButton={false}
                   render={<Link href={`/expense/expenses/${expense.id}`} />}
                 >

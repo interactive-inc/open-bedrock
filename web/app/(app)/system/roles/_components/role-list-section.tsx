@@ -47,9 +47,9 @@ export async function RoleListSection(props: { actorPermissionKeys: ReadonlyArra
 
             return (
               <TableRow key={role.id}>
-                <TableCell className="font-mono text-sm">{role.key}</TableCell>
+                <TableCell>{role.key}</TableCell>
                 <TableCell>{role.name}</TableCell>
-                <TableCell className="text-muted-foreground">{role.description ?? "—"}</TableCell>
+                <TableCell>{role.description ?? "—"}</TableCell>
                 <TableCell>
                   {role.is_system ? (
                     <Badge variant="secondary">システム</Badge>
@@ -62,7 +62,7 @@ export async function RoleListSection(props: { actorPermissionKeys: ReadonlyArra
                     <TableRowActions>
                       <Link
                         href={`/system/roles/${role.id}/edit`}
-                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                        className={buttonVariants({ variant: "secondary", size: "sm" })}
                       >
                         編集
                       </Link>

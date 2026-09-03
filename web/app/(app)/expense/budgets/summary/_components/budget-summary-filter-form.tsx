@@ -12,16 +12,18 @@ export function BudgetSummaryFilterForm(props: Props) {
     <form method="get" action="/expense/budgets/summary">
       <FieldSet>
         <FieldGroup className="flex-row flex-wrap items-end gap-4">
-          <Field className="w-full sm:w-56">
-            <FieldLabel htmlFor="budget-summary-fiscal-period">会計期間</FieldLabel>
+          <div className="sm:w-56">
+            <Field className="w-full">
+              <FieldLabel htmlFor="budget-summary-fiscal-period">会計期間</FieldLabel>
 
-            <Input
-              id="budget-summary-fiscal-period"
-              name="fiscal_period"
-              defaultValue={props.fiscalPeriodValue}
-              placeholder="2026 や 2026-05 など"
-            />
-          </Field>
+              <Input
+                id="budget-summary-fiscal-period"
+                name="fiscal_period"
+                defaultValue={props.fiscalPeriodValue}
+                placeholder="2026 や 2026-05 など"
+              />
+            </Field>
+          </div>
 
           <Button type="submit">表示</Button>
         </FieldGroup>

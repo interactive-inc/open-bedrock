@@ -58,7 +58,7 @@ export function BusinessTripAdminTable(props: Props) {
                 <span className="font-medium">{row.destination}</span>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <Link
                   href={`/business-trip/business-trips?employee_id=${row.traveler_id}`}
                   className="underline-offset-4 hover:underline"
@@ -68,7 +68,7 @@ export function BusinessTripAdminTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {row.start_date === row.end_date
                   ? row.start_date
                   : `${row.start_date} 〜 ${row.end_date}`}
@@ -82,7 +82,7 @@ export function BusinessTripAdminTable(props: Props) {
 
               <TableCell>{statusLabel(row.status)}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
 

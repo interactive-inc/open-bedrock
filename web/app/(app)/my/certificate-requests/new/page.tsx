@@ -16,7 +16,7 @@ export default function NewCertificateRequestPage() {
         actions={<BackButton href="/my/certificate-requests" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <CertificateRequestCreateForm />
         </CardContent>

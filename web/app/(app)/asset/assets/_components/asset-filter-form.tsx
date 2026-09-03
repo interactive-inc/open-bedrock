@@ -45,7 +45,7 @@ export function AssetFilterForm(props: Props) {
         </select>
       </div>
 
-      <Button type="submit" variant="outline">
+      <Button type="submit" variant="secondary">
         絞り込む
       </Button>
     </form>

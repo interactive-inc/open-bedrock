@@ -49,7 +49,7 @@ function EditKnowledgeDialog(props: { article: KnowledgeDetailResponse }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>編集</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>編集</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

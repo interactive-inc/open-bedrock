@@ -47,10 +47,10 @@ export function PhoneField(props: Props) {
               defaultValue={props.phone ?? ""}
               maxLength={30}
               placeholder="例: 090-1234-5678"
-              className="w-full sm:w-64"
+              className="w-full"
             />
 
-            <Button type="submit" variant="outline" disabled={isPending}>
+            <Button type="submit" variant="secondary" disabled={isPending}>
               保存
             </Button>
           </div>

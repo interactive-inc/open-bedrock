@@ -33,7 +33,7 @@ export async function CommendationList(props: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         {result.data.map((commendation) => (
-          <Card key={commendation.id} className="gap-0 p-0">
+          <Card key={commendation.id} className="gap-0">
             <div className="flex items-start justify-between gap-3 p-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-3">

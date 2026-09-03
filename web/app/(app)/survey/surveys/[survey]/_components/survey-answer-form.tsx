@@ -49,7 +49,7 @@ export function SurveyAnswerForm(props: Props) {
 
       <FieldGroup>
         {props.questions.map((question) => (
-          <Card key={question.id} className="p-0 gap-0">
+          <Card key={question.id} className="gap-0">
             <div className="flex flex-col gap-3 p-4">
               <Field>
                 <FieldLabel htmlFor={`answer:${question.id}`}>{question.text}</FieldLabel>
@@ -81,7 +81,7 @@ export function SurveyAnswerForm(props: Props) {
           <FieldError>{formState.message}</FieldError>
         ) : null}
 
-        <Button type="submit" disabled={isPending} className="w-fit">
+        <Button type="submit" disabled={isPending}>
           {isPending ? "送信中..." : "回答を送信"}
         </Button>
       </FieldGroup>

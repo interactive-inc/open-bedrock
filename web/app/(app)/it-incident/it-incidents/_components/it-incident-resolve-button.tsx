@@ -27,7 +27,7 @@ export function ItIncidentResolveButton(props: Props) {
     <form action={formAction} className="flex flex-col gap-1">
       <input type="hidden" name="id" value={props.id} />
 
-      <Button type="submit" variant="outline" size="sm" disabled={pending}>
+      <Button type="submit" variant="secondary" size="sm" disabled={pending}>
         {pending ? "解消中..." : "解消済みにする"}
       </Button>
 

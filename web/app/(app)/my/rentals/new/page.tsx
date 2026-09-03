@@ -13,7 +13,7 @@ export default function NewRentalReservationPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="新規予約" actions={<BackButton href="/my/rentals" label="一覧に戻る" />} />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <RentalReservationCreateForm />
         </CardContent>

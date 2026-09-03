@@ -35,17 +35,13 @@ export function EmployeeCertificationsTable(props: Props) {
         <TableBody>
           {props.rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell className="font-mono text-sm">{row.certification_id}</TableCell>
+              <TableCell>{row.certification_id}</TableCell>
 
               <TableCell>{formatDate(row.acquired_on)}</TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {row.expires_on !== null ? formatDate(row.expires_on) : "—"}
-              </TableCell>
+              <TableCell>{row.expires_on !== null ? formatDate(row.expires_on) : "—"}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.note ?? "—"}
-              </TableCell>
+              <TableCell className="hidden md:table-cell">{row.note ?? "—"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

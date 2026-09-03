@@ -56,19 +56,15 @@ export async function LicenseList(props: Props) {
           <TableBody>
             {result.data.map((license) => (
               <TableRow key={license.id}>
-                <TableCell className="font-medium">{license.name}</TableCell>
+                <TableCell>{license.name}</TableCell>
 
-                <TableCell className="text-muted-foreground">{license.vendor ?? "-"}</TableCell>
+                <TableCell>{license.vendor ?? "-"}</TableCell>
 
-                <TableCell className="text-muted-foreground">{license.category ?? "-"}</TableCell>
+                <TableCell>{license.category ?? "-"}</TableCell>
 
-                <TableCell className="text-muted-foreground">
-                  {license.seats !== null ? String(license.seats) : "-"}
-                </TableCell>
+                <TableCell>{license.seats !== null ? String(license.seats) : "-"}</TableCell>
 
-                <TableCell className="text-muted-foreground">
-                  {license.renewal_deadline ?? "-"}
-                </TableCell>
+                <TableCell>{license.renewal_deadline ?? "-"}</TableCell>
 
                 <TableCell>
                   {license.status === "cancelled" ? (

@@ -81,7 +81,7 @@ export function DocumentWorkflowActions(props: Props) {
 
         {canAcknowledge && props.acknowledgementRequired && props.versionState === "published" ? (
           props.acknowledged ? (
-            <Button variant="outline" disabled>
+            <Button variant="secondary" disabled>
               確認済み
             </Button>
           ) : (

@@ -26,7 +26,7 @@ export default async function ShiftPatternNewPage() {
         actions={<BackButton href="/shift/shift-patterns" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-2xl">
+      <Card>
         <CardContent>
           <ShiftPatternCreateForm />
         </CardContent>

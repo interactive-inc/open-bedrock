@@ -28,39 +28,43 @@ export function SystemDeliveryFilterForm(props: Props) {
     <form method="get" action="/system/deliveries">
       <FieldSet>
         <FieldGroup className="flex-row flex-wrap items-end gap-4">
-          <Field className="w-full sm:w-48">
-            <FieldLabel htmlFor="system-delivery-kind">種別</FieldLabel>
+          <div className="sm:w-48">
+            <Field className="w-full">
+              <FieldLabel htmlFor="system-delivery-kind">種別</FieldLabel>
 
-            <select
-              id="system-delivery-kind"
-              name="kind"
-              defaultValue={props.kind}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-            >
-              {kindOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <select
+                id="system-delivery-kind"
+                name="kind"
+                defaultValue={props.kind}
+                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+              >
+                {kindOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
 
-          <Field className="w-full sm:w-48">
-            <FieldLabel htmlFor="system-delivery-status">状態</FieldLabel>
+          <div className="sm:w-48">
+            <Field className="w-full">
+              <FieldLabel htmlFor="system-delivery-status">状態</FieldLabel>
 
-            <select
-              id="system-delivery-status"
-              name="status"
-              defaultValue={props.status ?? ""}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-            >
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <select
+                id="system-delivery-status"
+                name="status"
+                defaultValue={props.status ?? ""}
+                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
 
           <Button type="submit">絞り込み</Button>
         </FieldGroup>

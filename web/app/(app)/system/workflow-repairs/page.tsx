@@ -35,7 +35,7 @@ export default async function WorkflowRepairsPage(props: Props) {
         title="承認フロー修復"
         actions={
           <Button
-            variant="outline"
+            variant="secondary"
             nativeButton={false}
             render={<Link href="/system/applications" />}
           >

@@ -43,7 +43,7 @@ export function RewardRedeemForm(props: Props) {
     <form action={formAction}>
       <input type="hidden" name="reward_id" value={props.rewardId} />
 
-      <Button type="submit" size="sm" variant="outline" disabled={props.disabled || isPending}>
+      <Button type="submit" size="sm" variant="secondary" disabled={props.disabled || isPending}>
         {isPending ? "申請中..." : "交換を申請"}
       </Button>
     </form>

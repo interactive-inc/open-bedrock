@@ -22,7 +22,7 @@ export default async function NewPositionPage() {
         actions={<BackButton href="/company/positions" label="役職に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <PositionCreateForm />
         </CardContent>

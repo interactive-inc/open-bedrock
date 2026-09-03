@@ -49,7 +49,7 @@ export function RedemptionInboxTable(props: {
         <TableBody>
           {props.redemptions.map((redemption) => (
             <TableRow key={redemption.id}>
-              <TableCell className="font-medium">{redemption.reward_name}</TableCell>
+              <TableCell>{redemption.reward_name}</TableCell>
               <TableCell>{redemption.employee_name}</TableCell>
               <TableCell>{redemption.employee_dept_name ?? "-"}</TableCell>
               <TableCell>{pointFormatter.format(redemption.point_cost)} pt</TableCell>

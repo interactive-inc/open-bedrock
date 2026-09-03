@@ -75,7 +75,7 @@ export function RingiAdminTable(props: Props) {
         <TableBody>
           {props.rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell className="font-medium">
+              <TableCell>
                 <Link
                   href={`/ringi/ringis?applicant_id=${row.applicant_id}`}
                   className="underline-offset-4 hover:underline"
@@ -85,11 +85,11 @@ export function RingiAdminTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {row.applicant_dept_name ?? "—"}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{row.approver_name}</TableCell>
+              <TableCell>{row.approver_name}</TableCell>
 
               <TableCell>{row.title}</TableCell>
 
@@ -101,7 +101,7 @@ export function RingiAdminTable(props: Props) {
                 <ApplicationStatusBadge status={row.status} />
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
             </TableRow>

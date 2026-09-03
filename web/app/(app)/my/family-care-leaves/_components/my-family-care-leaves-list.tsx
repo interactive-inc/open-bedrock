@@ -71,9 +71,7 @@ export function MyFamilyCareLeavesList(props: Props) {
         <TableBody>
           {props.familyCareLeaves.map((familyCareLeave) => (
             <TableRow key={familyCareLeave.id}>
-              <TableCell className="font-medium">
-                {familyCareLeaveKindLabel(familyCareLeave.leave_kind)}
-              </TableCell>
+              <TableCell>{familyCareLeaveKindLabel(familyCareLeave.leave_kind)}</TableCell>
 
               <TableCell>{familyCareLeave.start_date}</TableCell>
 
@@ -111,7 +109,7 @@ function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveRe
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

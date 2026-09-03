@@ -58,7 +58,7 @@ export function MyCertificateRequestsList(props: Props) {
         <TableBody>
           {props.certificateRequests.map((certificateRequest) => (
             <TableRow key={certificateRequest.id}>
-              <TableCell className="font-medium">{certificateRequest.certificate_type}</TableCell>
+              <TableCell>{certificateRequest.certificate_type}</TableCell>
 
               <TableCell>{certificateRequest.submit_to ?? "-"}</TableCell>
 
@@ -96,7 +96,7 @@ function UpdateCertificateRequestDialog(props: { certificateRequest: Certificate
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

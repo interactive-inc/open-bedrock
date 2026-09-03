@@ -55,11 +55,11 @@ export async function ItIncidentList(props: Props) {
           <TableBody>
             {result.data.map((incident) => (
               <TableRow key={incident.id}>
-                <TableCell className="text-muted-foreground">{incident.occurred_at}</TableCell>
+                <TableCell>{incident.occurred_at}</TableCell>
 
-                <TableCell className="font-medium">{incident.title}</TableCell>
+                <TableCell>{incident.title}</TableCell>
 
-                <TableCell className="text-muted-foreground">{incident.severity ?? "-"}</TableCell>
+                <TableCell>{incident.severity ?? "-"}</TableCell>
 
                 <TableCell>
                   {incident.status === "resolved" ? (
@@ -69,9 +69,7 @@ export async function ItIncidentList(props: Props) {
                   )}
                 </TableCell>
 
-                <TableCell className="text-muted-foreground">
-                  {incident.resolved_at ?? "-"}
-                </TableCell>
+                <TableCell>{incident.resolved_at ?? "-"}</TableCell>
 
                 {props.canManage ? (
                   <TableCell>

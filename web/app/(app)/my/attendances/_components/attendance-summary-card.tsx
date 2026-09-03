@@ -26,7 +26,7 @@ export async function AttendanceSummaryCard(props: Props) {
   ]
 
   return (
-    <Card className="p-0 gap-0">
+    <Card className="gap-0">
       <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3">
         {stats.map((stat) => (
           <div key={stat.label} className="flex flex-col gap-1">

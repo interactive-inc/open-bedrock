@@ -78,15 +78,13 @@ async function RegulationsTable() {
 
               <TableCell>{regulation.title}</TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {regulation.latest_version === null ? "-" : `v${regulation.latest_version}`}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {regulation.effective_on ?? "-"}
-              </TableCell>
+              <TableCell>{regulation.effective_on ?? "-"}</TableCell>
 
-              <TableCell className="text-muted-foreground">{regulation.status}</TableCell>
+              <TableCell>{regulation.status}</TableCell>
             </TableRow>
           ))}
         </TableBody>

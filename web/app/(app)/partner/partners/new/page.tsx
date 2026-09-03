@@ -14,7 +14,7 @@ export default function PartnerNewPage() {
         actions={<BackButton href="/partner/partners" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl p-0 gap-0">
+      <Card className="gap-0">
         <div className="p-6">
           <PartnerCreateForm />
         </div>

@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { getGovernanceDocuments } from "@/lib/api/get-governance-documents"
 import { requireAuth } from "@/lib/auth/require-auth"
 
@@ -51,7 +51,7 @@ export default async function GovernancePage(props: Props) {
           canManage ? (
             <Button
               nativeButton={false}
-              variant="outline"
+              variant="secondary"
               render={<Link href="/governance/governance-documents/manage" />}
             >
               <Settings2 />
@@ -65,16 +65,17 @@ export default async function GovernancePage(props: Props) {
         className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-[1fr_12rem_auto]"
         role="search"
       >
-        <div className="relative">
-          <Search className="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
-          <Input
+        <InputGroup>
+          <InputGroupAddon>
+            <Search />
+          </InputGroupAddon>
+          <InputGroupInput
             name="q"
             defaultValue={params.q}
             placeholder="タイトル・本文を検索"
-            className="pl-9"
             aria-label="規程・手続きを検索"
           />
-        </div>
+        </InputGroup>
         <select
           name="kind"
           defaultValue={params.kind ?? ""}
@@ -117,7 +118,7 @@ export default async function GovernancePage(props: Props) {
                   <VersionStateBadge state={document.version_state} />
                 </CardAction>
               </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+              <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <Meta label="版" value={document.version} />
                 <Meta label="主管能力" value={document.owner_capability} />
                 <Meta label="見直し期限" value={document.review_due_on ?? "未設定"} />

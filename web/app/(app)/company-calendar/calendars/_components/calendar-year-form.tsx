@@ -19,11 +19,10 @@ export function CalendarYearForm(props: Props) {
           inputMode="numeric"
           placeholder="例: 2026"
           defaultValue={props.year ?? ""}
-          className="w-32"
         />
       </div>
 
-      <Button type="submit" variant="outline">
+      <Button type="submit" variant="secondary">
         表示
       </Button>
     </form>

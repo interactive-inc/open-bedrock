@@ -63,9 +63,7 @@ export default async function DepartmentLeavesPage(props: Props) {
             <TableBody>
               {requests.map((request) => (
                 <TableRow key={request.id}>
-                  <TableCell className="font-medium whitespace-nowrap">
-                    {request.applicant_name}
-                  </TableCell>
+                  <TableCell className="whitespace-nowrap">{request.applicant_name}</TableCell>
 
                   <TableCell className="whitespace-nowrap">
                     <LeaveTypeLabel leaveType={request.leave_type} />

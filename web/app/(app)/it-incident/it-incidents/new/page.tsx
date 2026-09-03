@@ -23,7 +23,7 @@ export default async function ItIncidentNewPage() {
         actions={<BackButton href="/it-incident/it-incidents" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl p-0 gap-0">
+      <Card className="gap-0">
         <div className="p-6">
           <ItIncidentCreateForm />
         </div>

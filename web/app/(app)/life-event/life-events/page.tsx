@@ -64,7 +64,7 @@ export default async function AdminLifeEventsPage(props: { searchParams: SearchP
         title="ライフイベント届管理"
         actions={
           <Button
-            variant="outline"
+            variant="secondary"
             nativeButton={false}
             render={<Link href="/life-event/life-events" />}
           >

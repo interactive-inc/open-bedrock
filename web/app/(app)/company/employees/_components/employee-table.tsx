@@ -36,8 +36,8 @@ export function EmployeeTable(props: Props) {
 
         <TableBody>
           {props.employees.map((employee) => (
-            <TableRow key={employee.code} className="relative cursor-pointer hover:bg-muted">
-              <TableCell className="font-medium">
+            <TableRow key={employee.code} className="relative cursor-pointer">
+              <TableCell>
                 <Link
                   href={`/company/employees/${employee.code}`}
                   className="after:absolute after:inset-0"
@@ -52,7 +52,7 @@ export function EmployeeTable(props: Props) {
 
               <TableCell>{employee.position ?? "-"}</TableCell>
 
-              <TableCell className="text-muted-foreground">{employee.email}</TableCell>
+              <TableCell>{employee.email}</TableCell>
 
               <TableCell>
                 <EmployeeStatusBadge status={employee.status} />

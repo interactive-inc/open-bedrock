@@ -74,7 +74,7 @@ export function MeetingMinutesForm(props: Props) {
 
       {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
-      <Button type="submit" disabled={pending} className="w-fit">
+      <Button type="submit" disabled={pending}>
         {pending ? "記録中..." : "記録"}
       </Button>
     </form>

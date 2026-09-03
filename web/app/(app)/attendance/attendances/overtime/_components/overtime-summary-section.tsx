@@ -59,7 +59,7 @@ export async function OvertimeSummarySection(props: Props) {
             <TableBody>
               {summary.entries.map((entry) => (
                 <TableRow key={entry.employee_id}>
-                  <TableCell className="font-medium">{entry.employee_id}</TableCell>
+                  <TableCell>{entry.employee_id}</TableCell>
 
                   <TableCell className="text-right">{entry.work_days}</TableCell>
 

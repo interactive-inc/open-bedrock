@@ -53,15 +53,13 @@ export async function EmployeeWorkStyleHistory(props: Props) {
             <TableBody>
               {workStyles.map((workStyle) => (
                 <TableRow key={workStyle.id}>
-                  <TableCell className="font-medium">{toWorkStyleLabel(workStyle.style)}</TableCell>
+                  <TableCell>{toWorkStyleLabel(workStyle.style)}</TableCell>
 
                   <TableCell>{workStyle.starts_on}</TableCell>
 
-                  <TableCell className="text-muted-foreground">
-                    {workStyle.ends_on ?? "-"}
-                  </TableCell>
+                  <TableCell>{workStyle.ends_on ?? "-"}</TableCell>
 
-                  <TableCell className="text-muted-foreground">{workStyle.note ?? "-"}</TableCell>
+                  <TableCell>{workStyle.note ?? "-"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

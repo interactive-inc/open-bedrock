@@ -55,7 +55,7 @@ export function ReviewDiscloseForm(props: Props) {
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
 
         <Field orientation="horizontal">
-          <Button type="submit" variant="outline" disabled={isPending}>
+          <Button type="submit" variant="secondary" disabled={isPending}>
             {isPending ? "開示中..." : "サイクルを一括開示"}
           </Button>
         </Field>

@@ -32,22 +32,24 @@ export async function SystemExchangeConnectorForm(props: Props) {
     <form method="get" action="/system/integration-exchanges">
       <FieldSet>
         <FieldGroup className="flex-row flex-wrap items-end gap-4">
-          <Field className="w-full sm:w-72">
-            <FieldLabel htmlFor="system-exchange-connector">コネクタ</FieldLabel>
+          <div className="sm:w-72">
+            <Field className="w-full">
+              <FieldLabel htmlFor="system-exchange-connector">コネクタ</FieldLabel>
 
-            <select
-              id="system-exchange-connector"
-              name="connector_id"
-              defaultValue={props.connectorId ?? connectors[0].id}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-            >
-              {connectors.map((connector) => (
-                <option key={connector.id} value={connector.id}>
-                  {connector.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <select
+                id="system-exchange-connector"
+                name="connector_id"
+                defaultValue={props.connectorId ?? connectors[0].id}
+                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+              >
+                {connectors.map((connector) => (
+                  <option key={connector.id} value={connector.id}>
+                    {connector.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
 
           <Button type="submit">表示</Button>
         </FieldGroup>

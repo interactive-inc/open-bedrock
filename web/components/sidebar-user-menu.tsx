@@ -63,7 +63,7 @@ export function SidebarUserMenu(props: Props) {
         <Bell />
 
         {props.unreadNotificationCount > 0 ? (
-          <Badge className="absolute -top-1 -right-1 size-4 justify-center rounded-full p-0 text-[10px]">
+          <Badge className="absolute -top-1 -right-1 justify-center">
             {props.unreadNotificationCount}
           </Badge>
         ) : null}
@@ -74,12 +74,12 @@ export function SidebarUserMenu(props: Props) {
           aria-label="ユーザーメニュー"
           className={buttonVariants({ variant: "ghost", size: "icon" })}
         >
-          <Avatar className="size-8">
+          <Avatar>
             <AvatarFallback>{initial}</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" side="top" className="w-56">
+        <DropdownMenuContent align="end" side="top">
           <DropdownMenuGroup>
             <DropdownMenuLabel>
               <span className="flex flex-col gap-0.5">

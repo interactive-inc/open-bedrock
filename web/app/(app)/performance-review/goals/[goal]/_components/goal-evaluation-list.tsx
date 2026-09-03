@@ -27,7 +27,7 @@ export function GoalEvaluationList(props: Props) {
         <CardDescription>評価</CardDescription>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-3 text-sm">
+      <CardContent className="flex flex-col gap-3">
         {props.evaluations.length === 0 ? (
           <p className="text-muted-foreground">評価はまだ登録されていません</p>
         ) : (

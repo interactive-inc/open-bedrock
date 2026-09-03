@@ -12,16 +12,18 @@ export function CompanyOrganizationSnapshotFilterForm(props: Props) {
     <form method="get" action="/company/organization-snapshots">
       <FieldSet>
         <FieldGroup className="flex-row flex-wrap items-end gap-4">
-          <Field className="w-full sm:w-56">
-            <FieldLabel htmlFor="company-organization-snapshot-date">基準日</FieldLabel>
+          <div className="sm:w-56">
+            <Field className="w-full">
+              <FieldLabel htmlFor="company-organization-snapshot-date">基準日</FieldLabel>
 
-            <Input
-              id="company-organization-snapshot-date"
-              name="effective_on"
-              type="date"
-              defaultValue={props.effectiveOn ?? ""}
-            />
-          </Field>
+              <Input
+                id="company-organization-snapshot-date"
+                name="effective_on"
+                type="date"
+                defaultValue={props.effectiveOn ?? ""}
+              />
+            </Field>
+          </div>
 
           <Button type="submit">この日で見る</Button>
         </FieldGroup>

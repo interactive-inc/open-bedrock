@@ -57,7 +57,7 @@ export function CertificateRequestAdminTable(props: Props) {
                 <span className="font-medium">{row.certificate_type}</span>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <Link
                   href={`/certificate-request/certificate-requests?employee_id=${row.requester_id}`}
                   className="underline-offset-4 hover:underline"
@@ -67,17 +67,13 @@ export function CertificateRequestAdminTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.submit_to ?? "—"}
-              </TableCell>
+              <TableCell className="hidden md:table-cell">{row.submit_to ?? "—"}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.needed_by ?? "—"}
-              </TableCell>
+              <TableCell className="hidden md:table-cell">{row.needed_by ?? "—"}</TableCell>
 
               <TableCell>{statusLabel(row.status)}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
 

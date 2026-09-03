@@ -69,7 +69,7 @@ export function ThemeModeField() {
           variant="outline"
           spacing={0}
           disabled={!mounted}
-          className="w-full flex-wrap sm:w-fit"
+          className="w-full flex-wrap"
         >
           {themeModes.map((mode) => {
             const Icon = mode.icon

@@ -16,7 +16,7 @@ export default function NewRingiPage() {
         actions={<BackButton href="/my/ringis" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <RingiCreateForm />
         </CardContent>

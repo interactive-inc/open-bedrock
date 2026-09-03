@@ -42,13 +42,13 @@ export function PositionList(props: Props) {
         <TableBody>
           {props.positions.map((position) => (
             <TableRow key={position.id}>
-              <TableCell className="font-medium">{position.code}</TableCell>
+              <TableCell>{position.code}</TableCell>
 
               <TableCell>{position.name}</TableCell>
 
               <TableCell className="text-right">{position.rank}</TableCell>
 
-              <TableCell className="text-muted-foreground">{position.description ?? "-"}</TableCell>
+              <TableCell>{position.description ?? "-"}</TableCell>
 
               {props.canManage ? (
                 <TableCell className="text-right">

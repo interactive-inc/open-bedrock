@@ -92,7 +92,7 @@ export function WorkflowEditor(props: {
                 <Button
                   type="button"
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   disabled={index === 0}
                   onClick={() => {
                     const steps = [...workflow.steps]
@@ -244,7 +244,7 @@ export function WorkflowEditor(props: {
                   <Button
                     type="button"
                     size="sm"
-                    variant="outline"
+                    variant="secondary"
                     onClick={() =>
                       updateStep(index, {
                         ...step,
@@ -262,7 +262,7 @@ export function WorkflowEditor(props: {
 
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           onClick={() =>
             commit({
               ...workflow,
@@ -285,7 +285,7 @@ export function WorkflowEditor(props: {
           </FieldDescription>
           <Textarea
             id="workflow-advanced"
-            className="min-h-96 font-mono text-xs"
+            className="min-h-96"
             value={advanced}
             aria-invalid={definitionError !== null}
             onChange={(event) => setAdvanced(event.target.value)}
@@ -398,7 +398,7 @@ function ApproverRow(props: {
       )}
       <Button
         type="button"
-        variant="outline"
+        variant="secondary"
         size="sm"
         disabled={!props.canDelete}
         onClick={props.onDelete}

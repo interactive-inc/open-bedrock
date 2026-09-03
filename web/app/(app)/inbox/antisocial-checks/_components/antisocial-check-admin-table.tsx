@@ -38,7 +38,7 @@ export function AntisocialCheckAdminTable(props: {
             <TableHead>取引先</TableHead>
             <TableHead>所在地</TableHead>
             <TableHead>代表者</TableHead>
-            <TableHead className="min-w-72">判定</TableHead>
+            <TableHead>判定</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -46,7 +46,7 @@ export function AntisocialCheckAdminTable(props: {
           {props.checks.map((check) => (
             <TableRow key={check.id}>
               <TableCell>{check.requester_name}</TableCell>
-              <TableCell className="font-medium">{check.partner_name}</TableCell>
+              <TableCell>{check.partner_name}</TableCell>
               <TableCell>{check.partner_address ?? "-"}</TableCell>
               <TableCell>{check.representative_name ?? "-"}</TableCell>
               <TableCell>

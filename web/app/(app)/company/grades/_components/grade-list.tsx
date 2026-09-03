@@ -42,13 +42,13 @@ export function GradeList(props: Props) {
         <TableBody>
           {props.grades.map((grade) => (
             <TableRow key={grade.id}>
-              <TableCell className="font-medium">{grade.code}</TableCell>
+              <TableCell>{grade.code}</TableCell>
 
               <TableCell>{grade.name}</TableCell>
 
               <TableCell className="text-right">{grade.rank}</TableCell>
 
-              <TableCell className="text-muted-foreground">{grade.description ?? "-"}</TableCell>
+              <TableCell>{grade.description ?? "-"}</TableCell>
 
               {props.canManage ? (
                 <TableCell className="text-right">

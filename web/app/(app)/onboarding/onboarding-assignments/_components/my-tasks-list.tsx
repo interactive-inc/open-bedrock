@@ -33,7 +33,7 @@ export async function MyTasksList() {
       <Table aria-label="一覧">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12">#</TableHead>
+            <TableHead>#</TableHead>
             <TableHead>タスク</TableHead>
             <TableHead>状態</TableHead>
             <TableHead className="text-right">操作</TableHead>
@@ -43,9 +43,9 @@ export async function MyTasksList() {
         <TableBody>
           {tasks.map((task) => (
             <TableRow key={task.id}>
-              <TableCell className="text-muted-foreground">{task.order}</TableCell>
+              <TableCell>{task.order}</TableCell>
 
-              <TableCell className="font-medium">{task.title}</TableCell>
+              <TableCell>{task.title}</TableCell>
 
               <TableCell>
                 <Badge variant={task.status === "done" ? "secondary" : "outline"}>

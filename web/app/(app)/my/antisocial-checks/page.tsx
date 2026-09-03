@@ -28,7 +28,7 @@ export default async function AntisocialChecksPage() {
           <>
             {canManage ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/inbox/antisocial-checks" />}
               >

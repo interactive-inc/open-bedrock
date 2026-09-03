@@ -54,7 +54,7 @@ export function AnnouncementManageActions(props: Props) {
           <form action={archiveAction}>
             <input type="hidden" name="announcement_id" value={props.announcementId} />
 
-            <Button type="submit" variant="outline" disabled={archivePending}>
+            <Button type="submit" variant="secondary" disabled={archivePending}>
               {archivePending ? "アーカイブ中..." : "アーカイブ"}
             </Button>
           </form>

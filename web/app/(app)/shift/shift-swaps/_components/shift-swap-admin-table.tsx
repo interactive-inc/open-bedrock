@@ -36,7 +36,7 @@ type Props = {
 
 function StatusBadge(props: { status: string }) {
   if (props.status === "approved") {
-    return <Badge className="bg-emerald-600 text-white">承認済み</Badge>
+    return <Badge>承認済み</Badge>
   }
 
   if (props.status === "rejected") {
@@ -75,9 +75,9 @@ export function ShiftSwapAdminTable(props: Props) {
         <TableBody>
           {props.rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell className="font-medium">{row.date}</TableCell>
+              <TableCell>{row.date}</TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <Link
                   href={`/shift/shift-swaps?requester_id=${row.requester_employee_id}`}
                   className="underline-offset-4 hover:underline"
@@ -87,11 +87,11 @@ export function ShiftSwapAdminTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {row.requester_dept_name ?? "—"}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <Link
                   href={`/shift/shift-swaps?target_id=${row.target_employee_id}`}
                   className="underline-offset-4 hover:underline"
@@ -105,9 +105,7 @@ export function ShiftSwapAdminTable(props: Props) {
                 <StatusBadge status={row.status} />
               </TableCell>
 
-              <TableCell className="hidden max-w-xs truncate text-muted-foreground md:table-cell">
-                {row.note ?? "—"}
-              </TableCell>
+              <TableCell className="hidden truncate md:table-cell">{row.note ?? "—"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

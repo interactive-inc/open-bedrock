@@ -49,7 +49,7 @@ export function MyEnrollmentList(props: Props) {
 
             return (
               <TableRow key={enrollment.id}>
-                <TableCell className="font-medium">{courseLabel}</TableCell>
+                <TableCell>{courseLabel}</TableCell>
 
                 <TableCell>
                   <Badge variant={enrollment.status === "completed" ? "secondary" : "outline"}>
@@ -57,13 +57,9 @@ export function MyEnrollmentList(props: Props) {
                   </Badge>
                 </TableCell>
 
-                <TableCell className="text-muted-foreground">
-                  {enrollment.due_date ?? "-"}
-                </TableCell>
+                <TableCell>{enrollment.due_date ?? "-"}</TableCell>
 
-                <TableCell className="text-muted-foreground">
-                  {enrollment.completed_at ?? "-"}
-                </TableCell>
+                <TableCell>{enrollment.completed_at ?? "-"}</TableCell>
 
                 <TableCell className="text-right">
                   {enrollment.status === "enrolled" && enrollment.id !== null ? (

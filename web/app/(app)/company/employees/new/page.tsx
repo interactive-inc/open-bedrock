@@ -28,7 +28,7 @@ export default async function EmployeeNewPage() {
         actions={<BackButton href="/company/employees" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl gap-0 p-0">
+      <Card className="gap-0">
         <div className="p-6">
           <EmployeeCreateForm
             canAssignRole={canAssignRole}

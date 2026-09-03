@@ -124,7 +124,7 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 - Error classと失敗型は所有単位の `errors.ts` にまとめる。`errors/`、`*.error.ts`、`*.errors.ts` は作らない
 - re-exportは禁止する。利用側は定義元を直接importし、barrelや移行用の互換exportを作らない
 - `cli/app/` … コマンド群。`<command>/.../route.ts` で定義し、`cli/app/index.ts` が POST ルートとして集約する。ルート追加時は index.ts への登録を忘れない（未登録だと catch-all に落ちて使用不可）。共通処理は `cli/lib/`
-- `web/app/(app|auth)/` … ルートグループ。ルート直下は `page.tsx` / `actions.ts` などの規約ファイルのみ。画面コンポーネントは各ルートの `_components/`、表示用純関数は `_lib/` に collocation する。`components/ui` は shadcn 生成物（直接編集しない）、独自コンポーネントは別ファイルでラップする
+- `web/app/(app|auth)/` … ルートグループ。ルート直下は `page.tsx` / `actions.ts` などの規約ファイルのみ。画面コンポーネントは各ルートの `_components/`、表示用純関数は `_lib/` に collocation する。`components/ui` は shadcn 生成物（直接編集しない）、独自コンポーネントは別ファイルでラップする。shadcn/ui コンポーネントへ色やサイズを変える `className` を渡さず、`variant` と theme token で表現する（詳細は `web/DESIGN.md`）
 - `web/lib/api/` … API クライアント関数（1 関数 1 ファイル）。`api/app` の型（`api/dist/api/app.d.ts`）で型付けされる。レスポンスの手書き型は `web/lib/api/types/` に置く（api と疎結合に保つため z.infer を参照せず同形を手書きする）
 
 ## API の URL 規約

@@ -47,7 +47,7 @@ export default async function GoalsPage(props: Props) {
         actions={
           <div className="flex gap-2">
             <Button
-              variant="outline"
+              variant="secondary"
               nativeButton={false}
               render={<Link href="/performance-review/goals/tree" />}
             >

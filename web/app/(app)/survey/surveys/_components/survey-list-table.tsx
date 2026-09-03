@@ -35,16 +35,16 @@ export async function SurveyListTable(props: { canViewSummary: boolean }) {
         <TableHeader>
           <TableRow>
             <TableHead>タイトル</TableHead>
-            <TableHead className="w-24">状態</TableHead>
-            <TableHead className="w-24">設問数</TableHead>
-            <TableHead className="w-48 text-right">操作</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead>設問数</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
           {surveys.map((survey) => (
             <TableRow key={survey.id}>
-              <TableCell className="font-medium">{survey.title}</TableCell>
+              <TableCell>{survey.title}</TableCell>
 
               <TableCell>
                 <Badge variant={survey.status === "open" ? "default" : "secondary"}>
@@ -67,7 +67,7 @@ export async function SurveyListTable(props: { canViewSummary: boolean }) {
                   {props.canViewSummary ? (
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="secondary"
                       nativeButton={false}
                       render={<Link href={`/survey/surveys/${survey.id}/summary`} />}
                     >

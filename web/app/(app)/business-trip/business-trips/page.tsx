@@ -64,7 +64,7 @@ export default async function AdminBusinessTripsPage(props: { searchParams: Sear
         title="出張申請管理"
         actions={
           <Button
-            variant="outline"
+            variant="secondary"
             nativeButton={false}
             render={<Link href="/business-trip/business-trips" />}
           >

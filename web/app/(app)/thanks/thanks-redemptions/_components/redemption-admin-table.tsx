@@ -38,7 +38,7 @@ type Props = {
 
 function StatusBadge(props: { status: RedemptionStatus }) {
   if (props.status === "fulfilled") {
-    return <Badge className="bg-emerald-600 text-white">交換済み</Badge>
+    return <Badge>交換済み</Badge>
   }
 
   if (props.status === "rejected") {
@@ -78,9 +78,9 @@ export function RedemptionAdminTable(props: Props) {
         <TableBody>
           {props.rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell className="font-medium">{row.reward_name}</TableCell>
+              <TableCell>{row.reward_name}</TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <Link
                   href={`/thanks/thanks-redemptions?employee_id=${row.employee_id}`}
                   className="underline-offset-4 hover:underline"
@@ -90,7 +90,7 @@ export function RedemptionAdminTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {row.employee_dept_name ?? "—"}
               </TableCell>
 
@@ -102,7 +102,7 @@ export function RedemptionAdminTable(props: Props) {
                 <StatusBadge status={row.status} />
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
             </TableRow>

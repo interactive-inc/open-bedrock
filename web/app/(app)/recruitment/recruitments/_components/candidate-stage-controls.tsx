@@ -72,7 +72,7 @@ export function CandidateStageControls(props: Props) {
             name="stage"
             value="rejected"
             size="sm"
-            variant="outline"
+            variant="secondary"
             disabled={pending}
           >
             不採用にする

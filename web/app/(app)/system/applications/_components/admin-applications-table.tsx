@@ -71,7 +71,7 @@ export function AdminApplicationsTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <Link
                   href={`/system/applications?applicant_id=${row.applicant_id}`}
                   className="underline-offset-4 hover:underline"
@@ -81,7 +81,7 @@ export function AdminApplicationsTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {row.applicant_dept_name ?? "—"}
               </TableCell>
 
@@ -89,7 +89,7 @@ export function AdminApplicationsTable(props: Props) {
                 <ApplicationStatusBadge status={row.status} />
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
             </TableRow>

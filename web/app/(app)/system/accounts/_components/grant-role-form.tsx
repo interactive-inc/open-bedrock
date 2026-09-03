@@ -56,7 +56,7 @@ export function GrantRoleForm(props: Props) {
         ))}
       </select>
 
-      <Button type="submit" size="sm" variant="outline" disabled={isPending}>
+      <Button type="submit" size="sm" variant="secondary" disabled={isPending}>
         付与
       </Button>
     </form>

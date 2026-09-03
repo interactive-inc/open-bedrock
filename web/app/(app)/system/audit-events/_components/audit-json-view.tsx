@@ -20,12 +20,8 @@ function displayJson(value: string | null): string {
 
 export function AuditJsonView(props: Props) {
   return (
-    <Collapsible className="rounded-xl bg-card border">
-      <CollapsibleTrigger
-        render={
-          <Button variant="ghost" className="h-auto w-full justify-between rounded-xl px-4 py-3" />
-        }
-      >
+    <Collapsible>
+      <CollapsibleTrigger render={<Button variant="ghost" className="w-full justify-between" />}>
         {props.label}
         <ChevronDown
           data-icon="inline-end"

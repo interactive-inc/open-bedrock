@@ -51,17 +51,13 @@ export function WorkAccidentsTable(props: Props) {
             <TableRow key={row.id}>
               <TableCell>{formatDate(row.occurred_on)}</TableCell>
 
-              <TableCell className="font-mono text-sm text-muted-foreground">
-                {row.employee_id !== null ? row.employee_id : "—"}
-              </TableCell>
+              <TableCell>{row.employee_id !== null ? row.employee_id : "—"}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.location ?? "—"}
-              </TableCell>
+              <TableCell className="hidden md:table-cell">{row.location ?? "—"}</TableCell>
 
-              <TableCell className="max-w-xs truncate">{row.summary}</TableCell>
+              <TableCell className="truncate">{row.summary}</TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {row.severity !== null ? (SEVERITY_LABELS[row.severity] ?? row.severity) : "—"}
               </TableCell>
 

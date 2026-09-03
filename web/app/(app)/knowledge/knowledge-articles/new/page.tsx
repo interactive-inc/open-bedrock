@@ -16,7 +16,7 @@ export default function NewKnowledgePage() {
         actions={<BackButton href="/knowledge/knowledge-articles" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-3xl">
+      <Card>
         <CardContent>
           <KnowledgeNewForm />
         </CardContent>

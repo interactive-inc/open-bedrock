@@ -87,7 +87,7 @@ export function ShiftAssignmentList(props: Props) {
         <TableBody>
           {props.assignments.map((assignment) => (
             <TableRow key={assignment.id}>
-              <TableCell className="font-medium">{assignment.date}</TableCell>
+              <TableCell>{assignment.date}</TableCell>
 
               <TableCell>
                 {props.employeeNameMap[assignment.employee_id] ?? `#${assignment.employee_id}`}
@@ -99,7 +99,7 @@ export function ShiftAssignmentList(props: Props) {
                   : "-"}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{assignment.note ?? "-"}</TableCell>
+              <TableCell>{assignment.note ?? "-"}</TableCell>
 
               <TableCell>
                 {assignment.published_at !== null ? (
@@ -162,7 +162,7 @@ function UpdateAssignmentDialog(props: { assignment: ShiftAssignmentResponse }) 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

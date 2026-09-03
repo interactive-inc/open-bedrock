@@ -67,7 +67,7 @@ export default async function AdminCertificateRequestsPage(props: { searchParams
         title="証明書発行依頼管理"
         actions={
           <Button
-            variant="outline"
+            variant="secondary"
             nativeButton={false}
             render={<Link href="/certificate-request/certificate-requests" />}
           >

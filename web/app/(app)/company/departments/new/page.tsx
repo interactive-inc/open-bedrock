@@ -17,7 +17,7 @@ export default async function OrgDepartmentNewPage() {
         actions={<BackButton href="/company/departments" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-2xl">
+      <Card>
         <CardContent>
           <OrgDepartmentCreateForm />
         </CardContent>

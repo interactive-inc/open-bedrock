@@ -45,7 +45,7 @@ export function PageSizeSelect(props: Props) {
       <label htmlFor="page-size-select">表示</label>
 
       <Select value={String(props.currentSize)} onValueChange={handleChange}>
-        <SelectTrigger size="sm" id="page-size-select" className="w-auto min-w-16">
+        <SelectTrigger size="sm" id="page-size-select">
           <SelectValue />
         </SelectTrigger>
 

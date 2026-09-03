@@ -37,17 +37,17 @@ export function MyShiftAssignments(props: Props) {
         <TableBody>
           {props.assignments.map((assignment) => (
             <TableRow key={assignment.id}>
-              <TableCell className="font-medium">{assignment.date}</TableCell>
+              <TableCell>{assignment.date}</TableCell>
 
               <TableCell>{assignment.pattern_name ?? "-"}</TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {assignment.pattern_start_time !== null && assignment.pattern_end_time !== null
                   ? `${assignment.pattern_start_time}–${assignment.pattern_end_time}`
                   : "-"}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{assignment.note ?? "-"}</TableCell>
+              <TableCell>{assignment.note ?? "-"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

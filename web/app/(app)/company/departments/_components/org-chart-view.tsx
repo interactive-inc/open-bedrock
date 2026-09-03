@@ -26,7 +26,7 @@ export async function OrgChartView() {
   const membersByCode = toMembersByCode(codes, memberLists)
 
   return (
-    <Card className="p-0 gap-0">
+    <Card className="gap-0">
       <ul className="flex flex-col gap-6 p-6">
         {nodes.map((node) => (
           <OrgChartNode key={node.code} node={node} membersByCode={membersByCode} />

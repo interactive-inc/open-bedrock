@@ -73,7 +73,7 @@ export default async function GoalDetailPage(props: Props) {
           <CardDescription>概要</CardDescription>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-3 text-sm">
+        <CardContent className="flex flex-col gap-3">
           <div className="flex gap-2">
             <span className="w-24 text-muted-foreground">期間</span>
             <span>{goal.period}</span>

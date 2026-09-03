@@ -46,7 +46,7 @@ export default async function MyExpensesPage() {
           <>
             {canViewAll ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/expense/expenses" />}
               >
@@ -56,7 +56,7 @@ export default async function MyExpensesPage() {
 
             {canApprove ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/inbox/expenses" />}
               >
@@ -125,9 +125,7 @@ async function MyExpensesTable() {
                 {amountFormatter.format(expense.amount)} 円
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {formatDate(expense.spent_at)}
-              </TableCell>
+              <TableCell>{formatDate(expense.spent_at)}</TableCell>
 
               <TableCell>
                 <ExpenseStatusBadge status={expense.status} />

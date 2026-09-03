@@ -22,7 +22,7 @@ export default async function NewTrainingCoursePage() {
         actions={<BackButton href="/training/trainings" label="研修に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <CreateCourseForm />
         </CardContent>

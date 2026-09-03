@@ -57,7 +57,7 @@ export function FamilyCareLeaveAdminTable(props: Props) {
                 <span className="font-medium">{familyCareLeaveKindLabel(row.leave_kind)}</span>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <Link
                   href={`/family-care-leave/family-care-leaves?employee_id=${row.employee_id}`}
                   className="underline-offset-4 hover:underline"
@@ -67,7 +67,7 @@ export function FamilyCareLeaveAdminTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {row.start_date === row.end_date
                   ? row.start_date
                   : `${row.start_date} 〜 ${row.end_date}`}
@@ -75,7 +75,7 @@ export function FamilyCareLeaveAdminTable(props: Props) {
 
               <TableCell>{statusLabel(row.status)}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
 

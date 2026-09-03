@@ -42,7 +42,7 @@ export function AnnouncementCreateForm() {
 
       {state.ok ? <p className="text-sm text-muted-foreground">下書きを作成しました</p> : null}
 
-      <Button type="submit" disabled={pending} className="w-fit">
+      <Button type="submit" disabled={pending}>
         {pending ? "作成中..." : "下書きを作成"}
       </Button>
     </form>

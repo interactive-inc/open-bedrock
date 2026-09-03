@@ -49,13 +49,13 @@ export function HealthCheckupsTable(props: Props) {
         <TableBody>
           {props.rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell className="font-mono text-sm">{row.employee_id}</TableCell>
+              <TableCell>{row.employee_id}</TableCell>
 
               <TableCell>{row.fiscal_year}</TableCell>
 
               <TableCell>{KIND_LABELS[row.checkup_kind] ?? row.checkup_kind}</TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {row.conducted_on !== null ? formatDate(row.conducted_on) : "—"}
               </TableCell>
 
@@ -65,9 +65,7 @@ export function HealthCheckupsTable(props: Props) {
                 </Badge>
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.note ?? "—"}
-              </TableCell>
+              <TableCell className="hidden md:table-cell">{row.note ?? "—"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

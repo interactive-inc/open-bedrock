@@ -65,9 +65,7 @@ export default async function DepartmentOneOnOnesPage(props: Props) {
                     {session.held_at.slice(0, 10)}
                   </TableCell>
 
-                  <TableCell className="font-medium whitespace-nowrap">
-                    {session.member_name}
-                  </TableCell>
+                  <TableCell className="whitespace-nowrap">{session.member_name}</TableCell>
 
                   <TableCell className="whitespace-nowrap">{session.manager_name}</TableCell>
 

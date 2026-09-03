@@ -62,7 +62,7 @@ export function LocaleField(props: Props) {
         </FieldContent>
 
         <Select value={props.locale} onValueChange={handleValueChange} disabled={isPending}>
-          <SelectTrigger aria-labelledby="locale-label" className="w-full sm:w-fit">
+          <SelectTrigger aria-labelledby="locale-label" className="w-full">
             <SelectValue />
           </SelectTrigger>
 

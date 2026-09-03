@@ -51,7 +51,7 @@ export async function CalendarList(props: Props) {
         <TableBody>
           {days.map((day) => (
             <TableRow key={day.id}>
-              <TableCell className="font-medium">{day.calendar_date}</TableCell>
+              <TableCell>{day.calendar_date}</TableCell>
 
               <TableCell>
                 <Badge variant={day.kind === "holiday" ? "secondary" : "outline"}>
@@ -59,7 +59,7 @@ export async function CalendarList(props: Props) {
                 </Badge>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{day.name ?? "-"}</TableCell>
+              <TableCell>{day.name ?? "-"}</TableCell>
 
               {props.canManage ? (
                 <TableCell className="text-right">

@@ -103,7 +103,7 @@ export function DashboardCharts({
         </CardHeader>
 
         <CardContent>
-          <ChartContainer config={deptConfig} className="h-[250px] w-full">
+          <ChartContainer config={deptConfig} className="w-full">
             <BarChart data={departmentBreakdown} layout="vertical">
               <CartesianGrid horizontal={false} />
               <YAxis
@@ -133,7 +133,7 @@ export function DashboardCharts({
         </CardHeader>
 
         <CardContent>
-          <ChartContainer config={applicationTrendConfig} className="h-[250px] w-full">
+          <ChartContainer config={applicationTrendConfig} className="w-full">
             <LineChart data={applicationTrend}>
               <CartesianGrid />
               <XAxis dataKey="month" tickLine={false} axisLine={false} />
@@ -159,7 +159,7 @@ export function DashboardCharts({
         </CardHeader>
 
         <CardContent>
-          <ChartContainer config={goalStatusConfig} className="h-[250px] w-full">
+          <ChartContainer config={goalStatusConfig} className="w-full">
             <PieChart>
               <ChartTooltip content={<ChartTooltipContent nameKey="status" />} />
               <Pie data={goalStatusData} dataKey="count" nameKey="status" innerRadius={50} />

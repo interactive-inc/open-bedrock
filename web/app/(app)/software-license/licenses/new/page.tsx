@@ -23,7 +23,7 @@ export default async function LicenseNewPage() {
         actions={<BackButton href="/software-license/licenses" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl p-0 gap-0">
+      <Card className="gap-0">
         <div className="p-6">
           <LicenseCreateForm />
         </div>

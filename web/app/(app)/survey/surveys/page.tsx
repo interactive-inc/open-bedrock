@@ -25,7 +25,7 @@ export default async function SurveysPage() {
         actions={
           canManage ? (
             <Button
-              variant="outline"
+              variant="secondary"
               nativeButton={false}
               render={<Link href="/survey/surveys/manage" />}
             >

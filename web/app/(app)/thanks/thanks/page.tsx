@@ -35,7 +35,7 @@ export default async function ThanksPage() {
           <>
             {canViewAll ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/thanks/thanks-redemptions" />}
               >
@@ -45,7 +45,7 @@ export default async function ThanksPage() {
 
             {canApprove ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/inbox/thanks-redemptions" />}
               >
@@ -53,7 +53,11 @@ export default async function ThanksPage() {
               </Button>
             ) : null}
 
-            <Button variant="outline" nativeButton={false} render={<Link href="/thanks/rewards" />}>
+            <Button
+              variant="secondary"
+              nativeButton={false}
+              render={<Link href="/thanks/rewards" />}
+            >
               <Gift />
               景品を見る
             </Button>
@@ -84,9 +88,9 @@ export default async function ThanksPage() {
 function SummarySkeleton() {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <Skeleton className="h-24 w-full" />
+      <Skeleton className="w-full" />
 
-      <Skeleton className="h-24 w-full" />
+      <Skeleton className="w-full" />
     </div>
   )
 }
