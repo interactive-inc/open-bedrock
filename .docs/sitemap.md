@@ -75,7 +75,20 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 
 ## チーム
 
-- `/company/reports` は直属部下の一覧と、配下スコープの勤怠、休暇、目標を文脈導線としてまとめるマイチーム画面。各スコープ節は対応するスコープ権限(`attendance:read:reports`、`leave:read:reports`、`goal:read:reports`)を持つ場合のみ描画する。
+- `/company/direct-reports` は直属部下の一覧と、配下スコープの勤怠、休暇、目標を文脈導線としてまとめるマイチーム画面。各スコープ節は対応するスコープ権限(`attendance:read:reports`、`leave:read:reports`、`goal:read:reports`)を持つ場合のみ描画する。`/company/reports` は同じ画面へ転送する。
+
+## 会社の正本
+
+Company が正本として持つ資源を読み取り専用で確認する画面。作成、変更、削除の導線を持たず、変更は API と CLI が担う。いずれも `employee:read`、`org:manage`、`system:admin` のいずれかを持つ利用者だけが到達する。
+
+- `/company/profile` は法人(LegalEntity)、会社プロフィール、事業所(Site)、勤務場所(Workplace)を確認する画面。
+- `/company/people` は雇用と切り離した Person の台帳を確認する画面。
+- `/company/employments` は在籍状態と有効期間を持つ Employment を確認する画面。在籍区分の絞り込みは取得後に適用する。
+- `/company/organization-snapshots` は指定した時点の組織単位、配属、レポートライン、責任の割当を確認する画面。組織変更の履歴一覧は API が持たない。
+- `/company/definitions` は職務(Job)、組織上の役職(OrganizationalOffice)、責任(Responsibility)、権限範囲(AuthorityScope)、合議体(CollectiveBody)の定義を確認する画面。等級と役職マスタは `/company/grades` と `/company/positions` が正本なので含めない。
+- `/company/account-employee-links` は System の Account と Company の Employee の対応を確認する画面。
+- `/company/personnel-actions` は人事発令(PersonnelAction)を確認する画面。
+- `/company/employee-events` は従業員コードを指定して入社、異動、休職、復職、退職の記録を確認する画面。API が従業員コードを必須で要求するため全社横断の一覧は持たない。
 
 ## 人と組織
 
