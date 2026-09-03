@@ -10,7 +10,7 @@ import { SystemAccountRepository } from "@system/infrastructure/repositories/aut
 import type { SystemSessionRepository } from "@system/infrastructure/repositories/auth/system-session.repository"
 
 export type SystemSessionIssuanceAdapterContext = Readonly<{
-  accountRepository: Pick<SystemAccountRepository, "findById">
+  accountRepository: Pick<SystemAccountRepository, "find">
   sessionRepository: Pick<SystemSessionRepository, "createWithAudit">
   materialService: SystemSessionMaterial
   accessTokenIssuer: SystemAccessTokenIssuer

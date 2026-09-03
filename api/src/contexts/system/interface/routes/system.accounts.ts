@@ -21,7 +21,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
 
   const accounts = await new SystemAccountCatalogRepository({
     env: { DB: context.env.DB },
-  }).list()
+  }).findMany()
   if (accounts instanceof Error) {
     throw new SystemAccountUnavailableError()
   }
@@ -88,7 +88,7 @@ export const POST = systemFactory.createHandlers(
       throw new SystemAccountConflictError()
     }
 
-    const account = await repository.findById(accountId.data)
+    const account = await repository.find(accountId.data)
     if (account === null || account instanceof Error) {
       throw new SystemAccountUnavailableError()
     }

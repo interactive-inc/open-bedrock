@@ -7,7 +7,7 @@ export async function resolveActiveSystemAccountId(
   c: Context,
   accountId: AccountId,
 ): Promise<AccountId | Error> {
-  const account = await new SystemAccountRepository({ database: c.env.DB }).findById(accountId)
+  const account = await new SystemAccountRepository({ database: c.env.DB }).find(accountId)
   if (account instanceof Error) {
     return new Error("failed to resolve canonical System Account", { cause: account })
   }

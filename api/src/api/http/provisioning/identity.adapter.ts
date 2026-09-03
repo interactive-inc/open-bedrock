@@ -54,7 +54,7 @@ export class IdentityAdapter {
     if (login === null || login instanceof Error) return login
     const identity = await new SystemIdentityCatalogRepository({
       env: { DB: this.c.env.DB },
-    }).findById(login.identity.id)
+    }).find(login.identity.id)
     if (identity === null || identity instanceof Error) return identity
 
     try {
@@ -95,9 +95,7 @@ export class IdentityAdapter {
   }
 
   async findAccountById(accountId: AccountId): Promise<AccountAuthState | null | Error> {
-    const account = await new SystemAccountRepository({ database: this.c.env.DB }).findById(
-      accountId,
-    )
+    const account = await new SystemAccountRepository({ database: this.c.env.DB }).find(accountId)
     if (account === null || account instanceof Error) return account
 
     try {
@@ -189,7 +187,7 @@ export class IdentityAdapter {
         .all<{ employee_id: EmployeeId; account_id: AccountId }>()
       const identities = await Promise.all(
         links.results.map((link) =>
-          new SystemIdentityCatalogRepository({ env: { DB: this.c.env.DB } }).listForAccount(
+          new SystemIdentityCatalogRepository({ env: { DB: this.c.env.DB } }).findMany(
             link.account_id,
           ),
         ),

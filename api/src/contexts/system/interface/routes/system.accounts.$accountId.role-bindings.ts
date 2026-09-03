@@ -35,7 +35,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
   const account = await new SystemAccountCatalogRepository({
     env: { DB: context.env.DB },
-  }).findById(accountId.data)
+  }).find(accountId.data)
   if (account instanceof Error) {
     throw new SystemIAMUnavailableError()
   }
@@ -44,7 +44,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
   const bindings = await new SystemRoleBindingRepository({
     env: { DB: context.env.DB },
-  }).listForAccount(accountId.data)
+  }).findMany(accountId.data)
   if (bindings instanceof Error) {
     throw new SystemIAMUnavailableError()
   }
@@ -113,7 +113,7 @@ export const POST = systemFactory.createHandlers(
     }
     const role = await new SystemRoleCatalogRepository({
       env: { DB: context.env.DB },
-    }).findById(roleId.data)
+    }).find(roleId.data)
     if (role instanceof Error) {
       throw new SystemIAMUnavailableError()
     }

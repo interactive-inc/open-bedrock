@@ -10,7 +10,7 @@ async function resolveActiveSystemAccountId(
   const accountId = zAccountId.safeParse(accountIdInput)
   if (!accountId.success) return new Error("canonical System Account ID is invalid")
 
-  const account = await new SystemAccountRepository({ database: context.env.DB }).findById(
+  const account = await new SystemAccountRepository({ database: context.env.DB }).find(
     accountId.data,
   )
   if (account instanceof Error) {
@@ -35,7 +35,7 @@ export class ResolveActiveSystemAccountIdAdapter {
   async isActiveSystemAccount(accountIdInput: string): Promise<boolean | Error> {
     const accountId = zAccountId.safeParse(accountIdInput)
     if (!accountId.success) return new Error("canonical System Account ID is invalid")
-    const account = await new SystemAccountRepository({ database: this.c.env.DB }).findById(
+    const account = await new SystemAccountRepository({ database: this.c.env.DB }).find(
       accountId.data,
     )
     if (account instanceof Error) {

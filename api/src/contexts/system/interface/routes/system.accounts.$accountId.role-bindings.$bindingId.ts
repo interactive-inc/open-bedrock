@@ -37,7 +37,7 @@ export const DELETE = systemFactory.createHandlers(
     const repository = new SystemRoleBindingRepository({
       env: { DB: context.env.DB },
     })
-    const binding = await repository.findById(bindingId.data)
+    const binding = await repository.find(bindingId.data)
     if (binding instanceof Error) {
       throw new SystemIAMUnavailableError()
     }
@@ -50,7 +50,7 @@ export const DELETE = systemFactory.createHandlers(
     }
     const role = await new SystemRoleCatalogRepository({
       env: { DB: context.env.DB },
-    }).findById(binding.roleId)
+    }).find(binding.roleId)
     if (role instanceof Error) {
       throw new SystemIAMUnavailableError()
     }

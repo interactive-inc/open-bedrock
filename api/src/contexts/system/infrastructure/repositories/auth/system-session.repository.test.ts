@@ -173,7 +173,7 @@ describe("SystemSessionRepository", () => {
 
     expect(await repository.createWithAudit(session, audit)).toBeUndefined()
 
-    const stored = await repository.findByTokenHash(session.tokenHash)
+    const stored = await repository.find(session.tokenHash)
     expect(stored).toBeInstanceOf(SessionEntity)
     expect(stored instanceof SessionEntity ? stored.id : null).toBe(session.id)
     expect(stored instanceof SessionEntity ? stored.tokenHash : null).toBe(session.tokenHash)

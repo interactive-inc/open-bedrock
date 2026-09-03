@@ -16,9 +16,7 @@ export class SystemAccountEligibilityAdapter implements AccountEligibilityPort {
     const parsed = zAccountId.safeParse(accountId)
     if (!parsed.success) return { ok: true, eligible: false }
 
-    const account = await new SystemAccountRepository({ database: this.database }).findById(
-      parsed.data,
-    )
+    const account = await new SystemAccountRepository({ database: this.database }).find(parsed.data)
     if (account instanceof Error) return { ok: false, cause: account }
     return { ok: true, eligible: account?.status === "active" }
   }

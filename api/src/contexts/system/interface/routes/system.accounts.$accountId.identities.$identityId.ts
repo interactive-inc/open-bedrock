@@ -29,7 +29,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
   const identity = await new SystemIdentityCatalogRepository({
     env: { DB: context.env.DB },
-  }).findById(identityId.data)
+  }).find(identityId.data)
   if (identity instanceof Error) {
     throw new SystemIdentityUnavailableError()
   }
@@ -73,7 +73,7 @@ export const DELETE = systemFactory.createHandlers(
       throw new SystemIdentityNotFoundError()
     }
     const repository = new SystemIdentityCatalogRepository({ env: { DB: context.env.DB } })
-    const identity = await repository.findById(identityId.data)
+    const identity = await repository.find(identityId.data)
     if (identity instanceof Error) {
       throw new SystemIdentityUnavailableError()
     }

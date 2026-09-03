@@ -32,7 +32,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
   const role = await new SystemRoleCatalogRepository({
     env: { DB: context.env.DB },
-  }).findById(roleId.data)
+  }).find(roleId.data)
   if (role instanceof Error) {
     throw new SystemIAMUnavailableError()
   }
@@ -91,7 +91,7 @@ export const PATCH = systemFactory.createHandlers(
       throw new SystemRoleNotFoundError()
     }
     const repository = new SystemRoleCatalogRepository({ env: { DB: context.env.DB } })
-    const current = await repository.findById(roleId.data)
+    const current = await repository.find(roleId.data)
     if (current instanceof Error) {
       throw new SystemIAMUnavailableError()
     }
@@ -211,7 +211,7 @@ export const DELETE = systemFactory.createHandlers(
       throw new SystemRoleNotFoundError()
     }
     const repository = new SystemRoleCatalogRepository({ env: { DB: context.env.DB } })
-    const role = await repository.findById(roleId.data)
+    const role = await repository.find(roleId.data)
     if (role instanceof Error) {
       throw new SystemIAMUnavailableError()
     }

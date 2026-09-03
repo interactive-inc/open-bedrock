@@ -72,7 +72,7 @@ export class SystemSessionRepository {
     }
   }
 
-  async findByTokenHash(tokenHash: SessionTokenHash): Promise<SessionEntity | null | Error> {
+  async find(tokenHash: SessionTokenHash): Promise<SessionEntity | null | Error> {
     try {
       const storageRow = await this.c.context.env.DB.prepare(
         `SELECT id, account_id, family_id, token_hash, token_version,
@@ -102,7 +102,7 @@ export class SystemSessionRepository {
 
     const tokenHash = await materialService.hashRawToken(command.rawToken)
     if (tokenHash instanceof Error) return tokenHash
-    const session = await this.findByTokenHash(tokenHash)
+    const session = await this.find(tokenHash)
     if (session instanceof Error) return session
     if (session === null || session.getUseRejection(command.now) !== null) {
       return Object.freeze({ kind: "rejected" as const, reason: "invalid" as const })

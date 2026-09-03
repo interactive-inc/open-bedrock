@@ -31,7 +31,7 @@ describe("SystemAccountRepository", () => {
       )
       .run()
 
-    const account = await createRepository(database).findById(zAccountId.parse("account-1"))
+    const account = await createRepository(database).find(zAccountId.parse("account-1"))
 
     expect(account).toBeInstanceOf(AccountEntity)
     expect(account).toMatchObject({
@@ -47,7 +47,7 @@ describe("SystemAccountRepository", () => {
   test("存在しないAccountEntityはnullを返す", async () => {
     const database = createSystemD1TestDatabase(schema)
 
-    expect(await createRepository(database).findById(zAccountId.parse("missing"))).toBeNull()
+    expect(await createRepository(database).find(zAccountId.parse("missing"))).toBeNull()
   })
 
   test.each([
@@ -67,7 +67,7 @@ describe("SystemAccountRepository", () => {
         .bind(status, tokenVersion, createdAt, updatedAt)
         .run()
 
-      const account = await createRepository(database).findById(zAccountId.parse("corrupt"))
+      const account = await createRepository(database).find(zAccountId.parse("corrupt"))
 
       expect(account).toBeInstanceOf(InvalidAccountError)
     },
@@ -77,7 +77,7 @@ describe("SystemAccountRepository", () => {
     const database = createSystemD1TestDatabase(schema)
     await database.exec("DROP TABLE system_accounts")
 
-    const account = await createRepository(database).findById(zAccountId.parse("account-1"))
+    const account = await createRepository(database).find(zAccountId.parse("account-1"))
 
     expect(account).toBeInstanceOf(Error)
     expect(account).not.toBeInstanceOf(InvalidAccountError)
