@@ -2,7 +2,7 @@
 
 Governance Markdown は文書型、metadata、状態、参照、公開制約を持つ。parser と保存処理は governance schema、route、migration に一致させる。自社の施行済み規程は非公開 deployment source で管理する。
 
-公開リポジトリに同梱する文書は構造例であり、`effective_from: null` の未施行テンプレートとする。open-karte 開発元または利用者の自社に固有の内部規程、組織構造、決裁額、担当者を含めない。実在組織の規程は非公開 deployment source で管理する。
+公開リポジトリに同梱する文書は構造例であり、`effective_from: null` の未施行テンプレートとする。open-bedrock 開発元または利用者の自社に固有の内部規程、組織構造、決裁額、担当者を含めない。実在組織の規程は非公開 deployment source で管理する。
 
 自社は、法域、定款、契約、組織構造、リスク、専門家の助言に合わせて内容を作成し、非公開の deployment source で管理する。公開 repository へ法人固有名、個人情報、秘密、実際の決裁金額を commit しない。
 

@@ -22,7 +22,7 @@ export function CertificationsTable(props: Props) {
         title="登録済みの資格がありません"
         description={
           props.canManage
-            ? "資格マスタは karte certifications create で登録できます"
+            ? "資格マスタは bedrock certifications create で登録できます"
             : "資格マスタの登録は管理者に依頼してください"
         }
       />

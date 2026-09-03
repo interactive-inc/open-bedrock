@@ -28,7 +28,7 @@ bun install
 D1 を作成し、出力された database_id を `wrangler.jsonc` の d1_databases に設定する。
 
 ```sh
-bunx wrangler d1 create open-karte
+bunx wrangler d1 create bedrock
 ```
 
 マイグレーション（`migrations/*.sql`）を適用する。

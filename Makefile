@@ -1,7 +1,7 @@
 .PHONY: help dependencies worktree dev cli designer pm
 
 help:
-	@echo "open-karte - 主な make ターゲット"
+	@echo "open-bedrock - 主な make ターゲット"
 	@echo "  make worktree   worktree の依存を初期化"
 	@echo "  make dev        bun install して portless で全アプリを起動"
 	@echo "  make cli        CLI ヘルプを表示 (bun)"
@@ -28,4 +28,4 @@ designer:
 	claude --agent product-designer
 
 pm:
-	bunx funnel claude --profile open-karte --dangerously-skip-permissions
+	bunx funnel claude --profile open-bedrock --dangerously-skip-permissions

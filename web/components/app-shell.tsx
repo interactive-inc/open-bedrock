@@ -61,7 +61,7 @@ export function AppShell(props: Props) {
             className="flex flex-col gap-0.5 rounded-md px-2 py-1 hover:bg-sidebar-accent"
           >
             <span className="text-base font-semibold tracking-wider">
-              {process.env.NEXT_PUBLIC_APP_NAME ?? "KARTE"}
+              {process.env.NEXT_PUBLIC_APP_NAME ?? "BEDROCK"}
             </span>
 
             <span className="text-xs text-muted-foreground">{deptLabel}</span>

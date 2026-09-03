@@ -7,7 +7,7 @@
 #   bash api/seeds/guard-local-only.sh <database-name> <sql-file>
 #
 # 例:
-#   bash api/seeds/guard-local-only.sh open-karte api/seeds/employee.sql
+#   bash api/seeds/guard-local-only.sh bedrock api/seeds/employee.sql
 
 set -euo pipefail
 

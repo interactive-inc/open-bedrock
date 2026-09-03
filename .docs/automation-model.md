@@ -17,7 +17,7 @@ AI 自動化は、目的の委任、変更提案、方針評価、人間承認�
 sequenceDiagram
   actor Human as Human requester
   participant Agent as AI agent
-  participant API as open-karte API
+  participant API as open-bedrock API
   participant Policy as Policy evaluation
   participant Reviewer as Human reviewer
   participant Gateway as Execution gateway

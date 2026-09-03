@@ -20,7 +20,7 @@ export async function EmployeeCertificationsSection(props: Props) {
 
       {props.canViewAll ? (
         <p className="text-sm text-muted-foreground">
-          全社の保有記録は karte certifications records --employee-id で確認できます。
+          全社の保有記録は bedrock certifications records --employee-id で確認できます。
         </p>
       ) : null}
 

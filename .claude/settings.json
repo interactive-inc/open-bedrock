@@ -11,7 +11,7 @@
   },
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "CLAUDE_CODE_TASK_LIST_ID": "open-karte"
+    "CLAUDE_CODE_TASK_LIST_ID": "open-bedrock"
   },
   "hooks": {
     "PostToolUse": [

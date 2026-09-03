@@ -55,7 +55,7 @@ controls:
 - access scope と field policy
 - automated processing と人への影響
 
-法的根拠の最終判断を open-karte が自動生成しない。外部専門家の見解を source、rule version、review date 付き Assessment として記録する。
+法的根拠の最終判断を open-bedrock が自動生成しない。外部専門家の見解を source、rule version、review date 付き Assessment として記録する。
 
 ## 取得と利用
 
@@ -90,7 +90,7 @@ controls:
 
 access、correction、deletion、restriction、objection、portability など、適用法域で必要な request kind を設定する。本人確認、対象 system の探索、例外、decision、期限、回答、実行結果を case として追跡する。
 
-open-karte は法的な応答義務、例外、期限を自動判定しない。法域と専門判断を入力にし、人間の Decision を記録する。
+open-bedrock は法的な応答義務、例外、期限を自動判定しない。法域と専門判断を入力にし、人間の Decision を記録する。
 
 ## Incident
 

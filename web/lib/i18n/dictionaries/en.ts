@@ -3,7 +3,7 @@
  * 現時点は login 画面分のみ登録する。
  */
 export const en: Record<string, string> = {
-  "open-karte にサインイン": "Sign in to open-karte",
+  "open-bedrock にサインイン": "Sign in to open-bedrock",
   "アカウントのメールアドレスとパスワードを入力してください。":
     "Enter your account email address and password.",
   メールアドレス: "Email address",

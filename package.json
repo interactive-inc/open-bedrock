@@ -1,5 +1,5 @@
 {
-  "name": "open-karte",
+  "name": "open-bedrock",
   "private": true,
   "workspaces": [
     "api",

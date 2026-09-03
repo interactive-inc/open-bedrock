@@ -59,7 +59,7 @@ describe("AuditExportForm", () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
     const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit]
-    const parsedUrl = new URL(url, "https://karte.example")
+    const parsedUrl = new URL(url, "https://bedrock.example")
     expect(parsedUrl.searchParams.get("actor_account_id")).toBe("12")
     expect(parsedUrl.searchParams.get("action")).toBe("audit.event.read")
     expect(parsedUrl.searchParams.has("cursor")).toBe(false)
