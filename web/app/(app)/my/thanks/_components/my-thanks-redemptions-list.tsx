@@ -44,17 +44,15 @@ export async function MyThanksRedemptionsList() {
         <TableBody>
           {redemptions.data.map((redemption) => (
             <TableRow key={redemption.id}>
-              <TableCell className="font-medium">
+              <TableCell>
                 {rewardNameById.get(redemption.reward_id) ?? `景品 #${redemption.reward_id}`}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{redemption.point_cost} pt</TableCell>
+              <TableCell>{redemption.point_cost} pt</TableCell>
 
               <TableCell>{statusLabel(redemption.status)}</TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {formatDateTime(redemption.created_at)}
-              </TableCell>
+              <TableCell>{formatDateTime(redemption.created_at)}</TableCell>
             </TableRow>
           ))}
         </TableBody>

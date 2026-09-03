@@ -111,9 +111,7 @@ async function PartnersTable(props: TableProps) {
 
               <TableCell>{partner.name}</TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {partnerCategoryLabel(partner.category)}
-              </TableCell>
+              <TableCell>{partnerCategoryLabel(partner.category)}</TableCell>
 
               <TableCell>
                 <PartnerStatusBadge status={partner.status} />

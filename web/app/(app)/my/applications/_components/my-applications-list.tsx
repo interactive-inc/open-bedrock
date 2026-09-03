@@ -81,13 +81,9 @@ export function MyApplicationsList(props: Props) {
                 />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {application.current_step ?? "-"}
-              </TableCell>
+              <TableCell>{application.current_step ?? "-"}</TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {formatDateTime(application.created_at)}
-              </TableCell>
+              <TableCell>{formatDateTime(application.created_at)}</TableCell>
 
               <TableCell>
                 <ApplicationRowActions application={application} />
@@ -168,7 +164,7 @@ function UpdateApplicationDialog(props: {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>
         {props.resubmit ? "修正して再申請" : "変更"}
       </DialogTrigger>
 

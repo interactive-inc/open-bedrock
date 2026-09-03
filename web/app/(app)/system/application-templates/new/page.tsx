@@ -25,7 +25,7 @@ export default async function NewApplicationTemplatePage() {
         actions={<BackButton href="/system/application-templates" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-2xl">
+      <Card>
         <CardContent>
           <CreateTemplateForm />
         </CardContent>

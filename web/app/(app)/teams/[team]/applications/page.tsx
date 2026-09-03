@@ -60,9 +60,7 @@ export default async function DepartmentApplicationsPage(props: Props) {
             <TableBody>
               {applications.map((application) => (
                 <TableRow key={application.id}>
-                  <TableCell className="font-medium whitespace-nowrap">
-                    {application.applicant_name}
-                  </TableCell>
+                  <TableCell className="whitespace-nowrap">{application.applicant_name}</TableCell>
 
                   <TableCell className="whitespace-nowrap">{application.template_name}</TableCell>
 

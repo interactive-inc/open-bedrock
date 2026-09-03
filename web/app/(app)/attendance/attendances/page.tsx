@@ -33,7 +33,7 @@ export default async function AttendanceAllPage(props: Props) {
       <PageHeader
         title="勤怠一覧（管理者）"
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/my/attendances" />}>
+          <Button variant="secondary" nativeButton={false} render={<Link href="/my/attendances" />}>
             自分の勤怠へ
           </Button>
         }

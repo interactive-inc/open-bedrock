@@ -16,7 +16,7 @@ export default function NewExpensePage() {
         actions={<BackButton href="/my/expenses" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <ExpenseCreateForm />
         </CardContent>

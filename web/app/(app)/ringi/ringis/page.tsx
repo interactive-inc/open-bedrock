@@ -71,7 +71,7 @@ export default async function AdminRingiPage(props: { searchParams: SearchParams
       <PageHeader
         title="稟議管理"
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/inbox/ringis" />}>
+          <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/ringis" />}>
             承認受信箱
           </Button>
         }

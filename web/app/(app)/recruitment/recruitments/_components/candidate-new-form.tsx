@@ -45,7 +45,7 @@ export function CandidateNewForm(props: Props) {
   const pending = action[2]
 
   return (
-    <Card className="gap-0 p-0">
+    <Card className="gap-0">
       <form action={formAction} className="flex flex-col gap-4 p-4">
         <input type="hidden" name="position_id" value={props.positionId} />
 
@@ -77,7 +77,7 @@ export function CandidateNewForm(props: Props) {
 
         {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
-        <Button type="submit" disabled={pending} className="w-fit">
+        <Button type="submit" disabled={pending}>
           {pending ? "追加中..." : "応募者を追加"}
         </Button>
       </form>

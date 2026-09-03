@@ -23,35 +23,39 @@ export function CompanyEmployeeEventFilterForm(props: Props) {
     <form method="get" action="/company/employee-events">
       <FieldSet>
         <FieldGroup className="flex-row flex-wrap items-end gap-4">
-          <Field className="w-full sm:w-56">
-            <FieldLabel htmlFor="company-employee-event-code">従業員コード</FieldLabel>
+          <div className="sm:w-56">
+            <Field className="w-full">
+              <FieldLabel htmlFor="company-employee-event-code">従業員コード</FieldLabel>
 
-            <Input
-              id="company-employee-event-code"
-              name="employee_code"
-              type="text"
-              required
-              defaultValue={props.employeeCode ?? ""}
-              placeholder="E001"
-            />
-          </Field>
+              <Input
+                id="company-employee-event-code"
+                name="employee_code"
+                type="text"
+                required
+                defaultValue={props.employeeCode ?? ""}
+                placeholder="E001"
+              />
+            </Field>
+          </div>
 
-          <Field className="w-full sm:w-40">
-            <FieldLabel htmlFor="company-employee-event-kind">種別</FieldLabel>
+          <div className="sm:w-40">
+            <Field className="w-full">
+              <FieldLabel htmlFor="company-employee-event-kind">種別</FieldLabel>
 
-            <select
-              id="company-employee-event-kind"
-              name="kind"
-              defaultValue={props.kind ?? ""}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-            >
-              {kindOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <select
+                id="company-employee-event-kind"
+                name="kind"
+                defaultValue={props.kind ?? ""}
+                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+              >
+                {kindOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
 
           <Button type="submit">絞り込み</Button>
         </FieldGroup>

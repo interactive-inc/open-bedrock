@@ -63,7 +63,7 @@ export function AssetDisposeForm(props: Props) {
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
 
         <Field orientation="horizontal">
-          <Button type="submit" size="sm" variant="outline" disabled={isPending}>
+          <Button type="submit" size="sm" variant="secondary" disabled={isPending}>
             {isPending ? "廃棄中..." : "廃棄する"}
           </Button>
         </Field>

@@ -59,7 +59,7 @@ export function MyReservationsList(props: Props) {
         <TableBody>
           {props.reservations.map((reservation) => (
             <TableRow key={reservation.id}>
-              <TableCell className="font-medium">
+              <TableCell>
                 {props.roomNameMap[reservation.room_id] ?? `#${reservation.room_id}`}
               </TableCell>
 
@@ -97,7 +97,7 @@ function UpdateReservationDialog(props: { reservation: RoomReservationResponse }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

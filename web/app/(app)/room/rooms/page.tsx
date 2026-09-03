@@ -29,7 +29,7 @@ export default async function RoomsPage(props: Props) {
         title="会議室"
         actions={
           <Button
-            variant="outline"
+            variant="secondary"
             nativeButton={false}
             render={<Link href="/my/room-reservations" />}
           >

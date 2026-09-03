@@ -49,7 +49,7 @@ export default async function PartnerDetailPage(props: Props) {
 
       <PartnerStatusBadge status={partner.status} />
 
-      <Card className="p-0 gap-0">
+      <Card className="gap-0">
         <dl className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-2">
           <DetailField label="取引先コード">{partner.code}</DetailField>
 

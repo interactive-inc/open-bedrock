@@ -28,7 +28,7 @@ export async function PartnerContractsSection(props: Props) {
   }
 
   return (
-    <Card className="p-0 gap-0">
+    <Card className="gap-0">
       <div className="flex flex-col gap-4 p-6">
         <h2 className="text-lg font-semibold">契約記録</h2>
 
@@ -49,19 +49,15 @@ export async function PartnerContractsSection(props: Props) {
               <TableBody>
                 {contracts.map((contract) => (
                   <TableRow key={contract.id}>
-                    <TableCell className="font-medium">{contract.title}</TableCell>
+                    <TableCell>{contract.title}</TableCell>
 
-                    <TableCell className="text-muted-foreground">
-                      {contract.contract_date}
-                    </TableCell>
+                    <TableCell>{contract.contract_date}</TableCell>
 
-                    <TableCell className="text-muted-foreground">
+                    <TableCell>
                       {contract.starts_on ?? "-"} 〜 {contract.ends_on ?? "-"}
                     </TableCell>
 
-                    <TableCell className="text-muted-foreground">
-                      {contract.renewal_deadline ?? "-"}
-                    </TableCell>
+                    <TableCell>{contract.renewal_deadline ?? "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

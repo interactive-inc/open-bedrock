@@ -84,7 +84,7 @@ export function ExpenseAdminTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <Link
                   href={`/expense/expenses?applicant_id=${row.applicant_id}`}
                   className="underline-offset-4 hover:underline"
@@ -94,7 +94,7 @@ export function ExpenseAdminTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {row.applicant_dept_name ?? "—"}
               </TableCell>
 
@@ -102,15 +102,13 @@ export function ExpenseAdminTable(props: Props) {
                 {amountFormatter.format(row.amount)} 円
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
-                {formatDate(row.spent_at)}
-              </TableCell>
+              <TableCell className="hidden md:table-cell">{formatDate(row.spent_at)}</TableCell>
 
               <TableCell>
                 <ExpenseStatusBadge status={row.status} />
               </TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
             </TableRow>

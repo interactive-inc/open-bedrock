@@ -8,11 +8,11 @@ type Props = {
 /** 経費ステータスを日本語ラベルと配色付きの Badge で表示する。 */
 export function ExpenseStatusBadge(props: Props) {
   if (props.status === "approved") {
-    return <Badge className="bg-emerald-600 text-white">承認済み</Badge>
+    return <Badge>承認済み</Badge>
   }
 
   if (props.status === "settled") {
-    return <Badge className="bg-sky-600 text-white">精算済み</Badge>
+    return <Badge>精算済み</Badge>
   }
 
   if (props.status === "rejected") {

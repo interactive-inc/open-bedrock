@@ -7,7 +7,7 @@ type Props = {
 /** 取引先の状態を日本語ラベルと配色付きの Badge で表示する。 */
 export function PartnerStatusBadge(props: Props) {
   if (props.status === "active") {
-    return <Badge className="bg-emerald-600 text-white">取引中</Badge>
+    return <Badge>取引中</Badge>
   }
 
   if (props.status === "archived") {

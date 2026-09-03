@@ -58,9 +58,7 @@ export function MyLifeEventsList(props: Props) {
         <TableBody>
           {props.lifeEvents.map((lifeEvent) => (
             <TableRow key={lifeEvent.id}>
-              <TableCell className="font-medium">
-                {lifeEventTypeLabel(lifeEvent.event_type)}
-              </TableCell>
+              <TableCell>{lifeEventTypeLabel(lifeEvent.event_type)}</TableCell>
 
               <TableCell>{lifeEvent.event_date}</TableCell>
 
@@ -122,7 +120,7 @@ function UpdateLifeEventDialog(props: { lifeEvent: LifeEventResponse; phone: str
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

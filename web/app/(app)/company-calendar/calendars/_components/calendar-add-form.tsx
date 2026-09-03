@@ -41,27 +41,33 @@ export function CalendarAddForm() {
       action={formAction}
       className="flex flex-wrap items-end gap-3 rounded-2xl bg-card border p-4"
     >
-      <Field className="w-44">
-        <FieldLabel htmlFor="calendar-date">日付</FieldLabel>
+      <div className="w-44">
+        <Field>
+          <FieldLabel htmlFor="calendar-date">日付</FieldLabel>
 
-        <Input id="calendar-date" name="calendar_date" type="date" required />
-      </Field>
+          <Input id="calendar-date" name="calendar_date" type="date" required />
+        </Field>
+      </div>
 
-      <Field className="w-40">
-        <FieldLabel htmlFor="calendar-kind">種別</FieldLabel>
+      <div className="w-40">
+        <Field>
+          <FieldLabel htmlFor="calendar-kind">種別</FieldLabel>
 
-        <NativeSelect id="calendar-kind" name="kind" defaultValue="holiday" className="w-40">
-          <NativeSelectOption value="holiday">会社休日</NativeSelectOption>
+          <NativeSelect id="calendar-kind" name="kind" defaultValue="holiday">
+            <NativeSelectOption value="holiday">会社休日</NativeSelectOption>
 
-          <NativeSelectOption value="workday">振替出勤日</NativeSelectOption>
-        </NativeSelect>
-      </Field>
+            <NativeSelectOption value="workday">振替出勤日</NativeSelectOption>
+          </NativeSelect>
+        </Field>
+      </div>
 
-      <Field className="w-56">
-        <FieldLabel htmlFor="calendar-name">名称</FieldLabel>
+      <div className="w-56">
+        <Field>
+          <FieldLabel htmlFor="calendar-name">名称</FieldLabel>
 
-        <Input id="calendar-name" name="name" placeholder="任意（例: 創立記念日）" />
-      </Field>
+          <Input id="calendar-name" name="name" placeholder="任意（例: 創立記念日）" />
+        </Field>
+      </div>
 
       {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
 

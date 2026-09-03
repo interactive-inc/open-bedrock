@@ -148,7 +148,7 @@ export function ReviewCycleList(props: Props) {
                   <form action={closeDispatch}>
                     <input type="hidden" name="cycle_id" value={cycle.id} />
 
-                    <Button type="submit" variant="outline" size="sm" disabled={isClosing}>
+                    <Button type="submit" variant="secondary" size="sm" disabled={isClosing}>
                       終了する
                     </Button>
                   </form>
@@ -156,7 +156,7 @@ export function ReviewCycleList(props: Props) {
 
                 <Dialog>
                   <DialogTrigger
-                    render={<Button type="button" variant="outline" size="sm" data-icon="edit" />}
+                    render={<Button type="button" variant="secondary" size="sm" data-icon="edit" />}
                   >
                     編集
                   </DialogTrigger>

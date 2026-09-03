@@ -41,7 +41,11 @@ export default async function SurveyManagePage() {
         title="サーベイ管理"
         actions={
           <>
-            <Button variant="outline" nativeButton={false} render={<Link href="/survey/surveys" />}>
+            <Button
+              variant="secondary"
+              nativeButton={false}
+              render={<Link href="/survey/surveys" />}
+            >
               サーベイ一覧へ
             </Button>
 
@@ -82,8 +86,8 @@ async function SurveysTable() {
         <TableHeader>
           <TableRow>
             <TableHead>タイトル</TableHead>
-            <TableHead className="w-24">状態</TableHead>
-            <TableHead className="w-24">設問数</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead>設問数</TableHead>
             <TableHead className="text-right">操作</TableHead>
           </TableRow>
         </TableHeader>
@@ -91,7 +95,7 @@ async function SurveysTable() {
         <TableBody>
           {surveys.map((survey) => (
             <TableRow key={survey.id}>
-              <TableCell className="font-medium">{survey.title}</TableCell>
+              <TableCell>{survey.title}</TableCell>
 
               <TableCell>
                 <Badge variant={survey.status === "open" ? "default" : "secondary"}>
@@ -104,7 +108,7 @@ async function SurveysTable() {
               <TableCell>
                 <TableRowActions>
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     nativeButton={false}
                     render={<Link href={`/survey/surveys/${survey.id}/edit`} />}

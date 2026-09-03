@@ -16,7 +16,7 @@ export default function NewFamilyCareLeavePage() {
         actions={<BackButton href="/my/family-care-leaves" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <FamilyCareLeaveCreateForm />
         </CardContent>

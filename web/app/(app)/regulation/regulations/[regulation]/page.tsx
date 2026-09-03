@@ -55,7 +55,7 @@ export default async function RegulationDetailPage(props: Props) {
             : `（v${regulation.latest_version.version} / 施行日 ${regulation.latest_version.effective_on}）`}
         </h2>
 
-        <Card className="p-0 gap-0">
+        <Card className="gap-0">
           <article className="whitespace-pre-wrap p-6 text-sm leading-relaxed">
             {regulation.latest_version === null
               ? "版がありません"
@@ -82,9 +82,9 @@ export default async function RegulationDetailPage(props: Props) {
                 <TableRow key={version.id}>
                   <TableCell>v{version.version}</TableCell>
 
-                  <TableCell className="text-muted-foreground">{version.effective_on}</TableCell>
+                  <TableCell>{version.effective_on}</TableCell>
 
-                  <TableCell className="text-muted-foreground">{version.note ?? "-"}</TableCell>
+                  <TableCell>{version.note ?? "-"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

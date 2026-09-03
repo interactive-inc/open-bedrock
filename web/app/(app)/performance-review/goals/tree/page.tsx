@@ -40,7 +40,7 @@ export default async function GoalTreePage(props: Props) {
         title="目標ツリー"
         actions={
           <Button
-            variant="outline"
+            variant="secondary"
             nativeButton={false}
             render={<Link href="/performance-review/goals" />}
           >

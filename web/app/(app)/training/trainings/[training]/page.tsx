@@ -42,7 +42,7 @@ export default async function TrainingCourseDetailPage(props: Props) {
 
             {canManage ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href={`/training/trainings/${course.code}/edit`} />}
               >

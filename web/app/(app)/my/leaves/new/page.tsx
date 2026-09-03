@@ -16,7 +16,7 @@ export default function NewLeaveRequestPage() {
         actions={<BackButton href="/my/leaves" label="休暇に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <LeaveRequestCreateForm />
         </CardContent>

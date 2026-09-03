@@ -39,7 +39,7 @@ export default async function AttendancePage(props: Props) {
         actions={
           canViewAll ? (
             <Button
-              variant="outline"
+              variant="secondary"
               nativeButton={false}
               render={<Link href="/attendance/attendances" />}
             >
@@ -58,7 +58,7 @@ export default async function AttendancePage(props: Props) {
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">月次サマリ</h2>
 
-        <Suspense key={month ?? ""} fallback={<Skeleton className="h-24 w-full" />}>
+        <Suspense key={month ?? ""} fallback={<Skeleton className="w-full" />}>
           <AttendanceSummaryCard month={month} />
         </Suspense>
       </section>

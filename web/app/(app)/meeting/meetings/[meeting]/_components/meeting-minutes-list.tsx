@@ -27,7 +27,7 @@ export async function MeetingMinutesList(props: Props) {
   return (
     <div className="flex flex-col gap-3">
       {result.data.map((minutes) => (
-        <Card key={minutes.id} className="p-0 gap-0">
+        <Card key={minutes.id} className="gap-0">
           <div className="flex flex-col gap-2 p-4">
             <div className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground">{minutes.held_on}</span>

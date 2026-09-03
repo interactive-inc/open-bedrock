@@ -26,7 +26,7 @@ type Props = {
 export function SettingsDialog(props: Props) {
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>設定</DialogTitle>
 

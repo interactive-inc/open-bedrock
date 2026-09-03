@@ -63,17 +63,15 @@ export async function EmployeeSalaryRevisionHistory(props: Props) {
                   <TableRow key={revision.id}>
                     <TableCell>{revision.effective_date}</TableCell>
 
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                    <TableCell className="text-right tabular-nums">
                       {revision.previous_base_salary.toLocaleString("ja-JP")}円
                     </TableCell>
 
-                    <TableCell className="text-right tabular-nums font-medium">
+                    <TableCell className="text-right tabular-nums">
                       {revision.new_base_salary.toLocaleString("ja-JP")}円
                     </TableCell>
 
-                    <TableCell className="text-muted-foreground">
-                      {revision.reason ?? "-"}
-                    </TableCell>
+                    <TableCell>{revision.reason ?? "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

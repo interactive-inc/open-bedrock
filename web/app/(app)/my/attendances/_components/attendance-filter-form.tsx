@@ -27,7 +27,6 @@ export function AttendanceFilterForm(props: Props) {
             inputMode="numeric"
             placeholder="全員"
             defaultValue={props.employeeId ?? ""}
-            className="w-40"
           />
         </div>
       ) : null}
@@ -35,28 +34,16 @@ export function AttendanceFilterForm(props: Props) {
       <div className="flex flex-col gap-2">
         <Label htmlFor="filter-from">開始日</Label>
 
-        <Input
-          id="filter-from"
-          name="from"
-          type="date"
-          defaultValue={props.from ?? ""}
-          className="w-44"
-        />
+        <Input id="filter-from" name="from" type="date" defaultValue={props.from ?? ""} />
       </div>
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="filter-to">終了日</Label>
 
-        <Input
-          id="filter-to"
-          name="to"
-          type="date"
-          defaultValue={props.to ?? ""}
-          className="w-44"
-        />
+        <Input id="filter-to" name="to" type="date" defaultValue={props.to ?? ""} />
       </div>
 
-      <Button type="submit" variant="outline">
+      <Button type="submit" variant="secondary">
         絞り込む
       </Button>
     </form>

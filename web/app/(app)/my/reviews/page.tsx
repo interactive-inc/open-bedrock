@@ -31,7 +31,7 @@ export default async function ReviewPage() {
         actions={
           canAdminister ? (
             <Button
-              variant="outline"
+              variant="secondary"
               nativeButton={false}
               render={<Link href="/performance-review/review-cycles" />}
             >

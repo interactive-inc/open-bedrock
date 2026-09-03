@@ -60,7 +60,7 @@ export default async function EditSurveyPage(props: Props) {
         actions={<BackButton href="/survey/surveys/manage" label="管理に戻る" />}
       />
 
-      <Card className="max-w-2xl">
+      <Card>
         <CardContent>
           <SurveyEditForm
             id={survey.id}
@@ -71,7 +71,7 @@ export default async function EditSurveyPage(props: Props) {
         </CardContent>
       </Card>
 
-      <Card className="max-w-2xl">
+      <Card>
         <CardContent className="flex flex-col gap-3">
           <p className="text-sm text-muted-foreground">
             アンケートを削除すると回答もまとめて消えます。

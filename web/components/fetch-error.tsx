@@ -66,7 +66,7 @@ export function FetchError(props: Props) {
       {config.hint !== null ? <p className="text-xs text-muted-foreground">{config.hint}</p> : null}
 
       {variant !== "permission" ? (
-        <Button variant="outline" size="sm" onClick={() => router.refresh()}>
+        <Button variant="secondary" size="sm" onClick={() => router.refresh()}>
           <RefreshCw className="mr-2 size-4" />
           再読み込み
         </Button>

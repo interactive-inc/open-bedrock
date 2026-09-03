@@ -38,7 +38,7 @@ export function CompleteEnrollmentButton(props: Props) {
     <form action={dispatch}>
       <input type="hidden" name="enrollment_id" value={props.enrollmentId} />
 
-      <Button type="submit" size="sm" variant="outline" disabled={isPending}>
+      <Button type="submit" size="sm" variant="secondary" disabled={isPending}>
         {isPending ? "処理中..." : "受講を完了する"}
       </Button>
     </form>

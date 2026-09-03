@@ -60,7 +60,7 @@ export default async function LeaveInboxPage(props: { searchParams: SearchParams
       <SubPageHeader
         title="承認待ちの休暇"
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/my/leaves" />}>
+          <Button variant="secondary" nativeButton={false} render={<Link href="/my/leaves" />}>
             休暇へ戻る
           </Button>
         }
@@ -118,23 +118,19 @@ async function LeaveInboxTable(props: { offset: number; pageSize: number; sort: 
           <TableBody>
             {result.data.map((leaveRequest) => (
               <TableRow key={leaveRequest.id}>
-                <TableCell className="font-medium">{leaveRequest.applicant_name}</TableCell>
+                <TableCell>{leaveRequest.applicant_name}</TableCell>
 
-                <TableCell className="text-muted-foreground">
+                <TableCell>
                   <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
                 </TableCell>
 
-                <TableCell className="hidden text-muted-foreground md:table-cell">
+                <TableCell className="hidden md:table-cell">
                   {leaveRequest.start_date} 〜 {leaveRequest.end_date}
                 </TableCell>
 
-                <TableCell className="hidden text-muted-foreground sm:table-cell">
-                  {leaveRequest.days} 日
-                </TableCell>
+                <TableCell className="hidden sm:table-cell">{leaveRequest.days} 日</TableCell>
 
-                <TableCell className="hidden text-muted-foreground lg:table-cell">
-                  {leaveRequest.reason ?? "-"}
-                </TableCell>
+                <TableCell className="hidden lg:table-cell">{leaveRequest.reason ?? "-"}</TableCell>
 
                 <TableCell>
                   <LeaveStatusBadge status={leaveRequest.status} />

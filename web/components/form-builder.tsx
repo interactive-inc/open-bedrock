@@ -204,7 +204,7 @@ export function FormBuilder(props: Props) {
       ))}
 
       {schema.fields.length > 0 ? (
-        <Button type="button" variant="outline" onClick={addField}>
+        <Button type="button" variant="secondary" onClick={addField}>
           <Plus />
           項目を追加
         </Button>

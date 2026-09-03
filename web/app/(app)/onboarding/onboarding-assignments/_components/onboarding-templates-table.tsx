@@ -42,9 +42,9 @@ export async function OnboardingTemplatesTable() {
         <TableBody>
           {templates.map((template) => (
             <TableRow key={template.code}>
-              <TableCell className="font-mono text-xs">{template.code}</TableCell>
+              <TableCell>{template.code}</TableCell>
 
-              <TableCell className="font-medium">{template.name}</TableCell>
+              <TableCell>{template.name}</TableCell>
 
               <TableCell>
                 <Badge variant={template.kind === "join" ? "default" : "secondary"}>
@@ -52,7 +52,7 @@ export async function OnboardingTemplatesTable() {
                 </Badge>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{template.description ?? "—"}</TableCell>
+              <TableCell>{template.description ?? "—"}</TableCell>
 
               <TableCell className="text-right">{template.task_count}</TableCell>
 

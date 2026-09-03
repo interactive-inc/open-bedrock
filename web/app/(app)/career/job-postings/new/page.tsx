@@ -25,7 +25,7 @@ export default async function NewCareerPostingPage() {
         actions={<BackButton href="/career/job-postings" label="公募一覧に戻る" />}
       />
 
-      <Card className="p-0 gap-0">
+      <Card className="gap-0">
         <div className="p-6">
           <CreatePostingForm />
         </div>

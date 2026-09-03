@@ -46,7 +46,7 @@ export function ResetPasswordButton(props: Props) {
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button variant="outline" size="sm" disabled={isPending} />}>
+      <AlertDialogTrigger render={<Button variant="secondary" size="sm" disabled={isPending} />}>
         PW再設定
       </AlertDialogTrigger>
 

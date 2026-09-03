@@ -79,13 +79,11 @@ async function HoldingsTable() {
                 <span className="text-muted-foreground"> ({holding.asset_code})</span>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <AssetKindLabel kind={holding.kind} />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {holding.lent_at === null ? "-" : holding.lent_at.slice(0, 10)}
-              </TableCell>
+              <TableCell>{holding.lent_at === null ? "-" : holding.lent_at.slice(0, 10)}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -16,7 +16,7 @@ export default function NewResignationPage() {
         actions={<BackButton href="/my/resignations" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <ResignationCreateForm />
         </CardContent>

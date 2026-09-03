@@ -33,13 +33,21 @@ export default async function LeavePage() {
         actions={
           <>
             {canViewAll ? (
-              <Button variant="outline" nativeButton={false} render={<Link href="/leave/leaves" />}>
+              <Button
+                variant="secondary"
+                nativeButton={false}
+                render={<Link href="/leave/leaves" />}
+              >
                 休暇申請管理
               </Button>
             ) : null}
 
             {canApprove ? (
-              <Button variant="outline" nativeButton={false} render={<Link href="/inbox/leaves" />}>
+              <Button
+                variant="secondary"
+                nativeButton={false}
+                render={<Link href="/inbox/leaves" />}
+              >
                 <Inbox />
                 承認受信箱
               </Button>
@@ -76,7 +84,7 @@ function LeaveBalanceSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {leaveBalanceSkeletonPlaceholders.map((index) => (
-        <Skeleton key={index} className="h-28 w-full" />
+        <Skeleton key={index} className="w-full" />
       ))}
     </div>
   )

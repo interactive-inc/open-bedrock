@@ -61,7 +61,7 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
         actions={
           <>
             <Button
-              variant="outline"
+              variant="secondary"
               nativeButton={false}
               render={<Link href="/teams/approval-delegations" />}
             >
@@ -69,7 +69,7 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
             </Button>
             {canViewAll ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/system/applications" />}
               >
@@ -78,7 +78,7 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
             ) : null}
 
             <Button
-              variant="outline"
+              variant="secondary"
               nativeButton={false}
               render={<Link href="/my/applications" />}
             >
@@ -143,15 +143,13 @@ async function InboxTable(props: { offset: number; pageSize: number; sort: Appli
                   </Link>
                 </TableCell>
 
-                <TableCell className="text-muted-foreground">
-                  {application.applicant_name}
-                </TableCell>
+                <TableCell>{application.applicant_name}</TableCell>
 
                 <TableCell>
                   <ApplicationStatusBadge status={application.status} />
                 </TableCell>
 
-                <TableCell className="hidden text-muted-foreground md:table-cell">
+                <TableCell className="hidden md:table-cell">
                   {formatDateTime(application.created_at)}
                 </TableCell>
 

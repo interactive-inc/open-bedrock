@@ -39,12 +39,16 @@ export default async function MyRingiPage() {
         actions={
           <>
             {canViewAll ? (
-              <Button variant="outline" nativeButton={false} render={<Link href="/ringi/ringis" />}>
+              <Button
+                variant="secondary"
+                nativeButton={false}
+                render={<Link href="/ringi/ringis" />}
+              >
                 稟議管理
               </Button>
             ) : null}
 
-            <Button variant="outline" nativeButton={false} render={<Link href="/inbox/ringis" />}>
+            <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/ringis" />}>
               <Inbox />
               承認受信箱
             </Button>
@@ -96,9 +100,9 @@ async function MyRingiTable() {
         <TableBody>
           {ringiList.map((ringi) => (
             <TableRow key={ringi.id}>
-              <TableCell className="font-medium">{ringi.title}</TableCell>
+              <TableCell>{ringi.title}</TableCell>
 
-              <TableCell className="text-muted-foreground">{ringi.approver_name}</TableCell>
+              <TableCell>{ringi.approver_name}</TableCell>
 
               <TableCell className="tabular-nums">
                 {amountFormatter.format(ringi.amount)} 円

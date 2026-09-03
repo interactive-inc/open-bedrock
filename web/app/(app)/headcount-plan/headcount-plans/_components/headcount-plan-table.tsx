@@ -69,7 +69,7 @@ export async function HeadcountPlanTable(props: Props) {
                   <GapBadge gap={gap} />
                 </TableCell>
 
-                <TableCell className="text-muted-foreground">{plan.note ?? ""}</TableCell>
+                <TableCell>{plan.note ?? ""}</TableCell>
               </TableRow>
             )
           })}

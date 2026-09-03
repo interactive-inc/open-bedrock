@@ -131,7 +131,6 @@ export function QuestionBuilder(props: Props) {
                 <NativeSelect
                   value={question.type}
                   onChange={(e) => updateType(index, toQuestionType(e.target.value))}
-                  className="w-32"
                 >
                   {(Object.keys(TYPE_LABELS) as ReadonlyArray<QuestionType>).map((key) => (
                     <NativeSelectOption key={key} value={key}>
@@ -156,14 +155,13 @@ export function QuestionBuilder(props: Props) {
                   value={question.options.join(", ")}
                   onChange={(e) => updateOptions(index, e.target.value)}
                   placeholder="選択肢をカンマ区切りで入力（例: 月1回, 月2回, 週1回）"
-                  className="text-sm"
                 />
               ) : null}
             </div>
           </ReorderableItem>
         ))}
 
-        <Button type="button" variant="outline" onClick={addQuestion} className="self-start">
+        <Button type="button" variant="secondary" onClick={addQuestion} className="self-start">
           + 設問を追加
         </Button>
       </div>

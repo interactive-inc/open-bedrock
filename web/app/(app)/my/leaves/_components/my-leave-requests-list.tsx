@@ -58,23 +58,21 @@ export function MyLeaveRequestsList(props: Props) {
         <TableBody>
           {props.leaveRequests.map((leaveRequest) => (
             <TableRow key={leaveRequest.id}>
-              <TableCell className="font-medium">
+              <TableCell>
                 <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {leaveRequest.start_date} 〜 {leaveRequest.end_date}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{leaveRequest.days} 日</TableCell>
+              <TableCell>{leaveRequest.days} 日</TableCell>
 
               <TableCell>
                 <LeaveStatusBadge status={leaveRequest.status} />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {formatDateTime(leaveRequest.created_at)}
-              </TableCell>
+              <TableCell>{formatDateTime(leaveRequest.created_at)}</TableCell>
 
               <TableCell>
                 <TableRowActions>
@@ -123,7 +121,7 @@ function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineRespons
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

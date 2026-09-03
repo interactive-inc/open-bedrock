@@ -79,7 +79,7 @@ export function PersonnelActionForm(props: {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button size="sm" />}>人事変更</DialogTrigger>
-      <DialogContent className="max-h-[90dvh] overscroll-contain overflow-y-auto sm:max-w-xl">
+      <DialogContent className="max-h-[90dvh] overscroll-contain overflow-y-auto">
         <DialogHeader>
           <DialogTitle>人事変更</DialogTitle>
           <DialogDescription>有効日付きの発令として、申請または直接確定します。</DialogDescription>

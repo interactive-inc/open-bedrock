@@ -22,7 +22,7 @@ export default async function NewRoomPage() {
         actions={<BackButton href="/room/rooms/manage" label="マスタに戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <RoomCreateForm />
         </CardContent>

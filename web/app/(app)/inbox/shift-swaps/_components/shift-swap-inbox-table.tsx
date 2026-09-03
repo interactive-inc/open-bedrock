@@ -41,7 +41,7 @@ export function ShiftSwapInboxTable(props: {
         <TableBody>
           {props.requests.map((request) => (
             <TableRow key={request.id}>
-              <TableCell className="font-medium">{request.date}</TableCell>
+              <TableCell>{request.date}</TableCell>
               <TableCell>{request.requester_employee_code}</TableCell>
               <TableCell>{request.target_employee_code}</TableCell>
               <TableCell>{request.note ?? "-"}</TableCell>

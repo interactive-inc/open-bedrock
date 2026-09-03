@@ -65,7 +65,7 @@ export function DocumentRegisterForm() {
 
       {state.ok ? <p className="text-sm text-muted-foreground">文書を登録しました</p> : null}
 
-      <Button type="submit" disabled={pending} className="w-fit">
+      <Button type="submit" disabled={pending}>
         {pending ? "登録中..." : "文書を登録"}
       </Button>
     </form>

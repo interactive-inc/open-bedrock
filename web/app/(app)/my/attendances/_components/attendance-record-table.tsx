@@ -52,7 +52,7 @@ export function AttendanceRecordTable(props: Props) {
         <TableBody>
           {props.records.map((record) => (
             <TableRow key={record.id}>
-              <TableCell className="font-medium">{record.work_date}</TableCell>
+              <TableCell>{record.work_date}</TableCell>
 
               {props.withEmployeeId ? <TableCell>#{record.employee_id}</TableCell> : null}
 

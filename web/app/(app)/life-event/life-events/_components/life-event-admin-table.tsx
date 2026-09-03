@@ -57,7 +57,7 @@ export function LifeEventAdminTable(props: Props) {
                 <span className="font-medium">{lifeEventTypeLabel(row.event_type)}</span>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <Link
                   href={`/life-event/life-events?employee_id=${row.employee_id}`}
                   className="underline-offset-4 hover:underline"
@@ -67,15 +67,13 @@ export function LifeEventAdminTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{row.event_date}</TableCell>
+              <TableCell>{row.event_date}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.detail ?? "—"}
-              </TableCell>
+              <TableCell className="hidden md:table-cell">{row.detail ?? "—"}</TableCell>
 
               <TableCell>{statusLabel(row.status)}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
 

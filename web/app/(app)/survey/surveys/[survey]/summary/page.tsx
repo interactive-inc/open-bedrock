@@ -42,7 +42,7 @@ export default async function SurveySummaryPage(props: Props) {
         title={summary.title}
         actions={
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             nativeButton={false}
             render={<Link href={`/survey/surveys/${summary.survey_id}`} />}

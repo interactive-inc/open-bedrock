@@ -82,7 +82,7 @@ function Section(props: SectionProps) {
     <div className="flex flex-col gap-2">
       <h2 className="text-lg font-medium">{props.title}</h2>
 
-      <Card className="p-0 gap-0">
+      <Card className="gap-0">
         <p className="whitespace-pre-wrap p-4 text-sm leading-relaxed">{props.body}</p>
       </Card>
     </div>

@@ -64,7 +64,7 @@ export default async function AdminResignationsPage(props: { searchParams: Searc
         title="退職手続き管理"
         actions={
           <Button
-            variant="outline"
+            variant="secondary"
             nativeButton={false}
             render={<Link href="/resignation/resignations" />}
           >

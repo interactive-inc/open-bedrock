@@ -43,12 +43,12 @@ export default async function EmployeeDetailPage(props: Props) {
         <EmployeeDetail code={params.employee} permissions={currentUser.permissions} />
       </Suspense>
 
-      <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+      <Suspense fallback={<Skeleton className="w-full" />}>
         <EmployeeGradeHistory code={params.employee} />
       </Suspense>
 
       {canViewAllSalaryRevisions(currentUser.permissions) ? (
-        <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+        <Suspense fallback={<Skeleton className="w-full" />}>
           <EmployeeSalaryRevisionHistory
             code={params.employee}
             canManage={canManageSalaryRevisions(currentUser.permissions)}
@@ -56,11 +56,11 @@ export default async function EmployeeDetailPage(props: Props) {
         </Suspense>
       ) : null}
 
-      <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+      <Suspense fallback={<Skeleton className="w-full" />}>
         <EmployeeWorkStyleHistory code={params.employee} />
       </Suspense>
 
-      <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+      <Suspense fallback={<Skeleton className="w-full" />}>
         <EmployeeEventHistory
           code={params.employee}
           canManage={canManageEmployeeEvents(currentUser.permissions)}

@@ -56,15 +56,15 @@ export default async function HomePage() {
       <PageHeader title={profile === null ? "マイページ" : profile.name} />
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Suspense fallback={<Skeleton className="h-28 w-full" />}>
+        <Suspense fallback={<Skeleton className="w-full" />}>
           <TodayAttendanceCard />
         </Suspense>
 
-        <Suspense fallback={<Skeleton className="h-28 w-full" />}>
+        <Suspense fallback={<Skeleton className="w-full" />}>
           <LeaveBalanceCard />
         </Suspense>
 
-        <Suspense fallback={<Skeleton className="h-28 w-full" />}>
+        <Suspense fallback={<Skeleton className="w-full" />}>
           <RecentApplicationsCard />
         </Suspense>
       </section>
@@ -109,7 +109,7 @@ function DashboardSummarySkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {placeholders.map((index) => (
-        <Skeleton key={index} className="h-28 w-full" />
+        <Skeleton key={index} className="w-full" />
       ))}
     </div>
   )
@@ -129,7 +129,7 @@ async function TodayAttendanceCard() {
         <div className="flex items-center gap-2">
           <TimerReset className="size-4 text-muted-foreground" />
 
-          <CardTitle className="text-sm">今日の勤怠</CardTitle>
+          <CardTitle>今日の勤怠</CardTitle>
         </div>
 
         {record === null ? (
@@ -162,7 +162,7 @@ async function LeaveBalanceCard() {
         <div className="flex items-center gap-2">
           <CalendarOff className="size-4 text-muted-foreground" />
 
-          <CardTitle className="text-sm">休暇残</CardTitle>
+          <CardTitle>休暇残</CardTitle>
         </div>
 
         {annual === null ? (
@@ -191,7 +191,7 @@ async function RecentApplicationsCard() {
         <div className="flex items-center gap-2">
           <FileText className="size-4 text-muted-foreground" />
 
-          <CardTitle className="text-sm">直近の申請</CardTitle>
+          <CardTitle>直近の申請</CardTitle>
         </div>
 
         {applications.length === 0 ? (

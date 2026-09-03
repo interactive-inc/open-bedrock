@@ -23,46 +23,52 @@ export function EmployeeSearchForm(props: Props) {
     <form method="get" action="/company/employees">
       <FieldSet>
         <FieldGroup className="flex-row flex-wrap items-end gap-4">
-          <Field className="w-full sm:w-64">
-            <FieldLabel htmlFor="employee-search-q">キーワード</FieldLabel>
+          <div className="sm:w-64">
+            <Field className="w-full">
+              <FieldLabel htmlFor="employee-search-q">キーワード</FieldLabel>
 
-            <Input
-              id="employee-search-q"
-              name="q"
-              type="search"
-              defaultValue={props.filter.q ?? ""}
-              placeholder="氏名・メールなど"
-            />
-          </Field>
+              <Input
+                id="employee-search-q"
+                name="q"
+                type="search"
+                defaultValue={props.filter.q ?? ""}
+                placeholder="氏名・メールなど"
+              />
+            </Field>
+          </div>
 
-          <Field className="w-full sm:w-48">
-            <FieldLabel htmlFor="employee-search-dept">部署</FieldLabel>
+          <div className="sm:w-48">
+            <Field className="w-full">
+              <FieldLabel htmlFor="employee-search-dept">部署</FieldLabel>
 
-            <Input
-              id="employee-search-dept"
-              name="dept"
-              type="text"
-              defaultValue={props.filter.dept ?? ""}
-              placeholder="部署名"
-            />
-          </Field>
+              <Input
+                id="employee-search-dept"
+                name="dept"
+                type="text"
+                defaultValue={props.filter.dept ?? ""}
+                placeholder="部署名"
+              />
+            </Field>
+          </div>
 
-          <Field className="w-full sm:w-40">
-            <FieldLabel htmlFor="employee-search-status">在籍状況</FieldLabel>
+          <div className="sm:w-40">
+            <Field className="w-full">
+              <FieldLabel htmlFor="employee-search-status">在籍状況</FieldLabel>
 
-            <select
-              id="employee-search-status"
-              name="status"
-              defaultValue={props.filter.status ?? ""}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-            >
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <select
+                id="employee-search-status"
+                name="status"
+                defaultValue={props.filter.status ?? ""}
+                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
 
           <Button type="submit">絞り込み</Button>
         </FieldGroup>

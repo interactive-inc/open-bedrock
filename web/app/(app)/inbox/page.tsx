@@ -51,7 +51,7 @@ export default async function InboxPage() {
               className="flex min-h-24 flex-col justify-between gap-2"
             >
               <div className="flex items-start justify-between gap-2">
-                <CardTitle className="text-base">{card.inboxType.label}</CardTitle>
+                <CardTitle>{card.inboxType.label}</CardTitle>
 
                 {card.count !== null ? (
                   <span className="text-2xl font-semibold tabular-nums">{card.count}</span>

@@ -41,7 +41,7 @@ export function CommendationNewForm() {
   const pending = action[2]
 
   return (
-    <Card className="gap-0 p-0">
+    <Card className="gap-0">
       <form action={formAction} className="flex flex-col gap-4 p-4">
         <FieldGroup>
           <Field>
@@ -71,7 +71,7 @@ export function CommendationNewForm() {
 
         {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
-        <Button type="submit" disabled={pending} className="w-fit">
+        <Button type="submit" disabled={pending}>
           {pending ? "記録中..." : "表彰を記録"}
         </Button>
       </form>

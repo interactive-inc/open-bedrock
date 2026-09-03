@@ -8,7 +8,7 @@ type Props = {
 /** 休暇申請ステータスを日本語ラベルと配色付きの Badge で表示する。 */
 export function LeaveStatusBadge(props: Props) {
   if (props.status === "approved") {
-    return <Badge className="bg-emerald-600 text-white">承認済み</Badge>
+    return <Badge>承認済み</Badge>
   }
 
   if (props.status === "rejected") {

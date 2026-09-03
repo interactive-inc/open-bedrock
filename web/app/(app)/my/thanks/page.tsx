@@ -20,7 +20,11 @@ export default function MyThanksPage() {
         title="サンクス履歴"
         actions={
           <>
-            <Button variant="outline" nativeButton={false} render={<Link href="/thanks/rewards" />}>
+            <Button
+              variant="secondary"
+              nativeButton={false}
+              render={<Link href="/thanks/rewards" />}
+            >
               <Gift />
               景品を見る
             </Button>

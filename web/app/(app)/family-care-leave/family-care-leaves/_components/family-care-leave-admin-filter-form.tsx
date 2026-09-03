@@ -23,42 +23,46 @@ export function FamilyCareLeaveAdminFilterForm(props: Props) {
     <form method="get" action="/family-care-leave/family-care-leaves">
       <FieldSet>
         <FieldGroup className="flex-row flex-wrap items-end gap-4">
-          <Field className="w-full sm:w-40">
-            <FieldLabel htmlFor="family-care-leave-admin-status">ステータス</FieldLabel>
+          <div className="sm:w-40">
+            <Field className="w-full">
+              <FieldLabel htmlFor="family-care-leave-admin-status">ステータス</FieldLabel>
 
-            <select
-              id="family-care-leave-admin-status"
-              name="status"
-              defaultValue={props.statusValue}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-            >
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <select
+                id="family-care-leave-admin-status"
+                name="status"
+                defaultValue={props.statusValue}
+                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
 
-          <Field className="w-full sm:w-40">
-            <FieldLabel htmlFor="family-care-leave-admin-employee">従業員 ID</FieldLabel>
+          <div className="sm:w-40">
+            <Field className="w-full">
+              <FieldLabel htmlFor="family-care-leave-admin-employee">従業員 ID</FieldLabel>
 
-            <Input
-              id="family-care-leave-admin-employee"
-              name="employee_id"
-              type="text"
-              inputMode="numeric"
-              defaultValue={props.employeeIdValue}
-              placeholder="例: 5"
-            />
-          </Field>
+              <Input
+                id="family-care-leave-admin-employee"
+                name="employee_id"
+                type="text"
+                inputMode="numeric"
+                defaultValue={props.employeeIdValue}
+                placeholder="例: 5"
+              />
+            </Field>
+          </div>
 
           <div className="flex items-end gap-2">
             <Button type="submit">絞り込み</Button>
 
             {hasActiveFilter ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/family-care-leave/family-care-leaves" />}
               >

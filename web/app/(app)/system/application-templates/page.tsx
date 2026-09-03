@@ -34,7 +34,7 @@ export default async function ApplicationTemplatesPage() {
         actions={
           <>
             <Button
-              variant="outline"
+              variant="secondary"
               nativeButton={false}
               render={<Link href="/my/applications" />}
             >
@@ -75,7 +75,7 @@ async function TemplatesGrid() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {templates.map((template) => (
-        <Card key={template.code} className="p-0 gap-0">
+        <Card key={template.code} className="gap-0">
           <Link
             href={`/system/application-templates/${template.code}`}
             className="flex flex-col gap-3 p-4"
@@ -100,7 +100,7 @@ function TemplatesSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {templateSkeletonPlaceholders.map((index) => (
-        <Skeleton key={index} className="h-32 w-full" />
+        <Skeleton key={index} className="w-full" />
       ))}
     </div>
   )

@@ -38,15 +38,13 @@ export async function MyThanksSentList() {
         <TableBody>
           {myThanks.data.map((thanksItem) => (
             <TableRow key={thanksItem.id}>
-              <TableCell className="font-medium">{thanksItem.recipient_name}</TableCell>
+              <TableCell>{thanksItem.recipient_name}</TableCell>
 
-              <TableCell className="text-muted-foreground">{thanksItem.message}</TableCell>
+              <TableCell>{thanksItem.message}</TableCell>
 
-              <TableCell className="text-muted-foreground">{thanksItem.points} pt</TableCell>
+              <TableCell>{thanksItem.points} pt</TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {formatDateTime(thanksItem.created_at)}
-              </TableCell>
+              <TableCell>{formatDateTime(thanksItem.created_at)}</TableCell>
             </TableRow>
           ))}
         </TableBody>

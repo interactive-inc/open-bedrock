@@ -100,7 +100,7 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
           <>
             {canRepairWorkflows ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/system/workflow-repairs" />}
               >
@@ -108,7 +108,7 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
               </Button>
             ) : null}
             <Button
-              variant="outline"
+              variant="secondary"
               nativeButton={false}
               render={<Link href="/inbox/applications" />}
             >
