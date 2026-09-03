@@ -54,7 +54,7 @@ export class UpdateOrganizationUnit {
       officialName: input.officialName,
       parentCode: input.parentCode,
     })
-    const completed = await this.c.repository.findCompleted(operationId, requestFingerprint)
+    const completed = await this.c.repository.find({ operationId, requestFingerprint })
     if (completed instanceof CompanyOperationError) return completed
     if (completed !== null) {
       return {

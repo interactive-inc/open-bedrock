@@ -48,7 +48,7 @@ export class CreateCompanyGovernanceAuthorityResolution {
       criteria: ReadonlyArray<CompanyGovernanceAuthorityCriterion>
     }>,
   ): Promise<Result> {
-    const read = await this.c.repository.read({
+    const read = await this.c.repository.findMany({
       organizationId: input.organizationId,
       types: CreateCompanyGovernanceAuthorityResolution.authorityResourceTypes,
       effectiveOn: input.asOf,

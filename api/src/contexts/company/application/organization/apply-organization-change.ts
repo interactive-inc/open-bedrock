@@ -63,7 +63,10 @@ export class ApplyOrganizationChange {
 
     let current
     try {
-      current = await this.c.repository.read({ organizationId, types: organizationResourceTypes })
+      current = await this.c.repository.findMany({
+        organizationId,
+        types: organizationResourceTypes,
+      })
     } catch (cause) {
       return { kind: "unavailable", cause }
     }

@@ -12,7 +12,7 @@ export class GradeRepository {
     Object.freeze(this)
   }
 
-  async findAll(input: {
+  async findMany(input: {
     limit: number
     offset: number
   }): Promise<ReadonlyArray<GradeEntity> | Error> {
@@ -37,7 +37,7 @@ export class GradeRepository {
     }
   }
 
-  async findById(id: number): Promise<GradeEntity | null | Error> {
+  async find(id: number): Promise<GradeEntity | null | Error> {
     try {
       const row = (
         await this.c.var.database.select().from(grades).where(eq(grades.id, id)).limit(1)

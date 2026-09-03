@@ -10,10 +10,10 @@ export class UpdateCompanyAccountProfile {
   }
 
   async execute(organizationId: string, accountId: string, displayName: string, now: Date) {
-    const current: CompanyAccountProfileEntity | null | Error = await this.c.find(
+    const current: CompanyAccountProfileEntity | null | Error = await this.c.find({
       organizationId,
       accountId,
-    )
+    })
     if (current instanceof Error || current === null) return current
 
     const updated = current.rename(displayName, now)

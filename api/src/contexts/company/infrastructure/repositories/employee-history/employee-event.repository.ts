@@ -12,7 +12,7 @@ export class EmployeeEventRepository {
     Object.freeze(this)
   }
 
-  async findByEmployeeId(input: {
+  async findMany(input: {
     employeeId: EmployeeId
     kind: string | null
     limit: number

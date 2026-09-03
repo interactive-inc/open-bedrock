@@ -61,7 +61,7 @@ export const GET = factory.createHandlers(
       var: { database: context.var.database, auditContext: context.var.auditContext },
     })
     const [grades, total] = await Promise.all([
-      repository.findByEmployeeId({
+      repository.findMany({
         employeeId: employee.id,
         limit: query.limit,
         offset: query.offset,

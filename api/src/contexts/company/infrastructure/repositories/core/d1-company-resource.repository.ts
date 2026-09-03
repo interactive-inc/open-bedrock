@@ -34,7 +34,7 @@ export type CompanyResourceWriteResult =
   | Readonly<{ kind: "unavailable"; cause: unknown }>
 
 export type CompanyResourceRepository = Readonly<{
-  read: (query: CompanyResourceQuery) => Promise<CompanyResourceReadResult>
+  findMany: (query: CompanyResourceQuery) => Promise<CompanyResourceReadResult>
   write: (change: CompanyResourceChangeEntity) => Promise<CompanyResourceWriteResult>
 }>
 
@@ -98,7 +98,7 @@ type Context = D1CompanyResourceRepositoryContext
 export class D1CompanyResourceRepository implements CompanyResourceRepository {
   constructor(private readonly c: Context) {}
 
-  async read(query: CompanyResourceQuery): Promise<CompanyResourceReadResult> {
+  async findMany(query: CompanyResourceQuery): Promise<CompanyResourceReadResult> {
     if (query.types.length < 1 || query.types.length > 100 || (query.ids?.length ?? 0) > 100) {
       return { ok: false, cause: new Error("Invalid Company resource query") }
     }

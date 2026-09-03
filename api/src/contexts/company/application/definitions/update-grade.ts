@@ -22,7 +22,7 @@ export class UpdateGrade {
     details: Pick<ReturnType<GradeEntity["toProps"]>, "code" | "name" | "rank" | "description">
   }): Promise<GradeEntity | CompanyOperationError> {
     if (!this.c.actor.hasPermission("master:org:write")) return new CompanyForbiddenError()
-    const current = await this.c.repository.findById(input.id)
+    const current = await this.c.repository.find(input.id)
     if (current instanceof Error) {
       return new CompanyUnexpectedError("failed to find Company grade", { cause: current })
     }

@@ -13,7 +13,7 @@ export class EmployeeGradeRepository {
     Object.freeze(this)
   }
 
-  async findByEmployeeId(input: {
+  async findMany(input: {
     employeeId: EmployeeId
     limit: number
     offset: number

@@ -40,7 +40,10 @@ describe("Company Account Profile", () => {
     `)
     const repository = new D1CompanyAccountProfileRepository(database)
 
-    const before = await repository.find("organization:default", "account-1")
+    const before = await repository.find({
+      organizationId: "organization:default",
+      accountId: "account-1",
+    })
     expect(before).not.toBeNull()
     expect(before).not.toBeInstanceOf(Error)
     if (before === null || before instanceof Error) return

@@ -18,7 +18,7 @@ export class UpdateEmployeePhone {
 
   async execute(phone: string | null): Promise<EmployeeEntity | CompanyOperationError> {
     if (this.c.actor.employeeId === null) return new CompanyForbiddenError()
-    const current = await this.c.repository.findById(this.c.actor.employeeId)
+    const current = await this.c.repository.find({ id: this.c.actor.employeeId })
     if (current instanceof Error) {
       return new CompanyUnexpectedError("failed to find Company employee", { cause: current })
     }

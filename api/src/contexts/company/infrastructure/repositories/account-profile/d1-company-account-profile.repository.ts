@@ -1,9 +1,13 @@
 import { CompanyAccountProfileEntity } from "@/contexts/company/domain/entities/company-account-profile.entity"
 
+export type FindCompanyAccountProfileProps = Readonly<{
+  organizationId: string
+  accountId: string
+}>
+
 export type CompanyAccountProfileRepository = Readonly<{
   find: (
-    organizationId: string,
-    accountId: string,
+    props: FindCompanyAccountProfileProps,
   ) => Promise<CompanyAccountProfileEntity | null | Error>
   save: (profile: CompanyAccountProfileEntity) => Promise<void | Error>
 }>
@@ -23,8 +27,7 @@ export class D1CompanyAccountProfileRepository implements CompanyAccountProfileR
   constructor(private readonly c: Context) {}
 
   async find(
-    organizationId: string,
-    accountId: string,
+    props: FindCompanyAccountProfileProps,
   ): Promise<CompanyAccountProfileEntity | null | Error> {
     try {
       const row = await this.c
@@ -33,7 +36,7 @@ export class D1CompanyAccountProfileRepository implements CompanyAccountProfileR
            FROM company_account_profiles
            WHERE organization_id = ?1 AND account_id = ?2`,
         )
-        .bind(organizationId, accountId)
+        .bind(props.organizationId, props.accountId)
         .first<CompanyAccountProfileRow>()
       if (row === null) return null
 

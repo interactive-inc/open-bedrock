@@ -6,30 +6,38 @@ import { eq } from "drizzle-orm"
 
 type Context = CompanyContext
 
+type FindEmployeeProps =
+  | Readonly<{ id: EmployeeId; code?: never }>
+  | Readonly<{ code: string; id?: never }>
+
 export class EmployeeRepository {
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
-  async findById(id: EmployeeId): Promise<EmployeeEntity | null | Error> {
-    try {
-      const row = (
-        await this.c.var.database.select().from(employees).where(eq(employees.id, id)).limit(1)
-      )[0]
-      if (row === undefined) return null
-      return EmployeeEntity.restore(row)
-    } catch (cause) {
-      return cause instanceof Error ? cause : new Error("failed to find Company employee")
+  async find(props: FindEmployeeProps): Promise<EmployeeEntity | null | Error> {
+    if (props.id !== undefined) {
+      try {
+        const row = (
+          await this.c.var.database
+            .select()
+            .from(employees)
+            .where(eq(employees.id, props.id))
+            .limit(1)
+        )[0]
+        if (row === undefined) return null
+        return EmployeeEntity.restore(row)
+      } catch (cause) {
+        return cause instanceof Error ? cause : new Error("failed to find Company employee")
+      }
     }
-  }
 
-  async findByCode(code: string): Promise<EmployeeEntity | null | Error> {
     try {
       const row = (
         await this.c.var.database
           .select()
           .from(employees)
-          .where(eq(employees.employeeCode, code))
+          .where(eq(employees.employeeCode, props.code))
           .limit(1)
       )[0]
       if (row === undefined) return null

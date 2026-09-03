@@ -34,7 +34,7 @@ export const GET = factory.createHandlers(async (context) => {
     var: { database: context.var.database, auditContext: context.var.auditContext },
   })
   const [grades, total] = await Promise.all([
-    repository.findAll({ limit: 100, offset: 0 }),
+    repository.findMany({ limit: 100, offset: 0 }),
     repository.count(),
   ])
   if (grades instanceof Error || total instanceof Error) {
