@@ -1,8 +1,11 @@
 import {
+  Activity,
+  ArrowLeftRight,
   Award,
   Bell,
   BookOpen,
   BookOpenCheck,
+  Bot,
   Boxes,
   Briefcase,
   Building2,
@@ -23,11 +26,14 @@ import {
   KeyRound,
   Laptop,
   LayoutDashboard,
+  MailWarning,
   MessagesSquare,
   Package,
   PartyPopper,
   Plane,
+  Plug,
   ScrollText,
+  Send,
   ShieldCheck,
   Sparkles,
   Target,
@@ -1079,7 +1085,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     slug: "roles",
     tier: "system",
     status: "available",
-    group: "system",
+    group: "system-authorization",
     icon: KeyRound,
     prefetch: null,
     routes: [
@@ -1091,10 +1097,27 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     ],
   },
   {
+    slug: "permission-definitions",
+    tier: "system",
+    status: "available",
+    group: "system-authorization",
+    icon: ShieldCheck,
+    prefetch: null,
+    routes: [
+      {
+        label: "権限定義",
+        href: "/system/permission-definitions",
+        // api の handler は system:admin か iam:write のどちらかを要求する。
+        // iam:read では 403 になるので、nav もこの 2 キーの OR に合わせる。
+        visibility: { kind: "any-permission", permissions: ["iam:write", "system:admin"] },
+      },
+    ],
+  },
+  {
     slug: "accounts",
     tier: "system",
     status: "available",
-    group: "system",
+    group: "system-principal",
     icon: UserCog,
     prefetch: null,
     routes: [
@@ -1106,10 +1129,25 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     ],
   },
   {
+    slug: "principals",
+    tier: "system",
+    status: "available",
+    group: "system-principal",
+    icon: Bot,
+    prefetch: null,
+    routes: [
+      {
+        label: "Principal",
+        href: "/system/principals",
+        visibility: { kind: "permission", permission: "iam:read" },
+      },
+    ],
+  },
+  {
     slug: "audit",
     tier: "system",
     status: "available",
-    group: "system",
+    group: "system-record",
     icon: FileClock,
     prefetch: false,
     routes: [
@@ -1117,6 +1155,86 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
         label: "監査ログ",
         href: "/system/audit-events",
         visibility: { kind: "permission", permission: "audit:read" },
+      },
+    ],
+  },
+  {
+    slug: "deliveries",
+    tier: "system",
+    status: "available",
+    group: "system-async",
+    icon: Send,
+    prefetch: null,
+    routes: [
+      {
+        label: "配信",
+        href: "/system/deliveries",
+        visibility: { kind: "permission", permission: "batch:view" },
+      },
+    ],
+  },
+  {
+    slug: "dead-letters",
+    tier: "system",
+    status: "available",
+    group: "system-async",
+    icon: MailWarning,
+    prefetch: null,
+    routes: [
+      {
+        label: "dead letter",
+        href: "/system/dead-letters",
+        visibility: { kind: "permission", permission: "batch:view" },
+      },
+    ],
+  },
+  {
+    slug: "connectors",
+    tier: "system",
+    status: "available",
+    group: "system-integration",
+    icon: Plug,
+    prefetch: null,
+    routes: [
+      {
+        // api の route は integration:read を要求するが、このキーは権限カタログに無く
+        // ロールから付与できない。実際に到達できるのは system:admin だけなので、
+        // nav も system:admin にする（integration:read だと誰にも出ない）。
+        label: "コネクタ",
+        href: "/system/connectors",
+        visibility: { kind: "permission", permission: "system:admin" },
+      },
+    ],
+  },
+  {
+    slug: "integration-exchanges",
+    tier: "system",
+    status: "available",
+    group: "system-integration",
+    icon: ArrowLeftRight,
+    prefetch: null,
+    routes: [
+      {
+        label: "外部交換",
+        href: "/system/integration-exchanges",
+        visibility: { kind: "permission", permission: "system:admin" },
+      },
+    ],
+  },
+  {
+    slug: "health",
+    tier: "system",
+    status: "available",
+    group: "system-operation",
+    icon: Activity,
+    prefetch: null,
+    routes: [
+      {
+        // api の route は未認証で到達できるが、システムタブは運用者の空間なので
+        // 画面と nav は system:admin に絞る。
+        label: "health",
+        href: "/system/health",
+        visibility: { kind: "permission", permission: "system:admin" },
       },
     ],
   },
@@ -1154,7 +1272,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     slug: "batches",
     tier: "system",
     status: "available",
-    group: "system",
+    group: "system-async",
     icon: Wrench,
     prefetch: null,
     routes: [
@@ -1170,6 +1288,13 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
 export const featureGroupOrder: ReadonlyArray<FeatureGroup> = [
   "overview",
   "team",
+  "system-principal",
+  "system-authorization",
+  "system-case",
+  "system-record",
+  "system-async",
+  "system-integration",
+  "system-operation",
   "company-legal-entity",
   "company-people",
   "company-organization",
@@ -1189,6 +1314,13 @@ export const featureGroupOrder: ReadonlyArray<FeatureGroup> = [
 export const featureGroupLabels: Record<FeatureGroup, string> = {
   overview: "概要",
   team: "部署",
+  "system-principal": "主体と認証",
+  "system-authorization": "技術的認可",
+  "system-case": "案件と判断",
+  "system-record": "記録と証拠",
+  "system-async": "非同期実行と通知",
+  "system-integration": "外部接続",
+  "system-operation": "運用",
   "company-legal-entity": "会社と法人",
   "company-people": "人と雇用",
   "company-organization": "組織",
