@@ -16,7 +16,6 @@ export default async function NewBudgetPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="予算を登録"
-        description="部署・会計期間・期間・金額・名称・任意のメモを入力する"
         actions={<BackButton href="/expense/budgets" label="一覧に戻る" />}
       />
 

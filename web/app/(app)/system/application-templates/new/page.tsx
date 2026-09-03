@@ -22,7 +22,6 @@ export default async function NewApplicationTemplatePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="申請テンプレートを作成"
-        description="新しい申請テンプレートの名称・カテゴリ・項目を登録します。"
         actions={<BackButton href="/system/application-templates" label="一覧に戻る" />}
       />
 

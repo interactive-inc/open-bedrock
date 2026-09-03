@@ -16,7 +16,6 @@ export default function LifeEventsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="ライフイベント届出"
-        description="結婚・出産などのライフイベントを届け出ます。"
         actions={
           <Button nativeButton={false} render={<Link href="/my/life-events/new" />}>
             <Plus />

@@ -25,7 +25,6 @@ export default async function GradesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="等級"
-        description="等級マスタの一覧です。従業員への付与状況は各従業員の詳細で確認します。"
         actions={
           canManage ? (
             <Button nativeButton={false} render={<Link href="/company/grades/new" />}>

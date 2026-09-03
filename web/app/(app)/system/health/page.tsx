@@ -17,7 +17,7 @@ export default async function SystemHealthPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="health" description="api が応答できているかを確認します。" />
+      <PageHeader title="health" />
 
       <Suspense fallback={<ListSkeleton rows={1} />}>
         <SystemHealthSection />

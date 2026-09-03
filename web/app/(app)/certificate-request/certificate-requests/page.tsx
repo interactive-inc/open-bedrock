@@ -65,11 +65,6 @@ export default async function AdminCertificateRequestsPage(props: { searchParams
     <div className="flex flex-col gap-6">
       <PageHeader
         title="証明書発行依頼管理"
-        description="全社の証明書発行依頼を横断で確認します。"
-        breadcrumbs={[
-          { label: "証明書発行依頼", href: "/certificate-request/certificate-requests" },
-          { label: "証明書発行依頼管理" },
-        ]}
         actions={
           <Button
             variant="outline"

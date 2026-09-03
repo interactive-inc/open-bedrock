@@ -28,7 +28,6 @@ export default async function ReviewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="評価"
-        description="評価サイクルと自分の評価フォームを確認します。"
         actions={
           canAdminister ? (
             <Button

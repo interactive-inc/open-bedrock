@@ -25,10 +25,7 @@ export default async function ManagementDashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="経営ダッシュボード"
-        description="在籍・入退社・勤怠・休暇・経費・評価・目標・申請の横断集計を確認します。"
-      />
+      <PageHeader title="経営ダッシュボード" />
 
       <Suspense fallback={<ListSkeleton rows={4} />}>
         <ManagementDashboardSection />

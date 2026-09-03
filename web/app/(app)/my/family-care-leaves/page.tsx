@@ -16,7 +16,6 @@ export default function FamilyCareLeavesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="産休・育休・介護休業の申出"
-        description="休業の申出と、申出状況を確認します。"
         actions={
           <Button nativeButton={false} render={<Link href="/my/family-care-leaves/new" />}>
             <Plus />

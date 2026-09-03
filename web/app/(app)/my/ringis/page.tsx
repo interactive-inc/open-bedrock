@@ -36,7 +36,6 @@ export default async function MyRingiPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="稟議"
-        description="自分が起案した稟議の一覧と状態"
         actions={
           <>
             {canViewAll ? (

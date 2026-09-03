@@ -31,14 +31,7 @@ export default async function RecruitmentPositionPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="応募者パイプライン"
-        description="応募者の選考ステージを進めます。ステージは正順に1つずつ進め、いつでも不採用にできます。"
-        breadcrumbs={[
-          { label: "採用", href: "/recruitment/recruitments" },
-          { label: "応募者パイプライン" },
-        ]}
-      />
+      <PageHeader title="応募者パイプライン" />
 
       <CandidateNewForm positionId={positionId} />
 

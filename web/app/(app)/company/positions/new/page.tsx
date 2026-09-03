@@ -19,7 +19,6 @@ export default async function NewPositionPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="新規役職"
-        description="役職マスタの基本情報を登録します。"
         actions={<BackButton href="/company/positions" label="役職に戻る" />}
       />
 

@@ -39,7 +39,6 @@ export default async function RoomManagePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="会議室マスタ"
-        description="登録済みの会議室を編集・削除します。"
         actions={
           <>
             <Button variant="outline" nativeButton={false} render={<Link href="/room/rooms" />}>

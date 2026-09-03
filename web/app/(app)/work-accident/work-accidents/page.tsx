@@ -31,10 +31,7 @@ export default async function WorkAccidentsPage(props: { searchParams: SearchPar
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="労災・事故記録"
-        description="起きた事実の時系列記録です。労災認定の判定は行いません。"
-      />
+      <PageHeader title="労災・事故記録" />
 
       {canManage ? <WorkAccidentCreateForm /> : null}
 

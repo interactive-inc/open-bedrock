@@ -25,7 +25,7 @@ export default async function CompanyEmploymentsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="雇用" description="在籍状態と有効期間を持つ Employment の一覧です。" />
+      <PageHeader title="雇用" />
 
       <CompanyEmploymentFilterForm status={status} />
 

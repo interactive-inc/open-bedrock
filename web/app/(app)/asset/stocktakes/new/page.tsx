@@ -14,7 +14,6 @@ export default async function StocktakeNewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="棚卸しを開始"
-        description="対象日を指定して棚卸しセッションを開始します。開始時に廃棄済みでない全資産が対象になります。"
         actions={<BackButton href="/asset/stocktakes" label="一覧に戻る" />}
       />
 

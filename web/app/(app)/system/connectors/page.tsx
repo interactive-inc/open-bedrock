@@ -19,10 +19,7 @@ export default async function SystemConnectorsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="コネクタ"
-        description="外部システムとの境界の定義です。secret は含みません。"
-      />
+      <PageHeader title="コネクタ" />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <SystemConnectorSection />

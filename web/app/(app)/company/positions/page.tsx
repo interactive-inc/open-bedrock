@@ -26,7 +26,6 @@ export default async function PositionsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="役職"
-        description="役職マスタの一覧です。従業員登録や人事発令の役職はここから選びます。"
         actions={
           canManage ? (
             <Button nativeButton={false} render={<Link href="/company/positions/new" />}>

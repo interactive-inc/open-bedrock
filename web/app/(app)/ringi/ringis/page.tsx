@@ -70,8 +70,6 @@ export default async function AdminRingiPage(props: { searchParams: SearchParams
     <div className="flex flex-col gap-6">
       <PageHeader
         title="稟議管理"
-        description="全社の稟議を横断で確認します。承認は各稟議の承認受信箱から行います。"
-        breadcrumbs={[{ label: "稟議", href: "/my/ringis" }, { label: "稟議管理" }]}
         actions={
           <Button variant="outline" nativeButton={false} render={<Link href="/inbox/ringis" />}>
             承認受信箱

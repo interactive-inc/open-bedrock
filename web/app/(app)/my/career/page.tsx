@@ -18,7 +18,6 @@ export default async function CareerPage() {
     <div className="flex flex-col gap-8">
       <PageHeader
         title="キャリア"
-        description="キャリアシートの編集と自分の応募を確認します。"
         actions={
           <Button
             variant="outline"

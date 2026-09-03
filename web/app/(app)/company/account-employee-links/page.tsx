@@ -16,10 +16,7 @@ export default async function CompanyAccountEmployeeLinksPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Account の対応"
-        description="System の Account と Company の Employee の対応を確認します。"
-      />
+      <PageHeader title="Account の対応" />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <CompanyAccountEmployeeLinkSection />

@@ -13,7 +13,6 @@ export default function NewResignationPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="新規申請"
-        description="退職予定日と理由を記入して申請します。"
         actions={<BackButton href="/my/resignations" label="一覧に戻る" />}
       />
 

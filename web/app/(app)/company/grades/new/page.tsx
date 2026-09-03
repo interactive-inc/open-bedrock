@@ -19,7 +19,6 @@ export default async function NewGradePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="新規等級"
-        description="等級マスタの基本情報を登録します。"
         actions={<BackButton href="/company/grades" label="等級に戻る" />}
       />
 

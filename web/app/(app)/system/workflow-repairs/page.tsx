@@ -33,12 +33,6 @@ export default async function WorkflowRepairsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="承認フロー修復"
-        description="候補者不足で進められない申請に、監査理由を付けて承認候補者を再割当します。"
-        breadcrumbs={[
-          { label: "申請", href: "/my/applications" },
-          { label: "申請管理", href: "/system/applications" },
-          { label: "承認フロー修復" },
-        ]}
         actions={
           <Button
             variant="outline"

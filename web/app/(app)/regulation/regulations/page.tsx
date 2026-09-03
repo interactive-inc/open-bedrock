@@ -28,7 +28,7 @@ export default async function RegulationsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="規程集" description="社内規程の最新版と改定履歴を確認します。" />
+      <PageHeader title="規程集" />
 
       {canManage ? <RegulationCreateForm /> : null}
 

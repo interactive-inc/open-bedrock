@@ -14,7 +14,6 @@ export default async function OrgDepartmentNewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="部署作成"
-        description="新しい部署ノードを作成します。"
         actions={<BackButton href="/company/departments" label="一覧に戻る" />}
       />
 

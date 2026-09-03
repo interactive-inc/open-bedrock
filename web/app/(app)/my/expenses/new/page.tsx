@@ -13,7 +13,6 @@ export default function NewExpensePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="経費を申請"
-        description="カテゴリ・金額・利用日・任意のメモを入力する"
         actions={<BackButton href="/my/expenses" label="一覧に戻る" />}
       />
 

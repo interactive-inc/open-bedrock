@@ -83,7 +83,6 @@ export default async function AuditEventDetailPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="監査イベント"
-        description="保存された認可判断と変更内容を確認します。"
         actions={<BackButton href="/system/audit-events" label="一覧に戻る" prefetch={false} />}
       />
 

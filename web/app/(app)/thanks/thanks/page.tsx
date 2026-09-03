@@ -31,7 +31,6 @@ export default async function ThanksPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="感謝"
-        description="サンクスポイントの残量と、社内の感謝を見渡す。"
         actions={
           <>
             {canViewAll ? (

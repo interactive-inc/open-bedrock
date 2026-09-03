@@ -32,10 +32,7 @@ export default async function DocumentsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="文書台帳"
-        description="契約書・許認可などの所在と期限を管理します（期限の近い順）。"
-      />
+      <PageHeader title="文書台帳" />
 
       {canManage ? <DocumentRegisterForm /> : null}
 

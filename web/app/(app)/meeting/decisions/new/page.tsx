@@ -22,7 +22,6 @@ export default async function NewDecisionPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="意思決定記録を作成"
-        description="タイトル・決定日・背景・決定内容は必須です。"
         actions={<BackButton href="/meeting/decisions" label="一覧に戻る" />}
       />
 

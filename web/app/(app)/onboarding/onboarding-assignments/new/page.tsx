@@ -24,7 +24,6 @@ export default async function NewOnboardingAssignmentPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="割当を作成"
-        description="社員コードとテンプレートを指定して割り当てます。"
         actions={
           <BackButton href="/onboarding/onboarding-assignments" label="オンボーディングに戻る" />
         }

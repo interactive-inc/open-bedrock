@@ -19,7 +19,6 @@ export default async function NewTrainingCoursePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="新規コース"
-        description="研修コースの基本情報を登録します。"
         actions={<BackButton href="/training/trainings" label="研修に戻る" />}
       />
 

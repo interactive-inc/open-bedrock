@@ -59,7 +59,6 @@ export default async function NotificationsPage(props: { searchParams: SearchPar
     <div className="flex flex-col gap-6">
       <PageHeader
         title="通知"
-        description="自分宛ての通知を確認します。"
         actions={
           canCreate ? (
             <Button nativeButton={false} render={<Link href="/notifications/new" />}>

@@ -19,7 +19,6 @@ export default async function NewRoomPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="会議室を登録"
-        description="新しい会議室の名称・定員・所在地を登録します。"
         actions={<BackButton href="/room/rooms/manage" label="マスタに戻る" />}
       />
 

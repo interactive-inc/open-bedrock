@@ -17,10 +17,7 @@ export default async function CompanyProfilePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="会社と法人"
-        description="法人・会社プロフィールと、事業所・勤務場所の登録内容を確認します。"
-      />
+      <PageHeader title="会社と法人" />
 
       <Suspense fallback={<ListSkeleton rows={3} />}>
         <CompanyProfileSection />

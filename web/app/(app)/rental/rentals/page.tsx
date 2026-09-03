@@ -62,11 +62,6 @@ export default async function AdminRentalsPage(props: { searchParams: SearchPara
     <div className="flex flex-col gap-6">
       <PageHeader
         title="貸与品予約管理"
-        description="全社の貸与品予約を横断で確認します。"
-        breadcrumbs={[
-          { label: "貸与品予約", href: "/rental/rentals" },
-          { label: "貸与品予約管理" },
-        ]}
         actions={
           <Button variant="outline" nativeButton={false} render={<Link href="/rental/rentals" />}>
             自分の予約

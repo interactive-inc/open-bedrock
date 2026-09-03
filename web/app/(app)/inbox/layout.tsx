@@ -35,10 +35,7 @@ export default async function InboxLayout(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="受信箱"
-        description="あなたが対応すべき申請・承認・判定をまとめて確認します。"
-      />
+      <PageHeader title="受信箱" />
 
       <PageTabs tabs={tabs} />
 

@@ -19,10 +19,7 @@ export default async function SystemPermissionDefinitionsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="権限定義"
-        description="ロールに割り当てられる権限キーの一覧です。無効な App の権限は出ません。"
-      />
+      <PageHeader title="権限定義" />
 
       <Link className="text-sm underline" href="/system/roles">
         ロールの一覧へ

@@ -16,10 +16,7 @@ export default async function BatchPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="バッチジョブ状況"
-        description="バックグラウンドで実行されるジョブの最新の実行状況を確認できます。"
-      />
+      <PageHeader title="バッチジョブ状況" />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <BatchJobList />

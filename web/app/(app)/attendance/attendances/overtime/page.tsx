@@ -39,7 +39,6 @@ export default async function OvertimeSummaryPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="時間外の集計"
-        description="1 日 8 時間×営業日を超えた労働時間の参考集計です。36 協定などの法定判定はしません。"
         actions={
           <Button variant="outline" nativeButton={false} render={<Link href="/my/attendances" />}>
             勤怠へ

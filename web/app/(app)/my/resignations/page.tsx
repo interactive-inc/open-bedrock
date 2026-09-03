@@ -16,7 +16,6 @@ export default function ResignationsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="退職申請"
-        description="退職の申請と、申請状況を確認します。"
         actions={
           <Button nativeButton={false} render={<Link href="/my/resignations/new" />}>
             <Plus />

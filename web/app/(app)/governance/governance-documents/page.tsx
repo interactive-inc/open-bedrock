@@ -47,7 +47,6 @@ export default async function GovernancePage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="規程・手続き"
-        description="文章、責任者、適用対象、実行手順をひとつの原本として管理します。"
         actions={
           canManage ? (
             <Button

@@ -27,10 +27,7 @@ export default async function SystemIntegrationExchangesPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="外部交換"
-        description="コネクタごとの外部とのやり取りです。payload は保持せず digest だけを記録します。"
-      />
+      <PageHeader title="外部交換" />
 
       <Suspense fallback={<ListSkeleton rows={1} />}>
         <SystemExchangeConnectorForm connectorId={connectorId} />

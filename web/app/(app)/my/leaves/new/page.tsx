@@ -13,7 +13,6 @@ export default function NewLeaveRequestPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="休暇を申請"
-        description="休暇種別・期間・理由を入力して申請します。"
         actions={<BackButton href="/my/leaves" label="休暇に戻る" />}
       />
 

@@ -37,7 +37,6 @@ export default async function ShiftPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="シフト"
-        description="自分のシフトと交代申請を管理します。"
         actions={
           <>
             {canManage ? (

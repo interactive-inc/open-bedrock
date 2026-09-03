@@ -33,7 +33,6 @@ export default async function ShiftAssignmentNewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="シフトを割り当て"
-        description="対象社員・パターン・対象日を指定して割当を作成します。"
         actions={<BackButton href="/shift/shift-assignments" label="一覧に戻る" />}
       />
 

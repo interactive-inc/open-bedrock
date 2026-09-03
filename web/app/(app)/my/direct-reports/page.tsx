@@ -30,7 +30,7 @@ export default async function MyReportsPage() {
 
   return (
     <>
-      <PageHeader title="マイチーム" description="直属の部下と、配下のチーム状況を確認します。" />
+      <PageHeader title="マイチーム" />
 
       <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-24 w-full" />}>
         <ReportsGrid />

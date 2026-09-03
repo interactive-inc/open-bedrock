@@ -62,11 +62,6 @@ export default async function AdminBusinessTripsPage(props: { searchParams: Sear
     <div className="flex flex-col gap-6">
       <PageHeader
         title="出張申請管理"
-        description="全社の出張申請を横断で確認します。"
-        breadcrumbs={[
-          { label: "出張", href: "/business-trip/business-trips" },
-          { label: "出張申請管理" },
-        ]}
         actions={
           <Button
             variant="outline"

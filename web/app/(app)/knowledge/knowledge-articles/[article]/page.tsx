@@ -48,7 +48,6 @@ export default async function KnowledgeDetailPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={article.title}
-        description={article.category}
         actions={<BackButton href="/knowledge/knowledge-articles" label="一覧に戻る" />}
       />
 

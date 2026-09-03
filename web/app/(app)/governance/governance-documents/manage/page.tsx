@@ -29,14 +29,7 @@ export default async function GovernanceManagePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="規程の整合性管理"
-        description="組織図・責任者・参照先・期限がMarkdown原本と矛盾していないかを検査します。"
-        breadcrumbs={[
-          { label: "規程・手続き", href: "/governance/governance-documents" },
-          { label: "整合性管理" },
-        ]}
-      />
+      <PageHeader title="規程の整合性管理" />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <MetricCard title="検査文書" value={impact.document_count} icon={<FileWarning />} />

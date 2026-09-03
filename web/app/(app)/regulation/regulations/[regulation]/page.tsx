@@ -40,9 +40,6 @@ export default async function RegulationDetailPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={regulation.title}
-        description={`${regulation.code}${
-          regulation.category === null ? "" : ` / ${regulation.category}`
-        } / 状態: ${regulation.status}`}
         actions={<BackButton href="/regulation/regulations" label="一覧に戻る" />}
       />
 

@@ -16,7 +16,6 @@ export default async function NewLifeEventPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="新規届出"
-        description="イベントの種別と発生日を記入して届け出ます。"
         actions={<BackButton href="/my/life-events" label="一覧に戻る" />}
       />
 

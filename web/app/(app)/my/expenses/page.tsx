@@ -42,7 +42,6 @@ export default async function MyExpensesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="経費"
-        description="自分が申請した経費の一覧と状態"
         actions={
           <>
             {canViewAll ? (

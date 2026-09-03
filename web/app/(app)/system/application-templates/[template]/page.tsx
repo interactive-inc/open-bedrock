@@ -40,7 +40,6 @@ export default async function ApplicationTemplateDetailPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={template.name}
-        description={template.description ?? undefined}
         actions={<BackButton href="/system/application-templates" label="テンプレ一覧へ" />}
       />
 

@@ -13,7 +13,6 @@ export default function NewFamilyCareLeavePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="新規申出"
-        description="休業の種別と期間を記入して申し出ます。"
         actions={<BackButton href="/my/family-care-leaves" label="一覧に戻る" />}
       />
 

@@ -23,10 +23,7 @@ export default async function SystemConnectorPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="コネクタの詳細"
-        description="外部境界の定義と、このコネクタで起きた交換への導線です。"
-      />
+      <PageHeader title="コネクタの詳細" />
 
       <Link className="text-sm underline" href="/system/connectors">
         コネクタの一覧へ戻る

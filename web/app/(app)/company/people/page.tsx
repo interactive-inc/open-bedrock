@@ -16,10 +16,7 @@ export default async function CompanyPeoplePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="人"
-        description="雇用と切り離した Person の台帳です。在籍状態は雇用の一覧で確認します。"
-      />
+      <PageHeader title="人" />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <CompanyPeopleSection />

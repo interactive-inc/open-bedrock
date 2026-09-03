@@ -11,7 +11,6 @@ export default function PartnerNewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="取引先を登録"
-        description="新しい取引先を取引先台帳に登録します。"
         actions={<BackButton href="/partner/partners" label="一覧に戻る" />}
       />
 

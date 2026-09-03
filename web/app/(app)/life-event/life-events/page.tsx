@@ -62,11 +62,6 @@ export default async function AdminLifeEventsPage(props: { searchParams: SearchP
     <div className="flex flex-col gap-6">
       <PageHeader
         title="ライフイベント届管理"
-        description="全社のライフイベント届を横断で確認します。"
-        breadcrumbs={[
-          { label: "ライフイベント届", href: "/life-event/life-events" },
-          { label: "ライフイベント届管理" },
-        ]}
         actions={
           <Button
             variant="outline"

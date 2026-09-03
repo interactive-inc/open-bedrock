@@ -38,15 +38,7 @@ export default async function AdminRoleEditPage(props: Props) {
   if (role instanceof Error || permissions instanceof Error) {
     return (
       <div className="flex flex-col gap-6">
-        <PageHeader
-          title="ロール編集"
-          description="ロールの権限を変更します。"
-          breadcrumbs={[
-            { label: "システム", href: "/system/roles" },
-            { label: "ロール", href: "/system/roles" },
-            { label: "編集" },
-          ]}
-        />
+        <PageHeader title="ロール編集" />
 
         <FetchError message="ロール情報の取得に失敗しました" />
       </div>
@@ -66,15 +58,7 @@ export default async function AdminRoleEditPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={`ロール編集: ${role.name}`}
-        description="名前・説明・権限を変更します。"
-        breadcrumbs={[
-          { label: "システム", href: "/system/roles" },
-          { label: "ロール", href: "/system/roles" },
-          { label: role.name },
-        ]}
-      />
+      <PageHeader title={`ロール編集: ${role.name}`} />
 
       <RoleEditForm
         roleId={role.id}

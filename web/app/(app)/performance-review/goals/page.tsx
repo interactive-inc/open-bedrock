@@ -44,11 +44,6 @@ export default async function GoalsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="目標"
-        description={
-          canViewOthers
-            ? "期間と従業員で絞り込み、目標を確認します。"
-            : "期間で絞り込み、自分の目標を確認します。"
-        }
         actions={
           <div className="flex gap-2">
             <Button

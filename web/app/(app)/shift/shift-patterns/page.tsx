@@ -26,7 +26,6 @@ export default async function ShiftPatternsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="シフトパターン"
-        description="シフトの定型パターンを一覧します。"
         actions={
           <>
             <BackButton href="/my/shifts" label="シフトに戻る" />

@@ -31,7 +31,6 @@ export default async function ApplicationTemplatesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="申請テンプレート"
-        description="利用可能なテンプレートから新規申請を作成します。"
         actions={
           <>
             <Button

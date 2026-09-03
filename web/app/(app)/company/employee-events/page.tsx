@@ -29,10 +29,7 @@ export default async function CompanyEmployeeEventsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="雇用事実"
-        description="従業員ごとの入社・異動・休職・復職・退職の記録を確認します。"
-      />
+      <PageHeader title="雇用事実" />
 
       <CompanyEmployeeEventFilterForm employeeCode={employeeCode} kind={kind} />
 

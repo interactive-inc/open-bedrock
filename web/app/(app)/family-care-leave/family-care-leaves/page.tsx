@@ -65,11 +65,6 @@ export default async function AdminFamilyCareLeavesPage(props: { searchParams: S
     <div className="flex flex-col gap-6">
       <PageHeader
         title="産休・育休・介護休業管理"
-        description="全社の産休・育休・介護休業の申出を横断で確認します。"
-        breadcrumbs={[
-          { label: "産休・育休・介護", href: "/family-care-leave/family-care-leaves" },
-          { label: "産休・育休・介護休業管理" },
-        ]}
         actions={
           <Button
             variant="outline"

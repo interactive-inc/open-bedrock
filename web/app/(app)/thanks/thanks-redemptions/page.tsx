@@ -83,8 +83,6 @@ export default async function AdminRedemptionsPage(props: { searchParams: Search
     <div className="flex flex-col gap-6">
       <PageHeader
         title="交換申請管理"
-        description="全社のサンクス交換申請を横断で確認します。"
-        breadcrumbs={[{ label: "感謝", href: "/thanks/thanks" }, { label: "交換申請管理" }]}
         actions={
           currentUser.permissions.includes("thanks_reward:manage") ? (
             <Button

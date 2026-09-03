@@ -11,11 +11,7 @@ export const metadata = { title: "レンタルの新規予約" }
 export default function NewRentalReservationPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="新規予約"
-        description="備品と利用期間を指定して予約します。"
-        actions={<BackButton href="/my/rentals" label="一覧に戻る" />}
-      />
+      <PageHeader title="新規予約" actions={<BackButton href="/my/rentals" label="一覧に戻る" />} />
 
       <Card className="max-w-xl">
         <CardContent>

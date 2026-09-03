@@ -22,7 +22,6 @@ export default async function NewOnboardingTemplatePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="テンプレートを作成"
-        description="入社・退社のオンボーディングタスクをテンプレートに登録します。"
         actions={<BackButton href="/onboarding/onboarding-assignments" label="一覧に戻る" />}
       />
 

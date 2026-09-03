@@ -36,7 +36,6 @@ export default async function ItIncidentsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="インシデント記録"
-        description="発生した障害・事故を記録します。原因分析や再発防止の判定は持ちません。"
         actions={
           canManage ? (
             <Button nativeButton={false} render={<Link href="/it-incident/it-incidents/new" />}>

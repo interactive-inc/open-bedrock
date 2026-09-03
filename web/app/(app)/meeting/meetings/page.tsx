@@ -30,7 +30,6 @@ export default async function MeetingsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="会議体"
-        description="定例会議などの器を管理し、議事録を記録します。"
         actions={
           canManage ? (
             <Button nativeButton={false} render={<Link href="/meeting/meetings/new" />}>

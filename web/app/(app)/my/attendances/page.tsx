@@ -36,7 +36,6 @@ export default async function AttendancePage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="勤怠"
-        description="出勤・退勤の打刻と、自分の勤怠記録を確認します。"
         actions={
           canViewAll ? (
             <Button
