@@ -88,69 +88,71 @@ export function RoleCreateForm(props: Props) {
   const categories = [...new Set(props.permissions.map((permission) => permission.category))]
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <Field>
-        <FieldLabel htmlFor="key">キー（名前空間:名前、不変）</FieldLabel>
-        <Input
-          id="key"
-          name="key"
-          required
-          minLength={3}
-          maxLength={100}
-          pattern="[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*"
-          placeholder="company:auditor"
-        />
-      </Field>
+    <>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <Field>
+          <FieldLabel htmlFor="key">キー（名前空間:名前、不変）</FieldLabel>
+          <Input
+            id="key"
+            name="key"
+            required
+            minLength={3}
+            maxLength={100}
+            pattern="[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*"
+            placeholder="company:auditor"
+          />
+        </Field>
 
-      <Field>
-        <FieldLabel htmlFor="name">名前</FieldLabel>
-        <Input id="name" name="name" required maxLength={100} placeholder="監査担当" />
-      </Field>
+        <Field>
+          <FieldLabel htmlFor="name">名前</FieldLabel>
+          <Input id="name" name="name" required maxLength={100} placeholder="監査担当" />
+        </Field>
 
-      <Field>
-        <FieldLabel htmlFor="description">説明（任意）</FieldLabel>
-        <Input id="description" name="description" maxLength={1000} />
-      </Field>
+        <Field>
+          <FieldLabel htmlFor="description">説明（任意）</FieldLabel>
+          <Input id="description" name="description" maxLength={1000} />
+        </Field>
 
-      <div className="flex flex-col gap-4">
-        <p className="text-sm font-medium">付与する権限</p>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm font-medium">付与する権限</p>
 
-        {categories.map((category) => (
-          <div key={category} className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-muted-foreground">{category}</p>
+          {categories.map((category) => (
+            <div key={category} className="flex flex-col gap-2">
+              <p className="text-xs font-medium text-muted-foreground">{category}</p>
 
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              {props.permissions
-                .filter((permission) => permission.category === category)
-                .map((permission) => (
-                  <label key={permission.key} className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="permission_keys" value={permission.key} />
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                {props.permissions
+                  .filter((permission) => permission.category === category)
+                  .map((permission) => (
+                    <label key={permission.key} className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="permission_keys" value={permission.key} />
 
-                    <span className="font-mono text-xs">{permission.key}</span>
+                      <span className="font-mono text-xs">{permission.key}</span>
 
-                    <span className="text-muted-foreground">{permission.description}</span>
-                  </label>
-                ))}
+                      <span className="text-muted-foreground">{permission.description}</span>
+                    </label>
+                  ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {state.kind === "failed" ? (
-        <Alert variant="destructive">
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      ) : null}
+        {state.kind === "failed" ? (
+          <Alert variant="destructive">
+            <AlertDescription>{state.error}</AlertDescription>
+          </Alert>
+        ) : null}
 
-      <Button type="submit" disabled={isPending} className="self-start">
-        {isPending ? "作成中…" : "ロールを作成"}
-      </Button>
+        <Button type="submit" disabled={isPending} className="self-start">
+          {isPending ? "作成中…" : "ロールを作成"}
+        </Button>
+      </form>
 
       <StepUpDialog
         open={isStepUpOpen}
         onSucceeded={handleStepUpSucceeded}
         onCancel={() => setStepUpOpen(false)}
       />
-    </form>
+    </>
   )
 }

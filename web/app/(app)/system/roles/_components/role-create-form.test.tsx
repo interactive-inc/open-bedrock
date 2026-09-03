@@ -104,4 +104,34 @@ describe("RoleCreateForm", () => {
 
     expect(replayed?.get("key")).toBe("company:auditor")
   })
+
+  test("ダイアログの送信を外側のフォームへ渡さない", async () => {
+    // 再認証ダイアログを form の内側で描画すると、ダイアログの submit が外側まで
+    // 伝播し、外側の preventDefault によって grant の発行が実行されなくなる。
+    vi.mocked(createRoleAction).mockResolvedValue({ kind: "step_up_required" })
+
+    vi.mocked(stepUpAction).mockResolvedValue({ ok: false, error: "パスワードが違います" })
+
+    renderFilledForm()
+
+    fireEvent.click(screen.getByRole("button", { name: "ロールを作成" }))
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("パスワード")).toBeDefined()
+    })
+
+    fireEvent.change(screen.getByLabelText("パスワード"), { target: { value: "wrong" } })
+
+    fireEvent.click(screen.getByRole("button", { name: "確認して続行" }))
+
+    await waitFor(() => {
+      expect(vi.mocked(stepUpAction).mock.calls.length).toBe(1)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText("パスワードが違います")).toBeDefined()
+    })
+
+    expect(vi.mocked(createRoleAction).mock.calls.length).toBe(1)
+  })
 })

@@ -99,72 +99,74 @@ export function RoleEditForm(props: Props) {
   )
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <input type="hidden" name="role_id" value={props.roleId} />
+    <>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <input type="hidden" name="role_id" value={props.roleId} />
 
-      {hiddenGrantedKeys.map((permissionKey) => (
-        <input key={permissionKey} type="hidden" name="permission_keys" value={permissionKey} />
-      ))}
-
-      <Field>
-        <FieldLabel htmlFor="name">名前</FieldLabel>
-        <Input id="name" name="name" required maxLength={200} defaultValue={props.name} />
-      </Field>
-
-      <Field>
-        <FieldLabel htmlFor="description">説明（任意）</FieldLabel>
-        <Input
-          id="description"
-          name="description"
-          maxLength={1000}
-          defaultValue={props.description ?? ""}
-        />
-      </Field>
-
-      <div className="flex flex-col gap-4">
-        <p className="text-sm font-medium">付与する権限</p>
-
-        {categories.map((category) => (
-          <div key={category} className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-muted-foreground">{category}</p>
-
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              {props.permissions
-                .filter((permission) => permission.category === category)
-                .map((permission) => (
-                  <label key={permission.key} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      name="permission_keys"
-                      value={permission.key}
-                      defaultChecked={granted.has(permission.key)}
-                    />
-
-                    <span className="font-mono text-xs">{permission.key}</span>
-
-                    <span className="text-muted-foreground">{permission.description}</span>
-                  </label>
-                ))}
-            </div>
-          </div>
+        {hiddenGrantedKeys.map((permissionKey) => (
+          <input key={permissionKey} type="hidden" name="permission_keys" value={permissionKey} />
         ))}
-      </div>
 
-      {state.kind === "failed" ? (
-        <Alert variant="destructive">
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      ) : null}
+        <Field>
+          <FieldLabel htmlFor="name">名前</FieldLabel>
+          <Input id="name" name="name" required maxLength={200} defaultValue={props.name} />
+        </Field>
 
-      <Button type="submit" disabled={isPending} className="self-start">
-        {isPending ? "更新中…" : "変更を保存"}
-      </Button>
+        <Field>
+          <FieldLabel htmlFor="description">説明（任意）</FieldLabel>
+          <Input
+            id="description"
+            name="description"
+            maxLength={1000}
+            defaultValue={props.description ?? ""}
+          />
+        </Field>
+
+        <div className="flex flex-col gap-4">
+          <p className="text-sm font-medium">付与する権限</p>
+
+          {categories.map((category) => (
+            <div key={category} className="flex flex-col gap-2">
+              <p className="text-xs font-medium text-muted-foreground">{category}</p>
+
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                {props.permissions
+                  .filter((permission) => permission.category === category)
+                  .map((permission) => (
+                    <label key={permission.key} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        name="permission_keys"
+                        value={permission.key}
+                        defaultChecked={granted.has(permission.key)}
+                      />
+
+                      <span className="font-mono text-xs">{permission.key}</span>
+
+                      <span className="text-muted-foreground">{permission.description}</span>
+                    </label>
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {state.kind === "failed" ? (
+          <Alert variant="destructive">
+            <AlertDescription>{state.error}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        <Button type="submit" disabled={isPending} className="self-start">
+          {isPending ? "更新中…" : "変更を保存"}
+        </Button>
+      </form>
 
       <StepUpDialog
         open={isStepUpOpen}
         onSucceeded={handleStepUpSucceeded}
         onCancel={() => setStepUpOpen(false)}
       />
-    </form>
+    </>
   )
 }
