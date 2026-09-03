@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Table,
   TableBody,
@@ -141,28 +142,28 @@ function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineRespons
             <Field>
               <FieldLabel htmlFor="update_leave_type">種別</FieldLabel>
 
-              <select
+              <NativeSelect
                 id="update_leave_type"
                 name="leave_type"
                 defaultValue={props.leaveRequest.leave_type}
-                className="border-input bg-transparent flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="w-full"
               >
-                <option value="annual">年次有給</option>
+                <NativeSelectOption value="annual">年次有給</NativeSelectOption>
 
-                <option value="special">特別休暇</option>
+                <NativeSelectOption value="special">特別休暇</NativeSelectOption>
 
-                <option value="compensatory">代休</option>
+                <NativeSelectOption value="compensatory">代休</NativeSelectOption>
 
-                <option value="summer">夏季休暇</option>
+                <NativeSelectOption value="summer">夏季休暇</NativeSelectOption>
 
-                <option value="child_nursing_care">子の看護等休暇</option>
+                <NativeSelectOption value="child_nursing_care">子の看護等休暇</NativeSelectOption>
 
-                <option value="prenatal_checkup">妊婦通院休暇</option>
+                <NativeSelectOption value="prenatal_checkup">妊婦通院休暇</NativeSelectOption>
 
-                <option value="menstrual">生理休暇</option>
+                <NativeSelectOption value="menstrual">生理休暇</NativeSelectOption>
 
-                <option value="caregiving_leave">介護休暇</option>
-              </select>
+                <NativeSelectOption value="caregiving_leave">介護休暇</NativeSelectOption>
+              </NativeSelect>
             </Field>
 
             <Field>

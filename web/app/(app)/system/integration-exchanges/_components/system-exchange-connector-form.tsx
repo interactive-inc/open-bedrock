@@ -2,6 +2,7 @@ import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { getSystemConnectors } from "@/lib/api/get-system-connectors"
 
 type Props = {
@@ -36,18 +37,18 @@ export async function SystemExchangeConnectorForm(props: Props) {
             <Field className="w-full">
               <FieldLabel htmlFor="system-exchange-connector">コネクタ</FieldLabel>
 
-              <select
+              <NativeSelect
                 id="system-exchange-connector"
                 name="connector_id"
                 defaultValue={props.connectorId ?? connectors[0].id}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                className="w-full"
               >
                 {connectors.map((connector) => (
-                  <option key={connector.id} value={connector.id}>
+                  <NativeSelectOption key={connector.id} value={connector.id}>
                     {connector.name}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
           </div>
 

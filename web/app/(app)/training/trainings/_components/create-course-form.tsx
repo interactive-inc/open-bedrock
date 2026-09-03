@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import type { TrainingFormState } from "@/app/(app)/training/trainings/actions"
 import { createTrainingCourseAction } from "@/app/(app)/training/trainings/actions"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -69,7 +70,7 @@ export function CreateCourseForm() {
         </Field>
 
         <Field orientation="horizontal">
-          <input id="course-required" name="is_required" type="checkbox" className="size-4" />
+          <Checkbox id="course-required" name="is_required" />
 
           <FieldLabel htmlFor="course-required">必須コースにする</FieldLabel>
         </Field>

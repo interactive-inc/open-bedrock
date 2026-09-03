@@ -7,6 +7,7 @@ import type { RoomReservationActionState } from "@/app/(app)/room/rooms/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { RoomAvailability } from "@/lib/api/types/room-types"
 
 type Props = {
@@ -57,17 +58,13 @@ export function RoomReservationCreateForm(props: Props) {
         <Field>
           <FieldLabel htmlFor="room-reserve-room">会議室</FieldLabel>
 
-          <select
-            id="room-reserve-room"
-            name="room_id"
-            className="border-input bg-transparent flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
+          <NativeSelect id="room-reserve-room" name="room_id" className="w-full">
             {availableRooms.map((availability) => (
-              <option key={availability.room.id} value={availability.room.id}>
+              <NativeSelectOption key={availability.room.id} value={availability.room.id}>
                 {availability.room.name}（{availability.room.capacity} 名）
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
 
         <Field>

@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 const initialState: GovernanceActionState = { ok: false, error: null }
 
@@ -37,23 +38,23 @@ export function OrgRoleAssignmentForm(props: { roles: ReadonlyArray<Role>; today
       <FieldGroup className="gap-4 md:grid md:grid-cols-2">
         <Field>
           <FieldLabel htmlFor="org-role-code">組織ロール</FieldLabel>
-          <select
+          <NativeSelect
             id="org-role-code"
             name="org_role_code"
             aria-label="組織ロール"
             required
             defaultValue=""
-            className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            className="w-full"
           >
-            <option value="" disabled>
+            <NativeSelectOption value="" disabled>
               選択してください
-            </option>
+            </NativeSelectOption>
             {manualRoles.map((role) => (
-              <option key={role.code} value={role.code}>
+              <NativeSelectOption key={role.code} value={role.code}>
                 {role.name}（{role.code}）
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Field>
           <FieldLabel htmlFor="employee-code">従業員コード</FieldLabel>

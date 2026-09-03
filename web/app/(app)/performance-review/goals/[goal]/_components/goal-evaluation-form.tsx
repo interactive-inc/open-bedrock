@@ -7,6 +7,7 @@ import type { GoalActionState } from "@/app/(app)/performance-review/goals/actio
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 import { evaluationKindLabel } from "@/app/(app)/performance-review/goals/[goal]/_lib/evaluation-kind-label"
@@ -60,18 +61,18 @@ export function GoalEvaluationForm(props: Props) {
           <Field>
             <FieldLabel htmlFor="evaluation-kind">種別</FieldLabel>
 
-            <select
+            <NativeSelect
               id="evaluation-kind"
               name="kind"
               defaultValue={props.allowedKinds.at(0)}
-              className="h-8 w-full rounded-2xl border border-transparent bg-input/50 px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+              className="w-full"
             >
               {props.allowedKinds.map((kind) => (
-                <option key={kind} value={kind}>
+                <NativeSelectOption key={kind} value={kind}>
                   {evaluationKindLabel(kind)}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </Field>
 
           <Field>

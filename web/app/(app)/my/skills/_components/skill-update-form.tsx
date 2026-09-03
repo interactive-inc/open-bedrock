@@ -7,6 +7,7 @@ import type { SkillUpdateState } from "@/app/(app)/my/skills/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
@@ -67,23 +68,17 @@ export function SkillUpdateForm() {
         <Field>
           <FieldLabel htmlFor="level">レベル</FieldLabel>
 
-          <select
-            id="level"
-            name="level"
-            required
-            defaultValue=""
-            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-          >
-            <option value="" disabled>
+          <NativeSelect id="level" name="level" required defaultValue="">
+            <NativeSelectOption value="" disabled>
               選択してください
-            </option>
+            </NativeSelectOption>
 
             {levelOptions.map((level) => (
-              <option key={level} value={level}>
+              <NativeSelectOption key={level} value={level}>
                 {level}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
 
           <FieldDescription>1〜10 の習熟度を選びます。</FieldDescription>
         </Field>

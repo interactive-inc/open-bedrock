@@ -13,13 +13,12 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { PositionResponse } from "@/lib/api/types/position-types"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 
 const initialState: PersonnelActionFormState = { ok: false, error: null }
-const selectClassName =
-  "h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
 
 const actions = [
   ["primary_assignment_started", "配属"],
@@ -93,36 +92,40 @@ export function PersonnelActionForm(props: {
               <FieldLabel id="personnel-mode-label" htmlFor="personnel-mode">
                 処理方法
               </FieldLabel>
-              <select
+              <NativeSelect
                 id="personnel-mode"
                 name="mode"
                 aria-labelledby="personnel-mode-label"
-                className={selectClassName}
+                className="w-full"
                 value={mode}
                 onChange={(event) => setMode(event.target.value as "apply" | "request")}
               >
-                {props.canRequest ? <option value="request">承認を申請</option> : null}
-                {props.canApply ? <option value="apply">直接確定</option> : null}
-              </select>
+                {props.canRequest ? (
+                  <NativeSelectOption value="request">承認を申請</NativeSelectOption>
+                ) : null}
+                {props.canApply ? (
+                  <NativeSelectOption value="apply">直接確定</NativeSelectOption>
+                ) : null}
+              </NativeSelect>
             </Field>
             <Field>
               <FieldLabel id="personnel-kind-label" htmlFor="personnel-kind">
                 変更種別
               </FieldLabel>
-              <select
+              <NativeSelect
                 id="personnel-kind"
                 name="kind"
                 aria-labelledby="personnel-kind-label"
-                className={selectClassName}
+                className="w-full"
                 value={kind}
                 onChange={(event) => setKind(event.target.value as ActionKind)}
               >
                 {actions.map(([value, label]) => (
-                  <option key={value} value={value}>
+                  <NativeSelectOption key={value} value={value}>
                     {label}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
             <Field>
               <FieldLabel htmlFor="personnel-date">発令日</FieldLabel>
@@ -149,16 +152,16 @@ export function PersonnelActionForm(props: {
                 <FieldLabel id="personnel-assignment-label" htmlFor="personnel-assignment">
                   所属区分
                 </FieldLabel>
-                <select
+                <NativeSelect
                   id="personnel-assignment"
                   name="assignment_type"
                   aria-labelledby="personnel-assignment-label"
-                  className={selectClassName}
+                  className="w-full"
                   defaultValue="primary"
                 >
-                  <option value="primary">主所属</option>
-                  <option value="concurrent">兼務</option>
-                </select>
+                  <NativeSelectOption value="primary">主所属</NativeSelectOption>
+                  <NativeSelectOption value="concurrent">兼務</NativeSelectOption>
+                </NativeSelect>
               </Field>
             ) : null}
             {needsPosition ? (
@@ -166,21 +169,21 @@ export function PersonnelActionForm(props: {
                 <FieldLabel id="personnel-position-label" htmlFor="personnel-position">
                   役職{kind === "position_changed" ? "" : "（任意）"}
                 </FieldLabel>
-                <select
+                <NativeSelect
                   id="personnel-position"
                   name="position_code"
                   aria-labelledby="personnel-position-label"
-                  className={selectClassName}
+                  className="w-full"
                   defaultValue=""
                   required={kind === "position_changed"}
                 >
-                  <option value="">役職なし</option>
+                  <NativeSelectOption value="">役職なし</NativeSelectOption>
                   {props.positions.map((position) => (
-                    <option key={position.id} value={position.code}>
+                    <NativeSelectOption key={position.id} value={position.code}>
                       {position.name}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </select>
+                </NativeSelect>
                 <FieldDescription>役職マスタから選びます。</FieldDescription>
               </Field>
             ) : null}
@@ -204,18 +207,18 @@ export function PersonnelActionForm(props: {
                 <FieldLabel id="personnel-change-type-label" htmlFor="personnel-change-type">
                   役職変更区分
                 </FieldLabel>
-                <select
+                <NativeSelect
                   id="personnel-change-type"
                   name="change_type"
                   aria-labelledby="personnel-change-type-label"
-                  className={selectClassName}
+                  className="w-full"
                   defaultValue="lateral"
                 >
-                  <option value="promotion">昇格</option>
-                  <option value="demotion">降格</option>
-                  <option value="lateral">横移動</option>
-                  <option value="other">その他</option>
-                </select>
+                  <NativeSelectOption value="promotion">昇格</NativeSelectOption>
+                  <NativeSelectOption value="demotion">降格</NativeSelectOption>
+                  <NativeSelectOption value="lateral">横移動</NativeSelectOption>
+                  <NativeSelectOption value="other">その他</NativeSelectOption>
+                </NativeSelect>
               </Field>
             ) : null}
             {state.error ? (

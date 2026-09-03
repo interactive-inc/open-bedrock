@@ -8,6 +8,7 @@ import type { ItIncidentActionState } from "@/app/(app)/it-incident/it-incidents
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 
 const initialState: ItIncidentActionState = { ok: false, error: null }
@@ -65,18 +66,13 @@ export function ItIncidentCreateForm() {
         <Field>
           <FieldLabel htmlFor="incident-severity">深刻度（任意）</FieldLabel>
 
-          <select
-            id="incident-severity"
-            name="severity"
-            defaultValue=""
-            className="h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-          >
-            <option value="">未設定</option>
-            <option value="low">低</option>
-            <option value="medium">中</option>
-            <option value="high">高</option>
-            <option value="critical">重大</option>
-          </select>
+          <NativeSelect id="incident-severity" name="severity" defaultValue="" className="w-full">
+            <NativeSelectOption value="">未設定</NativeSelectOption>
+            <NativeSelectOption value="low">低</NativeSelectOption>
+            <NativeSelectOption value="medium">中</NativeSelectOption>
+            <NativeSelectOption value="high">高</NativeSelectOption>
+            <NativeSelectOption value="critical">重大</NativeSelectOption>
+          </NativeSelect>
         </Field>
 
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}

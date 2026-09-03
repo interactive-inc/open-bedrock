@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 type Props = {
   kind: string | null
@@ -16,33 +17,28 @@ export function AssetFilterForm(props: Props) {
       <div className="flex flex-col gap-2">
         <Label htmlFor="filter-kind">種別</Label>
 
-        <select
-          id="filter-kind"
-          name="kind"
-          defaultValue={props.kind ?? ""}
-          className="h-8 w-40 min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-        >
-          <option value="">すべて</option>
-          <option value="pc">PC</option>
-          <option value="monitor">モニター</option>
-          <option value="furniture">什器</option>
-          <option value="other">その他</option>
-        </select>
+        <NativeSelect id="filter-kind" name="kind" defaultValue={props.kind ?? ""} className="w-40">
+          <NativeSelectOption value="">すべて</NativeSelectOption>
+          <NativeSelectOption value="pc">PC</NativeSelectOption>
+          <NativeSelectOption value="monitor">モニター</NativeSelectOption>
+          <NativeSelectOption value="furniture">什器</NativeSelectOption>
+          <NativeSelectOption value="other">その他</NativeSelectOption>
+        </NativeSelect>
       </div>
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="filter-status">状態</Label>
 
-        <select
+        <NativeSelect
           id="filter-status"
           name="status"
           defaultValue={props.status ?? ""}
-          className="h-8 w-40 min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+          className="w-40"
         >
-          <option value="">すべて</option>
-          <option value="in_stock">在庫</option>
-          <option value="lent">貸与中</option>
-        </select>
+          <NativeSelectOption value="">すべて</NativeSelectOption>
+          <NativeSelectOption value="in_stock">在庫</NativeSelectOption>
+          <NativeSelectOption value="lent">貸与中</NativeSelectOption>
+        </NativeSelect>
       </div>
 
       <Button type="submit" variant="secondary">

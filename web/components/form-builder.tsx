@@ -3,9 +3,11 @@
 import { Plus, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { Textarea } from "@/components/ui/textarea"
 import { EmptyState } from "@/components/empty-state"
 import { ReorderableItem } from "@/components/reorderable-item"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -168,7 +170,7 @@ export function FormBuilder(props: Props) {
                   <Field>
                     <FieldLabel htmlFor={`${field.id}-options`}>選択肢（改行区切り）</FieldLabel>
 
-                    <textarea
+                    <Textarea
                       id={`${field.id}-options`}
                       value={(field.options ?? []).join("\n")}
                       onChange={(event) =>
@@ -178,7 +180,7 @@ export function FormBuilder(props: Props) {
                         })
                       }
                       rows={3}
-                      className="min-h-16 w-full rounded-2xl bg-input/50 px-2.5 py-1.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                      className="w-full"
                     />
 
                     <FieldDescription>1行に1つの選択肢を書く</FieldDescription>
@@ -186,12 +188,11 @@ export function FormBuilder(props: Props) {
                 ) : null}
 
                 <Field orientation="horizontal">
-                  <input
+                  <Checkbox
                     id={`${field.id}-required`}
-                    type="checkbox"
                     checked={field.required}
-                    onChange={(event) =>
-                      updateField(index, { ...field, required: event.target.checked })
+                    onCheckedChange={(checked) =>
+                      updateField(index, { ...field, required: checked })
                     }
                   />
 

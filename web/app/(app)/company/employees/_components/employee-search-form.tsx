@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { EmployeeSearchFilter } from "@/lib/api/types/employee-search-filter"
 
 type Props = {
@@ -55,18 +56,18 @@ export function EmployeeSearchForm(props: Props) {
             <Field className="w-full">
               <FieldLabel htmlFor="employee-search-status">在籍状況</FieldLabel>
 
-              <select
+              <NativeSelect
                 id="employee-search-status"
                 name="status"
                 defaultValue={props.filter.status ?? ""}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                className="w-full"
               >
                 {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <NativeSelectOption key={option.value} value={option.value}>
                     {option.label}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
           </div>
 

@@ -9,6 +9,7 @@ import type { RoleCreateFormState } from "@/app/(app)/system/roles/actions"
 import { StepUpDialog } from "@/components/step-up-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 
@@ -125,7 +126,7 @@ export function RoleCreateForm(props: Props) {
                   .filter((permission) => permission.category === category)
                   .map((permission) => (
                     <label key={permission.key} className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="permission_keys" value={permission.key} />
+                      <Checkbox name="permission_keys" value={permission.key} />
 
                       <span className="font-mono text-xs">{permission.key}</span>
 

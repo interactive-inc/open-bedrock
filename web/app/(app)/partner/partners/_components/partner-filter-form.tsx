@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 type Props = {
   q: string | null
@@ -23,16 +24,16 @@ export function PartnerFilterForm(props: Props) {
       <div className="flex flex-col gap-2">
         <Label htmlFor="filter-status">状態</Label>
 
-        <select
+        <NativeSelect
           id="filter-status"
           name="status"
           defaultValue={props.status ?? ""}
-          className="h-8 w-40 min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+          className="w-40"
         >
-          <option value="">すべて</option>
-          <option value="active">取引中</option>
-          <option value="archived">終了</option>
-        </select>
+          <NativeSelectOption value="">すべて</NativeSelectOption>
+          <NativeSelectOption value="active">取引中</NativeSelectOption>
+          <NativeSelectOption value="archived">終了</NativeSelectOption>
+        </NativeSelect>
       </div>
 
       <Button type="submit" variant="secondary">

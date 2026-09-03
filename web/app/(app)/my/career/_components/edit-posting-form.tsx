@@ -8,6 +8,7 @@ import { updateCareerPostingAction } from "@/app/(app)/my/career/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { CareerPosting } from "@/lib/api/types/career-types"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
@@ -101,16 +102,11 @@ export function EditPostingForm(props: Props) {
         <Field>
           <FieldLabel htmlFor="edit-posting-status">状態</FieldLabel>
 
-          <select
-            id="edit-posting-status"
-            name="status"
-            defaultValue={props.posting.status}
-            className="h-9 rounded-md border bg-transparent px-3 text-sm"
-          >
-            <option value="open">募集中</option>
+          <NativeSelect id="edit-posting-status" name="status" defaultValue={props.posting.status}>
+            <NativeSelectOption value="open">募集中</NativeSelectOption>
 
-            <option value="closed">締切</option>
-          </select>
+            <NativeSelectOption value="closed">締切</NativeSelectOption>
+          </NativeSelect>
         </Field>
 
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
