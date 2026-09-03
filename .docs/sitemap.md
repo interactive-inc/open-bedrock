@@ -33,8 +33,8 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 
 ## 通知
 
-- `/system/notifications` は自分宛ての通知を確認し、既読にする画面。
-- `/system/notifications/new` は宛先、種別、タイトル、本文を入力して通知を送る画面(`notification:send`)。
+- `/notifications` は自分宛ての通知を確認し、既読にする画面。
+- `/notifications/new` は宛先、種別、タイトル、本文を入力して通知を送る画面(`notification:send`)。
 
 ## じぶん
 

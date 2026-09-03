@@ -389,10 +389,10 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
   },
   { source: "/company/inbox", destination: "/inbox", permanent: false },
   { source: "/company/inbox/:path*", destination: "/inbox/:path*", permanent: false },
-  { source: "/company/notifications", destination: "/system/notifications", permanent: false },
+  { source: "/company/notifications", destination: "/notifications", permanent: false },
   {
     source: "/company/notifications/:path*",
-    destination: "/system/notifications/:path*",
+    destination: "/notifications/:path*",
     permanent: false,
   },
   {
@@ -403,12 +403,6 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
   {
     source: "/company/audit-events/:path*",
     destination: "/system/audit-events/:path*",
-    permanent: false,
-  },
-  { source: "/notifications", destination: "/system/notifications", permanent: false },
-  {
-    source: "/notifications/:path*",
-    destination: "/system/notifications/:path*",
     permanent: false,
   },
   // マイページはホームへ統合した。`/my/:path*`（本人スコープ）は現行なので転送しない。

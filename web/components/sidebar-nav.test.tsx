@@ -141,9 +141,8 @@ describe("SidebarNav workflow-repairs entry (requiredAllPermissions)", () => {
 })
 
 describe("SidebarNav space tabs", () => {
-  test("hides the system tab when the space has no visible item", () => {
-    // 通知だけが権限なしで見える System 項目なので、それを無効にすると空になる。
-    renderSidebar([], ["notifications"])
+  test("hides the system tab when no system permission is held", () => {
+    renderSidebar([])
 
     expect(screen.queryByRole("tab", { name: "システム" })).toBeNull()
   })
@@ -179,10 +178,8 @@ describe("SidebarNav space tabs", () => {
   })
 
   test("keeps only the apps tab when the other spaces have no visible item", () => {
-    renderSidebar(
-      [],
-      ["notifications", "employees", "departments", "grades", "positions", "team-management"],
-    )
+    // 会社の項目は権限なしでも見えるので、無効化して空にする。
+    renderSidebar([], ["employees", "departments", "grades", "positions", "team-management"])
 
     expect(screen.getAllByRole("tab").map((tab) => tab.getAttribute("aria-label"))).toEqual([
       "業務",
@@ -246,19 +243,11 @@ describe("SidebarNav space tabs", () => {
     expect(screen.queryByRole("link", { name: "部署の勤怠" })).toBeNull()
   })
 
-  test("keeps the inbox in the apps space and the notifications in the system space", () => {
+  test("keeps the inbox and the notifications in the apps space", () => {
     renderSidebar([])
 
     expect(screen.getByRole("link", { name: "受信箱" }).getAttribute("href")).toBe("/inbox")
-    expect(screen.queryByRole("link", { name: "通知" })).toBeNull()
-
-    cleanup()
-    pathnameMock.mockReturnValue("/system/notifications")
-    renderSidebar([])
-
-    expect(screen.getByRole("link", { name: "通知" }).getAttribute("href")).toBe(
-      "/system/notifications",
-    )
+    expect(screen.getByRole("link", { name: "通知" }).getAttribute("href")).toBe("/notifications")
   })
 
   test("selects the space tab from the current pathname", () => {

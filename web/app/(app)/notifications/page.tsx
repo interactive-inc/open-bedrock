@@ -5,8 +5,8 @@ import { Suspense } from "react"
 import {
   NotificationFilter,
   type NotificationFilterValue,
-} from "@/app/(app)/system/notifications/_components/notification-filter"
-import { NotificationList } from "@/app/(app)/system/notifications/_components/notification-list"
+} from "@/app/(app)/notifications/_components/notification-filter"
+import { NotificationList } from "@/app/(app)/notifications/_components/notification-list"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { TablePagination } from "@/components/table-pagination"
@@ -34,7 +34,7 @@ function filterToIsRead(filter: NotificationFilterValue): boolean | undefined {
 
 /**
  * 通知画面。自分宛ての通知一覧を RSC で取得して表示する。
- * 作成は /system/notifications/new に分離し、特権ロールにだけ導線を出す。
+ * 作成は /notifications/new に分離し、特権ロールにだけ導線を出す。
  * ?filter=unread|read で未読/既読の絞り込みができる。
  */
 export default async function NotificationsPage(props: { searchParams: SearchParams }) {
@@ -62,7 +62,7 @@ export default async function NotificationsPage(props: { searchParams: SearchPar
         description="自分宛ての通知を確認します。"
         actions={
           canCreate ? (
-            <Button nativeButton={false} render={<Link href="/system/notifications/new" />}>
+            <Button nativeButton={false} render={<Link href="/notifications/new" />}>
               <Plus />
               通知を作成
             </Button>
@@ -102,7 +102,7 @@ async function MyNotifications(props: {
       <NotificationList notifications={result.data} />
 
       <TablePagination
-        pathname="/system/notifications"
+        pathname="/notifications"
         total={result.total}
         limit={props.pageSize}
         offset={props.offset}

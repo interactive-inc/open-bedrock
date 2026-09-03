@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
-import type { NotificationFormState } from "@/app/(app)/system/notifications/actions"
-import { createNotificationAction } from "@/app/(app)/system/notifications/actions"
+import type { NotificationFormState } from "@/app/(app)/notifications/actions"
+import { createNotificationAction } from "@/app/(app)/notifications/actions"
 import { EmployeeSelect } from "@/components/employee-select"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -47,7 +47,7 @@ export function NotificationCreateForm(props: Props) {
       if (next.ok) {
         toast.success("通知を作成しました")
 
-        router.push("/system/notifications")
+        router.push("/notifications")
       } else if (next.error !== null) {
         toast.error(next.error)
       }

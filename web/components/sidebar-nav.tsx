@@ -157,7 +157,7 @@ export function SidebarNav(props: Props) {
 
   const badgeMap: Record<string, number> = {
     "/inbox": inboxTotal,
-    "/system/notifications": props.unreadNotificationCount,
+    "/notifications": props.unreadNotificationCount,
   }
 
   const appsBadgeTotal = inboxTotal + props.unreadNotificationCount

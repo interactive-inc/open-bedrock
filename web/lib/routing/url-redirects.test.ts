@@ -80,7 +80,7 @@ describe("urlRedirects", () => {
     expect(applyOnce("/system/licenses")).toBe("/software-license/licenses")
     expect(applyOnce("/system/it-incidents")).toBe("/it-incident/it-incidents")
     expect(applyOnce("/company/inbox")).toBe("/inbox")
-    expect(applyOnce("/company/notifications")).toBe("/system/notifications")
+    expect(applyOnce("/company/notifications")).toBe("/notifications")
     expect(applyOnce("/teams/reports")).toBe("/company/reports")
     expect(applyOnce("/my")).toBe("/")
   })

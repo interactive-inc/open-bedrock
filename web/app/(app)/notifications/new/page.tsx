@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { NotificationCreateForm } from "@/app/(app)/system/notifications/_components/notification-create-form"
+import { NotificationCreateForm } from "@/app/(app)/notifications/_components/notification-create-form"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,7 +10,7 @@ import { canManageNotifications } from "@/lib/notifications/can-manage-notificat
 export const metadata = { title: "通知を作成" }
 
 /**
- * 通知作成画面（特権ロールのみ）。作成後は /system/notifications へ redirect する。
+ * 通知作成画面（特権ロールのみ）。作成後は /notifications へ redirect する。
  * 権限が無いユーザーには 404 を返し UI を露出しない。
  */
 export default async function NotificationNewPage() {
@@ -34,7 +34,7 @@ export default async function NotificationNewPage() {
       <PageHeader
         title="通知を作成"
         description="宛先・種別・タイトル・本文を入力して通知を送ります。"
-        actions={<BackButton href="/system/notifications" label="一覧に戻る" />}
+        actions={<BackButton href="/notifications" label="一覧に戻る" />}
       />
 
       <Card className="max-w-2xl">

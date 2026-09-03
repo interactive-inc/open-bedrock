@@ -4,11 +4,11 @@ import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
 import { useActionState } from "react"
 import { toast } from "sonner"
-import type { NotificationFormState } from "@/app/(app)/system/notifications/actions"
+import type { NotificationFormState } from "@/app/(app)/notifications/actions"
 import {
   markAllNotificationsReadAction,
   markNotificationReadAction,
-} from "@/app/(app)/system/notifications/actions"
+} from "@/app/(app)/notifications/actions"
 import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"

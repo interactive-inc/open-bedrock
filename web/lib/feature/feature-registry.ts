@@ -78,7 +78,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     group: "overview",
     icon: Bell,
     prefetch: null,
-    routes: [{ label: "通知", href: "/system/notifications", visibility: everyone }],
+    routes: [{ label: "通知", href: "/notifications", visibility: everyone }],
   },
   {
     slug: "attendance",

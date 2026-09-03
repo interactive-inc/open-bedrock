@@ -42,8 +42,8 @@ describe("featureRegistry のラベル", () => {
   test("すべての href が所有者を表す prefix を持つ", () => {
     const hrefs = featureRegistry.flatMap((feature) => feature.routes.map((route) => route.href))
 
-    // ホーム、受信箱、全社サマリはコンテキストを持たない composition。
-    const compositionHrefs = new Set(["/", "/inbox", "/dashboards/management"])
+    // ホーム、受信箱、通知、全社サマリはコンテキストを持たない composition。
+    const compositionHrefs = new Set(["/", "/inbox", "/notifications", "/dashboards/management"])
 
     const scopePrefixes = ["/my/", "/teams/"]
 
