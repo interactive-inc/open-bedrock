@@ -1,26 +1,45 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toApiResponseError } from "@/lib/api/to-api-response-error"
+import type { ApiResponseError } from "@/lib/api/api-response-error"
 
-/** POST /system/roles。custom System Role を作成する。 */
-export async function createRole(request: {
+type Props = {
   key: string
   name: string
   description: string | null
   permissionKeys: ReadonlyArray<string>
-}) {
+  stepUpToken: string | null
+}
+
+/**
+ * POST /system/roles。custom System Role を作成する。
+ * API が再認証 grant を要求するため、あれば `x-system-step-up` として送る。
+ */
+export async function createRole(props: Props): Promise<null | ApiResponseError> {
   const client = await createClient()
 
-  const response = await client.system.roles.$post({
-    json: {
-      key: request.key,
-      name: request.name,
-      description: request.description,
-      permission_keys: [...request.permissionKeys],
+  const response = await client.system.roles.$post(
+    {
+      json: {
+        key: props.key,
+        name: props.name,
+        description: props.description,
+        permission_keys: [...props.permissionKeys],
+      },
     },
-  })
+    { headers: toStepUpHeaders(props.stepUpToken) },
+  )
 
   if (response.status !== 201) {
-    return new Error("failed to create role")
+    return toApiResponseError(response, "ロールの作成に失敗しました")
   }
 
-  return response.json()
+  return null
+}
+
+function toStepUpHeaders(stepUpToken: string | null): Record<string, string> {
+  if (stepUpToken === null) {
+    return {}
+  }
+
+  return { "x-system-step-up": stepUpToken }
 }

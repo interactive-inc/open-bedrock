@@ -1,10 +1,12 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useActionState } from "react"
+import { useActionState, useRef, useState } from "react"
 import { toast } from "sonner"
 import { updateRoleAction } from "@/app/(app)/system/roles/actions"
 import type { RoleUpdateFormState } from "@/app/(app)/system/roles/actions"
+import { StepUpDialog } from "@/components/step-up-dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -23,30 +25,55 @@ type Props = {
   permissions: ReadonlyArray<PermissionOption>
 }
 
-const initialState: RoleUpdateFormState = { ok: false, error: null }
+const initialState: RoleUpdateFormState = { kind: "idle" }
 
 /** ロール編集フォーム。現在の名前・説明・権限を初期値に表示し、変更を PATCH する。 */
 export function RoleEditForm(props: Props) {
   const router = useRouter()
 
+  const [isStepUpOpen, setStepUpOpen] = useState(false)
+
+  // 再認証を挟んだあと同じ入力で再送するため、送信した FormData を持っておく。
+  const submittedFormData = useRef<FormData | null>(null)
+
   async function reduce(
     previousState: RoleUpdateFormState,
     formData: FormData,
   ): Promise<RoleUpdateFormState> {
+    submittedFormData.current = formData
+
     const result = await updateRoleAction(previousState, formData)
 
-    if (result.ok) {
+    if (result.kind === "succeeded") {
       toast.success("ロールを更新しました")
 
       router.push("/system/roles")
-    } else if (result.error !== null) {
-      toast.error(result.error)
+    }
+
+    if (result.kind === "step_up_required") {
+      setStepUpOpen(true)
     }
 
     return result
   }
 
-  const [, formAction, isPending] = useActionState(reduce, initialState)
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
+
+  function handleStepUpSucceeded(): void {
+    setStepUpOpen(false)
+
+    const formData = submittedFormData.current
+
+    if (formData !== null) {
+      formAction(formData)
+    }
+  }
 
   const granted = new Set(props.grantedPermissionKeys)
 
@@ -112,9 +139,21 @@ export function RoleEditForm(props: Props) {
         ))}
       </div>
 
+      {state.kind === "failed" ? (
+        <Alert variant="destructive">
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
+      ) : null}
+
       <Button type="submit" disabled={isPending} className="self-start">
         {isPending ? "更新中…" : "変更を保存"}
       </Button>
+
+      <StepUpDialog
+        open={isStepUpOpen}
+        onSucceeded={handleStepUpSucceeded}
+        onCancel={() => setStepUpOpen(false)}
+      />
     </form>
   )
 }

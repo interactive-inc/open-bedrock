@@ -1,10 +1,12 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useActionState } from "react"
+import { useActionState, useRef, useState } from "react"
 import { toast } from "sonner"
 import { createRoleAction } from "@/app/(app)/system/roles/actions"
 import type { RoleCreateFormState } from "@/app/(app)/system/roles/actions"
+import { StepUpDialog } from "@/components/step-up-dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -19,33 +21,58 @@ type Props = {
   permissions: ReadonlyArray<PermissionOption>
 }
 
-const initialState: RoleCreateFormState = { ok: false, error: null }
+const initialState: RoleCreateFormState = { kind: "idle" }
 
 /**
  * 動的ロール作成フォーム。キー・名前・説明と、付与する権限をチェックボックスで選ぶ。
- * 権限はカテゴリごとにまとめて表示する。成功・失敗は toast で通知する。成功時は一覧へ遷移する。
+ * 権限はカテゴリごとにまとめて表示する。成功時は一覧へ遷移し、失敗の理由はフォーム内に出す。
  */
 export function RoleCreateForm(props: Props) {
   const router = useRouter()
+
+  const [isStepUpOpen, setStepUpOpen] = useState(false)
+
+  // 再認証を挟んだあと同じ入力で再送するため、送信した FormData を持っておく。
+  const submittedFormData = useRef<FormData | null>(null)
 
   async function reduce(
     previousState: RoleCreateFormState,
     formData: FormData,
   ): Promise<RoleCreateFormState> {
+    submittedFormData.current = formData
+
     const result = await createRoleAction(previousState, formData)
 
-    if (result.ok) {
+    if (result.kind === "succeeded") {
       toast.success("ロールを作成しました")
 
       router.push("/system/roles")
-    } else if (result.error !== null) {
-      toast.error(result.error)
+    }
+
+    if (result.kind === "step_up_required") {
+      setStepUpOpen(true)
     }
 
     return result
   }
 
-  const [state, formAction, isPending] = useActionState(reduce, initialState)
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
+
+  function handleStepUpSucceeded(): void {
+    setStepUpOpen(false)
+
+    const formData = submittedFormData.current
+
+    if (formData !== null) {
+      formAction(formData)
+    }
+  }
 
   const categories = [...new Set(props.permissions.map((permission) => permission.category))]
 
@@ -98,11 +125,21 @@ export function RoleCreateForm(props: Props) {
         ))}
       </div>
 
-      {state.error !== null ? <p className="text-sm text-destructive">{state.error}</p> : null}
+      {state.kind === "failed" ? (
+        <Alert variant="destructive">
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <Button type="submit" disabled={isPending} className="self-start">
         {isPending ? "作成中…" : "ロールを作成"}
       </Button>
+
+      <StepUpDialog
+        open={isStepUpOpen}
+        onSucceeded={handleStepUpSucceeded}
+        onCancel={() => setStepUpOpen(false)}
+      />
     </form>
   )
 }
