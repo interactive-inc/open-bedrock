@@ -2,7 +2,7 @@ import type { AuditEventFilters } from "@/api/http/audit/audit-event.adapter"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { auditUnavailable } from "@/api/http/audit/audit-unavailable"
 
-const FILTER_HASH_PREFIX = "open-karte:audit:filters:v1\0"
+const FILTER_HASH_PREFIX = "open-bedrock:audit:filters:v1\0"
 
 /** Hashes only normalized filter values, excluding cursor, limit and raw input spellings. */
 export async function hashAuditFilters(filters: AuditEventFilters): Promise<string> {

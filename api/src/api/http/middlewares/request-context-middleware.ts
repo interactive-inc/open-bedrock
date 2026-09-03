@@ -7,7 +7,7 @@ function toExternalRequestId(value: string | undefined): string | null {
 }
 
 export const requestContextMiddleware = factory.createMiddleware(async (c, next) => {
-  const clientHeader = c.req.header("X-Open-Karte-Client")
+  const clientHeader = c.req.header("X-Open-Bedrock-Client")
   const clientName = clientHeader === "web" || clientHeader === "cli" ? clientHeader : "api"
   const requestId = crypto.randomUUID()
 
