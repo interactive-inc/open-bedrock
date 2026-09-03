@@ -67,7 +67,7 @@ describe("System procedure application", () => {
     expect(first).not.toBeInstanceOf(Error)
     expect(second).not.toBeInstanceOf(Error)
     expect(await fixture.repository.findNumber(procedureKeySchema.parse("change"))).toBe(1)
-    const current = await fixture.repository.findCurrent(procedureKeySchema.parse("change"))
+    const current = await fixture.repository.find(procedureKeySchema.parse("change"))
     expect(current).toMatchObject({ revision: 2, title: "Change v2" })
     expect(
       await fixture.database
@@ -152,9 +152,9 @@ describe("System procedure application", () => {
     })
 
     expect(retired).toBe(true)
-    expect(await fixture.repository.findCurrent(definition.key)).toBeNull()
+    expect(await fixture.repository.find(definition.key)).toBeNull()
     expect(
-      await fixture.repository.listActive({
+      await fixture.repository.findMany({
         category: null,
         limit: 10,
         offset: 0,

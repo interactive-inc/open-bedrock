@@ -76,7 +76,7 @@ export class RegisterEmployee {
       },
       var: { database: this.c.var.database, auditContext: this.c.var.auditContext },
     }
-    const roles = await new SystemRoleCatalogRepository({ env: { DB: this.c.env.DB } }).list()
+    const roles = await new SystemRoleCatalogRepository({ env: { DB: this.c.env.DB } }).findMany()
     if (roles instanceof Error) {
       return new UnexpectedError("System Roleを取得できません", { cause: roles })
     }

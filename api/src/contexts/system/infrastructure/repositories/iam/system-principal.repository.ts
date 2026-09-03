@@ -14,6 +14,10 @@ type PrincipalRow = Readonly<{
 
 type Context = SystemD1Context
 
+export type FindSystemPrincipalProps =
+  | Readonly<{ principalId: string; accountId?: never }>
+  | Readonly<{ principalId?: never; accountId: string }>
+
 /** Accountと分離したSystem Principalの分類・名称・Connector対応を保存する。 */
 export class SystemPrincipalRepository {
   constructor(private readonly c: Context) {
@@ -41,33 +45,26 @@ export class SystemPrincipalRepository {
     }
   }
 
-  async findOne(principalId: string): Promise<SystemPrincipalEntity | null | Error> {
+  async find(props: FindSystemPrincipalProps): Promise<SystemPrincipalEntity | null | Error> {
     try {
-      const row = await this.c.env.DB.prepare(
-        `SELECT id, account_id, kind, name, connector_id, revision, created_at, updated_at
+      const row =
+        props.principalId !== undefined
+          ? await this.c.env.DB.prepare(
+              `SELECT id, account_id, kind, name, connector_id, revision, created_at, updated_at
          FROM system_principals
          WHERE id = ?1
          LIMIT 1`,
-      )
-        .bind(principalId)
-        .first<PrincipalRow>()
-
-      return row === null ? null : this.restore(row)
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to read System Principal")
-    }
-  }
-
-  async findByAccountId(accountId: string): Promise<SystemPrincipalEntity | null | Error> {
-    try {
-      const row = await this.c.env.DB.prepare(
-        `SELECT id, account_id, kind, name, connector_id, revision, created_at, updated_at
+            )
+              .bind(props.principalId)
+              .first<PrincipalRow>()
+          : await this.c.env.DB.prepare(
+              `SELECT id, account_id, kind, name, connector_id, revision, created_at, updated_at
          FROM system_principals
          WHERE account_id = ?1
          LIMIT 1`,
-      )
-        .bind(accountId)
-        .first<PrincipalRow>()
+            )
+              .bind(props.accountId)
+              .first<PrincipalRow>()
 
       return row === null ? null : this.restore(row)
     } catch (caught) {
@@ -126,7 +123,7 @@ export class SystemPrincipalRepository {
     expectedRevision: number,
     auditStatements: ReadonlyArray<D1PreparedStatement>,
   ): Promise<"updated" | "conflict" | "not_found" | Error> {
-    const current = await this.findOne(principal.id)
+    const current = await this.find({ principalId: principal.id })
     if (current === null) return "not_found"
     if (current instanceof Error) return current
     if (current.revision !== expectedRevision) return "conflict"

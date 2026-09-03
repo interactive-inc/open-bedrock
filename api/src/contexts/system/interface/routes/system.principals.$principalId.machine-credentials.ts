@@ -33,7 +33,7 @@ export const GET = systemFactory.createHandlers(
     const principalId = context.req.valid("param").principalId
     const principal = await new SystemPrincipalRepository({
       env: { DB: context.env.DB },
-    }).findOne(principalId)
+    }).find({ principalId })
     if (principal instanceof Error) throw new SystemPrincipalUnavailableError(principal)
     if (principal === null) throw new SystemPrincipalNotFoundError()
     const credentials = await new SystemMachineCredentialRepository({
@@ -68,7 +68,7 @@ export const POST = systemFactory.createHandlers(
     const principalId = context.req.valid("param").principalId
     const principal = await new SystemPrincipalRepository({
       env: { DB: context.env.DB },
-    }).findOne(principalId)
+    }).find({ principalId })
     if (principal instanceof Error) throw new SystemPrincipalUnavailableError(principal)
     if (principal === null) throw new SystemPrincipalNotFoundError()
     if (principal.kind === "human") throw new SystemPrincipalInvalidError()

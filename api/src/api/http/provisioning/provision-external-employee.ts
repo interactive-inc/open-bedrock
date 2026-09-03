@@ -22,7 +22,7 @@ export class ProvisionExternalEmployee {
   }): Promise<EmployeeId | Error> {
     const roles = await new SystemRoleCatalogRepository({
       env: { DB: this.c.env.DB },
-    }).list()
+    }).findMany()
     if (roles instanceof Error) return roles
     const role = roles.find((candidate) => candidate.key === `company:${input.roleKey}`)
     if (role === undefined) return new Error("System provisioning role not found")

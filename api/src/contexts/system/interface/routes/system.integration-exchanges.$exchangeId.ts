@@ -25,7 +25,7 @@ export const GET = systemFactory.createHandlers(
   async (context) => {
     const exchange = await new SystemIntegrationExchangeRepository({
       env: { DB: context.env.DB },
-    }).findOne(context.req.valid("param").exchangeId)
+    }).find(context.req.valid("param").exchangeId)
     if (exchange instanceof Error) throw new SystemIntegrationUnavailableError(exchange)
     if (exchange === null) throw new SystemIntegrationNotFoundError()
     if (
@@ -62,7 +62,7 @@ export const PATCH = systemFactory.createHandlers(
     const systemContext = { env: { DB: context.env.DB } }
     const repository = new SystemIntegrationExchangeRepository(systemContext)
     const exchangeId = context.req.valid("param").exchangeId
-    const current = await repository.findOne(exchangeId)
+    const current = await repository.find(exchangeId)
     if (current instanceof Error) throw new SystemIntegrationUnavailableError(current)
     if (current === null) throw new SystemIntegrationNotFoundError()
     if (
@@ -101,7 +101,7 @@ export const PATCH = systemFactory.createHandlers(
     if (event instanceof Error) throw new SystemIntegrationUnavailableError(event)
     const auditStatements = new SystemAuditEventRepository(systemContext).prepareAppend(event)
     const result = await new UpdateIntegrationExchange({
-      findOne: (id) => repository.findOne(id),
+      find: (id) => repository.find(id),
       write: (value, expectedUpdatedAt) =>
         repository.write(value, expectedUpdatedAt, auditStatements),
     }).execute({

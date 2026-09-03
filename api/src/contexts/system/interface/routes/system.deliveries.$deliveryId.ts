@@ -74,13 +74,13 @@ export const PATCH = systemFactory.createHandlers(
     if (input.action === "claim") {
       const principal = await new SystemPrincipalRepository({
         env: { DB: context.env.DB },
-      }).findByAccountId(accountId.data)
+      }).find({ accountId: accountId.data })
       if (principal instanceof Error) throw new SystemDeliveryUnavailableError(principal)
       if (principal === null || principal.kind === "human") throw new SystemForbiddenError()
     }
     const systemContext = { env: { DB: context.env.DB } }
     const repository = new SystemDeliveryRepository(systemContext)
-    const current = await repository.findOne(input.kind, context.req.valid("param").deliveryId)
+    const current = await repository.find(input.kind, context.req.valid("param").deliveryId)
     if (current instanceof Error) throw new SystemDeliveryUnavailableError(current)
     if (current === null) throw new SystemDeliveryNotFoundError()
     const material = new SystemPrincipalSecretService()

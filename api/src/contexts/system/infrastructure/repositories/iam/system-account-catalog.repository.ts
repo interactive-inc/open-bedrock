@@ -41,7 +41,7 @@ export class SystemAccountCatalogRepository {
     Object.freeze(this)
   }
 
-  async list(): Promise<ReadonlyArray<SystemAccountCatalogView> | Error> {
+  async findMany(): Promise<ReadonlyArray<SystemAccountCatalogView> | Error> {
     try {
       const accounts = await this.c.env.DB.prepare(
         `SELECT id, status, token_version, closed_at, created_at, updated_at
@@ -74,7 +74,7 @@ export class SystemAccountCatalogRepository {
     }
   }
 
-  async findById(accountId: AccountId): Promise<SystemAccountCatalogView | null | Error> {
+  async find(accountId: AccountId): Promise<SystemAccountCatalogView | null | Error> {
     try {
       const row = await this.c.env.DB.prepare(
         `SELECT id, status, token_version, closed_at, created_at, updated_at
@@ -143,7 +143,7 @@ export class SystemAccountCatalogRepository {
     now: Date,
     auditStatements: ReadonlyArray<D1PreparedStatement>,
   ): Promise<SystemAccountStatusUpdate | Error> {
-    const target = await this.findById(targetAccountId)
+    const target = await this.find(targetAccountId)
     if (target === null) return "not_found"
     if (target instanceof Error) return target
     if (actorAccountId === targetAccountId && status !== "active") return "forbidden"

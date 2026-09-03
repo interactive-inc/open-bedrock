@@ -136,7 +136,7 @@ export const GET = factory.createHandlers(
       max: MAX_LIST_OFFSET,
     })
 
-    const result = await systemProcedureRepository(c).listActive({
+    const result = await systemProcedureRepository(c).findMany({
       category: query.category ?? null,
       limit,
       offset,

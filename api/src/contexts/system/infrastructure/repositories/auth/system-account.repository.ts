@@ -24,7 +24,7 @@ export class SystemAccountRepository {
     Object.freeze(this)
   }
 
-  async findById(accountId: AccountId): Promise<AccountEntity | null | Error> {
+  async find(accountId: AccountId): Promise<AccountEntity | null | Error> {
     try {
       const database =
         "select" in this.c.database ? this.c.database : createDatabase(this.c.database)
@@ -43,7 +43,7 @@ export class SystemAccountRepository {
 
   /** canonical AccountEntityの現在状態からSession継続可否を解決するrepository read。 */
   static async resolveSession(props: {
-    accountRepository: Pick<SystemAccountRepository, "findById">
+    accountRepository: Pick<SystemAccountRepository, "find">
     accountId: AccountId
     sessionTokenVersion: number
   }): Promise<
@@ -54,7 +54,7 @@ export class SystemAccountRepository {
       }>
     | Error
   > {
-    const account = await props.accountRepository.findById(props.accountId)
+    const account = await props.accountRepository.find(props.accountId)
 
     if (account instanceof Error) return account
     if (account === null) return { kind: "rejected", reason: "account_not_found" }

@@ -5,7 +5,7 @@ import type {
 } from "@system/infrastructure/repositories/integration/system-integration-exchange.repository"
 
 type Context = Readonly<{
-  findOne: SystemIntegrationExchangeRepository["findOne"]
+  find: SystemIntegrationExchangeRepository["find"]
   write: SystemIntegrationExchangeRepository["write"]
 }>
 
@@ -24,7 +24,7 @@ export class UpdateIntegrationExchange {
   }
 
   async execute(command: Command): Promise<SystemIntegrationExchangeWriteResult | Error | null> {
-    const current = await this.c.findOne(command.id)
+    const current = await this.c.find(command.id)
     if (current === null || current instanceof Error) return current
     const updated = current.transition(command.status, command.at, {
       externalReference: command.externalReference,

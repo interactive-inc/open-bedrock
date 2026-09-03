@@ -28,7 +28,7 @@ export const GET = systemFactory.createHandlers(
     const exchangeId = context.req.valid("param").exchangeId
     const exchange = await new SystemIntegrationExchangeRepository({
       env: { DB: context.env.DB },
-    }).findOne(exchangeId)
+    }).find(exchangeId)
     if (exchange instanceof Error) throw new SystemIntegrationUnavailableError(exchange)
     if (
       exchange === null ||
@@ -88,7 +88,7 @@ export const POST = systemFactory.createHandlers(
     const exchangeId = context.req.valid("param").exchangeId
     const exchange = await new SystemIntegrationExchangeRepository({
       env: { DB: context.env.DB },
-    }).findOne(exchangeId)
+    }).find(exchangeId)
     if (exchange instanceof Error) throw new SystemIntegrationUnavailableError(exchange)
     if (
       exchange === null ||

@@ -72,7 +72,7 @@ export class SystemConnectorRepository {
     }
   }
 
-  async findOne(id: string): Promise<SystemConnectorEntity | null | Error> {
+  async find(id: string): Promise<SystemConnectorEntity | null | Error> {
     try {
       const row = await this.c.env.DB.prepare(
         `SELECT id, key, name, direction, transport, status, revision, created_at, updated_at
@@ -91,7 +91,7 @@ export class SystemConnectorRepository {
     expectedRevision: number,
     auditStatements: ReadonlyArray<D1PreparedStatement>,
   ): Promise<"updated" | "conflict" | "not_found" | Error> {
-    const current = await this.findOne(connector.id)
+    const current = await this.find(connector.id)
     if (current === null) return "not_found"
     if (current instanceof Error) return current
     if (current.revision !== expectedRevision) return "conflict"

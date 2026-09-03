@@ -38,7 +38,7 @@ export const POST = systemFactory.createHandlers(
       throw new SystemLoginCodeInvalidError()
     }
 
-    const account = await new SystemAccountRepository({ database: context.env.DB }).findById(
+    const account = await new SystemAccountRepository({ database: context.env.DB }).find(
       consumed.accountId,
     )
     if (account instanceof Error) {

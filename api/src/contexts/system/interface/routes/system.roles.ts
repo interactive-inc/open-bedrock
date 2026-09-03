@@ -26,7 +26,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
   const roles = await new SystemRoleCatalogRepository({
     env: { DB: context.env.DB },
-  }).list()
+  }).findMany()
   if (roles instanceof Error) {
     throw new SystemIAMUnavailableError()
   }

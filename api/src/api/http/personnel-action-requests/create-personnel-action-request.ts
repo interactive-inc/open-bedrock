@@ -136,7 +136,7 @@ export class CreatePersonnelActionRequest {
 
     const procedure = await new SystemD1ProcedureRepository({
       env: { DB: this.c.env.DB },
-    }).findCurrent(CreatePersonnelActionRequest.procedureKey)
+    }).find(CreatePersonnelActionRequest.procedureKey)
     if (procedure instanceof Error) {
       return new UnexpectedError("人事変更申請手続を取得できません", { cause: procedure })
     }

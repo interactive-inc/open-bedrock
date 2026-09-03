@@ -29,7 +29,7 @@ type Context = SystemD1Context
 export class SystemD1ProcedureRepository {
   constructor(private readonly c: Context) {}
 
-  async findCurrent(key: ProcedureKey): Promise<ProcedureDefinitionEntity | null | Error> {
+  async find(key: ProcedureKey): Promise<ProcedureDefinitionEntity | null | Error> {
     try {
       const row = await this.c.env.DB.prepare(
         `SELECT
@@ -90,7 +90,7 @@ export class SystemD1ProcedureRepository {
     }
   }
 
-  async listActive(input: {
+  async findMany(input: {
     category: string | null
     limit: number
     offset: number

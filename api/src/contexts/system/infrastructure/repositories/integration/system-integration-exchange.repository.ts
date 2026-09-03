@@ -15,7 +15,7 @@ export class SystemIntegrationExchangeRepository {
     Object.freeze(this)
   }
 
-  async findOne(id: string): Promise<IntegrationExchangeEntity | null | Error> {
+  async find(id: string): Promise<IntegrationExchangeEntity | null | Error> {
     try {
       const row = await this.c.env.DB.prepare(
         `SELECT id, connector_id, direction, operation_key, idempotency_key, payload_digest,

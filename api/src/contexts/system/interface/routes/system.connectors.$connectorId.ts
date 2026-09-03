@@ -46,7 +46,7 @@ export const PATCH = systemFactory.createHandlers(
     }
     const systemContext = { env: { DB: context.env.DB } }
     const repository = new SystemConnectorRepository(systemContext)
-    const current = await repository.findOne(connectorId)
+    const current = await repository.find(connectorId)
     if (current instanceof Error) throw new SystemIntegrationUnavailableError(current)
     if (current === null) throw new SystemIntegrationNotFoundError()
     const body = context.req.valid("json")

@@ -221,7 +221,7 @@ describe("canonical System Notification Application + D1 repository", () => {
     const accountId = zAccountId.parse("account-owner")
     expect(await repository.countUnreadForAccount(accountId)).toBe(2)
 
-    const page = await repository.listForAccount({
+    const page = await repository.findMany({
       recipientAccountId: accountId,
       read: false,
       limit: 1,

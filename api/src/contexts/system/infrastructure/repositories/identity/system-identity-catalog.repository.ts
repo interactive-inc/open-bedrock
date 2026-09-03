@@ -62,9 +62,7 @@ export class SystemIdentityCatalogRepository {
     Object.freeze(this)
   }
 
-  async listForAccount(
-    accountId: AccountId,
-  ): Promise<ReadonlyArray<SystemIdentityCatalogView> | Error> {
+  async findMany(accountId: AccountId): Promise<ReadonlyArray<SystemIdentityCatalogView> | Error> {
     try {
       const rows = await this.c.env.DB.prepare(
         `SELECT identity.id, identity.account_id, identity.provider, identity.subject,
@@ -132,7 +130,7 @@ export class SystemIdentityCatalogRepository {
     }
   }
 
-  async findById(identityId: IdentityId): Promise<SystemIdentityCatalogView | null | Error> {
+  async find(identityId: IdentityId): Promise<SystemIdentityCatalogView | null | Error> {
     try {
       const row = await this.c.env.DB.prepare(
         `SELECT identity.id, identity.account_id, identity.provider, identity.subject,
@@ -280,7 +278,7 @@ export class SystemIdentityCatalogRepository {
         return "forbidden"
       }
       if (caught instanceof Error && caught.message.includes("malformed JSON")) {
-        const identities = await this.listForAccount(props.identity.binding.accountId)
+        const identities = await this.findMany(props.identity.binding.accountId)
         if (identities instanceof Error) return identities
         const activeCount = identities.filter((entry) => entry.binding.state === "active").length
         if (activeCount <= 1) return "last_active_identity"

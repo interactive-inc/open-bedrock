@@ -37,7 +37,7 @@ export class AccountDirectoryReadAdapter {
   async list(props: Props): Promise<AccountDirectoryPage | Error> {
     const systemAccounts = await new SystemAccountCatalogRepository({
       env: { DB: this.context.env.DB },
-    }).list()
+    }).findMany()
     if (systemAccounts instanceof Error) return systemAccounts
     const selectedAccounts = systemAccounts.filter(
       (account) => props.status === null || account.status === props.status,

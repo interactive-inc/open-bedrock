@@ -28,7 +28,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
   const account = await new SystemAccountCatalogRepository({
     env: { DB: context.env.DB },
-  }).findById(accountId.data)
+  }).find(accountId.data)
   if (account instanceof Error) {
     throw new SystemAccountUnavailableError()
   }
@@ -68,7 +68,7 @@ export const PATCH = systemFactory.createHandlers(
     }
 
     const repository = new SystemAccountCatalogRepository({ env: { DB: context.env.DB } })
-    const before = await repository.findById(targetAccountId.data)
+    const before = await repository.find(targetAccountId.data)
     if (before instanceof Error) {
       throw new SystemAccountUnavailableError()
     }
@@ -143,7 +143,7 @@ export const PATCH = systemFactory.createHandlers(
       throw new SystemLastRootAccountError()
     }
 
-    const account = await repository.findById(targetAccountId.data)
+    const account = await repository.find(targetAccountId.data)
     if (account === null || account instanceof Error) {
       throw new SystemAccountUnavailableError()
     }
