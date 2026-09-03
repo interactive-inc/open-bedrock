@@ -8,6 +8,12 @@ import type { LoginState } from "@/lib/auth/login-action"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import { useTranslator } from "@/lib/i18n/use-translator"
 
 const initialState: LoginState = { ok: false, error: null }
@@ -62,8 +68,8 @@ export function LoginForm(props: Props) {
         <Field>
           <FieldLabel htmlFor="login-password">{t("パスワード")}</FieldLabel>
 
-          <div className="relative">
-            <Input
+          <InputGroup>
+            <InputGroupInput
               id="login-password"
               name="password"
               type={showPassword ? "text" : "password"}
@@ -72,17 +78,16 @@ export function LoginForm(props: Props) {
               required
             />
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              className="absolute top-1/2 right-2 -translate-y-1/2"
-              onClick={() => setShowPassword((prev) => !prev)}
-              aria-label={showPassword ? t("パスワードを隠す") : t("パスワードを表示")}
-            >
-              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </Button>
-          </div>
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                size="icon-xs"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? t("パスワードを隠す") : t("パスワードを表示")}
+              >
+                {showPassword ? <EyeOff /> : <Eye />}
+              </InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
         </Field>
 
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
