@@ -30,7 +30,7 @@ describe("createClient", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const request = new Request(fetchMock.mock.calls[0]?.[0], fetchMock.mock.calls[0]?.[1])
-    expect(request.headers.get("X-Open-Karte-Client")).toBe("web")
+    expect(request.headers.get("X-Open-Bedrock-Client")).toBe("web")
     expect(request.headers.get("Authorization")).toBe(bearer)
   })
 

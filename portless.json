@@ -1,6 +1,6 @@
 {
   "apps": {
-    "web": { "name": "bedrock" },
-    "api": { "name": "api.bedrock", "appPort": 18787 }
+    "web": { "name": "app.bedrock" },
+    "api": { "name": "bedrock", "appPort": 18787 }
   }
 }

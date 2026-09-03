@@ -1,4 +1,4 @@
-# open-karte
+# open-bedrock
 
 オープンソースの、社内事務手続きのためのセルフホスト基盤。Claude などの AI エージェントから CLI で呼ばれることを前提に設計し、人が操作する Web UI も提供する。
 
@@ -7,7 +7,7 @@
 TypeScript のモノレポ。API を業務規則と認可の正本とし、Web と CLI が操作ごとの提供面になる。提供範囲は操作ごとに異なる。
 
 ```text
-open-karte/
+open-bedrock/
 ├── api/             # API サーバ (Hono / Cloudflare Workers)
 ├── cli/             # bedrock コマンド (Hono / bun)
 ├── web/             # Web UI (Next.js)
@@ -34,7 +34,7 @@ make dev      # bun install して portless で全アプリ起動
 
 個別に動かす場合は `make help` を参照。
 
-起動後は web（`https://bedrock.localhost`）に開発用シードのアカウントでログインできる。メールは `you+e001@example.com`、パスワードは `password`（`E001` が admin）。seed は全ユーザー共通の既知パスワードで、本番には投入しない。
+起動後は web（`https://app.bedrock.localhost`）に開発用シードのアカウントでログインできる。API は `https://bedrock.localhost` で動作する。メールは `you+e001@example.com`、パスワードは `password`（`E001` が admin）。seed は全ユーザー共通の既知パスワードで、本番には投入しない。
 
 ## CLI
 

@@ -12,7 +12,7 @@ describe("session refresh middleware", () => {
   test("lets the local export Route Handler return the unauthenticated API response", async () => {
     const response = await middleware(
       new NextRequest(
-        "https://karte.open.localhost/admin/audit-events/export?from=2026-07-01T00%3A00%3A00Z&to=2026-07-02T00%3A00%3A00Z",
+        "https://app.bedrock.localhost/admin/audit-events/export?from=2026-07-01T00%3A00%3A00Z&to=2026-07-02T00%3A00%3A00Z",
       ),
     )
     expect(response.headers.get("location")).toBeNull()
@@ -21,7 +21,7 @@ describe("session refresh middleware", () => {
 
   test("keeps the current URL when no session or refresh token exists", async () => {
     const response = await middleware(
-      new NextRequest("https://karte.open.localhost/admin/audit-events"),
+      new NextRequest("https://app.bedrock.localhost/admin/audit-events"),
     )
     expect(response.headers.get("location")).toBeNull()
     expect(response.headers.get("x-middleware-next")).toBe("1")
@@ -29,7 +29,7 @@ describe("session refresh middleware", () => {
 
   test("does not turn an invalid refresh token on the export route into HTML navigation", async () => {
     mocks.postRefreshToken.mockResolvedValue(new Error("invalid refresh"))
-    const request = new NextRequest("https://karte.open.localhost/admin/audit-events/export")
+    const request = new NextRequest("https://app.bedrock.localhost/admin/audit-events/export")
     request.cookies.set("refresh_token", "fixture")
     const response = await middleware(request)
     expect(response.headers.get("location")).toBeNull()
@@ -42,7 +42,7 @@ describe("session refresh middleware", () => {
       access_token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJFMDExIiwiZXhwIjo0MTAyNDQ0ODAwfQ.signature",
       refresh_token: "rotated-refresh-token",
     })
-    const request = new NextRequest("https://karte.open.localhost/employees?status=active")
+    const request = new NextRequest("https://app.bedrock.localhost/employees?status=active")
     request.cookies.set("refresh_token", "fixture")
 
     const response = await middleware(request)
@@ -69,10 +69,10 @@ describe("session refresh middleware", () => {
         }),
     )
 
-    const requestA = new NextRequest("https://karte.open.localhost/employees")
+    const requestA = new NextRequest("https://app.bedrock.localhost/employees")
     requestA.cookies.set("refresh_token", "token-a")
 
-    const requestB = new NextRequest("https://karte.open.localhost/employees")
+    const requestB = new NextRequest("https://app.bedrock.localhost/employees")
     requestB.cookies.set("refresh_token", "token-b")
 
     const responses = await Promise.all([middleware(requestA), middleware(requestB)])
@@ -86,7 +86,7 @@ describe("session refresh middleware", () => {
 
 describe("nonce-based CSP", () => {
   test("authenticated page response contains nonce and strict-dynamic in CSP", async () => {
-    const request = new NextRequest("https://karte.open.localhost/employees")
+    const request = new NextRequest("https://app.bedrock.localhost/employees")
     request.cookies.set("session", "valid-token")
     const response = await middleware(request)
 
@@ -97,11 +97,11 @@ describe("nonce-based CSP", () => {
   })
 
   test("CSP nonce differs between requests", async () => {
-    const req1 = new NextRequest("https://karte.open.localhost/employees")
+    const req1 = new NextRequest("https://app.bedrock.localhost/employees")
     req1.cookies.set("session", "valid-token")
     const res1 = await middleware(req1)
 
-    const req2 = new NextRequest("https://karte.open.localhost/employees")
+    const req2 = new NextRequest("https://app.bedrock.localhost/employees")
     req2.cookies.set("session", "valid-token")
     const res2 = await middleware(req2)
 
@@ -111,7 +111,7 @@ describe("nonce-based CSP", () => {
   })
 
   test("x-nonce request header is forwarded via x-middleware-request-x-nonce", async () => {
-    const request = new NextRequest("https://karte.open.localhost/employees")
+    const request = new NextRequest("https://app.bedrock.localhost/employees")
     request.cookies.set("session", "valid-token")
     const response = await middleware(request)
 
@@ -124,7 +124,7 @@ describe("nonce-based CSP", () => {
   })
 
   test("CSP is set when no session or refresh token exists", async () => {
-    const request = new NextRequest("https://karte.open.localhost/admin/audit-events")
+    const request = new NextRequest("https://app.bedrock.localhost/admin/audit-events")
     const response = await middleware(request)
 
     const csp = response.headers.get("content-security-policy")
@@ -138,7 +138,7 @@ describe("nonce-based CSP", () => {
       access_token: "new-access",
       refresh_token: "new-refresh",
     })
-    const request = new NextRequest("https://karte.open.localhost/employees")
+    const request = new NextRequest("https://app.bedrock.localhost/employees")
     request.cookies.set("refresh_token", "old-refresh")
     const response = await middleware(request)
 
@@ -151,7 +151,7 @@ describe("nonce-based CSP", () => {
   test("dev mode adds unsafe-eval to script-src", async () => {
     vi.stubEnv("NODE_ENV", "development")
     try {
-      const request = new NextRequest("https://karte.open.localhost/employees")
+      const request = new NextRequest("https://app.bedrock.localhost/employees")
       request.cookies.set("session", "valid-token")
       const response = await middleware(request)
 
@@ -165,7 +165,7 @@ describe("nonce-based CSP", () => {
   test("production mode does not include unsafe-eval", async () => {
     vi.stubEnv("NODE_ENV", "production")
     try {
-      const request = new NextRequest("https://karte.open.localhost/employees")
+      const request = new NextRequest("https://app.bedrock.localhost/employees")
       request.cookies.set("session", "valid-token")
       const response = await middleware(request)
 

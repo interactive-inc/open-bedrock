@@ -10,9 +10,9 @@ export async function downloadExpenseAttachment(
 ): Promise<Response> {
   const token = await getServerSession()
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:18787"
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "https://bedrock.localhost"
 
-  const headers: Record<string, string> = { "X-Open-Karte-Client": "web" }
+  const headers: Record<string, string> = { "X-Open-Bedrock-Client": "web" }
 
   if (token !== null) {
     headers.Authorization = `Bearer ${token}`

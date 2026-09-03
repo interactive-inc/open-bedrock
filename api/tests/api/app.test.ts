@@ -34,6 +34,14 @@ function preflight(origin: string, corsOrigin?: string): Promise<Response> {
 }
 
 describe("CORS", () => {
+  test("CORS_ORIGIN 未設定時は portless の Web origin を許可する", async () => {
+    const response = await preflight("https://app.bedrock.localhost")
+
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://app.bedrock.localhost",
+    )
+  })
+
   test("CORS_ORIGIN 未設定時は localhost:3000 を許可する", async () => {
     const response = await preflight("http://localhost:3000")
 

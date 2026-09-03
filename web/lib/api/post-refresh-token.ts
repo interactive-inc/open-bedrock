@@ -7,7 +7,7 @@ import { hc } from "hono/client"
  * トークン不要のクライアントをその場で作る。
  */
 export async function postRefreshToken(refreshToken: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:18787"
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "https://bedrock.localhost"
 
   const client = hc<AppType>(baseUrl)
 

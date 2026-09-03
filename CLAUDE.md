@@ -143,7 +143,7 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 - 初回は `cd api && bun run db:migrate:local` でローカル D1 を作成し、`bun run db:seed:local` で seed を投入する
 - `cd api && bun run setup:dev-vars` で `.dev.vars` を生成する（署名・暗号鍵はランダムに作り、`PEPPER_SECRET` はlocal seedのhashと一致する開発専用値を設定する。既存ファイルは上書きしない。`.dev.vars` はgitignore済み）。本番の`PEPPER_SECRET`は必ず別のランダムsecretを使う。apiは未設定・16文字未満・`-change-me`で終わる秘密値を実行時に拒否するので、空の例示値では動かない
 - `.dev.vars` には `ENABLED_OPT_IN_APPS="all"` も必要（無いと opt-in App が既定で無効になり API が 404 を返す。正本は `.docs/feature-tiers.md`）
-- リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://bedrock.localhost`、api は `https://api.bedrock.localhost`（実体は `localhost:18787`）。ホスト名の正本は `portless.json`。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
+- リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://app.bedrock.localhost`、api は `https://bedrock.localhost`（実体は `localhost:18787`）。ホスト名の正本は `portless.json`。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
 - ログインは seed の `you+e001@example.com` / `password`（`E001` が admin）。ダッシュボード・従業員一覧まで表示されれば web→api→D1 の通し動作 OK
 
 api 単体の疎通だけ見るなら `cd api && bun run dev`（wrangler dev の自動再起動ラッパー、ポート 18787）。`/` は 404 が正常、`/employees` は未認証で 401。`POST /system/sessions` で access_token を取り `Authorization: Bearer` で叩く。
