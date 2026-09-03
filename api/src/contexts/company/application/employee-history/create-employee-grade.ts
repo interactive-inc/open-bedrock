@@ -26,7 +26,7 @@ export class CreateEmployeeGrade {
     input: Omit<ReturnType<EmployeeGradeEntity["toProps"]>, "id">,
   ): Promise<EmployeeGradeEntity | CompanyOperationError> {
     if (!this.c.actor.hasPermission("employee:write:attributes")) return new CompanyForbiddenError()
-    const grade = await this.c.gradeRepository.findById(input.gradeId)
+    const grade = await this.c.gradeRepository.find(input.gradeId)
     if (grade instanceof Error) {
       return new CompanyUnexpectedError("failed to find Company grade", { cause: grade })
     }

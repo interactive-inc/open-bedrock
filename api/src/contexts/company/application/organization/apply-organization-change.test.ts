@@ -15,7 +15,7 @@ test("ApplyOrganizationChangeはsnapshot readの例外をunavailableへ閉じて
   const applyOrganizationChange = new ApplyOrganizationChange({
     actor,
     repository: {
-      read: async () => {
+      findMany: async () => {
         throw new Error("read unavailable")
       },
       write: async () => {

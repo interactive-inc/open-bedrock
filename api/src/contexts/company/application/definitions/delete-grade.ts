@@ -18,7 +18,7 @@ export class DeleteGrade {
 
   async execute(id: number): Promise<GradeEntity | CompanyOperationError> {
     if (!this.c.actor.hasPermission("master:org:write")) return new CompanyForbiddenError()
-    const current = await this.c.repository.findById(id)
+    const current = await this.c.repository.find(id)
     if (current instanceof Error) {
       return new CompanyUnexpectedError("failed to find Company grade", { cause: current })
     }

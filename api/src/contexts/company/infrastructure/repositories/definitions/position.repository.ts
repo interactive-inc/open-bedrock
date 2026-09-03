@@ -8,12 +8,16 @@ import { and, asc, count, eq, sql } from "drizzle-orm"
 
 type Context = CompanyContext
 
+type FindPositionProps =
+  | Readonly<{ id: number; code?: never }>
+  | Readonly<{ code: string; id?: never }>
+
 export class PositionRepository {
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
-  async findAll(input: {
+  async findMany(input: {
     limit: number
     offset: number
   }): Promise<ReadonlyArray<PositionEntity> | Error> {
@@ -38,21 +42,29 @@ export class PositionRepository {
     }
   }
 
-  async findById(id: number): Promise<PositionEntity | null | Error> {
-    try {
-      const row = (
-        await this.c.var.database.select().from(positions).where(eq(positions.id, id)).limit(1)
-      )[0]
-      return row === undefined ? null : PositionEntity.restore(row)
-    } catch (cause) {
-      return cause instanceof Error ? cause : new Error("failed to find Company position")
+  async find(props: FindPositionProps): Promise<PositionEntity | null | Error> {
+    if (props.id !== undefined) {
+      try {
+        const row = (
+          await this.c.var.database
+            .select()
+            .from(positions)
+            .where(eq(positions.id, props.id))
+            .limit(1)
+        )[0]
+        return row === undefined ? null : PositionEntity.restore(row)
+      } catch (cause) {
+        return cause instanceof Error ? cause : new Error("failed to find Company position")
+      }
     }
-  }
 
-  async findByCode(code: string): Promise<PositionEntity | null | Error> {
     try {
       const row = (
-        await this.c.var.database.select().from(positions).where(eq(positions.code, code)).limit(1)
+        await this.c.var.database
+          .select()
+          .from(positions)
+          .where(eq(positions.code, props.code))
+          .limit(1)
       )[0]
       return row === undefined ? null : PositionEntity.restore(row)
     } catch (cause) {

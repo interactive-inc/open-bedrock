@@ -22,7 +22,7 @@ export class UpdatePosition {
     details: Pick<ReturnType<PositionEntity["toProps"]>, "code" | "name" | "rank" | "description">
   }): Promise<PositionEntity | CompanyOperationError> {
     if (!this.c.actor.hasPermission("master:org:write")) return new CompanyForbiddenError()
-    const current = await this.c.repository.findById(input.id)
+    const current = await this.c.repository.find({ id: input.id })
     if (current instanceof Error) {
       return new CompanyUnexpectedError("failed to find Company position", { cause: current })
     }

@@ -21,7 +21,7 @@ export class UpdateEmployeeName {
     officialName: string
   }): Promise<EmployeeEntity | CompanyOperationError> {
     if (!this.c.actor.hasPermission("employee:write:basic")) return new CompanyForbiddenError()
-    const current = await this.c.repository.findByCode(input.code)
+    const current = await this.c.repository.find({ code: input.code })
     if (current instanceof Error) {
       return new CompanyUnexpectedError("failed to find Company employee", { cause: current })
     }

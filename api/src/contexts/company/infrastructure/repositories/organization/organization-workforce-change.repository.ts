@@ -33,6 +33,11 @@ function writeError(cause: unknown): CompanyOperationError {
 
 type Context = CompanyContext
 
+type FindCompletedOrganizationUnitChangeProps = Readonly<{
+  operationId: string
+  requestFingerprint: string
+}>
+
 type CompletedOrganizationUnitChange = Readonly<{
   resultingRevision: number
   organizationUnitId: string
@@ -47,9 +52,8 @@ export class OrganizationWorkforceChangeRepository {
     return new OrganizationUnitReadAdapter(this.c.var.database).readSnapshot(asOf)
   }
 
-  async findCompleted(
-    operationId: string,
-    requestFingerprint: string,
+  async find(
+    props: FindCompletedOrganizationUnitChangeProps,
   ): Promise<CompletedOrganizationUnitChange | null | CompanyOperationError> {
     try {
       const existing = await this.c.env.DB.prepare(
@@ -60,7 +64,7 @@ export class OrganizationWorkforceChangeRepository {
              ON period.recorded_by_action_id = operation.id
           WHERE operation.id = ?1`,
       )
-        .bind(operationId)
+        .bind(props.operationId)
         .first<{
           resulting_revision: number
           status: "PENDING" | "COMPLETED"
@@ -70,7 +74,7 @@ export class OrganizationWorkforceChangeRepository {
       if (existing === null) return null
       if (
         existing.status !== "COMPLETED" ||
-        existing.request_fingerprint !== requestFingerprint ||
+        existing.request_fingerprint !== props.requestFingerprint ||
         existing.organization_unit_id === null
       ) {
         return new CompanyConflictError(
@@ -95,7 +99,7 @@ export class OrganizationWorkforceChangeRepository {
     | CompanyOperationError
   > {
     try {
-      const existing = await this.findCompleted(change.operationId, requestFingerprint)
+      const existing = await this.find({ operationId: change.operationId, requestFingerprint })
       if (existing instanceof CompanyOperationError) return existing
       if (existing !== null) return { ...existing, replayed: true }
 
@@ -160,7 +164,7 @@ export class OrganizationWorkforceChangeRepository {
         replayed: false,
       }
     } catch (cause) {
-      const raced = await this.findCompleted(change.operationId, requestFingerprint)
+      const raced = await this.find({ operationId: change.operationId, requestFingerprint })
       if (raced !== null && !(raced instanceof CompanyOperationError)) {
         return { ...raced, replayed: true }
       }
