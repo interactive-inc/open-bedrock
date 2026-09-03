@@ -44,7 +44,7 @@ export async function OrgMembersTable(props: Props) {
             <TableRow key={member.employee_code}>
               <TableCell>
                 <Link
-                  href={`/organization/employees/${member.employee_code}/reporting-line`}
+                  href={`/company/employees/${member.employee_code}/reporting-line`}
                   className="font-medium hover:underline"
                 >
                   {member.employee_code}

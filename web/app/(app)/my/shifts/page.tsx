@@ -44,7 +44,7 @@ export default async function ShiftPage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/organization/shift-patterns" />}
+                render={<Link href="/shift/shift-patterns" />}
               >
                 <CalendarDays />
                 パターン
@@ -55,7 +55,7 @@ export default async function ShiftPage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/organization/shift-swaps" />}
+                render={<Link href="/shift/shift-swaps" />}
               >
                 交代管理
               </Button>
@@ -65,7 +65,7 @@ export default async function ShiftPage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/company/inbox/shift-swaps" />}
+                render={<Link href="/inbox/shift-swaps" />}
               >
                 交代承認
               </Button>
@@ -75,7 +75,7 @@ export default async function ShiftPage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/organization/shift-assignments" />}
+                render={<Link href="/shift/shift-assignments" />}
               >
                 <Settings />
                 管理

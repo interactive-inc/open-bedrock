@@ -45,7 +45,7 @@ export async function issueCertificateRequestAction(
     return { ok: false, error: issued.message }
   }
 
-  revalidatePath("/organization/certificate-requests")
+  revalidatePath("/certificate-request/certificate-requests")
 
   return { ok: true, error: null }
 }
@@ -79,7 +79,7 @@ export async function rejectCertificateRequestAction(
     return { ok: false, error: rejected.message }
   }
 
-  revalidatePath("/organization/certificate-requests")
+  revalidatePath("/certificate-request/certificate-requests")
 
   return { ok: true, error: null }
 }

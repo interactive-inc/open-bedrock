@@ -26,7 +26,7 @@ export default function MyLentAssetsPage() {
       <PageHeader
         title="自分の貸与品"
         description="自分が借りている備品を確認します。"
-        actions={<BackButton href="/organization/assets" label="備品一覧へ" />}
+        actions={<BackButton href="/asset/assets" label="備品一覧へ" />}
       />
 
       <Suspense fallback={<ListSkeleton rows={4} />}>
@@ -65,7 +65,7 @@ async function MyLentAssetsTable() {
             <TableRow key={asset.code}>
               <TableCell>
                 <Link
-                  href={`/organization/assets/${asset.code}`}
+                  href={`/asset/assets/${asset.code}`}
                   className="font-medium underline-offset-4 hover:underline"
                 >
                   {asset.code}

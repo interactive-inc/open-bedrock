@@ -49,7 +49,7 @@ export default async function MyExpensesPage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/organization/expenses" />}
+                render={<Link href="/expense/expenses" />}
               >
                 経費申請管理
               </Button>
@@ -59,7 +59,7 @@ export default async function MyExpensesPage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/company/inbox/expenses" />}
+                render={<Link href="/inbox/expenses" />}
               >
                 <Inbox />
                 承認受信箱
@@ -115,7 +115,7 @@ async function MyExpensesTable() {
             <TableRow key={expense.id}>
               <TableCell>
                 <Link
-                  href={`/organization/expenses/${expense.id}`}
+                  href={`/expense/expenses/${expense.id}`}
                   className="font-medium underline-offset-4 hover:underline"
                 >
                   {toExpenseCategoryLabel(expense.category)}

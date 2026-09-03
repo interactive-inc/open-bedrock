@@ -95,7 +95,7 @@ async function ExpenseInboxTable() {
                   size="sm"
                   variant="outline"
                   nativeButton={false}
-                  render={<Link href={`/organization/expenses/${expense.id}`} />}
+                  render={<Link href={`/expense/expenses/${expense.id}`} />}
                 >
                   審査する
                 </Button>

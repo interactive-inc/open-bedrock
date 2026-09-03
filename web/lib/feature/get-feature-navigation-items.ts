@@ -1,8 +1,10 @@
 import { featureRegistry } from "@/lib/feature/feature-registry"
 import type { FeatureNavigationItem, FeatureSpace } from "@/lib/feature/feature-types"
+import { toFeatureSpace } from "@/lib/routing/to-feature-space"
 
 /**
  * 空間に属する表示可能な経路を、部署コードを解決して返す。
+ * 空間は href の第 1 セグメントから導出する。
  * disabledFeatureSlugs（機能ゲートで無効な機能）は表示から除く。
  */
 export function getFeatureNavigationItems(
@@ -19,7 +21,7 @@ export function getFeatureNavigationItems(
     if (disabledSlugSet.has(feature.slug)) continue
 
     for (const route of feature.routes) {
-      if (route.space !== space) continue
+      if (toFeatureSpace(route.href) !== space) continue
       if (route.href.includes(":team") && teamCode === null) continue
 
       navigationItems.push({

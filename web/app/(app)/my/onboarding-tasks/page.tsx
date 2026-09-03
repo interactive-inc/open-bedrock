@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { MyTasksList } from "@/app/(app)/organization/onboarding-assignments/_components/my-tasks-list"
+import { MyTasksList } from "@/app/(app)/onboarding/onboarding-assignments/_components/my-tasks-list"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"

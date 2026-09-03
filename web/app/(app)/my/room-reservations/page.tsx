@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { MyReservationsSection } from "@/app/(app)/organization/rooms/_components/my-reservations-section"
+import { MyReservationsSection } from "@/app/(app)/room/rooms/_components/my-reservations-section"
 import { BackButton } from "@/components/back-button"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
@@ -15,7 +15,7 @@ export default function MyReservationsPage() {
       <PageHeader
         title="自分の予約"
         description="自分が予約した会議室の一覧と取消を行います。"
-        actions={<BackButton href="/organization/rooms" label="会議室に戻る" />}
+        actions={<BackButton href="/room/rooms" label="会議室に戻る" />}
       />
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>

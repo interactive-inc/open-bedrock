@@ -5,11 +5,11 @@ import { CardLink } from "@/components/card-link"
 
 describe("CardLink", () => {
   test("カード全体を 1 つのリンクにする", () => {
-    render(<CardLink href="/organization/meetings/abc">定例会</CardLink>)
+    render(<CardLink href="/meeting/meetings/abc">定例会</CardLink>)
 
     const link = screen.getByRole("link", { name: "定例会" })
 
-    expect(link.getAttribute("href")).toBe("/organization/meetings/abc")
+    expect(link.getAttribute("href")).toBe("/meeting/meetings/abc")
   })
 
   test("押せることを示す ChevronRight を右下に描画する", () => {

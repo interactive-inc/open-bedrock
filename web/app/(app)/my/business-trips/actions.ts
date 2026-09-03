@@ -46,7 +46,7 @@ export async function approveBusinessTripAction(
     return { ok: false, error: approved.message }
   }
 
-  revalidatePath("/organization/business-trips")
+  revalidatePath("/business-trip/business-trips")
 
   return { ok: true, error: null }
 }
@@ -77,7 +77,7 @@ export async function rejectBusinessTripAction(
     return { ok: false, error: rejected.message }
   }
 
-  revalidatePath("/organization/business-trips")
+  revalidatePath("/business-trip/business-trips")
 
   return { ok: true, error: null }
 }

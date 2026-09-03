@@ -35,7 +35,7 @@ export async function markNotificationReadAction(
     return { ok: false, error: "既読化に失敗しました" }
   }
 
-  revalidatePath("/company/notifications")
+  revalidatePath("/notifications")
 
   return { ok: true, error: null }
 }
@@ -52,7 +52,7 @@ export async function markAllNotificationsReadAction(
     return { ok: false, error: "全件既読化に失敗しました" }
   }
 
-  revalidatePath("/company/notifications")
+  revalidatePath("/notifications")
 
   return { ok: true, error: null }
 }
@@ -127,7 +127,7 @@ export async function createNotificationAction(
     return { ok: false, error: "通知の作成に失敗しました" }
   }
 
-  revalidatePath("/company/notifications")
+  revalidatePath("/notifications")
 
   // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
   // 成功フィードバック（toast等）が握り潰されるのを防ぐ。

@@ -23,7 +23,7 @@ export function PostingManagement(props: Props) {
           variant="outline"
           size="sm"
           nativeButton={false}
-          render={<Link href={`/organization/job-postings/${props.posting.id}/edit`} />}
+          render={<Link href={`/career/job-postings/${props.posting.id}/edit`} />}
         >
           編集
         </Button>

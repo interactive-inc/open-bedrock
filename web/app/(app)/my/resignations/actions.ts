@@ -46,7 +46,7 @@ export async function acceptResignationAction(
     return { ok: false, error: accepted.message }
   }
 
-  revalidatePath("/organization/resignations")
+  revalidatePath("/resignation/resignations")
 
   return { ok: true, error: null }
 }
@@ -77,7 +77,7 @@ export async function rejectResignationAction(
     return { ok: false, error: rejected.message }
   }
 
-  revalidatePath("/organization/resignations")
+  revalidatePath("/resignation/resignations")
 
   return { ok: true, error: null }
 }

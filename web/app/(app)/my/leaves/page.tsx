@@ -34,21 +34,13 @@ export default async function LeavePage() {
         actions={
           <>
             {canViewAll ? (
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={<Link href="/organization/leaves" />}
-              >
+              <Button variant="outline" nativeButton={false} render={<Link href="/leave/leaves" />}>
                 休暇申請管理
               </Button>
             ) : null}
 
             {canApprove ? (
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={<Link href="/company/inbox/leaves" />}
-              >
+              <Button variant="outline" nativeButton={false} render={<Link href="/inbox/leaves" />}>
                 <Inbox />
                 承認受信箱
               </Button>

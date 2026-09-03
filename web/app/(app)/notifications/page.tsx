@@ -62,7 +62,7 @@ export default async function NotificationsPage(props: { searchParams: SearchPar
         description="自分宛ての通知を確認します。"
         actions={
           canCreate ? (
-            <Button nativeButton={false} render={<Link href="/company/notifications/new" />}>
+            <Button nativeButton={false} render={<Link href="/notifications/new" />}>
               <Plus />
               通知を作成
             </Button>
@@ -102,7 +102,7 @@ async function MyNotifications(props: {
       <NotificationList notifications={result.data} />
 
       <TablePagination
-        pathname="/company/notifications"
+        pathname="/notifications"
         total={result.total}
         limit={props.pageSize}
         offset={props.offset}

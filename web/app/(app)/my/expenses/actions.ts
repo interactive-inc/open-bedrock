@@ -124,7 +124,7 @@ export async function submitExpenseAction(
 
   revalidatePath("/my/expenses")
 
-  revalidatePath("/company/inbox/expenses")
+  revalidatePath("/inbox/expenses")
 
   return { ok: true, error: null }
 }
@@ -156,9 +156,9 @@ export async function approveExpenseAction(
     return { ok: false, error: decided.message }
   }
 
-  revalidatePath("/company/inbox/expenses")
+  revalidatePath("/inbox/expenses")
 
-  revalidatePath(`/organization/expenses/${expenseId}`)
+  revalidatePath(`/expense/expenses/${expenseId}`)
 
   revalidatePath("/my/expenses")
 
@@ -196,9 +196,9 @@ export async function rejectExpenseAction(
     return { ok: false, error: decided.message }
   }
 
-  revalidatePath("/company/inbox/expenses")
+  revalidatePath("/inbox/expenses")
 
-  revalidatePath(`/organization/expenses/${expenseId}`)
+  revalidatePath(`/expense/expenses/${expenseId}`)
 
   revalidatePath("/my/expenses")
 
@@ -260,9 +260,9 @@ export async function updateExpenseAction(
 
   revalidatePath("/my/expenses")
 
-  revalidatePath(`/organization/expenses/${expenseId}`)
+  revalidatePath(`/expense/expenses/${expenseId}`)
 
-  revalidatePath("/company/inbox/expenses")
+  revalidatePath("/inbox/expenses")
 
   return { ok: true, error: null }
 }
@@ -288,9 +288,9 @@ export async function deleteExpenseAction(
 
   revalidatePath("/my/expenses")
 
-  revalidatePath(`/organization/expenses/${expenseId}`)
+  revalidatePath(`/expense/expenses/${expenseId}`)
 
-  revalidatePath("/company/inbox/expenses")
+  revalidatePath("/inbox/expenses")
 
   return { ok: true, error: null }
 }

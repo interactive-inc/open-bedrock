@@ -123,7 +123,7 @@ export async function completeAntisocialCheckAction(
     return { ok: false, error: updated.message }
   }
 
-  revalidatePath("/company/inbox/antisocial-checks")
+  revalidatePath("/inbox/antisocial-checks")
   revalidatePath("/my/antisocial-checks")
 
   return { ok: true, error: null }

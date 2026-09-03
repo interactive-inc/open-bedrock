@@ -71,7 +71,7 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/organization/applications" />}
+                render={<Link href="/system/applications" />}
               >
                 申請管理
               </Button>
@@ -120,7 +120,7 @@ async function InboxTable(props: { offset: number; pageSize: number; sort: Appli
               <TableHead>申請者</TableHead>
               <TableHead>ステータス</TableHead>
               <SortableTableHead
-                pathname="/company/inbox/applications"
+                pathname="/inbox/applications"
                 currentSort={props.sort}
                 ascValue="created_at_asc"
                 descValue="created_at_desc"
@@ -136,7 +136,7 @@ async function InboxTable(props: { offset: number; pageSize: number; sort: Appli
               <TableRow key={application.id}>
                 <TableCell>
                   <Link
-                    href={`/organization/applications/${application.id}`}
+                    href={`/system/applications/${application.id}`}
                     className="font-medium underline-offset-4 hover:underline"
                   >
                     {application.template_name}
@@ -165,7 +165,7 @@ async function InboxTable(props: { offset: number; pageSize: number; sort: Appli
       </div>
 
       <TablePagination
-        pathname="/company/inbox/applications"
+        pathname="/inbox/applications"
         total={result.total}
         limit={props.pageSize}
         offset={props.offset}

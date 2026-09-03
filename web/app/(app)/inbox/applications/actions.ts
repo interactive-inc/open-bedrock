@@ -76,7 +76,7 @@ export async function decideApplicationAction(
     return result
   }
 
-  revalidatePath("/company/inbox/applications")
+  revalidatePath("/inbox/applications")
 
   revalidatePath("/my/applications")
 

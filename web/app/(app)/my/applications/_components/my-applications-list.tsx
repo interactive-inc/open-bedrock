@@ -67,7 +67,7 @@ export function MyApplicationsList(props: Props) {
             <TableRow key={application.id}>
               <TableCell>
                 <Link
-                  href={`/organization/applications/${application.id}`}
+                  href={`/system/applications/${application.id}`}
                   className="font-medium underline-offset-4 hover:underline"
                 >
                   {application.id}

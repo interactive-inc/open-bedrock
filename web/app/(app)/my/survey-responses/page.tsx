@@ -1,6 +1,6 @@
 import { FetchError } from "@/components/fetch-error"
 import { Suspense } from "react"
-import { MyResponsesList } from "@/app/(app)/organization/surveys/_components/my-responses-list"
+import { MyResponsesList } from "@/app/(app)/survey/surveys/_components/my-responses-list"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { getSurveyList } from "@/lib/api/get-survey-list"

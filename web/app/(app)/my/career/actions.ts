@@ -102,8 +102,8 @@ export async function applyCareerPostingAction(
   }
 
   revalidatePath("/my/career")
-  revalidatePath("/organization/job-postings")
-  revalidatePath("/organization/job-postings/[posting]", "page")
+  revalidatePath("/career/job-postings")
+  revalidatePath("/career/job-postings/[posting]", "page")
 
   return { ok: true, error: null }
 }
@@ -233,8 +233,8 @@ export async function createCareerPostingAction(
     return { ok: false, error: created.message }
   }
 
-  revalidatePath("/organization/job-postings")
-  revalidatePath("/organization/job-postings/[posting]", "page")
+  revalidatePath("/career/job-postings")
+  revalidatePath("/career/job-postings/[posting]", "page")
 
   return { ok: true, error: null }
 }
@@ -301,8 +301,8 @@ export async function updateCareerPostingAction(
     return { ok: false, error: updated.message }
   }
 
-  revalidatePath("/organization/job-postings")
-  revalidatePath("/organization/job-postings/[posting]", "page")
+  revalidatePath("/career/job-postings")
+  revalidatePath("/career/job-postings/[posting]", "page")
 
   return { ok: true, error: null }
 }
@@ -330,8 +330,8 @@ export async function deleteCareerPostingAction(
     return { ok: false, error: deleted.message }
   }
 
-  revalidatePath("/organization/job-postings")
-  revalidatePath("/organization/job-postings/[posting]", "page")
+  revalidatePath("/career/job-postings")
+  revalidatePath("/career/job-postings/[posting]", "page")
 
   return { ok: true, error: null }
 }

@@ -24,7 +24,7 @@ export function ShiftPatternCreateForm() {
     if (next.ok) {
       toast.success("パターンを作成しました")
 
-      router.push("/organization/shift-patterns")
+      router.push("/shift/shift-patterns")
     } else if (next.error !== null) {
       toast.error(next.error)
     }
