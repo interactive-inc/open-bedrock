@@ -8,7 +8,7 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageWorkAccidents } from "@/lib/work-accident/can-manage-work-accidents"
 import { canViewAllWorkAccidents } from "@/lib/work-accident/can-view-all-work-accidents"
 
-export const metadata = { title: "労災・事故記録" }
+export const metadata = { title: "労災・事故" }
 
 type SearchParams = Promise<{ [key: string]: string | Array<string> | undefined }>
 
@@ -31,7 +31,7 @@ export default async function WorkAccidentsPage(props: { searchParams: SearchPar
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="労災・事故記録" />
+      <PageHeader title="労災・事故" />
 
       {canManage ? <WorkAccidentCreateForm /> : null}
 

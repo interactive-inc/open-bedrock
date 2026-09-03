@@ -13,7 +13,7 @@ import { getMyTrainingEnrollments } from "@/lib/api/get-my-training-enrollments"
 import { getTrainingCourses } from "@/lib/api/get-training-courses"
 import { canManageTraining } from "@/lib/training/can-manage-training"
 
-export const metadata = { title: "研修" }
+export const metadata = { title: "研修コース" }
 
 type SearchParams = Promise<{ page?: string; size?: string }>
 
@@ -37,7 +37,7 @@ export default async function TrainingPage(props: { searchParams: SearchParams }
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="研修"
+        title="研修コース"
         actions={
           <>
             <Button variant="secondary" nativeButton={false} render={<Link href="/my/trainings" />}>

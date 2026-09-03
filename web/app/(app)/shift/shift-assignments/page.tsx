@@ -13,7 +13,7 @@ import { getShiftAssignments } from "@/lib/api/get-shift-assignments"
 import { getShiftPatterns } from "@/lib/api/get-shift-patterns"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
 
-export const metadata = { title: "シフト管理" }
+export const metadata = { title: "シフト割当" }
 
 /**
  * シフトの管理（特権ロールのみ）。横断割当一覧を表示し、新規割当は /shift/manage/new に分離する。
@@ -29,7 +29,7 @@ export default async function ShiftManagePage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="シフト管理"
+        title="シフト割当"
         actions={
           <>
             <BackButton href="/my/shifts" label="シフトに戻る" />

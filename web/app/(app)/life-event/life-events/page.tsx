@@ -16,7 +16,7 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageLifeEvents } from "@/lib/life-event/can-manage-life-events"
 import { canViewAllLifeEvents } from "@/lib/life-event/can-view-all-life-events"
 
-export const metadata = { title: "ライフイベント届管理" }
+export const metadata = { title: "ライフイベントの横断" }
 
 const PAGE_SIZE = 20
 
@@ -61,7 +61,7 @@ export default async function AdminLifeEventsPage(props: { searchParams: SearchP
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="ライフイベント届管理"
+        title="ライフイベントの横断"
         actions={
           <Button
             variant="secondary"

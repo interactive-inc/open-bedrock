@@ -6,7 +6,7 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 
-export const metadata = { title: "スキル" }
+export const metadata = { title: "スキル一覧" }
 
 type Props = {
   searchParams: Promise<{ q?: string; category?: string }>

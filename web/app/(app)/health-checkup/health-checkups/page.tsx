@@ -10,7 +10,7 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageHealthCheckups } from "@/lib/health-checkup/can-manage-health-checkups"
 import { canViewAllHealthCheckups } from "@/lib/health-checkup/can-view-all-health-checkups"
 
-export const metadata = { title: "健康診断" }
+export const metadata = { title: "健診の実施記録" }
 
 type SearchParams = Promise<{ [key: string]: string | Array<string> | undefined }>
 
@@ -32,7 +32,7 @@ export default async function HealthCheckupsPage(props: { searchParams: SearchPa
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="健康診断"
+        title="健診の実施記録"
         actions={
           canManageHealthCheckups(currentUser.permissions) ? (
             <Button

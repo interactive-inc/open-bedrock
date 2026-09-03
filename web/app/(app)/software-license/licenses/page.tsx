@@ -10,13 +10,13 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageLicenses } from "@/lib/license/can-manage-licenses"
 import { canViewAllLicenses } from "@/lib/license/can-view-all-licenses"
 
-export const metadata = { title: "ライセンス・SaaS 台帳" }
+export const metadata = { title: "ライセンス" }
 
 type Props = {
   searchParams: Promise<{ page?: string }>
 }
 
-/** /licenses ライセンス・SaaS 台帳の一覧。license:read:all が無ければ notFound。 */
+/** /licenses ライセンスの一覧。license:read:all が無ければ notFound。 */
 export default async function LicensesPage(props: Props) {
   const me = await getMe()
 
@@ -35,7 +35,7 @@ export default async function LicensesPage(props: Props) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="ライセンス・SaaS 台帳"
+        title="ライセンス"
         actions={
           canManage ? (
             <Button nativeButton={false} render={<Link href="/software-license/licenses/new" />}>

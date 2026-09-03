@@ -53,7 +53,9 @@ export default async function HomePage() {
 
   return (
     <>
-      <PageHeader title={profile === null ? "マイページ" : profile.name} />
+      <PageHeader title="ホーム" />
+
+      {profile !== null ? <p className="text-sm text-muted-foreground">{profile.name}</p> : null}
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Suspense fallback={<Skeleton className="w-full" />}>

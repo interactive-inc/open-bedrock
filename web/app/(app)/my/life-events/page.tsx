@@ -6,16 +6,16 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 
-export const metadata = { title: "ライフイベント届出" }
+export const metadata = { title: "ライフイベント" }
 
 /**
- * ライフイベント届出の自分の届出一覧画面。新規届出は /new に分離。
+ * ライフイベントの自分の届出一覧画面。新規届出は /new に分離。
  */
 export default function LifeEventsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="ライフイベント届出"
+        title="ライフイベント"
         actions={
           <Button nativeButton={false} render={<Link href="/my/life-events/new" />}>
             <Plus />

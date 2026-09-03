@@ -1,6 +1,7 @@
 import { AttendanceRecordTable } from "@/app/(app)/my/attendances/_components/attendance-record-table"
+import { DepartmentName } from "@/app/(app)/teams/[team]/_components/department-name"
 import { EmptyState } from "@/components/empty-state"
-import { SubPageHeader } from "@/components/sub-page-header"
+import { PageHeader } from "@/components/page-header"
 import { getDepartmentAttendances } from "@/lib/api/get-department-attendances"
 
 export const metadata = { title: "部署の勤怠" }
@@ -21,7 +22,9 @@ export default async function DepartmentAttendancesPage(props: Props) {
   if (records instanceof Error) {
     return (
       <div className="flex flex-col gap-6">
-        <SubPageHeader title="勤怠" />
+        <PageHeader title="部署の勤怠" />
+
+        <DepartmentName team={params.team} />
 
         <EmptyState title="この部署の勤怠を閲覧する権限がありません" />
       </div>
@@ -30,7 +33,9 @@ export default async function DepartmentAttendancesPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <SubPageHeader title="勤怠" />
+      <PageHeader title="部署の勤怠" />
+
+      <DepartmentName team={params.team} />
 
       {records.length === 0 ? (
         <EmptyState title="この部署の勤怠記録はまだありません" />

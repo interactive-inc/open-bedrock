@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getMe } from "@/lib/api/get-me"
 import { canViewAllRedemptions } from "@/lib/thanks/can-view-all-redemptions"
 
-export const metadata = { title: "感謝" }
+export const metadata = { title: "サンクス" }
 
 /**
  * 感謝（サンクス）のメイン画面。サマリと公開タイムラインだけを並べる読み取り専用画面。
@@ -30,7 +30,7 @@ export default async function ThanksPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="感謝"
+        title="サンクス"
         actions={
           <>
             {canViewAll ? (

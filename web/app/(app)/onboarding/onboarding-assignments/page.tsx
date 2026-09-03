@@ -16,7 +16,7 @@ import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import { requirePermission } from "@/lib/auth/require-permission"
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 
-export const metadata = { title: "社員別オンボーディング" }
+export const metadata = { title: "オンボーディング進捗" }
 
 export default async function OnboardingEmployeesPage() {
   const currentUser = await requirePermission("onboarding:view:all")
@@ -28,7 +28,7 @@ export default async function OnboardingEmployeesPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="社員別オンボーディング"
+        title="オンボーディング進捗"
         actions={
           <>
             {canManage ? (

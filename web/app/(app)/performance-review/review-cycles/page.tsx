@@ -10,10 +10,10 @@ import { getMe } from "@/lib/api/get-me"
 import { getReviewCycles } from "@/lib/api/get-review-cycles"
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 
-export const metadata = { title: "評価の管理" }
+export const metadata = { title: "評価サイクル" }
 
 /**
- * 評価の管理（特権ロールのみ）。サイクル作成と結果検索の2機能を分離して提供する。
+ * 評価サイクル（特権ロールのみ）。サイクル作成と結果検索の2機能を分離して提供する。
  * 権限が無いユーザーには 404 を返し UI を露出しない。
  */
 export default async function ReviewManagePage() {
@@ -30,7 +30,7 @@ export default async function ReviewManagePage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="評価の管理"
+        title="評価サイクル"
         actions={<BackButton href="/my/reviews" label="評価に戻る" />}
       />
 

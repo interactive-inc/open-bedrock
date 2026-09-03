@@ -20,7 +20,7 @@ import { canViewAllApplications } from "@/lib/application/can-view-all-applicati
 import { canManageWorkflowRepairs } from "@/lib/application/can-manage-workflow-repairs"
 import type { ApplicationStatus } from "@/lib/api/types/application-types"
 
-export const metadata = { title: "申請管理" }
+export const metadata = { title: "全社の申請" }
 
 const SORT_VALUES: ReadonlyArray<ApplicationAdminSort> = ["created_at_desc", "created_at_asc"]
 
@@ -95,7 +95,7 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="申請管理"
+        title="全社の申請"
         actions={
           <>
             {canRepairWorkflows ? (
