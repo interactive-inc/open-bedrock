@@ -14,6 +14,13 @@ export type FeatureGroup =
   | "workplace"
   | "governance"
   | "system"
+  // Company 空間の章立て。`.docs/capability-map.md` の Company 章に合わせる。
+  | "company-legal-entity"
+  | "company-people"
+  | "company-organization"
+  | "company-responsibility"
+  | "company-system-link"
+  | "company-employment-fact"
 
 export type FeatureSpace = "system" | "company" | "apps"
 

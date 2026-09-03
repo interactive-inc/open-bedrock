@@ -94,17 +94,17 @@ describe("SidebarNav governance entry", () => {
 
 describe("SidebarNav team entry (requiredAnyPermission)", () => {
   test("shows マイチーム in the company space with any one of the scope permissions", () => {
-    pathnameMock.mockReturnValue("/company/reports")
+    pathnameMock.mockReturnValue("/company/direct-reports")
 
     renderSidebar(["leave:read:reports"])
 
     expect(screen.getByRole("link", { name: "マイチーム" }).getAttribute("href")).toBe(
-      "/company/reports",
+      "/company/direct-reports",
     )
   })
 
   test("shows マイチーム with a different single scope permission", () => {
-    pathnameMock.mockReturnValue("/company/reports")
+    pathnameMock.mockReturnValue("/company/direct-reports")
 
     renderSidebar(["goal:read:reports"])
 
@@ -112,7 +112,7 @@ describe("SidebarNav team entry (requiredAnyPermission)", () => {
   })
 
   test("hides マイチーム when none of the scope permissions are held", () => {
-    pathnameMock.mockReturnValue("/company/reports")
+    pathnameMock.mockReturnValue("/company/direct-reports")
 
     renderSidebar(["employee:create"])
 

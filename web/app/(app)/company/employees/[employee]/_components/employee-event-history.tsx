@@ -1,5 +1,5 @@
 import { EmployeeEventCreateForm } from "@/app/(app)/company/employees/[employee]/_components/employee-event-create-form"
-import { employeeEventKindLabel } from "@/app/(app)/company/employees/[employee]/_lib/employee-event-kind-label"
+import { toEmployeeEventKindLabel } from "@/lib/employee-event/to-employee-event-kind-label"
 import { getEmployeeEventList } from "@/lib/api/get-employee-event-list"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -67,7 +67,7 @@ export async function EmployeeEventHistory(props: Props) {
                     <TableCell>{event.effective_date}</TableCell>
 
                     <TableCell>
-                      <Badge variant="outline">{employeeEventKindLabel(event.kind)}</Badge>
+                      <Badge variant="outline">{toEmployeeEventKindLabel(event.kind)}</Badge>
                     </TableCell>
 
                     <TableCell className="text-muted-foreground">
