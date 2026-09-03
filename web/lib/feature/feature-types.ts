@@ -16,6 +16,16 @@ export type FeatureGroup =
   | "workplace"
   | "governance"
   | "system"
+  // System 空間の章立て。`.docs/capability-map.md` の System 章に合わせる。
+  // `system` は業務 App が混ざる旧来のセクションなので、`/system/*` を持つ
+  // System tier の feature だけをこちらへ移す。
+  | "system-principal"
+  | "system-authorization"
+  | "system-case"
+  | "system-record"
+  | "system-async"
+  | "system-integration"
+  | "system-operation"
   // Company 空間の章立て。`.docs/capability-map.md` の Company 章に合わせる。
   | "company-legal-entity"
   | "company-people"

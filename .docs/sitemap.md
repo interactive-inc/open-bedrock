@@ -232,9 +232,19 @@ Company が正本として持つ資源を読み取り専用で確認する画面
 - `/system/roles/new` は権限を選んで新しいロールを作成する画面。
 - `/system/roles/[role]/edit` はロールの名称と権限の割当を変更する画面。
 - ロールの作成、変更、削除はパスワードの再入力による再認証を要求する。画面は拒否の理由を表示し、再認証が必要な場合はその場で再入力して同じ操作をやり直せる。
+- `/system/permission-definitions` はロールに割り当てられる権限キーと分類、説明を確認する読み取り専用の画面。`iam:write` または `system:admin` を要求する。無効な App の権限は出ない。
 - `/system/accounts` はアカウントの状態確認、ロール割当、停止、パスワードリセットを行う管理画面。閲覧は `iam:read`、変更は `iam:write` を要求する。
+- `/system/principals` は Account と対になる主体の分類、名称、対応する Account を確認する読み取り専用の画面(`iam:read`)。
+- `/system/principals/[principal]` は主体の属性と、発行済みの機械 credential の名称、状態、有効期限、最終利用を確認する読み取り専用の画面。secret 本体は表示しない。
 - `/system/audit-events` は重要操作と認可判断の監査イベントを検索し、権限がある場合は検索結果を書き出す画面。
 - `/system/audit-events/[event]` は監査イベントの認可情報、変更内容、request 情報を確認する画面。
+- `/system/deliveries` はジョブと送信箱の配信を、種別と状態で絞り込んで確認する読み取り専用の画面(`batch:view`)。種別の指定は必須で、既定はジョブ。
+- `/system/dead-letters` は再試行の上限に達した配信の発生元、理由、再投入の有無を確認する読み取り専用の画面(`batch:view`)。再投入の導線は置かない。
+- `/system/connectors` は外部境界のコネクタの向き、transport、状態を確認する読み取り専用の画面(`system:admin`)。
+- `/system/connectors/[connector]` はコネクタの属性と、そのコネクタの外部交換への導線を確認する読み取り専用の画面。
+- `/system/integration-exchanges` は選んだコネクタの外部交換を、操作、向き、状態、試行で確認する読み取り専用の画面(`system:admin`)。コネクタの指定は必須。
+- `/system/integration-exchanges/[exchange]` は交換の digest と結果、外部との照合の履歴を確認する読み取り専用の画面。
+- `/system/health` は api が応答できているかを確認する読み取り専用の画面(`system:admin`)。
 - `/software-license/licenses` はライセンス・SaaS 台帳を確認、管理する画面(`license:read:all`)。
 - `/software-license/licenses/new` は利用中の SaaS・ソフトウェアを台帳に登録する画面(`license:manage`)。
 - `/it-incident/it-incidents` はインシデントの発生と解消を記録する画面(`it_incident:read:all`)。
