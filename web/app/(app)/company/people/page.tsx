@@ -1,0 +1,31 @@
+import { Suspense } from "react"
+import { CompanyPeopleSection } from "@/app/(app)/company/people/_components/company-people-section"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
+import { ReadOnlyNotice } from "@/components/read-only-notice"
+import { requireAnyPermission } from "@/lib/auth/require-any-permission"
+
+export const metadata = { title: "人" }
+
+/**
+ * Person 一覧。雇用と切り離した「人そのもの」の台帳で、
+ * 在籍状態は雇用（/company/employments）が持つ。
+ */
+export default async function CompanyPeoplePage() {
+  await requireAnyPermission(["employee:read", "org:manage", "system:admin"])
+
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="人"
+        description="雇用と切り離した Person の台帳です。在籍状態は雇用の一覧で確認します。"
+      />
+
+      <Suspense fallback={<ListSkeleton rows={5} />}>
+        <CompanyPeopleSection />
+      </Suspense>
+
+      <ReadOnlyNotice command={null} />
+    </div>
+  )
+}

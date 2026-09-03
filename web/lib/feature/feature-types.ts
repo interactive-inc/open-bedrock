@@ -6,6 +6,8 @@ export type FeatureStatus = "available" | "development" | "retirement-candidate"
 
 export type FeatureGroup =
   | "overview"
+  // 自分タブの部署セクション。feature ではなく route の href から導出する。
+  | "team"
   | "time"
   | "requests"
   | "people"
@@ -14,8 +16,15 @@ export type FeatureGroup =
   | "workplace"
   | "governance"
   | "system"
+  // Company 空間の章立て。`.docs/capability-map.md` の Company 章に合わせる。
+  | "company-legal-entity"
+  | "company-people"
+  | "company-organization"
+  | "company-responsibility"
+  | "company-system-link"
+  | "company-employment-fact"
 
-export type FeatureSpace = "system" | "company" | "apps"
+export type FeatureSpace = "my" | "system" | "company" | "apps"
 
 export type FeatureNavigationVisibility =
   | { kind: "everyone" }

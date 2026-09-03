@@ -3,8 +3,8 @@ import { describe, expect, test } from "vite-plus/test"
 import { featureRegistry } from "@/lib/feature/feature-registry"
 
 /**
- * サイドバーは本人・部署・全社の項目を同じ「業務」空間に並べて表示する
- * （components/sidebar-nav.tsx の "apps" 空間）。
+ * サイドバーは本人と部署の項目を同じ「自分」空間に並べて表示する
+ * （components/sidebar-nav.tsx の "my" 空間。全社ビューだけが "apps" に残る）。
  * ラベルが重複すると、どちらが自分用でどちらが部署用か区別できなくなる。
  */
 describe("featureRegistry のラベル", () => {

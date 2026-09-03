@@ -50,6 +50,16 @@ import type {
 const everyone: FeatureNavigationVisibility = { kind: "everyone" }
 
 /**
+ * Company の読み取り route が要求する権限。
+ * api の companyActor middleware がこの 3 つの OR から company:read capability を導出するので、
+ * nav もそれに合わせる（片方だけを条件にすると web と api で見え方が食い違う）。
+ */
+const companyReadVisibility: FeatureNavigationVisibility = {
+  kind: "any-permission",
+  permissions: ["employee:read", "org:manage", "system:admin"],
+}
+
+/**
  * 開発中はユーザ視点の利用レビューが完了していない機能を含む。
  */
 export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
@@ -365,10 +375,25 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     ],
   },
   {
+    slug: "company-profile",
+    tier: "company",
+    status: "development",
+    group: "company-legal-entity",
+    icon: Building2,
+    prefetch: null,
+    routes: [
+      {
+        label: "会社と法人",
+        href: "/company/profile",
+        visibility: companyReadVisibility,
+      },
+    ],
+  },
+  {
     slug: "employees",
     tier: "company",
     status: "available",
-    group: "people",
+    group: "company-people",
     icon: Users,
     prefetch: null,
     routes: [
@@ -380,10 +405,40 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     ],
   },
   {
+    slug: "company-people",
+    tier: "company",
+    status: "development",
+    group: "company-people",
+    icon: Users,
+    prefetch: null,
+    routes: [
+      {
+        label: "人",
+        href: "/company/people",
+        visibility: companyReadVisibility,
+      },
+    ],
+  },
+  {
+    slug: "company-employments",
+    tier: "company",
+    status: "development",
+    group: "company-people",
+    icon: BookOpenCheck,
+    prefetch: null,
+    routes: [
+      {
+        label: "雇用",
+        href: "/company/employments",
+        visibility: companyReadVisibility,
+      },
+    ],
+  },
+  {
     slug: "departments",
     tier: "company",
     status: "available",
-    group: "people",
+    group: "company-organization",
     icon: GitBranch,
     prefetch: null,
     routes: [
@@ -395,6 +450,99 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     ],
   },
   {
+    slug: "company-organization-snapshots",
+    tier: "company",
+    status: "development",
+    group: "company-organization",
+    icon: FileClock,
+    prefetch: null,
+    routes: [
+      {
+        label: "組織の時点断面",
+        href: "/company/organization-snapshots",
+        visibility: companyReadVisibility,
+      },
+    ],
+  },
+  {
+    slug: "company-definitions",
+    tier: "company",
+    status: "development",
+    group: "company-responsibility",
+    icon: ScrollText,
+    prefetch: null,
+    routes: [
+      {
+        label: "職務と責任",
+        href: "/company/definitions",
+        visibility: companyReadVisibility,
+      },
+    ],
+  },
+  {
+    slug: "company-account-employee-links",
+    tier: "company",
+    status: "development",
+    group: "company-system-link",
+    icon: KeyRound,
+    prefetch: null,
+    routes: [
+      {
+        label: "Account の対応",
+        href: "/company/account-employee-links",
+        visibility: companyReadVisibility,
+      },
+    ],
+  },
+  {
+    slug: "company-personnel-actions",
+    tier: "company",
+    status: "development",
+    group: "company-employment-fact",
+    icon: UserCog,
+    prefetch: null,
+    routes: [
+      {
+        label: "人事発令",
+        href: "/company/personnel-actions",
+        visibility: companyReadVisibility,
+      },
+    ],
+  },
+  {
+    slug: "company-employee-events",
+    tier: "company",
+    status: "development",
+    group: "company-employment-fact",
+    icon: FileClock,
+    prefetch: null,
+    routes: [
+      {
+        label: "雇用事実",
+        href: "/company/employee-events",
+        visibility: companyReadVisibility,
+      },
+    ],
+  },
+  {
+    slug: "direct-reports",
+    tier: "company",
+    status: "development",
+    group: "team",
+    icon: Users,
+    prefetch: null,
+    routes: [
+      {
+        label: "マイチーム",
+        href: "/my/direct-reports",
+        visibility: {
+          kind: "any-permission",
+          permissions: ["goal:read:reports", "attendance:read:reports", "leave:read:reports"],
+        },
+      },
+    ],
+  },
+  {
     slug: "team-management",
     tier: "company",
     status: "development",
@@ -402,14 +550,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: Users,
     prefetch: null,
     routes: [
-      {
-        label: "マイチーム",
-        href: "/company/reports",
-        visibility: {
-          kind: "any-permission",
-          permissions: ["goal:read:reports", "attendance:read:reports", "leave:read:reports"],
-        },
-      },
       {
         label: "メンバー",
         href: "/teams/:team/members",
@@ -506,7 +646,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     slug: "grades",
     tier: "company",
     status: "development",
-    group: "people",
+    group: "company-responsibility",
     icon: Award,
     prefetch: null,
     routes: [
@@ -521,7 +661,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     slug: "positions",
     tier: "company",
     status: "development",
-    group: "people",
+    group: "company-responsibility",
     icon: Briefcase,
     prefetch: null,
     routes: [
@@ -1029,6 +1169,13 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
 
 export const featureGroupOrder: ReadonlyArray<FeatureGroup> = [
   "overview",
+  "team",
+  "company-legal-entity",
+  "company-people",
+  "company-organization",
+  "company-responsibility",
+  "company-system-link",
+  "company-employment-fact",
   "people",
   "time",
   "requests",
@@ -1041,6 +1188,13 @@ export const featureGroupOrder: ReadonlyArray<FeatureGroup> = [
 
 export const featureGroupLabels: Record<FeatureGroup, string> = {
   overview: "概要",
+  team: "部署",
+  "company-legal-entity": "会社と法人",
+  "company-people": "人と雇用",
+  "company-organization": "組織",
+  "company-responsibility": "職務と責任",
+  "company-system-link": "System との対応",
+  "company-employment-fact": "雇用事実と人事発令",
   people: "人と組織",
   time: "時間と予定",
   requests: "申請と手続き",
