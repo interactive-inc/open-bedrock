@@ -90,7 +90,7 @@ function toPreparedStatement(
   const bindings = (): Array<SqliteBinding> => values.map(toSqliteBinding)
 
   const statement = {
-    __openKarteAllSync: () => {
+    __openBedrockAllSync: () => {
       onQuery?.()
       return toResult(sqlite.query(query).all(...bindings()))
     },
@@ -140,13 +140,13 @@ function toPreparedStatement(
 function toPreparedStatementSync(statement: D1PreparedStatement): {
   all: () => D1Result<unknown>
 } {
-  const maybeSync = statement as unknown as { __openKarteAllSync?: () => D1Result<unknown> }
+  const maybeSync = statement as unknown as { __openBedrockAllSync?: () => D1Result<unknown> }
 
-  if (maybeSync.__openKarteAllSync === undefined) {
+  if (maybeSync.__openBedrockAllSync === undefined) {
     throw new Error("test D1 batch received an unsupported prepared statement")
   }
 
-  return { all: maybeSync.__openKarteAllSync }
+  return { all: maybeSync.__openBedrockAllSync }
 }
 
 function toResult(rows: Array<unknown>) {

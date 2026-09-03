@@ -926,7 +926,7 @@ async function auditFilterFingerprint(filters: AuditEventFilters): Promise<strin
   const digest = new Uint8Array(
     await crypto.subtle.digest(
       "SHA-256",
-      new TextEncoder().encode(`open-karte:audit:cursor-filters:v2\0${canonical}`),
+      new TextEncoder().encode(`open-bedrock:audit:cursor-filters:v2\0${canonical}`),
     ),
   )
   return bytesToBase64Url(digest.slice(0, 16))
