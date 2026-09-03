@@ -4,7 +4,7 @@ import type { SystemSessionMaterial } from "@system/domain/definitions/auth/syst
 import type { SystemSessionRepository } from "@system/infrastructure/repositories/auth/system-session.repository"
 
 type Props = Readonly<{
-  sessionRepository: Pick<SystemSessionRepository, "findByTokenHash" | "revokeFamilyWithAudit">
+  sessionRepository: Pick<SystemSessionRepository, "find" | "revokeFamilyWithAudit">
   materialService: Pick<SystemSessionMaterial, "hashRawToken">
 }>
 
@@ -31,7 +31,7 @@ export class RevokeSystemSession {
 
     const tokenHash = await this.c.materialService.hashRawToken(command.rawToken)
     if (tokenHash instanceof Error) return tokenHash
-    const session = await this.c.sessionRepository.findByTokenHash(tokenHash)
+    const session = await this.c.sessionRepository.find(tokenHash)
     if (session instanceof Error) return session
     if (session === null || session.revokedAt !== null) return RevokeSystemSession.completed()
 

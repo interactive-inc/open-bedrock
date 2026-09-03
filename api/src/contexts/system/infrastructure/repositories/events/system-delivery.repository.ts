@@ -96,7 +96,7 @@ export class SystemDeliveryRepository {
     }
   }
 
-  async findOne(kind: "job" | "outbox", id: string): Promise<SystemDeliveryEntity | null | Error> {
+  async find(kind: "job" | "outbox", id: string): Promise<SystemDeliveryEntity | null | Error> {
     const table = kind === "job" ? "system_jobs" : "system_outbox_messages"
     const operationColumn = kind === "job" ? "operation_key" : "topic"
     try {

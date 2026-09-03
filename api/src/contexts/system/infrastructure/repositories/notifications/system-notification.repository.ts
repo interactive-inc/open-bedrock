@@ -112,9 +112,7 @@ export class SystemNotificationRepository {
     }
   }
 
-  async listForAccount(
-    props: ListSystemNotificationsProps,
-  ): Promise<SystemNotificationPage | Error> {
+  async findMany(props: ListSystemNotificationsProps): Promise<SystemNotificationPage | Error> {
     try {
       const database = this.c.context.env.DB
       const results = await database.batch([

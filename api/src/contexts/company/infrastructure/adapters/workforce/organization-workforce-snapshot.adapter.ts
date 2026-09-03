@@ -101,7 +101,7 @@ export class OrganizationWorkforceSnapshotAdapter implements WorkforceSnapshotRe
         links.results.map(async (link) => {
           const accountId = zAccountId.safeParse(link.account_id)
           return accountId.success
-            ? new SystemAccountRepository({ database: this.c.env.DB }).findById(accountId.data)
+            ? new SystemAccountRepository({ database: this.c.env.DB }).find(accountId.data)
             : null
         }),
       )

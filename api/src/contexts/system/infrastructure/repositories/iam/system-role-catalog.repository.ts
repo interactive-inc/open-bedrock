@@ -37,7 +37,7 @@ export class SystemRoleCatalogRepository {
     Object.freeze(this)
   }
 
-  async list(): Promise<ReadonlyArray<IamRoleEntity> | Error> {
+  async findMany(): Promise<ReadonlyArray<IamRoleEntity> | Error> {
     try {
       const rows = await this.c.env.DB.prepare(
         `SELECT role.id, role.key, role.kind, role.resource_type, role.name, role.description,
@@ -54,7 +54,7 @@ export class SystemRoleCatalogRepository {
     }
   }
 
-  async findById(roleId: IamRoleId): Promise<IamRoleEntity | null | Error> {
+  async find(roleId: IamRoleId): Promise<IamRoleEntity | null | Error> {
     try {
       const rows = await this.c.env.DB.prepare(
         `SELECT role.id, role.key, role.kind, role.resource_type, role.name, role.description,

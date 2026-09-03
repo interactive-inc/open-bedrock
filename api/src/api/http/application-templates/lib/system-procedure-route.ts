@@ -19,7 +19,7 @@ export async function loadSystemProcedure(
   const key = procedureKeySchema.safeParse(code)
   if (!key.success) return null
 
-  return systemProcedureRepository(c).findCurrent(key.data)
+  return systemProcedureRepository(c).find(key.data)
 }
 
 export function parseSystemProcedurePolicy(

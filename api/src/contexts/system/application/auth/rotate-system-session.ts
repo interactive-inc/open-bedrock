@@ -16,10 +16,10 @@ export type SystemAuditEventAppender = Readonly<{
 }>
 
 type Props = Readonly<{
-  accountRepository: Pick<SystemAccountRepository, "findById">
+  accountRepository: Pick<SystemAccountRepository, "find">
   sessionRepository: Pick<
     SystemSessionRepository,
-    "findByTokenHash" | "revokeFamilyWithAudit" | "rotateWithAudit"
+    "find" | "revokeFamilyWithAudit" | "rotateWithAudit"
   >
   auditAppender: SystemAuditEventAppender
   materialService: SystemSessionMaterial
@@ -68,7 +68,7 @@ export class RotateSystemSession {
 
     const tokenHash = await this.c.materialService.hashRawToken(command.rawToken)
     if (tokenHash instanceof Error) return tokenHash
-    const current = await this.c.sessionRepository.findByTokenHash(tokenHash)
+    const current = await this.c.sessionRepository.find(tokenHash)
     if (current instanceof Error) return current
     if (current === null) return this.rejectUnknown(command)
 

@@ -34,7 +34,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
   const account = await new SystemAccountCatalogRepository({
     env: { DB: context.env.DB },
-  }).findById(accountId.data)
+  }).find(accountId.data)
   if (account instanceof Error) {
     throw new SystemIdentityUnavailableError()
   }
@@ -43,7 +43,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
   const identities = await new SystemIdentityCatalogRepository({
     env: { DB: context.env.DB },
-  }).listForAccount(accountId.data)
+  }).findMany(accountId.data)
   if (identities instanceof Error) {
     throw new SystemIdentityUnavailableError()
   }

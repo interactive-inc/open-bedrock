@@ -29,7 +29,7 @@ export const GET = systemFactory.createHandlers(
     }
     const principal = await new SystemPrincipalRepository({
       env: { DB: context.env.DB },
-    }).findOne(context.req.valid("param").principalId)
+    }).find({ principalId: context.req.valid("param").principalId })
     if (principal instanceof Error) throw new SystemPrincipalUnavailableError(principal)
     if (principal === null) throw new SystemPrincipalNotFoundError()
 
@@ -59,7 +59,7 @@ export const PATCH = systemFactory.createHandlers(
     }
     const body = context.req.valid("json")
     const repository = new SystemPrincipalRepository({ env: { DB: context.env.DB } })
-    const current = await repository.findOne(context.req.valid("param").principalId)
+    const current = await repository.find({ principalId: context.req.valid("param").principalId })
     if (current instanceof Error) throw new SystemPrincipalUnavailableError(current)
     if (current === null) throw new SystemPrincipalNotFoundError()
     if (current.revision !== body.expected_revision) throw new SystemPrincipalConflictError()

@@ -38,7 +38,7 @@ export const GET = systemFactory.createHandlers(
     const query = context.req.valid("query")
     const page = await new SystemNotificationRepository({
       context: { env: { DB: context.env.DB } },
-    }).listForAccount({
+    }).findMany({
       recipientAccountId: accountId.data,
       read: query.read === undefined ? null : query.read === "true",
       limit: query.limit,

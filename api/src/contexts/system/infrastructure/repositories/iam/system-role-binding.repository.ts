@@ -29,7 +29,7 @@ export class SystemRoleBindingRepository {
     Object.freeze(this)
   }
 
-  async listForAccount(accountId: AccountId): Promise<ReadonlyArray<RoleBindingEntity> | Error> {
+  async findMany(accountId: AccountId): Promise<ReadonlyArray<RoleBindingEntity> | Error> {
     try {
       const rows = await this.c.env.DB.prepare(
         `SELECT id, account_id, role_id, resource_type, resource_id, created_at, revoked_at
@@ -55,7 +55,7 @@ export class SystemRoleBindingRepository {
     }
   }
 
-  async findById(bindingId: RoleBindingId): Promise<RoleBindingEntity | null | Error> {
+  async find(bindingId: RoleBindingId): Promise<RoleBindingEntity | null | Error> {
     try {
       const row = await this.c.env.DB.prepare(
         `SELECT id, account_id, role_id, resource_type, resource_id, created_at, revoked_at
@@ -180,7 +180,7 @@ export class SystemRoleBindingRepository {
         return "forbidden"
       }
       if (caught instanceof Error && caught.message.includes("malformed JSON")) {
-        const current = await this.findById(binding.id)
+        const current = await this.find(binding.id)
         if (
           current === null ||
           (current instanceof RoleBindingEntity && current.revokedAt !== null)
