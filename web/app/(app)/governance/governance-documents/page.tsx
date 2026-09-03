@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { getGovernanceDocuments } from "@/lib/api/get-governance-documents"
 import { requireAuth } from "@/lib/auth/require-auth"
 
@@ -76,18 +77,13 @@ export default async function GovernancePage(props: Props) {
             aria-label="規程・手続きを検索"
           />
         </InputGroup>
-        <select
-          name="kind"
-          defaultValue={params.kind ?? ""}
-          className="h-9 rounded-4xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-          aria-label="文書種別"
-        >
-          <option value="">すべての種別</option>
-          <option value="policy">規程</option>
-          <option value="procedure">手続き</option>
-          <option value="guideline">ガイドライン</option>
-          <option value="control">統制</option>
-        </select>
+        <NativeSelect name="kind" defaultValue={params.kind ?? ""} aria-label="文書種別">
+          <NativeSelectOption value="">すべての種別</NativeSelectOption>
+          <NativeSelectOption value="policy">規程</NativeSelectOption>
+          <NativeSelectOption value="procedure">手続き</NativeSelectOption>
+          <NativeSelectOption value="guideline">ガイドライン</NativeSelectOption>
+          <NativeSelectOption value="control">統制</NativeSelectOption>
+        </NativeSelect>
         <Button type="submit">絞り込む</Button>
       </form>
 

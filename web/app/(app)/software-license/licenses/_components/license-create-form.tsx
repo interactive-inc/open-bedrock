@@ -8,6 +8,7 @@ import type { LicenseActionState } from "@/app/(app)/software-license/licenses/a
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 const initialState: LicenseActionState = { ok: false, error: null }
 
@@ -58,17 +59,12 @@ export function LicenseCreateForm() {
         <Field>
           <FieldLabel htmlFor="license-category">区分（任意）</FieldLabel>
 
-          <select
-            id="license-category"
-            name="category"
-            defaultValue=""
-            className="h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-          >
-            <option value="">未設定</option>
-            <option value="saas">SaaS</option>
-            <option value="software">ソフトウェア</option>
-            <option value="other">その他</option>
-          </select>
+          <NativeSelect id="license-category" name="category" defaultValue="" className="w-full">
+            <NativeSelectOption value="">未設定</NativeSelectOption>
+            <NativeSelectOption value="saas">SaaS</NativeSelectOption>
+            <NativeSelectOption value="software">ソフトウェア</NativeSelectOption>
+            <NativeSelectOption value="other">その他</NativeSelectOption>
+          </NativeSelect>
         </Field>
 
         <Field>

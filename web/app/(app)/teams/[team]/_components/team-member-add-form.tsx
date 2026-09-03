@@ -19,6 +19,7 @@ import {
 import { EmployeeCombobox } from "@/components/ui/employee-combobox"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { EmployeeListItem } from "@/lib/api/types/employee-list-item"
 import type { PositionResponse } from "@/lib/api/types/position-types"
 import { useRouter } from "next/navigation"
@@ -31,9 +32,6 @@ type Props = {
 }
 
 const initialState: PersonnelActionFormState = { ok: false, error: null }
-
-const selectClassName =
-  "h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
 
 /**
  * 部署ページから既存従業員をこの部署へ配属（主配属・兼務）する人事発令フォーム。
@@ -137,17 +135,17 @@ export function TeamMemberAddForm(props: Props) {
                 配属の種別
               </FieldLabel>
 
-              <select
+              <NativeSelect
                 id="team-member-kind"
                 name="kind"
                 aria-labelledby="team-member-kind-label"
-                className={selectClassName}
+                className="w-full"
                 defaultValue="primary_assignment_started"
               >
-                <option value="primary_assignment_started">主配属</option>
+                <NativeSelectOption value="primary_assignment_started">主配属</NativeSelectOption>
 
-                <option value="concurrent_assignment_started">兼務</option>
-              </select>
+                <NativeSelectOption value="concurrent_assignment_started">兼務</NativeSelectOption>
+              </NativeSelect>
 
               <FieldDescription>
                 主所属を移す異動は従業員詳細の人事変更から行います。
@@ -165,21 +163,21 @@ export function TeamMemberAddForm(props: Props) {
                 役職（任意）
               </FieldLabel>
 
-              <select
+              <NativeSelect
                 id="team-member-position"
                 name="position_code"
                 aria-labelledby="team-member-position-label"
-                className={selectClassName}
+                className="w-full"
                 defaultValue=""
               >
-                <option value="">役職なし</option>
+                <NativeSelectOption value="">役職なし</NativeSelectOption>
 
                 {props.positions.map((position) => (
-                  <option key={position.id} value={position.code}>
+                  <NativeSelectOption key={position.id} value={position.code}>
                     {position.name}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
 
             <Field>

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Table,
@@ -150,22 +151,22 @@ function UpdateExpenseDialog(props: { expense: ExpenseMineResponse }) {
             <Field>
               <FieldLabel htmlFor={`update_category_${props.expense.id}`}>カテゴリ</FieldLabel>
 
-              <select
+              <NativeSelect
                 id={`update_category_${props.expense.id}`}
                 name="category"
                 defaultValue={props.expense.category}
-                className="h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                className="w-full"
               >
-                <option value="transport">交通費</option>
+                <NativeSelectOption value="transport">交通費</NativeSelectOption>
 
-                <option value="supplies">備品</option>
+                <NativeSelectOption value="supplies">備品</NativeSelectOption>
 
-                <option value="entertainment">交際費</option>
+                <NativeSelectOption value="entertainment">交際費</NativeSelectOption>
 
-                <option value="books">書籍</option>
+                <NativeSelectOption value="books">書籍</NativeSelectOption>
 
-                <option value="other">その他</option>
-              </select>
+                <NativeSelectOption value="other">その他</NativeSelectOption>
+              </NativeSelect>
             </Field>
 
             <Field>

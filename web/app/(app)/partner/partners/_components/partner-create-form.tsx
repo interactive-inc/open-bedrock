@@ -8,6 +8,7 @@ import type { PartnerCreateFormState } from "@/app/(app)/partner/partners/action
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 const initialState: PartnerCreateFormState = { ok: false, error: null }
 
@@ -61,17 +62,12 @@ export function PartnerCreateForm() {
         <Field>
           <FieldLabel htmlFor="partner-category">分類（任意）</FieldLabel>
 
-          <select
-            id="partner-category"
-            name="category"
-            defaultValue=""
-            className="h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-          >
-            <option value="">未設定</option>
-            <option value="customer">顧客</option>
-            <option value="supplier">仕入先</option>
-            <option value="other">その他</option>
-          </select>
+          <NativeSelect id="partner-category" name="category" defaultValue="" className="w-full">
+            <NativeSelectOption value="">未設定</NativeSelectOption>
+            <NativeSelectOption value="customer">顧客</NativeSelectOption>
+            <NativeSelectOption value="supplier">仕入先</NativeSelectOption>
+            <NativeSelectOption value="other">その他</NativeSelectOption>
+          </NativeSelect>
         </Field>
 
         <Field>

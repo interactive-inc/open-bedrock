@@ -9,6 +9,7 @@ import type { GoalPeriodOption } from "@/app/(app)/performance-review/goals/_lib
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Select,
   SelectContent,
@@ -76,19 +77,22 @@ export function StructuralGoalCreateForm(props: Props) {
           <Field>
             <FieldLabel htmlFor="structural-owner-type">種別</FieldLabel>
 
-            <select
+            <NativeSelect
               id="structural-owner-type"
               name="ownerType"
               value={ownerType}
               onChange={(event) =>
                 setOwnerType(event.target.value === "company" ? "company" : "department")
               }
-              className="border-input h-9 rounded-md border bg-transparent px-3 text-sm"
             >
-              {props.canCreateCompany ? <option value="company">全社</option> : null}
+              {props.canCreateCompany ? (
+                <NativeSelectOption value="company">全社</NativeSelectOption>
+              ) : null}
 
-              {props.canCreateDepartment ? <option value="department">部門</option> : null}
-            </select>
+              {props.canCreateDepartment ? (
+                <NativeSelectOption value="department">部門</NativeSelectOption>
+              ) : null}
+            </NativeSelect>
           </Field>
 
           <Field>

@@ -1,9 +1,11 @@
 "use client"
 
+import { X } from "lucide-react"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { revokeAccountRoleAction } from "@/app/(app)/system/accounts/actions"
 import type { AccountActionFormState } from "@/app/(app)/system/accounts/actions"
+import { Button } from "@/components/ui/button"
 
 const initialState: AccountActionFormState = { ok: false, error: null }
 
@@ -38,14 +40,16 @@ export function RevokeRoleButton(props: Props) {
 
       <input type="hidden" name="binding_id" value={props.bindingId} />
 
-      <button
+      <Button
         type="submit"
+        variant="ghost"
+        size="icon-xs"
         disabled={isPending}
-        className="relative ml-1 text-muted-foreground transition-colors select-none hover:text-destructive focus-visible:rounded focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50 disabled:pointer-events-none max-md:after:absolute max-md:after:inset-[-14px] max-md:after:content-['']"
+        className="ml-1"
         aria-label={`${props.roleLabel} を剥奪`}
       >
-        ×
-      </button>
+        <X />
+      </Button>
     </form>
   )
 }

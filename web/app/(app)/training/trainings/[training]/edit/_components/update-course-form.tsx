@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import type { TrainingFormState } from "@/app/(app)/training/trainings/actions"
 import { updateTrainingCourseAction } from "@/app/(app)/training/trainings/actions"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -82,11 +83,9 @@ export function UpdateCourseForm(props: Props) {
         </Field>
 
         <Field orientation="horizontal">
-          <input
+          <Checkbox
             id="update_required"
             name="is_required"
-            type="checkbox"
-            className="size-4"
             defaultChecked={props.course.is_required}
           />
 

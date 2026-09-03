@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 type Props = {
   // 編集対象の資産。hidden の code と各入力の初期値に使う。
@@ -83,17 +84,17 @@ export function AssetEditForm(props: Props) {
             <Field>
               <FieldLabel htmlFor="edit-asset-kind">種別</FieldLabel>
 
-              <select
+              <NativeSelect
                 id="edit-asset-kind"
                 name="kind"
                 defaultValue={props.kind}
-                className="h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                className="w-full"
               >
-                <option value="pc">PC</option>
-                <option value="monitor">モニター</option>
-                <option value="furniture">什器</option>
-                <option value="other">その他</option>
-              </select>
+                <NativeSelectOption value="pc">PC</NativeSelectOption>
+                <NativeSelectOption value="monitor">モニター</NativeSelectOption>
+                <NativeSelectOption value="furniture">什器</NativeSelectOption>
+                <NativeSelectOption value="other">その他</NativeSelectOption>
+              </NativeSelect>
             </Field>
 
             <Field>

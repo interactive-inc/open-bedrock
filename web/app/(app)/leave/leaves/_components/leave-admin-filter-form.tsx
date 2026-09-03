@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 type LeaveTypeFilterValue =
   | "annual"
@@ -57,18 +58,18 @@ export function LeaveAdminFilterForm(props: Props) {
             <Field className="w-full">
               <FieldLabel htmlFor="leave-admin-status">ステータス</FieldLabel>
 
-              <select
+              <NativeSelect
                 id="leave-admin-status"
                 name="status"
                 defaultValue={props.statusValue}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                className="w-full"
               >
                 {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <NativeSelectOption key={option.value} value={option.value}>
                     {option.label}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
           </div>
 
@@ -76,18 +77,18 @@ export function LeaveAdminFilterForm(props: Props) {
             <Field className="w-full">
               <FieldLabel htmlFor="leave-admin-type">休暇種別</FieldLabel>
 
-              <select
+              <NativeSelect
                 id="leave-admin-type"
                 name="leave_type"
                 defaultValue={props.leaveTypeValue}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                className="w-full"
               >
                 {typeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <NativeSelectOption key={option.value} value={option.value}>
                     {option.label}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
           </div>
 

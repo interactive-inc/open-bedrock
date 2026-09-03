@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 type Props = {
   kind: string
@@ -32,18 +33,18 @@ export function SystemDeliveryFilterForm(props: Props) {
             <Field className="w-full">
               <FieldLabel htmlFor="system-delivery-kind">種別</FieldLabel>
 
-              <select
+              <NativeSelect
                 id="system-delivery-kind"
                 name="kind"
                 defaultValue={props.kind}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                className="w-full"
               >
                 {kindOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <NativeSelectOption key={option.value} value={option.value}>
                     {option.label}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
           </div>
 
@@ -51,18 +52,18 @@ export function SystemDeliveryFilterForm(props: Props) {
             <Field className="w-full">
               <FieldLabel htmlFor="system-delivery-status">状態</FieldLabel>
 
-              <select
+              <NativeSelect
                 id="system-delivery-status"
                 name="status"
                 defaultValue={props.status ?? ""}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                className="w-full"
               >
                 {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <NativeSelectOption key={option.value} value={option.value}>
                     {option.label}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
           </div>
 
