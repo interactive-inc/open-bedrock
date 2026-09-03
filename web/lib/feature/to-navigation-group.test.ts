@@ -13,6 +13,12 @@ describe("toNavigationGroup", () => {
     expect(toNavigationGroup("/my/goals", "growth")).toBe("growth")
   })
 
+  test("汎用手続きの全社ビューは System 空間の「案件と判断」へ寄せ、本人スコープは保つ", () => {
+    expect(toNavigationGroup("/system/applications", "requests")).toBe("system-case")
+    expect(toNavigationGroup("/system/application-templates", "requests")).toBe("system-case")
+    expect(toNavigationGroup("/my/applications", "requests")).toBe("requests")
+  })
+
   test("所有者 prefix を持つ route も feature の group を保つ", () => {
     expect(toNavigationGroup("/company/employees", "company-people")).toBe("company-people")
     expect(toNavigationGroup("/system/accounts", "system")).toBe("system")
