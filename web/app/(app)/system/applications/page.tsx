@@ -104,7 +104,7 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
                 nativeButton={false}
                 render={<Link href="/system/workflow-repairs" />}
               >
-                承認フロー修復
+                ワークフロー修復
               </Button>
             ) : null}
             <Button

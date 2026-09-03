@@ -50,7 +50,7 @@ export default async function MyExpensesPage() {
                 nativeButton={false}
                 render={<Link href="/expense/expenses" />}
               >
-                経費申請管理
+                全社の経費
               </Button>
             ) : null}
 

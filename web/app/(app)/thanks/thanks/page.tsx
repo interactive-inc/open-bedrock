@@ -39,7 +39,7 @@ export default async function ThanksPage() {
                 nativeButton={false}
                 render={<Link href="/thanks/thanks-redemptions" />}
               >
-                交換申請管理
+                サンクス交換の横断
               </Button>
             ) : null}
 
