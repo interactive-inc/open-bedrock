@@ -84,7 +84,7 @@ Company が正本として持つ資源を読み取り専用で確認する画面
 - `/company/profile` は法人(LegalEntity)、会社プロフィール、事業所(Site)、勤務場所(Workplace)を確認する画面。
 - `/company/people` は雇用と切り離した Person の台帳を確認する画面。
 - `/company/employments` は在籍状態と有効期間を持つ Employment を確認する画面。在籍区分の絞り込みは取得後に適用する。
-- `/company/organization-snapshots` は指定した時点の組織単位、配属、レポートライン、責任の割当を確認する画面。組織変更の履歴一覧は API が持たない。
+- `/company/organization-snapshots` は指定した時点の組織単位、配属、レポートライン、責任の割当を確認する画面。組織単位のコードは `/teams/[team]` へ辿る。組織変更の履歴一覧は API が持たない。
 - `/company/definitions` は職務(Job)、組織上の役職(OrganizationalOffice)、責任(Responsibility)、権限範囲(AuthorityScope)、合議体(CollectiveBody)の定義を確認する画面。等級と役職マスタは `/company/grades` と `/company/positions` が正本なので含めない。
 - `/company/account-employee-links` は System の Account と Company の Employee の対応を確認する画面。
 - `/company/personnel-actions` は人事発令(PersonnelAction)を確認する画面。

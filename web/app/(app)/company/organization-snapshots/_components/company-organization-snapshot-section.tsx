@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { CompanyResourceTable } from "@/components/company-resource-table"
 import { FetchError } from "@/components/fetch-error"
 import { getCompanyOrganizationSnapshot } from "@/lib/api/get-company-organization-snapshot"
@@ -45,7 +46,20 @@ export async function CompanyOrganizationSnapshotSection(props: Props) {
           emptyTitle="組織単位がありません"
           emptyDescription={emptyDescription}
           columns={[
-            { header: "コード", toValue: (resource) => readResourceText(resource, "code") ?? "-" },
+            {
+              header: "コード",
+              toValue: (resource) => {
+                const code = readResourceText(resource, "code")
+
+                if (code === null) return "-"
+
+                return (
+                  <Link href={`/teams/${code}`} className="underline underline-offset-4">
+                    {code}
+                  </Link>
+                )
+              },
+            },
             {
               header: "正式名称",
               toValue: (resource) => readResourceText(resource, "officialName") ?? "-",

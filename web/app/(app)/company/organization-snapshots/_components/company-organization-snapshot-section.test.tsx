@@ -60,6 +60,48 @@ describe("CompanyOrganizationSnapshotSection", () => {
     expect(screen.getByText("組織 revision 9 時点の内容です。")).toBeDefined()
   })
 
+  test("組織単位のコードは部署ハブへ辿れる", async () => {
+    mocks.getCompanyOrganizationSnapshot.mockResolvedValue({
+      organizationId: "organization:default",
+      organizationRevision: 9,
+      resources: [
+        toResource({
+          type: "organization-unit",
+          id: "unit:1",
+          attributes: {
+            organizationUnitId: "unit:1",
+            code: "D001",
+            officialName: "開発部",
+            kind: "DEPARTMENT",
+            parentOrganizationUnitId: null,
+          },
+        }),
+      ],
+    })
+
+    render(await CompanyOrganizationSnapshotSection({ effectiveOn: null }))
+
+    expect(screen.getByRole("link", { name: "D001" }).getAttribute("href")).toBe("/teams/D001")
+  })
+
+  test("コードを持たない組織単位はリンクにしない", async () => {
+    mocks.getCompanyOrganizationSnapshot.mockResolvedValue({
+      organizationId: "organization:default",
+      organizationRevision: 9,
+      resources: [
+        toResource({
+          type: "organization-unit",
+          id: "unit:2",
+          attributes: { organizationUnitId: "unit:2", parentOrganizationUnitId: null },
+        }),
+      ],
+    })
+
+    render(await CompanyOrganizationSnapshotSection({ effectiveOn: null }))
+
+    expect(screen.queryByRole("link")).toBeNull()
+  })
+
   test("再委任の可否を日本語にする", async () => {
     mocks.getCompanyOrganizationSnapshot.mockResolvedValue({
       organizationId: "organization:default",
