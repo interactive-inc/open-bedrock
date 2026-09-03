@@ -12,8 +12,8 @@ type Props = {
 export function PageHeader(props: Props) {
   return (
     <div className="flex flex-col gap-2 border-b pb-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-        <div className="flex items-start gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="flex items-center gap-2">
           <SidebarTrigger variant="secondary" />
 
           <h1 className="text-base font-semibold">{props.title}</h1>
