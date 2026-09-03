@@ -38,16 +38,16 @@ import {
   Users,
   Wallet,
   Wrench,
-} from "lucide-react";
+} from "lucide-react"
 import type {
   FeatureDefinition,
   FeatureGroup,
   FeatureNavigationVisibility,
   FeatureStatus,
   FeatureTier,
-} from "@/lib/feature/feature-types";
+} from "@/lib/feature/feature-types"
 
-const everyone: FeatureNavigationVisibility = { kind: "everyone" };
+const everyone: FeatureNavigationVisibility = { kind: "everyone" }
 
 /**
  * 開発中はユーザ視点の利用レビューが完了していない機能を含む。
@@ -1025,7 +1025,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
       },
     ],
   },
-];
+]
 
 export const featureGroupOrder: ReadonlyArray<FeatureGroup> = [
   "overview",
@@ -1037,7 +1037,7 @@ export const featureGroupOrder: ReadonlyArray<FeatureGroup> = [
   "workplace",
   "governance",
   "system",
-];
+]
 
 export const featureGroupLabels: Record<FeatureGroup, string> = {
   overview: "概要",
@@ -1049,17 +1049,17 @@ export const featureGroupLabels: Record<FeatureGroup, string> = {
   workplace: "資産と施設",
   governance: "経営と統制",
   system: "システム運用",
-};
+}
 
 export const featureTierLabels: Record<FeatureTier, string> = {
   system: "システム層",
   company: "company",
   "app-default": "app-default",
   "app-opt-in": "app-opt-in",
-};
+}
 
 export const featureStatusLabels: Record<FeatureStatus, string> = {
   available: "使用可能",
   development: "開発中",
   "retirement-candidate": "廃止候補",
-};
+}

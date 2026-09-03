@@ -56,11 +56,7 @@ export function RingiAdminFilterForm(props: Props) {
             <Button type="submit">絞り込み</Button>
 
             {hasActiveFilter ? (
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={<Link href="/ringi/ringis" />}
-              >
+              <Button variant="outline" nativeButton={false} render={<Link href="/ringi/ringis" />}>
                 リセット
               </Button>
             ) : null}

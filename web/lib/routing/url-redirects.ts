@@ -1,8 +1,8 @@
 type Redirect = {
-  source: string;
-  destination: string;
-  permanent: boolean;
-};
+  source: string
+  destination: string
+  permanent: boolean
+}
 
 /**
  * App の全社ビューを持つ context と、その配下の resource。
@@ -45,7 +45,7 @@ const appViews: ReadonlyArray<{ context: string; resources: ReadonlyArray<string
   { context: "thanks", resources: ["rewards", "thanks", "thanks-redemptions"] },
   { context: "training", resources: ["trainings"] },
   { context: "work-accident", resources: ["work-accidents"] },
-];
+]
 
 /**
  * 旧 `/organization/<resource>` から現行 URL への対応。
@@ -68,13 +68,13 @@ const organizationMoves: ReadonlyArray<{ resource: string; destination: string }
       destination: `${view.context}/${resource}`,
     })),
   ),
-];
+]
 
 /**
  * 現行 URL のうち、旧 URL としても登場しないもの。
  * ここに載る resource は `/<resource>` からの一括転送を作らない。
  */
-const contextPrefixes = new Set(appViews.map((view) => view.context));
+const contextPrefixes = new Set(appViews.map((view) => view.context))
 
 function toRedirects(
   moves: ReadonlyArray<{ source: string; destination: string }>,
@@ -86,7 +86,7 @@ function toRedirects(
       destination: `/${move.destination}/:path*`,
       permanent: false,
     },
-  ]);
+  ])
 }
 
 /**
@@ -105,12 +105,9 @@ const flatResourceMoves: ReadonlyArray<{ source: string; destination: string }> 
     .filter((move) => contextPrefixes.has(move.resource) === false)
     .filter((move) => move.resource !== "dashboards")
     // 先に個別定義がある旧 URL。一括生成すると source が重複する。
-    .filter(
-      (move) =>
-        ["applications", "departments", "rentals"].includes(move.resource) === false,
-    )
+    .filter((move) => ["applications", "departments", "rentals"].includes(move.resource) === false)
     .map((move) => ({ source: move.resource, destination: move.destination })),
-];
+]
 
 /**
  * 旧 URL から現行 URL への転送定義。
@@ -417,4 +414,4 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
   // 空間移動の一括転送は個別 redirects より後に置く（先に置くと
   // /applications/inbox 等の具体パスが先取りされて壊れる）。
   ...toRedirects(flatResourceMoves),
-];
+]

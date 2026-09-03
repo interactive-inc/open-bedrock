@@ -174,7 +174,10 @@ function ReferenceBadge(props: { kind: string; code: string }) {
     props.kind === "control"
   ) {
     return (
-      <Badge variant="outline" render={<Link href={`/governance/governance-documents/${props.code}`} />}>
+      <Badge
+        variant="outline"
+        render={<Link href={`/governance/governance-documents/${props.code}`} />}
+      >
         {props.kind}:{props.code}
       </Badge>
     )

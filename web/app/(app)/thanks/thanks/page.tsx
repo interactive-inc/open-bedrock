@@ -54,11 +54,7 @@ export default async function ThanksPage() {
               </Button>
             ) : null}
 
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link href="/thanks/rewards" />}
-            >
+            <Button variant="outline" nativeButton={false} render={<Link href="/thanks/rewards" />}>
               <Gift />
               景品を見る
             </Button>

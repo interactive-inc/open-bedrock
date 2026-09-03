@@ -21,11 +21,7 @@ export default function MyThanksPage() {
         description="自分が送った感謝と、景品の交換履歴・申請状況を確認します。"
         actions={
           <>
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link href="/thanks/rewards" />}
-            >
+            <Button variant="outline" nativeButton={false} render={<Link href="/thanks/rewards" />}>
               <Gift />
               景品を見る
             </Button>

@@ -95,11 +95,7 @@ export default async function AdminExpensesPage(props: { searchParams: SearchPar
         breadcrumbs={[{ label: "経費", href: "/my/expenses" }, { label: "経費申請管理" }]}
         actions={
           currentUser.permissions.includes("expense:approve") ? (
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link href="/inbox/expenses" />}
-            >
+            <Button variant="outline" nativeButton={false} render={<Link href="/inbox/expenses" />}>
               承認受信箱
             </Button>
           ) : null

@@ -32,10 +32,7 @@ export default async function ShiftPatternsPage() {
             <BackButton href="/my/shifts" label="シフトに戻る" />
 
             {canManage ? (
-              <Button
-                nativeButton={false}
-                render={<Link href="/shift/shift-patterns/new" />}
-              >
+              <Button nativeButton={false} render={<Link href="/shift/shift-patterns/new" />}>
                 <Plus />
                 パターンを作成
               </Button>

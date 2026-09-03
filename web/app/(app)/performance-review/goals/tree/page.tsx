@@ -39,7 +39,10 @@ export default async function GoalTreePage(props: Props) {
       <PageHeader
         title="目標ツリー"
         description="全社から部門・個人へと連なる目標を階層で確認します。"
-        breadcrumbs={[{ label: "目標", href: "/performance-review/goals" }, { label: "目標ツリー" }]}
+        breadcrumbs={[
+          { label: "目標", href: "/performance-review/goals" },
+          { label: "目標ツリー" },
+        ]}
         actions={
           <Button
             variant="outline"

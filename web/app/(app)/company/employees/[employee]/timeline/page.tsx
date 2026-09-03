@@ -18,10 +18,7 @@ export default async function EmployeeTimelinePage(props: {
       <PageHeader
         title="人材タイムライン"
         actions={
-          <BackButton
-            href={`/company/employees/${encodeURIComponent(code)}`}
-            label="詳細に戻る"
-          />
+          <BackButton href={`/company/employees/${encodeURIComponent(code)}`} label="詳細に戻る" />
         }
       />
       {events instanceof Error ? (

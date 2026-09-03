@@ -116,11 +116,7 @@ export function LeaveAdminFilterForm(props: Props) {
             <Button type="submit">絞り込み</Button>
 
             {hasActiveFilter ? (
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={<Link href="/leave/leaves" />}
-              >
+              <Button variant="outline" nativeButton={false} render={<Link href="/leave/leaves" />}>
                 リセット
               </Button>
             ) : null}

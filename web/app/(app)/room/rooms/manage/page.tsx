@@ -42,11 +42,7 @@ export default async function RoomManagePage() {
         description="登録済みの会議室を編集・削除します。"
         actions={
           <>
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link href="/room/rooms" />}
-            >
+            <Button variant="outline" nativeButton={false} render={<Link href="/room/rooms" />}>
               予約・空き状況へ
             </Button>
 

@@ -45,9 +45,7 @@ export function TemplateManagement(props: Props) {
         variant="outline"
         size="sm"
         nativeButton={false}
-        render={
-          <Link href={`/system/application-templates/${props.template.code}/workflow`} />
-        }
+        render={<Link href={`/system/application-templates/${props.template.code}/workflow`} />}
       >
         承認フロー
       </Button>

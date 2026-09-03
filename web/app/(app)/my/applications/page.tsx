@@ -55,10 +55,7 @@ export default async function MyApplicationsPage(props: { searchParams: SearchPa
               承認 inbox
             </Button>
 
-            <Button
-              nativeButton={false}
-              render={<Link href="/system/application-templates" />}
-            >
+            <Button nativeButton={false} render={<Link href="/system/application-templates" />}>
               新規申請
             </Button>
           </>

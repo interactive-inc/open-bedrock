@@ -35,10 +35,7 @@ export default async function ShiftManagePage() {
           <>
             <BackButton href="/my/shifts" label="シフトに戻る" />
 
-            <Button
-              nativeButton={false}
-              render={<Link href="/shift/shift-assignments/new" />}
-            >
+            <Button nativeButton={false} render={<Link href="/shift/shift-assignments/new" />}>
               <Plus />
               シフトを割り当て
             </Button>

@@ -4,7 +4,7 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 
 ## URL 設計
 
-- トップレベルの複数形リソースはコレクション全体を指し、閲覧範囲は permission でスコープする。例は `/company/employees`、`/expense/expenses`、`/system/applications`。
+- URL の第 1 segment は所有者を表す。System は `/system`、Company は `/company`、App は `api/src/contexts/` の context 名。第 2 segment はその所有者が持つ複数形リソースで、コレクション全体を指し、閲覧範囲は permission でスコープする。例は `/company/employees`、`/expense/expenses`、`/system/applications`。
 - `/my` は本人のものを指す。例は `/my/expenses`、`/my/leaves`。
 - `/inbox` は本人が対応すべきものを指す。例は `/inbox/applications`、`/inbox/expenses`。
 - 階層は所有関係を表す。例は `/teams/[team]/members`、`/company/employees/[employee]/timeline`。
@@ -18,7 +18,7 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 
 ## ホーム
 
-- `/` は主要な人数、申請、サーベイの状況を一覧する画面。
+- `/` は本人の基本情報と、今日の勤怠、休暇残、直近の申請の要約、各 `/my` リソースへの導線、および全社の人数、申請、サーベイの状況を並べる画面。
 
 ## 受信箱
 
@@ -38,7 +38,7 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 
 ## じぶん
 
-- `/my` は本人の基本情報と、今日の勤怠、休暇残、直近の申請の要約、各 `/my` リソースへの導線を並べるマイページ。layout は共通ラッパのみを持ち、各ページが自前の見出しを持つ。
+- `/my` 直下に index は無い。layout は共通ラッパのみを持ち、各ページが自前の見出しを持つ。
 - `/my/attendances` は出勤、退勤の打刻と、自分の勤怠記録を確認する画面。
 - `/my/leaves` は休暇残日数と自分の休暇申請状況を確認する画面。
 - `/my/leaves/new` は休暇種別、期間、理由を入力して休暇を申請する画面。

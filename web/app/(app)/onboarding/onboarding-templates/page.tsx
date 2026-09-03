@@ -30,10 +30,7 @@ export default async function OnboardingTemplatesPage() {
         description="入社・退社のオンボーディングテンプレートを管理します。"
         actions={
           <>
-            <BackButton
-              href="/onboarding/onboarding-assignments"
-              label="オンボーディングに戻る"
-            />
+            <BackButton href="/onboarding/onboarding-assignments" label="オンボーディングに戻る" />
 
             <Button
               nativeButton={false}

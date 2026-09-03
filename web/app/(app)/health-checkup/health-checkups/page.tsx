@@ -36,7 +36,10 @@ export default async function HealthCheckupsPage(props: { searchParams: SearchPa
         description="健診・ストレスチェックの実施状況を確認します。結果は保持せず、実施日と受診状態のみを記録します。"
         actions={
           canManageHealthCheckups(currentUser.permissions) ? (
-            <Button nativeButton={false} render={<Link href="/health-checkup/health-checkups/new" />}>
+            <Button
+              nativeButton={false}
+              render={<Link href="/health-checkup/health-checkups/new" />}
+            >
               <Plus />
               実施記録を登録
             </Button>
