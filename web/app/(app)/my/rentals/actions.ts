@@ -42,7 +42,7 @@ export async function lendRentalReservationAction(
     return { ok: false, error: lent.message }
   }
 
-  revalidatePath("/organization/rentals")
+  revalidatePath("/rental/rentals")
 
   return { ok: true, error: null }
 }
@@ -73,7 +73,7 @@ export async function returnRentalReservationAction(
     return { ok: false, error: returned.message }
   }
 
-  revalidatePath("/organization/rentals")
+  revalidatePath("/rental/rentals")
 
   return { ok: true, error: null }
 }

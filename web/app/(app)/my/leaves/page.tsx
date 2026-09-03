@@ -37,7 +37,7 @@ export default async function LeavePage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/organization/leaves" />}
+                render={<Link href="/leave/leaves" />}
               >
                 休暇申請管理
               </Button>
@@ -47,7 +47,7 @@ export default async function LeavePage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/company/inbox/leaves" />}
+                render={<Link href="/inbox/leaves" />}
               >
                 <Inbox />
                 承認受信箱

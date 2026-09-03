@@ -68,7 +68,7 @@ export async function submitRingiAction(
 
   revalidatePath("/my/ringis")
 
-  revalidatePath("/company/inbox/ringis")
+  revalidatePath("/inbox/ringis")
 
   return { ok: true, error: null }
 }
@@ -97,7 +97,7 @@ export async function approveRingiAction(
     return { ok: false, error: decided.message }
   }
 
-  revalidatePath("/company/inbox/ringis")
+  revalidatePath("/inbox/ringis")
 
   revalidatePath("/my/ringis")
 
@@ -128,7 +128,7 @@ export async function rejectRingiAction(
     return { ok: false, error: decided.message }
   }
 
-  revalidatePath("/company/inbox/ringis")
+  revalidatePath("/inbox/ringis")
 
   revalidatePath("/my/ringis")
 

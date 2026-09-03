@@ -20,7 +20,7 @@ export default function MySkillsPage() {
           <Button
             variant="outline"
             nativeButton={false}
-            render={<Link href="/organization/skills" />}
+            render={<Link href="/skill/skills" />}
           >
             スキル一覧
           </Button>

@@ -31,7 +31,7 @@ export default async function AntisocialChecksPage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/company/inbox/antisocial-checks" />}
+                render={<Link href="/inbox/antisocial-checks" />}
               >
                 判定受信箱
               </Button>

@@ -33,8 +33,8 @@ export async function CareerPostingsSection(props: Props) {
           key={posting.id ?? posting.title}
           href={
             posting.id !== null
-              ? `/organization/job-postings/${posting.id}`
-              : "/organization/job-postings"
+              ? `/career/job-postings/${posting.id}`
+              : "/career/job-postings"
           }
           className="flex flex-col gap-2"
         >

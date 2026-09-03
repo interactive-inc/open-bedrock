@@ -41,7 +41,7 @@ export default async function MyApplicationsPage(props: { searchParams: SearchPa
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/organization/applications" />}
+                render={<Link href="/system/applications" />}
               >
                 申請管理
               </Button>
@@ -50,14 +50,14 @@ export default async function MyApplicationsPage(props: { searchParams: SearchPa
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href="/company/inbox/applications" />}
+              render={<Link href="/inbox/applications" />}
             >
               承認 inbox
             </Button>
 
             <Button
               nativeButton={false}
-              render={<Link href="/organization/application-templates" />}
+              render={<Link href="/system/application-templates" />}
             >
               新規申請
             </Button>

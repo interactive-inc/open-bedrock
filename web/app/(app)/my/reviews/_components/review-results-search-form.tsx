@@ -32,7 +32,7 @@ export function ReviewResultsSearchForm() {
 
     const params = new URLSearchParams({ cycle_id: cycleId, employee_code: employeeCode })
 
-    router.push(`/organization/reviews?${params.toString()}`)
+    router.push(`/performance-review/reviews?${params.toString()}`)
   }
 
   return (

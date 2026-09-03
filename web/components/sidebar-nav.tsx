@@ -18,8 +18,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { featureStatusLabels, featureTierLabels } from "@/lib/feature/feature-registry"
 import { getFeatureNavigationItems } from "@/lib/feature/get-feature-navigation-items"
 import { getFeatureNavigationSections } from "@/lib/feature/get-feature-navigation-sections"
-import type { FeatureNavigationItem, FeatureNavigationSection } from "@/lib/feature/feature-types"
+import type {
+  FeatureNavigationItem,
+  FeatureNavigationSection,
+  FeatureSpace,
+} from "@/lib/feature/feature-types"
 import type { FlatDepartment } from "@/lib/org/flatten-org-tree"
+import { toFeatureSpace } from "@/lib/routing/to-feature-space"
 import { cn } from "@/lib/utils"
 
 export type MyDepartment = {
@@ -41,10 +46,8 @@ type Props = {
   disabledFeatures: ReadonlyArray<string>
 }
 
-type SpaceKey = "system" | "organization" | "other"
-
 type Space = {
-  key: SpaceKey
+  key: FeatureSpace
   label: string
   icon: LucideIcon
   sections: ReadonlyArray<FeatureNavigationSection>
@@ -89,27 +92,8 @@ function filterSections(
   return filteredSections
 }
 
-const SPACE_PREFIXES: ReadonlyArray<{ key: SpaceKey; prefix: string }> = [
-  { key: "system", prefix: "/system" },
-  { key: "organization", prefix: "/organization" },
-  { key: "other", prefix: "/my" },
-  { key: "other", prefix: "/company/inbox" },
-  { key: "other", prefix: "/company/notifications" },
-  { key: "other", prefix: "/teams" },
-]
-
-function isSpaceKey(value: unknown): value is SpaceKey {
-  return value === "system" || value === "organization" || value === "other"
-}
-
-function spaceFromPath(pathname: string): SpaceKey | null {
-  for (const entry of SPACE_PREFIXES) {
-    if (pathname === entry.prefix || pathname.startsWith(`${entry.prefix}/`)) {
-      return entry.key
-    }
-  }
-
-  return null
+function isFeatureSpace(value: unknown): value is FeatureSpace {
+  return value === "system" || value === "company" || value === "apps"
 }
 
 /**
@@ -130,8 +114,8 @@ function teamCodeFromPath(pathname: string): string | null {
 function isItemActive(pathname: string, item: FeatureNavigationItem): boolean {
   if (pathname === item.href) return true
 
-  // 空間トップ（マイページ）は配下全体で光らせず、完全一致のみアクティブにする。
-  if (item.href === "/my") {
+  // ホームは配下全体で光らせず、完全一致のみアクティブにする。
+  if (item.href === "/") {
     return false
   }
 
@@ -139,7 +123,7 @@ function isItemActive(pathname: string, item: FeatureNavigationItem): boolean {
 }
 
 /**
- * 空間タブ（システム / 会社 / その他の業務）を最上部に置き、選んだ空間の項目を
+ * 空間タブ（システム / 会社 / 業務）を最上部に置き、選んだ空間の項目を
  * 機能レジストリのグループ別に表示するサイドバーナビ。
  */
 export function SidebarNav(props: Props) {
@@ -150,7 +134,7 @@ export function SidebarNav(props: Props) {
   // タブの明示クリックは、その時点のパスに紐づけて保持する。ページ遷移で
   // パスが変わったら、開いたページの空間を自動選択に戻す。
   const [selectedSpace, setSelectedSpace] = useState<{
-    space: SpaceKey
+    space: FeatureSpace
     forPath: string
   } | null>(null)
 
@@ -159,7 +143,7 @@ export function SidebarNav(props: Props) {
   const activeSpace =
     selectedSpace !== null && selectedSpace.forPath === pathname
       ? selectedSpace.space
-      : (spaceFromPath(pathname) ?? selectedSpace?.space ?? "other")
+      : toFeatureSpace(pathname)
 
   const permissionSet = new Set(props.permissions)
 
@@ -172,11 +156,11 @@ export function SidebarNav(props: Props) {
     props.inboxCounts.thanks
 
   const badgeMap: Record<string, number> = {
-    "/company/inbox": inboxTotal,
-    "/company/notifications": props.unreadNotificationCount,
+    "/inbox": inboxTotal,
+    "/system/notifications": props.unreadNotificationCount,
   }
 
-  const otherBadgeTotal = inboxTotal + props.unreadNotificationCount
+  const appsBadgeTotal = inboxTotal + props.unreadNotificationCount
 
   // 部署 Select の現在値。URL の部署 → 手動選択 → 主配属 → 全部署の先頭、の順で決める。
   const pathTeam = teamCodeFromPath(pathname)
@@ -211,21 +195,20 @@ export function SidebarNav(props: Props) {
       ),
     },
     {
-      key: "organization",
+      key: "company",
       label: "会社",
       icon: Building2,
       sections: getFeatureNavigationSections(
-        getFeatureNavigationItems("organization", null, props.disabledFeatures),
+        getFeatureNavigationItems("company", null, props.disabledFeatures),
       ),
     },
     {
-      key: "other",
-      label: "その他の業務（おまけ）",
+      key: "apps",
+      label: "業務",
       icon: Blocks,
-      sections: getFeatureNavigationSections([
-        ...getFeatureNavigationItems("my", null, props.disabledFeatures),
-        ...getFeatureNavigationItems("teams", currentTeam, props.disabledFeatures),
-      ]),
+      sections: getFeatureNavigationSections(
+        getFeatureNavigationItems("apps", currentTeam, props.disabledFeatures),
+      ),
     },
   ]
 
@@ -255,7 +238,7 @@ export function SidebarNav(props: Props) {
   }
 
   const handleSpaceChange = (space: unknown) => {
-    if (!isSpaceKey(space)) return
+    if (!isFeatureSpace(space)) return
 
     setSelectedSpace({ space, forPath: pathname })
   }
@@ -322,17 +305,17 @@ export function SidebarNav(props: Props) {
                     value={space.key}
                     aria-label={space.label}
                     aria-description={
-                      space.key === "other" && otherBadgeTotal > 0
-                        ? `未処理と未読 ${otherBadgeTotal} 件`
+                      space.key === "apps" && appsBadgeTotal > 0
+                        ? `未処理と未読 ${appsBadgeTotal} 件`
                         : undefined
                     }
                     title={space.label}
                   >
                     <SpaceIcon aria-hidden="true" />
 
-                    {space.key === "other" && otherBadgeTotal > 0 ? (
+                    {space.key === "apps" && appsBadgeTotal > 0 ? (
                       <Badge aria-hidden="true" className="absolute -top-1 -right-1 min-w-4 px-1">
-                        {otherBadgeTotal > 9 ? "9+" : otherBadgeTotal}
+                        {appsBadgeTotal > 9 ? "9+" : appsBadgeTotal}
                       </Badge>
                     ) : null}
                   </TabsTrigger>
@@ -343,7 +326,7 @@ export function SidebarNav(props: Props) {
         </SidebarGroupContent>
       </SidebarGroup>
 
-      {currentSpace?.key === "other" && isTeamPath && currentTeam !== null ? (
+      {currentSpace?.key === "apps" && isTeamPath && currentTeam !== null ? (
         <SidebarGroup>
           <SidebarGroupContent>
             {isMyDepartment && props.myDepartments.length >= 1 ? (

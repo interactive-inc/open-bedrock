@@ -23,7 +23,7 @@ export default async function CareerPage() {
           <Button
             variant="outline"
             nativeButton={false}
-            render={<Link href="/organization/job-postings" />}
+            render={<Link href="/career/job-postings" />}
           >
             <Briefcase />
             社内公募を見る

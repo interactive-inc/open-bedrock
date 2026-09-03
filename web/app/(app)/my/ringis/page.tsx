@@ -43,7 +43,7 @@ export default async function MyRingiPage() {
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/organization/ringis" />}
+                render={<Link href="/ringi/ringis" />}
               >
                 稟議管理
               </Button>
@@ -52,7 +52,7 @@ export default async function MyRingiPage() {
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href="/company/inbox/ringis" />}
+              render={<Link href="/inbox/ringis" />}
             >
               <Inbox />
               承認受信箱

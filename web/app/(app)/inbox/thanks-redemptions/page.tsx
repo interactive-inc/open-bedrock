@@ -17,7 +17,7 @@ export default async function ThanksRedemptionInboxPage() {
       <SubPageHeader
         title="サンクス交換の承認"
         description="自分以外から提出された交換申請を承認または却下します。"
-        actions={<BackButton href="/organization/thanks" label="感謝へ戻る" />}
+        actions={<BackButton href="/thanks/thanks" label="感謝へ戻る" />}
       />
 
       {redemptions instanceof Error ? (

@@ -46,14 +46,14 @@ ephemeral: true
   - 宣言: `lib/schemas.ts:87`, `lib/app-schemas.ts:596`, `domain/expense/expense.entity.ts:13`,
     `application/expense/decide-expense.ts:20`
   - 書き込むコード: **存在しない**（テスト・seed を除く全出現を確認済み）
-  - UI 露出: `web/app/(app)/organization/expenses/_components/expense-admin-filter-form.tsx:19`
+  - UI 露出: `web/app/(app)/expense/expenses/_components/expense-admin-filter-form.tsx:19`
     に `{ value: "settled", label: "精算済み" }`
   - CLI 露出: `cli/app/expense/mine/route.ts:13` が `--status settled` を受け付ける
   - 実務影響: 承認後「支払われたか」を追跡できない。経費の最終段が存在しない。
 - **resignation / `completed`（完了）**
   - `domain/resignation/resignation.entity.ts` の遷移は `requested` → `accepted` / `rejected` の 3 状態のみ
     （`accept()` は :90-96、`reject()` は :99-105）。`completed` への遷移メソッドは無い。
-  - UI 露出: `web/app/(app)/organization/resignations/_components/resignation-admin-filter-form.tsx:14`
+  - UI 露出: `web/app/(app)/resignation/resignations/_components/resignation-admin-filter-form.tsx:14`
     に `{ value: "completed", label: "完了" }`
   - 実務影響: 退職手続きの完了を記録できない。
 
@@ -206,8 +206,8 @@ dead state より重い型。申請・記録はできるが、その結果が台
 
 - `/my/survey-responses` — `organization/surveys/actions.ts` の `revalidatePath` で
   参照されるだけ（キャッシュ再検証でありリンクではない）
-- `/organization/attendances/overtime`
-- `/organization/departments/new` — 部署の新規作成画面
+- `/attendance/attendances/overtime`
+- `/company/departments/new` — 部署の新規作成画面
 
 `/auth/broker/error` も未リンクだが、外部 IdP のエラー着地点なので正当。
 

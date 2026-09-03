@@ -4,11 +4,11 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 
 ## URL 設計
 
-- トップレベルの複数形リソースはコレクション全体を指し、閲覧範囲は permission でスコープする。例は `/organization/employees`、`/organization/expenses`、`/organization/applications`。
+- トップレベルの複数形リソースはコレクション全体を指し、閲覧範囲は permission でスコープする。例は `/company/employees`、`/expense/expenses`、`/system/applications`。
 - `/my` は本人のものを指す。例は `/my/expenses`、`/my/leaves`。
 - `/inbox` は本人が対応すべきものを指す。例は `/inbox/applications`、`/inbox/expenses`。
-- 階層は所有関係を表す。例は `/teams/[team]/members`、`/organization/employees/[employee]/timeline`。
-- 動的 segment は単数リソース名で表す。例は `[employee]`、`[application]`、`[team]`。`/organization/governance/[code]` は現行実装の segment 名をそのまま表す。
+- 階層は所有関係を表す。例は `/teams/[team]/members`、`/company/employees/[employee]/timeline`。
+- 動的 segment は単数リソース名で表す。例は `[employee]`、`[application]`、`[team]`。`/governance/governance-documents/[code]` は現行実装の segment 名をそのまま表す。
 - URL 階層はレイアウトの入れ子に対応する。`/inbox/layout.tsx` は受信箱ヘッダと種類タブを共有し、`/teams/[team]/layout.tsx` は部署名、コード、責任者のヘッダを共有する。
 - 旧 URL は `web/next.config.ts` の redirects で新 URL へ転送する。
 
@@ -33,8 +33,8 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 
 ## 通知
 
-- `/notifications` は自分宛ての通知を確認し、既読にする画面。
-- `/notifications/new` は宛先、種別、タイトル、本文を入力して通知を送る画面(`notification:send`)。
+- `/system/notifications` は自分宛ての通知を確認し、既読にする画面。
+- `/system/notifications/new` は宛先、種別、タイトル、本文を入力して通知を送る画面(`notification:send`)。
 
 ## じぶん
 
@@ -75,141 +75,141 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 
 ## チーム
 
-- `/teams/reports` は直属部下の一覧と、配下スコープの勤怠、休暇、目標を文脈導線としてまとめるマイチーム画面。各スコープ節は対応するスコープ権限(`attendance:read:reports`、`leave:read:reports`、`goal:read:reports`)を持つ場合のみ描画する。
+- `/company/reports` は直属部下の一覧と、配下スコープの勤怠、休暇、目標を文脈導線としてまとめるマイチーム画面。各スコープ節は対応するスコープ権限(`attendance:read:reports`、`leave:read:reports`、`goal:read:reports`)を持つ場合のみ描画する。
 
 ## 人と組織
 
-- `/organization/employees` は従業員台帳を検索し、従業員一覧を確認する画面。
-- `/organization/employees/new` は人物台帳、入社発令、初期アカウントを一括登録する画面。
-- `/organization/employees/[employee]` は基本情報、現在の人事状態、人材タイムライン、承認待ちの人事変更を確認し、人事変更を申請または確定する画面。
-- `/organization/employees/[employee]/timeline` は従業員の人事発令履歴をカーソルで継続表示する画面。
-- `/organization/employees/[employee]/reporting-line` は指定した従業員のレポートラインを確認する画面。
-- `/organization/employees/[employee]/onboarding` は社員ごとのオンボーディング進行状況を確認する画面。
-- `/organization/departments` は部署ツリー(組織図)を閲覧し、部署ノードを一覧、管理する画面。
-- `/organization/departments/new` は新しい部署ノードを作成する画面(`org:manage`)。
+- `/company/employees` は従業員台帳を検索し、従業員一覧を確認する画面。
+- `/company/employees/new` は人物台帳、入社発令、初期アカウントを一括登録する画面。
+- `/company/employees/[employee]` は基本情報、現在の人事状態、人材タイムライン、承認待ちの人事変更を確認し、人事変更を申請または確定する画面。
+- `/company/employees/[employee]/timeline` は従業員の人事発令履歴をカーソルで継続表示する画面。
+- `/company/employees/[employee]/reporting-line` は指定した従業員のレポートラインを確認する画面。
+- `/company/employees/[employee]/onboarding` は社員ごとのオンボーディング進行状況を確認する画面。
+- `/company/departments` は部署ツリー(組織図)を閲覧し、部署ノードを一覧、管理する画面。
+- `/company/departments/new` は新しい部署ノードを作成する画面(`org:manage`)。
 - `/teams/[team]` は部署ハブの入口。概要ページは持たず `/teams/[team]/members` へリダイレクトする。layout が部署名、コード、責任者のヘッダを共有する。
 - `/teams/[team]/members` は部署に所属するメンバーを確認し、直接発令の権限(`employee:lifecycle:apply`)を持つ利用者がこの部署への配属(主配属・兼務)を登録する画面。
 - `/teams/[team]/goals` は部署の所属メンバーと部門の目標を一覧する画面(`goal:read:all`、または所属部署への `goal:read:department`)。
 - `/teams/[team]/attendances` は部署の所属メンバーの勤怠記録を一覧する画面(`attendance:read:all`、または所属部署への `attendance:read:department`)。
 - `/teams/[team]/leaves` は部署の所属メンバーの休暇申請を一覧する画面(`leave:read:all`、または所属部署への `leave:read:department`)。
-- `/organization/goals/tree` は全社、部門、個人の目標を階層で俯瞰する画面。
-- `/organization/grades` は等級マスタの一覧を確認し、管理者(`grade:manage`)が作成、編集、削除する画面。
-- `/organization/grades/new` は等級マスタの基本情報を登録する画面(`grade:manage`)。
-- `/organization/positions` は役職マスタの一覧を確認し、管理者(`position:manage`)が作成、編集、削除する画面。一覧は全認証者が閲覧する。
-- `/organization/positions/new` は役職マスタの基本情報を登録する画面(`position:manage`)。
-- `/organization/job-postings` は募集中の社内公募を閲覧し、応募先を探す画面。
-- `/organization/job-postings/new` は管理者が新しい社内公募を登録する画面。
-- `/organization/job-postings/[posting]` は公募内容を確認し応募する詳細画面。
-- `/organization/job-postings/[posting]/edit` は管理者が公募内容と状態を変更する画面。
-- `/organization/commendations` は表彰の一覧(社内公開)と管理者による記録を行う画面。
-- `/organization/headcount-plans` は人員計画と実在籍数を比較する画面(`headcount_plan:read:all`)。
+- `/performance-review/goals/tree` は全社、部門、個人の目標を階層で俯瞰する画面。
+- `/company/grades` は等級マスタの一覧を確認し、管理者(`grade:manage`)が作成、編集、削除する画面。
+- `/company/grades/new` は等級マスタの基本情報を登録する画面(`grade:manage`)。
+- `/company/positions` は役職マスタの一覧を確認し、管理者(`position:manage`)が作成、編集、削除する画面。一覧は全認証者が閲覧する。
+- `/company/positions/new` は役職マスタの基本情報を登録する画面(`position:manage`)。
+- `/career/job-postings` は募集中の社内公募を閲覧し、応募先を探す画面。
+- `/career/job-postings/new` は管理者が新しい社内公募を登録する画面。
+- `/career/job-postings/[posting]` は公募内容を確認し応募する詳細画面。
+- `/career/job-postings/[posting]/edit` は管理者が公募内容と状態を変更する画面。
+- `/commendation/commendations` は表彰の一覧(社内公開)と管理者による記録を行う画面。
+- `/headcount-plan/headcount-plans` は人員計画と実在籍数を比較する画面(`headcount_plan:read:all`)。
 
 ## 目標
 
-- `/organization/goals` は期間と従業員で絞り込み、目標を確認する画面。
-- `/organization/goals/new` は期間と内容を入力して目標を登録する画面。
-- `/organization/goals/[goal]` は目標の内容、評価、状態を確認する詳細画面。
+- `/performance-review/goals` は期間と従業員で絞り込み、目標を確認する画面。
+- `/performance-review/goals/new` は期間と内容を入力して目標を登録する画面。
+- `/performance-review/goals/[goal]` は目標の内容、評価、状態を確認する詳細画面。
 
 ## ナレッジと文化
 
-- `/organization/knowledge-articles` は社内ナレッジをキーワードやカテゴリで検索する画面。
-- `/organization/knowledge-articles/new` はナレッジ記事のタイトル、カテゴリ、本文を登録する画面。
-- `/organization/knowledge-articles/[article]` はナレッジ記事の本文とカテゴリを確認する画面。
-- `/organization/announcements` は社内アナウンスの一覧と詳細を確認し、管理者(`announcement:manage`)が作成、公開する画面。
-- `/organization/announcements/[announcement]` は社内アナウンスの本文を確認する画面。
-- `/organization/regulations` は規程集の一覧と版履歴を確認し、管理者(`regulation:manage`)が新版を追加する画面。
-- `/organization/regulations/[regulation]` は規程の本文と版履歴を確認し、管理者(`regulation:manage`)が新版を追加する画面。
-- `/organization/governance` は published status、audience、閲覧権限に応じた規程・手続きを検索する画面。現行実装は施行期間で絞り込まない。
-- `/organization/governance/[code]` は Markdown 本文、版、ProcedureDefinition、authority rule と control の宣言 metadata、公開 review、確認状態を表示する画面。
-- `/organization/governance/manage` は組織ロールの割当と、組織・参照・期限の整合性を検査する管理画面(`governance:manage`)。
-- `/organization/surveys` は配信中のアンケートを確認し回答する画面。
-- `/organization/surveys/[survey]` は指定したアンケートに回答する画面。
-- `/organization/surveys/[survey]/summary` はアンケートの回答件数と設問別集計を確認する画面。
-- `/organization/surveys/[survey]/edit` はアンケートのタイトル、状態、設問を変更する画面。
-- `/organization/surveys/manage` は実施中のアンケートを確認、編集、削除する管理画面。
-- `/organization/surveys/manage/new` は新しいアンケートのタイトルと設問を登録する画面。
-- `/organization/rewards` は受領残高で交換できる景品を確認し、交換を申請する画面。
-- `/organization/rewards/manage` は管理者が新しい景品を登録する画面。
-- `/organization/skills` はスキルをキーワードやカテゴリで検索する画面。
-- `/organization/certifications` は資格・免許のマスタと保有記録を確認、管理する画面。
-- `/organization/trainings` は研修コースの一覧から受講を申し込む画面。
-- `/organization/trainings/new` は研修コースの基本情報を登録する管理画面。
-- `/organization/trainings/[training]` は研修コースの詳細を確認し、受講登録や完了操作を行う画面。
-- `/organization/trainings/[training]/edit` は研修コースの内容を変更する管理画面。
+- `/knowledge/knowledge-articles` は社内ナレッジをキーワードやカテゴリで検索する画面。
+- `/knowledge/knowledge-articles/new` はナレッジ記事のタイトル、カテゴリ、本文を登録する画面。
+- `/knowledge/knowledge-articles/[article]` はナレッジ記事の本文とカテゴリを確認する画面。
+- `/announcement/announcements` は社内アナウンスの一覧と詳細を確認し、管理者(`announcement:manage`)が作成、公開する画面。
+- `/announcement/announcements/[announcement]` は社内アナウンスの本文を確認する画面。
+- `/regulation/regulations` は規程集の一覧と版履歴を確認し、管理者(`regulation:manage`)が新版を追加する画面。
+- `/regulation/regulations/[regulation]` は規程の本文と版履歴を確認し、管理者(`regulation:manage`)が新版を追加する画面。
+- `/governance/governance-documents` は published status、audience、閲覧権限に応じた規程・手続きを検索する画面。現行実装は施行期間で絞り込まない。
+- `/governance/governance-documents/[code]` は Markdown 本文、版、ProcedureDefinition、authority rule と control の宣言 metadata、公開 review、確認状態を表示する画面。
+- `/governance/governance-documents/manage` は組織ロールの割当と、組織・参照・期限の整合性を検査する管理画面(`governance:manage`)。
+- `/survey/surveys` は配信中のアンケートを確認し回答する画面。
+- `/survey/surveys/[survey]` は指定したアンケートに回答する画面。
+- `/survey/surveys/[survey]/summary` はアンケートの回答件数と設問別集計を確認する画面。
+- `/survey/surveys/[survey]/edit` はアンケートのタイトル、状態、設問を変更する画面。
+- `/survey/surveys/manage` は実施中のアンケートを確認、編集、削除する管理画面。
+- `/survey/surveys/manage/new` は新しいアンケートのタイトルと設問を登録する画面。
+- `/thanks/rewards` は受領残高で交換できる景品を確認し、交換を申請する画面。
+- `/thanks/rewards/manage` は管理者が新しい景品を登録する画面。
+- `/skill/skills` はスキルをキーワードやカテゴリで検索する画面。
+- `/certification/certifications` は資格・免許のマスタと保有記録を確認、管理する画面。
+- `/training/trainings` は研修コースの一覧から受講を申し込む画面。
+- `/training/trainings/new` は研修コースの基本情報を登録する管理画面。
+- `/training/trainings/[training]` は研修コースの詳細を確認し、受講登録や完了操作を行う画面。
+- `/training/trainings/[training]/edit` は研修コースの内容を変更する管理画面。
 - `/my/oneonones` は自分が参加した 1on1 の履歴を確認する画面。
 - `/my/oneonones/new` は日時、相手、メモを入力して 1on1 を記録する画面。
-- `/organization/thanks` はサンクスポイントの残量と、社内の感謝を見渡す画面。
-- `/organization/thanks/send` は送り先と感謝メッセージを入力し、任意でポイントを添えて送る画面。
+- `/thanks/thanks` はサンクスポイントの残量と、社内の感謝を見渡す画面。
+- `/thanks/thanks/send` は送り先と感謝メッセージを入力し、任意でポイントを添えて送る画面。
 
 ## 設備
 
-- `/organization/rooms` は会議室の空き状況を検索し、会議室を予約する画面。
-- `/organization/rooms/manage` は登録済みの会議室を編集、削除する管理画面。
-- `/organization/rooms/manage/new` は新しい会議室の名称、定員、所在地を登録する画面。
-- `/organization/assets` は種別や状態で絞り込み、備品一覧を確認する画面。
-- `/organization/assets/new` は新しい備品を備品マスタに登録する画面。
-- `/organization/assets/[asset]` は備品の属性と貸与、返却、廃棄を操作する画面。
-- `/organization/assets/holdings` は現在貸出中の備品を保有者ごとに横断で確認する管理画面。
-- `/organization/stocktakes` は棚卸しセッションの一覧を確認する画面。
-- `/organization/stocktakes/new` は名称と対象日を指定して棚卸しを開始する画面。
-- `/organization/stocktakes/[stocktake]` は対象備品ごとの現物確認を記録し、セッションを締める画面。
-- `/organization/calendars` は会社カレンダー(休日・振替出勤日)を確認し、管理者(`calendar:manage`)が編集する画面。
+- `/room/rooms` は会議室の空き状況を検索し、会議室を予約する画面。
+- `/room/rooms/manage` は登録済みの会議室を編集、削除する管理画面。
+- `/room/rooms/manage/new` は新しい会議室の名称、定員、所在地を登録する画面。
+- `/asset/assets` は種別や状態で絞り込み、備品一覧を確認する画面。
+- `/asset/assets/new` は新しい備品を備品マスタに登録する画面。
+- `/asset/assets/[asset]` は備品の属性と貸与、返却、廃棄を操作する画面。
+- `/asset/assets/holdings` は現在貸出中の備品を保有者ごとに横断で確認する管理画面。
+- `/asset/stocktakes` は棚卸しセッションの一覧を確認する画面。
+- `/asset/stocktakes/new` は名称と対象日を指定して棚卸しを開始する画面。
+- `/asset/stocktakes/[stocktake]` は対象備品ごとの現物確認を記録し、セッションを締める画面。
+- `/company-calendar/calendars` は会社カレンダー(休日・振替出勤日)を確認し、管理者(`calendar:manage`)が編集する画面。
 
 ## 経営と対外
 
-- `/organization/dashboards/management` は経営ダッシュボードを確認する画面(`management_dashboard:view`)。
-- `/organization/ringis` は全社の稟議を横断で確認する管理画面(`ringi:read:all`)。
-- `/organization/meetings` は会議体の一覧を確認し、登録済みの会議体へ移動する画面。
-- `/organization/meetings/new` は会議体のコードと名称を登録する画面(`meeting:manage`)。
-- `/organization/meetings/[meeting]` は会議体の詳細と議事録一覧を確認し、議事録を記録する画面。
-- `/organization/decisions` は会社の意思決定記録を一覧する画面。
-- `/organization/decisions/new` は意思決定記録を ADR 形式で作成する画面(`decision:manage`)。
-- `/organization/decisions/[decision]` は意思決定記録の背景、決定、帰結を確認する画面。
-- `/organization/partners` は取引先台帳を検索し、登録する画面。
-- `/organization/partners/new` は新しい取引先を登録する画面(`partner:manage`)。
-- `/organization/partners/[partner]` は取引先の詳細と契約記録を確認する画面(契約は `contract:read:all`)。
-- `/organization/budgets` は部署と会計期間ごとの予算を一覧で確認する画面(`budget:manage`)。
-- `/organization/budgets/new` は部署、会計期間、期間、金額、名称、メモを入力して予算を登録する画面(`budget:manage`)。
-- `/organization/budgets/[budget]` は予算の詳細と、承認済み経費による消化額、残額を確認し、修正や削除を行う画面(`budget:manage`)。
-- `/organization/budgets/summary` は会計期間を指定し、部署ごとの予算、消化額、残額を横断で確認する画面(`budget:manage`)。
-- `/organization/documents` は文書台帳(所在・期限)を確認、登録する画面(`document:read:all`)。
+- `/dashboards/management` は経営ダッシュボードを確認する画面(`management_dashboard:view`)。
+- `/ringi/ringis` は全社の稟議を横断で確認する管理画面(`ringi:read:all`)。
+- `/meeting/meetings` は会議体の一覧を確認し、登録済みの会議体へ移動する画面。
+- `/meeting/meetings/new` は会議体のコードと名称を登録する画面(`meeting:manage`)。
+- `/meeting/meetings/[meeting]` は会議体の詳細と議事録一覧を確認し、議事録を記録する画面。
+- `/meeting/decisions` は会社の意思決定記録を一覧する画面。
+- `/meeting/decisions/new` は意思決定記録を ADR 形式で作成する画面(`decision:manage`)。
+- `/meeting/decisions/[decision]` は意思決定記録の背景、決定、帰結を確認する画面。
+- `/partner/partners` は取引先台帳を検索し、登録する画面。
+- `/partner/partners/new` は新しい取引先を登録する画面(`partner:manage`)。
+- `/partner/partners/[partner]` は取引先の詳細と契約記録を確認する画面(契約は `contract:read:all`)。
+- `/expense/budgets` は部署と会計期間ごとの予算を一覧で確認する画面(`budget:manage`)。
+- `/expense/budgets/new` は部署、会計期間、期間、金額、名称、メモを入力して予算を登録する画面(`budget:manage`)。
+- `/expense/budgets/[budget]` は予算の詳細と、承認済み経費による消化額、残額を確認し、修正や削除を行う画面(`budget:manage`)。
+- `/expense/budgets/summary` は会計期間を指定し、部署ごとの予算、消化額、残額を横断で確認する画面(`budget:manage`)。
+- `/document/documents` は文書台帳(所在・期限)を確認、登録する画面(`document:read:all`)。
 
 ## 人事・労務
 
-- `/organization/attendances` は管理者が従業員や期間で絞り込み、全体の勤怠記録を確認する画面(`attendance:read:all`)。
-- `/organization/attendances/overtime` は時間外の参考集計を確認する画面(スコープ権限で範囲を出し分け)。
-- `/organization/leaves` は全社の休暇申請を横断で確認する管理画面(`leave:read:all`)。
-- `/organization/applications` は全社の申請を横断で確認する管理画面(`application:read:all`)。
-- `/organization/applications/[application]` は申請内容と承認状況を確認する詳細画面。
-- `/organization/expenses` は全社の経費申請を横断で確認する管理画面(`expense:read:all`)。
-- `/organization/expenses/[expense]` は経費申請の詳細を確認する画面。
-- `/organization/application-templates` は利用可能な申請テンプレートを確認し、新規申請を作成する画面。
-- `/organization/application-templates/new` は新しい申請テンプレートの名称、カテゴリ、入力項目を登録する画面。
-- `/organization/application-templates/[template]` は申請テンプレートの詳細を確認し、テンプレートから申請を始める画面。
-- `/organization/application-templates/[template]/workflow` はテンプレートの多段承認、条件、期限、差戻し、代理承認可否を設定する管理画面。
-- `/organization/workflow-repairs` は候補者不足で停止した承認フローへ、監査理由付きで承認候補者を再割り当てする管理画面。
-- `/organization/review-cycles` は評価サイクルの作成と、割り当てる評価者種別、同僚評価者数の設定を行う管理画面(`review:administer`)。
-- `/organization/reviews` は評価結果を検索し確認する管理画面(`review:administer`)。
-- `/organization/recruitments` は採用の募集一覧と候補者パイプラインを管理する画面(`recruitment:manage`)。
-- `/organization/recruitments/[recruitment]` は募集ごとの応募者パイプラインを確認し、選考ステージを進める画面(`recruitment:manage`)。
-- `/organization/onboarding-templates` は入社、退社のオンボーディングテンプレートと人事発令からの自動割当を管理する画面(`onboarding:manage`)。
-- `/organization/onboarding-templates/new` はオンボーディングタスクをテンプレートとして登録する画面。
-- `/organization/onboarding-assignments` は閲覧権限を持つ担当者が社員を選び、進行状況へ移動する画面(`onboarding:view:all`)。
-- `/organization/onboarding-assignments/new` は社員コードとテンプレートを指定して割り当てを作成する画面。
-- `/organization/health-checkups` は健康診断・ストレスチェックの実施記録を管理する画面(`health_checkup:read:all`)。
-- `/organization/work-accidents` は労災・事故の発生記録を確認、登録する画面(`work_accident:read:all`)。
-- `/organization/certificate-requests` は全社の証明書発行依頼を横断で確認する管理画面(`certificate_request:read:all`)。
-- `/organization/resignations` は全社の退職手続きを横断で確認する管理画面(`resignation:read:all`)。
-- `/organization/life-events` は全社のライフイベント届を横断で確認する管理画面(`life_event:read:all`)。
-- `/organization/family-care-leaves` は全社の産休・育休・介護休業の申出を横断で確認する管理画面(`family_care_leave:read:all`)。
-- `/organization/business-trips` は全社の出張申請を横断で確認する管理画面(`business_trip:read:all`)。
-- `/organization/rentals` は全社の貸与品予約を横断で確認する管理画面(`rental:read:all`)。
-- `/organization/shift-assignments` は全員のシフト割当を確認する管理画面(`shift:manage`)。
-- `/organization/shift-assignments/new` は対象社員、パターン、対象日を指定してシフト割当を作成する画面(`shift:manage`)。
-- `/organization/shift-patterns` はシフトの定型パターンを一覧する画面。
-- `/organization/shift-patterns/new` はコード、名前、開始と終了の時刻、休憩時間を登録してシフトパターンを作成する画面(`shift:manage`)。
-- `/organization/shift-swaps` は全社のシフト交代申請を横断で確認する管理画面(`shift_swap:read:all`)。
-- `/organization/thanks-redemptions` は全社のサンクス交換申請を横断で確認する管理画面(`thanks_redemption:read:all`)。
+- `/attendance/attendances` は管理者が従業員や期間で絞り込み、全体の勤怠記録を確認する画面(`attendance:read:all`)。
+- `/attendance/attendances/overtime` は時間外の参考集計を確認する画面(スコープ権限で範囲を出し分け)。
+- `/leave/leaves` は全社の休暇申請を横断で確認する管理画面(`leave:read:all`)。
+- `/system/applications` は全社の申請を横断で確認する管理画面(`application:read:all`)。
+- `/system/applications/[application]` は申請内容と承認状況を確認する詳細画面。
+- `/expense/expenses` は全社の経費申請を横断で確認する管理画面(`expense:read:all`)。
+- `/expense/expenses/[expense]` は経費申請の詳細を確認する画面。
+- `/system/application-templates` は利用可能な申請テンプレートを確認し、新規申請を作成する画面。
+- `/system/application-templates/new` は新しい申請テンプレートの名称、カテゴリ、入力項目を登録する画面。
+- `/system/application-templates/[template]` は申請テンプレートの詳細を確認し、テンプレートから申請を始める画面。
+- `/system/application-templates/[template]/workflow` はテンプレートの多段承認、条件、期限、差戻し、代理承認可否を設定する管理画面。
+- `/system/workflow-repairs` は候補者不足で停止した承認フローへ、監査理由付きで承認候補者を再割り当てする管理画面。
+- `/performance-review/review-cycles` は評価サイクルの作成と、割り当てる評価者種別、同僚評価者数の設定を行う管理画面(`review:administer`)。
+- `/performance-review/reviews` は評価結果を検索し確認する管理画面(`review:administer`)。
+- `/recruitment/recruitments` は採用の募集一覧と候補者パイプラインを管理する画面(`recruitment:manage`)。
+- `/recruitment/recruitments/[recruitment]` は募集ごとの応募者パイプラインを確認し、選考ステージを進める画面(`recruitment:manage`)。
+- `/onboarding/onboarding-templates` は入社、退社のオンボーディングテンプレートと人事発令からの自動割当を管理する画面(`onboarding:manage`)。
+- `/onboarding/onboarding-templates/new` はオンボーディングタスクをテンプレートとして登録する画面。
+- `/onboarding/onboarding-assignments` は閲覧権限を持つ担当者が社員を選び、進行状況へ移動する画面(`onboarding:view:all`)。
+- `/onboarding/onboarding-assignments/new` は社員コードとテンプレートを指定して割り当てを作成する画面。
+- `/health-checkup/health-checkups` は健康診断・ストレスチェックの実施記録を管理する画面(`health_checkup:read:all`)。
+- `/work-accident/work-accidents` は労災・事故の発生記録を確認、登録する画面(`work_accident:read:all`)。
+- `/certificate-request/certificate-requests` は全社の証明書発行依頼を横断で確認する管理画面(`certificate_request:read:all`)。
+- `/resignation/resignations` は全社の退職手続きを横断で確認する管理画面(`resignation:read:all`)。
+- `/life-event/life-events` は全社のライフイベント届を横断で確認する管理画面(`life_event:read:all`)。
+- `/family-care-leave/family-care-leaves` は全社の産休・育休・介護休業の申出を横断で確認する管理画面(`family_care_leave:read:all`)。
+- `/business-trip/business-trips` は全社の出張申請を横断で確認する管理画面(`business_trip:read:all`)。
+- `/rental/rentals` は全社の貸与品予約を横断で確認する管理画面(`rental:read:all`)。
+- `/shift/shift-assignments` は全員のシフト割当を確認する管理画面(`shift:manage`)。
+- `/shift/shift-assignments/new` は対象社員、パターン、対象日を指定してシフト割当を作成する画面(`shift:manage`)。
+- `/shift/shift-patterns` はシフトの定型パターンを一覧する画面。
+- `/shift/shift-patterns/new` はコード、名前、開始と終了の時刻、休憩時間を登録してシフトパターンを作成する画面(`shift:manage`)。
+- `/shift/shift-swaps` は全社のシフト交代申請を横断で確認する管理画面(`shift_swap:read:all`)。
+- `/thanks/thanks-redemptions` は全社のサンクス交換申請を横断で確認する管理画面(`thanks_redemption:read:all`)。
 
 ## システム管理
 
@@ -219,8 +219,8 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 - `/system/accounts` はアカウントの状態確認、ロール割当、停止、パスワードリセットを行う管理画面。閲覧は `iam:read`、変更は `iam:write` を要求する。
 - `/system/audit-events` は重要操作と認可判断の監査イベントを検索し、権限がある場合は検索結果を書き出す画面。
 - `/system/audit-events/[event]` は監査イベントの認可情報、変更内容、request 情報を確認する画面。
-- `/system/licenses` はライセンス・SaaS 台帳を確認、管理する画面(`license:read:all`)。
-- `/system/licenses/new` は利用中の SaaS・ソフトウェアを台帳に登録する画面(`license:manage`)。
-- `/system/it-incidents` はインシデントの発生と解消を記録する画面(`it_incident:read:all`)。
-- `/system/it-incidents/new` は発生した障害・事故を記録する画面(`it_incident:manage`)。
+- `/software-license/licenses` はライセンス・SaaS 台帳を確認、管理する画面(`license:read:all`)。
+- `/software-license/licenses/new` は利用中の SaaS・ソフトウェアを台帳に登録する画面(`license:manage`)。
+- `/it-incident/it-incidents` はインシデントの発生と解消を記録する画面(`it_incident:read:all`)。
+- `/it-incident/it-incidents/new` は発生した障害・事故を記録する画面(`it_incident:manage`)。
 - `/system/batches` はバックグラウンドで実行されるバッチジョブの最新状況を確認する画面(`batch:view`)。

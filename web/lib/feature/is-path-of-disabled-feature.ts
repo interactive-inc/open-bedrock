@@ -1,4 +1,4 @@
-import { featureRegistry } from "@/lib/feature/feature-registry"
+import { featureRegistry } from "@/lib/feature/feature-registry";
 
 /**
  * 現在のパスが、無効化された機能の画面かを feature-registry の href で判定する。
@@ -10,31 +10,31 @@ export function isPathOfDisabledFeature(
   disabledFeatureSlugs: ReadonlyArray<string>,
 ): boolean {
   if (disabledFeatureSlugs.length === 0) {
-    return false
+    return false;
   }
 
-  const disabledSlugSet = new Set(disabledFeatureSlugs)
+  const disabledSlugSet = new Set(disabledFeatureSlugs);
 
   for (const feature of featureRegistry) {
     if (disabledSlugSet.has(feature.slug) === false) {
-      continue
+      continue;
     }
 
     for (const route of feature.routes) {
       const pattern = route.href
         .split("/")
         .map((segment) => (segment.startsWith(":") ? "[^/]+" : escapeRegExp(segment)))
-        .join("/")
+        .join("/");
 
       if (new RegExp(`^${pattern}(?:/|$)`).test(path)) {
-        return true
+        return true;
       }
     }
   }
 
-  return false
+  return false;
 }
 
 function escapeRegExp(segment: string): string {
-  return segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

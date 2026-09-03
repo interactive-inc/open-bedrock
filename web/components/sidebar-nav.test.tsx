@@ -2,6 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import { SidebarNav } from "@/components/sidebar-nav"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { featureRegistry } from "@/lib/feature/feature-registry"
 
 const pathnameMock = vi.fn<() => string>(() => "/")
 
@@ -23,6 +24,17 @@ vi.mock("next/link", () => ({
 }))
 
 const inboxCounts = { applications: 0, expenses: 0, leaves: 0, shifts: 0, thanks: 0 }
+
+/** admin 相当。registry が要求する permission をすべて持つ。 */
+const allPermissions = featureRegistry.flatMap((feature) =>
+  feature.routes.flatMap((route) => {
+    if (route.visibility.kind === "permission") return [route.visibility.permission]
+
+    if (route.visibility.kind === "everyone") return []
+
+    return route.visibility.permissions
+  }),
+)
 
 afterEach(() => {
   cleanup()
@@ -62,17 +74,17 @@ describe("SidebarNav audit entry", () => {
 
 describe("SidebarNav governance entry", () => {
   test("shows the governance link only to readers", () => {
-    pathnameMock.mockReturnValue("/organization/governance")
+    pathnameMock.mockReturnValue("/governance/governance-documents")
 
     renderSidebar(["governance:read"])
 
     expect(screen.getByRole("link", { name: "規程・手続き" }).getAttribute("href")).toBe(
-      "/organization/governance",
+      "/governance/governance-documents",
     )
   })
 
   test("hides the governance link without governance:read", () => {
-    pathnameMock.mockReturnValue("/organization/employees")
+    pathnameMock.mockReturnValue("/company/employees")
 
     renderSidebar([])
 
@@ -81,18 +93,18 @@ describe("SidebarNav governance entry", () => {
 })
 
 describe("SidebarNav team entry (requiredAnyPermission)", () => {
-  test("shows マイチーム in the teams space with any one of the scope permissions", () => {
-    pathnameMock.mockReturnValue("/teams/D001")
+  test("shows マイチーム in the company space with any one of the scope permissions", () => {
+    pathnameMock.mockReturnValue("/company/reports")
 
     renderSidebar(["leave:read:reports"])
 
     expect(screen.getByRole("link", { name: "マイチーム" }).getAttribute("href")).toBe(
-      "/teams/reports",
+      "/company/reports",
     )
   })
 
   test("shows マイチーム with a different single scope permission", () => {
-    pathnameMock.mockReturnValue("/teams/D001")
+    pathnameMock.mockReturnValue("/company/reports")
 
     renderSidebar(["goal:read:reports"])
 
@@ -100,7 +112,7 @@ describe("SidebarNav team entry (requiredAnyPermission)", () => {
   })
 
   test("hides マイチーム when none of the scope permissions are held", () => {
-    pathnameMock.mockReturnValue("/teams/D001")
+    pathnameMock.mockReturnValue("/company/reports")
 
     renderSidebar(["employee:create"])
 
@@ -110,17 +122,17 @@ describe("SidebarNav team entry (requiredAnyPermission)", () => {
 
 describe("SidebarNav workflow-repairs entry (requiredAllPermissions)", () => {
   test("shows only when both required permissions are held", () => {
-    pathnameMock.mockReturnValue("/organization/workflow-repairs")
+    pathnameMock.mockReturnValue("/system/workflow-repairs")
 
     renderSidebar(["application:read:all", "application_template:manage"])
 
     expect(screen.getByRole("link", { name: "ワークフロー修復" }).getAttribute("href")).toBe(
-      "/organization/workflow-repairs",
+      "/system/workflow-repairs",
     )
   })
 
   test("hides when only one required permission is held", () => {
-    pathnameMock.mockReturnValue("/organization/employees")
+    pathnameMock.mockReturnValue("/company/employees")
 
     renderSidebar(["application:read:all"])
 
@@ -129,8 +141,9 @@ describe("SidebarNav workflow-repairs entry (requiredAllPermissions)", () => {
 })
 
 describe("SidebarNav space tabs", () => {
-  test("hides the system tab when no system permission is held", () => {
-    renderSidebar([])
+  test("hides the system tab when the space has no visible item", () => {
+    // 通知だけが権限なしで見える System 項目なので、それを無効にすると空になる。
+    renderSidebar([], ["notifications"])
 
     expect(screen.queryByRole("tab", { name: "システム" })).toBeNull()
   })
@@ -141,18 +154,39 @@ describe("SidebarNav space tabs", () => {
     expect(screen.getByRole("tab", { name: "システム" })).toBeTruthy()
   })
 
-  test("orders the spaces as system, company, and other work", () => {
-    renderSidebar(["batch:view"])
+  test("orders the spaces as system, company, and apps", () => {
+    renderSidebar(["batch:view", "employee:read"])
 
     const spaceTabs = screen.getAllByRole("tab")
 
     expect(spaceTabs.map((tab) => tab.getAttribute("aria-label"))).toEqual([
       "システム",
       "会社",
-      "その他の業務（おまけ）",
+      "業務",
     ])
     expect(spaceTabs.every((tab) => tab.querySelector("svg") !== null)).toBe(true)
     expect(spaceTabs.every((tab) => tab.textContent === "")).toBe(true)
+  })
+
+  test("shows all three tabs to an account holding every permission", () => {
+    renderSidebar(allPermissions)
+
+    expect(screen.getAllByRole("tab").map((tab) => tab.getAttribute("aria-label"))).toEqual([
+      "システム",
+      "会社",
+      "業務",
+    ])
+  })
+
+  test("keeps only the apps tab when the other spaces have no visible item", () => {
+    renderSidebar(
+      [],
+      ["notifications", "employees", "departments", "grades", "positions", "team-management"],
+    )
+
+    expect(screen.getAllByRole("tab").map((tab) => tab.getAttribute("aria-label"))).toEqual([
+      "業務",
+    ])
   })
 
   test("shows the selector even with a single membership", () => {
@@ -170,16 +204,13 @@ describe("SidebarNav space tabs", () => {
     expect(screen.queryByRole("link", { name: "組織図" })).toBeNull()
   })
 
-  test("places my team above the department members", () => {
+  test("keeps my team in the company space and the members link in the apps space", () => {
     pathnameMock.mockReturnValue("/teams/D001/members")
 
     renderSidebar(["goal:read:reports"])
 
-    const links = screen.getAllByRole("link")
-    const myTeamIndex = links.findIndex((link) => link.textContent?.includes("マイチーム"))
-    const membersIndex = links.findIndex((link) => link.textContent?.includes("メンバー"))
-    expect(myTeamIndex).toBeGreaterThanOrEqual(0)
-    expect(myTeamIndex).toBeLessThan(membersIndex)
+    expect(screen.getByRole("link", { name: "メンバー" })).toBeTruthy()
+    expect(screen.queryByRole("link", { name: "マイチーム" })).toBeNull()
   })
 
   test("shows only the department name when browsing a department outside my memberships", () => {
@@ -194,13 +225,13 @@ describe("SidebarNav space tabs", () => {
     )
   })
 
-  test("shows the org chart in the organization space", () => {
-    pathnameMock.mockReturnValue("/organization/departments")
+  test("shows the org chart in the company space", () => {
+    pathnameMock.mockReturnValue("/company/departments")
 
     renderSidebar([])
 
     expect(screen.getByRole("link", { name: "組織図" }).getAttribute("href")).toBe(
-      "/organization/departments",
+      "/company/departments",
     )
   })
 
@@ -215,30 +246,45 @@ describe("SidebarNav space tabs", () => {
     expect(screen.queryByRole("link", { name: "部署の勤怠" })).toBeNull()
   })
 
-  test("keeps inbox and notifications in the other work space", () => {
+  test("keeps the inbox in the apps space and the notifications in the system space", () => {
     renderSidebar([])
 
-    expect(screen.getByRole("link", { name: "受信箱" }).getAttribute("href")).toBe("/company/inbox")
+    expect(screen.getByRole("link", { name: "受信箱" }).getAttribute("href")).toBe("/inbox")
+    expect(screen.queryByRole("link", { name: "通知" })).toBeNull()
+
+    cleanup()
+    pathnameMock.mockReturnValue("/system/notifications")
+    renderSidebar([])
+
     expect(screen.getByRole("link", { name: "通知" }).getAttribute("href")).toBe(
-      "/company/notifications",
+      "/system/notifications",
     )
-    expect(screen.queryByRole("link", { name: "ホーム" })).toBeNull()
   })
 
   test("selects the space tab from the current pathname", () => {
     pathnameMock.mockReturnValue("/teams/D001")
 
-    renderSidebar([])
+    renderSidebar(allPermissions)
 
-    expect(
-      screen.getByRole("tab", { name: "その他の業務（おまけ）" }).getAttribute("aria-selected"),
-    ).toBe("true")
+    expect(screen.getByRole("tab", { name: "業務" }).getAttribute("aria-selected")).toBe("true")
+
+    cleanup()
+    pathnameMock.mockReturnValue("/company/employees")
+    renderSidebar(allPermissions)
+
+    expect(screen.getByRole("tab", { name: "会社" }).getAttribute("aria-selected")).toBe("true")
+
+    cleanup()
+    pathnameMock.mockReturnValue("/system/batches")
+    renderSidebar(allPermissions)
+
+    expect(screen.getByRole("tab", { name: "システム" }).getAttribute("aria-selected")).toBe("true")
   })
 
-  test("shows my items on the default space without leaking other spaces", () => {
+  test("shows apps items on the default space without leaking other spaces", () => {
     renderSidebar([])
 
-    expect(screen.getByRole("link", { name: "マイページ" }).getAttribute("href")).toBe("/my")
+    expect(screen.getByRole("link", { name: "ホーム" }).getAttribute("href")).toBe("/")
     expect(screen.queryByRole("link", { name: "従業員" })).toBeNull()
   })
 })
@@ -257,17 +303,17 @@ describe("SidebarNav feature registry", () => {
   })
 
   test("does not add development treatment to available features", () => {
-    pathnameMock.mockReturnValue("/my")
+    pathnameMock.mockReturnValue("/")
 
     renderSidebar([])
 
-    const link = screen.getByRole("link", { name: "マイページ" })
+    const link = screen.getByRole("link", { name: "ホーム" })
     expect(link.querySelector("svg")?.classList.contains("text-feature-development")).toBe(false)
     expect(within(link).queryByText("開発中")).toBeNull()
   })
 
   test("groups my features by their task-oriented registry group", () => {
-    pathnameMock.mockReturnValue("/my")
+    pathnameMock.mockReturnValue("/")
 
     renderSidebar([])
 
@@ -279,7 +325,7 @@ describe("SidebarNav feature registry", () => {
   })
 
   test("hides retirement candidates even when the permission is held", () => {
-    pathnameMock.mockReturnValue("/organization/employees")
+    pathnameMock.mockReturnValue("/company/employees")
 
     renderSidebar(["management_dashboard:view"])
 
@@ -287,14 +333,17 @@ describe("SidebarNav feature registry", () => {
   })
 })
 
-function renderSidebar(permissions: ReadonlyArray<string>) {
+function renderSidebar(
+  permissions: ReadonlyArray<string>,
+  disabledFeatures: ReadonlyArray<string> = [],
+) {
   return render(
     <SidebarProvider>
       <SidebarNav
         inboxCounts={inboxCounts}
         unreadNotificationCount={0}
         permissions={permissions}
-        disabledFeatures={[]}
+        disabledFeatures={disabledFeatures}
         myDepartments={[{ code: "D001", name: "Corporate Planning", assignment_type: "primary" }]}
         allDepartments={[
           { code: "D001", name: "Corporate Planning", depth: 0 },

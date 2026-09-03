@@ -32,7 +32,7 @@ export function EditPostingForm(props: Props) {
     if (next.ok) {
       toast.success("公募を更新しました")
 
-      router.push(`/organization/job-postings/${props.posting.id ?? ""}`)
+      router.push(`/career/job-postings/${props.posting.id ?? ""}`)
     } else if (next.error !== null) {
       toast.error(next.error)
     }

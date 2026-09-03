@@ -101,7 +101,7 @@ export async function approveLifeEventAction(
     return { ok: false, error: approved.message }
   }
 
-  revalidatePath("/organization/life-events")
+  revalidatePath("/life-event/life-events")
 
   return { ok: true, error: null }
 }
@@ -132,7 +132,7 @@ export async function rejectLifeEventAction(
     return { ok: false, error: rejected.message }
   }
 
-  revalidatePath("/organization/life-events")
+  revalidatePath("/life-event/life-events")
 
   return { ok: true, error: null }
 }

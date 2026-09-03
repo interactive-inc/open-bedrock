@@ -30,7 +30,7 @@ export function ShiftAssignmentCreateForm(props: Props) {
     if (next.ok) {
       toast.success("シフトを割り当てました")
 
-      router.push("/organization/shift-assignments")
+      router.push("/shift/shift-assignments")
     } else if (next.error !== null) {
       toast.error(next.error)
     }

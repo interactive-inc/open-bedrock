@@ -62,7 +62,7 @@ export async function resubmitApplicationAction(
   const result = await resubmitApplication(applicationId, payload)
   if (result instanceof Error) return { ok: false, error: result.message }
   revalidatePath("/my/applications")
-  revalidatePath(`/organization/applications/${applicationId}`)
+  revalidatePath(`/system/applications/${applicationId}`)
   return { ok: true, error: null }
 }
 

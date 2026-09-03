@@ -34,7 +34,7 @@ export default async function ReviewPage() {
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href="/organization/review-cycles" />}
+              render={<Link href="/performance-review/review-cycles" />}
             >
               <Settings />
               管理

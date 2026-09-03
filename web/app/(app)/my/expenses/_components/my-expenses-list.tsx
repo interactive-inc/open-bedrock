@@ -69,7 +69,7 @@ export function MyExpensesList(props: Props) {
             <TableRow key={expense.id}>
               <TableCell>
                 <Link
-                  href={`/organization/expenses/${expense.id}`}
+                  href={`/expense/expenses/${expense.id}`}
                   className="font-medium underline-offset-4 hover:underline"
                 >
                   {toExpenseCategoryLabel(expense.category)}
