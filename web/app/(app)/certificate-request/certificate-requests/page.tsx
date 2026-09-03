@@ -16,7 +16,7 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageCertificateRequests } from "@/lib/certificate-request/can-manage-certificate-requests"
 import { canViewAllCertificateRequests } from "@/lib/certificate-request/can-view-all-certificate-requests"
 
-export const metadata = { title: "証明書発行依頼管理" }
+export const metadata = { title: "証明書の横断" }
 
 const PAGE_SIZE = 20
 
@@ -64,7 +64,7 @@ export default async function AdminCertificateRequestsPage(props: { searchParams
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="証明書発行依頼管理"
+        title="証明書の横断"
         actions={
           <Button
             variant="secondary"

@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { requirePermission } from "@/lib/auth/require-permission"
 
-export const metadata = { title: "勤怠（全体）" }
+export const metadata = { title: "全社の勤怠" }
 
 type Props = {
   searchParams: Promise<{ employee_id?: string; from?: string; to?: string }>
@@ -31,7 +31,7 @@ export default async function AttendanceAllPage(props: Props) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="勤怠一覧（管理者）"
+        title="全社の勤怠"
         actions={
           <Button variant="secondary" nativeButton={false} render={<Link href="/my/attendances" />}>
             自分の勤怠へ

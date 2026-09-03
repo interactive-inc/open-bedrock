@@ -10,13 +10,13 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageItIncidents } from "@/lib/it-incident/can-manage-it-incidents"
 import { canViewAllItIncidents } from "@/lib/it-incident/can-view-all-it-incidents"
 
-export const metadata = { title: "インシデント記録" }
+export const metadata = { title: "IT インシデント" }
 
 type Props = {
   searchParams: Promise<{ page?: string }>
 }
 
-/** /it-incidents インシデント記録の一覧。it_incident:read:all が無ければ notFound。 */
+/** /it-incidents IT インシデントの一覧。it_incident:read:all が無ければ notFound。 */
 export default async function ItIncidentsPage(props: Props) {
   const me = await getMe()
 
@@ -35,7 +35,7 @@ export default async function ItIncidentsPage(props: Props) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="インシデント記録"
+        title="IT インシデント"
         actions={
           canManage ? (
             <Button nativeButton={false} render={<Link href="/it-incident/it-incidents/new" />}>

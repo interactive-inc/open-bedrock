@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getMe } from "@/lib/api/get-me"
 import { canManageRewards } from "@/lib/thanks/can-manage-rewards"
 
-export const metadata = { title: "感謝の景品" }
+export const metadata = { title: "景品" }
 
 /**
  * 景品の交換（一般 + 管理者の両方が同じ閲覧体験）に集中させ、登録・編集の管理機能は /thanks/rewards/manage に分離する。

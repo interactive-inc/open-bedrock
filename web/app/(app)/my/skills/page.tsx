@@ -7,14 +7,14 @@ import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-export const metadata = { title: "自分のスキル" }
+export const metadata = { title: "スキル" }
 
-/** /skills/me 自分のスキル画面。本人の登録済みスキル一覧と、登録/更新フォームを並べる。 */
+/** /skills/me スキル画面。本人の登録済みスキル一覧と、登録/更新フォームを並べる。 */
 export default function MySkillsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="自分のスキル"
+        title="スキル"
         actions={
           <Button variant="secondary" nativeButton={false} render={<Link href="/skill/skills" />}>
             スキル一覧

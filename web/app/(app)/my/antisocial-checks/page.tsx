@@ -7,10 +7,10 @@ import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 
-export const metadata = { title: "反社チェック申請" }
+export const metadata = { title: "反社チェック" }
 
 /**
- * 反社チェック申請の自分の申請一覧画面。新規申請は /new に分離。
+ * 反社チェックの自分の申請一覧画面。新規申請は /new に分離。
  */
 export default async function AntisocialChecksPage() {
   const currentUser = await getMe()
@@ -23,7 +23,7 @@ export default async function AntisocialChecksPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="反社チェック申請"
+        title="反社チェック"
         actions={
           <>
             {canManage ? (

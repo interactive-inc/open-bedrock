@@ -1,5 +1,6 @@
+import { DepartmentName } from "@/app/(app)/teams/[team]/_components/department-name"
 import { EmptyState } from "@/components/empty-state"
-import { SubPageHeader } from "@/components/sub-page-header"
+import { PageHeader } from "@/components/page-header"
 import {
   Table,
   TableBody,
@@ -29,7 +30,9 @@ export default async function DepartmentGoalsPage(props: Props) {
   if (goals instanceof Error) {
     return (
       <div className="flex flex-col gap-6">
-        <SubPageHeader title="目標" />
+        <PageHeader title="部署の目標" />
+
+        <DepartmentName team={params.team} />
 
         <EmptyState title="この部署の目標を閲覧する権限がありません" />
       </div>
@@ -38,7 +41,9 @@ export default async function DepartmentGoalsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <SubPageHeader title="目標" />
+      <PageHeader title="部署の目標" />
+
+      <DepartmentName team={params.team} />
 
       {goals.length === 0 ? (
         <EmptyState title="この部署の目標はまだありません" />

@@ -43,7 +43,7 @@ export default async function AttendancePage(props: Props) {
               nativeButton={false}
               render={<Link href="/attendance/attendances" />}
             >
-              勤怠一覧（管理者）
+              全社の勤怠
             </Button>
           ) : null
         }

@@ -7,16 +7,16 @@ import { PageHeader } from "@/components/page-header"
 import { getMyTrainingEnrollments } from "@/lib/api/get-my-training-enrollments"
 import { getTrainingCourses } from "@/lib/api/get-training-courses"
 
-export const metadata = { title: "自分の受講" }
+export const metadata = { title: "研修" }
 
 /**
- * 自分の受講一覧。コース一覧 /training から分離した本人スコープのページ。
+ * 研修一覧。コース一覧 /training から分離した本人スコープのページ。
  */
 export default function MyTrainingEnrollmentsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="自分の受講"
+        title="研修"
         actions={<BackButton href="/training/trainings" label="研修に戻る" />}
       />
 

@@ -1,12 +1,13 @@
 import { Suspense } from "react"
+import { DepartmentName } from "@/app/(app)/teams/[team]/_components/department-name"
 import { OrgMembersTable } from "@/app/(app)/teams/[team]/_components/org-members-table"
 import { TeamMemberAddForm } from "@/app/(app)/teams/[team]/_components/team-member-add-form"
 import { ListSkeleton } from "@/components/list-skeleton"
-import { SubPageHeader } from "@/components/sub-page-header"
+import { PageHeader } from "@/components/page-header"
 import { getPositionList } from "@/lib/api/get-position-list"
 import { requireAuth } from "@/lib/auth/require-auth"
 
-export const metadata = { title: "部署メンバー" }
+export const metadata = { title: "メンバー" }
 
 type Props = {
   params: Promise<{ team: string }>
@@ -34,7 +35,9 @@ export default async function OrgDepartmentMembersPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <SubPageHeader title="メンバー" actions={addForm} />
+      <PageHeader title="メンバー" actions={addForm} />
+
+      <DepartmentName team={params.team} />
 
       <Suspense fallback={<ListSkeleton rows={5} rowClassName="h-10 w-full" />}>
         <OrgMembersTable code={params.team} />

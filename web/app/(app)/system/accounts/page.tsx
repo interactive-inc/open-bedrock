@@ -5,7 +5,7 @@ import { getMe } from "@/lib/api/get-me"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-export const metadata = { title: "アカウント管理" }
+export const metadata = { title: "アカウント" }
 
 /**
  * System Account と割当ロール・状態を一覧する（iam:read が必要）。
@@ -28,7 +28,7 @@ export default async function AdminAccountsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="アカウント管理" />
+      <PageHeader title="アカウント" />
 
       <Suspense fallback={<ListSkeleton rows={5} rowClassName="h-10 w-full" />}>
         <AccountListSection canWrite={canWrite} actorPermissionKeys={currentUser.permissions} />

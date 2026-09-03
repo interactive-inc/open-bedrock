@@ -4,14 +4,14 @@ import { FetchError } from "@/components/fetch-error"
 import { PageHeader } from "@/components/page-header"
 import { getApprovalDelegations } from "@/lib/api/get-approval-delegations"
 
-export const metadata = { title: "代理承認" }
+export const metadata = { title: "代理承認の設定" }
 
 export default async function ApprovalDelegationsPage() {
   const result = await getApprovalDelegations()
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="代理承認"
+        title="代理承認の設定"
         actions={<BackButton href="/my/applications" label="申請へ戻る" />}
       />
       {result instanceof Error ? (

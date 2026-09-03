@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getMe } from "@/lib/api/get-me"
 import { canManageOrg } from "@/lib/org/can-manage-org"
 
-export const metadata = { title: "組織" }
+export const metadata = { title: "組織図" }
 
 /**
  * 組織図トップ。「組織図」（部署→マネージャー→従業員の縦型ボックス）と「リスト」（インデント式一覧）を

@@ -1,5 +1,6 @@
+import { DepartmentName } from "@/app/(app)/teams/[team]/_components/department-name"
 import { EmptyState } from "@/components/empty-state"
-import { SubPageHeader } from "@/components/sub-page-header"
+import { PageHeader } from "@/components/page-header"
 import {
   Table,
   TableBody,
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/table"
 import { getDepartmentOneOnOnes } from "@/lib/api/get-department-oneonones"
 
-export const metadata = { title: "部署の 1on1" }
+export const metadata = { title: "部署の1on1" }
 
 type Props = {
   params: Promise<{ team: string }>
@@ -28,7 +29,9 @@ export default async function DepartmentOneOnOnesPage(props: Props) {
   if (sessions instanceof Error) {
     return (
       <div className="flex flex-col gap-6">
-        <SubPageHeader title="1on1" />
+        <PageHeader title="部署の1on1" />
+
+        <DepartmentName team={params.team} />
 
         <EmptyState title="この部署の 1on1 を閲覧する権限がありません" />
       </div>
@@ -37,7 +40,9 @@ export default async function DepartmentOneOnOnesPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <SubPageHeader title="1on1" />
+      <PageHeader title="部署の1on1" />
+
+      <DepartmentName team={params.team} />
 
       {sessions.length === 0 ? (
         <EmptyState title="この部署の 1on1 はまだありません" />

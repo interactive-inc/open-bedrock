@@ -16,7 +16,7 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageBusinessTrips } from "@/lib/business-trip/can-manage-business-trips"
 import { canViewAllBusinessTrips } from "@/lib/business-trip/can-view-all-business-trips"
 
-export const metadata = { title: "出張申請管理" }
+export const metadata = { title: "出張の横断" }
 
 const PAGE_SIZE = 20
 
@@ -61,7 +61,7 @@ export default async function AdminBusinessTripsPage(props: { searchParams: Sear
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="出張申請管理"
+        title="出張の横断"
         actions={
           <Button
             variant="secondary"

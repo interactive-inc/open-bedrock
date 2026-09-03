@@ -17,7 +17,7 @@ import type { RingiStatus } from "@/lib/api/types/ringi-types"
 import { getMe } from "@/lib/api/get-me"
 import { canViewAllRingi } from "@/lib/ringi/can-view-all-ringi"
 
-export const metadata = { title: "稟議管理" }
+export const metadata = { title: "稟議の横断" }
 
 const PAGE_SIZE = 20
 
@@ -69,7 +69,7 @@ export default async function AdminRingiPage(props: { searchParams: SearchParams
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="稟議管理"
+        title="稟議の横断"
         actions={
           <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/ringis" />}>
             承認受信箱

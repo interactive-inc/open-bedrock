@@ -17,7 +17,7 @@ import {
 } from "@/lib/api/get-shift-swap-admin-list"
 import { canViewAllShiftSwaps } from "@/lib/shift/can-view-all-shift-swaps"
 
-export const metadata = { title: "シフト交代管理" }
+export const metadata = { title: "シフト交代の横断" }
 
 const SORT_VALUES: ReadonlyArray<ShiftSwapAdminSort> = [
   "date_desc",
@@ -90,7 +90,7 @@ export default async function AdminShiftSwapsPage(props: { searchParams: SearchP
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="シフト交代管理"
+        title="シフト交代の横断"
         actions={
           <Button variant="secondary" nativeButton={false} render={<Link href="/my/shifts" />}>
             自分のシフトへ

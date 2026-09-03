@@ -6,16 +6,16 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 
-export const metadata = { title: "退職申請" }
+export const metadata = { title: "退職" }
 
 /**
- * 退職申請の自分の申請一覧画面。新規申請は /new に分離。
+ * 退職の自分の申請一覧画面。新規申請は /new に分離。
  */
 export default function ResignationsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="退職申請"
+        title="退職"
         actions={
           <Button nativeButton={false} render={<Link href="/my/resignations/new" />}>
             <Plus />

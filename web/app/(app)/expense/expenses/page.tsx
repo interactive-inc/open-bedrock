@@ -18,7 +18,7 @@ import type { ExpenseCategory, ExpenseStatus } from "@/lib/api/types/expense-typ
 import { getMe } from "@/lib/api/get-me"
 import { canViewAllExpenses } from "@/lib/expense/can-view-all-expenses"
 
-export const metadata = { title: "経費申請管理" }
+export const metadata = { title: "全社の経費" }
 
 const SORT_VALUES: ReadonlyArray<ExpenseAdminSort> = [
   "created_at_desc",
@@ -90,7 +90,7 @@ export default async function AdminExpensesPage(props: { searchParams: SearchPar
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="経費申請管理"
+        title="全社の経費"
         actions={
           currentUser.permissions.includes("expense:approve") ? (
             <Button

@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getMe } from "@/lib/api/get-me"
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 
-export const metadata = { title: "オンボーディングテンプレート" }
+export const metadata = { title: "オンボーディング設計" }
 
 /**
  * オンボーディングテンプレート一覧（特権ロールのみ）。
@@ -26,7 +26,7 @@ export default async function OnboardingTemplatesPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="テンプレート"
+        title="オンボーディング設計"
         actions={
           <>
             <BackButton href="/onboarding/onboarding-assignments" label="オンボーディングに戻る" />

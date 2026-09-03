@@ -17,9 +17,9 @@ import { getMe } from "@/lib/api/get-me"
 import { getAnnouncementList } from "@/lib/api/get-announcement-list"
 import { canManageAnnouncements } from "@/lib/announcement/can-manage-announcements"
 
-export const metadata = { title: "社内アナウンス" }
+export const metadata = { title: "アナウンス" }
 
-/** 社内アナウンス一覧画面。全員は公開分を閲覧し、管理者は下書き作成もできる。 */
+/** アナウンス一覧画面。全員は公開分を閲覧し、管理者は下書き作成もできる。 */
 export default async function AnnouncementsPage() {
   const currentUser = await getMe()
 
@@ -28,7 +28,7 @@ export default async function AnnouncementsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="社内アナウンス" />
+      <PageHeader title="アナウンス" />
 
       {canManage ? <AnnouncementCreateForm /> : null}
 
@@ -53,7 +53,7 @@ async function AnnouncementsTable() {
 
   return (
     <div className="overflow-x-auto">
-      <Table aria-label="社内アナウンス一覧">
+      <Table aria-label="アナウンス一覧">
         <TableHeader>
           <TableRow>
             <TableHead>タイトル</TableHead>

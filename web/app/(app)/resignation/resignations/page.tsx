@@ -16,7 +16,7 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageResignations } from "@/lib/resignation/can-manage-resignations"
 import { canViewAllResignations } from "@/lib/resignation/can-view-all-resignations"
 
-export const metadata = { title: "退職手続き管理" }
+export const metadata = { title: "退職の横断" }
 
 const PAGE_SIZE = 20
 
@@ -61,7 +61,7 @@ export default async function AdminResignationsPage(props: { searchParams: Searc
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="退職手続き管理"
+        title="退職の横断"
         actions={
           <Button
             variant="secondary"

@@ -6,7 +6,7 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 
-export const metadata = { title: "出張申請" }
+export const metadata = { title: "出張" }
 
 /**
  * 出張申請の自分の申請一覧画面。新規申請は /new に分離。
@@ -15,7 +15,7 @@ export default function BusinessTripsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="出張申請"
+        title="出張"
         actions={
           <Button nativeButton={false} render={<Link href="/my/business-trips/new" />}>
             <Plus />

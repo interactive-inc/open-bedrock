@@ -1,7 +1,8 @@
+import { DepartmentName } from "@/app/(app)/teams/[team]/_components/department-name"
 import { EmptyState } from "@/components/empty-state"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
-import { SubPageHeader } from "@/components/sub-page-header"
+import { PageHeader } from "@/components/page-header"
 import {
   Table,
   TableBody,
@@ -30,7 +31,9 @@ export default async function DepartmentLeavesPage(props: Props) {
   if (requests instanceof Error) {
     return (
       <div className="flex flex-col gap-6">
-        <SubPageHeader title="休暇" />
+        <PageHeader title="部署の休暇" />
+
+        <DepartmentName team={params.team} />
 
         <EmptyState title="この部署の休暇を閲覧する権限がありません" />
       </div>
@@ -39,7 +42,9 @@ export default async function DepartmentLeavesPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <SubPageHeader title="休暇" />
+      <PageHeader title="部署の休暇" />
+
+      <DepartmentName team={params.team} />
 
       {requests.length === 0 ? (
         <EmptyState title="この部署の休暇申請はまだありません" />
