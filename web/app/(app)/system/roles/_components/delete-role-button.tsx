@@ -27,7 +27,8 @@ const initialState: RoleDeleteFormState = { kind: "idle" }
 
 /**
  * 動的ロールを削除するボタン。削除前に確認ダイアログを挟む。system role には表示しない。
- * 再認証を求められたら確認ダイアログを開いたまま再入力を挟み、同じ削除を再実行する。
+ * 再認証を求められたら確認ダイアログを閉じて再入力を挟み、同じ削除を再実行する。
+ * modal を重ねると背面の dialog が focus を握ったままになるため、同時には開かない。
  */
 export function DeleteRoleButton(props: Props) {
   const [isConfirmOpen, setConfirmOpen] = useState(false)
@@ -52,7 +53,14 @@ export function DeleteRoleButton(props: Props) {
     }
 
     if (result.kind === "step_up_required") {
+      setConfirmOpen(false)
+
       setStepUpOpen(true)
+    }
+
+    // 再認証のあとに拒否された場合、理由は確認ダイアログの中に出す。
+    if (result.kind === "failed") {
+      setConfirmOpen(true)
     }
 
     return result

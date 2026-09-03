@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toApiResponseError } from "@/lib/api/to-api-response-error"
+import { toStepUpHeaders } from "@/lib/api/to-step-up-headers"
 import type { ApiResponseError } from "@/lib/api/api-response-error"
 
 type Props = {
@@ -34,12 +35,4 @@ export async function createRole(props: Props): Promise<null | ApiResponseError>
   }
 
   return null
-}
-
-function toStepUpHeaders(stepUpToken: string | null): Record<string, string> {
-  if (stepUpToken === null) {
-    return {}
-  }
-
-  return { "x-system-step-up": stepUpToken }
 }
