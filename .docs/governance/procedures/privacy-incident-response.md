@@ -77,7 +77,7 @@ controls: []
 
 個人データの漏えい、滅失、毀損、不正利用またはその疑いを、発見から事後 review まで追跡する。自社が承認、施行するまでは手続きまたは実行根拠として使用しない。
 
-法的通知義務、通知先、期限、本人への説明は open-karte が自動判定しない。適用法域と事実を外部専門家へ渡し、source、rule version、performed_at を持つ ExternalAssessment として受領する。権限を持つ HumanPrincipal がその Assessment を参照して Decision を記録する。
+法的通知義務、通知先、期限、本人への説明は open-bedrock が自動判定しない。適用法域と事実を外部専門家へ渡し、source、rule version、performed_at を持つ ExternalAssessment として受領する。権限を持つ HumanPrincipal がその Assessment を参照して Decision を記録する。
 
 ## 実行上の注意
 

@@ -6,7 +6,7 @@
 
 ```mermaid
 flowchart LR
-  subgraph Core["open-karte core"]
+  subgraph Core["open-bedrock core"]
     Domain["会社共通核・ドメイン"]
     Outbox["Outbox"]
     Inbox["Inbox・重複排除"]
@@ -103,7 +103,7 @@ HTTP `200` を業務成功として扱ってはならない。送信、受理、
 - supersedes または corrects
 - acceptance status
 
-open-karte は算術または法的判断を再実装しない。schema、署名、対象、版、単位、整合性を検証する。
+open-bedrock は算術または法的判断を再実装しない。schema、署名、対象、版、単位、整合性を検証する。
 
 ## 支払
 
@@ -111,22 +111,22 @@ open-karte は算術または法的判断を再実装しない。schema、署名
 sequenceDiagram
   participant Case as Expense or contract case
   participant Authority as Authority evaluation
-  participant Karte as open-karte
+  participant Bedrock as open-bedrock
   participant Connector as Payment connector
   participant Provider as External payment provider
   participant Review as Reconciliation
 
   Case->>Authority: Payment proposal
-  Authority-->>Karte: Approved instruction
-  Karte->>Connector: Outbox command with digest and idempotency key
+  Authority-->>Bedrock: Approved instruction
+  Bedrock->>Connector: Outbox command with digest and idempotency key
   Connector->>Provider: Payment instruction
   Provider-->>Connector: Receipt or result assertion
-  Connector-->>Karte: Verified inbox message
-  Karte->>Review: Compare amount, currency, beneficiary, state
+  Connector-->>Bedrock: Verified inbox message
+  Bedrock->>Review: Compare amount, currency, beneficiary, state
   Review-->>Case: Accepted, disputed, or corrected reference
 ```
 
-open-karte は支払提案、社内判断、外部指示、外部参照、結果主張、照合を保持する。資金移動、銀行残高、清算台帳、仕訳、税務確定を内部実行してはならない。
+open-bedrock は支払提案、社内判断、外部指示、外部参照、結果主張、照合を保持する。資金移動、銀行残高、清算台帳、仕訳、税務確定を内部実行してはならない。
 
 ## セキュリティ
 

@@ -1,4 +1,4 @@
-# open-karte デザインシステム
+# open-bedrock デザインシステム
 
 shadcn/ui + Tailwind CSS ベースのデザイン規約。コンポーネントの使い方・トークン・レイアウトパターンを定義する。
 

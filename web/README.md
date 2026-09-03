@@ -1,6 +1,6 @@
 # web
 
-open-karte の Web UI。Next.js (App Router) + React + Tailwind + shadcn/ui。
+open-bedrock の Web UI。Next.js (App Router) + React + Tailwind + shadcn/ui。
 
 API（`api` ワークスペース）に HTTP で接続して動作する。データのソースオブトゥルースは常に API 側にあり、この UI は申請・承認・記録の閲覧と操作を提供する。
 

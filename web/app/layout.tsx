@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 })
 
-const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "KARTE"
+const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "BEDROCK"
 
 export const metadata: Metadata = {
   title: {

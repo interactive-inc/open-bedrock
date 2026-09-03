@@ -8,7 +8,7 @@ import { GET } from "@/app/(app)/system/audit-events/export/route"
 afterEach(() => vi.clearAllMocks())
 
 const validUrl =
-  "https://karte.example/admin/audit-events/export?from=2026-01-01T00%3A00%3A00Z&to=2026-02-01T00%3A00%3A00Z&action=audit.event.read"
+  "https://bedrock.example/admin/audit-events/export?from=2026-01-01T00%3A00%3A00Z&to=2026-02-01T00%3A00%3A00Z&action=audit.event.read"
 
 describe("audit export Route Handler", () => {
   test.each([
@@ -17,7 +17,7 @@ describe("audit export Route Handler", () => {
     "?from=2026-01-01T00%3A00%3A00Z&from=2026-01-02T00%3A00%3A00Z&to=2026-01-03T00%3A00%3A00Z",
     "?from=2026-01-01T00%3A00%3A00Z&to=2026-01-02T00%3A00%3A00Z&secret=%3Craw%3E",
   ])("rejects invalid local query without contacting or reflecting upstream: %s", async (query) => {
-    const response = await GET(new Request(`https://karte.example/export${query}`))
+    const response = await GET(new Request(`https://bedrock.example/export${query}`))
     expect(response.status).toBe(400)
     expect(response.headers.get("Cache-Control")).toBe("no-store")
     expect(await response.text()).not.toContain("<raw>")
