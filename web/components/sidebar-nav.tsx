@@ -328,9 +328,7 @@ export function SidebarNav(props: Props) {
                     <SpaceIcon aria-hidden="true" />
 
                     {space.key === "my" && myBadgeTotal > 0 ? (
-                      <Badge aria-hidden="true" className="absolute -top-1 -right-1">
-                        {myBadgeTotal > 9 ? "9+" : myBadgeTotal}
-                      </Badge>
+                      <Badge aria-hidden="true">{myBadgeTotal > 9 ? "9+" : myBadgeTotal}</Badge>
                     ) : null}
                   </TabsTrigger>
                 )
