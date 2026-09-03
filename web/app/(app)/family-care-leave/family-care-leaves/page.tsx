@@ -67,7 +67,7 @@ export default async function AdminFamilyCareLeavesPage(props: { searchParams: S
         title="産休・育休・介護休業管理"
         actions={
           <Button
-            variant="outline"
+            variant="secondary"
             nativeButton={false}
             render={<Link href="/family-care-leave/family-care-leaves" />}
           >

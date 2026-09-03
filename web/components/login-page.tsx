@@ -50,7 +50,7 @@ export function LoginPage(props: Props) {
 
   return (
     <div className="flex min-h-screen flex-1 items-center justify-center bg-muted/40 p-6">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>
             {appName === null ? t("open-karte にサインイン") : `${appName} にサインイン`}

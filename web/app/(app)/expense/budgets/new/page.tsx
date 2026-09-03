@@ -19,7 +19,7 @@ export default async function NewBudgetPage() {
         actions={<BackButton href="/expense/budgets" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <BudgetCreateForm />
         </CardContent>

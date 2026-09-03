@@ -16,7 +16,7 @@ export default function NewAntisocialCheckPage() {
         actions={<BackButton href="/my/antisocial-checks" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <AntisocialCheckCreateForm />
         </CardContent>

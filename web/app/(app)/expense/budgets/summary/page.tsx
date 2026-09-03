@@ -94,9 +94,7 @@ async function BudgetSummaryTable(props: TableProps) {
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.organization_unit_id}>
-              <TableCell className="font-medium">
-                {row.organization_unit_name ?? row.organization_unit_id}
-              </TableCell>
+              <TableCell>{row.organization_unit_name ?? row.organization_unit_id}</TableCell>
 
               <TableCell className="tabular-nums">
                 {amountFormatter.format(row.budget_amount)} 円
@@ -110,7 +108,7 @@ async function BudgetSummaryTable(props: TableProps) {
                 {amountFormatter.format(row.remaining_amount)} 円
               </TableCell>
 
-              <TableCell className="tabular-nums text-muted-foreground">
+              <TableCell className="tabular-nums">
                 {row.budget_amount > 0
                   ? Math.round((row.consumed_amount / row.budget_amount) * 100)
                   : 0}

@@ -61,15 +61,13 @@ export function ResignationAdminTable(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{row.resignation_date}</TableCell>
+              <TableCell>{row.resignation_date}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.last_working_date ?? "—"}
-              </TableCell>
+              <TableCell className="hidden md:table-cell">{row.last_working_date ?? "—"}</TableCell>
 
               <TableCell>{statusLabel(row.status)}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              <TableCell className="hidden md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
 

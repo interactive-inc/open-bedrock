@@ -82,13 +82,13 @@ async function StocktakesTable() {
                 </Link>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{stocktake.target_date}</TableCell>
+              <TableCell>{stocktake.target_date}</TableCell>
 
               <TableCell>
                 <StocktakeStatusBadge status={stocktake.status} />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {stocktake.checked_count} / {stocktake.total_count}
               </TableCell>
             </TableRow>

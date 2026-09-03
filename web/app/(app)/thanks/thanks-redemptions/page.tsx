@@ -86,7 +86,7 @@ export default async function AdminRedemptionsPage(props: { searchParams: Search
         actions={
           currentUser.permissions.includes("thanks_reward:manage") ? (
             <Button
-              variant="outline"
+              variant="secondary"
               nativeButton={false}
               render={<Link href="/thanks/rewards/manage" />}
             >

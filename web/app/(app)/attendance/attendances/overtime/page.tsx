@@ -40,7 +40,7 @@ export default async function OvertimeSummaryPage(props: Props) {
       <PageHeader
         title="時間外の集計"
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/my/attendances" />}>
+          <Button variant="secondary" nativeButton={false} render={<Link href="/my/attendances" />}>
             勤怠へ
           </Button>
         }

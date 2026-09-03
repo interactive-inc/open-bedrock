@@ -16,7 +16,7 @@ export default function MySkillsPage() {
       <PageHeader
         title="自分のスキル"
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/skill/skills" />}>
+          <Button variant="secondary" nativeButton={false} render={<Link href="/skill/skills" />}>
             スキル一覧
           </Button>
         }

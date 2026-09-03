@@ -60,7 +60,7 @@ export async function CareerPostingDetailSection(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card className="p-0 gap-0">
+      <Card className="gap-0">
         <div className="flex flex-col gap-4 p-6">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-semibold">{posting.title}</h2>
@@ -85,7 +85,7 @@ export async function CareerPostingDetailSection(props: Props) {
       </Card>
 
       {posting.status === "open" && posting.id !== null ? (
-        <Card className="p-0 gap-0">
+        <Card className="gap-0">
           <div className="flex flex-col gap-4 p-6">
             <h3 className="text-base font-semibold">この公募に応募</h3>
 

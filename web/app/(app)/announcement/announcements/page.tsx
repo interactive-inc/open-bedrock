@@ -74,11 +74,9 @@ async function AnnouncementsTable() {
                 </Link>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{announcement.status}</TableCell>
+              <TableCell>{announcement.status}</TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {announcement.published_on ?? "-"}
-              </TableCell>
+              <TableCell>{announcement.published_on ?? "-"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

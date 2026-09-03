@@ -41,7 +41,7 @@ export default async function ShiftPage() {
           <>
             {canManage ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/shift/shift-patterns" />}
               >
@@ -52,7 +52,7 @@ export default async function ShiftPage() {
 
             {canViewAllSwaps ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/shift/shift-swaps" />}
               >
@@ -62,7 +62,7 @@ export default async function ShiftPage() {
 
             {canApproveSwaps ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/inbox/shift-swaps" />}
               >
@@ -72,7 +72,7 @@ export default async function ShiftPage() {
 
             {canManage ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/shift/shift-assignments" />}
               >

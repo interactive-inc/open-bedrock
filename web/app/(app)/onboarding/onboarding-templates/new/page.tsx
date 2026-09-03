@@ -25,7 +25,7 @@ export default async function NewOnboardingTemplatePage() {
         actions={<BackButton href="/onboarding/onboarding-assignments" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <CreateTemplateForm />
         </CardContent>

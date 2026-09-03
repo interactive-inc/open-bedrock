@@ -70,14 +70,13 @@ export function LoginForm(props: Props) {
               autoComplete="current-password"
               defaultValue={defaults?.password}
               required
-              className="pr-10"
             />
 
             <Button
               type="button"
               variant="ghost"
               size="icon-xs"
-              className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute top-1/2 right-2 -translate-y-1/2"
               onClick={() => setShowPassword((prev) => !prev)}
               aria-label={showPassword ? t("パスワードを隠す") : t("パスワードを表示")}
             >

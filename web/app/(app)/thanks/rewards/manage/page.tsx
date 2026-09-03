@@ -25,7 +25,7 @@ export default async function ThanksRewardsManagePage() {
         actions={<BackButton href="/thanks/rewards" label="景品に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <RewardCreateForm />
         </CardContent>

@@ -68,7 +68,7 @@ export async function GoalList(props: Props) {
                 </Link>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{goal.kpi ?? "-"}</TableCell>
+              <TableCell>{goal.kpi ?? "-"}</TableCell>
 
               <TableCell className="text-right">{goal.weight}</TableCell>
 

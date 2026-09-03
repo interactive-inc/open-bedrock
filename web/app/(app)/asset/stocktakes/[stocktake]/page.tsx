@@ -54,7 +54,7 @@ export default async function StocktakeDetailPage(props: Props) {
         {isOpen ? <StocktakeCloseButton id={stocktake.id} /> : null}
       </div>
 
-      <Card className="p-0 gap-0">
+      <Card className="gap-0">
         <div className="overflow-x-auto">
           <Table aria-label="棚卸し対象一覧">
             <TableHeader>
@@ -75,7 +75,7 @@ export default async function StocktakeDetailPage(props: Props) {
                     <span className="text-muted-foreground"> ({item.asset_code})</span>
                   </TableCell>
 
-                  <TableCell className="text-muted-foreground">
+                  <TableCell>
                     <AssetKindLabel kind={item.kind} />
                   </TableCell>
 
@@ -87,9 +87,7 @@ export default async function StocktakeDetailPage(props: Props) {
                     )}
                   </TableCell>
 
-                  <TableCell className="text-muted-foreground">
-                    {item.location_note ?? "-"}
-                  </TableCell>
+                  <TableCell>{item.location_note ?? "-"}</TableCell>
 
                   {isOpen ? (
                     <TableCell>

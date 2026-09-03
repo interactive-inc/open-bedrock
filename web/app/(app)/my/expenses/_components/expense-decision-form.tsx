@@ -98,11 +98,7 @@ export function ExpenseDecisionForm(props: Props) {
           {approveState.error !== null ? <FieldError>{approveState.error}</FieldError> : null}
 
           <Field orientation="horizontal">
-            <Button
-              type="submit"
-              disabled={isApproving || isRejecting}
-              className="bg-emerald-600 text-white hover:bg-emerald-700"
-            >
+            <Button type="submit" disabled={isApproving || isRejecting}>
               {isApproving ? "承認中..." : "承認する"}
             </Button>
           </Field>

@@ -51,7 +51,7 @@ export function CourseList(props: Props) {
 
             return (
               <TableRow key={course.id}>
-                <TableCell className="font-medium">{course.code}</TableCell>
+                <TableCell>{course.code}</TableCell>
 
                 <TableCell>
                   <Link

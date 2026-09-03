@@ -43,7 +43,7 @@ export default async function CareerPostingDetailPage(props: Props) {
 
             {canManage ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href={`/career/job-postings/${postingId}/edit`} />}
               >

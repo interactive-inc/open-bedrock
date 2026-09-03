@@ -107,7 +107,7 @@ async function ReportsGrid() {
           href={`/company/employees/${report.code}`}
           className="flex min-h-24 flex-col gap-1"
         >
-          <CardTitle className="text-base">{report.name}</CardTitle>
+          <CardTitle>{report.name}</CardTitle>
 
           <CardDescription>
             {[report.dept_name, report.position].filter((value) => value !== null).join(" / ") ||

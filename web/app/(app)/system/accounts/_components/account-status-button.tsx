@@ -51,7 +51,7 @@ export function AccountStatusButton(props: Props) {
 
         <input type="hidden" name="status" value="active" />
 
-        <Button type="submit" size="sm" variant="outline" disabled={isPending}>
+        <Button type="submit" size="sm" variant="secondary" disabled={isPending}>
           有効化
         </Button>
       </form>
@@ -60,7 +60,7 @@ export function AccountStatusButton(props: Props) {
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button variant="outline" size="sm" disabled={isPending} />}>
+      <AlertDialogTrigger render={<Button variant="secondary" size="sm" disabled={isPending} />}>
         停止
       </AlertDialogTrigger>
 

@@ -30,11 +30,9 @@ export function RoomAvailabilityTable(props: Props) {
         <TableBody>
           {props.availabilities.map((availability) => (
             <TableRow key={availability.room.id}>
-              <TableCell className="font-medium">{availability.room.name}</TableCell>
+              <TableCell>{availability.room.name}</TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {availability.room.capacity} 名
-              </TableCell>
+              <TableCell>{availability.room.capacity} 名</TableCell>
 
               <TableCell>
                 {availability.available ? (
@@ -44,9 +42,7 @@ export function RoomAvailabilityTable(props: Props) {
                 )}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {toConflictLabel(availability)}
-              </TableCell>
+              <TableCell>{toConflictLabel(availability)}</TableCell>
             </TableRow>
           ))}
         </TableBody>

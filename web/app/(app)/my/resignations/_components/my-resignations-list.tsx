@@ -69,7 +69,7 @@ export function MyResignationsList(props: Props) {
         <TableBody>
           {props.resignations.map((resignation) => (
             <TableRow key={resignation.id}>
-              <TableCell className="font-medium">{resignation.resignation_date}</TableCell>
+              <TableCell>{resignation.resignation_date}</TableCell>
 
               <TableCell>{resignation.last_working_date ?? "-"}</TableCell>
 
@@ -105,7 +105,7 @@ function UpdateResignationDialog(props: { resignation: ResignationResponse }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

@@ -19,7 +19,7 @@ export default async function NewLifeEventPage() {
         actions={<BackButton href="/my/life-events" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <LifeEventCreateForm phone={me.phone} />
         </CardContent>

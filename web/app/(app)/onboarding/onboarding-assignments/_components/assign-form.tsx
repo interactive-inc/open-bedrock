@@ -73,7 +73,7 @@ export function AssignForm(props: Props) {
           <p className="text-sm text-muted-foreground">{state.message}</p>
         ) : null}
 
-        <Button type="submit" disabled={isPending} className="w-fit">
+        <Button type="submit" disabled={isPending}>
           {isPending ? "割当中..." : "割り当てる"}
         </Button>
       </FieldGroup>

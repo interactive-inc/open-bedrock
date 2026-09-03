@@ -116,7 +116,7 @@ export function AuditEventFilterForm(props: Props) {
             <div className="flex flex-wrap gap-2">
               <Button type="submit">検索</Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={
                   <Link href="/system/audit-events" prefetch={false} aria-label="条件をリセット" />

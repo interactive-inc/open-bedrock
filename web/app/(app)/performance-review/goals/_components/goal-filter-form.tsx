@@ -23,12 +23,7 @@ export function GoalFilterForm(props: Props) {
       <div className="flex flex-col gap-2">
         <Label htmlFor="filter-period">期間</Label>
 
-        <NativeSelect
-          id="filter-period"
-          name="period"
-          defaultValue={props.period ?? ""}
-          className="w-52"
-        >
+        <NativeSelect id="filter-period" name="period" defaultValue={props.period ?? ""}>
           <NativeSelectOption value="">すべて</NativeSelectOption>
 
           {props.periodOptions.map((option) => (
@@ -49,12 +44,11 @@ export function GoalFilterForm(props: Props) {
             inputMode="numeric"
             placeholder="本人"
             defaultValue={props.employeeId ?? ""}
-            className="w-40"
           />
         </div>
       ) : null}
 
-      <Button type="submit" variant="outline">
+      <Button type="submit" variant="secondary">
         絞り込む
       </Button>
     </form>

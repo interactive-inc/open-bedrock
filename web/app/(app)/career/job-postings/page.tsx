@@ -52,7 +52,7 @@ function PostingsSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {postingSkeletonPlaceholders.map((index) => (
-        <Skeleton key={index} className="h-48 w-full" />
+        <Skeleton key={index} className="w-full" />
       ))}
     </div>
   )

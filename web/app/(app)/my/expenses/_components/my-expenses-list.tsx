@@ -80,7 +80,7 @@ export function MyExpensesList(props: Props) {
                 {amountFormatter.format(expense.amount)} 円
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{expense.spent_at}</TableCell>
+              <TableCell>{expense.spent_at}</TableCell>
 
               <TableCell>
                 <ExpenseStatusBadge status={expense.status} />
@@ -134,7 +134,7 @@ function UpdateExpenseDialog(props: { expense: ExpenseMineResponse }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

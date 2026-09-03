@@ -87,7 +87,7 @@ export function StepUpDialog(props: Props) {
           ) : null}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={props.onCancel}>
+            <Button type="button" variant="secondary" onClick={props.onCancel}>
               やめる
             </Button>
 

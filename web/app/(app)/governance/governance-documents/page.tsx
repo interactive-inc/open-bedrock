@@ -51,7 +51,7 @@ export default async function GovernancePage(props: Props) {
           canManage ? (
             <Button
               nativeButton={false}
-              variant="outline"
+              variant="secondary"
               render={<Link href="/governance/governance-documents/manage" />}
             >
               <Settings2 />
@@ -71,7 +71,6 @@ export default async function GovernancePage(props: Props) {
             name="q"
             defaultValue={params.q}
             placeholder="タイトル・本文を検索"
-            className="pl-9"
             aria-label="規程・手続きを検索"
           />
         </div>
@@ -117,7 +116,7 @@ export default async function GovernancePage(props: Props) {
                   <VersionStateBadge state={document.version_state} />
                 </CardAction>
               </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+              <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <Meta label="版" value={document.version} />
                 <Meta label="主管能力" value={document.owner_capability} />
                 <Meta label="見直し期限" value={document.review_due_on ?? "未設定"} />

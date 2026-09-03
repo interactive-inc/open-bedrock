@@ -30,7 +30,7 @@ export default function RingiInboxPage() {
       <SubPageHeader
         title="承認待ちの稟議"
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/my/ringis" />}>
+          <Button variant="secondary" nativeButton={false} render={<Link href="/my/ringis" />}>
             自分の稟議へ
           </Button>
         }
@@ -71,7 +71,7 @@ async function RingiInboxTable() {
         <TableBody>
           {ringiList.map((ringi) => (
             <TableRow key={ringi.id}>
-              <TableCell className="font-medium">{ringi.applicant_name}</TableCell>
+              <TableCell>{ringi.applicant_name}</TableCell>
 
               <TableCell>{ringi.title}</TableCell>
 
@@ -79,7 +79,7 @@ async function RingiInboxTable() {
                 {amountFormatter.format(ringi.amount)} 円
               </TableCell>
 
-              <TableCell className="max-w-xs text-muted-foreground">{ringi.reason}</TableCell>
+              <TableCell>{ringi.reason}</TableCell>
 
               <TableCell className="text-right">
                 <RingiDecisionForm ringiId={ringi.id} />

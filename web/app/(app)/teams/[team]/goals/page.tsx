@@ -64,7 +64,7 @@ export default async function DepartmentGoalsPage(props: Props) {
                 <TableRow key={goal.id}>
                   <TableCell className="whitespace-nowrap">{goal.period}</TableCell>
 
-                  <TableCell className="font-medium">{goal.title}</TableCell>
+                  <TableCell>{goal.title}</TableCell>
 
                   <TableCell className="whitespace-nowrap">
                     {goal.owner_type === "department"

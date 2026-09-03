@@ -17,7 +17,7 @@ export default async function AssetNewPage() {
         actions={<BackButton href="/asset/assets" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl p-0 gap-0">
+      <Card className="gap-0">
         <div className="p-6">
           <AssetCreateForm />
         </div>

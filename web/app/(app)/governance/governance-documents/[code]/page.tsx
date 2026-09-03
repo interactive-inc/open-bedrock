@@ -78,7 +78,7 @@ export default async function GovernanceDetailPage(props: Props) {
       </div>
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <Card className="gap-0 p-0">
+        <Card className="gap-0">
           <article className="whitespace-pre-wrap p-5 text-sm leading-7 sm:p-8">
             {document.body_md}
           </article>
@@ -88,7 +88,7 @@ export default async function GovernanceDetailPage(props: Props) {
             <CardHeader>
               <CardTitle>適用と更新</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
+            <CardContent className="space-y-3">
               <KeyValue label="適用対象" value={audienceLabel(metadata.audience)} />
               <KeyValue
                 label="公開方式"
@@ -146,7 +146,7 @@ function SummaryCard(props: { icon: React.ReactNode; title: string; value: strin
           {props.icon}
           <CardDescription>{props.title}</CardDescription>
         </div>
-        <CardTitle className="break-all text-sm">{props.value}</CardTitle>
+        <CardTitle className="break-all">{props.value}</CardTitle>
       </CardHeader>
     </Card>
   )

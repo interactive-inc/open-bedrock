@@ -16,7 +16,7 @@ export default function NewBusinessTripPage() {
         actions={<BackButton href="/my/business-trips" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <BusinessTripCreateForm />
         </CardContent>

@@ -46,7 +46,7 @@ export function AssetReturnForm(props: Props) {
     <form action={formAction} className="flex flex-col gap-2">
       <input type="hidden" name="code" value={props.code} />
 
-      <Button type="submit" size="sm" variant="outline" disabled={isPending}>
+      <Button type="submit" size="sm" variant="secondary" disabled={isPending}>
         {isPending ? "返却中..." : "返却"}
       </Button>
 

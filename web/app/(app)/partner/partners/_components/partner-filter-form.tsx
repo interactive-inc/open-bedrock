@@ -17,13 +17,7 @@ export function PartnerFilterForm(props: Props) {
       <div className="flex flex-col gap-2">
         <Label htmlFor="filter-q">キーワード</Label>
 
-        <Input
-          id="filter-q"
-          name="q"
-          defaultValue={props.q ?? ""}
-          placeholder="名称・コード"
-          className="w-56"
-        />
+        <Input id="filter-q" name="q" defaultValue={props.q ?? ""} placeholder="名称・コード" />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -41,7 +35,7 @@ export function PartnerFilterForm(props: Props) {
         </select>
       </div>
 
-      <Button type="submit" variant="outline">
+      <Button type="submit" variant="secondary">
         絞り込む
       </Button>
     </form>

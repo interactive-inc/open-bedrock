@@ -59,7 +59,7 @@ export function RentalAdminActions(props: Props) {
         <form action={returnAction}>
           <input type="hidden" name="reservation_id" value={props.reservationId} />
 
-          <Button type="submit" size="sm" variant="outline" disabled={isReturnPending}>
+          <Button type="submit" size="sm" variant="secondary" disabled={isReturnPending}>
             返却
           </Button>
         </form>

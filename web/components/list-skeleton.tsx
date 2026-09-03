@@ -17,7 +17,7 @@ export function ListSkeleton(props: Props) {
   return (
     <div className="flex flex-col gap-2">
       {placeholders.map((index) => (
-        <Skeleton key={index} className={props.rowClassName ?? "h-12 w-full"} />
+        <Skeleton key={index} className={props.rowClassName ?? "w-full"} />
       ))}
     </div>
   )

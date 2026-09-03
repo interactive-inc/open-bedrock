@@ -77,7 +77,7 @@ async function Results(props: ResultsProps) {
           <CardTitle>集計</CardTitle>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-1 text-sm">
+        <CardContent className="flex flex-col gap-1">
           <span>評価対象: {props.employeeCode}</span>
 
           <span>フォーム数: {result.form_count}</span>
@@ -132,9 +132,7 @@ function ResultsTable(props: ResultsTableProps) {
                 )}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {formatDateTime(form.submitted_at)}
-              </TableCell>
+              <TableCell>{formatDateTime(form.submitted_at)}</TableCell>
             </TableRow>
           ))}
         </TableBody>

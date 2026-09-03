@@ -59,7 +59,7 @@ export function MyAntisocialChecksList(props: Props) {
         <TableBody>
           {props.antisocialChecks.map((antisocialCheck) => (
             <TableRow key={antisocialCheck.id}>
-              <TableCell className="font-medium">{antisocialCheck.partner_name}</TableCell>
+              <TableCell>{antisocialCheck.partner_name}</TableCell>
 
               <TableCell>{antisocialCheck.partner_address ?? "-"}</TableCell>
 
@@ -107,7 +107,7 @@ function UpdateAntisocialCheckDialog(props: {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

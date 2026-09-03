@@ -36,7 +36,7 @@ export default async function NotificationNewPage() {
         actions={<BackButton href="/notifications" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-2xl">
+      <Card>
         <CardContent>
           <NotificationCreateForm employees={employees} />
         </CardContent>

@@ -44,13 +44,13 @@ export function MyShiftSwapRequests(props: Props) {
         <TableBody>
           {props.swapRequests.map((swapRequest) => (
             <TableRow key={swapRequest.id}>
-              <TableCell className="font-medium">{swapRequest.date}</TableCell>
+              <TableCell>{swapRequest.date}</TableCell>
 
               <TableCell>
                 {swapRequest.target_employee_name ?? `#${swapRequest.target_employee_id}`}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{swapRequest.note ?? "-"}</TableCell>
+              <TableCell>{swapRequest.note ?? "-"}</TableCell>
 
               <TableCell>
                 {swapRequest.status === "approved" ? (

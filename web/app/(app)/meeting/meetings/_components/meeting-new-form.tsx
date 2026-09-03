@@ -68,7 +68,7 @@ export function MeetingNewForm() {
 
       {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
-      <Button type="submit" disabled={pending} className="w-fit">
+      <Button type="submit" disabled={pending}>
         {pending ? "登録中..." : "登録"}
       </Button>
     </form>

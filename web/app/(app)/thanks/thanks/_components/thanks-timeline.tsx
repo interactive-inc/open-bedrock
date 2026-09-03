@@ -50,7 +50,7 @@ export function ThanksTimeline(props: Props) {
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="text-sm">
+          <CardContent>
             <p className="whitespace-pre-wrap">{thanks.message}</p>
           </CardContent>
         </Card>
@@ -58,7 +58,7 @@ export function ThanksTimeline(props: Props) {
 
       {hasMore ? (
         <div className="flex justify-center">
-          <Button variant="outline" disabled={isPending} onClick={handleLoadMore}>
+          <Button variant="secondary" disabled={isPending} onClick={handleLoadMore}>
             {isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />

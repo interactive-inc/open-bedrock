@@ -61,7 +61,7 @@ export default async function KnowledgeDetailPage(props: Props) {
         </div>
       ) : null}
 
-      <Card className="p-0 gap-0">
+      <Card className="gap-0">
         <article className="whitespace-pre-wrap p-6 text-sm leading-relaxed">
           {article.body_md}
         </article>

@@ -64,15 +64,11 @@ export async function CompanyEmployeeEventSection(props: Props) {
                 <Badge variant="outline">{toEmployeeEventKindLabel(event.kind)}</Badge>
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {event.from_department_code ?? "-"}
-              </TableCell>
+              <TableCell>{event.from_department_code ?? "-"}</TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {event.to_department_code ?? "-"}
-              </TableCell>
+              <TableCell>{event.to_department_code ?? "-"}</TableCell>
 
-              <TableCell className="text-muted-foreground">{event.note ?? "-"}</TableCell>
+              <TableCell>{event.note ?? "-"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -58,7 +58,7 @@ export function ShiftPatternList(props: Props) {
         <TableBody>
           {props.patterns.map((pattern) => (
             <TableRow key={pattern.id}>
-              <TableCell className="font-medium">{pattern.code}</TableCell>
+              <TableCell>{pattern.code}</TableCell>
 
               <TableCell>{pattern.name}</TableCell>
 
@@ -95,7 +95,7 @@ function UpdatePatternDialog(props: { pattern: ShiftPatternResponse }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="secondary" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

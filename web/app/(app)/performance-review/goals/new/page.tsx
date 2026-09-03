@@ -31,7 +31,7 @@ export default async function NewGoalPage(props: Props) {
         actions={<BackButton href="/performance-review/goals" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <GoalCreateForm defaultPeriod={period} periodOptions={periodOptions} />
         </CardContent>

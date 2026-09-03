@@ -13,7 +13,7 @@ export function ApplicationStatusBadge(props: Props) {
   }
 
   if (props.status === "approved") {
-    return <Badge className="bg-emerald-600 text-white">承認済み</Badge>
+    return <Badge>承認済み</Badge>
   }
 
   if (props.status === "rejected") {

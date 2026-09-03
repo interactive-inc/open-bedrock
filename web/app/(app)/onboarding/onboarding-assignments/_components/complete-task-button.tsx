@@ -32,7 +32,7 @@ export function CompleteTaskButton(props: Props) {
     <form action={formAction} className="flex flex-col items-end gap-1">
       <input type="hidden" name="task_id" value={props.taskId} />
 
-      <Button type="submit" size="sm" variant="outline" disabled={isPending}>
+      <Button type="submit" size="sm" variant="secondary" disabled={isPending}>
         {isPending ? "処理中..." : "完了にする"}
       </Button>
 

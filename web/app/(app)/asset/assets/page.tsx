@@ -54,14 +54,14 @@ export default async function AssetsPage(props: Props) {
         title="備品"
         actions={
           <>
-            <Button variant="outline" nativeButton={false} render={<Link href="/my/assets" />}>
+            <Button variant="secondary" nativeButton={false} render={<Link href="/my/assets" />}>
               自分の貸与品
             </Button>
 
             {canManage ? (
               <>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   nativeButton={false}
                   render={<Link href="/asset/assets/holdings" />}
                 >
@@ -69,7 +69,7 @@ export default async function AssetsPage(props: Props) {
                 </Button>
 
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   nativeButton={false}
                   render={<Link href="/asset/stocktakes" />}
                 >
@@ -138,7 +138,7 @@ async function AssetsTable(props: TableProps) {
 
               <TableCell>{asset.name}</TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 <AssetKindLabel kind={asset.kind} />
               </TableCell>
 
@@ -146,7 +146,7 @@ async function AssetsTable(props: TableProps) {
                 <AssetStatusBadge status={asset.status} />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {asset.holder_employee_id === null ? "-" : `#${asset.holder_employee_id}`}
               </TableCell>
             </TableRow>

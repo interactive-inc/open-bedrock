@@ -22,7 +22,7 @@ export default async function NewSurveyPage() {
         actions={<BackButton href="/survey/surveys/manage" label="管理に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <SurveyCreateForm />
         </CardContent>

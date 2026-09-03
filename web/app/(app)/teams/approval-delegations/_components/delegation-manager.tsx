@@ -88,10 +88,10 @@ export function DelegationManager(props: { delegations: ReadonlyArray<Delegation
       </Card>
       <div className="flex flex-col gap-3">
         {props.delegations.length === 0 ? (
-          <Card className="p-4 text-sm text-muted-foreground">代理承認設定はありません。</Card>
+          <Card>代理承認設定はありません。</Card>
         ) : (
           props.delegations.map((item) => (
-            <Card key={item.id} className="p-4">
+            <Card key={item.id}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex flex-col gap-1">
                   <div className="font-medium">

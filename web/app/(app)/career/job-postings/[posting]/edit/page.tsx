@@ -44,7 +44,7 @@ export default async function EditCareerPostingPage(props: Props) {
       {posting instanceof Error ? (
         <FetchError message="公募の取得に失敗しました" />
       ) : (
-        <Card className="p-0 gap-0">
+        <Card className="gap-0">
           <div className="p-6">
             <EditPostingForm posting={posting} />
           </div>

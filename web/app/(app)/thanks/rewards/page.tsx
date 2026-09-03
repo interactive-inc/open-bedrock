@@ -31,7 +31,7 @@ export default async function ThanksRewardsPage() {
 
             {canManage ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 nativeButton={false}
                 render={<Link href="/thanks/rewards/manage" />}
               >
@@ -43,7 +43,7 @@ export default async function ThanksRewardsPage() {
         }
       />
 
-      <Suspense fallback={<Skeleton className="h-20 w-full" />}>
+      <Suspense fallback={<Skeleton className="w-full" />}>
         <ThanksExchangeBalance />
       </Suspense>
 

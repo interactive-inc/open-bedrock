@@ -44,17 +44,13 @@ export function CertificationsTable(props: Props) {
         <TableBody>
           {props.rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell className="font-mono text-sm">{row.code}</TableCell>
+              <TableCell>{row.code}</TableCell>
 
-              <TableCell className="font-medium">{row.name}</TableCell>
+              <TableCell>{row.name}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.issuer ?? "—"}
-              </TableCell>
+              <TableCell className="hidden md:table-cell">{row.issuer ?? "—"}</TableCell>
 
-              <TableCell className="hidden text-muted-foreground lg:table-cell">
-                {row.description ?? "—"}
-              </TableCell>
+              <TableCell className="hidden lg:table-cell">{row.description ?? "—"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -20,25 +20,14 @@ export function OvertimeFilterForm(props: Props) {
       <div className="flex flex-col gap-2">
         <Label htmlFor="overtime-month">月</Label>
 
-        <Input
-          id="overtime-month"
-          name="month"
-          type="month"
-          defaultValue={props.month ?? ""}
-          className="w-44"
-        />
+        <Input id="overtime-month" name="month" type="month" defaultValue={props.month ?? ""} />
       </div>
 
       {props.canReadReports || props.canReadAll ? (
         <div className="flex flex-col gap-2">
           <Label htmlFor="overtime-scope">範囲</Label>
 
-          <NativeSelect
-            id="overtime-scope"
-            name="scope"
-            defaultValue={props.scope ?? ""}
-            className="w-40"
-          >
+          <NativeSelect id="overtime-scope" name="scope" defaultValue={props.scope ?? ""}>
             <NativeSelectOption value="">本人のみ</NativeSelectOption>
 
             {props.canReadReports ? (
@@ -50,7 +39,7 @@ export function OvertimeFilterForm(props: Props) {
         </div>
       ) : null}
 
-      <Button type="submit" variant="outline">
+      <Button type="submit" variant="secondary">
         表示
       </Button>
     </form>

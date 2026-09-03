@@ -41,7 +41,7 @@ export default async function RoomManagePage() {
         title="会議室マスタ"
         actions={
           <>
-            <Button variant="outline" nativeButton={false} render={<Link href="/room/rooms" />}>
+            <Button variant="secondary" nativeButton={false} render={<Link href="/room/rooms" />}>
               予約・空き状況へ
             </Button>
 
@@ -92,13 +92,13 @@ async function RoomsTable() {
         <TableBody>
           {rooms.map((room) => (
             <TableRow key={room.id}>
-              <TableCell className="font-medium">{room.id}</TableCell>
+              <TableCell>{room.id}</TableCell>
 
               <TableCell>{room.name}</TableCell>
 
-              <TableCell className="text-muted-foreground">{room.capacity}</TableCell>
+              <TableCell>{room.capacity}</TableCell>
 
-              <TableCell className="text-muted-foreground">{room.location ?? "-"}</TableCell>
+              <TableCell>{room.location ?? "-"}</TableCell>
 
               <TableCell>
                 <TableRowActions>

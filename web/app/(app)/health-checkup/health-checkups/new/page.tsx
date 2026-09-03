@@ -38,7 +38,7 @@ export default async function HealthCheckupNewPage() {
         actions={<BackButton href="/health-checkup/health-checkups" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-2xl">
+      <Card>
         <CardContent>
           <HealthCheckupCreateForm employees={employees} defaultFiscalYear={defaultFiscalYear} />
         </CardContent>

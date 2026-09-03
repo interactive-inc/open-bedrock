@@ -41,23 +41,21 @@ export async function MyLeaveRequestsTable() {
         <TableBody>
           {leaveRequests.map((leaveRequest) => (
             <TableRow key={leaveRequest.id}>
-              <TableCell className="font-medium">
+              <TableCell>
                 <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {leaveRequest.start_date} 〜 {leaveRequest.end_date}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{leaveRequest.days} 日</TableCell>
+              <TableCell>{leaveRequest.days} 日</TableCell>
 
               <TableCell>
                 <LeaveStatusBadge status={leaveRequest.status} />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
-                {formatDateTime(leaveRequest.created_at)}
-              </TableCell>
+              <TableCell>{formatDateTime(leaveRequest.created_at)}</TableCell>
             </TableRow>
           ))}
         </TableBody>

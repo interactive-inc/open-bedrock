@@ -22,7 +22,7 @@ export default async function NewGradePage() {
         actions={<BackButton href="/company/grades" label="等級に戻る" />}
       />
 
-      <Card className="max-w-xl">
+      <Card>
         <CardContent>
           <GradeCreateForm />
         </CardContent>

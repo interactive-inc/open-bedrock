@@ -20,7 +20,7 @@ export default async function CareerPage() {
         title="キャリア"
         actions={
           <Button
-            variant="outline"
+            variant="secondary"
             nativeButton={false}
             render={<Link href="/career/job-postings" />}
           >
@@ -31,7 +31,7 @@ export default async function CareerPage() {
       />
 
       <section className="flex flex-col gap-4">
-        <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+        <Suspense fallback={<Skeleton className="w-full" />}>
           <CareerSheetSection />
         </Suspense>
       </section>
@@ -39,7 +39,7 @@ export default async function CareerPage() {
       <section className="flex flex-col gap-4">
         <h2 className="text-xl font-semibold">自分の応募</h2>
 
-        <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+        <Suspense fallback={<Skeleton className="w-full" />}>
           <MyApplicationsSection />
         </Suspense>
       </section>
