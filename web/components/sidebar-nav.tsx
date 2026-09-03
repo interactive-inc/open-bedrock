@@ -169,8 +169,6 @@ export function SidebarNav(props: Props) {
     "/notifications": props.unreadNotificationCount,
   }
 
-  const myBadgeTotal = inboxTotal + props.unreadNotificationCount
-
   // 部署 Select の現在値。URL の部署 → 手動選択 → 主配属 → 全部署の先頭、の順で決める。
   const pathTeam = teamCodeFromPath(pathname)
 

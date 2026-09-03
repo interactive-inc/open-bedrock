@@ -427,7 +427,7 @@ describe("SidebarNav my space", () => {
     expect(screen.queryByRole("link", { name: "ホーム" })).toBeNull()
   })
 
-  test("未処理と未読の合計バッジは自分タブに付く", () => {
+  test("空間タブには件数バッジを出さず、受信箱と通知の項目だけに件数を付ける", () => {
     pathnameMock.mockReturnValue("/")
 
     render(
@@ -445,8 +445,9 @@ describe("SidebarNav my space", () => {
 
     const myTab = screen.getByRole("tab", { name: "自分" })
 
-    expect(myTab.getAttribute("aria-description")).toBe("未処理と未読 7 件")
-    expect(within(myTab).getByText("7")).toBeTruthy()
-    expect(screen.getByRole("tab", { name: "業務" }).getAttribute("aria-description")).toBeNull()
+    expect(myTab.getAttribute("aria-description")).toBeNull()
+    expect(within(myTab).queryByText("7")).toBeNull()
+    expect(screen.getByRole("link", { name: /受信箱/ }).textContent).toContain("3")
+    expect(screen.getByRole("link", { name: /通知/ }).textContent).toContain("4")
   })
 })
