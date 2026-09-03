@@ -318,18 +318,9 @@ export function SidebarNav(props: Props) {
                     key={space.key}
                     value={space.key}
                     aria-label={space.label}
-                    aria-description={
-                      space.key === "my" && myBadgeTotal > 0
-                        ? `未処理と未読 ${myBadgeTotal} 件`
-                        : undefined
-                    }
                     title={space.label}
                   >
                     <SpaceIcon aria-hidden="true" />
-
-                    {space.key === "my" && myBadgeTotal > 0 ? (
-                      <Badge aria-hidden="true">{myBadgeTotal > 9 ? "9+" : myBadgeTotal}</Badge>
-                    ) : null}
                   </TabsTrigger>
                 )
               })}
