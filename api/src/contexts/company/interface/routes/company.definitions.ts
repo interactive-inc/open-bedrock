@@ -126,7 +126,7 @@ export const GET = factory.createHandlers(
       throw new CompanyAccessDeniedError()
     }
 
-    const result = await new D1CompanyResourceRepository(database).read(query)
+    const result = await new D1CompanyResourceRepository(database).findMany(query)
     if (!result.ok) {
       throw new CompanyReadUnavailableError(result.cause)
     }

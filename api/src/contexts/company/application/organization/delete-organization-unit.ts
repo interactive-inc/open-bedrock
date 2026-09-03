@@ -47,7 +47,7 @@ export class DeleteOrganizationUnit {
       actorAccountId: this.c.actor.accountId,
       code: input.code,
     })
-    const completed = await this.c.repository.findCompleted(operationId, requestFingerprint)
+    const completed = await this.c.repository.find({ operationId, requestFingerprint })
     if (completed instanceof CompanyOperationError) return completed
     if (completed !== null) return { replayed: true }
     const resolvedDate = resolveCompanyBusinessDate({

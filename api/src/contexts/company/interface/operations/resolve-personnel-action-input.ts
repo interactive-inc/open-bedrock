@@ -127,7 +127,7 @@ async function resolvePositionTitle(
   codeValue: string | null | undefined,
 ): Promise<string | null | CompanyOperationError> {
   if (codeValue === null || codeValue === undefined) return null
-  const position = await repository.findByCode(codeValue)
+  const position = await repository.find({ code: codeValue })
   if (position instanceof Error) {
     return new CompanyUnexpectedError("役職を取得できません", { cause: position })
   }

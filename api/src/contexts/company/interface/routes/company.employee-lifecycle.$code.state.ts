@@ -37,9 +37,9 @@ export const GET = factory.createHandlers(
       },
       var: { database: context.var.database, auditContext: context.var.auditContext },
     }
-    const employee = await new EmployeeRepository(companyContext).findByCode(
-      context.req.valid("param").code,
-    )
+    const employee = await new EmployeeRepository(companyContext).find({
+      code: context.req.valid("param").code,
+    })
     if (employee instanceof Error) throw new CompanyReadUnavailableError(employee)
     if (employee === null) {
       throw new CompanyEmployeeNotFoundError()

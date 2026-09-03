@@ -59,7 +59,7 @@ export const POST = factory.createHandlers(
     if (action instanceof CompanyOperationError) throw toHttpException(action)
     const employeeCode =
       action.kind === "corrected" ? action.replacementAction.employeeCode : action.employeeCode
-    const employee = await new EmployeeRepository(companyContext).findByCode(employeeCode)
+    const employee = await new EmployeeRepository(companyContext).find({ code: employeeCode })
     if (employee instanceof Error) throw new CompanyReadUnavailableError(employee)
     if (employee === null) {
       throw new CompanyEmployeeNotFoundError()
