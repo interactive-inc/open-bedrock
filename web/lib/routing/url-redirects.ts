@@ -354,18 +354,18 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
   // --- 組織図は Company へ移設。個別部署 /teams/:code は部署ハブとして存続 ---
   { source: "/teams", destination: "/company/departments", permanent: false },
   { source: "/teams/new", destination: "/company/departments/new", permanent: false },
-  { source: "/teams/reports", destination: "/company/reports", permanent: false },
+  { source: "/teams/reports", destination: "/my/direct-reports", permanent: false },
   { source: "/departments/new", destination: "/company/departments/new", permanent: false },
   { source: "/departments", destination: "/company/departments", permanent: false },
   { source: "/departments/:path*", destination: "/teams/:path*", permanent: false },
   // --- マイチームと代理承認は部署空間へ移動 ---
-  { source: "/my/reports", destination: "/company/reports", permanent: false },
+  { source: "/my/reports", destination: "/my/direct-reports", permanent: false },
   {
     source: "/my/approval-delegations",
     destination: "/teams/approval-delegations",
     permanent: false,
   },
-  { source: "/me/reports", destination: "/company/reports", permanent: false },
+  { source: "/me/reports", destination: "/my/direct-reports", permanent: false },
   // --- 空間 prefix の廃止（第3世代） ---
   // /organization は所有者を表さないので全面的に解体した。
   ...toRedirects(
@@ -387,6 +387,9 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
     destination: "/it-incident/it-incidents/:path*",
     permanent: false,
   },
+  // 「レポート」と誤読されるため direct reports（直属の部下）へ改名し、
+  // 本人の文脈なので会社ではなく自分の空間へ移した。
+  { source: "/company/reports", destination: "/my/direct-reports", permanent: false },
   { source: "/company/inbox", destination: "/inbox", permanent: false },
   { source: "/company/inbox/:path*", destination: "/inbox/:path*", permanent: false },
   { source: "/company/notifications", destination: "/notifications", permanent: false },
