@@ -24,7 +24,6 @@ export default async function AntisocialChecksPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="反社チェック申請"
-        description="反社チェックの申請と、申請状況を確認します。"
         actions={
           <>
             {canManage ? (

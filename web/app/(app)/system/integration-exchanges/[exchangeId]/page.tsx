@@ -24,10 +24,7 @@ export default async function SystemIntegrationExchangePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="外部交換の詳細"
-        description="交換の digest と結果、外部との照合の履歴を確認します。"
-      />
+      <PageHeader title="外部交換の詳細" />
 
       <Link className="text-sm underline" href="/system/integration-exchanges">
         外部交換の一覧へ戻る

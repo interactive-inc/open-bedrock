@@ -38,7 +38,6 @@ export default async function TrainingPage(props: { searchParams: SearchParams }
     <div className="flex flex-col gap-6">
       <PageHeader
         title="研修"
-        description="研修コースの一覧から受講を申し込みます。"
         actions={
           <>
             <Button variant="outline" nativeButton={false} render={<Link href="/my/trainings" />}>

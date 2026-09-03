@@ -53,15 +53,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <PageHeader
-        title={profile === null ? "マイページ" : profile.name}
-        description={
-          profile === null
-            ? "自分の状態と各機能への入り口です。"
-            : [profile.dept_name, profile.position].filter((value) => value !== null).join(" / ") ||
-              "自分の状態と各機能への入り口です。"
-        }
-      />
+      <PageHeader title={profile === null ? "マイページ" : profile.name} />
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Suspense fallback={<Skeleton className="h-28 w-full" />}>

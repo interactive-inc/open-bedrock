@@ -90,8 +90,6 @@ export default async function AdminLeavesPage(props: { searchParams: SearchParam
     <div className="flex flex-col gap-6">
       <PageHeader
         title="休暇申請管理"
-        description="全社の休暇申請を横断で確認します。承認は各申請の詳細から行います。"
-        breadcrumbs={[{ label: "休暇", href: "/my/leaves" }, { label: "休暇申請管理" }]}
         actions={
           currentUser.permissions.includes("leave:approve") ? (
             <Button variant="outline" nativeButton={false} render={<Link href="/inbox/leaves" />}>

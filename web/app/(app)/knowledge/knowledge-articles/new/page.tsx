@@ -13,7 +13,6 @@ export default function NewKnowledgePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="ナレッジ記事を作成"
-        description="タイトル・カテゴリ・本文は必須です。"
         actions={<BackButton href="/knowledge/knowledge-articles" label="一覧に戻る" />}
       />
 

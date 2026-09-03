@@ -25,7 +25,6 @@ export default async function EmployeeNewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="従業員を登録"
-        description="新しい従業員を従業員台帳に登録します。"
         actions={<BackButton href="/company/employees" label="一覧に戻る" />}
       />
 

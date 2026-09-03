@@ -13,7 +13,7 @@ export default async function CompanyPersonnelActionsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="人事発令" description="全社の人事発令を発令日の順に確認します。" />
+      <PageHeader title="人事発令" />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <CompanyPersonnelActionSection />

@@ -39,7 +39,6 @@ export default async function SurveyManagePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="サーベイ管理"
-        description="実施中のアンケートを確認・編集・削除します。"
         actions={
           <>
             <Button variant="outline" nativeButton={false} render={<Link href="/survey/surveys" />}>

@@ -14,7 +14,6 @@ export default async function AssetNewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="物品を登録"
-        description="新しい備品を備品マスタに登録します。"
         actions={<BackButton href="/asset/assets" label="一覧に戻る" />}
       />
 

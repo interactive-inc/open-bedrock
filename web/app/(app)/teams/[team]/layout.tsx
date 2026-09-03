@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation"
 import { PageHeader } from "@/components/page-header"
-import { getEmployeeByCode } from "@/lib/api/get-employee-by-code"
 import { getOrgDepartment } from "@/lib/api/get-org-department"
 import { getOrgTree } from "@/lib/api/get-org-tree"
 import { findOrgTreeNode } from "@/lib/org/find-org-tree-node"
@@ -22,20 +21,9 @@ export default async function DepartmentLayout(props: Props) {
 
   const node = tree instanceof Error ? null : findOrgTreeNode(tree, params.team)
 
-  const managerCode = department.manager_employee_code
-
-  const manager = managerCode === null ? null : await getEmployeeByCode(managerCode)
-
-  const managerName = manager === null || manager instanceof Error ? null : manager.name
-
-  const description = [
-    `コード: ${department.code}`,
-    managerName === null ? "責任者: 未設定" : `責任者: ${managerName}`,
-  ].join(" / ")
-
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={node === null ? params.team : node.name} description={description} />
+      <PageHeader title={node === null ? params.team : node.name} />
 
       {props.children}
     </div>

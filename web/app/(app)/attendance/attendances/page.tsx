@@ -32,7 +32,6 @@ export default async function AttendanceAllPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="勤怠一覧（管理者）"
-        description="従業員・期間で絞り込み、全体の勤怠記録を確認します。"
         actions={
           <Button variant="outline" nativeButton={false} render={<Link href="/my/attendances" />}>
             自分の勤怠へ

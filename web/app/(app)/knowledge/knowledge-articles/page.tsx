@@ -35,7 +35,6 @@ export default async function KnowledgePage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="ナレッジ検索"
-        description="社内ナレッジを検索します。"
         actions={
           <Button nativeButton={false} render={<Link href="/knowledge/knowledge-articles/new" />}>
             <Plus />

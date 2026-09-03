@@ -16,10 +16,7 @@ export default async function SystemPrincipalsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Principal"
-        description="Account と対になる主体の分類です。機械の credential は各 Principal の詳細で確認します。"
-      />
+      <PageHeader title="Principal" />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <SystemPrincipalSection />

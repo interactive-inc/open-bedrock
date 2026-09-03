@@ -16,7 +16,6 @@ export default function RentalsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="レンタル"
-        description="自分の貸出予約を確認します。"
         actions={
           <Button nativeButton={false} render={<Link href="/my/rentals/new" />}>
             <Plus />

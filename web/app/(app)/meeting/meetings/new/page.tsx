@@ -22,7 +22,6 @@ export default async function NewMeetingPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="会議体を登録"
-        description="コードと名称は必須です。"
         actions={<BackButton href="/meeting/meetings" label="一覧に戻る" />}
       />
 

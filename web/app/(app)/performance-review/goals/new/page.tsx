@@ -28,7 +28,6 @@ export default async function NewGoalPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="新規目標"
-        description="期間と内容を入力して目標を登録します。"
         actions={<BackButton href="/performance-review/goals" label="一覧に戻る" />}
       />
 

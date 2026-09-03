@@ -50,9 +50,6 @@ export default async function AnnouncementDetailPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={announcement.title}
-        description={`状態: ${announcement.status}${
-          announcement.published_on === null ? "" : ` / 公開日: ${announcement.published_on}`
-        }`}
         actions={<BackButton href="/announcement/announcements" label="一覧に戻る" />}
       />
 

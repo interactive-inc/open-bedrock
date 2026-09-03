@@ -19,10 +19,7 @@ export default async function RecruitmentPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="採用"
-        description="募集ポジションと応募者を管理します。応募者は社外の個人情報のため、この権限を持つ担当者だけが閲覧できます。"
-      />
+      <PageHeader title="採用" />
 
       <PositionNewForm />
 

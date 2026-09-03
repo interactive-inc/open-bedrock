@@ -62,11 +62,6 @@ export default async function AdminResignationsPage(props: { searchParams: Searc
     <div className="flex flex-col gap-6">
       <PageHeader
         title="退職手続き管理"
-        description="全社の退職手続きを横断で確認します。"
-        breadcrumbs={[
-          { label: "退職手続き", href: "/resignation/resignations" },
-          { label: "退職手続き管理" },
-        ]}
         actions={
           <Button
             variant="outline"

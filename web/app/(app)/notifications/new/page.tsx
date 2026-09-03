@@ -33,7 +33,6 @@ export default async function NotificationNewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="通知を作成"
-        description="宛先・種別・タイトル・本文を入力して通知を送ります。"
         actions={<BackButton href="/notifications" label="一覧に戻る" />}
       />
 

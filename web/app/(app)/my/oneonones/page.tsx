@@ -34,7 +34,6 @@ export default async function OneOnOnePage(props: { searchParams: SearchParams }
     <div className="flex flex-col gap-6">
       <PageHeader
         title="1on1"
-        description="自分の参加した 1on1 の履歴を確認します。"
         actions={
           canCreate ? (
             <Button nativeButton={false} render={<Link href="/my/oneonones/new" />}>

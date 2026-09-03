@@ -25,7 +25,6 @@ export default async function ThanksRewardsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="景品"
-        description="受領残高でカタログから景品を交換する"
         actions={
           <>
             <BackButton href="/thanks/thanks" label="感謝に戻る" />

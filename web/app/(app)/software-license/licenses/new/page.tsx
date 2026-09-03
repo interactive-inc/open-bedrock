@@ -20,7 +20,6 @@ export default async function LicenseNewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="ライセンスを登録"
-        description="利用中の SaaS・ソフトウェアを台帳に登録します。"
         actions={<BackButton href="/software-license/licenses" label="一覧に戻る" />}
       />
 

@@ -31,7 +31,6 @@ export default async function MeetingDetailPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={meeting.name}
-        description={meeting.code}
         actions={<BackButton href="/meeting/meetings" label="一覧に戻る" />}
       />
 

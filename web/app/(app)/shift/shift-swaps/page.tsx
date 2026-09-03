@@ -91,8 +91,6 @@ export default async function AdminShiftSwapsPage(props: { searchParams: SearchP
     <div className="flex flex-col gap-6">
       <PageHeader
         title="シフト交代管理"
-        description="全社のシフト交代申請を横断で確認します。"
-        breadcrumbs={[{ label: "シフト", href: "/my/shifts" }, { label: "交代管理" }]}
         actions={
           <Button variant="outline" nativeButton={false} render={<Link href="/my/shifts" />}>
             自分のシフトへ

@@ -18,7 +18,6 @@ export default function MyThanksPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="サンクス履歴"
-        description="自分が送った感謝と、景品の交換履歴・申請状況を確認します。"
         actions={
           <>
             <Button variant="outline" nativeButton={false} render={<Link href="/thanks/rewards" />}>

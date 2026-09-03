@@ -27,7 +27,6 @@ export default async function SkillsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="スキル一覧"
-        description="スキルをキーワード・カテゴリで検索します。"
         actions={
           <Button nativeButton={false} render={<Link href="/my/skills" />}>
             自分のスキル

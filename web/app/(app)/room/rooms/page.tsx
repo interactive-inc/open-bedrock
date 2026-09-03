@@ -27,7 +27,6 @@ export default async function RoomsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="会議室"
-        description="空き状況を検索し、会議室を予約します。"
         actions={
           <Button
             variant="outline"

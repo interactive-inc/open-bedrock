@@ -23,7 +23,6 @@ export default async function ShiftPatternNewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="シフトパターンを作成"
-        description="コード・名前・開始/終了時刻・休憩時間を登録します。"
         actions={<BackButton href="/shift/shift-patterns" label="一覧に戻る" />}
       />
 

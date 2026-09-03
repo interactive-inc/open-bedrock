@@ -21,10 +21,7 @@ export default async function SystemPrincipalPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Principal の詳細"
-        description="主体の属性と、発行済みの機械 credential を確認します。"
-      />
+      <PageHeader title="Principal の詳細" />
 
       <Link className="text-sm underline" href="/system/principals">
         Principal の一覧へ戻る

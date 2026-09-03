@@ -22,7 +22,6 @@ export default async function SurveysPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="サーベイ"
-        description="配信中のアンケートに回答します。"
         actions={
           canManage ? (
             <Button

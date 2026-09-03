@@ -33,7 +33,6 @@ export default async function HealthCheckupsPage(props: { searchParams: SearchPa
     <div className="flex flex-col gap-6">
       <PageHeader
         title="健康診断"
-        description="健診・ストレスチェックの実施状況を確認します。結果は保持せず、実施日と受診状態のみを記録します。"
         actions={
           canManageHealthCheckups(currentUser.permissions) ? (
             <Button

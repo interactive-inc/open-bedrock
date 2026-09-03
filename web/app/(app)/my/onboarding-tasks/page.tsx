@@ -10,10 +10,7 @@ export const metadata = { title: "自分のオンボーディング" }
 export default function OnboardingMePage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="自分のオンボーディングタスク"
-        description="自分に割り当てられた未完了タスクを確認します。"
-      />
+      <PageHeader title="自分のオンボーディングタスク" />
 
       <Card>
         <CardHeader>

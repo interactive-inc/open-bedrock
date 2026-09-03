@@ -16,10 +16,7 @@ export default async function SystemDeadLettersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="dead letter"
-        description="再試行の上限に達した配信です。原因を確認したうえで再投入します。"
-      />
+      <PageHeader title="dead letter" />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <SystemDeadLetterSection />

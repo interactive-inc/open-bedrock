@@ -26,7 +26,6 @@ export default async function NewOneOnOnePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="1on1 を記録"
-        description="日時・相手・メモを入力して 1on1 を記録します。"
         actions={<BackButton href="/my/oneonones" label="履歴に戻る" />}
       />
 

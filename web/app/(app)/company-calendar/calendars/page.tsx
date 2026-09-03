@@ -26,10 +26,7 @@ export default async function CalendarPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="会社カレンダー"
-        description="会社休日と振替出勤日の記録です。通常営業日は登録しません。"
-      />
+      <PageHeader title="会社カレンダー" />
 
       <CalendarYearForm year={year} />
 

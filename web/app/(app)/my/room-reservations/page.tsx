@@ -14,7 +14,6 @@ export default function MyReservationsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="自分の予約"
-        description="自分が予約した会議室の一覧と取消を行います。"
         actions={<BackButton href="/room/rooms" label="会議室に戻る" />}
       />
 

@@ -30,7 +30,6 @@ export default async function ShiftManagePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="シフト管理"
-        description="全員のシフト割当を確認します。"
         actions={
           <>
             <BackButton href="/my/shifts" label="シフトに戻る" />

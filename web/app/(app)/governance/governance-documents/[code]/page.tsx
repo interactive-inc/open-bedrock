@@ -33,11 +33,6 @@ export default async function GovernanceDetailPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={document.title}
-        description={`${document.code} · ${document.version}`}
-        breadcrumbs={[
-          { label: "規程・手続き", href: "/governance/governance-documents" },
-          { label: document.title },
-        ]}
         actions={<BackButton href="/governance/governance-documents" label="一覧に戻る" />}
       />
 

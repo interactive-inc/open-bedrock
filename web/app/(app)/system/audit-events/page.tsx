@@ -23,7 +23,7 @@ export default async function AuditEventsPage(props: Props) {
   if (!parsed.ok) {
     return (
       <div className="flex flex-col gap-6">
-        <PageHeader title="監査ログ" description="重要操作と認可判断の記録を確認します。" />
+        <PageHeader title="監査ログ" />
         <Alert variant="destructive">
           <AlertTitle>検索条件が無効です</AlertTitle>
           <AlertDescription>
@@ -44,7 +44,6 @@ export default async function AuditEventsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="監査ログ"
-        description="重要操作と認可判断の記録を確認します。"
         actions={canExport ? <AuditExportForm query={parsed.query} /> : undefined}
       />
       <AuditEventFilterForm query={parsed.query} />

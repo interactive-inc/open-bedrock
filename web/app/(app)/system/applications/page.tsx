@@ -96,8 +96,6 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
     <div className="flex flex-col gap-6">
       <PageHeader
         title="申請管理"
-        description="全社の申請を横断で確認します。承認操作は各申請の詳細から行います。"
-        breadcrumbs={[{ label: "申請", href: "/my/applications" }, { label: "申請管理" }]}
         actions={
           <>
             {canRepairWorkflows ? (

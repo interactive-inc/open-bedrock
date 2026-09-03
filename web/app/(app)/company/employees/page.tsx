@@ -39,7 +39,7 @@ export default async function EmployeesPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="従業員" description="従業員台帳の検索と閲覧をします。" />
+      <PageHeader title="従業員" />
 
       <EmployeeSearchForm filter={filter} />
 

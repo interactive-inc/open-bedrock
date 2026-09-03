@@ -13,7 +13,6 @@ export default function NewRingiPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="稟議を起案"
-        description="承認者・件名・金額・理由を入力する"
         actions={<BackButton href="/my/ringis" label="一覧に戻る" />}
       />
 
