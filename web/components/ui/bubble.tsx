@@ -39,7 +39,7 @@ const bubbleVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  }
+  },
 )
 
 function Bubble({
@@ -62,21 +62,17 @@ function Bubble({
   )
 }
 
-function BubbleContent({
-  className,
-  render,
-  ...props
-}: useRender.ComponentProps<"div">) {
+function BubbleContent({ className, render, ...props }: useRender.ComponentProps<"div">) {
   return useRender({
     defaultTagName: "div",
     props: mergeProps<"div">(
       {
         className: cn(
           "w-fit max-w-full min-w-0 overflow-hidden rounded-3xl border border-transparent px-3.5 py-2.5 text-sm leading-relaxed wrap-break-word group-data-[align=end]/bubble:self-end [button]:text-left [button,a]:transition-colors [button,a]:outline-none [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-[3px] [button,a]:focus-visible:ring-ring/50",
-          className
+          className,
         ),
       },
-      props
+      props,
     ),
     render,
     state: {
@@ -102,7 +98,7 @@ const bubbleReactionsVariants = cva(
       side: "bottom",
       align: "end",
     },
-  }
+  },
 )
 
 function BubbleReactions({
