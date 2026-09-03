@@ -2,9 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import type { SystemPrincipal } from "@/lib/api/types/system-operation-types"
 
 /** GET /system/principals/:principalId。1 件の Principal を返す。 */
-export async function getSystemPrincipal(
-  principalId: string,
-): Promise<SystemPrincipal | Error> {
+export async function getSystemPrincipal(principalId: string): Promise<SystemPrincipal | Error> {
   const client = await createClient()
 
   const response = await client.system.principals[":principalId"].$get({

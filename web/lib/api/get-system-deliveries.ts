@@ -19,7 +19,8 @@ export async function getSystemDeliveries(
   const client = await createClient()
 
   const response = await client.system.deliveries.$get({
-    query: props.status === null ? { kind: props.kind } : { kind: props.kind, status: props.status },
+    query:
+      props.status === null ? { kind: props.kind } : { kind: props.kind, status: props.status },
   })
 
   if (response.status >= 400) {
