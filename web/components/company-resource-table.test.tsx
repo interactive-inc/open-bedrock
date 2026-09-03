@@ -2,6 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, test } from "vite-plus/test"
 import { CompanyResourceTable } from "@/components/company-resource-table"
 import type { CompanyResource } from "@/lib/api/types/company-resource-types"
+import { readResourceText } from "@/lib/company/read-resource-text"
 
 afterEach(cleanup)
 
@@ -19,7 +20,7 @@ const baseResource: CompanyResource = {
 const columns = [
   {
     header: "コード",
-    toValue: (resource: CompanyResource) => String(resource.attributes.code ?? "-"),
+    toValue: (resource: CompanyResource) => readResourceText(resource, "code") ?? "-",
   },
 ]
 
