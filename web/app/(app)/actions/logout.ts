@@ -17,7 +17,7 @@ export async function logoutAction(): Promise<void> {
 
   if (refreshToken !== undefined) {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:18787"
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "https://bedrock.localhost"
 
       await fetch(`${baseUrl}/system/sessions`, {
         method: "DELETE",

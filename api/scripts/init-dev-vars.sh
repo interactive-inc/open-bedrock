@@ -31,9 +31,9 @@ COMPANY_TIME_ZONE="Asia/Tokyo"
 PROVISIONING_API_KEY=
 IDENTITY_JWKS=
 IDENTITY_ISSUER="http://localhost:18790"
-IDENTITY_AUDIENCE="http://localhost:3000"
+IDENTITY_AUDIENCE="https://app.bedrock.localhost"
 IDENTITY_LOGIN_URL="http://localhost:18790"
-API_ORIGIN="http://localhost:18787"
+API_ORIGIN="https://bedrock.localhost"
 BOOTSTRAP_TOKEN=
 EOF
 

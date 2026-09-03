@@ -23,7 +23,11 @@ import { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-i
 import { SystemIdentityUnavailableError } from "@system/interface/errors"
 
 /** CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。 */
-const defaultAllowedOrigins = ["http://localhost:3000", "http://localhost:5173"]
+const defaultAllowedOrigins = [
+  "https://app.bedrock.localhost",
+  "http://localhost:3000",
+  "http://localhost:5173",
+]
 const disabledOidcClientRegistry = OidcClientRegistryValue.restore({})
 if (disabledOidcClientRegistry instanceof Error) throw disabledOidcClientRegistry
 const disabledOidcIssuerConfiguration = OidcIssuerConfigurationValue.create({

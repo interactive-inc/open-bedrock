@@ -13,8 +13,8 @@ const nextConfig: NextConfig = {
   },
   outputFileTracingRoot: path.join(import.meta.dirname, ".."),
 
-  // portless のプロキシ経由（bedrock.localhost）で dev リソースと HMR を許可する
-  allowedDevOrigins: ["bedrock.localhost"],
+  // portless のプロキシ経由（app.bedrock.localhost）で dev リソースと HMR を許可する
+  allowedDevOrigins: ["app.bedrock.localhost"],
 
   // Codex のローカル in-app browser は sandboxed frame から Server Action を送るため
   // Origin が `null` になる。production では許可せず、通常の same-origin 検査を維持する。
