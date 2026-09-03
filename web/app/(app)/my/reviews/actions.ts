@@ -103,7 +103,7 @@ export async function createReviewCycleAction(
   }
 
   revalidatePath("/my/reviews")
-  revalidatePath("/organization/review-cycles")
+  revalidatePath("/performance-review/review-cycles")
 
   return { ok: true, error: null }
 }
@@ -132,7 +132,7 @@ export async function openReviewCycleAction(
   }
 
   revalidatePath("/my/reviews")
-  revalidatePath("/organization/review-cycles")
+  revalidatePath("/performance-review/review-cycles")
 
   return { ok: true, error: null }
 }
@@ -161,7 +161,7 @@ export async function closeReviewCycleAction(
   }
 
   revalidatePath("/my/reviews")
-  revalidatePath("/organization/review-cycles")
+  revalidatePath("/performance-review/review-cycles")
 
   return { ok: true, error: null }
 }
@@ -218,7 +218,7 @@ export async function updateReviewCycleAction(
   }
 
   revalidatePath("/my/reviews")
-  revalidatePath("/organization/review-cycles")
+  revalidatePath("/performance-review/review-cycles")
 
   return { ok: true, error: null }
 }
@@ -247,7 +247,7 @@ export async function deleteReviewCycleAction(
   }
 
   revalidatePath("/my/reviews")
-  revalidatePath("/organization/review-cycles")
+  revalidatePath("/performance-review/review-cycles")
 
   return { ok: true, error: null }
 }
@@ -294,7 +294,7 @@ export async function submitReviewFormAction(
   }
 
   revalidatePath("/my/reviews")
-  revalidatePath("/organization/review-cycles")
+  revalidatePath("/performance-review/review-cycles")
 
   return { ok: true, error: null }
 }
@@ -323,7 +323,7 @@ export async function discloseReviewCycleAction(
   }
 
   revalidatePath("/my/reviews")
-  revalidatePath("/organization/review-cycles")
+  revalidatePath("/performance-review/review-cycles")
 
   return { ok: true, error: null }
 }
@@ -382,7 +382,7 @@ export async function createReviewFormsBulkAction(
   }
 
   revalidatePath("/my/reviews")
-  revalidatePath("/organization/review-cycles")
+  revalidatePath("/performance-review/review-cycles")
 
   return { ok: true, error: null }
 }

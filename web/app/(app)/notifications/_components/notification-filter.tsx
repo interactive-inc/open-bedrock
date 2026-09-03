@@ -34,8 +34,8 @@ export function NotificationFilter(props: Props) {
               <Link
                 href={
                   option.value === "all"
-                    ? "/company/notifications"
-                    : `/company/notifications?filter=${option.value}`
+                    ? "/notifications"
+                    : `/notifications?filter=${option.value}`
                 }
               />
             }

@@ -15,7 +15,7 @@ export type FeatureGroup =
   | "governance"
   | "system"
 
-export type FeatureSpace = "my" | "teams" | "organization" | "system"
+export type FeatureSpace = "system" | "company" | "apps"
 
 export type FeatureNavigationVisibility =
   | { kind: "everyone" }
@@ -24,7 +24,6 @@ export type FeatureNavigationVisibility =
   | { kind: "all-permissions"; permissions: ReadonlyArray<string> }
 
 export type FeatureRoute = {
-  space: FeatureSpace
   label: string
   href: string
   visibility: FeatureNavigationVisibility

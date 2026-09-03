@@ -40,20 +40,12 @@ export default async function MyRingiPage() {
         actions={
           <>
             {canViewAll ? (
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={<Link href="/organization/ringis" />}
-              >
+              <Button variant="outline" nativeButton={false} render={<Link href="/ringi/ringis" />}>
                 稟議管理
               </Button>
             ) : null}
 
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link href="/company/inbox/ringis" />}
-            >
+            <Button variant="outline" nativeButton={false} render={<Link href="/inbox/ringis" />}>
               <Inbox />
               承認受信箱
             </Button>

@@ -4,19 +4,19 @@ import { isPathOfDisabledFeature } from "@/lib/feature/is-path-of-disabled-featu
 
 describe("isPathOfDisabledFeature", () => {
   test("matches the feature page and its sub paths", () => {
-    expect(isPathOfDisabledFeature("/organization/thanks", ["thanks"])).toBe(true)
+    expect(isPathOfDisabledFeature("/thanks/thanks", ["thanks"])).toBe(true)
     expect(isPathOfDisabledFeature("/my/thanks", ["thanks"])).toBe(true)
-    expect(isPathOfDisabledFeature("/organization/thanks-redemptions", ["thanks"])).toBe(true)
+    expect(isPathOfDisabledFeature("/thanks/thanks-redemptions", ["thanks"])).toBe(true)
   })
 
   test("does not match other features or plain prefixes", () => {
-    expect(isPathOfDisabledFeature("/organization/thanks", ["one-on-ones"])).toBe(false)
-    expect(isPathOfDisabledFeature("/organization/employees", ["thanks"])).toBe(false)
+    expect(isPathOfDisabledFeature("/thanks/thanks", ["one-on-ones"])).toBe(false)
+    expect(isPathOfDisabledFeature("/company/employees", ["thanks"])).toBe(false)
     expect(isPathOfDisabledFeature("/", ["thanks", "one-on-ones"])).toBe(false)
   })
 
   test("resolves dynamic segments in hrefs", () => {
-    const teamRoutes = getFeatureNavigationItems("teams", "D003")
+    const teamRoutes = getFeatureNavigationItems("apps", "D003")
 
     const oneOnOneRoute = teamRoutes.find((item) => item.slug === "one-on-ones")
 
@@ -28,14 +28,14 @@ describe("isPathOfDisabledFeature", () => {
   })
 
   test("an empty disabled list never matches", () => {
-    expect(isPathOfDisabledFeature("/organization/thanks", [])).toBe(false)
+    expect(isPathOfDisabledFeature("/thanks/thanks", [])).toBe(false)
   })
 })
 
 describe("getFeatureNavigationItems with disabled features", () => {
   test("drops navigation items of disabled features", () => {
-    const allItems = getFeatureNavigationItems("organization", null)
-    const filteredItems = getFeatureNavigationItems("organization", null, ["thanks"])
+    const allItems = getFeatureNavigationItems("apps", null)
+    const filteredItems = getFeatureNavigationItems("apps", null, ["thanks"])
 
     expect(allItems.some((item) => item.slug === "thanks")).toBe(true)
     expect(filteredItems.some((item) => item.slug === "thanks")).toBe(false)

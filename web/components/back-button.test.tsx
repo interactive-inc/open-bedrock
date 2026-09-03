@@ -18,7 +18,7 @@ afterEach(cleanup)
 
 describe("BackButton", () => {
   test("preserves the existing Link prefetch default", () => {
-    render(<BackButton href="/organization/employees" label="一覧へ戻る" />)
+    render(<BackButton href="/company/employees" label="一覧へ戻る" />)
 
     expect(screen.getByRole("button", { name: "一覧へ戻る" }).getAttribute("data-prefetch")).toBe(
       "undefined",

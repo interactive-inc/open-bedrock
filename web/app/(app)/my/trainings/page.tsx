@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { MyEnrollmentList } from "@/app/(app)/organization/trainings/_components/my-enrollment-list"
+import { MyEnrollmentList } from "@/app/(app)/training/trainings/_components/my-enrollment-list"
 import { BackButton } from "@/components/back-button"
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
@@ -18,7 +18,7 @@ export default function MyTrainingEnrollmentsPage() {
       <PageHeader
         title="自分の受講"
         description="受講中・受講済みのコースを確認します。"
-        actions={<BackButton href="/organization/trainings" label="研修に戻る" />}
+        actions={<BackButton href="/training/trainings" label="研修に戻る" />}
       />
 
       <Suspense fallback={<ListSkeleton rows={3} />}>

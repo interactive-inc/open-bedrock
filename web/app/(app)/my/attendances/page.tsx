@@ -42,7 +42,7 @@ export default async function AttendancePage(props: Props) {
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href="/organization/attendances" />}
+              render={<Link href="/attendance/attendances" />}
             >
               勤怠一覧（管理者）
             </Button>

@@ -81,7 +81,7 @@ export function NotificationList(props: Props) {
                   <span className="font-medium">{notification.title}</span>
 
                   {notification.kind === "thanks" ? (
-                    <Link href="/organization/thanks">
+                    <Link href="/thanks/thanks">
                       <Badge variant="secondary">感謝</Badge>
                     </Link>
                   ) : null}

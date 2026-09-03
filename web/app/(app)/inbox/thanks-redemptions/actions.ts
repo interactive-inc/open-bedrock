@@ -38,9 +38,9 @@ export async function decideRedemptionAction(
     return { ok: false, error: result.message }
   }
 
-  revalidatePath("/company/inbox/thanks-redemptions")
-  revalidatePath("/organization/thanks-redemptions")
-  revalidatePath("/organization/thanks")
+  revalidatePath("/inbox/thanks-redemptions")
+  revalidatePath("/thanks/thanks-redemptions")
+  revalidatePath("/thanks/thanks")
 
   return { ok: true, error: null }
 }

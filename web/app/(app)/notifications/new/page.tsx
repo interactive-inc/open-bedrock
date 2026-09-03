@@ -34,7 +34,7 @@ export default async function NotificationNewPage() {
       <PageHeader
         title="通知を作成"
         description="宛先・種別・タイトル・本文を入力して通知を送ります。"
-        actions={<BackButton href="/company/notifications" label="一覧に戻る" />}
+        actions={<BackButton href="/notifications" label="一覧に戻る" />}
       />
 
       <Card className="max-w-2xl">

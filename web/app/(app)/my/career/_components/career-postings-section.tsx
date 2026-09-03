@@ -31,11 +31,7 @@ export async function CareerPostingsSection(props: Props) {
       {visible.map((posting) => (
         <CardLink
           key={posting.id ?? posting.title}
-          href={
-            posting.id !== null
-              ? `/organization/job-postings/${posting.id}`
-              : "/organization/job-postings"
-          }
+          href={posting.id !== null ? `/career/job-postings/${posting.id}` : "/career/job-postings"}
           className="flex flex-col gap-2"
         >
           <div className="flex items-center gap-2">

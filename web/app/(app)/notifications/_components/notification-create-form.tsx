@@ -47,7 +47,7 @@ export function NotificationCreateForm(props: Props) {
       if (next.ok) {
         toast.success("通知を作成しました")
 
-        router.push("/company/notifications")
+        router.push("/notifications")
       } else if (next.error !== null) {
         toast.error(next.error)
       }

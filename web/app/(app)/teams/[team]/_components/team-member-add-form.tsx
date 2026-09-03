@@ -1,7 +1,7 @@
 "use client"
 
-import { submitPersonnelAction } from "@/app/(app)/organization/employees/[employee]/actions"
-import type { PersonnelActionFormState } from "@/app/(app)/organization/employees/[employee]/actions"
+import { submitPersonnelAction } from "@/app/(app)/company/employees/[employee]/actions"
+import type { PersonnelActionFormState } from "@/app/(app)/company/employees/[employee]/actions"
 import {
   getAssignmentBaseRevisionsAction,
   searchTeamMemberCandidatesAction,

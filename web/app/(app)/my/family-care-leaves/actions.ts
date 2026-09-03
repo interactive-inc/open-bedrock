@@ -49,7 +49,7 @@ export async function approveFamilyCareLeaveAction(
     return { ok: false, error: approved.message }
   }
 
-  revalidatePath("/organization/family-care-leaves")
+  revalidatePath("/family-care-leave/family-care-leaves")
 
   return { ok: true, error: null }
 }
@@ -83,7 +83,7 @@ export async function cancelFamilyCareLeaveApprovalAction(
     return { ok: false, error: cancelled.message }
   }
 
-  revalidatePath("/organization/family-care-leaves")
+  revalidatePath("/family-care-leave/family-care-leaves")
 
   return { ok: true, error: null }
 }

@@ -11,7 +11,7 @@ export const metadata = { title: "サンクス履歴" }
 
 /**
  * 自分のサンクス送信履歴と交換履歴・申請状況をまとめて確認する画面。
- * 全社公開のタイムラインは /organization/thanks に分離する。
+ * 全社公開のタイムラインは /thanks/thanks に分離する。
  */
 export default function MyThanksPage() {
   return (
@@ -21,16 +21,12 @@ export default function MyThanksPage() {
         description="自分が送った感謝と、景品の交換履歴・申請状況を確認します。"
         actions={
           <>
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link href="/organization/rewards" />}
-            >
+            <Button variant="outline" nativeButton={false} render={<Link href="/thanks/rewards" />}>
               <Gift />
               景品を見る
             </Button>
 
-            <Button nativeButton={false} render={<Link href="/organization/thanks/send" />}>
+            <Button nativeButton={false} render={<Link href="/thanks/thanks/send" />}>
               <Plus />
               感謝を送る
             </Button>
