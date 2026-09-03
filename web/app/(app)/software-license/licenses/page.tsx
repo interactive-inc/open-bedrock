@@ -36,7 +36,6 @@ export default async function LicensesPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="ライセンス・SaaS 台帳"
-        description="利用中のライセンスと更新期限を記録します。支払や会計連動は行いません。"
         actions={
           canManage ? (
             <Button nativeButton={false} render={<Link href="/software-license/licenses/new" />}>

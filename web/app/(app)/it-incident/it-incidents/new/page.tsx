@@ -20,7 +20,6 @@ export default async function ItIncidentNewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="インシデントを記録"
-        description="発生した障害・事故を記録します。"
         actions={<BackButton href="/it-incident/it-incidents" label="一覧に戻る" />}
       />
 

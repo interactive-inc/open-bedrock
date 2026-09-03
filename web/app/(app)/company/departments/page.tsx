@@ -24,12 +24,7 @@ export default async function OrgPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="組織図"
-        description={
-          canManage ? "組織図の閲覧と、部署ノードの管理を行います。" : "組織図を閲覧します。"
-        }
-      />
+      <PageHeader title="組織図" />
 
       <Tabs defaultValue="chart">
         <TabsList>

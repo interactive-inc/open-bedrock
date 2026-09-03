@@ -12,7 +12,6 @@ export default async function ApprovalDelegationsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="代理承認"
-        description="休暇・出張などの期間に、自分の承認権限を別の従業員へ委任します。"
         actions={<BackButton href="/my/applications" label="申請へ戻る" />}
       />
       {result instanceof Error ? (

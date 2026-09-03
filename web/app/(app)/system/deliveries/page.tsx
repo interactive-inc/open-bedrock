@@ -30,10 +30,7 @@ export default async function SystemDeliveriesPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="配信"
-        description="バックグラウンドのジョブと外部への送信箱の状態を確認します。"
-      />
+      <PageHeader title="配信" />
 
       <SystemDeliveryFilterForm kind={kind} status={status} />
 

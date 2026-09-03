@@ -24,10 +24,7 @@ export default async function CertificationsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
-        title="資格・免許"
-        description="会社で管理する資格の台帳と、自分の保有記録を確認します。更新要否の判定は行いません。"
-      />
+      <PageHeader title="資格・免許" />
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
         <CertificationsSection canManage={canManage} />

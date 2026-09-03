@@ -38,7 +38,6 @@ export default async function EditCareerPostingPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="公募の編集"
-        description="公募の内容と状態を変更します。"
         actions={<BackButton href={`/career/job-postings/${postingId}`} label="詳細に戻る" />}
       />
 

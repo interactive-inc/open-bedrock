@@ -35,10 +35,7 @@ export default async function HeadcountPlansPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="人員計画"
-        description="年度・部署ごとの計画人数と、実際の在籍数（active）を並べて比較します。"
-      />
+      <PageHeader title="人員計画" />
 
       {canManage ? <HeadcountPlanNewForm /> : null}
 

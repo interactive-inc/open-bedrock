@@ -26,10 +26,7 @@ export default async function CommendationsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="表彰"
-        description="社内で共有される表彰の記録です。閲覧は全員、記録の追加・削除は担当者のみ行えます。"
-      />
+      <PageHeader title="表彰" />
 
       {canManage ? <CommendationNewForm /> : null}
 

@@ -13,7 +13,6 @@ export default function NewCertificateRequestPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="新規依頼"
-        description="発行したい証明書の種類と用途を記入して依頼します。"
         actions={<BackButton href="/my/certificate-requests" label="一覧に戻る" />}
       />
 

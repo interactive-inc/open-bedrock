@@ -30,7 +30,6 @@ export default async function DecisionsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="意思決定記録"
-        description="会社の重要な意思決定を ADR 形式で記録します。"
         actions={
           canManage ? (
             <Button nativeButton={false} render={<Link href="/meeting/decisions/new" />}>

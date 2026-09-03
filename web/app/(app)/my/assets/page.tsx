@@ -25,7 +25,6 @@ export default function MyLentAssetsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="自分の貸与品"
-        description="自分が借りている備品を確認します。"
         actions={<BackButton href="/asset/assets" label="備品一覧へ" />}
       />
 

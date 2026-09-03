@@ -25,10 +25,7 @@ export default async function CompanyOrganizationSnapshotsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="組織の時点断面"
-        description="指定した日の組織単位・配属・レポートライン・責任割当をまとめて確認します。"
-      />
+      <PageHeader title="組織の時点断面" />
 
       <CompanyOrganizationSnapshotFilterForm effectiveOn={effectiveOn} />
 

@@ -13,7 +13,6 @@ export default function SendThanksPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="感謝を送る"
-        description="送り先と感謝のメッセージを入力します。任意でポイントを添えられます。"
         actions={<BackButton href="/thanks/thanks" label="感謝に戻る" />}
       />
 

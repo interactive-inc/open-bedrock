@@ -28,7 +28,6 @@ export default async function StocktakesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="棚卸し"
-        description="棚卸しセッションを開始し、対象資産の現物確認を記録します。"
         actions={
           <>
             <BackButton href="/asset/assets" label="備品に戻る" />

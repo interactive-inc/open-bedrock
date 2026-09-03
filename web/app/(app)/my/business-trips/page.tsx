@@ -16,7 +16,6 @@ export default function BusinessTripsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="出張申請"
-        description="出張の申請と、申請状況を確認します。"
         actions={
           <Button nativeButton={false} render={<Link href="/my/business-trips/new" />}>
             <Plus />

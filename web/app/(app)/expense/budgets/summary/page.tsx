@@ -38,7 +38,6 @@ export default async function BudgetSummaryPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="消化状況"
-        description="会計期間を指定して、部署ごとの予算・消化額・残額を横断で確認する"
         actions={<BackButton href="/expense/budgets" label="予算一覧に戻る" />}
       />
 

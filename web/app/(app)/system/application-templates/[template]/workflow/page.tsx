@@ -37,7 +37,6 @@ export default async function WorkflowPage(props: { params: Promise<{ template: 
     <div className="flex flex-col gap-6">
       <PageHeader
         title={`${template.name}の承認フロー`}
-        description="組織・IAM・条件に基づく多段承認を設定します。変更は新規申請から適用されます。"
         actions={
           <BackButton
             href={`/system/application-templates/${templateCode}`}

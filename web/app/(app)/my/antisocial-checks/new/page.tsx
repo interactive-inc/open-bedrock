@@ -13,7 +13,6 @@ export default function NewAntisocialCheckPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="新規申請"
-        description="対象者と確認内容を記入して申請します。"
         actions={<BackButton href="/my/antisocial-checks" label="一覧に戻る" />}
       />
 

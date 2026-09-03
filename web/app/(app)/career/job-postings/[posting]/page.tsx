@@ -37,7 +37,6 @@ export default async function CareerPostingDetailPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="公募の詳細"
-        description="公募の内容を確認して応募できます。"
         actions={
           <div className="flex items-center gap-2">
             <BackButton href="/career/job-postings" label="公募一覧に戻る" />

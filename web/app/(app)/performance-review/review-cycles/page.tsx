@@ -31,7 +31,6 @@ export default async function ReviewManagePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="評価の管理"
-        description="評価サイクルの作成・360度評価フォームの一括作成・結果の開示と横断検索を行います。"
         actions={<BackButton href="/my/reviews" label="評価に戻る" />}
       />
 

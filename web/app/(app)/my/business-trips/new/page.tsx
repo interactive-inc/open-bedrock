@@ -13,7 +13,6 @@ export default function NewBusinessTripPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="新規申請"
-        description="出張先・期間・目的を記入して申請します。"
         actions={<BackButton href="/my/business-trips" label="一覧に戻る" />}
       />
 

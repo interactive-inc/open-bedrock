@@ -57,7 +57,6 @@ export default async function EditSurveyPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={`${survey.title} の編集`}
-        description="タイトル・状態・設問を変更します。"
         actions={<BackButton href="/survey/surveys/manage" label="管理に戻る" />}
       />
 

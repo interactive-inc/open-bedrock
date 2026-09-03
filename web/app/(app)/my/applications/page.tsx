@@ -34,7 +34,6 @@ export default async function MyApplicationsPage(props: { searchParams: SearchPa
     <div className="flex flex-col gap-6">
       <PageHeader
         title="申請"
-        description="自分の申請の状況を確認します。"
         actions={
           <>
             {canViewAll ? (

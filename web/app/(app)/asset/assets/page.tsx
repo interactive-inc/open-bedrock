@@ -52,7 +52,6 @@ export default async function AssetsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="備品"
-        description="種別・状態で絞り込み、備品の一覧を確認します。"
         actions={
           <>
             <Button variant="outline" nativeButton={false} render={<Link href="/my/assets" />}>

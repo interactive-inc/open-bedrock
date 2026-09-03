@@ -16,7 +16,6 @@ export default function CertificateRequestsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="証明書発行依頼"
-        description="在職証明など各種証明書の発行を依頼し、進捗を確認します。"
         actions={
           <Button nativeButton={false} render={<Link href="/my/certificate-requests/new" />}>
             <Plus />

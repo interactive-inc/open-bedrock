@@ -33,7 +33,6 @@ export default async function BudgetsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="予算"
-        description="部署・会計期間ごとの予算の記録"
         actions={
           <>
             <Button

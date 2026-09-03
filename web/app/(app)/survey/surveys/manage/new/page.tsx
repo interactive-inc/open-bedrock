@@ -19,7 +19,6 @@ export default async function NewSurveyPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="新規アンケート"
-        description="タイトルと設問を登録します。"
         actions={<BackButton href="/survey/surveys/manage" label="管理に戻る" />}
       />
 

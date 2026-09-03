@@ -17,7 +17,6 @@ export default function MyTrainingEnrollmentsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="自分の受講"
-        description="受講中・受講済みのコースを確認します。"
         actions={<BackButton href="/training/trainings" label="研修に戻る" />}
       />
 

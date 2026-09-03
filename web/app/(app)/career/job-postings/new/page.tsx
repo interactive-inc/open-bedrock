@@ -22,7 +22,6 @@ export default async function NewCareerPostingPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="公募の新規作成"
-        description="新しい社内公募を登録します。"
         actions={<BackButton href="/career/job-postings" label="公募一覧に戻る" />}
       />
 

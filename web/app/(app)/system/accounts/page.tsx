@@ -28,10 +28,7 @@ export default async function AdminAccountsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="アカウント管理"
-        description="アカウントの状態と割り当てられたロールを管理します。"
-      />
+      <PageHeader title="アカウント管理" />
 
       <Suspense fallback={<ListSkeleton rows={5} rowClassName="h-10 w-full" />}>
         <AccountListSection canWrite={canWrite} actorPermissionKeys={currentUser.permissions} />

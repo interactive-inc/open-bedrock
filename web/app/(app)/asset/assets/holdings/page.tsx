@@ -27,7 +27,6 @@ export default async function AssetHoldingsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="保有状況"
-        description="現在貸与中の物品を、保有者ごとに横断で確認します。"
         actions={<BackButton href="/asset/assets" label="一覧に戻る" />}
       />
 

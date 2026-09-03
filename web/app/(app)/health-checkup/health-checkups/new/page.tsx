@@ -35,7 +35,6 @@ export default async function HealthCheckupNewPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="実施記録を登録"
-        description="健診・ストレスチェックの実施予定や受診状態を記録します。"
         actions={<BackButton href="/health-checkup/health-checkups" label="一覧に戻る" />}
       />
 

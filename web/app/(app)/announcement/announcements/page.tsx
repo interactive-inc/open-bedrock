@@ -28,7 +28,7 @@ export default async function AnnouncementsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="社内アナウンス" description="全社への公開されたお知らせを確認します。" />
+      <PageHeader title="社内アナウンス" />
 
       {canManage ? <AnnouncementCreateForm /> : null}
 

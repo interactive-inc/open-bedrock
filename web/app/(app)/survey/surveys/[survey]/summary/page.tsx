@@ -40,7 +40,6 @@ export default async function SurveySummaryPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={summary.title}
-        description={`回答 ${summary.response_count} 件`}
         actions={
           <Button
             variant="outline"

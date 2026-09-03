@@ -30,7 +30,6 @@ export default async function LeavePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="休暇"
-        description="残日数を確認し、自分の申請状況を見ます。"
         actions={
           <>
             {canViewAll ? (

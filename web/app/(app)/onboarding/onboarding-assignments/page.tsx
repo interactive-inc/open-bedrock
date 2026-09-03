@@ -29,7 +29,6 @@ export default async function OnboardingEmployeesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="社員別オンボーディング"
-        description="社員を選んで割当とタスクの進捗を確認します。"
         actions={
           <>
             {canManage ? (

@@ -17,10 +17,7 @@ export default async function CompanyDefinitionsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="職務と責任"
-        description="職務・組織上の役職・責任・権限範囲・合議体の定義を確認します。"
-      />
+      <PageHeader title="職務と責任" />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <CompanyDefinitionSection />
