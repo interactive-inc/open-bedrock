@@ -1,6 +1,7 @@
 "use client"
 
-import { useActionState, useRef, useState } from "react"
+import { startTransition, useActionState, useRef, useState } from "react"
+import type { FormEvent } from "react"
 import { toast } from "sonner"
 import { deleteRoleAction } from "@/app/(app)/system/roles/actions"
 import type { RoleDeleteFormState } from "@/app/(app)/system/roles/actions"
@@ -42,8 +43,6 @@ export function DeleteRoleButton(props: Props) {
     previousState: RoleDeleteFormState,
     formData: FormData,
   ): Promise<RoleDeleteFormState> {
-    submittedFormData.current = formData
-
     const result = await deleteRoleAction(previousState, formData)
 
     if (result.kind === "succeeded") {
@@ -74,13 +73,25 @@ export function DeleteRoleButton(props: Props) {
 
   const isPending = action[2]
 
+  // 再送を transition の外で呼ぶと isPending が更新されず React が警告する。
+  // 3つのロールフォームで送信経路を揃えるため、削除も onSubmit から action を呼ぶ。
+  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault()
+
+    const formData = new FormData(event.currentTarget)
+
+    submittedFormData.current = formData
+
+    startTransition(() => formAction(formData))
+  }
+
   function handleStepUpSucceeded(): void {
     setStepUpOpen(false)
 
     const formData = submittedFormData.current
 
     if (formData !== null) {
-      formAction(formData)
+      startTransition(() => formAction(formData))
     }
   }
 
@@ -105,7 +116,7 @@ export function DeleteRoleButton(props: Props) {
           </Alert>
         ) : null}
 
-        <form action={formAction}>
+        <form onSubmit={handleSubmit}>
           <input type="hidden" name="role_id" value={props.roleId} />
 
           <AlertDialogFooter>

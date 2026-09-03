@@ -115,4 +115,43 @@ describe("RoleEditForm", () => {
       expect(screen.getByText("システム定義のロールは変更・削除できません")).toBeDefined()
     })
   })
+
+  test("拒否されても編集した内容を初期値へ戻さない", async () => {
+    vi.mocked(updateRoleAction).mockResolvedValue({
+      kind: "failed",
+      error: "システム定義のロールは変更・削除できません",
+    })
+
+    renderForm([])
+
+    fireEvent.change(screen.getByLabelText("名前"), { target: { value: "経理 2" } })
+
+    fireEvent.click(screen.getByRole("button", { name: "変更を保存" }))
+
+    await waitFor(() => {
+      expect(vi.mocked(updateRoleAction).mock.calls.length).toBe(1)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText("システム定義のロールは変更・削除できません")).toBeDefined()
+    })
+
+    expect(screen.getByLabelText<HTMLInputElement>("名前").value).toBe("経理 2")
+  })
+
+  test("再認証を求められても編集した内容を保つ", async () => {
+    vi.mocked(updateRoleAction).mockResolvedValue({ kind: "step_up_required" })
+
+    renderForm([])
+
+    fireEvent.change(screen.getByLabelText("名前"), { target: { value: "経理 2" } })
+
+    fireEvent.click(screen.getByRole("button", { name: "変更を保存" }))
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("パスワード")).toBeDefined()
+    })
+
+    expect(screen.getByLabelText<HTMLInputElement>("名前").value).toBe("経理 2")
+  })
 })

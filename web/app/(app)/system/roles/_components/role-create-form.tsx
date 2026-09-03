@@ -1,7 +1,8 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useActionState, useRef, useState } from "react"
+import { startTransition, useActionState, useRef, useState } from "react"
+import type { FormEvent } from "react"
 import { toast } from "sonner"
 import { createRoleAction } from "@/app/(app)/system/roles/actions"
 import type { RoleCreateFormState } from "@/app/(app)/system/roles/actions"
@@ -39,8 +40,6 @@ export function RoleCreateForm(props: Props) {
     previousState: RoleCreateFormState,
     formData: FormData,
   ): Promise<RoleCreateFormState> {
-    submittedFormData.current = formData
-
     const result = await createRoleAction(previousState, formData)
 
     if (result.kind === "succeeded") {
@@ -64,20 +63,32 @@ export function RoleCreateForm(props: Props) {
 
   const isPending = action[2]
 
+  // form の action prop を使うと React が送信後にフォームをリセットし、失敗しても入力が消える。
+  // 自前の onSubmit から transition 内で action を呼ぶことで、入力を保ったまま結果を受け取る。
+  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault()
+
+    const formData = new FormData(event.currentTarget)
+
+    submittedFormData.current = formData
+
+    startTransition(() => formAction(formData))
+  }
+
   function handleStepUpSucceeded(): void {
     setStepUpOpen(false)
 
     const formData = submittedFormData.current
 
     if (formData !== null) {
-      formAction(formData)
+      startTransition(() => formAction(formData))
     }
   }
 
   const categories = [...new Set(props.permissions.map((permission) => permission.category))]
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <Field>
         <FieldLabel htmlFor="key">キー（名前空間:名前、不変）</FieldLabel>
         <Input
