@@ -7,6 +7,7 @@ import type { OnboardingTemplate } from "@/lib/api/types/onboarding-types"
 import { EmployeeSelect } from "@/components/employee-select"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 type Props = {
   templates: ReadonlyArray<OnboardingTemplate>
@@ -49,20 +50,15 @@ export function AssignForm(props: Props) {
         <Field>
           <FieldLabel htmlFor="template_code">テンプレート</FieldLabel>
 
-          <select
-            id="template_code"
-            name="template_code"
-            required
-            className="h-8 w-full rounded-2xl border border-transparent bg-input/50 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-          >
-            <option value="">選択してください</option>
+          <NativeSelect id="template_code" name="template_code" required className="w-full">
+            <NativeSelectOption value="">選択してください</NativeSelectOption>
 
             {props.templates.map((template) => (
-              <option key={template.code} value={template.code}>
+              <NativeSelectOption key={template.code} value={template.code}>
                 {template.name}（{template.kind === "join" ? "入社" : "退社"}）
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
 
         {state.ok === false && state.message !== null ? (

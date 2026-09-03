@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 type Props = {
   statusValue: "pending" | "rejected" | "fulfilled" | ""
@@ -34,18 +35,18 @@ export function RedemptionAdminFilterForm(props: Props) {
             <Field className="w-full">
               <FieldLabel htmlFor="redemption-admin-status">ステータス</FieldLabel>
 
-              <select
+              <NativeSelect
                 id="redemption-admin-status"
                 name="status"
                 defaultValue={props.statusValue}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                className="w-full"
               >
                 {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <NativeSelectOption key={option.value} value={option.value}>
                     {option.label}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
           </div>
 

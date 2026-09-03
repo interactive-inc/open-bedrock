@@ -8,6 +8,7 @@ import type { AssetCreateFormState } from "@/app/(app)/asset/assets/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 const initialState: AssetCreateFormState = { ok: false, error: null }
 
@@ -61,17 +62,12 @@ export function AssetCreateForm() {
         <Field>
           <FieldLabel htmlFor="asset-kind">種別</FieldLabel>
 
-          <select
-            id="asset-kind"
-            name="kind"
-            defaultValue="pc"
-            className="h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-          >
-            <option value="pc">PC</option>
-            <option value="monitor">モニター</option>
-            <option value="furniture">什器</option>
-            <option value="other">その他</option>
-          </select>
+          <NativeSelect id="asset-kind" name="kind" defaultValue="pc" className="w-full">
+            <NativeSelectOption value="pc">PC</NativeSelectOption>
+            <NativeSelectOption value="monitor">モニター</NativeSelectOption>
+            <NativeSelectOption value="furniture">什器</NativeSelectOption>
+            <NativeSelectOption value="other">その他</NativeSelectOption>
+          </NativeSelect>
         </Field>
 
         <Field>

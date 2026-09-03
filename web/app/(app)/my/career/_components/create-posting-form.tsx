@@ -7,6 +7,7 @@ import { createCareerPostingAction } from "@/app/(app)/my/career/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: CareerPostingFormState = { ok: false, error: null }
@@ -83,16 +84,11 @@ export function CreatePostingForm() {
         <Field>
           <FieldLabel htmlFor="posting-status">状態</FieldLabel>
 
-          <select
-            id="posting-status"
-            name="status"
-            defaultValue="open"
-            className="h-9 rounded-md border bg-transparent px-3 text-sm"
-          >
-            <option value="open">募集中</option>
+          <NativeSelect id="posting-status" name="status" defaultValue="open">
+            <NativeSelectOption value="open">募集中</NativeSelectOption>
 
-            <option value="closed">締切</option>
-          </select>
+            <NativeSelectOption value="closed">締切</NativeSelectOption>
+          </NativeSelect>
         </Field>
 
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}

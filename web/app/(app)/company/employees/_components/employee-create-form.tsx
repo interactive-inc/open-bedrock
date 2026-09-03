@@ -8,13 +8,11 @@ import type { EmployeeCreateFormState } from "@/app/(app)/company/employees/acti
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { PositionResponse } from "@/lib/api/types/position-types"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: EmployeeCreateFormState = { ok: false, error: null }
-
-const selectClassName =
-  "h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
 
 /**
  * 従業員登録フォーム。人物、入社発令、初期アカウントを一括作成する。
@@ -123,20 +121,20 @@ export function EmployeeCreateForm(props: {
           <FieldLabel htmlFor="employee-role">システム権限セット</FieldLabel>
 
           {props.canAssignRole ? (
-            <select
+            <NativeSelect
               aria-label="システム権限セット"
               id="employee-role"
               name="role"
               defaultValue="member"
-              className={selectClassName}
+              className="w-full"
               autoComplete="off"
               required
             >
-              <option value="member">標準利用者</option>
-              <option value="manager">業務管理者</option>
-              <option value="hr">人事管理者</option>
-              <option value="root">システム管理者</option>
-            </select>
+              <NativeSelectOption value="member">標準利用者</NativeSelectOption>
+              <NativeSelectOption value="manager">業務管理者</NativeSelectOption>
+              <NativeSelectOption value="hr">人事管理者</NativeSelectOption>
+              <NativeSelectOption value="root">システム管理者</NativeSelectOption>
+            </NativeSelect>
           ) : (
             <>
               <Input id="employee-role" value="標準利用者" readOnly />
@@ -167,20 +165,20 @@ export function EmployeeCreateForm(props: {
         <Field>
           <FieldLabel htmlFor="employee-position">役職（任意）</FieldLabel>
 
-          <select
+          <NativeSelect
             id="employee-position"
             name="position_code"
             defaultValue=""
-            className={selectClassName}
+            className="w-full"
             autoComplete="off"
           >
-            <option value="">役職なし</option>
+            <NativeSelectOption value="">役職なし</NativeSelectOption>
             {props.positions.map((position) => (
-              <option key={position.id} value={position.code}>
+              <NativeSelectOption key={position.id} value={position.code}>
                 {position.name}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
           <FieldDescription>
             役職は配属先部署とあわせて指定します。役職マスタから選び、空欄は役職なしです。
           </FieldDescription>

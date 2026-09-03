@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import Link from "next/link"
 
 type TemplateOption = {
@@ -45,18 +46,18 @@ export function AdminApplicationsFilterForm(props: Props) {
             <Field className="w-full">
               <FieldLabel htmlFor="admin-app-status">ステータス</FieldLabel>
 
-              <select
+              <NativeSelect
                 id="admin-app-status"
                 name="status"
                 defaultValue={props.statusValue}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                className="w-full"
               >
                 {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <NativeSelectOption key={option.value} value={option.value}>
                     {option.label}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
           </div>
 
@@ -64,19 +65,19 @@ export function AdminApplicationsFilterForm(props: Props) {
             <Field className="w-full">
               <FieldLabel htmlFor="admin-app-template">申請テンプレート</FieldLabel>
 
-              <select
+              <NativeSelect
                 id="admin-app-template"
                 name="template_code"
                 defaultValue={props.templateCodeValue}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                className="w-full"
               >
-                <option value="">すべて</option>
+                <NativeSelectOption value="">すべて</NativeSelectOption>
                 {props.templates.map((template) => (
-                  <option key={template.code} value={template.code}>
+                  <NativeSelectOption key={template.code} value={template.code}>
                     {template.name}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
           </div>
 
