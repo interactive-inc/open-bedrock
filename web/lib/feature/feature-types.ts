@@ -6,6 +6,8 @@ export type FeatureStatus = "available" | "development" | "retirement-candidate"
 
 export type FeatureGroup =
   | "overview"
+  // 自分タブの部署セクション。feature ではなく route の href から導出する。
+  | "team"
   | "time"
   | "requests"
   | "people"
@@ -22,7 +24,7 @@ export type FeatureGroup =
   | "company-system-link"
   | "company-employment-fact"
 
-export type FeatureSpace = "system" | "company" | "apps"
+export type FeatureSpace = "my" | "system" | "company" | "apps"
 
 export type FeatureNavigationVisibility =
   | { kind: "everyone" }

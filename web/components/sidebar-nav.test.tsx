@@ -93,18 +93,18 @@ describe("SidebarNav governance entry", () => {
 })
 
 describe("SidebarNav team entry (requiredAnyPermission)", () => {
-  test("shows マイチーム in the company space with any one of the scope permissions", () => {
-    pathnameMock.mockReturnValue("/company/direct-reports")
+  test("shows マイチーム in the my space with any one of the scope permissions", () => {
+    pathnameMock.mockReturnValue("/my/direct-reports")
 
     renderSidebar(["leave:read:reports"])
 
     expect(screen.getByRole("link", { name: "マイチーム" }).getAttribute("href")).toBe(
-      "/company/direct-reports",
+      "/my/direct-reports",
     )
   })
 
   test("shows マイチーム with a different single scope permission", () => {
-    pathnameMock.mockReturnValue("/company/direct-reports")
+    pathnameMock.mockReturnValue("/my/direct-reports")
 
     renderSidebar(["goal:read:reports"])
 
@@ -112,7 +112,7 @@ describe("SidebarNav team entry (requiredAnyPermission)", () => {
   })
 
   test("hides マイチーム when none of the scope permissions are held", () => {
-    pathnameMock.mockReturnValue("/company/direct-reports")
+    pathnameMock.mockReturnValue("/my/direct-reports")
 
     renderSidebar(["employee:create"])
 
@@ -159,6 +159,7 @@ describe("SidebarNav space tabs", () => {
     const spaceTabs = screen.getAllByRole("tab")
 
     expect(spaceTabs.map((tab) => tab.getAttribute("aria-label"))).toEqual([
+      "自分",
       "システム",
       "会社",
       "業務",
@@ -167,21 +168,39 @@ describe("SidebarNav space tabs", () => {
     expect(spaceTabs.every((tab) => tab.textContent === "")).toBe(true)
   })
 
-  test("shows all three tabs to an account holding every permission", () => {
+  test("shows all four tabs to an account holding every permission", () => {
     renderSidebar(allPermissions)
 
     expect(screen.getAllByRole("tab").map((tab) => tab.getAttribute("aria-label"))).toEqual([
+      "自分",
       "システム",
       "会社",
       "業務",
     ])
   })
 
-  test("keeps only the apps tab when the other spaces have no visible item", () => {
+  test("hides the company tab when its items are all disabled", () => {
     // 会社の項目は権限なしでも見えるので、無効化して空にする。
-    renderSidebar([], ["employees", "departments", "grades", "positions", "team-management"])
+    renderSidebar(
+      [],
+      [
+        "employees",
+        "departments",
+        "grades",
+        "positions",
+        "company-profile",
+        "company-people",
+        "company-employments",
+        "company-organization-snapshots",
+        "company-definitions",
+        "company-account-employee-links",
+        "company-personnel-actions",
+        "company-employee-events",
+      ],
+    )
 
     expect(screen.getAllByRole("tab").map((tab) => tab.getAttribute("aria-label"))).toEqual([
+      "自分",
       "業務",
     ])
   })
@@ -201,13 +220,15 @@ describe("SidebarNav space tabs", () => {
     expect(screen.queryByRole("link", { name: "組織図" })).toBeNull()
   })
 
-  test("keeps my team in the company space and the members link in the apps space", () => {
+  test("keeps my team and the members link together in the my space", () => {
     pathnameMock.mockReturnValue("/teams/D001/members")
 
     renderSidebar(["goal:read:reports"])
 
     expect(screen.getByRole("link", { name: "メンバー" })).toBeTruthy()
-    expect(screen.queryByRole("link", { name: "マイチーム" })).toBeNull()
+    expect(screen.getByRole("link", { name: "マイチーム" }).getAttribute("href")).toBe(
+      "/my/direct-reports",
+    )
   })
 
   test("shows only the department name when browsing a department outside my memberships", () => {
@@ -243,7 +264,7 @@ describe("SidebarNav space tabs", () => {
     expect(screen.queryByRole("link", { name: "部署の勤怠" })).toBeNull()
   })
 
-  test("keeps the inbox and the notifications in the apps space", () => {
+  test("keeps the inbox and the notifications in the my space", () => {
     renderSidebar([])
 
     expect(screen.getByRole("link", { name: "受信箱" }).getAttribute("href")).toBe("/inbox")
@@ -253,6 +274,12 @@ describe("SidebarNav space tabs", () => {
   test("selects the space tab from the current pathname", () => {
     pathnameMock.mockReturnValue("/teams/D001")
 
+    renderSidebar(allPermissions)
+
+    expect(screen.getByRole("tab", { name: "自分" }).getAttribute("aria-selected")).toBe("true")
+
+    cleanup()
+    pathnameMock.mockReturnValue("/expense/expenses")
     renderSidebar(allPermissions)
 
     expect(screen.getByRole("tab", { name: "業務" }).getAttribute("aria-selected")).toBe("true")
@@ -342,3 +369,84 @@ function renderSidebar(
     </SidebarProvider>,
   )
 }
+
+describe("SidebarNav my space", () => {
+  test("並べる順は 概要、部署、そのあとに本人の group", () => {
+    pathnameMock.mockReturnValue("/")
+
+    const rendered = renderSidebar(["goal:read:reports"])
+
+    const headings = Array.from(
+      rendered.container.querySelectorAll("[data-slot='sidebar-group-label']"),
+    ).map((heading) => heading.textContent)
+
+    expect(headings.slice(0, 2)).toEqual(["概要", "部署"])
+    expect(headings).toContain("時間と予定")
+    expect(headings.indexOf("時間と予定")).toBeGreaterThan(headings.indexOf("部署"))
+  })
+
+  test("部署セクションは部署スコープの項目とマイチームを集める", () => {
+    pathnameMock.mockReturnValue("/teams/D001/members")
+
+    renderSidebar(["goal:read:department", "goal:read:reports"])
+
+    const teamSection = screen.getByText("部署").closest("[data-slot='sidebar-group']")
+
+    expect(teamSection).not.toBeNull()
+    expect(within(teamSection as HTMLElement).getByRole("link", { name: "メンバー" })).toBeTruthy()
+    expect(
+      within(teamSection as HTMLElement).getByRole("link", { name: "部署の目標" }),
+    ).toBeTruthy()
+    expect(
+      within(teamSection as HTMLElement).getByRole("link", { name: "マイチーム" }),
+    ).toBeTruthy()
+  })
+
+  test("本人スコープの項目は部署セクションへ混ぜず既存の group に残す", () => {
+    pathnameMock.mockReturnValue("/")
+
+    renderSidebar([])
+
+    const teamSection = screen.getByText("部署").closest("[data-slot='sidebar-group']")
+
+    expect(within(teamSection as HTMLElement).queryByRole("link", { name: "勤怠" })).toBeNull()
+    expect(screen.getByRole("link", { name: "勤怠" }).getAttribute("href")).toBe("/my/attendances")
+    expect(screen.getByText("時間と予定")).toBeTruthy()
+  })
+
+  test("業務タブには App の全社ビューだけが残る", () => {
+    pathnameMock.mockReturnValue("/expense/expenses")
+
+    renderSidebar(["expense:read:all"])
+
+    expect(screen.getByRole("link", { name: "全社の経費" }).getAttribute("href")).toBe(
+      "/expense/expenses",
+    )
+    expect(screen.queryByRole("link", { name: "経費" })).toBeNull()
+    expect(screen.queryByRole("link", { name: "受信箱" })).toBeNull()
+    expect(screen.queryByRole("link", { name: "ホーム" })).toBeNull()
+  })
+
+  test("未処理と未読の合計バッジは自分タブに付く", () => {
+    pathnameMock.mockReturnValue("/")
+
+    render(
+      <SidebarProvider>
+        <SidebarNav
+          inboxCounts={{ applications: 2, expenses: 1, leaves: 0, shifts: 0, thanks: 0 }}
+          unreadNotificationCount={4}
+          permissions={[]}
+          disabledFeatures={[]}
+          myDepartments={[{ code: "D001", name: "Corporate Planning", assignment_type: "primary" }]}
+          allDepartments={[{ code: "D001", name: "Corporate Planning", depth: 0 }]}
+        />
+      </SidebarProvider>,
+    )
+
+    const myTab = screen.getByRole("tab", { name: "自分" })
+
+    expect(myTab.getAttribute("aria-description")).toBe("未処理と未読 7 件")
+    expect(within(myTab).getByText("7")).toBeTruthy()
+    expect(screen.getByRole("tab", { name: "業務" }).getAttribute("aria-description")).toBeNull()
+  })
+})

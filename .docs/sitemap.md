@@ -11,6 +11,8 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 - 動的 segment は単数リソース名で表す。例は `[employee]`、`[application]`、`[team]`。`/governance/governance-documents/[code]` は現行実装の segment 名をそのまま表す。
 - URL 階層はレイアウトの入れ子に対応する。`/inbox/layout.tsx` は受信箱ヘッダと種類タブを共有し、`/teams/[team]/layout.tsx` は部署名、コード、責任者のヘッダを共有する。
 - 旧 URL は `web/next.config.ts` の redirects で新 URL へ転送する。
+- サイドバーの空間は URL の第 1 segment から導出する。ホーム、`/my`、`/teams`、`/inbox`、`/notifications` は自分、`/system` はシステム、`/company` は会社、残りは業務。導出は `web/lib/routing/to-feature-space.ts` だけに置く。
+- 自分の空間のセクションは上から 概要、部署、そのあとに機能ごとのグループを並べる。部署セクションは `/teams` で始まる route を集めるので、同じ機能でも本人スコープの route は元のグループに残る。
 
 ## 認証
 
@@ -75,7 +77,7 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 
 ## チーム
 
-- `/company/direct-reports` は直属部下の一覧と、配下スコープの勤怠、休暇、目標を文脈導線としてまとめるマイチーム画面。各スコープ節は対応するスコープ権限(`attendance:read:reports`、`leave:read:reports`、`goal:read:reports`)を持つ場合のみ描画する。`/company/reports` は同じ画面へ転送する。
+- `/my/direct-reports` は直属部下の一覧と、配下スコープの勤怠、休暇、目標を文脈導線としてまとめるマイチーム画面。各スコープ節は対応するスコープ権限(`attendance:read:reports`、`leave:read:reports`、`goal:read:reports`)を持つ場合のみ描画する。`/company/reports` と `/teams/reports` は同じ画面へ転送する。
 
 ## 会社の正本
 

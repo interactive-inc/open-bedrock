@@ -528,13 +528,13 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     slug: "direct-reports",
     tier: "company",
     status: "development",
-    group: "company-people",
+    group: "team",
     icon: Users,
     prefetch: null,
     routes: [
       {
         label: "マイチーム",
-        href: "/company/direct-reports",
+        href: "/my/direct-reports",
         visibility: {
           kind: "any-permission",
           permissions: ["goal:read:reports", "attendance:read:reports", "leave:read:reports"],
@@ -1169,6 +1169,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
 
 export const featureGroupOrder: ReadonlyArray<FeatureGroup> = [
   "overview",
+  "team",
   "company-legal-entity",
   "company-people",
   "company-organization",
@@ -1187,6 +1188,7 @@ export const featureGroupOrder: ReadonlyArray<FeatureGroup> = [
 
 export const featureGroupLabels: Record<FeatureGroup, string> = {
   overview: "概要",
+  team: "部署",
   "company-legal-entity": "会社と法人",
   "company-people": "人と雇用",
   "company-organization": "組織",

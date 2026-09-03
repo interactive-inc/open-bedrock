@@ -1,5 +1,6 @@
 import { featureRegistry } from "@/lib/feature/feature-registry"
 import type { FeatureNavigationItem, FeatureSpace } from "@/lib/feature/feature-types"
+import { toNavigationGroup } from "@/lib/feature/to-navigation-group"
 import { toFeatureSpace } from "@/lib/routing/to-feature-space"
 
 /**
@@ -28,7 +29,7 @@ export function getFeatureNavigationItems(
         slug: feature.slug,
         tier: feature.tier,
         status: feature.status,
-        group: feature.group,
+        group: toNavigationGroup(route.href, feature.group),
         icon: feature.icon,
         prefetch: feature.prefetch,
         label: route.label,

@@ -1,6 +1,6 @@
 "use client"
 
-import { Blocks, Building2, type LucideIcon, Wrench } from "lucide-react"
+import { Blocks, Building2, CircleUser, type LucideIcon, Wrench } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
@@ -93,7 +93,15 @@ function filterSections(
 }
 
 function isFeatureSpace(value: unknown): value is FeatureSpace {
-  return value === "system" || value === "company" || value === "apps"
+  return value === "my" || value === "system" || value === "company" || value === "apps"
+}
+
+/** タブの列数。空間の数だけ等幅に割る。 */
+const spaceGridColumns: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
 }
 
 /**
@@ -123,8 +131,9 @@ function isItemActive(pathname: string, item: FeatureNavigationItem): boolean {
 }
 
 /**
- * 空間タブ（システム / 会社 / 業務）を最上部に置き、選んだ空間の項目を
+ * 空間タブ（自分 / システム / 会社 / 業務）を最上部に置き、選んだ空間の項目を
  * 機能レジストリのグループ別に表示するサイドバーナビ。
+ * 受信箱と通知のバッジ、部署セレクタは本人の文脈なので自分タブに出す。
  */
 export function SidebarNav(props: Props) {
   const pathname = usePathname()
@@ -160,7 +169,7 @@ export function SidebarNav(props: Props) {
     "/notifications": props.unreadNotificationCount,
   }
 
-  const appsBadgeTotal = inboxTotal + props.unreadNotificationCount
+  const myBadgeTotal = inboxTotal + props.unreadNotificationCount
 
   // 部署 Select の現在値。URL の部署 → 手動選択 → 主配属 → 全部署の先頭、の順で決める。
   const pathTeam = teamCodeFromPath(pathname)
@@ -187,6 +196,14 @@ export function SidebarNav(props: Props) {
 
   const spaces: ReadonlyArray<Space> = [
     {
+      key: "my",
+      label: "自分",
+      icon: CircleUser,
+      sections: getFeatureNavigationSections(
+        getFeatureNavigationItems("my", currentTeam, props.disabledFeatures),
+      ),
+    },
+    {
       key: "system",
       label: "システム",
       icon: Wrench,
@@ -207,7 +224,7 @@ export function SidebarNav(props: Props) {
       label: "業務",
       icon: Blocks,
       sections: getFeatureNavigationSections(
-        getFeatureNavigationItems("apps", currentTeam, props.disabledFeatures),
+        getFeatureNavigationItems("apps", null, props.disabledFeatures),
       ),
     },
   ]
@@ -293,7 +310,7 @@ export function SidebarNav(props: Props) {
               aria-label="メニューの空間"
               className={cn(
                 "grid h-auto w-full",
-                visibleSpaces.length === 3 ? "grid-cols-3" : "grid-cols-2",
+                spaceGridColumns[visibleSpaces.length] ?? "grid-cols-4",
               )}
             >
               {visibleSpaces.map((space) => {
@@ -305,17 +322,17 @@ export function SidebarNav(props: Props) {
                     value={space.key}
                     aria-label={space.label}
                     aria-description={
-                      space.key === "apps" && appsBadgeTotal > 0
-                        ? `未処理と未読 ${appsBadgeTotal} 件`
+                      space.key === "my" && myBadgeTotal > 0
+                        ? `未処理と未読 ${myBadgeTotal} 件`
                         : undefined
                     }
                     title={space.label}
                   >
                     <SpaceIcon aria-hidden="true" />
 
-                    {space.key === "apps" && appsBadgeTotal > 0 ? (
+                    {space.key === "my" && myBadgeTotal > 0 ? (
                       <Badge aria-hidden="true" className="absolute -top-1 -right-1 min-w-4 px-1">
-                        {appsBadgeTotal > 9 ? "9+" : appsBadgeTotal}
+                        {myBadgeTotal > 9 ? "9+" : myBadgeTotal}
                       </Badge>
                     ) : null}
                   </TabsTrigger>
@@ -326,7 +343,7 @@ export function SidebarNav(props: Props) {
         </SidebarGroupContent>
       </SidebarGroup>
 
-      {currentSpace?.key === "apps" && isTeamPath && currentTeam !== null ? (
+      {currentSpace?.key === "my" && isTeamPath && currentTeam !== null ? (
         <SidebarGroup>
           <SidebarGroupContent>
             {isMyDepartment && props.myDepartments.length >= 1 ? (
