@@ -15,11 +15,11 @@ export default async function CompanyPersonnelActionsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="人事発令" />
 
+      <ReadOnlyNotice command={null} />
+
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <CompanyPersonnelActionSection />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

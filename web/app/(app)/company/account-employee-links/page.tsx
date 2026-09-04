@@ -18,11 +18,11 @@ export default async function CompanyAccountEmployeeLinksPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="Account の対応" />
 
+      <ReadOnlyNotice command={null} />
+
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <CompanyAccountEmployeeLinkSection />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

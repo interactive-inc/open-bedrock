@@ -19,6 +19,8 @@ export default async function CompanyProfilePage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="会社と法人" />
 
+      <ReadOnlyNotice command={null} />
+
       <Suspense fallback={<ListSkeleton rows={3} />}>
         <CompanyProfileSection />
       </Suspense>
@@ -26,8 +28,6 @@ export default async function CompanyProfilePage() {
       <Suspense fallback={<ListSkeleton rows={3} />}>
         <CompanySiteSection />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

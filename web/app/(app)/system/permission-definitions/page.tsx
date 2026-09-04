@@ -21,6 +21,8 @@ export default async function SystemPermissionDefinitionsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="権限定義" />
 
+      <ReadOnlyNotice command={null} />
+
       <Link className="text-sm underline" href="/system/roles">
         ロールの一覧へ
       </Link>
@@ -28,8 +30,6 @@ export default async function SystemPermissionDefinitionsPage() {
       <Suspense fallback={<ListSkeleton rows={8} />}>
         <SystemPermissionDefinitionSection />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

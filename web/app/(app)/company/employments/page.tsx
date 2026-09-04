@@ -27,13 +27,13 @@ export default async function CompanyEmploymentsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader title="雇用" />
 
+      <ReadOnlyNotice command={null} />
+
       <CompanyEmploymentFilterForm status={status} />
 
       <Suspense key={status ?? ""} fallback={<ListSkeleton rows={5} />}>
         <CompanyEmploymentSection status={status} />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

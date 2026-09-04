@@ -25,6 +25,8 @@ export default async function SystemConnectorPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader title="コネクタの詳細" />
 
+      <ReadOnlyNotice command={null} />
+
       <Link className="text-sm underline" href="/system/connectors">
         コネクタの一覧へ戻る
       </Link>
@@ -32,8 +34,6 @@ export default async function SystemConnectorPage(props: Props) {
       <Suspense fallback={<ListSkeleton rows={3} />}>
         <SystemConnectorDetailSection connectorId={params.connectorId} />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

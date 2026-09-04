@@ -27,13 +27,13 @@ export default async function CompanyOrganizationSnapshotsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader title="組織の時点断面" />
 
+      <ReadOnlyNotice command={null} />
+
       <CompanyOrganizationSnapshotFilterForm effectiveOn={effectiveOn} />
 
       <Suspense key={effectiveOn ?? ""} fallback={<ListSkeleton rows={5} />}>
         <CompanyOrganizationSnapshotSection effectiveOn={effectiveOn} />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

@@ -23,6 +23,8 @@ export default async function SystemPrincipalPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader title="Principal の詳細" />
 
+      <ReadOnlyNotice command={null} />
+
       <Link className="text-sm underline" href="/system/principals">
         Principal の一覧へ戻る
       </Link>
@@ -34,8 +36,6 @@ export default async function SystemPrincipalPage(props: Props) {
       <Suspense fallback={<ListSkeleton rows={3} />}>
         <SystemMachineCredentialSection principalId={params.principalId} />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

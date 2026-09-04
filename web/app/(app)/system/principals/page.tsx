@@ -18,11 +18,11 @@ export default async function SystemPrincipalsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="Principal" />
 
+      <ReadOnlyNotice command={null} />
+
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <SystemPrincipalSection />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

@@ -29,6 +29,8 @@ export default async function SystemIntegrationExchangesPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader title="外部交換" />
 
+      <ReadOnlyNotice command={null} />
+
       <Suspense fallback={<ListSkeleton rows={1} />}>
         <SystemExchangeConnectorForm connectorId={connectorId} />
       </Suspense>
@@ -43,8 +45,6 @@ export default async function SystemIntegrationExchangesPage(props: Props) {
           <SystemIntegrationExchangeSection connectorId={connectorId} />
         </Suspense>
       )}
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }
