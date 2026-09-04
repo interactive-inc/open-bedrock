@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { getAccounts } from "@/lib/api/get-accounts"
 import { getRoles } from "@/lib/api/get-roles"
 
@@ -62,9 +62,9 @@ export async function AccountListSection(props: {
             <TableRow key={account.id}>
               <TableCell>{account.id}</TableCell>
               <TableCell>
-                <Badge variant={account.status === "active" ? "secondary" : "outline"}>
+                <Button type="button" variant="secondary" size="sm">
                   {account.status}
-                </Badge>
+                </Button>
               </TableCell>
               <TableCell className="flex flex-wrap gap-1">
                 {account.role_bindings.length === 0 ? (
@@ -79,17 +79,21 @@ export async function AccountListSection(props: {
                         actorPermissionKeys.has(permissionKey),
                       )
 
+                    if (canRevoke) {
+                      return (
+                        <RevokeRoleButton
+                          key={binding.id}
+                          accountId={account.id}
+                          bindingId={binding.id}
+                          roleLabel={roleLabel}
+                        />
+                      )
+                    }
+
                     return (
-                      <Badge key={binding.id} variant="outline">
+                      <Button key={binding.id} type="button" variant="secondary" size="sm">
                         {roleLabel}
-                        {canRevoke ? (
-                          <RevokeRoleButton
-                            accountId={account.id}
-                            bindingId={binding.id}
-                            roleLabel={roleLabel}
-                          />
-                        ) : null}
-                      </Badge>
+                      </Button>
                     )
                   })
                 )}
