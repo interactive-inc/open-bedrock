@@ -21,11 +21,11 @@ export default async function SystemConnectorsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="コネクタ" />
 
+      <ReadOnlyNotice command={null} />
+
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <SystemConnectorSection />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

@@ -18,11 +18,11 @@ export default async function CompanyPeoplePage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="人" />
 
+      <ReadOnlyNotice command={null} />
+
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <CompanyPeopleSection />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

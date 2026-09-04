@@ -26,6 +26,8 @@ export default async function SystemIntegrationExchangePage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader title="外部交換の詳細" />
 
+      <ReadOnlyNotice command={null} />
+
       <Link className="text-sm underline" href="/system/integration-exchanges">
         外部交換の一覧へ戻る
       </Link>
@@ -37,8 +39,6 @@ export default async function SystemIntegrationExchangePage(props: Props) {
       <Suspense fallback={<ListSkeleton rows={3} />}>
         <SystemReconciliationSection exchangeId={params.exchangeId} />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

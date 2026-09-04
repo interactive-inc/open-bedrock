@@ -19,11 +19,11 @@ export default async function CompanyDefinitionsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="職務と責任" />
 
+      <ReadOnlyNotice command={null} />
+
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <CompanyDefinitionSection />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

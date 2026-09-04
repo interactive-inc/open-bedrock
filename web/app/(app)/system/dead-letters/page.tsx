@@ -18,11 +18,11 @@ export default async function SystemDeadLettersPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="dead letter" />
 
+      <ReadOnlyNotice command={null} />
+
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <SystemDeadLetterSection />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

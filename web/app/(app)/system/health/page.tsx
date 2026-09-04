@@ -19,11 +19,11 @@ export default async function SystemHealthPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="health" />
 
+      <ReadOnlyNotice command={null} />
+
       <Suspense fallback={<ListSkeleton rows={1} />}>
         <SystemHealthSection />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }

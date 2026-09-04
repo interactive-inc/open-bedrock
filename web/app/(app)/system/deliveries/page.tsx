@@ -32,13 +32,13 @@ export default async function SystemDeliveriesPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader title="配信" />
 
+      <ReadOnlyNotice command={null} />
+
       <SystemDeliveryFilterForm kind={kind} status={status} />
 
       <Suspense key={`${kind}:${status ?? ""}`} fallback={<ListSkeleton rows={5} />}>
         <SystemDeliverySection kind={kind} status={status} />
       </Suspense>
-
-      <ReadOnlyNotice command={null} />
     </div>
   )
 }
