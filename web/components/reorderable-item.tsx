@@ -70,7 +70,7 @@ export function ReorderableItem(props: Props) {
         type="button"
         variant="ghost"
         size="icon"
-        className="mt-1 cursor-grab active:cursor-grabbing"
+        className="mt-2 cursor-grab active:cursor-grabbing"
         aria-label={props.dragHandleLabel}
         draggable
         onDragStart={handleDragStart}

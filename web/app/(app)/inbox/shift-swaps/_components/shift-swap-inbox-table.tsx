@@ -72,7 +72,7 @@ function ApproveButton(props: { request: ShiftSwapRequestInboxResponse }) {
   const [state, formAction, pending] = useActionState(reduce, initialState)
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <ConfirmActionDialog
         action={formAction}
         triggerLabel="承認"

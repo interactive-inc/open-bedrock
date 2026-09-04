@@ -29,7 +29,7 @@ export function SubmitApplicationForm(props: Props) {
   const isPending = action[2]
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form action={formAction} className="flex flex-col gap-8">
       <input type="hidden" name="template_code" value={props.templateCode} />
 
       <DynamicFormFields schema={props.schema} name="payload" />

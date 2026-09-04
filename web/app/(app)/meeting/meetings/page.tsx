@@ -27,7 +27,7 @@ export default async function MeetingsPage(props: Props) {
   const canManage = me instanceof Error ? false : canManageMeetings(me.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="会議体">
         {canManage ? (
           <Button nativeButton={false} render={<Link href="/meeting/meetings/new" />}>

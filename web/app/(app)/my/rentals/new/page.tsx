@@ -10,7 +10,7 @@ export const metadata = { title: "レンタルの新規予約" }
  */
 export default function NewRentalReservationPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="新規予約">
         <BackButton href="/my/rentals" label="一覧に戻る" />
       </PageHeader>

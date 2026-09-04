@@ -37,7 +37,7 @@ export default async function ApplicationTemplateDetailPage(props: Props) {
   const schema = toFormSchema(template.schema_json)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={template.name}>
         <BackButton href="/system/application-templates" label="テンプレ一覧へ" />
       </PageHeader>

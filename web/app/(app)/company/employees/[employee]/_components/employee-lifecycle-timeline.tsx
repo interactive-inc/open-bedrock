@@ -27,12 +27,12 @@ export function EmployeeLifecycleTimeline(props: {
             </EmptyHeader>
           </Empty>
         ) : (
-          <ol className="flex flex-col gap-3" aria-label="確定した人事発令">
+          <ol className="flex flex-col gap-4" aria-label="確定した人事発令">
             {props.events.data.map((event) => {
               const details = summarizeLifecycleEvent(event.summary)
               return (
                 <li key={event.id} className="min-w-0 rounded-xl bg-card border p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="font-medium break-words">{formatLifecycleKind(event.kind)}</p>
                       <p className="text-sm text-muted-foreground">
@@ -44,7 +44,7 @@ export function EmployeeLifecycleTimeline(props: {
                     </Badge>
                   </div>
                   {details.length > 0 ? (
-                    <ul className="mt-3 flex flex-col gap-1 text-sm text-muted-foreground">
+                    <ul className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
                       {details.map((detail) => (
                         <li key={detail} className="break-words">
                           {detail}

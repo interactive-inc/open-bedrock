@@ -31,7 +31,7 @@ export default async function MyApplicationsPage(props: { searchParams: SearchPa
     currentUser instanceof Error ? false : canViewAllApplications(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="申請">
         {canViewAll ? (
           <Button

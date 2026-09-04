@@ -43,18 +43,18 @@ export function OneOnOneList(props: Props) {
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
+          <CardContent className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <span className="text-muted-foreground">トピック</span>
               <span className="whitespace-pre-wrap">{oneOnOne.topics ?? "-"}</span>
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
               <span className="text-muted-foreground">上長メモ</span>
               <span className="whitespace-pre-wrap">{oneOnOne.manager_note ?? "-"}</span>
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
               <span className="text-muted-foreground">ネクストアクション</span>
               <span className="whitespace-pre-wrap">{oneOnOne.next_action ?? "-"}</span>
             </div>

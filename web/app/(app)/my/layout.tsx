@@ -7,5 +7,5 @@ type Props = {
  * ここでは共通ラッパのみを提供して余計なヘッダを重ねない。
  */
 export default function MeLayout(props: Props) {
-  return <div className="flex flex-col gap-6">{props.children}</div>
+  return <div className="flex flex-col gap-8">{props.children}</div>
 }

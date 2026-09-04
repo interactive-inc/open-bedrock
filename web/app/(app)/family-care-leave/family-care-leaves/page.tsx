@@ -62,7 +62,7 @@ export default async function AdminFamilyCareLeavesPage(props: { searchParams: S
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="休業の横断">
         <Button
           variant="secondary"

@@ -25,7 +25,7 @@ export default async function ReviewPage() {
     currentUser instanceof Error ? false : canAdministerCycle(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="評価">
         {canAdminister ? (
           <Button
@@ -39,7 +39,7 @@ export default async function ReviewPage() {
         ) : null}
       </PageHeader>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">評価サイクル</h2>
 
         <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}>
@@ -47,7 +47,7 @@ export default async function ReviewPage() {
         </Suspense>
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">自分の評価フォーム</h2>
 
         <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}>

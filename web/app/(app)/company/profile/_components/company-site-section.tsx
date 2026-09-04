@@ -19,8 +19,8 @@ export async function CompanySiteSection() {
   const workplaces = filterResourcesByType(definitions.resources, "workplace")
 
   return (
-    <div className="flex flex-col gap-6">
-      <section className="flex flex-col gap-3">
+    <div className="flex flex-col gap-8">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">事業所</h2>
 
         <CompanyResourceTable
@@ -47,7 +47,7 @@ export async function CompanySiteSection() {
         />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">勤務場所</h2>
 
         <CompanyResourceTable

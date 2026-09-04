@@ -24,7 +24,7 @@ export default async function RoomsPage(props: Props) {
   const suspenseKey = `${search.startAt ?? ""}:${search.endAt ?? ""}:${search.capacity ?? ""}`
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="会議室">
         <Button
           variant="secondary"

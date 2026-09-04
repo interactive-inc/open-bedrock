@@ -28,7 +28,7 @@ export default async function ReviewManagePage() {
   const cycleList = cycles instanceof Error ? [] : cycles
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="評価サイクル">
         <BackButton href="/my/reviews" label="評価に戻る" />
       </PageHeader>

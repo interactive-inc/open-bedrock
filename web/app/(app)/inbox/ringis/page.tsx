@@ -26,7 +26,7 @@ const amountFormatter = new Intl.NumberFormat("ja-JP")
  */
 export default function RingiInboxPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <SubPageHeader
         title="承認待ちの稟議"
         actions={

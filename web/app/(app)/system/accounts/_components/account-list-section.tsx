@@ -66,7 +66,7 @@ export async function AccountListSection(props: {
                   {account.status}
                 </Button>
               </TableCell>
-              <TableCell className="flex flex-wrap gap-1">
+              <TableCell className="flex flex-wrap gap-2">
                 {account.role_bindings.length === 0 ? (
                   <span className="text-muted-foreground">—</span>
                 ) : (

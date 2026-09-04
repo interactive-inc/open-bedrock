@@ -30,7 +30,7 @@ export default async function WorkflowRepairsPage(props: Props) {
   const result = await getWorkflowRepairs({ limit: pageSize, offset })
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="ワークフロー修復">
         <Button
           variant="secondary"

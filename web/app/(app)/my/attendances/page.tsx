@@ -33,7 +33,7 @@ export default async function AttendancePage(props: Props) {
   const to = typeof searchParams.to === "string" ? searchParams.to : null
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="勤怠">
         {canViewAll ? (
           <Button
@@ -52,7 +52,7 @@ export default async function AttendancePage(props: Props) {
         <AttendanceClockForm mode="clock-out" />
       </div>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">月次サマリ</h2>
 
         <Suspense key={month ?? ""} fallback={<Skeleton className="w-full" />}>
@@ -60,7 +60,7 @@ export default async function AttendancePage(props: Props) {
         </Suspense>
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">自分の勤怠</h2>
 
         <AttendanceFilterForm withEmployeeId={false} employeeId={null} from={from} to={to} />

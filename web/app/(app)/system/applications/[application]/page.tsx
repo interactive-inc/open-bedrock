@@ -46,7 +46,7 @@ export default async function ApplicationDetailPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={application.template_name}>
         <BackButton href="/my/applications" label="一覧に戻る" />
       </PageHeader>
@@ -72,7 +72,7 @@ export default async function ApplicationDetailPage(props: Props) {
         <div className="flex flex-col gap-2 p-4">
           <span className="text-sm font-medium">申請内容</span>
 
-          <pre className="overflow-auto rounded-md bg-muted p-3 text-xs">
+          <pre className="overflow-auto rounded-md bg-muted p-4 text-xs">
             {JSON.stringify(application.payload, null, 2)}
           </pre>
         </div>
@@ -118,7 +118,7 @@ function WorkflowProgress(props: { workflow: ApplicationWorkflowProgress }) {
               : `・期限 ${formatDateTime(props.workflow.due_at)}`}
           </span>
         </div>
-        <ol className="grid gap-3 md:grid-cols-2">
+        <ol className="grid gap-4 md:grid-cols-2">
           {props.workflow.steps.map((step, index) => {
             const Icon =
               step.status === "approved"
@@ -131,7 +131,7 @@ function WorkflowProgress(props: { workflow: ApplicationWorkflowProgress }) {
                       ? Clock3
                       : Circle
             return (
-              <li key={step.key} className="flex items-center gap-3 rounded-lg bg-card border p-3">
+              <li key={step.key} className="flex items-center gap-4 rounded-lg bg-card border p-4">
                 <Icon className="size-4 shrink-0" aria-hidden />
                 <div>
                   <div className="text-xs text-muted-foreground">ステップ {index + 1}</div>
@@ -165,7 +165,7 @@ function WorkflowProgress(props: { workflow: ApplicationWorkflowProgress }) {
                   ・ラウンド {approval.round}・{formatDateTime(approval.created_at)}
                 </span>
                 {approval.comment === null ? null : (
-                  <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
+                  <p className="mt-2 whitespace-pre-wrap text-muted-foreground">
                     {approval.comment}
                   </p>
                 )}
@@ -196,10 +196,10 @@ function ApprovalHistory(props: { approvals: ReadonlyArray<ApplicationApprovalEn
 
   return (
     <Card className="gap-0">
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-4 p-4">
         <span className="text-sm font-medium">承認履歴</span>
 
-        <ol className="flex flex-col gap-3">
+        <ol className="flex flex-col gap-4">
           {props.approvals.map((approval) => {
             const Icon = approval.action === "approve" ? CheckCircle2 : XCircle
 
@@ -211,11 +211,11 @@ function ApprovalHistory(props: { approvals: ReadonlyArray<ApplicationApprovalEn
             return (
               <li
                 key={approval.id}
-                className="flex items-start gap-3 rounded-md border bg-muted/30 p-3"
+                className="flex items-start gap-4 rounded-md border bg-muted/30 p-4"
               >
-                <Icon className={`mt-0.5 size-4 shrink-0 ${colorClass}`} aria-hidden />
+                <Icon className={`mt-2 size-4 shrink-0 ${colorClass}`} aria-hidden />
 
-                <div className="flex flex-1 flex-col gap-1">
+                <div className="flex flex-1 flex-col gap-2">
                   <div className="flex flex-wrap items-baseline gap-2">
                     <span className="text-sm font-medium">{approval.approver_name}</span>
 

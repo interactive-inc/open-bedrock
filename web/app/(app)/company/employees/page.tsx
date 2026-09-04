@@ -38,7 +38,7 @@ export default async function EmployeesPage(props: Props) {
   const suspenseKey = `${filter.q ?? ""}:${filter.dept ?? ""}:${filter.status ?? ""}:${page}`
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="従業員" />
 
       <EmployeeSearchForm filter={filter} />

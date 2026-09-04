@@ -28,7 +28,7 @@ export default async function ThanksPage() {
       : currentUser.permissions.includes("thanks_redemption:approve")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="サンクス">
         {canViewAll ? (
           <Button
@@ -65,7 +65,7 @@ export default async function ThanksPage() {
         <ThanksSummary />
       </Suspense>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">みんなの感謝</h2>
 
         <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-24 w-full" />}>

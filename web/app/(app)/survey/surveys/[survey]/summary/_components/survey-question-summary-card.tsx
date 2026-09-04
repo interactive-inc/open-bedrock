@@ -54,7 +54,7 @@ function DistributionList(props: DistributionListProps) {
   return (
     <div className="flex flex-col gap-2">
       {props.entries.map((entry) => (
-        <div key={entry[0]} className="flex items-center gap-3">
+        <div key={entry[0]} className="flex items-center gap-4">
           <span className="w-24 shrink-0 truncate text-sm">{entry[0]}</span>
 
           <div className="h-2 flex-1 rounded bg-muted">

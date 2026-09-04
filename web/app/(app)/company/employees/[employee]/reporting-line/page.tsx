@@ -18,7 +18,7 @@ export default async function OrgReportingLinePage(props: Props) {
   const params = await props.params
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={`レポートライン: ${params.employee}`}>
         <BackButton href="/company/departments" label="組織図に戻る" />
       </PageHeader>

@@ -32,12 +32,12 @@ export async function CompanyOrganizationSnapshotSection(props: Props) {
   )
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <p className="text-sm text-muted-foreground">
         組織 revision {snapshot.organizationRevision} 時点の内容です。
       </p>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">組織単位</h2>
 
         <CompanyResourceTable
@@ -74,7 +74,7 @@ export async function CompanyOrganizationSnapshotSection(props: Props) {
         />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">配属</h2>
 
         <CompanyResourceTable
@@ -103,7 +103,7 @@ export async function CompanyOrganizationSnapshotSection(props: Props) {
         />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">レポートライン</h2>
 
         <CompanyResourceTable
@@ -128,7 +128,7 @@ export async function CompanyOrganizationSnapshotSection(props: Props) {
         />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">責任の割当</h2>
 
         <CompanyResourceTable

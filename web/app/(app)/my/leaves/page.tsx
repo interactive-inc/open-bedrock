@@ -27,7 +27,7 @@ export default async function LeavePage() {
     currentUser instanceof Error ? false : currentUser.permissions.includes("leave:approve")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="休暇">
         {canViewAll ? (
           <Button variant="secondary" nativeButton={false} render={<Link href="/leave/leaves" />}>
@@ -48,7 +48,7 @@ export default async function LeavePage() {
         </Button>
       </PageHeader>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">残日数</h2>
 
         <Suspense fallback={<LeaveBalanceSkeleton />}>
@@ -56,7 +56,7 @@ export default async function LeavePage() {
         </Suspense>
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">自分の申請</h2>
 
         <Suspense fallback={<ListSkeleton rows={5} />}>

@@ -52,8 +52,8 @@ export function ReviewCycleCreateForm() {
           />
         </Field>
 
-        <fieldset className="flex flex-col gap-3 rounded-lg bg-card border p-4">
-          <legend className="px-1 text-sm font-medium">評価者の自動割当</legend>
+        <fieldset className="flex flex-col gap-4 rounded-lg bg-card border p-4">
+          <legend className="px-2 text-sm font-medium">評価者の自動割当</legend>
 
           <PolicySwitch
             name="include_self"

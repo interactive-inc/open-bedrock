@@ -32,7 +32,7 @@ export default function RootError(props: Props) {
   }
 
   return (
-    <main className="flex min-h-[60vh] flex-1 flex-col items-center justify-center gap-6 p-8 text-center">
+    <main className="flex min-h-[60vh] flex-1 flex-col items-center justify-center gap-8 p-8 text-center">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">問題が発生しました</h1>
 
@@ -45,7 +45,7 @@ export default function RootError(props: Props) {
         ) : null}
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-4">
         <Button onClick={props.reset}>再試行</Button>
 
         <Button variant="secondary" nativeButton={false} render={<Link href="/" />}>

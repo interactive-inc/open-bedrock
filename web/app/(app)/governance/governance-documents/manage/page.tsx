@@ -28,7 +28,7 @@ export default async function GovernanceManagePage() {
   const today = new Date().toISOString().slice(0, 10)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="規程の整合性管理" />
 
       <div className="grid gap-4 sm:grid-cols-3">

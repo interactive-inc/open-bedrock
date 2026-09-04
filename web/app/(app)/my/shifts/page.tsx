@@ -34,7 +34,7 @@ export default async function ShiftPage() {
     currentUser instanceof Error ? false : currentUser.permissions.includes("shift_swap:approve")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="シフト">
         {canManage ? (
           <Button
@@ -79,7 +79,7 @@ export default async function ShiftPage() {
         ) : null}
       </PageHeader>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">自分のシフト</h2>
 
         <Suspense fallback={<ListSkeleton rows={3} />}>
@@ -87,7 +87,7 @@ export default async function ShiftPage() {
         </Suspense>
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">自分の交代申請</h2>
 
         <Suspense fallback={<ListSkeleton rows={3} />}>

@@ -25,7 +25,7 @@ export async function SystemMachineCredentialSection(props: Props) {
   }
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold">機械 credential</h2>
 
       <SystemResourceTable

@@ -13,7 +13,7 @@ export default async function AntisocialCheckAdminPage() {
   const checks = await listAntisocialCheckAdmin()
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <SubPageHeader
         title="反社チェック判定"
         description="他の従業員から提出された申請を確認し、判定結果を記録します。"

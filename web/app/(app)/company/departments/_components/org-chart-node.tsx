@@ -18,10 +18,10 @@ export function OrgChartNode(props: Props) {
   const hasChildren = members.length > 0 || props.node.children.length > 0
 
   return (
-    <li className="flex flex-col gap-3">
+    <li className="flex flex-col gap-4">
       <Link
         href={`/teams/${props.node.code}`}
-        className="inline-flex w-fit items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+        className="inline-flex w-fit items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
       >
         {props.node.name}
 
@@ -29,7 +29,7 @@ export function OrgChartNode(props: Props) {
       </Link>
 
       {hasChildren && (
-        <div className="ml-4 flex flex-col gap-3 border-l-2 border-border py-1 pl-4">
+        <div className="ml-4 flex flex-col gap-4 border-l-2 border-border py-2 pl-4">
           {members.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {manager !== null && <OrgChartMemberBox member={manager} />}
@@ -41,7 +41,7 @@ export function OrgChartNode(props: Props) {
           )}
 
           {props.node.children.length > 0 && (
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-4">
               {props.node.children.map((child) => (
                 <OrgChartNode key={child.code} node={child} membersByCode={props.membersByCode} />
               ))}

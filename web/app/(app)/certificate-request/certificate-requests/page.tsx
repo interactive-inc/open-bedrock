@@ -62,7 +62,7 @@ export default async function AdminCertificateRequestsPage(props: { searchParams
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="証明書の横断">
         <Button
           variant="secondary"

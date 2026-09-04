@@ -20,7 +20,7 @@ export function DetailSkeleton(props: Props) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Skeleton />
 
           {props.showBadge !== false ? <Skeleton /> : null}
@@ -30,7 +30,7 @@ export function DetailSkeleton(props: Props) {
       <CardContent>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {fieldPlaceholders.map((index) => (
-            <div key={index} className="flex flex-col gap-1.5">
+            <div key={index} className="flex flex-col gap-2">
               <Skeleton />
 
               <Skeleton />

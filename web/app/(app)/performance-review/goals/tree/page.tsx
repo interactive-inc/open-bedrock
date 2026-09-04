@@ -35,7 +35,7 @@ export default async function GoalTreePage(props: Props) {
   const canCreateDepartment = me instanceof Error ? false : canWriteDepartmentGoal(me.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="目標ツリー">
         <Button
           variant="secondary"

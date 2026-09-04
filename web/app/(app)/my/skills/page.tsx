@@ -12,7 +12,7 @@ export const metadata = { title: "スキル" }
 /** /skills/me スキル画面。本人の登録済みスキル一覧と、登録/更新フォームを並べる。 */
 export default function MySkillsPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="スキル">
         <Button variant="secondary" nativeButton={false} render={<Link href="/skill/skills" />}>
           スキル一覧

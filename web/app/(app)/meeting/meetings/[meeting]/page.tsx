@@ -28,7 +28,7 @@ export default async function MeetingDetailPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={meeting.name}>
         <BackButton href="/meeting/meetings" label="一覧に戻る" />
       </PageHeader>
@@ -49,7 +49,7 @@ export default async function MeetingDetailPage(props: Props) {
         </Card>
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">議事録</h2>
 
         <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-16 w-full" />}>

@@ -21,7 +21,7 @@ export default async function OnboardingEmployeePage(props: Props) {
   const params = await props.params
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={`社員別: ${params.employee}`}>
         <BackButton href="/onboarding/onboarding-assignments" label="オンボーディングに戻る" />
       </PageHeader>

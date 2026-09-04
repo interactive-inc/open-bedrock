@@ -40,7 +40,7 @@ export function LoginPage(props: Props) {
 
   if (loginHidden) {
     return (
-      <div className="flex min-h-screen flex-1 items-center justify-center bg-muted/40 p-6">
+      <div className="flex min-h-screen flex-1 items-center justify-center bg-muted/40 p-8">
         <span className="text-2xl font-semibold tracking-widest">
           {appName ?? t("open-bedrock にサインイン")}
         </span>
@@ -49,7 +49,7 @@ export function LoginPage(props: Props) {
   }
 
   return (
-    <div className="flex min-h-screen flex-1 items-center justify-center bg-muted/40 p-6">
+    <div className="flex min-h-screen flex-1 items-center justify-center bg-muted/40 p-8">
       <div className="w-full max-w-md">
         <Card className="w-full">
           <CardHeader>

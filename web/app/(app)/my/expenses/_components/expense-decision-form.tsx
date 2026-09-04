@@ -82,7 +82,7 @@ export function ExpenseDecisionForm(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <form action={dispatchApprove}>
         <FieldGroup>
           <input type="hidden" name="expense_id" value={props.expenseId} />

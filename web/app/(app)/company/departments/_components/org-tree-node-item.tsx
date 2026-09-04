@@ -15,9 +15,9 @@ export function OrgTreeNodeItem(props: Props) {
   const indentStyle = { paddingInlineStart: `${props.depth * 1.5}rem` }
 
   return (
-    <li className="flex flex-col gap-1">
+    <li className="flex flex-col gap-2">
       <div
-        className="flex items-center gap-2 rounded-md py-1.5 hover:bg-muted/50"
+        className="flex items-center gap-2 rounded-md py-2 hover:bg-muted/50"
         style={indentStyle}
       >
         <Link href={`/teams/${props.node.code}`} className="text-sm font-medium hover:underline">
@@ -39,7 +39,7 @@ export function OrgTreeNodeItem(props: Props) {
       </div>
 
       {props.node.children.length > 0 && (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex flex-col gap-2">
           {props.node.children.map((child) => (
             <OrgTreeNodeItem key={child.code} node={child} depth={props.depth + 1} />
           ))}

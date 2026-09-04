@@ -34,7 +34,7 @@ export default async function HeadcountPlansPage(props: Props) {
       : Number.parseInt(fiscalYearRaw, 10)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="人員計画" />
 
       {canManage ? <HeadcountPlanNewForm /> : null}

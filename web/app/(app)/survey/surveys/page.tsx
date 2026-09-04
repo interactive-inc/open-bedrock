@@ -19,7 +19,7 @@ export default async function SurveysPage() {
   const canManage = currentUser instanceof Error ? false : canManageSurveys(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="サーベイ">
         {canManage ? (
           <Button

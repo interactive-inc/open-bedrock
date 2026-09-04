@@ -14,7 +14,7 @@ export const metadata = { title: "自分の回答" }
  */
 export default function MySurveyResponsesPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="自分の回答" />
 
       <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-14 w-full" />}>

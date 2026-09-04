@@ -41,7 +41,7 @@ export default async function PartnerDetailPage(props: Props) {
   const canManage = canManageContracts(permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={partner.name}>
         <BackButton href="/partner/partners" label="一覧に戻る" />
       </PageHeader>
@@ -49,7 +49,7 @@ export default async function PartnerDetailPage(props: Props) {
       <PartnerStatusBadge status={partner.status} />
 
       <Card className="gap-0">
-        <dl className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-4 p-8 sm:grid-cols-2">
           <DetailField label="取引先コード">{partner.code}</DetailField>
 
           <DetailField label="分類">{partnerCategoryLabel(partner.category)}</DetailField>

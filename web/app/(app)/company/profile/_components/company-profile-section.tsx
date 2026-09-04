@@ -20,8 +20,8 @@ export async function CompanyProfileSection() {
   const companyProfiles = filterResourcesByType(profile.resources, "company-profile")
 
   return (
-    <div className="flex flex-col gap-6">
-      <section className="flex flex-col gap-3">
+    <div className="flex flex-col gap-8">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">法人</h2>
 
         <CompanyResourceTable
@@ -50,7 +50,7 @@ export async function CompanyProfileSection() {
         />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">会社プロフィール</h2>
 
         <CompanyResourceTable

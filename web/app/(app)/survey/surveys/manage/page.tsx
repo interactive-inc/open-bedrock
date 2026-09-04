@@ -36,7 +36,7 @@ export default async function SurveyManagePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="サーベイ管理">
         <Button variant="secondary" nativeButton={false} render={<Link href="/survey/surveys" />}>
           サーベイ一覧へ

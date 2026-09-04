@@ -16,7 +16,7 @@ export default async function NewPositionPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="新規役職">
         <BackButton href="/company/positions" label="役職に戻る" />
       </PageHeader>

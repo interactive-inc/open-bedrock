@@ -26,7 +26,7 @@ export function LicenseCancelButton(props: Props) {
   const pending = action[2]
 
   return (
-    <form action={formAction} className="flex flex-col gap-1">
+    <form action={formAction} className="flex flex-col gap-2">
       <input type="hidden" name="id" value={props.id} />
 
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>

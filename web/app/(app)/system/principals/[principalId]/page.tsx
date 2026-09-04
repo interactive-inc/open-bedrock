@@ -20,7 +20,7 @@ export default async function SystemPrincipalPage(props: Props) {
   const params = await props.params
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="Principal の詳細" />
 
       <ReadOnlyNotice command={null} />

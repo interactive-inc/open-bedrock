@@ -9,7 +9,7 @@ export function EmployeeLifecycleSummary(props: { state: EmployeeLifecycleState 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-3">
+        <CardTitle className="flex flex-wrap items-center gap-4">
           現在の人事状態
           <EmployeeStatusBadge status={props.state.status} />
         </CardTitle>

@@ -31,7 +31,7 @@ export default async function OneOnOnePage(props: { searchParams: SearchParams }
     currentUser instanceof Error ? false : currentUser.permissions.includes("oneonone:create")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="1on1">
         {canCreate ? (
           <Button nativeButton={false} render={<Link href="/my/oneonones/new" />}>

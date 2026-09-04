@@ -59,7 +59,7 @@ export default async function AdminBusinessTripsPage(props: { searchParams: Sear
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="出張の横断">
         <Button
           variant="secondary"

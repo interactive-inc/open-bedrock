@@ -37,7 +37,7 @@ export default async function RegulationDetailPage(props: Props) {
     currentUser instanceof Error ? false : canManageRegulations(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={regulation.title}>
         <BackButton href="/regulation/regulations" label="一覧に戻る" />
       </PageHeader>
@@ -46,7 +46,7 @@ export default async function RegulationDetailPage(props: Props) {
         <RegulationManageActions code={regulation.code} status={regulation.status} />
       ) : null}
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-sm font-medium text-muted-foreground">
           最新版
           {regulation.latest_version === null
@@ -55,7 +55,7 @@ export default async function RegulationDetailPage(props: Props) {
         </h2>
 
         <Card className="gap-0">
-          <article className="whitespace-pre-wrap p-6 text-sm leading-relaxed">
+          <article className="whitespace-pre-wrap p-8 text-sm leading-relaxed">
             {regulation.latest_version === null
               ? "版がありません"
               : regulation.latest_version.body_md}
@@ -63,7 +63,7 @@ export default async function RegulationDetailPage(props: Props) {
         </Card>
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-sm font-medium text-muted-foreground">改定履歴</h2>
 
         <div className="overflow-x-auto">

@@ -26,7 +26,7 @@ export default async function SystemIntegrationExchangesPage(props: Props) {
   const connectorId = toConnectorId(params.connector_id)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="外部交換" />
 
       <ReadOnlyNotice command={null} />

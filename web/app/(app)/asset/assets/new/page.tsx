@@ -11,13 +11,13 @@ export default async function AssetNewPage() {
   await requirePermission("asset:manage")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="物品を登録">
         <BackButton href="/asset/assets" label="一覧に戻る" />
       </PageHeader>
 
       <Card className="gap-0">
-        <div className="p-6">
+        <div className="p-8">
           <AssetCreateForm />
         </div>
       </Card>

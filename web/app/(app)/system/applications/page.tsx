@@ -93,7 +93,7 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="全社の申請">
         {canRepairWorkflows ? (
           <Button

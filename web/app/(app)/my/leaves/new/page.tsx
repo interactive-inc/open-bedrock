@@ -10,7 +10,7 @@ export const metadata = { title: "休暇の申請" }
  */
 export default function NewLeaveRequestPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="休暇を申請">
         <BackButton href="/my/leaves" label="休暇に戻る" />
       </PageHeader>

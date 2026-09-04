@@ -10,7 +10,7 @@ export const metadata = { title: "感謝を送る" }
  */
 export default function SendThanksPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="感謝を送る">
         <BackButton href="/thanks/thanks" label="感謝に戻る" />
       </PageHeader>

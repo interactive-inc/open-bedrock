@@ -40,14 +40,14 @@ export async function KnowledgeResultList(props: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {result.data.map((article) => (
           <CardLink
             key={article.id}
             href={`/knowledge/knowledge-articles/${article.id}`}
             className="flex flex-col gap-2"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <Badge variant="secondary">{article.category}</Badge>
 
               <span className="text-base font-medium">{article.title}</span>

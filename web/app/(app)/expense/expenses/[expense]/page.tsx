@@ -32,7 +32,7 @@ export default async function ExpenseDetailPage(props: Props) {
   const viewerEmployeeId = currentUser instanceof Error ? null : currentUser.id
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="経費詳細">
         <BackButton href="/my/expenses" label="経費一覧に戻る" />
       </PageHeader>
@@ -71,7 +71,7 @@ async function ExpenseDetailView(props: ViewProps) {
   const isPending = expense.status === "pending"
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
@@ -101,7 +101,7 @@ async function ExpenseDetailView(props: ViewProps) {
               {expense.attachments.length === 0 ? (
                 <span>-</span>
               ) : (
-                <ul className="flex flex-col gap-1">
+                <ul className="flex flex-col gap-2">
                   {expense.attachments.map((attachment) => (
                     <li key={attachment.id}>
                       <a

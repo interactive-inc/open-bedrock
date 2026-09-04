@@ -30,7 +30,7 @@ export default async function HealthCheckupsPage(props: { searchParams: SearchPa
   const fiscalYear = toFiscalYear(toSingleValue(params.fiscal_year))
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="健診の実施記録">
         {canManageHealthCheckups(currentUser.permissions) ? (
           <Button nativeButton={false} render={<Link href="/health-checkup/health-checkups/new" />}>

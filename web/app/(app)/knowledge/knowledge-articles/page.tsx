@@ -32,7 +32,7 @@ export default async function KnowledgePage(props: Props) {
   const offset = (page - 1) * pageSize
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="ナレッジ">
         <Button nativeButton={false} render={<Link href="/knowledge/knowledge-articles/new" />}>
           <Plus />

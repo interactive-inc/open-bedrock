@@ -29,7 +29,7 @@ export default async function AttendanceAllPage(props: Props) {
   const to = typeof searchParams.to === "string" ? searchParams.to : null
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="全社の勤怠">
         <Button variant="secondary" nativeButton={false} render={<Link href="/my/attendances" />}>
           自分の勤怠へ

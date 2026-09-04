@@ -23,7 +23,7 @@ export function CardLink(props: Props) {
       <Link
         href={props.href}
         prefetch={props.prefetch}
-        className={cn("relative p-4 pr-9 transition-colors hover:bg-muted/50", props.className)}
+        className={cn("relative p-4 pr-8 transition-colors hover:bg-muted/50", props.className)}
       >
         {props.children}
 

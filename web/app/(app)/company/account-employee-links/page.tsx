@@ -15,7 +15,7 @@ export default async function CompanyAccountEmployeeLinksPage() {
   await requireAnyPermission(["employee:read", "org:manage", "system:admin"])
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="Account の対応" />
 
       <ReadOnlyNotice command={null} />

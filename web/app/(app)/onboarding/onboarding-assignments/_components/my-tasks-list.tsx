@@ -57,7 +57,7 @@ export async function MyTasksList() {
                 {task.status === "pending" ? (
                   <CompleteTaskButton taskId={task.id} />
                 ) : (
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex flex-col items-end gap-2">
                     <span className="text-xs text-muted-foreground">
                       {task.completed_at ?? "—"}
                     </span>

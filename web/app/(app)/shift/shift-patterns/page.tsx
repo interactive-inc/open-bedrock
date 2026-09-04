@@ -23,7 +23,7 @@ export default async function ShiftPatternsPage() {
   const canManage = currentUser instanceof Error ? false : canManageShift(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="シフトパターン">
         <BackButton href="/my/shifts" label="シフトに戻る" />
 

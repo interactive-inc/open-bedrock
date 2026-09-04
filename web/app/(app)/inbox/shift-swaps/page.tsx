@@ -13,7 +13,7 @@ export default async function ShiftSwapInboxPage() {
   const requests = await getShiftSwapInbox()
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <SubPageHeader
         title="シフト交代承認"
         description="当事者ではない申請の内容を確認し、シフト割当を入れ替えます。"

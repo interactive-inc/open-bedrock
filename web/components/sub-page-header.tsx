@@ -12,7 +12,7 @@ type Props = {
 export function SubPageHeader(props: Props) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2">
         <h2 className="text-lg font-medium">{props.title}</h2>
 
         {props.description !== undefined ? (

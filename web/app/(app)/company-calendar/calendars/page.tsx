@@ -25,7 +25,7 @@ export default async function CalendarPage(props: Props) {
     currentUser instanceof Error ? false : canManageCalendar(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="カレンダー" />
 
       <CalendarYearForm year={year} />

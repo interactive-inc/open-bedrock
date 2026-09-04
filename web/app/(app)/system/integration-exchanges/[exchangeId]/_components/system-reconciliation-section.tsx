@@ -19,7 +19,7 @@ export async function SystemReconciliationSection(props: Props) {
   }
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold">照合</h2>
 
       <SystemResourceTable

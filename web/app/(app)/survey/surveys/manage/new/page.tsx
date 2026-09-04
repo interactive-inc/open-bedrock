@@ -16,7 +16,7 @@ export default async function NewSurveyPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="新規アンケート">
         <BackButton href="/survey/surveys/manage" label="管理に戻る" />
       </PageHeader>

@@ -32,7 +32,7 @@ export default async function HealthCheckupNewPage() {
   const defaultFiscalYear = new Date().getFullYear()
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="実施記録を登録">
         <BackButton href="/health-checkup/health-checkups" label="一覧に戻る" />
       </PageHeader>

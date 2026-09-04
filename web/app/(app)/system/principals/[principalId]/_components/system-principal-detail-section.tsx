@@ -17,23 +17,23 @@ export async function SystemPrincipalDetailSection(props: Props) {
   }
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold">{principal.name}</h2>
 
-      <dl className="grid gap-3 rounded-2xl border bg-card p-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1">
+      <dl className="grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">識別子</dt>
 
           <dd className="font-mono text-xs">{principal.id}</dd>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">分類</dt>
 
           <dd className="text-sm">{toPrincipalKindLabel(principal.kind)}</dd>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">アカウント</dt>
 
           <dd className="font-mono text-xs">
@@ -43,7 +43,7 @@ export async function SystemPrincipalDetailSection(props: Props) {
           </dd>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">コネクタ</dt>
 
           <dd className="font-mono text-xs">
@@ -57,19 +57,19 @@ export async function SystemPrincipalDetailSection(props: Props) {
           </dd>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">版</dt>
 
           <dd className="text-sm">{principal.revision}</dd>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">作成</dt>
 
           <dd className="text-sm">{formatDateTime(principal.created_at)}</dd>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">更新</dt>
 
           <dd className="text-sm">{formatDateTime(principal.updated_at)}</dd>

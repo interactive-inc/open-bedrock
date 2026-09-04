@@ -108,7 +108,7 @@ export function QuestionBuilder(props: Props) {
 
       <input type="hidden" name="questions_json" value={jsonValue} />
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {questions.map((question, index) => (
           <ReorderableItem
             key={question.id}
@@ -116,7 +116,7 @@ export function QuestionBuilder(props: Props) {
             dragHandleLabel={`設問${index + 1}を並べ替え（上下キーで移動）`}
             onMove={moveQuestion}
           >
-            <div className="flex flex-col gap-2 rounded-md bg-card border p-3">
+            <div className="flex flex-col gap-2 rounded-md bg-card border p-4">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">#{index + 1}</span>
 

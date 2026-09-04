@@ -90,7 +90,7 @@ export function RoleCreateForm(props: Props) {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         <Field>
           <FieldLabel htmlFor="key">キー（名前空間:名前、不変）</FieldLabel>
           <Input

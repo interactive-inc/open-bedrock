@@ -22,7 +22,7 @@ export default async function AuditEventsPage(props: Props) {
 
   if (!parsed.ok) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <PageHeader title="監査ログ" />
         <Alert variant="destructive">
           <AlertTitle>検索条件が無効です</AlertTitle>
@@ -41,7 +41,7 @@ export default async function AuditEventsPage(props: Props) {
   const suspenseKey = JSON.stringify(parsed.query)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="監査ログ">
         {canExport ? <AuditExportForm query={parsed.query} /> : undefined}
       </PageHeader>

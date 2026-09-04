@@ -33,7 +33,7 @@ export function SettingsDialog(props: Props) {
           <DialogDescription>表示や操作に関する個人設定を変更できます。</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-8">
           <ThemeModeField />
 
           <LocaleField locale={props.locale} />

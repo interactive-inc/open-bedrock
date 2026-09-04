@@ -9,7 +9,7 @@ type Props = {
 /** 会社カレンダーの年絞り込みフォーム。native な GET フォームで ?year= へ遷移する。 */
 export function CalendarYearForm(props: Props) {
   return (
-    <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl bg-card border p-4">
+    <form method="get" className="flex flex-wrap items-end gap-4 rounded-2xl bg-card border p-4">
       <div className="flex flex-col gap-2">
         <Label htmlFor="calendar-year">年</Label>
 

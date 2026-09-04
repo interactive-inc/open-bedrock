@@ -55,7 +55,7 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
     currentUser instanceof Error ? false : canViewAllApplications(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <SubPageHeader
         title="承認待ちの申請"
         actions={

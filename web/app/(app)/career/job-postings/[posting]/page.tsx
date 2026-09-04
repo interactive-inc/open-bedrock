@@ -34,7 +34,7 @@ export default async function CareerPostingDetailPage(props: Props) {
     currentUser instanceof Error ? false : canManageCareerPostings(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="公募の詳細">
         <div className="flex items-center gap-2">
           <BackButton href="/career/job-postings" label="公募一覧に戻る" />

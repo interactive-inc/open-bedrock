@@ -59,22 +59,22 @@ export async function CareerPostingDetailSection(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <Card className="gap-0">
-        <div className="flex flex-col gap-4 p-6">
+        <div className="flex flex-col gap-4 p-8">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-semibold">{posting.title}</h2>
 
             <Badge variant="secondary">{posting.status === "closed" ? "締切" : "募集中"}</Badge>
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <span className="text-xs text-muted-foreground">部署</span>
 
             <span className="text-sm">{posting.dept_name ?? "部署未設定"}</span>
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <span className="text-xs text-muted-foreground">必要スキル</span>
 
             <span className="text-sm">{posting.required_skills ?? "指定なし"}</span>
@@ -86,7 +86,7 @@ export async function CareerPostingDetailSection(props: Props) {
 
       {posting.status === "open" && posting.id !== null ? (
         <Card className="gap-0">
-          <div className="flex flex-col gap-4 p-6">
+          <div className="flex flex-col gap-4 p-8">
             <h3 className="text-base font-semibold">この公募に応募</h3>
 
             <CareerPostingApplyForm postingId={posting.id} postingTitle={posting.title} />

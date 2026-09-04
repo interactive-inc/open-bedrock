@@ -51,7 +51,7 @@ export function MyReviewForms(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {props.forms.map((form) => (
         <Card key={form.id}>
           <CardHeader>
@@ -72,7 +72,7 @@ export function MyReviewForms(props: Props) {
 
           <CardContent>
             {form.status === "submitted" ? (
-              <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
                 <span>スコア: {form.score ?? "-"}</span>
 
                 <span>提出日時: {formatDateTime(form.submitted_at)}</span>

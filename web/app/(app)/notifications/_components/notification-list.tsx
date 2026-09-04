@@ -72,7 +72,7 @@ export function NotificationList(props: Props) {
         </form>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {props.notifications.map((notification) => (
           <Card key={notification.id} className={notification.is_read ? "opacity-70" : undefined}>
             <CardHeader>

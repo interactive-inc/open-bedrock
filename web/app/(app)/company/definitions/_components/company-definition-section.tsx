@@ -27,8 +27,8 @@ export async function CompanyDefinitionSection() {
   const collectiveBodies = filterResourcesByType(definitions.resources, "collective-body")
 
   return (
-    <div className="flex flex-col gap-6">
-      <section className="flex flex-col gap-3">
+    <div className="flex flex-col gap-8">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">職務</h2>
 
         <CompanyResourceTable
@@ -46,7 +46,7 @@ export async function CompanyDefinitionSection() {
         />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">組織上の役職</h2>
 
         <CompanyResourceTable
@@ -72,7 +72,7 @@ export async function CompanyDefinitionSection() {
         />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">責任</h2>
 
         <CompanyResourceTable
@@ -90,7 +90,7 @@ export async function CompanyDefinitionSection() {
         />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">権限範囲</h2>
 
         <CompanyResourceTable
@@ -108,7 +108,7 @@ export async function CompanyDefinitionSection() {
         />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">合議体</h2>
 
         <CompanyResourceTable

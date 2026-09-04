@@ -10,7 +10,7 @@ export const metadata = { title: "経費の新規申請" }
  */
 export default function NewExpensePage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="経費を申請">
         <BackButton href="/my/expenses" label="一覧に戻る" />
       </PageHeader>

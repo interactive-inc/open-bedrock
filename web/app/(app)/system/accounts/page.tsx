@@ -27,7 +27,7 @@ export default async function AdminAccountsPage() {
     currentUser.permissions.includes("iam:write")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="アカウント" />
 
       <Suspense fallback={<ListSkeleton rows={5} rowClassName="h-10 w-full" />}>

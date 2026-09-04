@@ -40,7 +40,7 @@ function DetailField(props: { label: string; children: React.ReactNode; mono?: b
       <dt className="text-xs text-muted-foreground">{props.label}</dt>
       <dd
         className={
-          props.mono ? "mt-1 break-all font-mono text-sm tabular-nums" : "mt-1 break-words text-sm"
+          props.mono ? "mt-2 break-all font-mono text-sm tabular-nums" : "mt-2 break-words text-sm"
         }
         translate={props.mono ? "no" : undefined}
       >
@@ -52,7 +52,7 @@ function DetailField(props: { label: string; children: React.ReactNode; mono?: b
 
 function DetailError() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="監査イベント">
         <BackButton href="/system/audit-events" label="一覧に戻る" prefetch={false} />
       </PageHeader>
@@ -79,7 +79,7 @@ export default async function AuditEventDetailPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="監査イベント">
         <BackButton href="/system/audit-events" label="一覧に戻る" prefetch={false} />
       </PageHeader>
@@ -139,7 +139,7 @@ export default async function AuditEventDetailPage(props: Props) {
         </Card>
       </div>
 
-      <section aria-labelledby="forensic-json-heading" className="flex flex-col gap-3">
+      <section aria-labelledby="forensic-json-heading" className="flex flex-col gap-4">
         <div>
           <h2 id="forensic-json-heading" className="text-lg font-semibold">
             証跡データ

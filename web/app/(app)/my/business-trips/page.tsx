@@ -13,7 +13,7 @@ export const metadata = { title: "出張" }
  */
 export default function BusinessTripsPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="出張">
         <Button nativeButton={false} render={<Link href="/my/business-trips/new" />}>
           <Plus />

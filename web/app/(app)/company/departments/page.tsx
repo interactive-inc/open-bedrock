@@ -23,7 +23,7 @@ export default async function OrgPage() {
   const canManage = currentUser instanceof Error ? false : canManageOrg(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="組織図" />
 
       <Tabs defaultValue="chart">

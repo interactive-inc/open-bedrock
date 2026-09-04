@@ -50,7 +50,7 @@ function DeletePostingButton(props: DeleteProps) {
   )
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <ConfirmActionDialog
         action={formAction}
         triggerLabel="削除"

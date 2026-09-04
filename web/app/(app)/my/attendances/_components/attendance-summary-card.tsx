@@ -29,7 +29,7 @@ export async function AttendanceSummaryCard(props: Props) {
     <Card className="gap-0">
       <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3">
         {stats.map((stat) => (
-          <div key={stat.label} className="flex flex-col gap-1">
+          <div key={stat.label} className="flex flex-col gap-2">
             <span className="text-sm text-muted-foreground">{stat.label}</span>
 
             <span className="text-xl font-semibold">{stat.value}</span>

@@ -96,7 +96,7 @@ export function DocumentWorkflowActions(props: Props) {
       </div>
 
       {canReview && props.versionState === "in_review" && actionableApprovals.length > 0 ? (
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           {actionableApprovals.map((approval) => (
             <ReviewForm
               key={approval.org_role_code}
@@ -145,8 +145,8 @@ function ReviewForm(props: { code: string; version: string; orgRoleCode: string 
       <input type="hidden" name="code" value={props.code} />
       <input type="hidden" name="version" value={props.version} />
       <input type="hidden" name="org_role_code" value={props.orgRoleCode} />
-      <p className="mb-3 text-sm font-medium">{props.orgRoleCode} として判断</p>
-      <Field className="mb-3">
+      <p className="mb-4 text-sm font-medium">{props.orgRoleCode} として判断</p>
+      <Field className="mb-4">
         <FieldLabel htmlFor={`review-comment-${props.orgRoleCode}`}>コメント（任意）</FieldLabel>
         <Textarea id={`review-comment-${props.orgRoleCode}`} name="comment" maxLength={2000} />
       </Field>

@@ -41,7 +41,7 @@ export default async function AssetDetailPage(props: Props) {
         )
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={asset.name}>
         <BackButton href="/asset/assets" label="一覧に戻る" />
       </PageHeader>
@@ -49,7 +49,7 @@ export default async function AssetDetailPage(props: Props) {
       <AssetStatusBadge status={asset.status} />
 
       <Card className="gap-0">
-        <dl className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-4 p-8 sm:grid-cols-2">
           <DetailField label="資産コード">{asset.code}</DetailField>
 
           <DetailField label="種別">
@@ -76,7 +76,7 @@ export default async function AssetDetailPage(props: Props) {
 
       {asset.status === "disposed" || canManage === false ? null : (
         <Card className="gap-0">
-          <div className="flex flex-col gap-4 p-6">
+          <div className="flex flex-col gap-4 p-8">
             <h2 className="text-lg font-semibold">貸与・返却</h2>
 
             {asset.status === "in_stock" ? (
@@ -90,7 +90,7 @@ export default async function AssetDetailPage(props: Props) {
 
       {asset.status === "in_stock" && canManage ? (
         <Card className="gap-0">
-          <div className="flex flex-col gap-4 p-6">
+          <div className="flex flex-col gap-4 p-8">
             <h2 className="text-lg font-semibold">廃棄</h2>
 
             <p className="text-sm text-muted-foreground">

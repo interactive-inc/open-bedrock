@@ -45,7 +45,7 @@ export default async function KnowledgeDetailPage(props: Props) {
   const tags = toTags(article.tags)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={article.title}>
         <BackButton href="/knowledge/knowledge-articles" label="一覧に戻る" />
       </PageHeader>
@@ -61,7 +61,7 @@ export default async function KnowledgeDetailPage(props: Props) {
       ) : null}
 
       <Card className="gap-0">
-        <article className="whitespace-pre-wrap p-6 text-sm leading-relaxed">
+        <article className="whitespace-pre-wrap p-8 text-sm leading-relaxed">
           {article.body_md}
         </article>
       </Card>

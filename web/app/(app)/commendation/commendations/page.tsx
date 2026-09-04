@@ -25,7 +25,7 @@ export default async function CommendationsPage(props: Props) {
   const canManage = me instanceof Error ? false : canManageCommendations(me.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="表彰" />
 
       {canManage ? <CommendationNewForm /> : null}

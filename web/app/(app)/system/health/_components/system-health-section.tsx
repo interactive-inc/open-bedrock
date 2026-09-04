@@ -12,8 +12,8 @@ export async function SystemHealthSection() {
   }
 
   return (
-    <dl className="grid gap-3 rounded-2xl border bg-card p-4">
-      <div className="flex flex-col gap-1">
+    <dl className="grid gap-4 rounded-2xl border bg-card p-4">
+      <div className="flex flex-col gap-2">
         <dt className="text-xs text-muted-foreground">状態</dt>
 
         <dd className="text-sm">{status === "ok" ? "正常" : status}</dd>

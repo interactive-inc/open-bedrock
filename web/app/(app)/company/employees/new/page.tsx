@@ -22,13 +22,13 @@ export default async function EmployeeNewPage() {
   const positions = await getPositionList()
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="従業員を登録">
         <BackButton href="/company/employees" label="一覧に戻る" />
       </PageHeader>
 
       <Card className="gap-0">
-        <div className="p-6">
+        <div className="p-8">
           <EmployeeCreateForm
             canAssignRole={canAssignRole}
             positions={positions instanceof Error ? [] : positions}

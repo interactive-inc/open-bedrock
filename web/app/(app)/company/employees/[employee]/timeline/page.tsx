@@ -14,7 +14,7 @@ export default async function EmployeeTimelinePage(props: {
   const code = routeParams.employee
   const events = await getEmployeeLifecycleEvents(code, { cursor: query.cursor })
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="人材タイムライン">
         <BackButton href={`/company/employees/${encodeURIComponent(code)}`} label="詳細に戻る" />
       </PageHeader>
