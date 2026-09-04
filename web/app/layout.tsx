@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono, Noto_Sans, Playfair_Display } from "next/font/google"
 import "./globals.css"
+import { headers } from "next/headers"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
@@ -39,6 +40,8 @@ type Props = {
 export default async function RootLayout(props: Props) {
   const locale = await getLocale()
 
+  const nonce = (await headers()).get("x-nonce")
+
   return (
     <html
       lang={locale}
@@ -54,7 +57,7 @@ export default async function RootLayout(props: Props) {
       )}
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>
+        <ThemeProvider nonce={nonce}>
           <TranslatorProvider dictionary={getDictionary(locale)}>
             {props.children}
 
