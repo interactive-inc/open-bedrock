@@ -46,10 +46,9 @@ export default async function KnowledgeDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={article.title}
-        actions={<BackButton href="/knowledge/knowledge-articles" label="一覧に戻る" />}
-      />
+      <PageHeader title={article.title}>
+        <BackButton href="/knowledge/knowledge-articles" label="一覧に戻る" />
+      </PageHeader>
 
       {tags.length > 0 ? (
         <div className="flex flex-wrap gap-2">

@@ -40,38 +40,29 @@ export default async function MyExpensesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="経費"
-        actions={
-          <>
-            {canViewAll ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/expense/expenses" />}
-              >
-                全社の経費
-              </Button>
-            ) : null}
+      <PageHeader title="経費">
+        {canViewAll ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/expense/expenses" />}
+          >
+            全社の経費
+          </Button>
+        ) : null}
 
-            {canApprove ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/inbox/expenses" />}
-              >
-                <Inbox />
-                承認受信箱
-              </Button>
-            ) : null}
+        {canApprove ? (
+          <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/expenses" />}>
+            <Inbox />
+            承認受信箱
+          </Button>
+        ) : null}
 
-            <Button nativeButton={false} render={<Link href="/my/expenses/new" />}>
-              <Plus />
-              新しい経費
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/my/expenses/new" />}>
+          <Plus />
+          新しい経費
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <MyExpensesTable />

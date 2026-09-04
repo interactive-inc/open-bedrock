@@ -14,15 +14,12 @@ export const metadata = { title: "証明書" }
 export default function CertificateRequestsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="証明書"
-        actions={
-          <Button nativeButton={false} render={<Link href="/my/certificate-requests/new" />}>
-            <Plus />
-            新規依頼
-          </Button>
-        }
-      />
+      <PageHeader title="証明書">
+        <Button nativeButton={false} render={<Link href="/my/certificate-requests/new" />}>
+          <Plus />
+          新規依頼
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
         <MyCertificateRequestsSection />

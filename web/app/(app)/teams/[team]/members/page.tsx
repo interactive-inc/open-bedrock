@@ -35,7 +35,7 @@ export default async function OrgDepartmentMembersPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="メンバー" actions={addForm} />
+      <PageHeader title="メンバー">{addForm}</PageHeader>
 
       <DepartmentName team={params.team} />
 

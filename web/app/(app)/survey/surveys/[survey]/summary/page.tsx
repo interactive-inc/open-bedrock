@@ -38,19 +38,16 @@ export default async function SurveySummaryPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={summary.title}
-        actions={
-          <Button
-            variant="secondary"
-            size="sm"
-            nativeButton={false}
-            render={<Link href={`/survey/surveys/${summary.survey_id}`} />}
-          >
-            回答する
-          </Button>
-        }
-      />
+      <PageHeader title={summary.title}>
+        <Button
+          variant="secondary"
+          size="sm"
+          nativeButton={false}
+          render={<Link href={`/survey/surveys/${summary.survey_id}`} />}
+        >
+          回答する
+        </Button>
+      </PageHeader>
 
       {summary.questions.length === 0 ? (
         <EmptyState title="集計対象の設問がありません" />

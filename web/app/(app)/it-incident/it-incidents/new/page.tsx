@@ -18,10 +18,9 @@ export default async function ItIncidentNewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="インシデントを記録"
-        actions={<BackButton href="/it-incident/it-incidents" label="一覧に戻る" />}
-      />
+      <PageHeader title="インシデントを記録">
+        <BackButton href="/it-incident/it-incidents" label="一覧に戻る" />
+      </PageHeader>
 
       <Card className="gap-0">
         <div className="p-6">

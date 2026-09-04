@@ -89,20 +89,13 @@ export default async function AdminExpensesPage(props: { searchParams: SearchPar
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="全社の経費"
-        actions={
-          currentUser.permissions.includes("expense:approve") ? (
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/inbox/expenses" />}
-            >
-              承認受信箱
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="全社の経費">
+        {currentUser.permissions.includes("expense:approve") ? (
+          <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/expenses" />}>
+            承認受信箱
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <ExpenseAdminFilterForm
         statusValue={filter.status ?? ""}

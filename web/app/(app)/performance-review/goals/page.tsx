@@ -42,25 +42,22 @@ export default async function GoalsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="全社の目標"
-        actions={
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/performance-review/goals/tree" />}
-            >
-              目標ツリー
-            </Button>
+      <PageHeader title="全社の目標">
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/performance-review/goals/tree" />}
+          >
+            目標ツリー
+          </Button>
 
-            <Button nativeButton={false} render={<Link href={newHref} />}>
-              <Plus />
-              新規目標
-            </Button>
-          </div>
-        }
-      />
+          <Button nativeButton={false} render={<Link href={newHref} />}>
+            <Plus />
+            新規目標
+          </Button>
+        </div>
+      </PageHeader>
 
       <GoalFilterForm
         period={period}

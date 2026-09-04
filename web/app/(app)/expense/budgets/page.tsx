@@ -31,26 +31,21 @@ export default async function BudgetsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="予算"
-        actions={
-          <>
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/expense/budgets/summary" />}
-            >
-              <TrendingUp />
-              消化状況
-            </Button>
+      <PageHeader title="予算">
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/expense/budgets/summary" />}
+        >
+          <TrendingUp />
+          消化状況
+        </Button>
 
-            <Button nativeButton={false} render={<Link href="/expense/budgets/new" />}>
-              <Plus />
-              新しい予算
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/expense/budgets/new" />}>
+          <Plus />
+          新しい予算
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <BudgetsTable />

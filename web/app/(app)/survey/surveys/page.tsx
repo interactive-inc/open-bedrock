@@ -20,20 +20,17 @@ export default async function SurveysPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="サーベイ"
-        actions={
-          canManage ? (
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/survey/surveys/manage" />}
-            >
-              管理
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="サーベイ">
+        {canManage ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/survey/surveys/manage" />}
+          >
+            管理
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-14 w-full" />}>
         <SurveyListTable canViewSummary={canManage} />

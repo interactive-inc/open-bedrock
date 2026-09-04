@@ -31,10 +31,9 @@ export default async function GovernanceDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={document.title}
-        actions={<BackButton href="/governance/governance-documents" label="一覧に戻る" />}
-      />
+      <PageHeader title={document.title}>
+        <BackButton href="/governance/governance-documents" label="一覧に戻る" />
+      </PageHeader>
 
       <div className="flex flex-wrap gap-2">
         <StateBadge state={document.version_state} />

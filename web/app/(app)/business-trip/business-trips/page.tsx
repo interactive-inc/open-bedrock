@@ -60,18 +60,15 @@ export default async function AdminBusinessTripsPage(props: { searchParams: Sear
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="出張の横断"
-        actions={
-          <Button
-            variant="secondary"
-            nativeButton={false}
-            render={<Link href="/business-trip/business-trips" />}
-          >
-            自分の申請
-          </Button>
-        }
-      />
+      <PageHeader title="出張の横断">
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/business-trip/business-trips" />}
+        >
+          自分の申請
+        </Button>
+      </PageHeader>
 
       <BusinessTripAdminFilterForm
         statusValue={filter.status ?? ""}

@@ -33,10 +33,9 @@ export default async function HealthCheckupNewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="実施記録を登録"
-        actions={<BackButton href="/health-checkup/health-checkups" label="一覧に戻る" />}
-      />
+      <PageHeader title="実施記録を登録">
+        <BackButton href="/health-checkup/health-checkups" label="一覧に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

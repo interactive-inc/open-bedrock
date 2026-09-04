@@ -22,27 +22,22 @@ export default async function AntisocialChecksPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="反社チェック"
-        actions={
-          <>
-            {canManage ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/inbox/antisocial-checks" />}
-              >
-                判定受信箱
-              </Button>
-            ) : null}
+      <PageHeader title="反社チェック">
+        {canManage ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/inbox/antisocial-checks" />}
+          >
+            判定受信箱
+          </Button>
+        ) : null}
 
-            <Button nativeButton={false} render={<Link href="/my/antisocial-checks/new" />}>
-              <Plus />
-              新規申請
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/my/antisocial-checks/new" />}>
+          <Plus />
+          新規申請
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
         <MyAntisocialChecksSection />

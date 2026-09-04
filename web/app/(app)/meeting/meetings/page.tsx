@@ -28,17 +28,14 @@ export default async function MeetingsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="会議体"
-        actions={
-          canManage ? (
-            <Button nativeButton={false} render={<Link href="/meeting/meetings/new" />}>
-              <Plus />
-              会議体を登録
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="会議体">
+        {canManage ? (
+          <Button nativeButton={false} render={<Link href="/meeting/meetings/new" />}>
+            <Plus />
+            会議体を登録
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense key={String(page)} fallback={<ListSkeleton rows={5} rowClassName="h-16 w-full" />}>
         <MeetingList offset={offset} />

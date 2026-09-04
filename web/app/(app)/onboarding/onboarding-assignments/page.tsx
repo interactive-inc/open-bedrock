@@ -27,23 +27,18 @@ export default async function OnboardingEmployeesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="オンボーディング進捗"
-        actions={
-          <>
-            {canManage ? (
-              <Button
-                nativeButton={false}
-                render={<Link href="/onboarding/onboarding-assignments/new" />}
-              >
-                新規割当
-              </Button>
-            ) : null}
+      <PageHeader title="オンボーディング進捗">
+        {canManage ? (
+          <Button
+            nativeButton={false}
+            render={<Link href="/onboarding/onboarding-assignments/new" />}
+          >
+            新規割当
+          </Button>
+        ) : null}
 
-            <BackButton href="/onboarding/onboarding-assignments" label="ハブへ戻る" />
-          </>
-        }
-      />
+        <BackButton href="/onboarding/onboarding-assignments" label="ハブへ戻る" />
+      </PageHeader>
 
       {employees instanceof Error ? (
         <FetchError message="社員ディレクトリを取得できませんでした" />

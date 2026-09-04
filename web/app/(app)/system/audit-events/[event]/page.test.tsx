@@ -16,10 +16,10 @@ vi.mock("@/lib/auth/require-permission", () => ({ requirePermission: mocks.requi
 vi.mock("@/lib/api/get-audit-event", () => ({ getAuditEvent: mocks.getAuditEvent }))
 vi.mock("next/navigation", () => ({ notFound: mocks.notFound }))
 vi.mock("@/components/page-header", () => ({
-  PageHeader: ({ title, actions }: { title: string; actions?: React.ReactNode }) => (
+  PageHeader: ({ title, children }: { title: string; children?: React.ReactNode }) => (
     <header>
       <h1>{title}</h1>
-      {actions}
+      {children}
     </header>
   ),
 }))

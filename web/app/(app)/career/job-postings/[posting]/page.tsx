@@ -35,25 +35,22 @@ export default async function CareerPostingDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="公募の詳細"
-        actions={
-          <div className="flex items-center gap-2">
-            <BackButton href="/career/job-postings" label="公募一覧に戻る" />
+      <PageHeader title="公募の詳細">
+        <div className="flex items-center gap-2">
+          <BackButton href="/career/job-postings" label="公募一覧に戻る" />
 
-            {canManage ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href={`/career/job-postings/${postingId}/edit`} />}
-              >
-                <Pencil />
-                編集
-              </Button>
-            ) : null}
-          </div>
-        }
-      />
+          {canManage ? (
+            <Button
+              variant="secondary"
+              nativeButton={false}
+              render={<Link href={`/career/job-postings/${postingId}/edit`} />}
+            >
+              <Pencil />
+              編集
+            </Button>
+          ) : null}
+        </div>
+      </PageHeader>
 
       <Suspense fallback={<DetailSkeleton fields={4} showBadge={false} />}>
         <CareerPostingDetailSection postingId={postingId} canManage={canManage} />

@@ -63,18 +63,15 @@ export default async function AdminCertificateRequestsPage(props: { searchParams
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="証明書の横断"
-        actions={
-          <Button
-            variant="secondary"
-            nativeButton={false}
-            render={<Link href="/certificate-request/certificate-requests" />}
-          >
-            自分の依頼
-          </Button>
-        }
-      />
+      <PageHeader title="証明書の横断">
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/certificate-request/certificate-requests" />}
+        >
+          自分の依頼
+        </Button>
+      </PageHeader>
 
       <CertificateRequestAdminFilterForm
         statusValue={filter.status ?? ""}

@@ -36,18 +36,15 @@ export default async function GoalTreePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="目標ツリー"
-        actions={
-          <Button
-            variant="secondary"
-            nativeButton={false}
-            render={<Link href="/performance-review/goals" />}
-          >
-            目標一覧
-          </Button>
-        }
-      />
+      <PageHeader title="目標ツリー">
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/performance-review/goals" />}
+        >
+          目標一覧
+        </Button>
+      </PageHeader>
 
       {canCreateCompany || canCreateDepartment ? (
         <StructuralGoalCreateForm

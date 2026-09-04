@@ -11,10 +11,9 @@ export const metadata = { title: "新規休業申出" }
 export default function NewFamilyCareLeavePage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="新規申出"
-        actions={<BackButton href="/my/family-care-leaves" label="一覧に戻る" />}
-      />
+      <PageHeader title="新規申出">
+        <BackButton href="/my/family-care-leaves" label="一覧に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

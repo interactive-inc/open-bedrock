@@ -26,10 +26,9 @@ export default async function NewGoalPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="新規目標"
-        actions={<BackButton href="/performance-review/goals" label="一覧に戻る" />}
-      />
+      <PageHeader title="新規目標">
+        <BackButton href="/performance-review/goals" label="一覧に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

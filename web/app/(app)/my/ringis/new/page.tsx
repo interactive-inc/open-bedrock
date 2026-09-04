@@ -11,10 +11,9 @@ export const metadata = { title: "稟議の新規起案" }
 export default function NewRingiPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="稟議を起案"
-        actions={<BackButton href="/my/ringis" label="一覧に戻る" />}
-      />
+      <PageHeader title="稟議を起案">
+        <BackButton href="/my/ringis" label="一覧に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

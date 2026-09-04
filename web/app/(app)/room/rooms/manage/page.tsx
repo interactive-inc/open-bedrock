@@ -37,21 +37,16 @@ export default async function RoomManagePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="会議室マスタ"
-        actions={
-          <>
-            <Button variant="secondary" nativeButton={false} render={<Link href="/room/rooms" />}>
-              予約・空き状況へ
-            </Button>
+      <PageHeader title="会議室マスタ">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/room/rooms" />}>
+          予約・空き状況へ
+        </Button>
 
-            <Button nativeButton={false} render={<Link href="/room/rooms/manage/new" />}>
-              <Plus />
-              会議室を登録
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/room/rooms/manage/new" />}>
+          <Plus />
+          会議室を登録
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <RoomsTable />

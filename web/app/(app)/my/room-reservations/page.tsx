@@ -12,10 +12,9 @@ export const metadata = { title: "会議室の予約" }
 export default function MyReservationsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="会議室の予約"
-        actions={<BackButton href="/room/rooms" label="会議室に戻る" />}
-      />
+      <PageHeader title="会議室の予約">
+        <BackButton href="/room/rooms" label="会議室に戻る" />
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
         <MyReservationsSection />

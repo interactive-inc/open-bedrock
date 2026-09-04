@@ -60,18 +60,15 @@ export default async function AdminResignationsPage(props: { searchParams: Searc
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="退職の横断"
-        actions={
-          <Button
-            variant="secondary"
-            nativeButton={false}
-            render={<Link href="/resignation/resignations" />}
-          >
-            自分の手続き
-          </Button>
-        }
-      />
+      <PageHeader title="退職の横断">
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/resignation/resignations" />}
+        >
+          自分の手続き
+        </Button>
+      </PageHeader>
 
       <ResignationAdminFilterForm
         statusValue={filter.status ?? ""}

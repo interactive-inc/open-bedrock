@@ -26,16 +26,14 @@ export default async function AdminRolesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <PageHeader title="ロール" />
-
+      <PageHeader title="ロール">
         {currentUser.permissions.includes("system:admin") ||
         currentUser.permissions.includes("iam:write") ? (
           <Link href="/system/roles/new" className={buttonVariants({ variant: "default" })}>
             新規作成
           </Link>
         ) : null}
-      </div>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
         <RoleListSection actorPermissionKeys={currentUser.permissions} />

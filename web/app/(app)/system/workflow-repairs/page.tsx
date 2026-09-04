@@ -31,18 +31,15 @@ export default async function WorkflowRepairsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="ワークフロー修復"
-        actions={
-          <Button
-            variant="secondary"
-            nativeButton={false}
-            render={<Link href="/system/applications" />}
-          >
-            申請管理へ
-          </Button>
-        }
-      />
+      <PageHeader title="ワークフロー修復">
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/system/applications" />}
+        >
+          申請管理へ
+        </Button>
+      </PageHeader>
 
       {result instanceof Error ? (
         <FetchError message="承認フローの修復対象を取得できませんでした" />

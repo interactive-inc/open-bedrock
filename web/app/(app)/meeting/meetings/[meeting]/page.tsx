@@ -29,10 +29,9 @@ export default async function MeetingDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={meeting.name}
-        actions={<BackButton href="/meeting/meetings" label="一覧に戻る" />}
-      />
+      <PageHeader title={meeting.name}>
+        <BackButton href="/meeting/meetings" label="一覧に戻る" />
+      </PageHeader>
 
       <div className="flex flex-wrap items-center gap-2">
         {meeting.status === "archived" ? (

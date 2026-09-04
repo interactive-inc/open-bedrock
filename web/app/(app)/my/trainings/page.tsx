@@ -15,10 +15,9 @@ export const metadata = { title: "研修" }
 export default function MyTrainingEnrollmentsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="研修"
-        actions={<BackButton href="/training/trainings" label="研修に戻る" />}
-      />
+      <PageHeader title="研修">
+        <BackButton href="/training/trainings" label="研修に戻る" />
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={3} />}>
         <MyEnrollments />

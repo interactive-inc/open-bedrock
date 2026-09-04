@@ -34,17 +34,14 @@ export default async function ItIncidentsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="IT インシデント"
-        actions={
-          canManage ? (
-            <Button nativeButton={false} render={<Link href="/it-incident/it-incidents/new" />}>
-              <Plus />
-              インシデントを記録
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="IT インシデント">
+        {canManage ? (
+          <Button nativeButton={false} render={<Link href="/it-incident/it-incidents/new" />}>
+            <Plus />
+            インシデントを記録
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense key={String(page)} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
         <ItIncidentList offset={offset} canManage={canManage} />

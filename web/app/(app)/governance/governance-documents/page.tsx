@@ -46,21 +46,18 @@ export default async function GovernancePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="規程・手続き"
-        actions={
-          canManage ? (
-            <Button
-              nativeButton={false}
-              variant="secondary"
-              render={<Link href="/governance/governance-documents/manage" />}
-            >
-              <Settings2 />
-              整合性と組織ロール
-            </Button>
-          ) : undefined
-        }
-      />
+      <PageHeader title="規程・手続き">
+        {canManage ? (
+          <Button
+            nativeButton={false}
+            variant="secondary"
+            render={<Link href="/governance/governance-documents/manage" />}
+          >
+            <Settings2 />
+            整合性と組織ロール
+          </Button>
+        ) : undefined}
+      </PageHeader>
 
       <form
         className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-[1fr_12rem_auto]"

@@ -41,10 +41,9 @@ export default async function DecisionDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={decision.title}
-        actions={<BackButton href="/meeting/decisions" label="一覧に戻る" />}
-      />
+      <PageHeader title={decision.title}>
+        <BackButton href="/meeting/decisions" label="一覧に戻る" />
+      </PageHeader>
 
       <div className="flex flex-wrap items-center gap-2">
         {decision.status === "superseded" ? (

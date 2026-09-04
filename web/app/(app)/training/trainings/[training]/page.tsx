@@ -34,24 +34,19 @@ export default async function TrainingCourseDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={course.title}
-        actions={
-          <>
-            <BackButton href="/training/trainings" label="一覧に戻る" />
+      <PageHeader title={course.title}>
+        <BackButton href="/training/trainings" label="一覧に戻る" />
 
-            {canManage ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href={`/training/trainings/${course.code}/edit`} />}
-              >
-                編集
-              </Button>
-            ) : null}
-          </>
-        }
-      />
+        {canManage ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href={`/training/trainings/${course.code}/edit`} />}
+          >
+            編集
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Card>
         <CardHeader>

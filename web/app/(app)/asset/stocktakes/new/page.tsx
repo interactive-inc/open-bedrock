@@ -12,10 +12,9 @@ export default async function StocktakeNewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="棚卸しを開始"
-        actions={<BackButton href="/asset/stocktakes" label="一覧に戻る" />}
-      />
+      <PageHeader title="棚卸しを開始">
+        <BackButton href="/asset/stocktakes" label="一覧に戻る" />
+      </PageHeader>
 
       <Card className="gap-0">
         <div className="p-6">

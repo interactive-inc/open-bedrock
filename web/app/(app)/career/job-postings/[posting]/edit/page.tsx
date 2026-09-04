@@ -36,10 +36,9 @@ export default async function EditCareerPostingPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="公募の編集"
-        actions={<BackButton href={`/career/job-postings/${postingId}`} label="詳細に戻る" />}
-      />
+      <PageHeader title="公募の編集">
+        <BackButton href={`/career/job-postings/${postingId}`} label="詳細に戻る" />
+      </PageHeader>
 
       {posting instanceof Error ? (
         <FetchError message="公募の取得に失敗しました" />

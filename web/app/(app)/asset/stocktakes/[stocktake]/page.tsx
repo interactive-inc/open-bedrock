@@ -39,10 +39,9 @@ export default async function StocktakeDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={stocktake.name}
-        actions={<BackButton href="/asset/stocktakes" label="一覧に戻る" />}
-      />
+      <PageHeader title={stocktake.name}>
+        <BackButton href="/asset/stocktakes" label="一覧に戻る" />
+      </PageHeader>
 
       <div className="flex flex-wrap items-center gap-3">
         <StocktakeStatusBadge status={stocktake.status} />

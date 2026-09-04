@@ -32,34 +32,29 @@ export default async function MyApplicationsPage(props: { searchParams: SearchPa
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="申請"
-        actions={
-          <>
-            {canViewAll ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/system/applications" />}
-              >
-                申請管理
-              </Button>
-            ) : null}
+      <PageHeader title="申請">
+        {canViewAll ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/system/applications" />}
+          >
+            申請管理
+          </Button>
+        ) : null}
 
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/inbox/applications" />}
-            >
-              承認 inbox
-            </Button>
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/inbox/applications" />}
+        >
+          承認 inbox
+        </Button>
 
-            <Button nativeButton={false} render={<Link href="/system/application-templates" />}>
-              新規申請
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/system/application-templates" />}>
+          新規申請
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <MyApplicationsTable offset={offset} pageSize={pageSize} />

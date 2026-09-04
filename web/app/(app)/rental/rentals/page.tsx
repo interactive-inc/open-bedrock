@@ -60,14 +60,11 @@ export default async function AdminRentalsPage(props: { searchParams: SearchPara
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="レンタルの横断"
-        actions={
-          <Button variant="secondary" nativeButton={false} render={<Link href="/rental/rentals" />}>
-            自分の予約
-          </Button>
-        }
-      />
+      <PageHeader title="レンタルの横断">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/rental/rentals" />}>
+          自分の予約
+        </Button>
+      </PageHeader>
 
       <RentalAdminFilterForm
         statusValue={filter.status ?? ""}

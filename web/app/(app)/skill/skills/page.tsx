@@ -25,14 +25,11 @@ export default async function SkillsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="スキル一覧"
-        actions={
-          <Button nativeButton={false} render={<Link href="/my/skills" />}>
-            自分のスキル
-          </Button>
-        }
-      />
+      <PageHeader title="スキル一覧">
+        <Button nativeButton={false} render={<Link href="/my/skills" />}>
+          自分のスキル
+        </Button>
+      </PageHeader>
 
       <SkillSearchForm q={q} category={category} />
 

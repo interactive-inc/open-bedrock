@@ -32,17 +32,14 @@ export default async function OneOnOnePage(props: { searchParams: SearchParams }
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="1on1"
-        actions={
-          canCreate ? (
-            <Button nativeButton={false} render={<Link href="/my/oneonones/new" />}>
-              <Plus />
-              記録を追加
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="1on1">
+        {canCreate ? (
+          <Button nativeButton={false} render={<Link href="/my/oneonones/new" />}>
+            <Plus />
+            記録を追加
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-32 w-full" />}>
         <OneOnOneSection offset={offset} pageSize={pageSize} />

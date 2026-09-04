@@ -25,10 +25,9 @@ export default async function AssetHoldingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="保有状況"
-        actions={<BackButton href="/asset/assets" label="一覧に戻る" />}
-      />
+      <PageHeader title="保有状況">
+        <BackButton href="/asset/assets" label="一覧に戻る" />
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <HoldingsTable />

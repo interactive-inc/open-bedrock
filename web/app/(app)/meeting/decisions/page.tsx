@@ -28,17 +28,14 @@ export default async function DecisionsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="意思決定記録"
-        actions={
-          canManage ? (
-            <Button nativeButton={false} render={<Link href="/meeting/decisions/new" />}>
-              <Plus />
-              記録を作成
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="意思決定記録">
+        {canManage ? (
+          <Button nativeButton={false} render={<Link href="/meeting/decisions/new" />}>
+            <Plus />
+            記録を作成
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense key={String(page)} fallback={<ListSkeleton rows={5} rowClassName="h-16 w-full" />}>
         <DecisionList offset={offset} />

@@ -30,14 +30,11 @@ export default async function AttendanceAllPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="全社の勤怠"
-        actions={
-          <Button variant="secondary" nativeButton={false} render={<Link href="/my/attendances" />}>
-            自分の勤怠へ
-          </Button>
-        }
-      />
+      <PageHeader title="全社の勤怠">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/my/attendances" />}>
+          自分の勤怠へ
+        </Button>
+      </PageHeader>
 
       <AttendanceFilterForm withEmployeeId={true} employeeId={employeeId} from={from} to={to} />
 

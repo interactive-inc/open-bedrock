@@ -34,32 +34,23 @@ export default async function MyRingiPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="稟議"
-        actions={
-          <>
-            {canViewAll ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/ringi/ringis" />}
-              >
-                稟議管理
-              </Button>
-            ) : null}
+      <PageHeader title="稟議">
+        {canViewAll ? (
+          <Button variant="secondary" nativeButton={false} render={<Link href="/ringi/ringis" />}>
+            稟議管理
+          </Button>
+        ) : null}
 
-            <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/ringis" />}>
-              <Inbox />
-              承認受信箱
-            </Button>
+        <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/ringis" />}>
+          <Inbox />
+          承認受信箱
+        </Button>
 
-            <Button nativeButton={false} render={<Link href="/my/ringis/new" />}>
-              <Plus />
-              新しい稟議
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/my/ringis/new" />}>
+          <Plus />
+          新しい稟議
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <MyRingiTable />

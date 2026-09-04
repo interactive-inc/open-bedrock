@@ -11,10 +11,9 @@ export const metadata = { title: "感謝を送る" }
 export default function SendThanksPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="感謝を送る"
-        actions={<BackButton href="/thanks/thanks" label="感謝に戻る" />}
-      />
+      <PageHeader title="感謝を送る">
+        <BackButton href="/thanks/thanks" label="感謝に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

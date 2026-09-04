@@ -26,18 +26,13 @@ export default async function StocktakesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="棚卸し"
-        actions={
-          <>
-            <BackButton href="/asset/assets" label="備品に戻る" />
+      <PageHeader title="棚卸し">
+        <BackButton href="/asset/assets" label="備品に戻る" />
 
-            <Button nativeButton={false} render={<Link href="/asset/stocktakes/new" />}>
-              棚卸しを開始
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/asset/stocktakes/new" />}>
+          棚卸しを開始
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <StocktakesTable />

@@ -35,54 +35,49 @@ export default async function ShiftPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="シフト"
-        actions={
-          <>
-            {canManage ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/shift/shift-patterns" />}
-              >
-                <CalendarDays />
-                パターン
-              </Button>
-            ) : null}
+      <PageHeader title="シフト">
+        {canManage ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/shift/shift-patterns" />}
+          >
+            <CalendarDays />
+            パターン
+          </Button>
+        ) : null}
 
-            {canViewAllSwaps ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/shift/shift-swaps" />}
-              >
-                交代管理
-              </Button>
-            ) : null}
+        {canViewAllSwaps ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/shift/shift-swaps" />}
+          >
+            交代管理
+          </Button>
+        ) : null}
 
-            {canApproveSwaps ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/inbox/shift-swaps" />}
-              >
-                交代承認
-              </Button>
-            ) : null}
+        {canApproveSwaps ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/inbox/shift-swaps" />}
+          >
+            交代承認
+          </Button>
+        ) : null}
 
-            {canManage ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/shift/shift-assignments" />}
-              >
-                <Settings />
-                管理
-              </Button>
-            ) : null}
-          </>
-        }
-      />
+        {canManage ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/shift/shift-assignments" />}
+          >
+            <Settings />
+            管理
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">自分のシフト</h2>

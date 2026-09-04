@@ -33,10 +33,9 @@ export default async function ExpenseDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="経費詳細"
-        actions={<BackButton href="/my/expenses" label="経費一覧に戻る" />}
-      />
+      <PageHeader title="経費詳細">
+        <BackButton href="/my/expenses" label="経費一覧に戻る" />
+      </PageHeader>
 
       <Suspense fallback={<DetailSkeleton fields={5} />}>
         <ExpenseDetailView

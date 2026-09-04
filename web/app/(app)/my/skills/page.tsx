@@ -13,14 +13,11 @@ export const metadata = { title: "スキル" }
 export default function MySkillsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="スキル"
-        actions={
-          <Button variant="secondary" nativeButton={false} render={<Link href="/skill/skills" />}>
-            スキル一覧
-          </Button>
-        }
-      />
+      <PageHeader title="スキル">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/skill/skills" />}>
+          スキル一覧
+        </Button>
+      </PageHeader>
 
       <Card>
         <CardHeader>

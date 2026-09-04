@@ -63,18 +63,15 @@ export default async function AdminFamilyCareLeavesPage(props: { searchParams: S
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="休業の横断"
-        actions={
-          <Button
-            variant="secondary"
-            nativeButton={false}
-            render={<Link href="/family-care-leave/family-care-leaves" />}
-          >
-            自分の申出
-          </Button>
-        }
-      />
+      <PageHeader title="休業の横断">
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/family-care-leave/family-care-leaves" />}
+        >
+          自分の申出
+        </Button>
+      </PageHeader>
 
       <FamilyCareLeaveAdminFilterForm
         statusValue={filter.status ?? ""}
