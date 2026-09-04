@@ -49,7 +49,7 @@ export function AppShell(props: Props) {
     <SidebarProvider>
       <a
         href="#main-content"
-        className="sr-only fixed top-2 left-2 z-50 rounded-md bg-background px-3 py-2 text-sm shadow focus:not-sr-only"
+        className="sr-only fixed top-2 left-2 z-50 rounded-md bg-background px-4 py-2 text-sm shadow focus:not-sr-only"
       >
         本文へスキップ
       </a>
@@ -58,7 +58,7 @@ export function AppShell(props: Props) {
         <SidebarHeader>
           <Link
             href="/"
-            className="flex flex-col gap-0.5 rounded-md px-2 py-1 hover:bg-sidebar-accent"
+            className="flex flex-col gap-2 rounded-md px-2 py-2 hover:bg-sidebar-accent"
           >
             <span className="text-base font-semibold tracking-wider">
               {process.env.NEXT_PUBLIC_APP_NAME ?? "BEDROCK"}
@@ -80,9 +80,9 @@ export function AppShell(props: Props) {
         </SidebarContent>
 
         <SidebarFooter>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             {/* 設定の入口は隣のユーザーメニューに寄せたので、氏名はリンクにしない。 */}
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5 px-2 py-1">
+            <div className="flex min-w-0 flex-1 flex-col gap-2 px-2 py-2">
               <span className="truncate text-sm font-medium">{props.currentUser.name}</span>
 
               <span className="truncate text-xs text-muted-foreground">
@@ -101,7 +101,7 @@ export function AppShell(props: Props) {
       </Sidebar>
 
       <SidebarInset>
-        <main id="main-content" className="flex flex-1 flex-col gap-4 p-4 md:p-6" tabIndex={-1}>
+        <main id="main-content" className="flex flex-1 flex-col gap-4 p-4 md:p-8" tabIndex={-1}>
           {isFeatureDisabledPath ? <FeatureDisabledScreen /> : props.children}
         </main>
       </SidebarInset>

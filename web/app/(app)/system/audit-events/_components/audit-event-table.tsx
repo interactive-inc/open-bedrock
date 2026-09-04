@@ -72,7 +72,7 @@ export function AuditEventTable(props: Props) {
               </time>
             </TableCell>
             <TableCell className="whitespace-normal">
-              <div className="flex min-w-0 flex-col gap-1">
+              <div className="flex min-w-0 flex-col gap-2">
                 <span className="break-words">{auditActionLabel(event.action)}</span>
                 <code className="break-all text-xs text-muted-foreground" translate="no">
                   {event.event_id}

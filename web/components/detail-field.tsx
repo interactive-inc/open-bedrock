@@ -12,7 +12,7 @@ export function DetailField(props: Props) {
   return (
     <div
       className={
-        props.span === "full" ? "flex flex-col gap-1 sm:col-span-2" : "flex flex-col gap-1"
+        props.span === "full" ? "flex flex-col gap-2 sm:col-span-2" : "flex flex-col gap-2"
       }
     >
       <dt className="text-sm text-muted-foreground">{props.label}</dt>

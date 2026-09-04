@@ -19,5 +19,5 @@ export default async function DepartmentLayout(props: Props) {
     notFound()
   }
 
-  return <div className="flex flex-col gap-6">{props.children}</div>
+  return <div className="flex flex-col gap-8">{props.children}</div>
 }

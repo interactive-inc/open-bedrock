@@ -87,7 +87,7 @@ export default async function AdminLeavesPage(props: { searchParams: SearchParam
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="全社の休暇">
         {currentUser.permissions.includes("leave:approve") ? (
           <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/leaves" />}>

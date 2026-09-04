@@ -29,7 +29,7 @@ export async function PartnerContractsSection(props: Props) {
 
   return (
     <Card className="gap-0">
-      <div className="flex flex-col gap-4 p-6">
+      <div className="flex flex-col gap-4 p-8">
         <h2 className="text-lg font-semibold">契約記録</h2>
 
         {contracts.length === 0 ? (

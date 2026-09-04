@@ -33,7 +33,7 @@ export default async function ItIncidentsPage(props: Props) {
   const canManage = canManageItIncidents(me.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="IT インシデント">
         {canManage ? (
           <Button nativeButton={false} render={<Link href="/it-incident/it-incidents/new" />}>

@@ -44,7 +44,7 @@ export function AssignmentActions(props: Props) {
   )
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <form action={reschedule[1]} className="flex flex-col gap-2">
         <input type="hidden" name="assignment_id" value={props.assignmentId} />
 

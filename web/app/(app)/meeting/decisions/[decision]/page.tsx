@@ -40,7 +40,7 @@ export default async function DecisionDetailPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={decision.title}>
         <BackButton href="/meeting/decisions" label="一覧に戻る" />
       </PageHeader>

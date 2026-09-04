@@ -28,7 +28,7 @@ export default async function ApplicationTemplatesPage() {
     currentUser instanceof Error ? false : canManageApplicationTemplates(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="申請テンプレート">
         <Button variant="secondary" nativeButton={false} render={<Link href="/my/applications" />}>
           申請一覧へ
@@ -66,7 +66,7 @@ async function TemplatesGrid() {
         <Card key={template.code} className="gap-0">
           <Link
             href={`/system/application-templates/${template.code}`}
-            className="flex flex-col gap-3 p-4"
+            className="flex flex-col gap-4 p-4"
           >
             <div className="flex items-center justify-between gap-2">
               <span className="font-medium">{template.name}</span>

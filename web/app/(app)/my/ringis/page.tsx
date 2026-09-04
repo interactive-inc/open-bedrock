@@ -33,7 +33,7 @@ export default async function MyRingiPage() {
   const canViewAll = currentUser instanceof Error ? false : canViewAllRingi(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="稟議">
         {canViewAll ? (
           <Button variant="secondary" nativeButton={false} render={<Link href="/ringi/ringis" />}>

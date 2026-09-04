@@ -25,12 +25,12 @@ export async function PositionList() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {positions.map((position) => (
         <CardLink
           key={position.id}
           href={`/recruitment/recruitments/${position.id}`}
-          className="flex items-center gap-3"
+          className="flex items-center gap-4"
         >
           {position.status === "open" ? (
             <Badge variant="secondary">募集中</Badge>

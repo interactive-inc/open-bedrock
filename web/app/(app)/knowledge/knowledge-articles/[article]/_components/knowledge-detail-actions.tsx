@@ -115,7 +115,7 @@ function DeleteKnowledgeButton(props: { articleId: number }) {
   )
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <ConfirmActionDialog
         action={formAction}
         triggerLabel="削除"

@@ -42,7 +42,7 @@ export async function CareerPostingsSection(props: Props) {
 
           <p className="text-sm text-muted-foreground">{posting.dept_name ?? "部署未設定"}</p>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <span className="text-xs text-muted-foreground">必要スキル</span>
 
             <span className="text-sm">{posting.required_skills ?? "指定なし"}</span>

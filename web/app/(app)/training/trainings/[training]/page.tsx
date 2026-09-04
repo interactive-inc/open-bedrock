@@ -33,7 +33,7 @@ export default async function TrainingCourseDetailPage(props: Props) {
     currentUser instanceof Error ? false : canManageTraining(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={course.title}>
         <BackButton href="/training/trainings" label="一覧に戻る" />
 

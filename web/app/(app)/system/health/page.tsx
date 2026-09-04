@@ -16,7 +16,7 @@ export default async function SystemHealthPage() {
   await requirePermission("system:admin")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="health" />
 
       <ReadOnlyNotice command={null} />

@@ -24,7 +24,7 @@ export default async function CompanyOrganizationSnapshotsPage(props: Props) {
   const effectiveOn = toEffectiveOn(params.effective_on)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="組織の時点断面" />
 
       <ReadOnlyNotice command={null} />

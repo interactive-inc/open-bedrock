@@ -101,7 +101,7 @@ export function RoleEditForm(props: Props) {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         <input type="hidden" name="role_id" value={props.roleId} />
 
         {hiddenGrantedKeys.map((permissionKey) => (

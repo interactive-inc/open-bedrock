@@ -33,14 +33,14 @@ export async function DecisionList(props: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {result.data.map((decision) => (
           <CardLink
             key={decision.id}
             href={`/meeting/decisions/${decision.id}`}
             className="flex flex-col gap-2"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {decision.status === "superseded" ? (
                 <Badge variant="outline">置き換え済み</Badge>
               ) : (

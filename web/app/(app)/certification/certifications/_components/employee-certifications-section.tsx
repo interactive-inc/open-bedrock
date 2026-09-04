@@ -15,7 +15,7 @@ export async function EmployeeCertificationsSection(props: Props) {
   }
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4">
       <h2 className="text-lg font-medium">自分の保有資格</h2>
 
       {props.canViewAll ? (

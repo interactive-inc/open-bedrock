@@ -59,7 +59,7 @@ export default async function AdminRentalsPage(props: { searchParams: SearchPara
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="レンタルの横断">
         <Button variant="secondary" nativeButton={false} render={<Link href="/rental/rentals" />}>
           自分の予約

@@ -34,7 +34,7 @@ export async function LeaveBalanceCards() {
               <span className="text-xs text-muted-foreground">{balance.fiscal_year} 年度</span>
             </div>
 
-            <div className="flex items-baseline gap-1">
+            <div className="flex items-baseline gap-2">
               <span className="text-3xl font-semibold">{balance.remaining_days}</span>
 
               <span className="text-sm text-muted-foreground">日 残</span>

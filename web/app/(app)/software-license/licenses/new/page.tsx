@@ -17,13 +17,13 @@ export default async function LicenseNewPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="ライセンスを登録">
         <BackButton href="/software-license/licenses" label="一覧に戻る" />
       </PageHeader>
 
       <Card className="gap-0">
-        <div className="p-6">
+        <div className="p-8">
           <LicenseCreateForm />
         </div>
       </Card>

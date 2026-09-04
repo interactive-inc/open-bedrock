@@ -11,7 +11,7 @@ export const metadata = { title: "会議室の予約" }
  */
 export default function MyReservationsPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="会議室の予約">
         <BackButton href="/room/rooms" label="会議室に戻る" />
       </PageHeader>

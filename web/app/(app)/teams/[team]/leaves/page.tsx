@@ -30,7 +30,7 @@ export default async function DepartmentLeavesPage(props: Props) {
 
   if (requests instanceof Error) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <PageHeader title="部署の休暇" />
 
         <DepartmentName team={params.team} />
@@ -41,7 +41,7 @@ export default async function DepartmentLeavesPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="部署の休暇" />
 
       <DepartmentName team={params.team} />

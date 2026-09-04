@@ -18,7 +18,7 @@ export async function OrgTreeView() {
 
   return (
     <Card className="gap-0">
-      <ul className="flex flex-col gap-1 p-4">
+      <ul className="flex flex-col gap-2 p-4">
         {nodes.map((node) => (
           <OrgTreeNodeItem key={node.code} node={node} depth={0} />
         ))}

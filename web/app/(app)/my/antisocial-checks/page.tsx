@@ -21,7 +21,7 @@ export default async function AntisocialChecksPage() {
       : currentUser.permissions.includes("antisocial_check:manage")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="反社チェック">
         {canManage ? (
           <Button

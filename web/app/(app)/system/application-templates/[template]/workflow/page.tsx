@@ -34,7 +34,7 @@ export default async function WorkflowPage(props: { params: Promise<{ template: 
     ],
   }
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={`${template.name}の承認フロー`}>
         <BackButton
           href={`/system/application-templates/${templateCode}`}

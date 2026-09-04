@@ -16,7 +16,7 @@ export default async function NewGradePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="新規等級">
         <BackButton href="/company/grades" label="等級に戻る" />
       </PageHeader>

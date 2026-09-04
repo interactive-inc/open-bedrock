@@ -25,7 +25,7 @@ export default async function AdminRolesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="ロール">
         {currentUser.permissions.includes("system:admin") ||
         currentUser.permissions.includes("iam:write") ? (

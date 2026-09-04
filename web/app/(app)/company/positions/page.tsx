@@ -23,7 +23,7 @@ export default async function PositionsPage() {
     currentUser instanceof Error ? false : canManagePositions(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="役職">
         {canManage ? (
           <Button nativeButton={false} render={<Link href="/company/positions/new" />}>

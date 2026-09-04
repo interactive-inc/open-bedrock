@@ -59,7 +59,7 @@ export function DynamicFormFields(props: Props) {
             <FieldLabel htmlFor={inputId}>
               {field.label}
               {field.required ? (
-                <abbr title="必須" className="ml-1 text-destructive no-underline">
+                <abbr title="必須" className="ml-2 text-destructive no-underline">
                   *
                 </abbr>
               ) : null}

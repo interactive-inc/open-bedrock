@@ -13,7 +13,7 @@ export default async function ThanksRedemptionInboxPage() {
   const redemptions = await getThanksRedemptionInbox()
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <SubPageHeader
         title="サンクス交換の承認"
         description="自分以外から提出された交換申請を承認または却下します。"

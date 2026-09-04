@@ -29,7 +29,7 @@ export default async function DepartmentGoalsPage(props: Props) {
 
   if (goals instanceof Error) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <PageHeader title="部署の目標" />
 
         <DepartmentName team={params.team} />
@@ -40,7 +40,7 @@ export default async function DepartmentGoalsPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="部署の目標" />
 
       <DepartmentName team={params.team} />

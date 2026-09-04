@@ -28,7 +28,7 @@ export default async function CompanyEmployeeEventsPage(props: Props) {
   const kind = toKind(params.kind)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="雇用事実" />
 
       <ReadOnlyNotice command="bedrock employee-events record" />

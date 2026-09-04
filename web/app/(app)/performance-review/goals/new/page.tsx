@@ -25,7 +25,7 @@ export default async function NewGoalPage(props: Props) {
   const periodOptions = toGoalPeriodOptions(periods instanceof Error ? [] : periods, period)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="新規目標">
         <BackButton href="/performance-review/goals" label="一覧に戻る" />
       </PageHeader>

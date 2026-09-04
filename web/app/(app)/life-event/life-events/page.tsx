@@ -59,7 +59,7 @@ export default async function AdminLifeEventsPage(props: { searchParams: SearchP
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="ライフイベントの横断">
         <Button
           variant="secondary"

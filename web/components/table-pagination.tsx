@@ -76,7 +76,7 @@ export function TablePagination(props: Props) {
       aria-label="ページ送り"
       className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <p className="text-xs text-muted-foreground">
           {start}–{end} / 全 {props.total} 件
         </p>
@@ -88,20 +88,20 @@ export function TablePagination(props: Props) {
         ) : null}
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         {canPrev ? (
           <Button variant="ghost" size="sm" nativeButton={false}>
             <Link
               href={buildHref(props.pathname, currentPage - 1, props.extraParams)}
               aria-label="前のページ"
-              className="flex items-center gap-1"
+              className="flex items-center gap-2"
             >
               <ChevronLeft className="size-4" />
               <span className="hidden sm:inline">前へ</span>
             </Link>
           </Button>
         ) : (
-          <span className="flex items-center gap-1 px-3 py-1 text-sm text-muted-foreground">
+          <span className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground">
             <ChevronLeft className="size-4" />
             <span className="hidden sm:inline">前へ</span>
           </span>
@@ -115,8 +115,8 @@ export function TablePagination(props: Props) {
           const isActive = page === currentPage
 
           return (
-            <span key={page} className="flex items-center gap-1">
-              {hasGap ? <span className="px-1 text-muted-foreground">…</span> : null}
+            <span key={page} className="flex items-center gap-2">
+              {hasGap ? <span className="px-2 text-muted-foreground">…</span> : null}
 
               {isActive ? (
                 <Button variant="secondary" size="sm" disabled aria-current="page">
@@ -141,14 +141,14 @@ export function TablePagination(props: Props) {
             <Link
               href={buildHref(props.pathname, currentPage + 1, props.extraParams)}
               aria-label="次のページ"
-              className="flex items-center gap-1"
+              className="flex items-center gap-2"
             >
               <span className="hidden sm:inline">次へ</span>
               <ChevronRight className="size-4" />
             </Link>
           </Button>
         ) : (
-          <span className="flex items-center gap-1 px-3 py-1 text-sm text-muted-foreground">
+          <span className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground">
             <span className="hidden sm:inline">次へ</span>
             <ChevronRight className="size-4" />
           </span>

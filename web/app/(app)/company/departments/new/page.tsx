@@ -11,7 +11,7 @@ export default async function OrgDepartmentNewPage() {
   await requirePermission("org:manage")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="部署作成">
         <BackButton href="/company/departments" label="一覧に戻る" />
       </PageHeader>

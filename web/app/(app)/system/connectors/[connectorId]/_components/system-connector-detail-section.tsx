@@ -33,41 +33,41 @@ export async function SystemConnectorDetailSection(props: Props) {
   }
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold">{connector.name}</h2>
 
-      <dl className="grid gap-3 rounded-2xl border bg-card p-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1">
+      <dl className="grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">識別子</dt>
 
           <dd className="font-mono text-xs">{connector.id}</dd>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">キー</dt>
 
           <dd className="font-mono text-xs">{connector.key}</dd>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">向き</dt>
 
           <dd className="text-sm">{toConnectorDirectionLabel(connector.direction)}</dd>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">transport</dt>
 
           <dd className="text-sm">{toConnectorTransportLabel(connector.transport)}</dd>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">状態</dt>
 
           <dd className="text-sm">{toConnectorStatusLabel(connector.status)}</dd>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <dt className="text-xs text-muted-foreground">版</dt>
 
           <dd className="text-sm">{connector.revision}</dd>

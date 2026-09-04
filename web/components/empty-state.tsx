@@ -14,14 +14,14 @@ export function EmptyState(props: Props) {
   const Icon = props.icon
 
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed bg-card py-12 text-center">
+    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed bg-card py-16 text-center">
       {Icon !== undefined ? (
-        <div className="rounded-full bg-muted p-3">
+        <div className="rounded-full bg-muted p-4">
           <Icon className="size-5 text-muted-foreground" />
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2">
         <p className="text-sm font-medium">{props.title}</p>
 
         {props.description !== undefined ? (

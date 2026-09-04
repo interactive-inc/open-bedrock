@@ -45,7 +45,7 @@ export default async function GovernancePage(props: Props) {
   const canManage = me.permissions.includes("governance:manage")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="規程・手続き">
         {canManage ? (
           <Button
@@ -60,7 +60,7 @@ export default async function GovernancePage(props: Props) {
       </PageHeader>
 
       <form
-        className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-[1fr_12rem_auto]"
+        className="grid gap-4 rounded-xl border bg-card p-4 sm:grid-cols-[1fr_12rem_auto]"
         role="search"
       >
         <InputGroup>
@@ -106,12 +106,12 @@ export default async function GovernancePage(props: Props) {
                   </Link>
                 </CardTitle>
                 <CardDescription>{document.code}</CardDescription>
-                <CardAction className="flex gap-1">
+                <CardAction className="flex gap-2">
                   <Badge variant="outline">{kindLabels[document.kind] ?? document.kind}</Badge>
                   <VersionStateBadge state={document.version_state} />
                 </CardAction>
               </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 <Meta label="版" value={document.version} />
                 <Meta label="主管能力" value={document.owner_capability} />
                 <Meta label="見直し期限" value={document.review_due_on ?? "未設定"} />
@@ -128,7 +128,7 @@ function Meta(props: { label: string; value: string }) {
   return (
     <div>
       <p className="text-xs text-muted-foreground">{props.label}</p>
-      <p className="mt-0.5 truncate font-medium">{props.value}</p>
+      <p className="mt-2 truncate font-medium">{props.value}</p>
     </div>
   )
 }

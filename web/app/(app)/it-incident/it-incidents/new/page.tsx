@@ -17,13 +17,13 @@ export default async function ItIncidentNewPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="インシデントを記録">
         <BackButton href="/it-incident/it-incidents" label="一覧に戻る" />
       </PageHeader>
 
       <Card className="gap-0">
-        <div className="p-6">
+        <div className="p-8">
           <ItIncidentCreateForm />
         </div>
       </Card>

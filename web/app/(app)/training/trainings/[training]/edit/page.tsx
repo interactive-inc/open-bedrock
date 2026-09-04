@@ -32,7 +32,7 @@ export default async function EditTrainingCoursePage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={`${course.title} の編集`}>
         <BackButton href={`/training/trainings/${course.code}`} label="詳細に戻る" />
       </PageHeader>
@@ -45,7 +45,7 @@ export default async function EditTrainingCoursePage(props: Props) {
 
       {course.status === "active" ? (
         <Card>
-          <CardContent className="flex flex-col gap-3">
+          <CardContent className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">
               アーカイブすると新規受講の申込みができなくなります。
             </p>

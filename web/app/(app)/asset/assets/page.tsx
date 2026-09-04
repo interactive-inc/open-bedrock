@@ -49,7 +49,7 @@ export default async function AssetsPage(props: Props) {
   const canManage = currentUser instanceof Error ? false : canManageAssets(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="備品">
         <Button variant="secondary" nativeButton={false} render={<Link href="/my/assets" />}>
           自分の貸与品

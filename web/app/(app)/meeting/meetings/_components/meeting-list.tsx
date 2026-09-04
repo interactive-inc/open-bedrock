@@ -33,14 +33,14 @@ export async function MeetingList(props: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {result.data.map((meeting) => (
           <CardLink
             key={meeting.code}
             href={`/meeting/meetings/${meeting.code}`}
             className="flex flex-col gap-2"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {meeting.status === "archived" ? (
                 <Badge variant="outline">アーカイブ</Badge>
               ) : (

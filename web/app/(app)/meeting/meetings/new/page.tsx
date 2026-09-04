@@ -19,7 +19,7 @@ export default async function NewMeetingPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="会議体を登録">
         <BackButton href="/meeting/meetings" label="一覧に戻る" />
       </PageHeader>

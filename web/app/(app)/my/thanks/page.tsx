@@ -15,7 +15,7 @@ export const metadata = { title: "サンクス履歴" }
  */
 export default function MyThanksPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="サンクス履歴">
         <Button variant="secondary" nativeButton={false} render={<Link href="/thanks/rewards" />}>
           <Gift />
@@ -28,7 +28,7 @@ export default function MyThanksPage() {
         </Button>
       </PageHeader>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">送信履歴</h2>
 
         <Suspense fallback={<ListSkeleton rows={5} />}>
@@ -36,7 +36,7 @@ export default function MyThanksPage() {
         </Suspense>
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">交換履歴・申請状況</h2>
 
         <Suspense fallback={<ListSkeleton rows={5} />}>

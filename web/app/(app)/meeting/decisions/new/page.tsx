@@ -19,7 +19,7 @@ export default async function NewDecisionPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="意思決定記録を作成">
         <BackButton href="/meeting/decisions" label="一覧に戻る" />
       </PageHeader>

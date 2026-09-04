@@ -28,7 +28,7 @@ export default async function BudgetDetailPage(props: Props) {
   const params = await props.params
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="予算詳細">
         <BackButton href="/expense/budgets" label="予算一覧に戻る" />
       </PageHeader>
@@ -62,7 +62,7 @@ async function BudgetDetailView(props: ViewProps) {
     budget.amount > 0 ? Math.round((budget.consumed_amount / budget.amount) * 100) : 0
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between gap-4">

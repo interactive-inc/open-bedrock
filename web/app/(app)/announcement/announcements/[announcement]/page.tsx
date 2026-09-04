@@ -47,7 +47,7 @@ export default async function AnnouncementDetailPage(props: Props) {
     currentUser instanceof Error ? false : canManageAnnouncements(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={announcement.title}>
         <BackButton href="/announcement/announcements" label="一覧に戻る" />
       </PageHeader>
@@ -57,7 +57,7 @@ export default async function AnnouncementDetailPage(props: Props) {
       ) : null}
 
       <Card className="gap-0">
-        <article className="whitespace-pre-wrap p-6 text-sm leading-relaxed">
+        <article className="whitespace-pre-wrap p-8 text-sm leading-relaxed">
           {announcement.body_md}
         </article>
       </Card>

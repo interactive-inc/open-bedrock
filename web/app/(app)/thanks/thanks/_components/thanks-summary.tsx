@@ -24,7 +24,7 @@ export async function ThanksSummary() {
         <CardContent>
           <p className="text-2xl font-semibold">
             {remainingBudget ?? "-"}
-            <span className="ml-1 text-base font-normal text-muted-foreground">
+            <span className="ml-2 text-base font-normal text-muted-foreground">
               / {grantedPoints ?? "-"} pt
             </span>
           </p>
@@ -39,7 +39,7 @@ export async function ThanksSummary() {
         <CardContent>
           <p className="text-2xl font-semibold">
             {balancePoints ?? "-"}
-            <span className="ml-1 text-base font-normal text-muted-foreground">pt</span>
+            <span className="ml-2 text-base font-normal text-muted-foreground">pt</span>
           </p>
         </CardContent>
       </Card>

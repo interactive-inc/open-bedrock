@@ -20,7 +20,7 @@ export default async function ShiftPatternNewPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="シフトパターンを作成">
         <BackButton href="/shift/shift-patterns" label="一覧に戻る" />
       </PageHeader>

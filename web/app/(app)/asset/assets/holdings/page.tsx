@@ -24,7 +24,7 @@ export default async function AssetHoldingsPage() {
   await requirePermission("asset:manage")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="保有状況">
         <BackButton href="/asset/assets" label="一覧に戻る" />
       </PageHeader>

@@ -56,7 +56,7 @@ export default async function NotificationsPage(props: { searchParams: SearchPar
   const suspenseKey = `${filter}:${page}:${pageSize}`
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="通知">
         {canCreate ? (
           <Button nativeButton={false} render={<Link href="/notifications/new" />}>

@@ -52,11 +52,11 @@ export async function EmployeeDetail(props: Props) {
     !(lifecycleState instanceof Error) && (canRequestLifecycle || canApplyLifecycle)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-            <CardTitle className="flex items-center gap-3">
+            <CardTitle className="flex items-center gap-4">
               <span className="text-xl font-semibold">{employee.name}</span>
 
               <EmployeeStatusBadge status={employee.status} />

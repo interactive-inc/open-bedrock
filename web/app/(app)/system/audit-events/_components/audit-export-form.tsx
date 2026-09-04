@@ -111,10 +111,10 @@ export function AuditExportForm(props: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full rounded-xl bg-card border p-3 sm:min-w-xl">
-      <FieldSet disabled={pending} className="gap-3">
+    <form onSubmit={handleSubmit} className="w-full rounded-xl bg-card border p-4 sm:min-w-xl">
+      <FieldSet disabled={pending} className="gap-4">
         <FieldLegend>CSV出力</FieldLegend>
-        <FieldGroup className="grid gap-3 sm:grid-cols-2">
+        <FieldGroup className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={validation?.field === "from" || undefined}>
             <FieldLabel htmlFor="audit-export-from">CSV開始日時</FieldLabel>
             <Input
@@ -161,7 +161,7 @@ export function AuditExportForm(props: Props) {
         </Button>
         <div aria-live="polite" className="text-sm">
           {feedback === null ? null : (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
               <p>{feedback.message}</p>
               {feedback.requestId === null ? null : (
                 <p className="font-mono text-xs text-muted-foreground" translate="no">

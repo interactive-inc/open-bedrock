@@ -23,7 +23,7 @@ export default async function NewOneOnOnePage() {
         )
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="1on1 を記録">
         <BackButton href="/my/oneonones" label="履歴に戻る" />
       </PageHeader>

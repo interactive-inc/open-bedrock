@@ -12,7 +12,7 @@ type Props = {
 export function ReadOnlyNotice(props: Props) {
   return (
     <div className="flex items-start gap-2 rounded-2xl border border-dashed bg-muted/40 p-4">
-      <Terminal className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+      <Terminal className="mt-2 size-4 shrink-0 text-muted-foreground" />
 
       <p className="text-sm text-muted-foreground">
         この画面は読み取り専用です。変更は
@@ -21,7 +21,7 @@ export function ReadOnlyNotice(props: Props) {
         ) : (
           <>
             {" CLI の "}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">{props.command}</code>
+            <code className="rounded bg-muted px-2 py-2 font-mono text-xs">{props.command}</code>
             {" で行います。"}
           </>
         )}

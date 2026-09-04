@@ -54,7 +54,7 @@ export default async function EditSurveyPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={`${survey.title} の編集`}>
         <BackButton href="/survey/surveys/manage" label="管理に戻る" />
       </PageHeader>
@@ -71,7 +71,7 @@ export default async function EditSurveyPage(props: Props) {
       </Card>
 
       <Card>
-        <CardContent className="flex flex-col gap-3">
+        <CardContent className="flex flex-col gap-4">
           <p className="text-sm text-muted-foreground">
             アンケートを削除すると回答もまとめて消えます。
           </p>

@@ -29,7 +29,7 @@ export function CompleteTaskButton(props: Props) {
   const isPending = action[2]
 
   return (
-    <form action={formAction} className="flex flex-col items-end gap-1">
+    <form action={formAction} className="flex flex-col items-end gap-2">
       <input type="hidden" name="task_id" value={props.taskId} />
 
       <Button type="submit" size="sm" variant="secondary" disabled={isPending}>

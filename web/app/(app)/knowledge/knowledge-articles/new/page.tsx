@@ -10,7 +10,7 @@ export const metadata = { title: "ナレッジ記事の作成" }
  */
 export default function NewKnowledgePage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="ナレッジ記事を作成">
         <BackButton href="/knowledge/knowledge-articles" label="一覧に戻る" />
       </PageHeader>

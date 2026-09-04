@@ -139,7 +139,7 @@ function LifecycleBindingButton(props: { template: OnboardingTemplate }) {
   const isCurrent = props.template.lifecycle_effect === effect
 
   return (
-    <form action={formAction} className="flex flex-col items-end gap-1">
+    <form action={formAction} className="flex flex-col items-end gap-2">
       <input type="hidden" name="code" value={props.template.code} />
       <input type="hidden" name="effect" value={effect} />
       <input type="hidden" name="operation" value={isCurrent ? "remove" : "bind"} />
@@ -174,7 +174,7 @@ function DeleteTemplateButton(props: { code: string }) {
   )
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <ConfirmActionDialog
         action={formAction}
         triggerLabel="削除"

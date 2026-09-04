@@ -22,7 +22,7 @@ export default function GlobalError(props: Props) {
 
   return (
     <html lang="ja">
-      <body className="min-h-screen flex flex-col items-center justify-center gap-6 p-8 text-center">
+      <body className="min-h-screen flex flex-col items-center justify-center gap-8 p-8 text-center">
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold">問題が発生しました</h1>
 
