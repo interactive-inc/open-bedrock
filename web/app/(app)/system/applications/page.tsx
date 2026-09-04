@@ -94,29 +94,24 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="全社の申請"
-        actions={
-          <>
-            {canRepairWorkflows ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/system/workflow-repairs" />}
-              >
-                ワークフロー修復
-              </Button>
-            ) : null}
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/inbox/applications" />}
-            >
-              承認 inbox
-            </Button>
-          </>
-        }
-      />
+      <PageHeader title="全社の申請">
+        {canRepairWorkflows ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/system/workflow-repairs" />}
+          >
+            ワークフロー修復
+          </Button>
+        ) : null}
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/inbox/applications" />}
+        >
+          承認 inbox
+        </Button>
+      </PageHeader>
 
       <Suspense
         fallback={<div className="h-9 animate-pulse rounded-md bg-muted" aria-hidden="true" />}

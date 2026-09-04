@@ -22,12 +22,9 @@ export default async function OnboardingEmployeePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={`社員別: ${params.employee}`}
-        actions={
-          <BackButton href="/onboarding/onboarding-assignments" label="オンボーディングに戻る" />
-        }
-      />
+      <PageHeader title={`社員別: ${params.employee}`}>
+        <BackButton href="/onboarding/onboarding-assignments" label="オンボーディングに戻る" />
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={2} rowClassName="h-48 w-full" />}>
         <OnboardingEmployeeView code={params.employee} />

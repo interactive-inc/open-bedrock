@@ -12,10 +12,9 @@ export default async function OrgDepartmentNewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="部署作成"
-        actions={<BackButton href="/company/departments" label="一覧に戻る" />}
-      />
+      <PageHeader title="部署作成">
+        <BackButton href="/company/departments" label="一覧に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

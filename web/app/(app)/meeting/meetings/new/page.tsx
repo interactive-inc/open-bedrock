@@ -20,10 +20,9 @@ export default async function NewMeetingPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="会議体を登録"
-        actions={<BackButton href="/meeting/meetings" label="一覧に戻る" />}
-      />
+      <PageHeader title="会議体を登録">
+        <BackButton href="/meeting/meetings" label="一覧に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

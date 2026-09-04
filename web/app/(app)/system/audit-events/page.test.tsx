@@ -15,10 +15,10 @@ vi.mock("@/app/(app)/system/audit-events/_components/audit-event-list-section", 
   AuditEventListSection: () => <div>監査ログ一覧</div>,
 }))
 vi.mock("@/components/page-header", () => ({
-  PageHeader: ({ title, actions }: { title: string; actions?: React.ReactNode }) => (
+  PageHeader: ({ title, children }: { title: string; children?: React.ReactNode }) => (
     <header>
       <h1>{title}</h1>
-      {actions}
+      {children}
     </header>
   ),
 }))

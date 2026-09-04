@@ -48,10 +48,9 @@ export default async function AnnouncementDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={announcement.title}
-        actions={<BackButton href="/announcement/announcements" label="一覧に戻る" />}
-      />
+      <PageHeader title={announcement.title}>
+        <BackButton href="/announcement/announcements" label="一覧に戻る" />
+      </PageHeader>
 
       {canManage ? (
         <AnnouncementManageActions announcementId={announcement.id} status={announcement.status} />

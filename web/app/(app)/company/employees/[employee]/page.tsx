@@ -34,10 +34,9 @@ export default async function EmployeeDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="従業員詳細"
-        actions={<BackButton href="/company/employees" label="一覧に戻る" />}
-      />
+      <PageHeader title="従業員詳細">
+        <BackButton href="/company/employees" label="一覧に戻る" />
+      </PageHeader>
 
       <Suspense fallback={<DetailSkeleton fields={5} />}>
         <EmployeeDetail code={params.employee} permissions={currentUser.permissions} />

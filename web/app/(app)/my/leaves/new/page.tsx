@@ -11,10 +11,9 @@ export const metadata = { title: "休暇の申請" }
 export default function NewLeaveRequestPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="休暇を申請"
-        actions={<BackButton href="/my/leaves" label="休暇に戻る" />}
-      />
+      <PageHeader title="休暇を申請">
+        <BackButton href="/my/leaves" label="休暇に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

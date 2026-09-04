@@ -50,40 +50,35 @@ export default async function AssetsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="備品"
-        actions={
+      <PageHeader title="備品">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/my/assets" />}>
+          自分の貸与品
+        </Button>
+
+        {canManage ? (
           <>
-            <Button variant="secondary" nativeButton={false} render={<Link href="/my/assets" />}>
-              自分の貸与品
+            <Button
+              variant="secondary"
+              nativeButton={false}
+              render={<Link href="/asset/assets/holdings" />}
+            >
+              保有状況
             </Button>
 
-            {canManage ? (
-              <>
-                <Button
-                  variant="secondary"
-                  nativeButton={false}
-                  render={<Link href="/asset/assets/holdings" />}
-                >
-                  保有状況
-                </Button>
+            <Button
+              variant="secondary"
+              nativeButton={false}
+              render={<Link href="/asset/stocktakes" />}
+            >
+              棚卸し
+            </Button>
 
-                <Button
-                  variant="secondary"
-                  nativeButton={false}
-                  render={<Link href="/asset/stocktakes" />}
-                >
-                  棚卸し
-                </Button>
-
-                <Button nativeButton={false} render={<Link href="/asset/assets/new" />}>
-                  物品を登録
-                </Button>
-              </>
-            ) : null}
+            <Button nativeButton={false} render={<Link href="/asset/assets/new" />}>
+              物品を登録
+            </Button>
           </>
-        }
-      />
+        ) : null}
+      </PageHeader>
 
       <AssetFilterForm kind={kind} status={status} />
 

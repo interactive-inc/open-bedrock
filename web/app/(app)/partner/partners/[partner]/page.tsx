@@ -42,10 +42,9 @@ export default async function PartnerDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={partner.name}
-        actions={<BackButton href="/partner/partners" label="一覧に戻る" />}
-      />
+      <PageHeader title={partner.name}>
+        <BackButton href="/partner/partners" label="一覧に戻る" />
+      </PageHeader>
 
       <PartnerStatusBadge status={partner.status} />
 

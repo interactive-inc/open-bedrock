@@ -42,10 +42,9 @@ export default async function AssetDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={asset.name}
-        actions={<BackButton href="/asset/assets" label="一覧に戻る" />}
-      />
+      <PageHeader title={asset.name}>
+        <BackButton href="/asset/assets" label="一覧に戻る" />
+      </PageHeader>
 
       <AssetStatusBadge status={asset.status} />
 

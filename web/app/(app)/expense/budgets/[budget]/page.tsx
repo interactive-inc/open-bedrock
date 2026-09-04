@@ -29,10 +29,9 @@ export default async function BudgetDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="予算詳細"
-        actions={<BackButton href="/expense/budgets" label="予算一覧に戻る" />}
-      />
+      <PageHeader title="予算詳細">
+        <BackButton href="/expense/budgets" label="予算一覧に戻る" />
+      </PageHeader>
 
       <Suspense fallback={<DetailSkeleton fields={6} />}>
         <BudgetDetailView id={params.budget} />

@@ -14,15 +14,12 @@ export const metadata = { title: "休業" }
 export default function FamilyCareLeavesPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="休業"
-        actions={
-          <Button nativeButton={false} render={<Link href="/my/family-care-leaves/new" />}>
-            <Plus />
-            新規申出
-          </Button>
-        }
-      />
+      <PageHeader title="休業">
+        <Button nativeButton={false} render={<Link href="/my/family-care-leaves/new" />}>
+          <Plus />
+          新規申出
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
         <MyFamilyCareLeavesSection />

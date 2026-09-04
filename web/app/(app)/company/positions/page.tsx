@@ -24,17 +24,14 @@ export default async function PositionsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="役職"
-        actions={
-          canManage ? (
-            <Button nativeButton={false} render={<Link href="/company/positions/new" />}>
-              <Plus />
-              新規役職
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="役職">
+        {canManage ? (
+          <Button nativeButton={false} render={<Link href="/company/positions/new" />}>
+            <Plus />
+            新規役職
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <Positions canManage={canManage} />

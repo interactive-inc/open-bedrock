@@ -17,10 +17,9 @@ export default async function NewTrainingCoursePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="新規コース"
-        actions={<BackButton href="/training/trainings" label="研修に戻る" />}
-      />
+      <PageHeader title="新規コース">
+        <BackButton href="/training/trainings" label="研修に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

@@ -14,10 +14,9 @@ export default async function NewBudgetPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="予算を登録"
-        actions={<BackButton href="/expense/budgets" label="一覧に戻る" />}
-      />
+      <PageHeader title="予算を登録">
+        <BackButton href="/expense/budgets" label="一覧に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

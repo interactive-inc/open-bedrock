@@ -36,23 +36,18 @@ export default async function TrainingPage(props: { searchParams: SearchParams }
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="研修コース"
-        actions={
-          <>
-            <Button variant="secondary" nativeButton={false} render={<Link href="/my/trainings" />}>
-              自分の受講
-            </Button>
+      <PageHeader title="研修コース">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/my/trainings" />}>
+          自分の受講
+        </Button>
 
-            {canManage ? (
-              <Button nativeButton={false} render={<Link href="/training/trainings/new" />}>
-                <Plus />
-                新規コース
-              </Button>
-            ) : null}
-          </>
-        }
-      />
+        {canManage ? (
+          <Button nativeButton={false} render={<Link href="/training/trainings/new" />}>
+            <Plus />
+            新規コース
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={3} />}>
         <Courses offset={offset} pageSize={pageSize} />

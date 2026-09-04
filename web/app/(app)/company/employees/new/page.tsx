@@ -23,10 +23,9 @@ export default async function EmployeeNewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="従業員を登録"
-        actions={<BackButton href="/company/employees" label="一覧に戻る" />}
-      />
+      <PageHeader title="従業員を登録">
+        <BackButton href="/company/employees" label="一覧に戻る" />
+      </PageHeader>
 
       <Card className="gap-0">
         <div className="p-6">

@@ -29,46 +29,37 @@ export default async function ThanksPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="サンクス"
-        actions={
-          <>
-            {canViewAll ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/thanks/thanks-redemptions" />}
-              >
-                サンクス交換の横断
-              </Button>
-            ) : null}
+      <PageHeader title="サンクス">
+        {canViewAll ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/thanks/thanks-redemptions" />}
+          >
+            サンクス交換の横断
+          </Button>
+        ) : null}
 
-            {canApprove ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/inbox/thanks-redemptions" />}
-              >
-                交換承認
-              </Button>
-            ) : null}
+        {canApprove ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/inbox/thanks-redemptions" />}
+          >
+            交換承認
+          </Button>
+        ) : null}
 
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/thanks/rewards" />}
-            >
-              <Gift />
-              景品を見る
-            </Button>
+        <Button variant="secondary" nativeButton={false} render={<Link href="/thanks/rewards" />}>
+          <Gift />
+          景品を見る
+        </Button>
 
-            <Button nativeButton={false} render={<Link href="/thanks/thanks/send" />}>
-              <Plus />
-              感謝を送る
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/thanks/thanks/send" />}>
+          <Plus />
+          感謝を送る
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<SummarySkeleton />}>
         <ThanksSummary />

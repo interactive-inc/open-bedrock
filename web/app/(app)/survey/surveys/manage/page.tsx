@@ -37,25 +37,16 @@ export default async function SurveyManagePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="サーベイ管理"
-        actions={
-          <>
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/survey/surveys" />}
-            >
-              サーベイ一覧へ
-            </Button>
+      <PageHeader title="サーベイ管理">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/survey/surveys" />}>
+          サーベイ一覧へ
+        </Button>
 
-            <Button nativeButton={false} render={<Link href="/survey/surveys/manage/new" />}>
-              <Plus />
-              新規アンケート
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/survey/surveys/manage/new" />}>
+          <Plus />
+          新規アンケート
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={4} />}>
         <SurveysTable />

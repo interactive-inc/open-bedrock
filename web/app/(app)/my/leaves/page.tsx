@@ -28,38 +28,25 @@ export default async function LeavePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="休暇"
-        actions={
-          <>
-            {canViewAll ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/leave/leaves" />}
-              >
-                全社の休暇
-              </Button>
-            ) : null}
+      <PageHeader title="休暇">
+        {canViewAll ? (
+          <Button variant="secondary" nativeButton={false} render={<Link href="/leave/leaves" />}>
+            全社の休暇
+          </Button>
+        ) : null}
 
-            {canApprove ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/inbox/leaves" />}
-              >
-                <Inbox />
-                承認受信箱
-              </Button>
-            ) : null}
+        {canApprove ? (
+          <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/leaves" />}>
+            <Inbox />
+            承認受信箱
+          </Button>
+        ) : null}
 
-            <Button nativeButton={false} render={<Link href="/my/leaves/new" />}>
-              <Plus />
-              休暇を申請
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/my/leaves/new" />}>
+          <Plus />
+          休暇を申請
+        </Button>
+      </PageHeader>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">残日数</h2>

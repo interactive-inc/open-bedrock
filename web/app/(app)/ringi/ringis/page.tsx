@@ -68,14 +68,11 @@ export default async function AdminRingiPage(props: { searchParams: SearchParams
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="稟議の横断"
-        actions={
-          <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/ringis" />}>
-            承認受信箱
-          </Button>
-        }
-      />
+      <PageHeader title="稟議の横断">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/ringis" />}>
+          承認受信箱
+        </Button>
+      </PageHeader>
 
       <RingiAdminFilterForm
         statusValue={filter.status ?? ""}

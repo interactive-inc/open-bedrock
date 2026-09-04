@@ -29,10 +29,9 @@ export default async function ReviewManagePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="評価サイクル"
-        actions={<BackButton href="/my/reviews" label="評価に戻る" />}
-      />
+      <PageHeader title="評価サイクル">
+        <BackButton href="/my/reviews" label="評価に戻る" />
+      </PageHeader>
 
       <Card>
         <CardHeader>

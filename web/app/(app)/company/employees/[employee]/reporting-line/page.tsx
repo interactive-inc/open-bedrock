@@ -19,10 +19,9 @@ export default async function OrgReportingLinePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={`レポートライン: ${params.employee}`}
-        actions={<BackButton href="/company/departments" label="組織図に戻る" />}
-      />
+      <PageHeader title={`レポートライン: ${params.employee}`}>
+        <BackButton href="/company/departments" label="組織図に戻る" />
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-14 w-full" />}>
         <OrgReportingLineView code={params.employee} />

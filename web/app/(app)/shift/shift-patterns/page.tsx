@@ -24,21 +24,16 @@ export default async function ShiftPatternsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="シフトパターン"
-        actions={
-          <>
-            <BackButton href="/my/shifts" label="シフトに戻る" />
+      <PageHeader title="シフトパターン">
+        <BackButton href="/my/shifts" label="シフトに戻る" />
 
-            {canManage ? (
-              <Button nativeButton={false} render={<Link href="/shift/shift-patterns/new" />}>
-                <Plus />
-                パターンを作成
-              </Button>
-            ) : null}
-          </>
-        }
-      />
+        {canManage ? (
+          <Button nativeButton={false} render={<Link href="/shift/shift-patterns/new" />}>
+            <Plus />
+            パターンを作成
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={3} />}>
         <Patterns canManage={canManage} />

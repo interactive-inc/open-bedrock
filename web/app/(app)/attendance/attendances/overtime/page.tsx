@@ -37,14 +37,11 @@ export default async function OvertimeSummaryPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="時間外の集計"
-        actions={
-          <Button variant="secondary" nativeButton={false} render={<Link href="/my/attendances" />}>
-            勤怠へ
-          </Button>
-        }
-      />
+      <PageHeader title="時間外の集計">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/my/attendances" />}>
+          勤怠へ
+        </Button>
+      </PageHeader>
 
       <OvertimeFilterForm
         month={month}

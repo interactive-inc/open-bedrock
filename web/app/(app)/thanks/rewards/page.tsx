@@ -23,25 +23,20 @@ export default async function ThanksRewardsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="景品"
-        actions={
-          <>
-            <BackButton href="/thanks/thanks" label="感謝に戻る" />
+      <PageHeader title="景品">
+        <BackButton href="/thanks/thanks" label="感謝に戻る" />
 
-            {canManage ? (
-              <Button
-                variant="secondary"
-                nativeButton={false}
-                render={<Link href="/thanks/rewards/manage" />}
-              >
-                <Settings />
-                景品の管理
-              </Button>
-            ) : null}
-          </>
-        }
-      />
+        {canManage ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/thanks/rewards/manage" />}
+          >
+            <Settings />
+            景品の管理
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense fallback={<Skeleton className="w-full" />}>
         <ThanksExchangeBalance />
