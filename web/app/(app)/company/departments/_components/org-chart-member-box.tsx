@@ -15,7 +15,7 @@ export function OrgChartMemberBox(props: Props) {
     <Link
       href={`/company/employees/${props.member.employee_code}/reporting-line`}
       className={cn(
-        "flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs hover:bg-muted/50",
+        "flex items-center gap-2 rounded-md border px-2 py-2 text-xs hover:bg-muted/50",
         props.member.is_manager ? "border-primary/60 bg-primary/5" : "bg-card",
       )}
     >

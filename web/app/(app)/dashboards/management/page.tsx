@@ -24,7 +24,7 @@ export default async function ManagementDashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="経営ダッシュボード" />
 
       <Suspense fallback={<ListSkeleton rows={4} />}>
@@ -45,13 +45,13 @@ async function ManagementDashboardSection() {
     <div className="flex flex-col gap-8">
       <ManagementMetricCards summary={summary} />
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">部署別の在籍者数</h2>
 
         <DepartmentHeadcountTable rows={summary.department_headcounts} />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">期間別の目標達成率</h2>
 
         <GoalDoneRateTable rows={summary.goal_done_rates} />

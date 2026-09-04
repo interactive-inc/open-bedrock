@@ -80,7 +80,7 @@ export default async function AdminRedemptionsPage(props: { searchParams: Search
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="サンクス交換の横断">
         {currentUser.permissions.includes("thanks_reward:manage") ? (
           <Button

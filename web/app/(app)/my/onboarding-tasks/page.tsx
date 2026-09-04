@@ -9,7 +9,7 @@ export const metadata = { title: "オンボーディング" }
 /** 自分のオンボーディングタスク一覧画面（/onboarding/me）。 */
 export default function OnboardingMePage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="オンボーディング" />
 
       <Card>

@@ -24,7 +24,7 @@ export default async function CompanyEmploymentsPage(props: Props) {
   const status = toStatus(params.status)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="雇用" />
 
       <ReadOnlyNotice command={null} />

@@ -33,7 +33,7 @@ export default async function EmployeeDetailPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="従業員詳細">
         <BackButton href="/company/employees" label="一覧に戻る" />
       </PageHeader>

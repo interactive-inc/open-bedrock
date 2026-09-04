@@ -44,7 +44,7 @@ export function DelegationManager(props: { delegations: ReadonlyArray<Delegation
     initial,
   )
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,24rem)_1fr]">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,24rem)_1fr]">
       <Card>
         <CardHeader>
           <CardTitle>代理承認を設定</CardTitle>
@@ -86,14 +86,14 @@ export function DelegationManager(props: { delegations: ReadonlyArray<Delegation
           </form>
         </CardContent>
       </Card>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {props.delegations.length === 0 ? (
           <Card>代理承認設定はありません。</Card>
         ) : (
           props.delegations.map((item) => (
             <Card key={item.id}>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex flex-col gap-2">
                   <div className="font-medium">
                     {item.delegator?.name ?? "不明"} → {item.delegate?.name ?? "不明"}
                   </div>

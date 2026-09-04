@@ -81,7 +81,7 @@ function DecisionForm(props: { redemptionId: number }) {
   const [state, formAction, pending] = useActionState(reduce, initialState)
 
   return (
-    <form action={formAction} className="flex flex-col gap-1">
+    <form action={formAction} className="flex flex-col gap-2">
       <input type="hidden" name="redemption_id" value={props.redemptionId} />
 
       <TableRowActions>

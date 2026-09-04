@@ -38,12 +38,12 @@ export default async function StocktakeDetailPage(props: Props) {
   const isOpen = stocktake.status === "open"
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={stocktake.name}>
         <BackButton href="/asset/stocktakes" label="一覧に戻る" />
       </PageHeader>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-4">
         <StocktakeStatusBadge status={stocktake.status} />
 
         <span className="text-sm text-muted-foreground">

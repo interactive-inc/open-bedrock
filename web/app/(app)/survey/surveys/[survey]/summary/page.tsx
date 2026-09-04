@@ -37,7 +37,7 @@ export default async function SurveySummaryPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={summary.title}>
         <Button
           variant="secondary"

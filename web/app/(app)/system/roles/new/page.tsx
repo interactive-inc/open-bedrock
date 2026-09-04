@@ -26,7 +26,7 @@ export default async function AdminRoleNewPage() {
 
   if (permissions instanceof Error) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <PageHeader title="ロール作成" />
 
         <FetchError message="権限カタログの取得に失敗しました" />
@@ -38,7 +38,7 @@ export default async function AdminRoleNewPage() {
   const actorPermissionKeys = new Set<string>(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="ロール作成" />
 
       <RoleCreateForm

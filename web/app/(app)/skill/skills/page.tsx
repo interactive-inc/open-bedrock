@@ -24,7 +24,7 @@ export default async function SkillsPage(props: Props) {
   const category = params.category ?? null
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="スキル一覧">
         <Button nativeButton={false} render={<Link href="/my/skills" />}>
           自分のスキル

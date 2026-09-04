@@ -71,10 +71,10 @@ export default async function HomePage() {
         </Suspense>
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">各機能へ</h2>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {resourceLinks.map((resource) => {
             const Icon = resource.icon
 
@@ -93,7 +93,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">全社の状況</h2>
 
         <Suspense fallback={<DashboardSummarySkeleton />}>
@@ -199,7 +199,7 @@ async function RecentApplicationsCard() {
         {applications.length === 0 ? (
           <CardDescription>最近の申請はありません。</CardDescription>
         ) : (
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-2">
             {applications.map((application) => (
               <li
                 key={application.id ?? application.created_at}

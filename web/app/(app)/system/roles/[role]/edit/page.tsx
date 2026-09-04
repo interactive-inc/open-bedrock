@@ -37,7 +37,7 @@ export default async function AdminRoleEditPage(props: Props) {
 
   if (role instanceof Error || permissions instanceof Error) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <PageHeader title="ロール編集" />
 
         <FetchError message="ロール情報の取得に失敗しました" />
@@ -57,7 +57,7 @@ export default async function AdminRoleEditPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={`ロール編集: ${role.name}`} />
 
       <RoleEditForm

@@ -27,7 +27,7 @@ export default async function ShiftManagePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="シフト割当">
         <BackButton href="/my/shifts" label="シフトに戻る" />
 
@@ -37,7 +37,7 @@ export default async function ShiftManagePage() {
         </Button>
       </PageHeader>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">シフト割当（横断）</h2>
 
         <Suspense fallback={<ListSkeleton rows={3} />}>

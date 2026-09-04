@@ -13,7 +13,7 @@ export const metadata = { title: "休業" }
  */
 export default function FamilyCareLeavesPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="休業">
         <Button nativeButton={false} render={<Link href="/my/family-care-leaves/new" />}>
           <Plus />

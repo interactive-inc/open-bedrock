@@ -82,7 +82,7 @@ export function RingiDecisionForm(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <form action={dispatchApprove}>
         <FieldGroup>
           <input type="hidden" name="ringi_id" value={props.ringiId} />

@@ -35,7 +35,7 @@ export default async function EditCareerPostingPage(props: Props) {
   const posting = await getCareerPosting(postingId)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="公募の編集">
         <BackButton href={`/career/job-postings/${postingId}`} label="詳細に戻る" />
       </PageHeader>
@@ -44,7 +44,7 @@ export default async function EditCareerPostingPage(props: Props) {
         <FetchError message="公募の取得に失敗しました" />
       ) : (
         <Card className="gap-0">
-          <div className="p-6">
+          <div className="p-8">
             <EditPostingForm posting={posting} />
           </div>
         </Card>

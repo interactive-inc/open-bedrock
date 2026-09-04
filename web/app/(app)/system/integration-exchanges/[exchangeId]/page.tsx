@@ -23,7 +23,7 @@ export default async function SystemIntegrationExchangePage(props: Props) {
   const params = await props.params
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="外部交換の詳細" />
 
       <ReadOnlyNotice command={null} />

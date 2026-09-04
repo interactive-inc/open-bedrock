@@ -30,7 +30,7 @@ export default async function BudgetsPage() {
   await requirePermission("budget:manage")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="予算">
         <Button
           variant="secondary"

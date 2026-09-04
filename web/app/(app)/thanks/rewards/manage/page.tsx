@@ -19,7 +19,7 @@ export default async function ThanksRewardsManagePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="景品の管理">
         <BackButton href="/thanks/rewards" label="景品に戻る" />
       </PageHeader>

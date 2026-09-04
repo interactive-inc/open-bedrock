@@ -39,7 +39,7 @@ export function CalendarAddForm() {
   return (
     <form
       action={formAction}
-      className="flex flex-wrap items-end gap-3 rounded-2xl bg-card border p-4"
+      className="flex flex-wrap items-end gap-4 rounded-2xl bg-card border p-4"
     >
       <div className="w-44">
         <Field>

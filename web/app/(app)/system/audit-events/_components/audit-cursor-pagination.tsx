@@ -15,7 +15,7 @@ function DisabledDirection(props: { direction: "previous" | "next" }) {
   return (
     <span
       aria-disabled="true"
-      className="inline-flex h-9 items-center gap-1.5 rounded-4xl px-3 text-sm text-muted-foreground"
+      className="inline-flex h-9 items-center gap-2 rounded-4xl px-4 text-sm text-muted-foreground"
     >
       {previous ? <ChevronLeft aria-hidden="true" /> : null}
       {previous ? "前のページ" : "次のページ"}
@@ -26,7 +26,7 @@ function DisabledDirection(props: { direction: "previous" | "next" }) {
 
 export function AuditCursorPagination(props: Props) {
   return (
-    <nav aria-label="監査ログのページ送り" className="flex items-center justify-between gap-3">
+    <nav aria-label="監査ログのページ送り" className="flex items-center justify-between gap-4">
       {props.previousCursor === null ? (
         <DisabledDirection direction="previous" />
       ) : (

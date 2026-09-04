@@ -18,7 +18,7 @@ export default async function SystemConnectorsPage() {
   await requirePermission("system:admin")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="コネクタ" />
 
       <ReadOnlyNotice command={null} />

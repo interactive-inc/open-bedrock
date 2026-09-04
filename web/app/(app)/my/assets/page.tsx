@@ -22,7 +22,7 @@ export const metadata = { title: "貸与品" }
 /** 自分の貸与品一覧画面。RSC で GET /assets/lent/me を取得してテーブル表示する。 */
 export default function MyLentAssetsPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="貸与品">
         <BackButton href="/asset/assets" label="備品一覧へ" />
       </PageHeader>

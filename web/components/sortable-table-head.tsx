@@ -48,7 +48,7 @@ export function SortableTableHead(props: Props) {
       <Link
         href={href}
         aria-label={`${props.label}で並び替え`}
-        className="inline-flex items-center gap-1 hover:text-foreground"
+        className="inline-flex items-center gap-2 hover:text-foreground"
         aria-sort={isAsc ? "ascending" : isDesc ? "descending" : "none"}
       >
         {props.label}

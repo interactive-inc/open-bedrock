@@ -60,13 +60,13 @@ export function AttendanceClockForm(props: Props) {
   return (
     <form
       action={formAction}
-      className={`flex flex-col gap-3 rounded-2xl border p-4 transition-colors duration-300 ${borderClass}`}
+      className={`flex flex-col gap-4 rounded-2xl border p-4 transition-colors duration-300 ${borderClass}`}
     >
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">{label}打刻</h2>
 
         {state.ok && state.clockedAt !== null ? (
-          <div className="flex items-center gap-1.5 text-sm font-medium text-green-600 dark:text-green-400">
+          <div className="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
             <CheckCircle className="size-4" />
             <span>{state.clockedAt} 打刻済み</span>
           </div>

@@ -30,7 +30,7 @@ export default async function GovernanceDetailPage(props: Props) {
   const metadata = document.metadata
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={document.title}>
         <BackButton href="/governance/governance-documents" label="一覧に戻る" />
       </PageHeader>
@@ -76,9 +76,9 @@ export default async function GovernanceDetailPage(props: Props) {
         />
       </div>
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <Card className="gap-0">
-          <article className="whitespace-pre-wrap p-5 text-sm leading-7 sm:p-8">
+          <article className="whitespace-pre-wrap p-4 text-sm leading-7 sm:p-8">
             {document.body_md}
           </article>
         </Card>
@@ -87,7 +87,7 @@ export default async function GovernanceDetailPage(props: Props) {
             <CardHeader>
               <CardTitle>適用と更新</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               <KeyValue label="適用対象" value={audienceLabel(metadata.audience)} />
               <KeyValue
                 label="公開方式"
@@ -155,7 +155,7 @@ function KeyValue(props: { label: string; value: string }) {
   return (
     <div>
       <dt className="text-xs text-muted-foreground">{props.label}</dt>
-      <dd className="mt-0.5 font-medium">{props.value}</dd>
+      <dd className="mt-2 font-medium">{props.value}</dd>
     </div>
   )
 }

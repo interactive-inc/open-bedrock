@@ -37,7 +37,7 @@ export default async function MyReportsPage() {
       </Suspense>
 
       {canReadReportsOvertime(permissions) ? (
-        <section className="flex flex-col gap-3">
+        <section className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <TimerReset className="size-4 text-muted-foreground" />
 
@@ -51,7 +51,7 @@ export default async function MyReportsPage() {
       ) : null}
 
       {canReadReportsLeaves(permissions) ? (
-        <section className="flex flex-col gap-3">
+        <section className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <CalendarOff className="size-4 text-muted-foreground" />
 
@@ -65,7 +65,7 @@ export default async function MyReportsPage() {
       ) : null}
 
       {canReadReportsGoals(permissions) ? (
-        <section className="flex flex-col gap-3">
+        <section className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <Target className="size-4 text-muted-foreground" />
 
@@ -105,7 +105,7 @@ async function ReportsGrid() {
         <CardLink
           key={report.code}
           href={`/company/employees/${report.code}`}
-          className="flex min-h-24 flex-col gap-1"
+          className="flex min-h-24 flex-col gap-2"
         >
           <CardTitle>{report.name}</CardTitle>
 
@@ -138,7 +138,7 @@ async function TeamAttendanceSection() {
   return (
     <Card>
       <CardContent className="flex flex-col gap-2">
-        <ul className="flex flex-col gap-1.5 text-sm">
+        <ul className="flex flex-col gap-2 text-sm">
           {recent.map((record) => (
             <li key={record.id} className="flex items-center justify-between gap-2">
               <span>{formatDate(record.work_date)}</span>
@@ -171,7 +171,7 @@ async function TeamLeaveSection() {
   return (
     <Card>
       <CardContent className="flex flex-col gap-2">
-        <ul className="flex flex-col gap-1.5 text-sm">
+        <ul className="flex flex-col gap-2 text-sm">
           {result.map((request) => (
             <li key={request.id} className="flex items-center justify-between gap-2">
               <span>
@@ -206,7 +206,7 @@ async function TeamGoalSection() {
   return (
     <Card>
       <CardContent className="flex flex-col gap-2">
-        <ul className="flex flex-col gap-1.5 text-sm">
+        <ul className="flex flex-col gap-2 text-sm">
           {goals.map((goal) => (
             <li key={goal.id} className="flex items-center justify-between gap-2">
               <span>

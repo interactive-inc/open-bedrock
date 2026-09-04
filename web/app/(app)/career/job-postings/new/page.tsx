@@ -19,13 +19,13 @@ export default async function NewCareerPostingPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="公募の新規作成">
         <BackButton href="/career/job-postings" label="公募一覧に戻る" />
       </PageHeader>
 
       <Card className="gap-0">
-        <div className="p-6">
+        <div className="p-8">
           <CreatePostingForm />
         </div>
       </Card>

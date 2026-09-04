@@ -33,7 +33,7 @@ export default async function LicensesPage(props: Props) {
   const canManage = canManageLicenses(me.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="ライセンス">
         {canManage ? (
           <Button nativeButton={false} render={<Link href="/software-license/licenses/new" />}>

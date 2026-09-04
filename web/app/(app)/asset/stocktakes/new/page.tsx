@@ -11,13 +11,13 @@ export default async function StocktakeNewPage() {
   await requirePermission("asset:manage")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="棚卸しを開始">
         <BackButton href="/asset/stocktakes" label="一覧に戻る" />
       </PageHeader>
 
       <Card className="gap-0">
-        <div className="p-6">
+        <div className="p-8">
           <StocktakeStartForm />
         </div>
       </Card>

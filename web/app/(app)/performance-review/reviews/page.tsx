@@ -38,7 +38,7 @@ export default async function ReviewResultsPage(props: Props) {
   const employeeCode = typeof employeeCodeValue === "string" ? employeeCodeValue : ""
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="評価結果">
         <BackButton href="/my/reviews" label="評価に戻る" />
       </PageHeader>
@@ -79,7 +79,7 @@ async function Results(props: ResultsProps) {
           <CardTitle>集計</CardTitle>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-1">
+        <CardContent className="flex flex-col gap-2">
           <span>評価対象: {props.employeeCode}</span>
 
           <span>フォーム数: {result.form_count}</span>

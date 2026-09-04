@@ -35,7 +35,7 @@ export default async function InboxPage() {
   const hasCountable = cards.some((card) => card.count !== null)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       {hasCountable && totalPending === 0 ? (
         <EmptyState
           icon={Inbox}

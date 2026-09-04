@@ -51,7 +51,7 @@ export function MyBusinessTripsList(props: Props) {
 
   if (isMobile) {
     return (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {props.businessTrips.map((businessTrip) => (
           <Card key={businessTrip.id}>
             <CardContent className="flex flex-col gap-2">

@@ -41,7 +41,7 @@ export function PageSizeSelect(props: Props) {
   }
 
   return (
-    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
       <label htmlFor="page-size-select">表示</label>
 
       <Select value={String(props.currentSize)} onValueChange={handleChange}>

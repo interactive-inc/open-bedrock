@@ -13,7 +13,7 @@ export default async function NewLifeEventPage() {
   const me = await getMe()
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="新規届出">
         <BackButton href="/my/life-events" label="一覧に戻る" />
       </PageHeader>

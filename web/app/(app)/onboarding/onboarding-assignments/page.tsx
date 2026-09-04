@@ -26,7 +26,7 @@ export default async function OnboardingEmployeesPage() {
   const employees = await getEmployeeDirectory({}, { limit: 100 })
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="オンボーディング進捗">
         {canManage ? (
           <Button

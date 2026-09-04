@@ -10,7 +10,7 @@ export const metadata = { title: "新規出張申請" }
  */
 export default function NewBusinessTripPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="新規申請">
         <BackButton href="/my/business-trips" label="一覧に戻る" />
       </PageHeader>

@@ -50,7 +50,7 @@ export function SurveyAnswerForm(props: Props) {
       <FieldGroup>
         {props.questions.map((question) => (
           <Card key={question.id} className="gap-0">
-            <div className="flex flex-col gap-3 p-4">
+            <div className="flex flex-col gap-4 p-4">
               <Field>
                 <FieldLabel htmlFor={`answer:${question.id}`}>{question.text}</FieldLabel>
 

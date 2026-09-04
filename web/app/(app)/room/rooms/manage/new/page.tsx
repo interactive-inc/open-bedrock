@@ -16,7 +16,7 @@ export default async function NewRoomPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="会議室を登録">
         <BackButton href="/room/rooms/manage" label="マスタに戻る" />
       </PageHeader>

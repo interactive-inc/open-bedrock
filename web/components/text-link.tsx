@@ -24,7 +24,7 @@ export function TextLink(props: Props) {
       href={props.href}
       prefetch={props.prefetch}
       className={cn(
-        "group/text-link inline-flex w-fit items-center gap-0.5 text-sm text-primary",
+        "group/text-link inline-flex w-fit items-center gap-2 text-sm text-primary",
         props.className,
       )}
     >

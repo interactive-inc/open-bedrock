@@ -25,7 +25,7 @@ export default async function StocktakesPage() {
   await requirePermission("asset:manage")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="棚卸し">
         <BackButton href="/asset/assets" label="備品に戻る" />
 

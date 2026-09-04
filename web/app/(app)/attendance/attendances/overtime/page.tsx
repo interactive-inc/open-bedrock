@@ -36,7 +36,7 @@ export default async function OvertimeSummaryPage(props: Props) {
   const canReadAll = canReadAllOvertime(permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="時間外の集計">
         <Button variant="secondary" nativeButton={false} render={<Link href="/my/attendances" />}>
           勤怠へ

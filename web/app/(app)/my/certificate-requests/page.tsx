@@ -13,7 +13,7 @@ export const metadata = { title: "証明書" }
  */
 export default function CertificateRequestsPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="証明書">
         <Button nativeButton={false} render={<Link href="/my/certificate-requests/new" />}>
           <Plus />

@@ -22,7 +22,7 @@ export default async function GradesPage() {
   const canManage = currentUser instanceof Error ? false : canManageGrades(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="等級">
         {canManage ? (
           <Button nativeButton={false} render={<Link href="/company/grades/new" />}>

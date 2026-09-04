@@ -40,7 +40,7 @@ type Props = {
  */
 export function OrgDepartmentManagerList(props: Props) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="overflow-x-auto">
         <Table aria-label="一覧">
           <TableHeader>
@@ -177,7 +177,7 @@ function DeleteDepartmentButton(props: { code: string }) {
   })
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-end gap-2">
       <ConfirmActionDialog
         action={formAction}
         triggerLabel="削除"

@@ -15,7 +15,7 @@ export async function CertificationsSection(props: Props) {
   }
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4">
       <h2 className="text-lg font-medium">資格マスタ</h2>
 
       <CertificationsTable rows={certifications} canManage={props.canManage} />

@@ -67,7 +67,7 @@ export default async function AdminRingiPage(props: { searchParams: SearchParams
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="稟議の横断">
         <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/ringis" />}>
           承認受信箱

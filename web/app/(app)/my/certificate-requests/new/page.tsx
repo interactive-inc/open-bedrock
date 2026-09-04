@@ -10,7 +10,7 @@ export const metadata = { title: "新規証明書発行依頼" }
  */
 export default function NewCertificateRequestPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="新規依頼">
         <BackButton href="/my/certificate-requests" label="一覧に戻る" />
       </PageHeader>

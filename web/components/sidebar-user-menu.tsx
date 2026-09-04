@@ -47,7 +47,7 @@ export function SidebarUserMenu(props: Props) {
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-2">
       <Button
         variant="ghost"
         size="icon"
@@ -82,7 +82,7 @@ export function SidebarUserMenu(props: Props) {
         <DropdownMenuContent align="end" side="top">
           <DropdownMenuGroup>
             <DropdownMenuLabel>
-              <span className="flex flex-col gap-0.5">
+              <span className="flex flex-col gap-2">
                 <span className="text-sm font-medium">{props.currentUser.name}</span>
 
                 <span className="text-xs text-muted-foreground">{props.currentUser.email}</span>

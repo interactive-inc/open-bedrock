@@ -28,7 +28,7 @@ export default async function DepartmentOneOnOnesPage(props: Props) {
 
   if (sessions instanceof Error) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <PageHeader title="部署の1on1" />
 
         <DepartmentName team={params.team} />
@@ -39,7 +39,7 @@ export default async function DepartmentOneOnOnesPage(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="部署の1on1" />
 
       <DepartmentName team={params.team} />

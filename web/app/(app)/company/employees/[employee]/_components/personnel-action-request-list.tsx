@@ -13,11 +13,11 @@ export function PersonnelActionRequestList(props: { data: PersonnelActionRequest
         <CardDescription>承認フローで確定を待っている申請</CardDescription>
       </CardHeader>
       <CardContent>
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-4">
           {props.data.requests.map((request) => (
             <li
               key={request.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card border p-4"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-card border p-4"
             >
               <div className="min-w-0">
                 <p className="font-medium break-words">{formatLifecycleKind(request.kind)}</p>

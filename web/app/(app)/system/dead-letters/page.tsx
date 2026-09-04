@@ -15,7 +15,7 @@ export default async function SystemDeadLettersPage() {
   await requirePermission("batch:view")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="dead letter" />
 
       <ReadOnlyNotice command={null} />

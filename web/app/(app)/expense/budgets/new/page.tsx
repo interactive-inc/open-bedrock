@@ -13,7 +13,7 @@ export default async function NewBudgetPage() {
   await requirePermission("budget:manage")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="予算を登録">
         <BackButton href="/expense/budgets" label="一覧に戻る" />
       </PageHeader>

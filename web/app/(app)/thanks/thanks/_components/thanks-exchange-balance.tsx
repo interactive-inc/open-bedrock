@@ -18,7 +18,7 @@ export async function ThanksExchangeBalance() {
       <CardContent>
         <p className="text-2xl font-semibold">
           {balancePoints ?? "-"}
-          <span className="ml-1 text-base font-normal text-muted-foreground">pt</span>
+          <span className="ml-2 text-base font-normal text-muted-foreground">pt</span>
         </p>
       </CardContent>
     </Card>

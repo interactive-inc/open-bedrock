@@ -35,7 +35,7 @@ export default async function BudgetSummaryPage(props: Props) {
   const fiscalPeriod = searchParams.fiscal_period ?? ""
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="消化状況">
         <BackButton href="/expense/budgets" label="予算一覧に戻る" />
       </PageHeader>

@@ -22,7 +22,7 @@ export default async function ThanksRewardsPage() {
   const canManage = currentUser instanceof Error ? false : canManageRewards(currentUser.permissions)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="景品">
         <BackButton href="/thanks/thanks" label="感謝に戻る" />
 
@@ -42,7 +42,7 @@ export default async function ThanksRewardsPage() {
         <ThanksExchangeBalance />
       </Suspense>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">交換する景品を選ぶ</h2>
 
         <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}>

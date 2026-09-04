@@ -39,7 +39,7 @@ export default async function MyExpensesPage() {
     currentUser instanceof Error ? false : currentUser.permissions.includes("expense:approve")
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="経費">
         {canViewAll ? (
           <Button

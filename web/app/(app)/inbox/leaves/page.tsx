@@ -56,7 +56,7 @@ export default async function LeaveInboxPage(props: { searchParams: SearchParams
   const sort = toSort(searchParams.sort)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <SubPageHeader
         title="承認待ちの休暇"
         actions={

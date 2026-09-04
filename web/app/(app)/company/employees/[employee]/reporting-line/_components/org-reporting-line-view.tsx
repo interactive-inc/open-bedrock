@@ -25,7 +25,7 @@ export async function OrgReportingLineView(props: Props) {
       {nodes.map((node) => (
         <li key={node.employee_code} style={{ paddingInlineStart: `${node.depth * 1.5}rem` }}>
           <Card className="gap-0">
-            <div className="flex items-center gap-3 p-3">
+            <div className="flex items-center gap-4 p-4">
               <span className="text-xs text-muted-foreground">Lv.{node.depth}</span>
 
               <span className="text-sm font-medium">{node.employee_name}</span>

@@ -19,7 +19,7 @@ export default async function NewOnboardingTemplatePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="テンプレートを作成">
         <BackButton href="/onboarding/onboarding-assignments" label="一覧に戻る" />
       </PageHeader>

@@ -62,7 +62,7 @@ export default async function GoalDetailPage(props: Props) {
           : []
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title={goal.title}>
         <BackButton href="/performance-review/goals" label="一覧に戻る" />
       </PageHeader>
@@ -72,7 +72,7 @@ export default async function GoalDetailPage(props: Props) {
           <CardDescription>概要</CardDescription>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-3">
+        <CardContent className="flex flex-col gap-4">
           <div className="flex gap-2">
             <span className="w-24 text-muted-foreground">期間</span>
             <span>{goal.period}</span>

@@ -41,7 +41,7 @@ export default async function GoalsPage(props: Props) {
       : `/performance-review/goals/new?period=${encodeURIComponent(period)}`
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="全社の目標">
         <div className="flex gap-2">
           <Button
