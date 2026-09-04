@@ -48,16 +48,13 @@ export default async function PartnersPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="取引先"
-        actions={
-          canManage ? (
-            <Button nativeButton={false} render={<Link href="/partner/partners/new" />}>
-              取引先を登録
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="取引先">
+        {canManage ? (
+          <Button nativeButton={false} render={<Link href="/partner/partners/new" />}>
+            取引先を登録
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <PartnerFilterForm q={q} status={status} />
 

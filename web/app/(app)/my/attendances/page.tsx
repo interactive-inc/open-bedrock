@@ -34,20 +34,17 @@ export default async function AttendancePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="勤怠"
-        actions={
-          canViewAll ? (
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/attendance/attendances" />}
-            >
-              全社の勤怠
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="勤怠">
+        {canViewAll ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/attendance/attendances" />}
+          >
+            全社の勤怠
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <AttendanceClockForm mode="clock-in" />

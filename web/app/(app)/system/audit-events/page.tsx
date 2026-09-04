@@ -42,10 +42,9 @@ export default async function AuditEventsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="監査ログ"
-        actions={canExport ? <AuditExportForm query={parsed.query} /> : undefined}
-      />
+      <PageHeader title="監査ログ">
+        {canExport ? <AuditExportForm query={parsed.query} /> : undefined}
+      </PageHeader>
       <AuditEventFilterForm query={parsed.query} />
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
         <AuditEventListSection query={parsed.query} />

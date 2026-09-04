@@ -25,18 +25,15 @@ export default async function RoomsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="会議室"
-        actions={
-          <Button
-            variant="secondary"
-            nativeButton={false}
-            render={<Link href="/my/room-reservations" />}
-          >
-            自分の予約
-          </Button>
-        }
-      />
+      <PageHeader title="会議室">
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/my/room-reservations" />}
+        >
+          自分の予約
+        </Button>
+      </PageHeader>
 
       <RoomAvailabilitySearchForm search={search} />
 

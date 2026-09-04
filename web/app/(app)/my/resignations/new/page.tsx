@@ -11,10 +11,9 @@ export const metadata = { title: "新規退職申請" }
 export default function NewResignationPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="新規申請"
-        actions={<BackButton href="/my/resignations" label="一覧に戻る" />}
-      />
+      <PageHeader title="新規申請">
+        <BackButton href="/my/resignations" label="一覧に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

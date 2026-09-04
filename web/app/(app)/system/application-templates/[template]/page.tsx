@@ -38,10 +38,9 @@ export default async function ApplicationTemplateDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={template.name}
-        actions={<BackButton href="/system/application-templates" label="テンプレ一覧へ" />}
-      />
+      <PageHeader title={template.name}>
+        <BackButton href="/system/application-templates" label="テンプレ一覧へ" />
+      </PageHeader>
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="secondary">{categoryLabel(template.category)}</Badge>

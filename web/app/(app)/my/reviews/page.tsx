@@ -26,21 +26,18 @@ export default async function ReviewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="評価"
-        actions={
-          canAdminister ? (
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/performance-review/review-cycles" />}
-            >
-              <Settings />
-              管理
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="評価">
+        {canAdminister ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/performance-review/review-cycles" />}
+          >
+            <Settings />
+            管理
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">評価サイクル</h2>

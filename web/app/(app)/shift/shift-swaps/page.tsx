@@ -89,14 +89,11 @@ export default async function AdminShiftSwapsPage(props: { searchParams: SearchP
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="シフト交代の横断"
-        actions={
-          <Button variant="secondary" nativeButton={false} render={<Link href="/my/shifts" />}>
-            自分のシフトへ
-          </Button>
-        }
-      />
+      <PageHeader title="シフト交代の横断">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/my/shifts" />}>
+          自分のシフトへ
+        </Button>
+      </PageHeader>
 
       <ShiftSwapAdminFilterForm
         statusValue={filter.status ?? ""}

@@ -81,20 +81,17 @@ export default async function AdminRedemptionsPage(props: { searchParams: Search
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="サンクス交換の横断"
-        actions={
-          currentUser.permissions.includes("thanks_reward:manage") ? (
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/thanks/rewards/manage" />}
-            >
-              景品の管理
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="サンクス交換の横断">
+        {currentUser.permissions.includes("thanks_reward:manage") ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/thanks/rewards/manage" />}
+          >
+            景品の管理
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <RedemptionAdminFilterForm
         statusValue={filter.status ?? ""}

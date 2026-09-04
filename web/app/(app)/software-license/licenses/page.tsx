@@ -34,17 +34,14 @@ export default async function LicensesPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="ライセンス"
-        actions={
-          canManage ? (
-            <Button nativeButton={false} render={<Link href="/software-license/licenses/new" />}>
-              <Plus />
-              ライセンスを登録
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="ライセンス">
+        {canManage ? (
+          <Button nativeButton={false} render={<Link href="/software-license/licenses/new" />}>
+            <Plus />
+            ライセンスを登録
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense key={String(page)} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
         <LicenseList offset={offset} canManage={canManage} />

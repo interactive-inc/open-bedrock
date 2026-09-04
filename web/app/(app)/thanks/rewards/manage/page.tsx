@@ -20,10 +20,9 @@ export default async function ThanksRewardsManagePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="景品の管理"
-        actions={<BackButton href="/thanks/rewards" label="景品に戻る" />}
-      />
+      <PageHeader title="景品の管理">
+        <BackButton href="/thanks/rewards" label="景品に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

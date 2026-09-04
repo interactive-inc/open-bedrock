@@ -29,30 +29,18 @@ export default async function ApplicationTemplatesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="申請テンプレート"
-        actions={
-          <>
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/my/applications" />}
-            >
-              申請一覧へ
-            </Button>
+      <PageHeader title="申請テンプレート">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/my/applications" />}>
+          申請一覧へ
+        </Button>
 
-            {canManage ? (
-              <Button
-                nativeButton={false}
-                render={<Link href="/system/application-templates/new" />}
-              >
-                <Plus />
-                テンプレートを作成
-              </Button>
-            ) : null}
-          </>
-        }
-      />
+        {canManage ? (
+          <Button nativeButton={false} render={<Link href="/system/application-templates/new" />}>
+            <Plus />
+            テンプレートを作成
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense fallback={<TemplatesSkeleton />}>
         <TemplatesGrid />

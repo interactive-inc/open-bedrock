@@ -16,26 +16,17 @@ export const metadata = { title: "サンクス履歴" }
 export default function MyThanksPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="サンクス履歴"
-        actions={
-          <>
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/thanks/rewards" />}
-            >
-              <Gift />
-              景品を見る
-            </Button>
+      <PageHeader title="サンクス履歴">
+        <Button variant="secondary" nativeButton={false} render={<Link href="/thanks/rewards" />}>
+          <Gift />
+          景品を見る
+        </Button>
 
-            <Button nativeButton={false} render={<Link href="/thanks/thanks/send" />}>
-              <Plus />
-              感謝を送る
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/thanks/thanks/send" />}>
+          <Plus />
+          感謝を送る
+        </Button>
+      </PageHeader>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">送信履歴</h2>

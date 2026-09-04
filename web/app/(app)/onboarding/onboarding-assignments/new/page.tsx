@@ -22,12 +22,9 @@ export default async function NewOnboardingAssignmentPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="割当を作成"
-        actions={
-          <BackButton href="/onboarding/onboarding-assignments" label="オンボーディングに戻る" />
-        }
-      />
+      <PageHeader title="割当を作成">
+        <BackButton href="/onboarding/onboarding-assignments" label="オンボーディングに戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

@@ -31,10 +31,9 @@ export default async function NotificationNewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="通知を作成"
-        actions={<BackButton href="/notifications" label="一覧に戻る" />}
-      />
+      <PageHeader title="通知を作成">
+        <BackButton href="/notifications" label="一覧に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

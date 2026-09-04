@@ -14,15 +14,12 @@ export const metadata = { title: "レンタル" }
 export default function RentalsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="レンタル"
-        actions={
-          <Button nativeButton={false} render={<Link href="/my/rentals/new" />}>
-            <Plus />
-            新規予約
-          </Button>
-        }
-      />
+      <PageHeader title="レンタル">
+        <Button nativeButton={false} render={<Link href="/my/rentals/new" />}>
+          <Plus />
+          新規予約
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
         <MyReservationsSection />

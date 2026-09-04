@@ -16,19 +16,16 @@ export const metadata = { title: "キャリア" }
 export default async function CareerPage() {
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
-        title="キャリア"
-        actions={
-          <Button
-            variant="secondary"
-            nativeButton={false}
-            render={<Link href="/career/job-postings" />}
-          >
-            <Briefcase />
-            社内公募を見る
-          </Button>
-        }
-      />
+      <PageHeader title="キャリア">
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/career/job-postings" />}
+        >
+          <Briefcase />
+          社内公募を見る
+        </Button>
+      </PageHeader>
 
       <section className="flex flex-col gap-4">
         <Suspense fallback={<Skeleton className="w-full" />}>

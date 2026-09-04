@@ -53,10 +53,9 @@ function DetailField(props: { label: string; children: React.ReactNode; mono?: b
 function DetailError() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="監査イベント"
-        actions={<BackButton href="/system/audit-events" label="一覧に戻る" prefetch={false} />}
-      />
+      <PageHeader title="監査イベント">
+        <BackButton href="/system/audit-events" label="一覧に戻る" prefetch={false} />
+      </PageHeader>
       <Alert variant="destructive">
         <AlertTitle>監査イベントを取得できませんでした</AlertTitle>
         <AlertDescription>時間をおいて、もう一度お試しください。</AlertDescription>
@@ -81,10 +80,9 @@ export default async function AuditEventDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="監査イベント"
-        actions={<BackButton href="/system/audit-events" label="一覧に戻る" prefetch={false} />}
-      />
+      <PageHeader title="監査イベント">
+        <BackButton href="/system/audit-events" label="一覧に戻る" prefetch={false} />
+      </PageHeader>
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>

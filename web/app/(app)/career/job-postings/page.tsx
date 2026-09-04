@@ -25,21 +25,18 @@ export default async function CareerPostingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="社内公募"
-        actions={
-          <div className="flex items-center gap-2">
-            <BackButton href="/my/career" label="キャリアに戻る" />
+      <PageHeader title="社内公募">
+        <div className="flex items-center gap-2">
+          <BackButton href="/my/career" label="キャリアに戻る" />
 
-            {canManage ? (
-              <Button nativeButton={false} render={<Link href="/career/job-postings/new" />}>
-                <Plus />
-                新規作成
-              </Button>
-            ) : null}
-          </div>
-        }
-      />
+          {canManage ? (
+            <Button nativeButton={false} render={<Link href="/career/job-postings/new" />}>
+              <Plus />
+              新規作成
+            </Button>
+          ) : null}
+        </div>
+      </PageHeader>
 
       <Suspense fallback={<PostingsSkeleton />}>
         <CareerPostingsSection canManage={canManage} />

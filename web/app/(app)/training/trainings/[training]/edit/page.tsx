@@ -33,10 +33,9 @@ export default async function EditTrainingCoursePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={`${course.title} の編集`}
-        actions={<BackButton href={`/training/trainings/${course.code}`} label="詳細に戻る" />}
-      />
+      <PageHeader title={`${course.title} の編集`}>
+        <BackButton href={`/training/trainings/${course.code}`} label="詳細に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

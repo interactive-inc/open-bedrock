@@ -39,7 +39,9 @@ export default async function ReviewResultsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="評価結果" actions={<BackButton href="/my/reviews" label="評価に戻る" />} />
+      <PageHeader title="評価結果">
+        <BackButton href="/my/reviews" label="評価に戻る" />
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-16 w-full" />}>
         <Results cycleId={cycleId} employeeCode={employeeCode} />

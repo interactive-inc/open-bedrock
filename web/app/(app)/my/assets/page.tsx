@@ -23,7 +23,9 @@ export const metadata = { title: "貸与品" }
 export default function MyLentAssetsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="貸与品" actions={<BackButton href="/asset/assets" label="備品一覧へ" />} />
+      <PageHeader title="貸与品">
+        <BackButton href="/asset/assets" label="備品一覧へ" />
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={4} />}>
         <MyLentAssetsTable />

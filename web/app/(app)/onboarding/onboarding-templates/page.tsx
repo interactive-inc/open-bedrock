@@ -25,22 +25,14 @@ export default async function OnboardingTemplatesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="オンボーディング設計"
-        actions={
-          <>
-            <BackButton href="/onboarding/onboarding-assignments" label="オンボーディングに戻る" />
+      <PageHeader title="オンボーディング設計">
+        <BackButton href="/onboarding/onboarding-assignments" label="オンボーディングに戻る" />
 
-            <Button
-              nativeButton={false}
-              render={<Link href="/onboarding/onboarding-templates/new" />}
-            >
-              <Plus />
-              新規テンプレート
-            </Button>
-          </>
-        }
-      />
+        <Button nativeButton={false} render={<Link href="/onboarding/onboarding-templates/new" />}>
+          <Plus />
+          新規テンプレート
+        </Button>
+      </PageHeader>
 
       <Card>
         <CardContent>

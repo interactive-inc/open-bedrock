@@ -14,10 +14,9 @@ export default async function NewLifeEventPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="新規届出"
-        actions={<BackButton href="/my/life-events" label="一覧に戻る" />}
-      />
+      <PageHeader title="新規届出">
+        <BackButton href="/my/life-events" label="一覧に戻る" />
+      </PageHeader>
 
       <Card>
         <CardContent>

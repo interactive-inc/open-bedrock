@@ -38,10 +38,9 @@ export default async function RegulationDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={regulation.title}
-        actions={<BackButton href="/regulation/regulations" label="一覧に戻る" />}
-      />
+      <PageHeader title={regulation.title}>
+        <BackButton href="/regulation/regulations" label="一覧に戻る" />
+      </PageHeader>
 
       {canManage ? (
         <RegulationManageActions code={regulation.code} status={regulation.status} />

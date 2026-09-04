@@ -31,20 +31,14 @@ export default async function HealthCheckupsPage(props: { searchParams: SearchPa
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="健診の実施記録"
-        actions={
-          canManageHealthCheckups(currentUser.permissions) ? (
-            <Button
-              nativeButton={false}
-              render={<Link href="/health-checkup/health-checkups/new" />}
-            >
-              <Plus />
-              実施記録を登録
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="健診の実施記録">
+        {canManageHealthCheckups(currentUser.permissions) ? (
+          <Button nativeButton={false} render={<Link href="/health-checkup/health-checkups/new" />}>
+            <Plus />
+            実施記録を登録
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense
         key={String(fiscalYear ?? "")}

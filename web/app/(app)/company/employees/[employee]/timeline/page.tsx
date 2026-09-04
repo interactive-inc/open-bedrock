@@ -15,12 +15,9 @@ export default async function EmployeeTimelinePage(props: {
   const events = await getEmployeeLifecycleEvents(code, { cursor: query.cursor })
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="人材タイムライン"
-        actions={
-          <BackButton href={`/company/employees/${encodeURIComponent(code)}`} label="詳細に戻る" />
-        }
-      />
+      <PageHeader title="人材タイムライン">
+        <BackButton href={`/company/employees/${encodeURIComponent(code)}`} label="詳細に戻る" />
+      </PageHeader>
       {events instanceof Error ? (
         <FetchError message="人事タイムラインの取得に失敗しました" />
       ) : (

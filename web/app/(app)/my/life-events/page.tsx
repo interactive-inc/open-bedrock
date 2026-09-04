@@ -14,15 +14,12 @@ export const metadata = { title: "ライフイベント" }
 export default function LifeEventsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="ライフイベント"
-        actions={
-          <Button nativeButton={false} render={<Link href="/my/life-events/new" />}>
-            <Plus />
-            新規届出
-          </Button>
-        }
-      />
+      <PageHeader title="ライフイベント">
+        <Button nativeButton={false} render={<Link href="/my/life-events/new" />}>
+          <Plus />
+          新規届出
+        </Button>
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
         <MyLifeEventsSection />

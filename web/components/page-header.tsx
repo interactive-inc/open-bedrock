@@ -1,12 +1,12 @@
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
 /**
- * 全ページ共通の見出しブロック。タイトルと右側アクションを横並びに整える。
- * h1 とアクション領域の縦リズム・余白を統一するために collocation でなく共有コンポーネントにする。
+ * 全ページ共通の見出しブロック。タイトルと右側の children を横並びに整える。
+ * h1 と children 領域の縦リズム・余白を統一するために collocation でなく共有コンポーネントにする。
  */
 type Props = {
   title: string
-  actions?: React.ReactNode
+  children?: React.ReactNode
 }
 
 export function PageHeader(props: Props) {
@@ -19,8 +19,8 @@ export function PageHeader(props: Props) {
           <h1 className="text-base font-semibold">{props.title}</h1>
         </div>
 
-        {props.actions !== undefined ? (
-          <div className="flex flex-wrap items-center gap-2">{props.actions}</div>
+        {props.children !== undefined ? (
+          <div className="flex flex-wrap items-center gap-2">{props.children}</div>
         ) : null}
       </div>
     </div>

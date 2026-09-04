@@ -23,17 +23,14 @@ export default async function GradesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="等級"
-        actions={
-          canManage ? (
-            <Button nativeButton={false} render={<Link href="/company/grades/new" />}>
-              <Plus />
-              新規等級
-            </Button>
-          ) : null
-        }
-      />
+      <PageHeader title="等級">
+        {canManage ? (
+          <Button nativeButton={false} render={<Link href="/company/grades/new" />}>
+            <Plus />
+            新規等級
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <Grades canManage={canManage} />
