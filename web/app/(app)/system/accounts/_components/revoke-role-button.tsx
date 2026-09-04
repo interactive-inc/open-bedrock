@@ -15,7 +15,7 @@ type Props = {
   roleLabel: string
 }
 
-/** アカウントから特定ロールを剥奪するボタン。 */
+/** ロール名を表示し、押すとそのロールをアカウントから剥奪するボタン。 */
 export function RevokeRoleButton(props: Props) {
   async function reduce(
     previousState: AccountActionFormState,
@@ -35,20 +35,20 @@ export function RevokeRoleButton(props: Props) {
   const [, formAction, isPending] = useActionState(reduce, initialState)
 
   return (
-    <form action={formAction} className="inline">
+    <form action={formAction}>
       <input type="hidden" name="account_id" value={props.accountId} />
 
       <input type="hidden" name="binding_id" value={props.bindingId} />
 
       <Button
         type="submit"
-        variant="ghost"
-        size="icon-xs"
+        variant="secondary"
+        size="sm"
         disabled={isPending}
-        className="ml-1"
         aria-label={`${props.roleLabel} を剥奪`}
       >
-        <X />
+        {props.roleLabel}
+        <X data-icon="inline-end" />
       </Button>
     </form>
   )
