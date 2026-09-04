@@ -92,6 +92,16 @@ shadcn/ui + Tailwind CSS ベースのデザイン規約。コンポーネント�
 | `--font-mono`    | コード（Geist Mono） |
 | `--font-heading` | 見出し               |
 
+### 間隔（Spacing）
+
+余白と間隔は 2 の冪だけを使う。使ってよい値は `0`、`2`、`4`、`8`、`16`、`32`、`64` と `px` に限る。
+
+対象は `gap-*`、`p-*`（`px` / `py` / `pt` / `pb` / `pl` / `pr` を含む）、`m-*`（同様）、`space-x-*` / `space-y-*` である。`1`、`3`、`5`、`6`、`1.5`、`2.5` のような中間値と、`p-[0.15rem]` のような任意値は使わない。
+
+段階が足りないと感じたときは値を刻まず、入れ子の構造を見直す。要素の間は `gap-2`、関連する要素のまとまりの間は `gap-4`、セクションの間は `gap-8` を基準にする。
+
+`web/components/ui/` の shadcn/ui 生成物はこの規則の対象外とする。生成物は手編集しないため、内部で使う値をこちらの都合で変えない。
+
 ## コンポーネント使用規約
 
 `web/components/ui/` の shadcn/ui コンポーネントへ、色やサイズを変える `className` を渡すことを禁止する。対象は色（`bg-*`、`text-{色}`、`border-{色}`）、文字サイズ（`text-xs`〜`text-xl` 等）、箱のサイズ（`size-*`、`h-*`、`w-*`（`w-full` を除く）、`min-w-*`、`max-w-*`、`p-*` 系）、角丸（`rounded-*`）、枠線の有無や太さ（`border`、`border-*`）、影（`shadow-*`）、フォントの太さ（`font-*`）、`tracking-*` である。見た目の変更は `variant` と `size` の props、および theme token（CSS 変数）で表現する。配置と余白（`flex`、`grid`、`gap-*`、`items-*`、`justify-*`、`w-full`、margin 系、`hidden` などの表示切替、`truncate`、揃え）はこの禁止の対象外で、これまでどおり `className` で渡してよい。列幅など個別にサイズを持たせたい場合は、対象コンポーネントを `div` で包み、その `div` 側にサイズ指定の `className` を渡す。
