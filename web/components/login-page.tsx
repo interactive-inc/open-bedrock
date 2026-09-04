@@ -50,29 +50,31 @@ export function LoginPage(props: Props) {
 
   return (
     <div className="flex min-h-screen flex-1 items-center justify-center bg-muted/40 p-6">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>
-            {appName === null ? t("open-bedrock にサインイン") : `${appName} にサインイン`}
-          </CardTitle>
+      <div className="w-full max-w-md">
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>
+              {appName === null ? t("open-bedrock にサインイン") : `${appName} にサインイン`}
+            </CardTitle>
 
-          <CardDescription>
-            {passwordLoginHidden
-              ? t("組織のアカウントでログインしてください。")
-              : t("アカウントのメールアドレスとパスワードを入力してください。")}
-          </CardDescription>
-        </CardHeader>
+            <CardDescription>
+              {passwordLoginHidden
+                ? t("組織のアカウントでログインしてください。")
+                : t("アカウントのメールアドレスとパスワードを入力してください。")}
+            </CardDescription>
+          </CardHeader>
 
-        <CardContent className="flex flex-col gap-4">
-          {passwordLoginHidden === false ? <LoginForm onAuthenticated={onAuthenticated} /> : null}
+          <CardContent className="flex flex-col gap-4">
+            {passwordLoginHidden === false ? <LoginForm onAuthenticated={onAuthenticated} /> : null}
 
-          {identityLoginUrl !== null ? (
-            <Button nativeButton={false} render={<Link href="/auth/broker/login" />}>
-              {t("ログインする")}
-            </Button>
-          ) : null}
-        </CardContent>
-      </Card>
+            {identityLoginUrl !== null ? (
+              <Button nativeButton={false} render={<Link href="/auth/broker/login" />}>
+                {t("ログインする")}
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
