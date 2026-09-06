@@ -29,7 +29,7 @@ export const employments = sqliteTable(
     index("company_employments_status_idx").on(table.status),
     uniqueIndex("company_employments_employee_active_unique")
       .on(table.employeeId)
-      .where(sql`${table.terminationDate} is null`),
+      .where(sql`${table.terminationDate} is null AND ${table.status} IN ('ACTIVE', 'ON_LEAVE')`),
     check(
       "company_employments_contract_name",
       sql`length(${table.contractName}) BETWEEN 1 AND 200 AND trim(${table.contractName}) = ${table.contractName}`,

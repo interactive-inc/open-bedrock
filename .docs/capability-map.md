@@ -107,7 +107,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - 雇用開始、在籍状態、休職、復職、終了、再雇用
 - valid time と recorded time を持つ履歴、訂正、重複禁止
 
-現行実装には従業員台帳、在籍期間、状態期間、ライフサイクル revision がある。Company の判断と組織変更は期間モデルを正本にし、旧 employee 現在値は既存 wire の表示 projection として同じ transaction で更新する。
+現行実装には従業員台帳、在籍期間、状態期間、ライフサイクル revision がある。人事発令による判断と組織変更は期間モデルを正本にし、旧 employee 現在値は既存 wire の表示 projection として同じ transaction で更新する。版付きresource APIと業務台帳の接続は未完成であり、[Company APIの保存先と参照整合性](company-api.md#storage-と移行)に制約を記載する。
 
 ### 組織
 
@@ -118,7 +118,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 
 現行実装には opaque OrgUnit identity、名称・kind・親子関係の period version、期間付き Assignment、organization revision、atomic change operation がある。単一 root、code 重複、親期間、循環、主務重複、上司在籍、部分適用を Domain と DB の両方で拒否する。旧部署表と membership は既存 wire の互換 projection に限定し、検証済み lifecycle の判断正本には使わない。
 
-`/company/v1` は LegalEntity、CompanyProfile、Site、Workplace、Person、Employee、Employment、OrgUnit、Assignment、ReportingRelation、Job、Position、Grade、OrganizationalOffice、OfficeAssignment、Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody、CollectiveBodyMembership、OrganizationalAuthority、AccountEmployeeLink、PersonnelAction を同じ resource、revision、半開期間、command 契約で公開する。read は D1 atomic batch で一つの organization revision へ固定し、write は expected revision、resource revision、SHA-256 fingerprint 付き idempotency receipt、append-only 履歴を強制する。契約と失敗条件は [Company API](./company-api.md) に定める。
+`/company` は LegalEntity、CompanyProfile、Site、Workplace、Person、Employee、Employment、OrgUnit、Assignment、ReportingRelation、Job、Position、Grade、OrganizationalOffice、OfficeAssignment、Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody、CollectiveBodyMembership、OrganizationalAuthority、AccountEmployeeLink、PersonnelAction を同じ resource、revision、半開期間、command 契約で公開する。read は D1 atomic batch で一つの organization revision へ固定し、write は expected revision、resource revision、SHA-256 fingerprint 付き idempotency receipt、append-only 履歴を強制する。契約と失敗条件は [Company API](./company-api.md) に定める。
 
 ### 職務と責任
 
@@ -128,7 +128,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - CollectiveBody、構成員、定足数、決議方式
 - 委任可能性と継続責任主体
 
-現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。Company resolver は法人、組織単位、拠点、勤務場所、地域、金額の scope、在籍、active な System Account、対象本人の除外を同一 revision と時点で評価する。合議体の参加定足数、全会一致、過半数、特別多数、委任可否は Company snapshot から System DecisionTask へ変換され、曖昧な複数 assignment を一つの合議へ混ぜず拒否する。Account role は操作権限に限定し、workflow 未定義や旧 role selector を会社上の資格として補完しない。
+現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。版付きresourceを参照するCompany resolverは、在籍、System Account、対象本人の除外、scope、合議規則を同一revisionと時点で評価する。System DecisionTaskへの変換部品もあるが、業務の本番経路への接続は未完成である。経費・稟議の独自承認経路を含め、技術的権限と会社上の判断資格の合成を全業務で保証していない。
 
 ### System との対応
 
@@ -137,7 +137,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - System の Case に対する会社上の判断資格の解決
 - 判断時点の Employment、Membership、ResponsibilityAssignment の snapshot
 
-現行実装には Account と Employee の一対一対応と、それを在籍・組織資格、active な canonical System Account と同時に検査する Company resolver がある。System workflow の候補解決はこの resolver を利用し、Company resource revision、責務 assignment、scope、雇用、Account 対応、合議規則を候補ごとの digest 付き証拠へ保存する。System Task と Company API には opaque な文字列 ID だけを渡し、System Account の読取障害、参照切れ、複数対応、候補ゼロ、成立不能な定足数を推測で補わず停止する。
+現行実装にはAccountとEmployeeの対応、期間履歴による在籍・組織資格の参照、版付きresourceによる資格解決がある。Accountに対応する従業員表示と在籍判定は、Companyの従業員一覧と同じ期間snapshotを使う。版付きresourceの資格証拠をSystem Taskへ渡す部品はあるが、既存workflow全体がそれを利用する状態には達していない。Account対応を含む二つの保存先の統合も未完成である。
 
 ### 雇用事実と人事発令
 

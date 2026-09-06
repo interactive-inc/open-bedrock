@@ -5,6 +5,7 @@ import type { Context } from "@/env"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
+import { InitialEmploymentPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter"
 
 /** machine provisioningでCompany EmployeeとSystem Accountを原子的に作る。 */
 export class ProvisionExternalEmployee {
@@ -45,6 +46,17 @@ export class ProvisionExternalEmployee {
     const employmentId = restoreWorkforceId("employment", crypto.randomUUID())
     const now = input.now.getTime()
     const database = this.c.env.DB
+    const initialEmployment = await new InitialEmploymentPersistenceAdapter(this.c).prepare({
+      employeeId,
+      employmentId,
+      effectiveOn: businessDate,
+      status: "active",
+      occurredAt: input.now,
+      actorAccountId: null,
+      operationId: `provision:${employeeId}`,
+      reason: "External employee provisioning",
+    })
+    if (initialEmployment instanceof Error) return initialEmployment
 
     try {
       await database.batch([
@@ -64,6 +76,7 @@ export class ProvisionExternalEmployee {
              VALUES (?1, ?2, ?3, 'FULL_TIME', ?4, 'ACTIVE', NULL, ?5, ?5)`,
           )
           .bind(employmentId, employeeId, input.name, businessDate, now),
+        ...initialEmployment,
         database
           .prepare(
             `INSERT INTO company_account_employee_links (account_id, employee_id)

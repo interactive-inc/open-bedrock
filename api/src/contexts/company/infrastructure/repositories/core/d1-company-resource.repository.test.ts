@@ -1,0 +1,434 @@
+import { describe, expect, test } from "bun:test"
+import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { readFileSync } from "node:fs"
+
+const schema = readFileSync(new URL("../../schema/company.sql", import.meta.url), "utf8")
+const effectiveFrom = restoreCalendarDate("2026-01-01")
+
+const person: CompanyResourceProps = {
+  organizationId: "organization:default",
+  type: "person",
+  id: "person:1",
+  revision: 1,
+  state: "active",
+  effectiveFrom,
+  effectiveTo: null,
+  attributes: { officialName: "Example Person" },
+}
+const employee: CompanyResourceProps = {
+  ...person,
+  type: "employee",
+  id: "employee:1",
+  attributes: { personId: person.id, employeeCode: "E001" },
+}
+const employment: CompanyResourceProps = {
+  ...person,
+  type: "employment",
+  id: "employment:1",
+  attributes: { employeeId: employee.id, status: "ACTIVE", employmentType: "FULL_TIME" },
+}
+const assignment: CompanyResourceProps = {
+  ...person,
+  type: "assignment",
+  id: "assignment:1",
+  attributes: {
+    employeeId: employee.id,
+    employmentId: employment.id,
+    organizationUnitId: "unit:1",
+    assignmentType: "PRIMARY",
+  },
+}
+
+function command(
+  resources: ReadonlyArray<CompanyResourceProps>,
+  expectedRevision = 0,
+  commandId = `command:${expectedRevision + 1}`,
+): CompanyResourceChangeEntity {
+  const result = CompanyResourceChangeEntity.create({
+    resources,
+    commandId,
+    expectedRevision,
+    actorAccountId: "account:operator",
+    reason: "従業員台帳の変更",
+    recordedAt: Date.parse("2026-09-06T00:00:00Z"),
+  })
+  if (result instanceof Error) throw result
+  return result
+}
+
+function fixture() {
+  const database = createCompanyD1TestDatabase(schema)
+  return { database, repository: new D1CompanyResourceRepository(database) }
+}
+
+async function counts(database: D1Database) {
+  return database
+    .prepare(`
+    SELECT
+      (SELECT count(*) FROM company_resource_heads) AS heads,
+      (SELECT count(*) FROM company_resource_revisions) AS revisions,
+      (SELECT count(*) FROM company_command_receipts) AS receipts,
+      (SELECT coalesce(sum(revision), 0) FROM company_organizations) AS organization_revision
+  `)
+    .first()
+}
+
+describe("Company workforce resourceの参照整合性", () => {
+  test("参照順と逆に入力しても人・従業員・雇用を原子的に登録し、再送で増やさない", async () => {
+    const { database, repository } = fixture()
+    const change = command([employment, employee, person])
+    expect(await repository.write(change)).toEqual({
+      kind: "applied",
+      organizationRevision: 1,
+      replayed: false,
+    })
+    expect(await repository.write(change)).toEqual({
+      kind: "applied",
+      organizationRevision: 1,
+      replayed: true,
+    })
+    expect(await counts(database)).toEqual({
+      heads: 3,
+      revisions: 3,
+      receipts: 1,
+      organization_revision: 1,
+    })
+  })
+
+  test.each([employee, employment])(
+    "$typeの参照先がなければreceiptも組織revisionも残さない",
+    async (resource) => {
+      const { database, repository } = fixture()
+      expect(await repository.write(command([resource]))).toMatchObject({
+        kind: "invalid",
+        error: { code: "invalid_resource" },
+      })
+      expect(await counts(database)).toEqual({
+        heads: 0,
+        revisions: 0,
+        receipts: 0,
+        organization_revision: 0,
+      })
+    },
+  )
+
+  test("同じIDが別organizationにあっても参照できない", async () => {
+    const { repository } = fixture()
+    expect(
+      await repository.write(command([{ ...person, organizationId: "organization:other" }])),
+    ).toMatchObject({ kind: "applied" })
+    expect(await repository.write(command([employee]))).toMatchObject({ kind: "invalid" })
+  })
+
+  test("別organizationの従業員を単一Companyの業務台帳へ混在させない", async () => {
+    const { database, repository } = fixture()
+    expect(
+      await repository.write(
+        command([
+          { ...person, organizationId: "organization:other" },
+          { ...employee, organizationId: "organization:other" },
+          { ...employment, organizationId: "organization:other" },
+        ]),
+      ),
+    ).toMatchObject({ kind: "invalid", error: { code: "invalid_resource" } })
+    expect(await database.prepare("SELECT id FROM company_employees").first()).toBeNull()
+    expect(await counts(database)).toEqual({
+      heads: 0,
+      revisions: 0,
+      receipts: 0,
+      organization_revision: 0,
+    })
+  })
+
+  test("取消済みのPersonを新しいEmployeeから参照できない", async () => {
+    const { repository } = fixture()
+    expect(await repository.write(command([person]))).toMatchObject({ kind: "applied" })
+    expect(
+      await repository.write(command([{ ...person, revision: 2, state: "void" }], 1)),
+    ).toMatchObject({ kind: "applied" })
+    expect(await repository.write(command([employee], 2))).toMatchObject({ kind: "invalid" })
+  })
+
+  test("後続resourceの失敗で先行resourceの更新も取り消す", async () => {
+    const { database, repository } = fixture()
+    expect(await repository.write(command([person, employee, employment]))).toMatchObject({
+      kind: "applied",
+    })
+    const before = await counts(database)
+    expect(
+      await repository.write(
+        command(
+          [
+            { ...person, revision: 2, attributes: { officialName: "Changed Person" } },
+            {
+              ...employment,
+              revision: 2,
+              attributes: {
+                employeeId: "employee:missing",
+                status: "ACTIVE",
+                employmentType: "FULL_TIME",
+              },
+            },
+          ],
+          1,
+        ),
+      ),
+    ).toMatchObject({ kind: "invalid" })
+    expect(await counts(database)).toEqual(before)
+    const result = await repository.findMany({
+      organizationId: person.organizationId,
+      types: ["person"],
+    })
+    if (!result.ok) throw result.cause
+    expect(result.resources[0]?.readText("officialName")).toBe("Example Person")
+  })
+
+  test.each(["active", "void"] as const)(
+    "EmployeeとEmploymentの持ち主は%sへの変更でも付け替えられない",
+    async (state) => {
+      const { database, repository } = fixture()
+      const otherPerson = { ...person, id: "person:2" }
+      const otherEmployee = {
+        ...employee,
+        id: "employee:2",
+        attributes: { personId: otherPerson.id },
+      }
+      expect(
+        await repository.write(command([person, otherPerson, employee, otherEmployee, employment])),
+      ).toMatchObject({ kind: "applied" })
+      const before = await counts(database)
+      expect(
+        await repository.write(
+          command(
+            [
+              {
+                ...employee,
+                revision: 2,
+                state,
+                attributes: { personId: otherPerson.id },
+              },
+            ],
+            1,
+          ),
+        ),
+      ).toMatchObject({ kind: "invalid" })
+      expect(
+        await repository.write(
+          command(
+            [
+              {
+                ...employment,
+                revision: 2,
+                state,
+                attributes: {
+                  employeeId: otherEmployee.id,
+                  status: "ACTIVE",
+                  employmentType: "FULL_TIME",
+                },
+              },
+            ],
+            1,
+          ),
+        ),
+      ).toMatchObject({ kind: "invalid" })
+      expect(await counts(database)).toEqual(before)
+    },
+  )
+
+  test.each([person, employee, employment])(
+    "参照されている$typeの取消で履歴とrevisionを変えない",
+    async (resource) => {
+      const { database, repository } = fixture()
+      expect(
+        await repository.write(command([person, employee, employment, assignment])),
+      ).toMatchObject({ kind: "applied" })
+      const before = await counts(database)
+      expect(
+        await repository.write(command([{ ...resource, revision: 2, state: "void" }], 1)),
+      ).toMatchObject({ kind: "invalid" })
+      expect(await counts(database)).toEqual(before)
+    },
+  )
+
+  test("参照する側も同一commandで取り消せば全体を取り消せる", async () => {
+    const { database, repository } = fixture()
+    const resources = [person, employee, employment, assignment]
+    expect(await repository.write(command(resources))).toMatchObject({ kind: "applied" })
+    expect(
+      await repository.write(
+        command(
+          resources.map((resource) => ({
+            ...resource,
+            revision: 2,
+            state: "void",
+          })),
+          1,
+        ),
+      ),
+    ).toMatchObject({ kind: "applied", organizationRevision: 2 })
+    expect(
+      await database
+        .prepare("SELECT count(*) AS count FROM company_resource_heads WHERE state = 'active'")
+        .first<{ count: number }>(),
+    ).toEqual({ count: 0 })
+    expect(await counts(database)).toEqual({
+      heads: 4,
+      revisions: 8,
+      receipts: 2,
+      organization_revision: 2,
+    })
+  })
+
+  test.each(["assignment", "office-assignment", "organizational-authority"] as const)(
+    "他人の雇用を$typeへ割り当てられない",
+    async (type) => {
+      const { repository } = fixture()
+      const otherEmployee = {
+        ...employee,
+        id: "employee:2",
+        attributes: { personId: person.id, employeeCode: "E002" },
+      }
+      const unit: CompanyResourceProps = {
+        ...person,
+        type: "organization-unit",
+        id: "unit:1",
+        attributes: {
+          organizationUnitId: "unit:1",
+          code: "ROOT",
+          officialName: "Example Organization",
+          kind: "COMPANY",
+          parentOrganizationUnitId: null,
+        },
+      }
+      const position: CompanyResourceProps = {
+        ...person,
+        type: "position",
+        id: "position:1",
+        attributes: { code: "MANAGER", officialName: "Manager" },
+      }
+      const office: CompanyResourceProps = {
+        ...person,
+        type: "organizational-office",
+        id: "office:1",
+        attributes: {
+          code: "ROOT_MANAGER",
+          officialName: "Organization Manager",
+          organizationUnitId: unit.id,
+          positionId: position.id,
+        },
+      }
+      expect(
+        await repository.write(
+          command([person, employee, otherEmployee, employment, unit, position, office]),
+        ),
+      ).toMatchObject({ kind: "applied" })
+      const attributes: CompanyResourceProps["attributes"] =
+        type === "assignment"
+          ? { ...assignment.attributes, employeeId: otherEmployee.id }
+          : type === "office-assignment"
+            ? {
+                employeeId: otherEmployee.id,
+                employmentId: employment.id,
+                organizationalOfficeId: "office:1",
+              }
+            : {
+                employeeId: otherEmployee.id,
+                employmentId: employment.id,
+                scopeType: "organization-unit",
+                scopeId: "unit:1",
+                authority: "approve",
+              }
+      expect(
+        await repository.write(
+          command(
+            [{ ...assignment, type, attributes: { ...attributes, employeeId: employee.id } }],
+            1,
+          ),
+        ),
+      ).toMatchObject({ kind: "applied" })
+      expect(
+        await repository.write(command([{ ...assignment, type, revision: 2, attributes }], 2)),
+      ).toMatchObject({ kind: "invalid" })
+    },
+  )
+
+  test("上司として参照されているEmployeeは取り消せない", async () => {
+    const { repository } = fixture()
+    const manager = {
+      ...employee,
+      id: "employee:manager",
+      attributes: { personId: person.id, employeeCode: "E003" },
+    }
+    const reporting: CompanyResourceProps = {
+      ...person,
+      id: "reporting:1",
+      type: "reporting-relation",
+      attributes: {
+        employeeId: employee.id,
+        managerEmployeeId: manager.id,
+        organizationUnitId: "unit:1",
+      },
+    }
+    expect(await repository.write(command([person, employee, manager, reporting]))).toMatchObject({
+      kind: "applied",
+    })
+    expect(
+      await repository.write(command([{ ...manager, revision: 2, state: "void" }], 1)),
+    ).toMatchObject({ kind: "invalid" })
+  })
+
+  test("Account対応が残るEmployeeは雇用がなくても取り消せない", async () => {
+    const { repository } = fixture()
+    const link: CompanyResourceProps = {
+      ...person,
+      id: "link:1",
+      type: "account-employee-link",
+      attributes: { employeeId: employee.id, accountId: "account:1" },
+    }
+    expect(await repository.write(command([person, employee, link]))).toMatchObject({
+      kind: "applied",
+    })
+    expect(
+      await repository.write(command([{ ...employee, revision: 2, state: "void" }], 1)),
+    ).toMatchObject({ kind: "invalid" })
+  })
+
+  test("競合と保存障害を参照不整合へ分類しない", async () => {
+    const { database, repository } = fixture()
+    expect(await repository.write(command([person]))).toMatchObject({ kind: "applied" })
+    expect(await repository.write(command([employee], 0, "command:stale"))).toMatchObject({
+      kind: "conflict",
+      actualRevision: 1,
+    })
+    expect(await repository.write(command([person], 1))).toMatchObject({
+      kind: "resource_conflict",
+      actualRevision: 1,
+    })
+    expect(await repository.write(command([employee], 0))).toEqual({ kind: "command_conflict" })
+    await database.exec(
+      "CREATE TRIGGER reject_company_write BEFORE INSERT ON company_resource_revisions BEGIN SELECT RAISE(ABORT, 'storage_failure'); END;",
+    )
+    expect(await repository.write(command([employee], 1))).toMatchObject({ kind: "unavailable" })
+  })
+
+  test("同じrevisionへの同時登録は一方だけが確定する", async () => {
+    const { database, repository } = fixture()
+    expect(await repository.write(command([person]))).toMatchObject({ kind: "applied" })
+    const results = await Promise.all([
+      repository.write(command([employee], 1, "command:first")),
+      repository.write(command([{ ...employee, id: "employee:2" }], 1, "command:second")),
+    ])
+    expect(results.filter((result) => result.kind === "applied")).toHaveLength(1)
+    expect(results.filter((result) => result.kind === "conflict")).toHaveLength(1)
+    expect(await counts(database)).toEqual({
+      heads: 2,
+      revisions: 2,
+      receipts: 2,
+      organization_revision: 2,
+    })
+  })
+})

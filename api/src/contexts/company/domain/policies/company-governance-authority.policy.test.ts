@@ -42,6 +42,7 @@ describe("Company governance authority", () => {
         resource("employment", `employment:${suffix}`, {
           employeeId: `employee:${suffix}`,
           status: "ACTIVE",
+          employmentType: "FULL_TIME",
         }),
         resource("account-employee-link", `link:${suffix}`, {
           accountId: `account:${suffix}`,
@@ -107,6 +108,7 @@ describe("Company governance authority", () => {
       resource("employment", "employment:1", {
         employeeId: "employee:1",
         status: "ACTIVE",
+        employmentType: "FULL_TIME",
       }),
       resource("account-employee-link", "link:1", {
         accountId: "account:1",

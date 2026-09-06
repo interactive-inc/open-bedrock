@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm"
 import {
   check,
+  foreignKey,
   index,
   integer,
   primaryKey,
@@ -9,6 +10,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 import { systemAccounts } from "@system/infrastructure/schema/system-core"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 
 /** Company全体のoptimistic revision。全writeはこのrevisionをCASする。 */
 export const companyOrganizations = sqliteTable("company_organizations", {
@@ -166,10 +168,55 @@ export const companyCommandReceipts = sqliteTable(
   ],
 )
 
+/** 公開resourceの所有者と、同じtransactionで反映したEmployeeの版を固定する。 */
+export const companyWorkforceResourceBindings = sqliteTable(
+  "company_workforce_resource_bindings",
+  {
+    resourceType: text("resource_type", { enum: ["employee", "employment"] }).notNull(),
+    resourceId: text("resource_id").notNull(),
+    organizationId: text("organization_id").notNull(),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id, { onDelete: "restrict" }),
+    resourceRevision: integer("resource_revision").notNull(),
+    lifecycleRevision: integer("lifecycle_revision").notNull(),
+    lastActionId: text("last_action_id"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.resourceType, table.resourceId] }),
+    foreignKey({
+      columns: [table.organizationId, table.resourceType, table.resourceId],
+      foreignColumns: [
+        companyResourceHeads.organizationId,
+        companyResourceHeads.resourceType,
+        companyResourceHeads.resourceId,
+      ],
+    }).onDelete("restrict"),
+    index("company_workforce_resource_bindings_employee_idx").on(
+      table.employeeId,
+      table.resourceType,
+    ),
+    check(
+      "company_workforce_resource_binding_type",
+      sql`${table.resourceType} IN ('employee', 'employment')`,
+    ),
+    check(
+      "company_workforce_resource_binding_owner",
+      sql`${table.resourceType} != 'employee' OR ${table.resourceId} = ${table.employeeId}`,
+    ),
+    check("company_workforce_resource_binding_revision", sql`${table.resourceRevision} > 0`),
+    check(
+      "company_workforce_resource_binding_lifecycle_revision",
+      sql`${table.lifecycleRevision} >= 0`,
+    ),
+  ],
+)
+
 export const companySchema = {
   companyOrganizations,
   companyAccountProfiles,
   companyResourceHeads,
   companyResourceRevisions,
   companyCommandReceipts,
+  companyWorkforceResourceBindings,
 }

@@ -123,6 +123,12 @@ async function seed(database: D1Database): Promise<void> {
     resources.push(
       {
         ...base,
+        type: "person",
+        id: `person:${state}`,
+        attributes: { officialName: `Example ${state}` },
+      },
+      {
+        ...base,
         type: "employee",
         id: `employee:${state}`,
         attributes: { personId: `person:${state}`, employeeCode: state.toUpperCase() },
@@ -131,7 +137,11 @@ async function seed(database: D1Database): Promise<void> {
         ...base,
         type: "employment",
         id: `employment:${state}`,
-        attributes: { employeeId: `employee:${state}`, status: "ACTIVE" },
+        attributes: {
+          employeeId: `employee:${state}`,
+          status: "ACTIVE",
+          employmentType: "FULL_TIME",
+        },
       },
       {
         ...base,
