@@ -5,7 +5,7 @@ import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { BackButton } from "@/components/back-button"
 import { DetailField } from "@/components/detail-field"
 import { PageHeader } from "@/components/page-header"
-import { Badge } from "@/components/ui/badge"
+import { ApplicationDecisionForm } from "@/app/(app)/system/applications/[application]/_components/application-decision-form"
 import { Card } from "@/components/ui/card"
 import { getApplicationDetail } from "@/lib/api/get-application-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
@@ -44,6 +44,9 @@ export default async function ApplicationDetailPage(props: Props) {
   if (application instanceof Error) {
     handleDetailError(application)
   }
+  const decisionStep = application.workflow?.steps.find(
+    (step) => step.key === application.decision_target.task_key,
+  )
 
   return (
     <div className="flex flex-col gap-8">
@@ -78,24 +81,16 @@ export default async function ApplicationDetailPage(props: Props) {
         </div>
       </Card>
 
-      {application.status === "pending" && application.approver_roles.length > 0 ? (
-        <Card className="gap-0">
-          <div className="flex flex-col gap-2 p-4">
-            <span className="text-sm font-medium">次の承認者</span>
-
-            <div className="flex flex-wrap gap-2">
-              {application.approver_roles.map((role) => (
-                <Badge key={role} variant="secondary">
-                  {role}
-                </Badge>
-              ))}
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              上記いずれかのロールを持つ人が承認できます。
-            </p>
-          </div>
-        </Card>
+      {application.can_decide && decisionStep !== undefined ? (
+        <section aria-label="申請の判断" className="flex flex-col gap-4">
+          <h2 className="text-lg font-semibold">この内容を確認して判断する</h2>
+          <ApplicationDecisionForm
+            key={`${application.id}:${application.decision_target.proposal_version}:${application.decision_target.task_key}:${application.decision_target.task_round}`}
+            applicationId={application.id}
+            decisionTarget={application.decision_target}
+            negativeAction={decisionStep.rejection_behavior}
+          />
+        </section>
       ) : null}
 
       <ApprovalHistory approvals={application.approvals} />

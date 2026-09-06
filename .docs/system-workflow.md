@@ -71,6 +71,14 @@ proposal digest は小文字 hexadecimal の SHA-256 とする。hash 対象は�
 
 digest は内容の同一性を検査するが、内容の妥当性を証明しない。不正な提案を正確に hash しても正しい提案にはならない。App の schema 検証、Company の資格解決、System の判断制約をすべて通過させる。
 
+## 確認した判断対象
+
+`GET /company/application-requests/:id` は、表示する本文と同じProposalから `decision_target` を返す。参照は `proposal_version`、`proposal_digest`、`task_key`、`task_round` を持つ。承認・否認のPOSTはこの参照を必須とし、欠落・形式不正は400、現在の提案または判断段階との不一致は409を返す。
+
+同じ本文を再提出してdigestが変わらなくても、版が違えば以前の判断は適用しない。同じ提案の次段階、再割当後のroundにも、以前の参照による判断を適用しない。実行済み申請の再送であっても、参照の一致を先に検査する。照合後の競合は、元のCase・Task・round・digestに対するSystemの永続化制約で拒否する。
+
+Webは詳細画面の本文と同じ参照をフォームへ固定する。一覧から詳細へ進み、保存された手順に応じて承認・却下・差戻しを選ぶ。409では内容の再確認を案内し、最新版を自動取得して判断を再送しない。CLIの `application-requests approve` と `reject` も、`show` で確認した `decision_target` のJSONを `--decision-target` へ指定する。
+
 ## Task と資格 snapshot
 
 `DecisionTask` は Case 内の判断単位である。task key、round、required approvals、required participants、negative decision rule、代理可否、差戻し可否、proposal digest、開始、期限を固定する。候補者は canonical System Account ID で保存し、Employee ID または組織語彙を保存しない。

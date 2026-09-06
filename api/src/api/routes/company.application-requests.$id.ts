@@ -23,6 +23,7 @@ import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
+import { toApplicationDecisionTarget } from "@/api/http/application-requests/lib/to-application-decision-target"
 
 // @authorization service - System証拠とCompany主体を合成して所有者・候補者・監査者を判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -47,7 +48,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       attestation.actorAccountId === actorAccountId ||
       attestation.representedAccountId === actorAccountId,
   )
-  if (!owner && !participant && proposal.currentTaskKey !== null) {
+  let currentCandidate = false
+  let representedAccountId = actorAccountId
+  if (!owner && proposal.status === "pending" && proposal.currentTaskKey !== null) {
     const candidates = await query.listTaskCandidateAccountIds({
       caseId: proposal.caseId,
       taskKey: proposal.currentTaskKey,
@@ -55,8 +58,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       at: new Date(c.env.NOW ?? Date.now()),
     })
     if (candidates instanceof Error) throw new InternalError("failed to load decision candidates")
-    participant = candidates.includes(actorAccountId)
-    if (!participant) {
+    currentCandidate = candidates.includes(actorAccountId)
+    if (!currentCandidate) {
       const delegation = await query.findDelegation({
         caseId: proposal.caseId,
         actorAccountId,
@@ -64,8 +67,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
         at: new Date(c.env.NOW ?? Date.now()),
       })
       if (delegation instanceof Error) throw new InternalError("failed to resolve delegation")
-      participant = delegation !== null
+      currentCandidate = delegation !== null
+      if (delegation !== null) representedAccountId = delegation.representedAccountId
     }
+    participant = participant || currentCandidate
   }
   if (!owner && !participant && !session.hasPermission("application:read:all")) {
     throw new ForbiddenError()
@@ -114,6 +119,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
             return {
               key: step.key,
               name: step.name,
+              rejection_behavior: step.rejection_behavior,
               status:
                 task === undefined
                   ? "waiting"
@@ -137,6 +143,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(
     zAppApplication.parse({
       id: proposal.number,
+      decision_target: toApplicationDecisionTarget(proposal),
+      can_decide:
+        currentCandidate &&
+        !attestations.some(
+          (attestation) =>
+            attestation.taskKey === proposal.currentTaskKey &&
+            attestation.round === proposal.currentTaskRound &&
+            (attestation.actorAccountId === actorAccountId ||
+              attestation.representedAccountId === representedAccountId),
+        ),
       template_code: proposal.procedureKey,
       template_name: proposal.title,
       applicant_name: ownerParticipant.employeeName,

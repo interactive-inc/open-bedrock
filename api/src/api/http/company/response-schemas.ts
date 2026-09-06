@@ -31,6 +31,7 @@ export const zAppApplicationWorkflowProgress = z.object({
     z.object({
       key: z.string(),
       name: z.string(),
+      rejection_behavior: z.enum(["reject", "return"]),
       status: z.enum(["waiting", "pending", "approved", "rejected", "returned"]),
     }),
   ),
@@ -40,6 +41,13 @@ export const zAppApplicationWorkflowProgress = z.object({
 /** 申請 1 件（詳細・作成のレスポンス）。GET /application-requests/:id と POST /application-requests で使う。 */
 export const zAppApplication = z.object({
   id: z.number(),
+  decision_target: z.object({
+    proposal_version: z.number().int().positive(),
+    proposal_digest: z.string().regex(/^[a-f0-9]{64}$/),
+    task_key: z.string().min(1).max(100),
+    task_round: z.number().int().positive(),
+  }),
+  can_decide: z.boolean(),
   template_code: z.string(),
   template_name: z.string(),
   applicant_name: z.string(),
@@ -58,7 +66,7 @@ export const zAppApplication = z.object({
   created_at: z.string(),
   /** 承認/却下の履歴。古い順。POST /application-requests の直後は空配列で返す。 */
   approvals: z.array(zAppApplicationApproval).default([]),
-  /** テンプレートの承認可能ロール（空配列なら application:approve 権限保持者）。 */
+  /** テンプレートのロール名。Companyの判断資格を置き換えない。 */
   approver_roles: z.array(z.string()).default([]),
   workflow: zAppApplicationWorkflowProgress.nullable().default(null),
 })

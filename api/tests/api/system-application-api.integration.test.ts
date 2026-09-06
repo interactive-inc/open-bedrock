@@ -1,3 +1,4 @@
+import { withCurrentDecisionTarget } from "@tests/api/support/with-current-decision-target"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
@@ -11,6 +12,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { describe, expect, spyOn, test } from "bun:test"
 import type { ApplicationWorkflowStep } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 
@@ -25,6 +27,7 @@ async function token(employeeId: EmployeeId): Promise<string> {
 async function createDb(
   options?: Parameters<typeof createLifecycleRouteDb>[0],
   stepOverrides: Partial<ApplicationWorkflowStep> = {},
+  extraSteps: ReadonlyArray<ApplicationWorkflowStep> = [],
 ): Promise<D1Database> {
   const db = await createLifecycleRouteDb(options)
   const policy = createCompanyProcedureDecisionPolicy({
@@ -45,6 +48,7 @@ async function createDb(
           allow_delegation: true,
           ...stepOverrides,
         },
+        ...extraSteps,
       ],
     },
   })
@@ -93,7 +97,7 @@ async function request(
     jwtSecret: lifecycleRouteJwtSecret,
     path,
     method: options.method,
-    body: options.body,
+    body: await withCurrentDecisionTarget(db, path, options.body),
     token: await token(employeeId),
     now: options.at ?? now,
   })
@@ -113,6 +117,241 @@ async function submit(db: D1Database, reason: string): Promise<number> {
 }
 
 describe("System application API composition", () => {
+  test.each([
+    ["approve", "Changed after review"],
+    ["reject", "Changed after review"],
+    ["approve", "Viewed content"],
+  ])("閲覧後に改訂された提案へ古い画面の判断を付けない: %s, %s", async (action, reason) => {
+    const db = await createDb(undefined, { rejection_behavior: "return" })
+    const number = await submit(db, "Viewed content")
+    const seen = await new SystemD1ProposalAdapter({ env: { DB: db } }).findByNumber(number)
+    if (seen === null || seen instanceof Error) throw new Error("proposal is missing")
+    const target = {
+      proposal_version: seen.version,
+      proposal_digest: seen.digest,
+      task_key: seen.lastTaskKey,
+      task_round: seen.lastTaskRound,
+    }
+    const viewed = await request(
+      db,
+      toWorkforceEmployeeId(1),
+      `/company/application-requests/${number}`,
+    )
+    expect(await viewed.json()).toMatchObject({
+      decision_target: target,
+      payload: { reason: "Viewed content" },
+      can_decide: true,
+    })
+    expect(
+      (
+        await request(
+          db,
+          toWorkforceEmployeeId(1),
+          `/company/application-requests/${number}/reject`,
+          {
+            method: "POST",
+            body: { comment: "Please revise", decision_target: target },
+          },
+        )
+      ).status,
+    ).toBe(200)
+    expect(
+      (
+        await request(
+          db,
+          toWorkforceEmployeeId(5),
+          `/company/application-requests/${number}/resubmit`,
+          {
+            method: "POST",
+            body: { payload: { reason } },
+          },
+        )
+      ).status,
+    ).toBe(200)
+    const response = await request(
+      db,
+      toWorkforceEmployeeId(1),
+      `/company/application-requests/${number}/${action}`,
+      {
+        method: "POST",
+        body: { comment: "Decision about viewed content", decision_target: target },
+      },
+    )
+    expect(response.status).toBe(409)
+    expect(
+      await db
+        .prepare("SELECT count(*) AS total FROM system_human_attestations")
+        .first<number>("total"),
+    ).toBe(1)
+  })
+
+  test("内容を見た参照が欠けている場合や段階・round・digestが違う場合は判断しない", async () => {
+    const db = await createDb()
+    const number = await submit(db, "Exact decision target")
+    const seen = await new SystemD1ProposalAdapter({ env: { DB: db } }).findByNumber(number)
+    if (seen === null || seen instanceof Error) throw new Error("proposal is missing")
+    const target = {
+      proposal_version: seen.version,
+      proposal_digest: seen.digest,
+      task_key: seen.lastTaskKey,
+      task_round: seen.lastTaskRound,
+    }
+    for (const action of ["approve", "reject"]) {
+      expect(
+        (
+          await request(
+            db,
+            toWorkforceEmployeeId(1),
+            `/company/application-requests/${number}/${action}`,
+            {
+              method: "POST",
+              body: { comment: "Decision", decision_target: undefined },
+            },
+          )
+        ).status,
+      ).toBe(400)
+      for (const changed of [
+        { ...target, proposal_digest: "b".repeat(64) },
+        { ...target, task_key: "another-step" },
+        { ...target, task_round: 2 },
+      ]) {
+        expect(
+          (
+            await request(
+              db,
+              toWorkforceEmployeeId(1),
+              `/company/application-requests/${number}/${action}`,
+              {
+                method: "POST",
+                body: { comment: "Decision", decision_target: changed },
+              },
+            )
+          ).status,
+        ).toBe(409)
+      }
+    }
+    expect(
+      await db
+        .prepare("SELECT count(*) AS total FROM system_human_attestations")
+        .first<number>("total"),
+    ).toBe(0)
+  })
+
+  test("同じ提案でも前段階の承認再送を次段階の承認に変換しない", async () => {
+    const db = await createDb(undefined, {}, [
+      {
+        key: "final_approval",
+        name: "Final approval",
+        approvers: [{ type: "management_chain" }],
+        approval_mode: "any",
+        condition_mode: "all",
+        conditions: [],
+        due_days: null,
+        escalation_approvers: [],
+        rejection_behavior: "reject",
+        allow_delegation: true,
+      },
+    ])
+    const number = await submit(db, "Two separate decisions")
+    const seen = await new SystemD1ProposalAdapter({ env: { DB: db } }).findByNumber(number)
+    if (seen === null || seen instanceof Error) throw new Error("proposal is missing")
+    const body = {
+      comment: "First stage",
+      decision_target: {
+        proposal_version: seen.version,
+        proposal_digest: seen.digest,
+        task_key: seen.lastTaskKey,
+        task_round: seen.lastTaskRound,
+      },
+    }
+    const path = `/company/application-requests/${number}/approve`
+    expect(
+      (await request(db, toWorkforceEmployeeId(1), path, { method: "POST", body })).status,
+    ).toBe(200)
+    expect(
+      (await request(db, toWorkforceEmployeeId(1), path, { method: "POST", body })).status,
+    ).toBe(409)
+    expect(
+      await db
+        .prepare("SELECT count(*) AS total FROM system_human_attestations")
+        .first<number>("total"),
+    ).toBe(1)
+    expect(
+      (
+        await request(db, toWorkforceEmployeeId(1), path, {
+          method: "POST",
+          body: { comment: "Final stage" },
+        })
+      ).status,
+    ).toBe(200)
+    expect(
+      await db
+        .prepare("SELECT count(*) AS total FROM system_human_attestations")
+        .first<number>("total"),
+    ).toBe(2)
+  })
+
+  test("対象の照合後に差戻し・再提出が競合しても新しい版へ判断を付けない", async () => {
+    const db = await createDb(undefined, { rejection_behavior: "return" })
+    const number = await submit(db, "Concurrent revision")
+    const interception = spyOn(SystemD1WorkflowAdapter.prototype, "decide").mockImplementationOnce(
+      async function (this: SystemD1WorkflowAdapter, command) {
+        interception.mockRestore()
+        expect(
+          (
+            await request(
+              db,
+              toWorkforceEmployeeId(1),
+              `/company/application-requests/${number}/reject`,
+              {
+                method: "POST",
+                body: { comment: "Revise before deciding" },
+              },
+            )
+          ).status,
+        ).toBe(200)
+        expect(
+          (
+            await request(
+              db,
+              toWorkforceEmployeeId(5),
+              `/company/application-requests/${number}/resubmit`,
+              {
+                method: "POST",
+                body: { payload: { reason: "Concurrent replacement" } },
+              },
+            )
+          ).status,
+        ).toBe(200)
+        return this.decide(command)
+      },
+    )
+    try {
+      expect(
+        (
+          await request(
+            db,
+            toWorkforceEmployeeId(1),
+            `/company/application-requests/${number}/approve`,
+            {
+              method: "POST",
+              body: { comment: "Old proposal" },
+            },
+          )
+        ).status,
+      ).toBe(409)
+    } finally {
+      interception.mockRestore()
+    }
+    expect(
+      await db
+        .prepare("SELECT count(*) AS total FROM system_human_attestations")
+        .first<number>("total"),
+    ).toBe(1)
+    const latest = await new SystemD1ProposalAdapter({ env: { DB: db } }).findByNumber(number)
+    expect(latest).toMatchObject({ version: 2, status: "pending" })
+  })
+
   test("在籍を続けていても、提出後に失った上司資格では承認できない", async () => {
     const db = await createDb({ subjectAssignmentEndsOn: "2026-01-02" })
     const number = await submit(db, "Authority must still apply at the decision")

@@ -25,7 +25,7 @@ Web route は `web/app` に配置し、動的 segment は `[param]` で表す。
 ## 受信箱
 
 - `/inbox` は本人が対応すべき申請・承認・判定を種類別の件数カードで集約するハブ。layout が受信箱ヘッダと種類タブを共有する。件数 API を持つ種類の合計が 0 件のとき空状態を表示する。
-- `/inbox/applications` は自分宛ての承認待ち申請を確認し、承認または却下する画面。
+- `/inbox/applications` は自分宛ての承認待ち申請から詳細へ進む画面。`/system/applications/[application]` で内容と手順を確認して承認・却下・差戻しを行う。
 - `/inbox/expenses` は承認待ちの経費申請を確認し、承認または却下する画面(`expense:approve`)。
 - `/inbox/leaves` は承認待ちの休暇申請を確認し、承認または却下する画面(`leave:approve`)。
 - `/inbox/ringis` は自分宛の決裁待ち稟議を承認または却下する画面。

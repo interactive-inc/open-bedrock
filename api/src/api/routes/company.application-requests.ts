@@ -30,6 +30,7 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { zAppApplication, zAppApplicationAdminList } from "@/api/http/company/response-schemas"
 import { ApplicationError } from "@/lib/errors"
+import { toApplicationDecisionTarget } from "@/api/http/application-requests/lib/to-application-decision-target"
 import { codeSchema } from "@/lib/validation/code.schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -170,6 +171,8 @@ export const POST = factory.createHandlers(
     if (payload instanceof Error) throw new InternalError("invalid application payload")
     const responseBody = zAppApplication.parse({
       id: created.proposal.number,
+      decision_target: toApplicationDecisionTarget(created.proposal),
+      can_decide: false,
       template_code: created.proposal.procedureKey,
       template_name: created.proposal.title,
       applicant_name: created.applicantName,

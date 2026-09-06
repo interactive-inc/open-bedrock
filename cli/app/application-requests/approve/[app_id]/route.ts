@@ -1,3 +1,4 @@
+import { parseDecisionTarget } from "@/lib/application-requests/parse-decision-target"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
@@ -5,7 +6,7 @@ import { ensureOk } from "@/lib/http/ensure-ok"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock application-requests approve <id> [--comment <c>]`
+export const help = `bedrock application-requests approve <id> --decision-target <json> [--comment <c>]`
 
 const json = () => zValidator("json", z.object({ help: z.string().optional() }).passthrough())
 
@@ -21,11 +22,20 @@ export default factory.createHandlers(
 
     if (!appId) throw new UsageError("引数 <id> が必要です")
 
+    const target = parseDecisionTarget(query["decision-target"])
+    if (target instanceof Error) throw new UsageError(target.message)
+    const comment = z
+      .string()
+      .max(3_000)
+      .nullable()
+      .safeParse(query.comment ?? null)
+    if (!comment.success) throw new UsageError("--comment が不正です")
+
     const client = await createClient()
 
     const response = await client["company"]["application-requests"][":id"].approve.$post({
       param: { id: appId },
-      json: { comment: (query.comment ?? null) as string | null },
+      json: { comment: comment.data, decision_target: target },
     })
 
     await ensureOk(response)
