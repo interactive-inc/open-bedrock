@@ -54,8 +54,10 @@
 - 公開Person・Employee・Employmentのwriteを、業務台帳、人事記録、雇用・状態の期間履歴へ同じtransactionで接続済み。将来の休職・復職・退職、訂正・取消、再送、保存失敗、再入社の空白を実際のhandlerから検証済み
 - 接続済みEmployeeの名簿は、氏名・従業員番号・存在を公開resourceの有効日で読む。参照期間の空白・短縮、雇用重複をcommand確定時のDB制約で拒否する
 - 既存台帳にorganization列がないため、Employee・Employmentの公開writeは既定organizationへ限定している。複数organizationの従業員を混在させる機能は未完成
-- 既存業務writerから公開resourceへの反映、組織・所属・責務・Account対応の統合、既存データの接続、Account表示名の将来変更、System側の完成条件は未完了
+- 公開resourceへ接続済みのEmployeeでは、既存の休職・復職・退職・再入社・訂正から公開Employment履歴へ反映する。発令・期間・監査・公開履歴を同じtransactionで確定し、再送で履歴を増やさず、公開writeとの競合で一方だけを確定する
+- 公開雇用の改訂を専用の人事記録として読み出せる。通常の復職で前の休職を訂正済みにしない。追記migrationは既存人事記録の全列・rowid・一意制約と更新削除禁止を保全する
+- 未接続の既存台帳・新規登録と氏名変更writer、組織・所属・責務・Account対応の統合、Account表示名の将来変更、System側の完成条件は未完了。既存の入社・再入社発令の契約区分入力も公開APIへ揃える必要がある
 - 退職発令の確定・再送から既存tokenの認可までを、実際のApplication・DB・業務handlerで検証済み。退職日中は200、翌日は401
-- 本製品のAPI全体は固定Bun版で3,149件成功。変更前からあるUI生成ファイルのre-export検査1件は失敗する。追加のorganization隔離とmigrationを含む変更箇所22件も成功
-- 共有先のCompanyとAPI compositionは533件成功。続く参照・隔離のrepository検査20件も成功。両製品の型検査と共有source検査は成功し、Company 371ファイルとSystem 491ファイル、manifest、lockは完全一致
+- 本製品のAPI全体は固定Bun版で3,162件成功。変更前からあるUI生成ファイルのre-export検査1件は失敗する。APIの構造・境界・seed・型検査とWebの型検査は成功
+- 共有先のCompanyとAPI compositionは546件成功。両製品で人事発令と公開APIの往復・競合・失敗時取消を検証済み。共有先のアプリとテストの型検査は成功し、Company 378ファイルとSystem 491ファイル、manifest、lockは完全一致
 - 変更は両製品の共有sourceと追記migrationへ反映済み。残る完成条件の実装と全経路の再監査を継続する

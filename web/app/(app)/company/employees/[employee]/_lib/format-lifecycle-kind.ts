@@ -14,6 +14,7 @@ const kindLabels: Readonly<Record<string, string>> = {
   retired: "退職",
   corrected: "訂正",
   initial_state: "初期状態",
+  employment_revised: "雇用情報の改訂",
 }
 
 export function formatLifecycleKind(kind: string): string {

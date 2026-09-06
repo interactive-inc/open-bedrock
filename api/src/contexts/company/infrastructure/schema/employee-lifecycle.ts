@@ -41,7 +41,7 @@ export const personnelActions = sqliteTable(
         'concurrent_assignment_started', 'assignment_ended', 'position_changed',
         'manager_changed', 'department_responsibility_started',
         'department_responsibility_ended', 'leave_started', 'returned', 'retired',
-        'corrected', 'initial_state'
+        'corrected', 'initial_state', 'employment_revised'
       )`,
     ),
     check(
@@ -152,7 +152,9 @@ export const personnelActionRequests = sqliteTable(
     targetEmployeeId: text("target_employee_id").$type<EmployeeId>(),
     subjectSnapshotJson: text("subject_snapshot_json"),
     targetDepartmentCode: text("target_department_code"),
-    kind: text("kind").notNull().$type<Exclude<PersonnelActionKind, "initial_state">>(),
+    kind: text("kind")
+      .notNull()
+      .$type<Exclude<PersonnelActionKind, "initial_state" | "employment_revised">>(),
     payloadJson: text("payload_json").notNull(),
     payloadFingerprint: text("payload_fingerprint"),
     requestedByEmployeeId: text("requested_by_employee_id").notNull().$type<EmployeeId>(),

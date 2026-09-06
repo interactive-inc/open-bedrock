@@ -77,7 +77,11 @@ export const personnelActionSummarySchema = z.discriminatedUnion("kind", [
       kind: z.literal("corrected"),
       eventOn: z.string(),
       correctsActionId: z.string(),
-      replacementKind: personnelActionKindSchema.exclude(["corrected", "initial_state"]),
+      replacementKind: personnelActionKindSchema.exclude([
+        "corrected",
+        "initial_state",
+        "employment_revised",
+      ]),
     })
     .strict(),
   z
@@ -88,6 +92,22 @@ export const personnelActionSummarySchema = z.discriminatedUnion("kind", [
       positionTitle: z.string().nullable(),
       managerEmployeeCode: z.string().nullable(),
       status: z.enum(["active", "leave", "retired"]),
+      employeeId: z.string().optional(),
+      employmentId: z.string().optional(),
+      actorAccountId: z.string().nullable().optional(),
+      reason: z.string().optional(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("employment_revised"),
+      eventOn: z.string(),
+      employeeId: z.string(),
+      status: z.enum(["active", "leave", "retired"]),
+      resourceId: z.string(),
+      resourceRevision: z.number().int().positive(),
+      resource: z.record(z.string(), z.json()),
+      reason: z.string(),
     })
     .strict(),
 ])

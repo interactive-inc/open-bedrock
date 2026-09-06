@@ -60,6 +60,9 @@ export class InitialEmploymentPersistenceAdapter {
 
     const summary = CanonicalSystemJsonValue.create({
       kind: "initial_state",
+      department: null,
+      positionTitle: null,
+      managerEmployeeCode: null,
       eventOn: input.effectiveOn,
       status: input.status,
       employeeId: input.employeeId,
