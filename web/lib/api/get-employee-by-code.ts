@@ -26,6 +26,8 @@ export async function getEmployeeByCode(code: string): Promise<EmployeeDetailIte
 
   return {
     code: employee.code,
+    profile: employee.profile,
+    profileCommandId: crypto.randomUUID(),
     name: employee.name,
     deptName: employee.dept_name,
     position: employee.position,

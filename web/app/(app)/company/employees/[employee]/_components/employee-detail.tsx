@@ -75,7 +75,15 @@ export async function EmployeeDetail(props: Props) {
                   />
                 ) : null}
 
-                {showEdit ? <EmployeeEditForm code={employee.code} name={employee.name} /> : null}
+                {showEdit ? (
+                  <EmployeeEditForm
+                    key={employee.profileCommandId}
+                    code={employee.code}
+                    name={employee.name}
+                    profile={employee.profile}
+                    commandId={employee.profileCommandId}
+                  />
+                ) : null}
               </div>
             ) : null}
           </div>

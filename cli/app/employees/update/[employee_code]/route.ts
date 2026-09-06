@@ -4,10 +4,10 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock employees update <code> --name <n>
+export const help = `bedrock employees update <code> --name <n> --employee-id <id> --company-revision <n> --person-revision <n> --effective-on <YYYY-MM-DD> --idempotency-key <uuid> --reason <text>
 
-人物台帳の氏名だけを変更します。
-メール・ロールはアカウント管理、所属・役職・在籍状態は personnel-action を使ってください。`
+employees show の profile に含まれる人物ID・会社版・人物版・営業日を指定してください。
+同じ変更の再送では同じ冪等キーを使います。競合時は内容を確認し直してください。`
 
 export default factory.createHandlers(
   zValidator(
@@ -15,6 +15,15 @@ export default factory.createHandlers(
     z.object({
       help: z.string().optional(),
       name: z.string().optional(),
+      "employee-id": z
+        .string()
+        .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/)
+        .optional(),
+      "company-revision": z.coerce.number().int().nonnegative().optional(),
+      "person-revision": z.coerce.number().int().positive().optional(),
+      "effective-on": z.string().date().optional(),
+      "idempotency-key": z.string().uuid().optional(),
+      reason: z.string().trim().min(1).max(1500).optional(),
     }),
   ),
   zValidator("param", z.object({ employee_code: z.string().optional() })),
@@ -29,11 +38,33 @@ export default factory.createHandlers(
 
     if (!query.name) throw new UsageError("--name が必要です")
 
+    if (
+      query["employee-id"] === undefined ||
+      query["company-revision"] === undefined ||
+      query["person-revision"] === undefined ||
+      query["effective-on"] === undefined ||
+      query["idempotency-key"] === undefined ||
+      query.reason === undefined
+    ) {
+      throw new UsageError(
+        "--employee-id, --company-revision, --person-revision, --effective-on, --idempotency-key, --reason が必要です",
+      )
+    }
     const client = await createClient()
 
     const response = await client.company["employee-directory"][":code"].$put({
       param: { code: employeeCode },
-      json: { name: query.name },
+      header: { "idempotency-key": query["idempotency-key"] },
+      json: {
+        name: query.name,
+        reason: query.reason,
+        profile: {
+          employeeId: query["employee-id"],
+          organizationRevision: query["company-revision"],
+          personRevision: query["person-revision"],
+          effectiveOn: query["effective-on"],
+        },
+      },
     })
 
     return c.json(await response.json())

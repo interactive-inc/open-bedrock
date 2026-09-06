@@ -171,6 +171,16 @@ export const companyRouteManifest = [
     },
   },
   {
+    method: "GET",
+    path: "/company/my-profile",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.my-profile",
+      exportName: "GET",
+    },
+  },
+  {
     method: "PUT",
     path: "/company/my-profile",
     phase: "audited",

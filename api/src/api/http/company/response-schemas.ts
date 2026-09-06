@@ -215,6 +215,14 @@ export const zAppAuthMe = z.object({
   position: z.string().nullable(),
   permissions: z.array(z.string()),
   role_keys: z.array(z.string()),
+  profile: z
+    .object({
+      employeeId: z.string(),
+      organizationRevision: z.number().int().nonnegative(),
+      personRevision: z.number().int().positive(),
+      effectiveOn: z.string().date(),
+    })
+    .nullable(),
   phone: z.string().nullable(),
 })
 

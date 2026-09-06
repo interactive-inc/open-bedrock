@@ -1,5 +1,6 @@
 "use client"
 
+import type { EmployeeProfileVersion } from "@/lib/api/types/employee-profile-version"
 import { LocaleField } from "@/app/(app)/my/settings/_components/locale-field"
 import { PhoneField } from "@/app/(app)/my/settings/_components/phone-field"
 import { ThemeModeField } from "@/app/(app)/my/settings/_components/theme-mode-field"
@@ -15,6 +16,8 @@ import type { Locale } from "@/lib/i18n/locale"
 type Props = {
   locale: Locale
   phone: string | null
+  profile: EmployeeProfileVersion | null
+  profileCommandId: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -38,7 +41,12 @@ export function SettingsDialog(props: Props) {
 
           <LocaleField locale={props.locale} />
 
-          <PhoneField phone={props.phone} />
+          <PhoneField
+            key={props.profile?.organizationRevision ?? "unlinked"}
+            phone={props.phone}
+            profile={props.profile}
+            commandId={props.profileCommandId}
+          />
         </div>
       </DialogContent>
     </Dialog>

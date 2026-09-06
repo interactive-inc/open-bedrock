@@ -1,3 +1,4 @@
+import type { EmployeeProfileVersion } from "@/lib/api/types/employee-profile-version"
 /** api/src/employee/employee-response-schema.ts と同形の手書き type。 */
 export type EmployeeResponse = {
   code: string
@@ -31,5 +32,7 @@ export type EmployeeCreateRequest = {
 
 /** PUT /employees/:code のリクエストボディ。所属・役職・在籍状態は人事発令で扱う。 */
 export type EmployeeUpdateRequest = {
+  profile: EmployeeProfileVersion
+  reason: string
   name: string
 }
