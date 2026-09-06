@@ -8,6 +8,7 @@ usage:
   bedrock employees register --code <code> --name <name> --hire-on <date> --email <email> --role <role> --password-stdin
   bedrock employees update <code> --name <name> --employee-id <id> --company-revision <n> --person-revision <n> --effective-on <date> --idempotency-key <uuid> --reason <text>
   bedrock employees state --code <code> [--as-of <date>]
+  bedrock employees adoption --employee-id <id> | --data <confirmed-history.json> --idempotency-key <uuid>
   bedrock employees timeline --code <code> [--from <date>] [--to <date>]
   bedrock employees archive --code <code>`
 

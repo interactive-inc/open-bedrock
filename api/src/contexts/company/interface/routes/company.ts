@@ -11,6 +11,7 @@ import * as employeeEvents from "@/contexts/company/interface/routes/company.emp
 import * as employeeGrades from "@/contexts/company/interface/routes/company.employee-grades"
 import * as employeeLifecycleCodeEvents from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.events"
 import * as employeeLifecycleCodeState from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.state"
+import * as employeeResourceAdoptions from "@/contexts/company/interface/routes/company.employee-resource-adoptions"
 import * as employees from "@/contexts/company/interface/routes/company.employees"
 import * as employments from "@/contexts/company/interface/routes/company.employments"
 import * as externalIdentityImports from "@/contexts/company/interface/routes/company.external-identity-imports"
@@ -52,13 +53,14 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/employee-grades", ...employeeGrades.GET)
   .get("/employee-lifecycle/:code/events", ...employeeLifecycleCodeEvents.GET)
   .get("/employee-lifecycle/:code/state", ...employeeLifecycleCodeState.GET)
+  .get("/employee-resource-adoptions", ...employeeResourceAdoptions.GET)
   .get("/employees", ...employees.GET)
   .get("/employments", ...employments.GET)
   .get("/grade-definitions", ...gradeDefinitions.GET)
   .get("/my-direct-reports", ...myDirectReports.GET)
   .get("/my-organization-units", ...myOrganizationUnits.GET)
-  .get("/organization-profile", ...organizationProfile.GET)
   .get("/my-profile", ...myProfile.GET)
+  .get("/organization-profile", ...organizationProfile.GET)
   .get("/organization-snapshots", ...organizationSnapshots.GET)
   .get("/organization-tree", ...organizationTree.GET)
   .get("/organization-units", ...organizationUnits.GET)
@@ -76,6 +78,7 @@ export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .put("/employee-directory/:code", ...employeeDirectoryCode.PUT)
   .post("/employee-events", ...employeeEvents.POST)
   .post("/employee-grades", ...employeeGrades.POST)
+  .post("/employee-resource-adoptions", ...employeeResourceAdoptions.POST)
   .post("/employees", ...employees.POST)
   .post("/employments", ...employments.POST)
   .post("/grade-definitions", ...gradeDefinitions.POST)

@@ -15,6 +15,7 @@ commands:
   employees register                          社員を登録
   employees show <code>                       社員の詳細
   employees update <code>                     社員情報を更新
+  employees adoption                          確認済みの既存従業員履歴を公開正本へ接続
   employees timeline                          入社・配属・異動・退職の履歴
   employees state                             基準日現在の人事状態
   employees archive                           退職者を履歴保持してアーカイブ

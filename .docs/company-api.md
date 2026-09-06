@@ -133,3 +133,17 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 変更は表示時の会社営業日から有効になる。将来のPerson変更がある場合、現在の区間の値を変更し、予約された別区間の値は保全する。営業日を越えた新しい保存は409を返して再確認を求める。成功済みの同じ操作は翌日や後続変更後も元の結果を返し、過去の履歴や現在値を再更新しない。
 
 公開Personに未接続の従業員では`profile`が`null`になる。Webの編集入口は対応確認が必要な旨を表示する。存在しない版を指定した保存も409で拒否し、従業員台帳だけを変更しない。既存データの対応関係と有効期間を確認する移行は引き続き必要である。
+
+## 既存従業員の公開履歴への接続
+
+`GET /company/employee-resource-adoptions?employee_id=<id>` は従業員台帳、全雇用・在籍期間revision、接続状態、照合用digest、会社版、会社営業日を返す。既定organizationへのアクセスと `company:admin` が必要になる。
+
+`POST /company/employee-resource-adoptions` は同じ参照の `employeeId`、`snapshotDigest`、`expectedRevision`、`observedOn` と、確認理由 `reason`、確認済みの `resources` を受け取る。`idempotency-key` headerは必須で、別内容による同じキーの使用は409になる。
+
+resourcesには、一人のPerson、そのPersonに対応する既存IDのEmployee、保存済みの全契約と同じIDのEmploymentを指定する。それぞれのrevisionは1から連続させ、全体を100件以内とする。人物と従業員の有効期間は保存済みの雇用期間全体を覆い、現在の氏名・連絡先・従業員番号は台帳と一致する必要がある。雇用の所有者、契約名・区分、雇用期間と在籍状態の各区間を照合する。対応するAccountの会社表示名も現在の氏名と一致する必要があり、表示名の欠落・不一致は移行で上書きせず拒否する。
+
+過去の氏名や従業員番号は管理者が確認した事実だけを入力し、現在値から推測して補完しない。期間履歴のない契約、部分接続、所有者の不一致、公開IDの衝突は接続しない。既定organization以外への移行や、既存の公開Personへの自動名寄せは行わない。
+
+確認後の台帳・期間・会社版の変更は保存直前にも検査する。新規依頼が会社営業日を越えた場合も409になる。人物・従業員・雇用の公開履歴、既存台帳との接続、操作主体・理由・元のsnapshotを持つ変更不能な移行記録を一つのtransactionで保存する。元の台帳と期間履歴は変更しない。保存済みの同じ依頼は翌日以降も元の結果を返す。
+
+CLIの `employees adoption --employee-id <id>` で照合対象を参照し、`employees adoption --data <confirmed-history.json> --idempotency-key <uuid>` で確認済みの履歴を送信できる。競合時に最新版への自動再送は行わない。
