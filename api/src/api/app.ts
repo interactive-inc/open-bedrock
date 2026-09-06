@@ -35,7 +35,6 @@ import * as companyPersonnelActionRequestsRoute from "@/api/routes/company.perso
 import * as governanceGovernanceDocumentsImpactRoute from "@/api/routes/governance.governance-documents.impact"
 import * as governanceGovernanceDocumentsSyncRoute from "@/api/routes/governance.governance-documents.sync"
 import * as systemPermissionDefinitionsRoute from "@/api/routes/system.permission-definitions"
-import * as systemProvisioningIdentitiesRoute from "@/api/routes/system.provisioning.identities"
 import * as announcementsRoute from "@/contexts/announcement/interface/routes/announcements"
 import * as announcementsIdRoute from "@/contexts/announcement/interface/routes/announcements.$id"
 import * as announcementsIdArchiveRoute from "@/contexts/announcement/interface/routes/announcements.$id.archive"
@@ -99,6 +98,7 @@ import * as companyEmployeeLifecycleCodeEventsRoute from "@/contexts/company/int
 import * as companyEmployeeLifecycleCodeStateRoute from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.state"
 import * as companyEmployeesRoute from "@/contexts/company/interface/routes/company.employees"
 import * as companyEmploymentsRoute from "@/contexts/company/interface/routes/company.employments"
+import * as companyExternalIdentityImportsRoute from "@/contexts/company/interface/routes/company.external-identity-imports"
 import * as companyGradeDefinitionsRoute from "@/contexts/company/interface/routes/company.grade-definitions"
 import * as companyGradeDefinitionsIdRoute from "@/contexts/company/interface/routes/company.grade-definitions.$id"
 import * as companyMyDirectReportsRoute from "@/contexts/company/interface/routes/company.my-direct-reports"
@@ -576,6 +576,7 @@ const routePart25 = createRouteApp()
   .post("/company/employees", ...companyEmployeesRoute.POST)
   .get("/company/employments", ...companyEmploymentsRoute.GET)
   .post("/company/employments", ...companyEmploymentsRoute.POST)
+  .post("/company/external-identity-imports", ...companyExternalIdentityImportsRoute.POST)
   .get("/company/features", ...companyFeaturesRoute.GET)
   .get("/company/grade-definitions", ...companyGradeDefinitionsRoute.GET)
   .post("/company/grade-definitions", ...companyGradeDefinitionsRoute.POST)
@@ -598,12 +599,10 @@ const routePart25 = createRouteApp()
   .delete("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.DELETE)
   .get("/company/organization-units/:code/members", ...companyOrganizationUnitsCodeMembersRoute.GET)
   .get("/company/people", ...companyPeopleRoute.GET)
-  .post("/company/people", ...companyPeopleRoute.POST)
 
-const routePart26 = createRouteApp().post(
-  "/company/personnel-action-executions",
-  ...companyPersonnelActionExecutionsRoute.POST,
-)
+const routePart26 = createRouteApp()
+  .post("/company/people", ...companyPeopleRoute.POST)
+  .post("/company/personnel-action-executions", ...companyPersonnelActionExecutionsRoute.POST)
 
 const routePart27 = createRouteApp().get(
   "/company/personnel-action-requests",
@@ -1051,7 +1050,6 @@ const routePart35 = createRouteApp()
     "/system/principals/:principalId/machine-credentials",
     ...systemPrincipalsPrincipalIdMachineCredentialsRoute.POST,
   )
-  .post("/system/provisioning/identities", ...systemProvisioningIdentitiesRoute.POST)
   .get("/system/roles", ...systemRolesRoute.GET)
   .post("/system/roles", ...systemRolesRoute.POST)
   .get("/system/roles/:roleId", ...systemRolesRoleIdRoute.GET)
@@ -1072,9 +1070,9 @@ const routePart35 = createRouteApp()
   .get("/thanks/thanks-redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)
   .get("/thanks/thanks-redemptions/me", ...thanksRedemptionsMeRoute.GET)
   .post("/thanks/thanks-redemptions/:id/approve", ...thanksRedemptionsIdApproveRoute.POST)
+  .post("/thanks/thanks-redemptions/:id/reject", ...thanksRedemptionsIdRejectRoute.POST)
 
 const routePart36 = createRouteApp()
-  .post("/thanks/thanks-redemptions/:id/reject", ...thanksRedemptionsIdRejectRoute.POST)
   .get("/thanks/thanks-rewards", ...thanksRewardsRoute.GET)
   .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
   .patch("/thanks/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)

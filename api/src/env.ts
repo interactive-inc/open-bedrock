@@ -11,6 +11,7 @@ import type {
 import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
+import type { AccessTokenClaims } from "@system/domain/schemas/auth/access-token-claims.schema"
 
 /** Workers のバインディング（wrangler の vars / secrets / D1）。 */
 export type Bindings = {
@@ -50,9 +51,6 @@ export type Bindings = {
   // ログイン以外の全エンドポイントの IP 単位グローバルレート制限（Workers Rate Limiting binding）。
   // wrangler.jsonc の ratelimits で設定する。未設定（ローカル開発・テスト）ではスキップする。
   API_RATE_LIMITER?: RateLimit
-  // プロビジョニング（外部 identity の同期）エンドポイント専用の machine API キー。
-  // `wrangler secret put PROVISIONING_API_KEY` で登録する。未設定なら全リクエストを拒否する。
-  PROVISIONING_API_KEY?: string
   // ローカル・テスト用の公開JWKS。未設定の本番ではIDENTITY_ISSUERのJWKS endpointを使う。
   IDENTITY_JWKS?: string
   // 外部 identity トークンに期待する iss（発行者）。未設定なら identity ログインを拒否する。
@@ -82,6 +80,7 @@ export type RequestAuditContext = SystemRequestAudit
 
 /** リクエストスコープの変数。database に Drizzle、session に本人（CompanySessionValue。認可判定は session.hasPermission）を載せる。 */
 export type Variables = {
+  systemAccessToken?: AccessTokenClaims
   companyActor?: CompanyActorValue
   companyClock?: () => Date
   database: DrizzleD1Database<typeof schema>

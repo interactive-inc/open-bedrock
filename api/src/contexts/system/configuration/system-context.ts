@@ -1,5 +1,6 @@
 import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
+import type { AccessTokenClaims } from "@system/domain/schemas/auth/access-token-claims.schema"
 import * as systemAttachmentSchema from "@system/infrastructure/schema/system-attachment"
 import * as systemCoreSchema from "@system/infrastructure/schema/system-core"
 import * as systemDeliverySchema from "@system/infrastructure/schema/system-delivery"
@@ -51,6 +52,7 @@ export type SystemAuthorizationContext = Readonly<{
     role: string
     roleKeys?: ReadonlyArray<string>
     userId: string
+    systemAccessToken?: AccessTokenClaims
   }>
 }>
 

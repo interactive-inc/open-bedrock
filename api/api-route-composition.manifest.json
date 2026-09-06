@@ -111,12 +111,6 @@
       "participants": ["company", "system"],
       "routes": ["system.permission-definitions"],
       "reason": "System権限とCompany権限を権限カタログへ合成する"
-    },
-    {
-      "routePrefix": "system.provisioning",
-      "participants": ["company", "system"],
-      "routes": ["system.provisioning.identities"],
-      "reason": "System IdentityとCompany従業員資格を外部provisioning wireへ合成する"
     }
   ]
 }

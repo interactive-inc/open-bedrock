@@ -68,6 +68,7 @@ export const authenticateSystemAccessToken = systemFactory.createMiddleware(
     }
 
     context.set("userId", accountId.data)
+    context.set("systemAccessToken", claims)
     context.set("accountTokenVersion", accountSession.account.tokenVersion)
     context.set("permissions", accountAuthorization.permissionKeys)
     context.set("scopedPermissions", accountAuthorization.scopedPermissionKeys)

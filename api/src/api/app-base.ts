@@ -186,6 +186,17 @@ const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
   await next()
 })
 
+/** 外部同期のPOSTは共有handlerで機械認証し、他のCompany入口は従業員sessionを要求する。 */
+const companyAuthenticationMiddleware = factory.createMiddleware(async (c, next) => {
+  if (c.req.path === "/company/external-identity-imports" && c.req.method === "POST") {
+    await next()
+    return
+  }
+  await verifyBearer(c, async () => {
+    await companyActorMiddleware(c, next)
+  })
+})
+
 /**
  * 全ルート共通の土台。middleware・エラーハンドラだけを持ち、context routeは載せない。
  * context routeの登録は生成物である app.ts が行う（`bun run gen:app`）。
@@ -221,8 +232,7 @@ export const appBase = factory
   .use("/system/oauth/authorizations", systemAuthorizationMiddleware)
   .use("/system/oauth/mcp-grants", verifyBearer)
   .use("/system/oauth/mcp-grants", systemAuthorizationMiddleware)
-  .use("/company/*", verifyBearer)
-  .use("/company/*", companyActorMiddleware)
+  .use("/company/*", companyAuthenticationMiddleware)
   .onError(handleApiError)
 
 /** 生成routeを型計算可能な単位へ分割して合成するための空のHono appを作る。 */

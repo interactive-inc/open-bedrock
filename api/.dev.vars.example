@@ -11,8 +11,7 @@ PEPPER_SECRET="open-bedrock-local-seed-pepper"
 # ローテーション中は旧 version も残す。未設定なら添付 API は 503 を返す。
 ATTACHMENT_KEKS=
 COMPANY_TIME_ZONE="Asia/Tokyo"
-# 外部 identity 同期を使うときだけ設定する。未設定なら /provisioning/* は全拒否。
-PROVISIONING_API_KEY=
+# 外部identity同期にはSystem機械credentialとproviderごとの権限を使用する。
 IDENTITY_JWKS=
 IDENTITY_ISSUER="http://localhost:18790"
 IDENTITY_AUDIENCE="https://app.bedrock.localhost"

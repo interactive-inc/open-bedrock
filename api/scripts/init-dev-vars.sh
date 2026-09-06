@@ -28,7 +28,6 @@ AUDIT_HMAC_SECRET="$(generate_secret)"
 PEPPER_SECRET="open-bedrock-local-seed-pepper"
 ATTACHMENT_KEKS='{"1": "$(generate_secret)"}'
 COMPANY_TIME_ZONE="Asia/Tokyo"
-PROVISIONING_API_KEY=
 IDENTITY_JWKS=
 IDENTITY_ISSUER="http://localhost:18790"
 IDENTITY_AUDIENCE="https://app.bedrock.localhost"

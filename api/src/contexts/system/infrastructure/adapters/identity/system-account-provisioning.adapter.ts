@@ -3,13 +3,16 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import type { IamRoleId } from "@system/domain/schemas/iam/iam-role.schema"
 import type { IdentityProvider } from "@system/domain/schemas/identity/identity-provider.schema"
-import { zIdentityId } from "@system/domain/schemas/identity/identity-id.schema"
+import { zIdentityId, type IdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-subject.schema"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/configuration/system-context"
+import type { IamRoleEntity } from "@system/domain/entities/iam-role.entity"
+import { SystemD1AuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-authorization.adapter"
 
 export type PreparedSystemAccountProvisioning = Readonly<{
   accountId: AccountId
+  identityId: IdentityId
   accountStatement: D1PreparedStatement
   identityStatements: ReadonlyArray<D1PreparedStatement>
 }>
@@ -19,6 +22,26 @@ type Context = SystemD1Context
 export class SystemAccountProvisioningAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
+  }
+
+  async canGrantInitialRole(
+    actorAccountId: AccountId,
+    role: IamRoleEntity,
+    now: Date,
+  ): Promise<boolean | Error> {
+    if (role.resourceType !== null) return false
+    const authorization = await new SystemD1AuthorizationAdapter(this.c).resolveForAccount({
+      accountId: actorAccountId,
+      resource: null,
+      at: now,
+    })
+    if (authorization instanceof Error) return authorization
+    if (authorization === null) return false
+    return (
+      authorization.permissionKeys.has("system:admin") ||
+      (authorization.permissionKeys.has("iam:write") &&
+        role.permissionKeys.every((permission) => authorization.permissionKeys.has(permission)))
+    )
   }
 
   prepare(input: {
@@ -88,6 +111,7 @@ export class SystemAccountProvisioningAdapter {
              INNER JOIN system_iam_role_permissions permission ON permission.role_id = binding.role_id
              WHERE account.id = ?1 AND account.status = 'active'
                AND binding.resource_type IS NULL AND binding.revoked_at IS NULL
+               AND binding.created_at <= ?3
            ), target_permissions AS (
              SELECT permission_key AS key FROM system_iam_role_permissions WHERE role_id = ?2
            )
@@ -104,7 +128,7 @@ export class SystemAccountProvisioningAdapter {
              )
            THEN 1 ELSE abs(-9223372036854775808) END AS ok`,
         )
-        .bind(input.actorAccountId, input.roleId),
+        .bind(input.actorAccountId, input.roleId, input.now.getTime()),
       database
         .prepare(
           `INSERT INTO system_identity_bindings
@@ -142,6 +166,7 @@ export class SystemAccountProvisioningAdapter {
 
     return Object.freeze({
       accountId: accountId.data,
+      identityId: identityId.data,
       accountStatement,
       identityStatements: Object.freeze(identityStatements),
     })

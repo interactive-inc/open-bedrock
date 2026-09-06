@@ -391,3 +391,14 @@ export class CompanyWriteUnavailableError extends CompanyHTTPException {
     })
   }
 }
+
+export class CompanyExternalIdentityImportError extends CompanyHTTPException {
+  constructor(kind: "invalid" | "conflict" | "forbidden" | "unavailable", reason: string = kind) {
+    super({
+      status:
+        kind === "invalid" ? 400 : kind === "conflict" ? 409 : kind === "forbidden" ? 403 : 503,
+      code: `company_external_identity_import_${kind}`,
+      detail: reason,
+    })
+  }
+}

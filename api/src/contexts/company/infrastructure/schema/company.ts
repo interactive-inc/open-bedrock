@@ -9,7 +9,8 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
-import { systemAccounts } from "@system/infrastructure/schema/system-core"
+import { systemAccounts, systemIdentityBindings } from "@system/infrastructure/schema/system-core"
+import { systemMachineCredentials } from "@system/infrastructure/schema/system-principal"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 
 /** Company全体のoptimistic revision。全writeはこのrevisionをCASする。 */
@@ -212,7 +213,70 @@ export const companyWorkforceResourceBindings = sqliteTable(
   ],
 )
 
+export const companyExternalIdentityImports = sqliteTable(
+  "company_external_identity_imports",
+  {
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => companyOrganizations.id, { onDelete: "restrict" }),
+    commandId: text("command_id").notNull(),
+    fingerprint: text("fingerprint").notNull(),
+    actorAccountId: text("actor_account_id")
+      .notNull()
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
+    machineCredentialId: text("machine_credential_id")
+      .notNull()
+      .references(() => systemMachineCredentials.id, { onDelete: "restrict" }),
+    reason: text("reason").notNull(),
+    expectedRevision: integer("expected_revision").notNull(),
+    organizationRevision: integer("organization_revision").notNull(),
+    resultJson: text("result_json").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.organizationId, table.commandId] }),
+    check(
+      "company_external_import_fingerprint",
+      sql`length(${table.fingerprint}) = 64 AND ${table.fingerprint} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+    check("company_external_import_result", sql`json_valid(${table.resultJson})`),
+    check("company_external_import_command", sql`length(${table.commandId}) BETWEEN 1 AND 200`),
+    check("company_external_import_reason", sql`length(trim(${table.reason})) BETWEEN 1 AND 2000`),
+    check("company_external_import_expected_revision", sql`${table.expectedRevision} >= 0`),
+    check(
+      "company_external_import_revision",
+      sql`${table.organizationRevision} = ${table.expectedRevision} + 1`,
+    ),
+    check("company_external_import_recorded_at", sql`${table.recordedAt} >= 0`),
+  ],
+)
+
+export const companyExternalIdentitySources = sqliteTable(
+  "company_external_identity_sources",
+  {
+    identityId: text("identity_id")
+      .primaryKey()
+      .references(() => systemIdentityBindings.id, { onDelete: "restrict" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => companyOrganizations.id, { onDelete: "restrict" }),
+    sourceRevision: integer("source_revision").notNull(),
+    sourceDigest: text("source_digest").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    check("company_external_source_revision", sql`${table.sourceRevision} > 0`),
+    check("company_external_source_updated_at", sql`${table.updatedAt} >= 0`),
+    check(
+      "company_external_source_digest",
+      sql`length(${table.sourceDigest}) = 64 AND ${table.sourceDigest} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+  ],
+)
+
 export const companySchema = {
+  companyExternalIdentityImports,
+  companyExternalIdentitySources,
   companyOrganizations,
   companyAccountProfiles,
   companyResourceHeads,
