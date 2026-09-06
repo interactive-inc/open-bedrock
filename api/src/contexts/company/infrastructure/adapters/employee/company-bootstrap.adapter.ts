@@ -1,3 +1,10 @@
+import { InitialWorkforceResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
+import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
+import { drizzle } from "drizzle-orm/d1"
+
 export type CompanyBootstrapResult = Readonly<{
   employeeId: string | null
   state: "created" | "already_initialized" | "company_exists_without_account_link"
@@ -26,7 +33,7 @@ export class CompanyBootstrapAdapter {
       return existing ?? new Error("Company bootstrap state is unavailable")
     }
 
-    const companyExists = await this.hasAnyEmployee()
+    const companyExists = await this.hasCompanyState()
     if (companyExists instanceof Error) return companyExists
     if (companyExists) {
       return Object.freeze({
@@ -41,7 +48,7 @@ export class CompanyBootstrapAdapter {
     const organizationActionId = `bootstrap:organization:${employeeId}`
     const recordedAt = write.occurredAt.getTime()
     const actionRecordedAt = Math.floor(recordedAt / 1_000)
-    const summaryJson = JSON.stringify({
+    const summary = CanonicalSystemJsonValue.create({
       kind: "initial_state",
       eventOn: write.effectiveOn,
       department: { code: "COMPANY", name: write.organizationName },
@@ -49,6 +56,30 @@ export class CompanyBootstrapAdapter {
       managerEmployeeCode: null,
       status: "active",
     })
+    if (summary instanceof Error) return summary
+    const digest = await ProposalDigestValue.create(summary)
+    if (digest instanceof Error) return digest
+    const summaryJson = summary.toString()
+    const initialResources = await new InitialWorkforceResourceJournalAdapter({
+      env: { DB: this.c },
+      var: { database: drizzle(this.c) },
+    }).prepare({
+      employeeId: restoreWorkforceId("employee", employeeId),
+      employmentId: restoreWorkforceId("employment", employmentId),
+      officialName: write.employeeName,
+      employeeCode: write.employeeCode,
+      email: null,
+      phone: null,
+      employmentType: "FULL_TIME",
+      status: "active",
+      effectiveOn: restoreCalendarDate(write.effectiveOn),
+      occurredAt: write.occurredAt,
+      actorAccountId: write.accountId,
+      operationId: actionId,
+      reason: "Initialize Company workforce",
+      lifecycleRevision: 0,
+    })
+    if (initialResources instanceof Error) return initialResources
 
     const statements: D1PreparedStatement[] = [
       this.c
@@ -94,7 +125,7 @@ export class CompanyBootstrapAdapter {
           write.effectiveOn,
           actionRecordedAt,
           write.accountId,
-          "0".repeat(64),
+          digest.toString(),
           summaryJson,
         ),
       this.c
@@ -184,10 +215,11 @@ export class CompanyBootstrapAdapter {
       this.c
         .prepare(
           `UPDATE company_organizations
-           SET revision = revision + 1, name = ?1, representative_name = ?2, updated_at = ?3
+           SET name = ?1, representative_name = ?2, updated_at = ?3
            WHERE id = 'organization:default' AND revision = 0`,
         )
         .bind(write.organizationName, write.employeeName, recordedAt),
+      ...initialResources,
     ]
 
     try {
@@ -224,11 +256,13 @@ export class CompanyBootstrapAdapter {
     }
   }
 
-  private async hasAnyEmployee(): Promise<boolean | Error> {
+  private async hasCompanyState(): Promise<boolean | Error> {
     try {
       return (
-        (await this.c.prepare(`SELECT id FROM company_employees LIMIT 1`).first<string>("id")) !==
-        null
+        (await this.c
+          .prepare(`SELECT id FROM company_employees
+          UNION ALL SELECT id FROM company_organizations WHERE revision > 0 LIMIT 1`)
+          .first<string>("id")) !== null
       )
     } catch (cause) {
       return cause instanceof Error ? cause : new Error("failed to read Company Employee state")

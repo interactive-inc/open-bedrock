@@ -68,6 +68,44 @@ describe("POST /company/employee-registrations", () => {
     expect(await count(db, "company_personnel_actions", `operation_id = '${idempotencyKey}'`)).toBe(
       1,
     )
+    const employeeId = await db
+      .prepare("SELECT id FROM company_employees WHERE employee_code = 'E100'")
+      .first<string>("id")
+    if (employeeId === null) throw new Error("missing registered employee")
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: `/company/employees?id=${employeeId}&effective_on=2026-01-01`,
+      token: await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) }),
+      headers: { "x-company-organization-id": "organization:default" },
+    })
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      resources: [
+        {
+          id: employeeId,
+          type: "employee",
+          attributes: { employeeCode: "E100", personId: `person:${employeeId}` },
+        },
+      ],
+    })
+    expect(await count(db, "company_resource_revisions", `resource_id = '${employeeId}'`)).toBe(1)
+  })
+
+  test("公開正本の失敗時はAccountと従業員を残さず、同じkeyで再試行できる", async () => {
+    const db = await createTestDb()
+    const accountsBefore = await count(db, "system_accounts", "1 = 1")
+    await db.exec(
+      "CREATE TRIGGER reject_registered_resource BEFORE INSERT ON company_resource_revisions BEGIN SELECT RAISE(ABORT, 'resource unavailable'); END;",
+    )
+    expect((await post(db, body)).status).toBe(500)
+    expect(await count(db, "system_accounts", "1 = 1")).toBe(accountsBefore)
+    expect(await count(db, "company_employees", "employee_code = 'E100'")).toBe(0)
+    expect(await count(db, "company_personnel_actions", `operation_id = '${idempotencyKey}'`)).toBe(
+      0,
+    )
+    await db.exec("DROP TRIGGER reject_registered_resource")
+    expect((await post(db, body)).status).toBe(201)
   })
 
   test("rejects reuse of the key with a different registration", async () => {
@@ -79,6 +117,17 @@ describe("POST /company/employee-registrations", () => {
     expect(response.status).toBe(409)
     expect(await response.json()).toMatchObject({ code: "idempotency_conflict" })
     expect(await count(db, "company_employees", "employee_code = 'E100'")).toBe(1)
+  })
+
+  test("Companyの版競合は409を返し、登録を確定しない", async () => {
+    const db = await createTestDb()
+    await db.exec(
+      "CREATE TRIGGER conflict_registered_resource BEFORE INSERT ON company_command_receipts BEGIN SELECT RAISE(ABORT, 'company_revision_conflict'); END;",
+    )
+    const response = await post(db, body)
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({ code: "employee_registration_conflict" })
+    expect(await count(db, "company_employees", "employee_code = 'E100'")).toBe(0)
   })
 
   test("requires a UUID idempotency key before persistence", async () => {

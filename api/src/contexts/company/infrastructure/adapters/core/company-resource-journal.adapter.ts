@@ -3,7 +3,23 @@ import { compareCompanyResourcePersistence } from "@/contexts/company/domain/def
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
-type Context = D1Database
+import { and, eq, sql } from "drizzle-orm"
+import type { DrizzleD1Database } from "drizzle-orm/d1"
+import type { BatchItem } from "drizzle-orm/batch"
+import {
+  companyOrganizations,
+  companyCommandReceipts,
+  companyResourceRevisions,
+  companyResourceHeads,
+} from "@/contexts/company/infrastructure/schema/company"
+
+type Context = Readonly<{
+  database: Pick<DrizzleD1Database, "insert" | "update">
+  d1?: D1Database
+}>
+export type CompanyResourceJournalStatement = BatchItem<"sqlite"> & {
+  toSQL(): { sql: string; params: unknown[] }
+}
 export type PreparedCompanyResourceJournal = Readonly<{
   fingerprint: string
   statements: ReadonlyArray<D1PreparedStatement>
@@ -19,6 +35,23 @@ export class CompanyResourceJournalAdapter {
   async prepare(
     change: CompanyResourceChangeEntity,
   ): Promise<PreparedCompanyResourceJournal | Error> {
+    const d1 = this.c.d1
+    if (d1 === undefined) return new Error("D1 statement preparation is unavailable")
+    const journal = await this.build(change)
+    if (journal instanceof Error) return journal
+    const prepare = (statement: CompanyResourceJournalStatement) => {
+      const query = statement.toSQL()
+      return d1.prepare(query.sql).bind(...query.params)
+    }
+    return {
+      fingerprint: journal.fingerprint,
+      statements: journal.statements.map(prepare),
+      commit: prepare(journal.commit),
+    }
+  }
+
+  async build(change: CompanyResourceChangeEntity) {
+    const database = this.c.database
     const organizationId = change.resources[0]?.organizationId
     if (organizationId === undefined) return new Error("empty Company command")
     const canonical = CanonicalSystemJsonValue.create({
@@ -41,92 +74,85 @@ export class CompanyResourceJournalAdapter {
     if (digest instanceof Error) return digest
     const commandFingerprint = digest.toString()
     const organizationRevision = change.expectedRevision + 1
-    const statements: D1PreparedStatement[] = []
+    const statements: CompanyResourceJournalStatement[] = []
     if (change.expectedRevision === 0) {
       statements.push(
-        this.c
-          .prepare(
-            "INSERT OR IGNORE INTO company_organizations (id, revision, created_at, updated_at) VALUES (?, 0, ?, ?)",
-          )
-          .bind(organizationId, change.recordedAt, change.recordedAt),
+        database.insert(companyOrganizations).select(sql`
+          SELECT ${organizationId}, 0, '', '', ${change.recordedAt}, ${change.recordedAt}
+          WHERE NOT EXISTS (SELECT 1 FROM company_organizations WHERE id = ${organizationId})
+        `),
       )
     }
     statements.push(
-      this.c
-        .prepare(
-          `INSERT INTO company_command_receipts
-             (organization_id, command_id, fingerprint, expected_revision, organization_revision, recorded_at)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-        )
-        .bind(
-          organizationId,
-          change.commandId,
-          commandFingerprint,
-          change.expectedRevision,
-          organizationRevision,
-          change.recordedAt,
-        ),
+      database.insert(companyCommandReceipts).values({
+        organizationId,
+        commandId: change.commandId,
+        fingerprint: commandFingerprint,
+        expectedRevision: change.expectedRevision,
+        organizationRevision,
+        recordedAt: change.recordedAt,
+      }),
     )
 
     for (const resource of change.resources.toSorted(compareCompanyResourcePersistence)) {
       const attributesJson = CanonicalSystemJsonValue.create(resource.attributes)
       if (attributesJson instanceof Error) return attributesJson
-      const values: ReadonlyArray<string | number | null> = [
-        resource.organizationId,
-        resource.type,
-        resource.id,
-        resource.revision,
+      const values = {
+        organizationId: resource.organizationId,
+        resourceType: resource.type,
+        resourceId: resource.id,
+        revision: resource.revision,
         organizationRevision,
-        resource.state,
-        resource.effectiveFrom,
-        resource.effectiveTo,
-        attributesJson.toString(),
-      ]
+        state: resource.state,
+        effectiveFrom: resource.effectiveFrom,
+        effectiveTo: resource.effectiveTo,
+        attributesJson: attributesJson.toString(),
+      }
       statements.push(
-        this.c
-          .prepare(
-            `INSERT INTO company_resource_revisions
-               (organization_id, resource_type, resource_id, revision, organization_revision,
-                state, effective_from, effective_to, attributes_json, command_id,
-                actor_account_id, reason, recorded_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          )
-          .bind(
-            ...values,
-            change.commandId,
-            change.actorAccountId,
-            change.reason,
-            change.recordedAt,
-          ),
-      )
-      statements.push(
-        this.c
-          .prepare(
-            `INSERT INTO company_resource_heads
-               (organization_id, resource_type, resource_id, revision, organization_revision,
-                state, effective_from, effective_to, attributes_json, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-             ON CONFLICT (organization_id, resource_type, resource_id) DO UPDATE SET
-               revision = excluded.revision,
-               organization_revision = excluded.organization_revision,
-               state = excluded.state,
-               effective_from = excluded.effective_from,
-               effective_to = excluded.effective_to,
-               attributes_json = excluded.attributes_json,
-               updated_at = excluded.updated_at`,
-          )
-          .bind(...values, change.recordedAt),
+        database.insert(companyResourceRevisions).values({
+          ...values,
+          commandId: change.commandId,
+          actorAccountId: change.actorAccountId,
+          reason: change.reason,
+          recordedAt: change.recordedAt,
+        }),
+        database
+          .insert(companyResourceHeads)
+          .values({ ...values, updatedAt: change.recordedAt })
+          .onConflictDoUpdate({
+            target: [
+              companyResourceHeads.organizationId,
+              companyResourceHeads.resourceType,
+              companyResourceHeads.resourceId,
+            ],
+            set: {
+              revision: sql`excluded.revision`,
+              organizationRevision: sql`excluded.organization_revision`,
+              state: sql`excluded.state`,
+              effectiveFrom: sql`excluded.effective_from`,
+              effectiveTo: sql`excluded.effective_to`,
+              attributesJson: sql`excluded.attributes_json`,
+              updatedAt: sql`excluded.updated_at`,
+            },
+          }),
       )
     }
 
     return {
       fingerprint: commandFingerprint,
       statements,
-      commit: this.c
-        .prepare(
-          "UPDATE company_organizations SET revision = ?, updated_at = ? WHERE id = ? AND revision = ?",
-        )
-        .bind(organizationRevision, change.recordedAt, organizationId, change.expectedRevision),
+      commit: database
+        .update(companyOrganizations)
+        .set({
+          revision: organizationRevision,
+          updatedAt: change.recordedAt,
+        })
+        .where(
+          and(
+            eq(companyOrganizations.id, organizationId),
+            eq(companyOrganizations.revision, change.expectedRevision),
+          ),
+        ),
     }
   }
 }

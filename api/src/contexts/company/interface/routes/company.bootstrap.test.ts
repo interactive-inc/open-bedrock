@@ -1,4 +1,5 @@
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
+import { CompanyBootstrapAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-bootstrap.adapter"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
@@ -33,6 +34,28 @@ type BootstrapTestEnvironment = {
 const bootstrapTestFactory = createFactory<BootstrapTestEnvironment>()
 
 describe("Company Bootstrap HTTP", () => {
+  test("公開Companyの版が進んでいるときは従業員が空でも初期化しない", async () => {
+    const database = createCompanyD1TestDatabase(schemaSql)
+    await database.exec(
+      "UPDATE company_organizations SET revision = 1 WHERE id = 'organization:default'",
+    )
+    expect(
+      await new CompanyBootstrapAdapter(database).provision({
+        accountId: "account:operator",
+        employeeCode: "E001",
+        employeeName: "Example Person",
+        organizationName: "Company",
+        effectiveOn: "2026-09-01",
+        occurredAt: new Date("2026-09-01"),
+      }),
+    ).toEqual({ employeeId: null, state: "company_exists_without_account_link" })
+    expect(
+      await database
+        .prepare("SELECT count(*) AS total FROM company_employees")
+        .first<number>("total"),
+    ).toBe(0)
+  })
+
   test("System rootだけがCompanyを初期化でき、失敗後はCompanyだけを安全に再実行できる", async () => {
     const database = createCompanyD1TestDatabase(schemaSql)
     const app = bootstrapTestFactory
@@ -174,6 +197,32 @@ describe("Company Bootstrap HTTP", () => {
       ),
     })
     expect("account_id" in createdBody).toBe(true)
+    expect(
+      await database
+        .prepare("SELECT count(*) AS total FROM company_resource_revisions")
+        .first<number>("total"),
+    ).toBe(3)
+    expect(
+      await database
+        .prepare("SELECT count(*) AS total FROM company_workforce_resource_bindings")
+        .first<number>("total"),
+    ).toBe(2)
+    expect(
+      await database
+        .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+        .first<number>("revision"),
+    ).toBe(1)
+    const action = await database
+      .prepare("SELECT payload_fingerprint, summary_json FROM company_personnel_actions")
+      .first<{ payload_fingerprint: string; summary_json: string }>()
+    if (action === null) throw new Error("missing initial personnel action")
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(action.summary_json),
+    )
+    expect(action.payload_fingerprint).toBe(
+      [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join(""),
+    )
 
     const repeated = await client.company.bootstrap.$post(
       { json: { name: "Other Admin" } },
