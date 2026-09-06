@@ -260,6 +260,8 @@
     "src/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter.test.ts",
+    "src/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/lib/CLAUDE.md",
     "src/contexts/company/infrastructure/adapters/employee/lib/company-employee-directory-sql.ts",
     "src/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-sql.ts",

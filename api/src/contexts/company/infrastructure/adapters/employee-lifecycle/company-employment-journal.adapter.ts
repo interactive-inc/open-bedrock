@@ -11,6 +11,9 @@ import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure
 import { CompanyEmploymentResourceHistoryAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter"
 import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/company/infrastructure/adapters/database/abort-when-previous-statement-changed-no-rows.adapter"
 import { z } from "zod"
+import { InitialWorkforceResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter"
+import { drizzle } from "drizzle-orm/d1"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 
 const bindingRow = z.object({
   organization_id: z.string(),
@@ -59,6 +62,35 @@ export class CompanyEmploymentJournalAdapter {
       if (employee.data === null) {
         if (employments.data.length > 0)
           return new CompanyUnexpectedError("公開雇用のEmployee対応が欠けています")
+        if (props.prospectiveEmployee !== undefined) {
+          const period = props.projection.schedule.employments[0]
+          if (period === undefined || props.projection.schedule.employments.length !== 1)
+            return new CompanyUnexpectedError("新規従業員の雇用期間が不正です")
+          const initial = await new InitialWorkforceResourceJournalAdapter({
+            env: { DB: this.c },
+            var: { database: drizzle(this.c) },
+          }).prepare({
+            employeeId: props.action.employeeId,
+            employmentId: period.employmentId,
+            officialName: props.prospectiveEmployee.name,
+            employeeCode: props.prospectiveEmployee.code,
+            email: props.prospectiveEmployee.email ?? null,
+            phone: null,
+            employmentType: "FULL_TIME",
+            status: "active",
+            effectiveOn: restoreCalendarDate(period.startsOn),
+            occurredAt: new Date(props.action.recordedAt * 1000),
+            actorAccountId: props.command.session.accountId,
+            operationId: props.action.id,
+            reason: `personnel_action:${props.action.kind}:${props.action.id}`,
+            lifecycleRevision: props.revisions.employeeRevision + 1,
+          })
+          return initial instanceof Error
+            ? new CompanyUnexpectedError("公開Companyの初期記録を準備できません", {
+                cause: initial,
+              })
+            : initial
+        }
         return []
       }
       if (
@@ -166,7 +198,10 @@ export class CompanyEmploymentJournalAdapter {
             return new CompanyUnexpectedError("公開雇用のcommandを作成できません", {
               cause: change,
             })
-          const journal = await new CompanyResourceJournalAdapter(this.c).prepare(change)
+          const journal = await new CompanyResourceJournalAdapter({
+            database: drizzle(this.c),
+            d1: this.c,
+          }).prepare(change)
           if (journal instanceof Error)
             return new CompanyUnexpectedError("公開雇用の履歴を準備できません", { cause: journal })
           statements.push(...journal.statements, journal.commit)

@@ -17,6 +17,7 @@ import { hashPassword } from "@system/lib/auth/hash-password"
 import { verifyPassword } from "@system/lib/auth/verify-password"
 import { SystemAccountProvisioningAdapter } from "@system/infrastructure/adapters/identity/system-account-provisioning.adapter"
 import { SystemRoleCatalogRepository } from "@system/infrastructure/repositories/iam/system-role-catalog.repository"
+import { isAbortedByGuard } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-aborted-by-guard"
 
 /**
  * 登録時に既定で割り当てるrole key。このroleは全従業員が持つ基準の権限集合なので、
@@ -199,6 +200,12 @@ export class RegisterEmployee {
     } catch (cause) {
       const completed = await this.findCompletedRegistration(registrationReplayInput)
       if (completed !== null) return completed
+      if (isAbortedByGuard(cause)) {
+        return new ConflictError(
+          "登録中にCompanyの状態が変更されました",
+          "employee_registration_conflict",
+        )
+      }
       const message = cause instanceof Error ? cause.message : String(cause)
       if (message.includes("UNIQUE constraint")) {
         return new ConflictError("employee code or email already exists", "employee_code_conflict")

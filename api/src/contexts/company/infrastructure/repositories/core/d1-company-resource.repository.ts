@@ -6,6 +6,7 @@ import type { CalendarDate } from "@/contexts/company/domain/definitions/calenda
 import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import { CompanyWorkforceResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter"
+import { drizzle } from "drizzle-orm/d1"
 
 export type CompanyResourceQuery = Readonly<{
   organizationId: string
@@ -206,7 +207,10 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     if (organizationId === undefined) {
       return { kind: "unavailable", cause: new Error("Empty change") }
     }
-    const journal = await new CompanyResourceJournalAdapter(this.c).prepare(change)
+    const journal = await new CompanyResourceJournalAdapter({
+      database: drizzle(this.c),
+      d1: this.c,
+    }).prepare(change)
     if (journal instanceof Error) return { kind: "unavailable", cause: journal }
     const commandFingerprint = journal.fingerprint
 
