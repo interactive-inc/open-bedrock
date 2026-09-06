@@ -253,6 +253,7 @@
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-completion-preparation.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/revalidate-personnel-action-execution.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/company-bootstrap.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/company-employment-resource-projection.adapter.ts",
@@ -395,7 +396,8 @@
     "src/contexts/company/test/external-identity-import.test-support.ts",
     "src/contexts/company/test/governance-task.integration.test.ts",
     "src/contexts/company/test/governance-task.test-support.ts",
-    "src/contexts/company/test/migrations-directory.test-support.ts"
+    "src/contexts/company/test/migrations-directory.test-support.ts",
+    "src/contexts/company/test/personnel-execution.integration.test.ts"
   ],
   "implementedCapabilities": [
     "account-employee-link",

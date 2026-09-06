@@ -535,6 +535,7 @@ export class PersonnelActionPersistenceAdapter {
       authorization: ExecutionAuthorizationEntity
       proposalDigest: ProposalDigest
       executedAt: Date
+      executionGuards: ReadonlyArray<D1PreparedStatement>
       persistence: PersonnelActionPersistenceProps
       request: Readonly<{ id: string; applicationId: number }>
     }>,
@@ -542,13 +543,14 @@ export class PersonnelActionPersistenceAdapter {
     const statements = await this.prepare(props.persistence)
     if (statements instanceof CompanyOperationError) return statements
 
-    return new SystemD1AuthorizedExecutionAdapter({
+    const executed = await new SystemD1AuthorizedExecutionAdapter({
       env: { DB: this.c.env.DB },
     }).execute({
       authorization: props.authorization,
       proposalDigest: props.proposalDigest,
       executedAt: props.executedAt,
       operationStatements: [
+        ...props.executionGuards,
         ...statements,
         this.c.env.DB.prepare(
           `UPDATE company_personnel_action_requests
@@ -566,5 +568,12 @@ export class PersonnelActionPersistenceAdapter {
         ).abortWhenPreviousStatementChangedNoRows(),
       ],
     })
+    if (executed instanceof Error && isAbortedByGuard(executed)) {
+      return new CompanyConflictError(
+        "発令内容または承認資格が同時に更新されました",
+        "personnel_action_stale",
+      )
+    }
+    return executed
   }
 }

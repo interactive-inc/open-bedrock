@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "24f9167bfd7d88fe76acf36a69abf611c5e22695a397f81c8db24eab5e78a865",
+    "company-context.manifest.json": "e61934d4d314a4aba1572ee94aa4872eb47875c00b22c30348f277812a77938a",
     "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -25,7 +25,7 @@
     "src/contexts/company/application/employee-lifecycle/end-department-responsibility.ts": "2a6b69035d8a590d42aafbe4fe8facda1824a376136882ccb9892f34de2e89ca",
     "src/contexts/company/application/employee-lifecycle/hire-employee.ts": "2415aa896226f870ca7af7260124cb52f8a3024ea1e0f78f3e597948d00b1d8b",
     "src/contexts/company/application/employee-lifecycle/initialize-employee-lifecycle.ts": "216693e91cdec03231d2b9e1e6b6fe0acef0a81d5e5d23380c94206d66704d95",
-    "src/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request.ts": "c7b00b903e7968651e00c5fb8281abae0513e2136c4345f13054f29eeae65c86",
+    "src/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request.ts": "c84ab61028607ece0f1d01bc6407394596e414a3a11066e2aa5f4d9f6ee53a32",
     "src/contexts/company/application/employee-lifecycle/rehire-employee.ts": "57bc023cfb0ca2932adfa8a52e7618a40998baeb909b44dfd5b1b2c091121e9d",
     "src/contexts/company/application/employee-lifecycle/retire-employee.ts": "694e92483d19fec360f12f981720cc5ccf9f1d5883e1a312f6ba96bb581adcae",
     "src/contexts/company/application/employee-lifecycle/return-employee-from-leave.ts": "ce51db4dadf9ee2d9674d0079da9fabd392d3850ae8dcb69a44081a42ff29b78",
@@ -251,8 +251,9 @@
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-aborted-by-guard.test.ts": "2c14c9a536966dc19c1f22d9f44511e67cab1d42184bcb5d8f0d92491e627336",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-aborted-by-guard.ts": "12aaa4eac2e1c276f5c959c4f7b34fb5f9d304977fe1006769427557a0a7c6a2",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-completion-preparation.adapter.ts": "1a5d75317fea33ec2ae1f08b2b552b82c26f0584902f6bfaba0b158d32805492",
-    "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter.ts": "0c086964ad307f2c1431d982079373906df40d71f8e367517ae93a93bc340e15",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter.ts": "239890a06f91765af4c33d861b3362c439073655edaf4ddd5c7fbfdf947ff76c",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action.adapter.ts": "2818ed6cb46681a80ee073b25356a7a30dc9998d9e701aa580cf98b152dd24dc",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/revalidate-personnel-action-execution.adapter.ts": "01cc47afcd86f0207c21c5c6b28495a499488f7f35b2ab35d10c641f9b4eb29f",
     "src/contexts/company/infrastructure/adapters/employee/company-bootstrap.adapter.ts": "de7550e83abfffe8c569ea87718ded2bdbdcb8cb55434390753ae8e58c0232bd",
     "src/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter.ts": "9514b6c108a94b50daa4ac7365409cc0409001aaf30abdfa3291156b281d668d",
     "src/contexts/company/infrastructure/adapters/employee/company-employment-resource-projection.adapter.ts": "cd5b1e03c8b3a3713ca1f5e4c62d34feaf7a7bd0b72b497dad7fe74355be50fb",
@@ -395,6 +396,7 @@
     "src/contexts/company/test/external-identity-import.test-support.ts": "fe1ff6e2292ae5a2104f8c17e08095164a17b371d3d21e0314665a2fce466176",
     "src/contexts/company/test/governance-task.integration.test.ts": "364b1040139c4659715790240fff2252d5688247c9ae32af891cbf4f1ea4c685",
     "src/contexts/company/test/governance-task.test-support.ts": "9342c230d7966623d153ac53215d4eb9db4b52c4a467b60f2f396c92a20e508a",
-    "src/contexts/company/test/migrations-directory.test-support.ts": "d240e87177cc36b5284bfccdc524487782d58a467a5a7c31ec2cddaee57b8cb3"
+    "src/contexts/company/test/migrations-directory.test-support.ts": "d240e87177cc36b5284bfccdc524487782d58a467a5a7c31ec2cddaee57b8cb3",
+    "src/contexts/company/test/personnel-execution.integration.test.ts": "fb2e49ba4c37565e8c2742d1a5f2a7a917c54c750c41d45565eee162ee10d196"
   }
 }
