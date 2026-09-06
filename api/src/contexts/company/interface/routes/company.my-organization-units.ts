@@ -14,7 +14,8 @@ const factory = createFactory<CompanyHttpEnvironment>()
 export const GET = factory.createHandlers(async (context) => {
   const actor = context.var.companyActor
   if (actor === undefined) throw new CompanyAuthenticationRequiredError()
-  if (!actor.hasCapability("company:read")) throw new CompanyReadForbiddenError()
+  if (!actor.canAccessOrganization("organization:default") || !actor.hasCapability("company:read"))
+    throw new CompanyReadForbiddenError()
   if (actor.employeeId === null) return context.json({ data: [] }, 200)
   if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()
 

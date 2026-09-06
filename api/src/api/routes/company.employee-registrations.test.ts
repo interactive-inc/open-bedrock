@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { employeeProfileVersionSchema } from "@/contexts/company/domain/entities/employee-profile-change.entity"
+import { employeeProfileVersionSchema } from "@/contexts/company/domain/definitions/employee-profile-version.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"

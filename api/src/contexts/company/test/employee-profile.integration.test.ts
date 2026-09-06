@@ -6,7 +6,7 @@ import { drizzle } from "drizzle-orm/d1"
 import { z } from "zod"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
-import { employeeProfileVersionSchema } from "@/contexts/company/domain/entities/employee-profile-change.entity"
+import { employeeProfileVersionSchema } from "@/contexts/company/domain/definitions/employee-profile-version.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import {

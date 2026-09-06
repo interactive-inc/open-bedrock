@@ -1,26 +1,12 @@
-import { z } from "zod"
+import {
+  employeeProfileVersionSchema,
+  type EmployeeProfileVersion,
+} from "@/contexts/company/domain/definitions/employee-profile-version.definition"
 import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { CompanyConflictError, CompanyValidationError } from "@/contexts/company/domain/errors"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 
-export const employeeProfileVersionSchema = z
-  .object({
-    employeeId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
-    organizationRevision: z
-      .number()
-      .int()
-      .nonnegative()
-      .max(Number.MAX_SAFE_INTEGER - 1),
-    personRevision: z
-      .number()
-      .int()
-      .positive()
-      .max(Number.MAX_SAFE_INTEGER - 1),
-    effectiveOn: z.string().date(),
-  })
-  .strict()
-export type EmployeeProfileVersion = z.infer<typeof employeeProfileVersionSchema>
 export type EmployeeProfileSnapshot = Readonly<{
   version: EmployeeProfileVersion
   employeeCode: string | null

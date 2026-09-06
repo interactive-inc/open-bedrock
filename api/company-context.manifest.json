@@ -48,6 +48,7 @@
     "src/contexts/company/application/organization/apply-organization-change.ts",
     "src/contexts/company/application/organization/create-organization-unit.ts",
     "src/contexts/company/application/organization/delete-organization-unit.ts",
+    "src/contexts/company/application/organization/update-organization-profile.test.ts",
     "src/contexts/company/application/organization/update-organization-profile.ts",
     "src/contexts/company/application/organization/update-organization-unit.ts",
     "src/contexts/company/application/people/create-people.ts",
@@ -82,6 +83,7 @@
     "src/contexts/company/domain/definitions/direct-personnel-action-command.definition.ts",
     "src/contexts/company/domain/definitions/employee-directory-entry.definition.ts",
     "src/contexts/company/domain/definitions/employee-management-authority.definition.ts",
+    "src/contexts/company/domain/definitions/employee-profile-version.definition.ts",
     "src/contexts/company/domain/definitions/employee-relation.definition.ts",
     "src/contexts/company/domain/definitions/employee-status.definition.ts",
     "src/contexts/company/domain/definitions/employment-status.definition.ts",
@@ -411,6 +413,7 @@
     "src/contexts/company/test/governance-task.integration.test.ts",
     "src/contexts/company/test/governance-task.test-support.ts",
     "src/contexts/company/test/migrations-directory.test-support.ts",
+    "src/contexts/company/test/organization-command.integration.test.ts",
     "src/contexts/company/test/personnel-execution.integration.test.ts"
   ],
   "implementedCapabilities": [
