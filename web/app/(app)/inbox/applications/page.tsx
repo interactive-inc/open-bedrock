@@ -4,7 +4,6 @@ import Link from "next/link"
 import { Suspense } from "react"
 import { TablePagination } from "@/components/table-pagination"
 import { PAGE_SIZE_OPTIONS, parsePageSize } from "@/lib/pagination/parse-page-size"
-import { InboxDecisionForm } from "@/app/(app)/inbox/applications/_components/inbox-decision-form"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { EmptyState } from "@/components/empty-state"
 import { ListSkeleton } from "@/components/list-skeleton"
@@ -37,7 +36,7 @@ function toSort(raw: string | undefined): ApplicationInboxSort {
   return "created_at_desc"
 }
 
-/** 承認 inbox 画面。RSC で承認待ち一覧を取得し、各行に承認/却下フォームを置く。 */
+/** 承認 inbox 画面。RSC で承認待ち一覧を取得し、各行から申請内容の確認へ進む。 */
 export default async function ApplicationInboxPage(props: { searchParams: SearchParams }) {
   const searchParams = await props.searchParams
 
@@ -154,7 +153,12 @@ async function InboxTable(props: { offset: number; pageSize: number; sort: Appli
                 </TableCell>
 
                 <TableCell>
-                  <InboxDecisionForm applicationId={application.id} />
+                  <Link
+                    href={`/system/applications/${application.id}`}
+                    className="underline underline-offset-4"
+                  >
+                    内容を確認
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}

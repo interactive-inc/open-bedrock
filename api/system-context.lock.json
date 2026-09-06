@@ -193,6 +193,8 @@
     "src/contexts/system/domain/values/oauth/system-cli-identity-redirect-uri.value.test.ts": "52cabc804a51fcbc5f4550abad60b0ce730d6dcbf9aeca87627cd1578ce2514c",
     "src/contexts/system/domain/values/oauth/system-cli-identity-redirect-uri.value.ts": "a2d8dfef46f78f7feea8a5a469da978b1fb56f185fc9fd64ecf95aad05b2f0e3",
     "src/contexts/system/domain/values/workflow/proposal-digest.value.ts": "f5233248f725ddad62a09cbd7735ddb7b093b3f18e177fe4e15283346c4ee88b",
+    "src/contexts/system/domain/values/workflow/system-decision-target.value.test.ts": "289f2755743160e420c1fcc8c4d9855a0e6b389e9c855c43d1f83ea35b477fd3",
+    "src/contexts/system/domain/values/workflow/system-decision-target.value.ts": "cde56385e56c1c3dd8df4526c930ae3f3b2dbd71ae634cabd774cf2479c1d2cc",
     "src/contexts/system/infrastructure/adapters/attachments/attachment-object.adapter.ts": "9e195e7748b900216a202f4b5edf3bc4158c14b975d33c439facf4abc9d24f30",
     "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter.ts": "345453e298644ae29d0af1b6c70aaf8a868bd7cb976f93c4c66a6df37021739e",
     "src/contexts/system/infrastructure/adapters/audit/prepare-system-audit-append-invariant.adapter.ts": "34f8a8a96a337e0b3e7e3543f21d810f9e10642a3bae76330b61b2fb5d40cb23",

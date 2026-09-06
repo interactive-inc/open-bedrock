@@ -65,8 +65,18 @@ export type ApplicationApprovalEntry = {
   created_at: string
 }
 
-/** GET /application-requests/:id および POST /application-requests のレスポンス。 */
+/** 表示した提案と判断段階を特定する参照。 */
+export type ApplicationDecisionTarget = {
+  proposal_version: number
+  proposal_digest: string
+  task_key: string
+  task_round: number
+}
+
+/** GET /company/application-requests/:id および作成のレスポンス。 */
 export type ApplicationDetailResponse = {
+  decision_target: ApplicationDecisionTarget
+  can_decide: boolean
   id: number
   template_code: string
   template_name: string
@@ -77,7 +87,7 @@ export type ApplicationDetailResponse = {
   created_at: string
   // 承認履歴（古い順）。POST 直後は空配列。
   approvals: ReadonlyArray<ApplicationApprovalEntry>
-  // テンプレートの承認可能ロール（空配列なら application:approve 権限保持者が承認可）。
+  // テンプレートのロール名。判断資格はAPIで再検査する。
   approver_roles: ReadonlyArray<string>
   workflow: ApplicationWorkflowProgress | null
 }
@@ -91,6 +101,7 @@ export type ApplicationWorkflowProgress = {
   steps: ReadonlyArray<{
     key: string
     name: string
+    rejection_behavior: "reject" | "return"
     status: "waiting" | "pending" | "approved" | "rejected" | "returned"
   }>
   approvals: ReadonlyArray<{

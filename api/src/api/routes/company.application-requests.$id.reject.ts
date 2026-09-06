@@ -15,6 +15,14 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
+      decision_target: z
+        .object({
+          proposal_version: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+          proposal_digest: z.string().regex(/^[a-f0-9]{64}$/),
+          task_key: z.string().min(1).max(100),
+          task_round: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+        })
+        .strict(),
       comment: z
         .string({ error: "却下にはコメントが必須です" })
         .min(1, "却下にはコメントが必須です")
@@ -36,6 +44,12 @@ export const POST = factory.createHandlers(
       number: applicationId,
       actorEmployeeId: session.employeeId,
       action: "reject",
+      decisionTarget: {
+        proposalVersion: body.decision_target.proposal_version,
+        proposalDigest: body.decision_target.proposal_digest,
+        taskKey: body.decision_target.task_key,
+        taskRound: body.decision_target.task_round,
+      },
       comment: body.comment,
       decidedAt: new Date(c.env.NOW ?? Date.now()),
     })

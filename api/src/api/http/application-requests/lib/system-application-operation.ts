@@ -52,6 +52,7 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import { SystemDecisionTargetValue } from "@system/domain/values/workflow/system-decision-target.value"
 
 export type SystemApplicationResult = Readonly<{
   proposal: SystemProposalView
@@ -210,6 +211,12 @@ export async function decideSystemApplication(
     number: number
     actorEmployeeId: EmployeeId
     action: "approve" | "reject"
+    decisionTarget: Readonly<{
+      proposalVersion: number
+      proposalDigest: string
+      taskKey: string
+      taskRound: number
+    }>
     comment: string | null
     decidedAt: Date
   }>,
@@ -221,6 +228,16 @@ export async function decideSystemApplication(
   }
   if (proposal === null || proposal.status === "cancelled") {
     return new NotFoundError("application not found", "application_not_found")
+  }
+  const expected = SystemDecisionTargetValue.create(input.decisionTarget)
+  const current = SystemDecisionTargetValue.create({
+    proposalVersion: proposal.version,
+    proposalDigest: proposal.digest,
+    taskKey: proposal.currentTaskKey ?? proposal.lastTaskKey,
+    taskRound: proposal.currentTaskRound ?? proposal.lastTaskRound,
+  })
+  if (expected instanceof Error || current instanceof Error || !expected.equals(current)) {
+    return new ConflictError("application decision target changed", "decision_target_changed")
   }
   if (
     input.action === "approve" &&

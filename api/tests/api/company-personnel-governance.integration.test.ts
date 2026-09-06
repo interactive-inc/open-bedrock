@@ -1,3 +1,4 @@
+import { withCurrentDecisionTarget } from "@tests/api/support/with-current-decision-target"
 import { describe, expect, spyOn, test } from "bun:test"
 import { z } from "zod"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
@@ -95,7 +96,7 @@ async function createFixture() {
       db: c.database,
       jwtSecret: "personnel-governance-test",
       path,
-      body,
+      body: await withCurrentDecisionTarget(c.database, path, body),
       method: "POST",
       now: c.at.toISOString(),
       headers: key === undefined ? {} : { "Idempotency-Key": key },

@@ -1,3 +1,4 @@
+import { withCurrentDecisionTarget } from "@tests/api/support/with-current-decision-target"
 import { describe, expect, spyOn, test } from "bun:test"
 import { z } from "zod"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
@@ -52,7 +53,7 @@ async function createFixture() {
       jwtSecret: "governance-workflow-test",
       path,
       method: "POST",
-      body,
+      body: await withCurrentDecisionTarget(c.database, path, body),
       now: c.at.toISOString(),
       token: await createTestToken("governance-workflow-test", {
         employeeId: person.employeeId,
