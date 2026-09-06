@@ -5,6 +5,8 @@ import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/enti
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { compareCompanyResourcePersistence } from "@/contexts/company/domain/definitions/compare-company-resource-persistence.definition"
+import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
+import { CompanyWorkforceResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter"
 
 export type CompanyResourceQuery = Readonly<{
   organizationId: string
@@ -23,6 +25,7 @@ export type CompanyResourceReadResult =
 
 export type CompanyResourceWriteResult =
   | Readonly<{ kind: "applied"; organizationRevision: number; replayed: boolean }>
+  | Readonly<{ kind: "invalid"; error: CompanyResourceValidationError }>
   | Readonly<{ kind: "conflict"; actualRevision: number }>
   | Readonly<{ kind: "command_conflict" }>
   | Readonly<{
@@ -229,6 +232,17 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     const resourceConflict = await this.findResourceConflict(change)
     if (resourceConflict !== null) return resourceConflict
 
+    const projection = await new CompanyWorkforceResourceProjectionAdapter(this.c)
+      .prepare(change, commandFingerprint)
+      .catch((cause: unknown) =>
+        cause instanceof Error
+          ? cause
+          : new Error("failed to prepare Company workforce projection", { cause }),
+      )
+    if (projection instanceof CompanyResourceValidationError)
+      return { kind: "invalid", error: projection }
+    if (projection instanceof Error) return { kind: "unavailable", cause: projection }
+
     const organizationRevision = change.expectedRevision + 1
     const statements: D1PreparedStatement[] = []
     if (change.expectedRevision === 0) {
@@ -307,6 +321,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
           .bind(...values, change.recordedAt),
       )
     }
+    statements.push(...projection)
     statements.push(
       this.c
         .prepare(
@@ -334,8 +349,30 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         return { kind: "conflict", actualRevision: concurrentRevision }
       }
       const concurrentResourceConflict = await this.findResourceConflict(change)
-      return concurrentResourceConflict ?? { kind: "unavailable", cause }
+      if (concurrentResourceConflict !== null) return concurrentResourceConflict
+      if (this.isWorkforceConstraintFailure(cause)) {
+        return { kind: "invalid", error: new CompanyResourceValidationError("invalid_resource") }
+      }
+      return { kind: "unavailable", cause }
     }
+  }
+
+  private isWorkforceConstraintFailure(cause: unknown): boolean {
+    const visited = new Set<Error>()
+    while (cause instanceof Error && !visited.has(cause)) {
+      visited.add(cause)
+      if (
+        /\bcompany_workforce_(?:reference_not_found|owner_immutable|resource_is_in_use|period_conflict|reference_period_conflict)\b/.test(
+          cause.message,
+        ) ||
+        /UNIQUE constraint failed: company_employees\.(?:id|employee_code)\b|UNIQUE constraint failed: company_employments\.(?:id|employee_id)\b/.test(
+          cause.message,
+        )
+      )
+        return true
+      cause = cause.cause
+    }
+    return false
   }
 
   private async fingerprint(change: CompanyResourceChangeEntity): Promise<string | Error> {

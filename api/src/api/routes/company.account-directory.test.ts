@@ -1,3 +1,4 @@
+import { drizzle } from "drizzle-orm/d1"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
@@ -5,6 +6,9 @@ import { loadSchema } from "@tests/api/support/load-schema"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { InitialEmploymentPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { describe, expect, test } from "bun:test"
 
 const jwtSecret = "account-directory-route-test-secret"
@@ -38,6 +42,23 @@ async function createTestDatabase(): Promise<D1Database> {
       role: employee.role,
     })),
   )
+  for (const employee of employees) {
+    const initialEmployment = await new InitialEmploymentPersistenceAdapter({
+      env: { DB: database },
+      var: { database: drizzle(database) },
+    }).prepare({
+      employeeId: toWorkforceEmployeeId(employee.id),
+      employmentId: restoreWorkforceId("employment", `test:${employee.id}:employment`),
+      effectiveOn: restoreCalendarDate("1970-01-01"),
+      status: "active",
+      occurredAt: new Date(0),
+      actorAccountId: null,
+      operationId: `seed:${employee.id}`,
+      reason: "Initial test employment",
+    })
+    if (initialEmployment instanceof Error) throw initialEmployment
+    await database.batch([...initialEmployment])
+  }
   return database
 }
 

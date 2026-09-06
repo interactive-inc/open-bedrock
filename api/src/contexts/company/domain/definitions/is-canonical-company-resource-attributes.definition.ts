@@ -44,23 +44,28 @@ const resourceAttributeSchemas = {
     .strict(),
   person: z
     .object({
-      officialName: text,
-      email: z.email().nullable().optional(),
-      phone: code.nullable().optional(),
+      officialName: z
+        .string()
+        .trim()
+        .min(1)
+        .max(200)
+        .refine((value) => !value.includes("\0")),
+      email: z.email().max(320).nullable().optional(),
+      phone: z.string().trim().min(1).max(64).nullable().optional(),
     })
     .strict(),
   employee: z
     .object({
       personId: identifier,
-      employeeCode: code.nullable().optional(),
+      employeeCode: z.string().trim().min(1).max(64).nullable().optional(),
     })
     .strict(),
   employment: z
     .object({
-      employeeId: identifier,
+      employeeId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
       status: z.enum(["ACTIVE", "ON_LEAVE", "TERMINATED"]),
-      employmentType: code.optional(),
-      officialName: text.optional(),
+      employmentType: z.enum(["FULL_TIME", "PART_TIME"]),
+      officialName: z.string().trim().min(1).max(200).optional(),
     })
     .strict(),
   "organization-unit": z

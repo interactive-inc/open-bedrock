@@ -165,9 +165,14 @@ export const POST = factory.createHandlers(
             effectiveTo: z.string().date().nullable(),
             attributes: z
               .object({
-                officialName: z.string().trim().min(1).max(2_000),
-                email: z.email().nullable().optional(),
-                phone: z.string().trim().min(1).max(255).nullable().optional(),
+                officialName: z
+                  .string()
+                  .trim()
+                  .min(1)
+                  .max(200)
+                  .refine((value) => !value.includes("\0")),
+                email: z.email().max(320).nullable().optional(),
+                phone: z.string().trim().min(1).max(64).nullable().optional(),
               })
               .strict(),
           }),

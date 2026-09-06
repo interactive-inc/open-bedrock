@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { POST as POST_ORGANIZATION_CHANGE } from "@/contexts/company/interface/routes/company.organization-changes"
 import { GET, POST } from "@/contexts/company/interface/routes/company.people"
+import { POST as POST_EMPLOYEES } from "@/contexts/company/interface/routes/company.employees"
+import { POST as POST_EMPLOYMENTS } from "@/contexts/company/interface/routes/company.employments"
 import {
   GET as GET_DEFINITIONS,
   POST as POST_DEFINITIONS,
@@ -46,6 +48,8 @@ function createClient(database: D1Database, currentActor: CompanyActorValue = ac
     })
     .get("/company/people", ...GET)
     .post("/company/people", ...POST)
+    .post("/company/employees", ...POST_EMPLOYEES)
+    .post("/company/employments", ...POST_EMPLOYMENTS)
     .get("/company/definitions", ...GET_DEFINITIONS)
     .post("/company/definitions", ...POST_DEFINITIONS)
     .post("/company/organization-changes", ...POST_ORGANIZATION_CHANGE)
@@ -92,6 +96,65 @@ const person = {
 } as const
 
 describe("canonical Company API", () => {
+  test("存在しない参照先への従業員・雇用登録は422で拒否し、修正後に同じkeyで再試行できる", async () => {
+    const database = createCompanyD1TestDatabase(companySql)
+    const client = createClient(database)
+    const employee = {
+      ...person,
+      type: "employee" as const,
+      id: "employee:1",
+      attributes: { personId: person.id, employeeCode: "E001" },
+    }
+    const employment: Parameters<
+      ReturnType<typeof createClient>["company"]["employments"]["$post"]
+    >[0]["json"]["resources"][number] = {
+      ...person,
+      type: "employment" as const,
+      id: "employment:1",
+      attributes: {
+        employeeId: employee.id,
+        status: "ACTIVE" as const,
+        employmentType: "FULL_TIME",
+      },
+    }
+    const missingPerson = await client.company.employees.$post({
+      header: writeHeaders("command:employee", 0),
+      json: { reason: "従業員登録", resources: [employee] },
+    })
+    expect(Number(missingPerson.status)).toBe(422)
+    expect(await missingPerson.json()).toMatchObject({ code: "invalid_resource" })
+    const missingEmployee = await client.company.employments.$post({
+      header: writeHeaders("command:employment", 0),
+      json: { reason: "雇用登録", resources: [employment] },
+    })
+    expect(Number(missingEmployee.status)).toBe(422)
+    expect(await missingEmployee.json()).toMatchObject({ code: "invalid_resource" })
+    expect(
+      (
+        await client.company.people.$post({
+          header: writeHeaders("command:person", 0),
+          json: { reason: "人の登録", resources: [person] },
+        })
+      ).status,
+    ).toBe(201)
+    expect(
+      (
+        await client.company.employees.$post({
+          header: writeHeaders("command:employee", 1),
+          json: { reason: "従業員登録", resources: [employee] },
+        })
+      ).status,
+    ).toBe(201)
+    expect(
+      (
+        await client.company.employments.$post({
+          header: writeHeaders("command:employment", 2),
+          json: { reason: "雇用登録", resources: [employment] },
+        })
+      ).status,
+    ).toBe(201)
+  })
+
   test("法人プロフィールを設定するまでは404へ閉じ、設定後は同じorganizationから読める", async () => {
     const database = createCompanyD1TestDatabase(companySql)
     await seedOrganization(database)

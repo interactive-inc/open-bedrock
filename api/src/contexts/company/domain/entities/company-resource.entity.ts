@@ -61,6 +61,11 @@ export class CompanyResourceEntity {
     if (!isCompanyIdentifier(props.organizationId) || !isCompanyIdentifier(props.id)) {
       return new CompanyResourceValidationError("invalid_identifier")
     }
+    if (
+      (props.type === "employee" || props.type === "employment") &&
+      !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(props.id)
+    )
+      return new CompanyResourceValidationError("invalid_identifier")
     if (!Number.isSafeInteger(props.revision) || props.revision < 1) {
       return new CompanyResourceValidationError("invalid_revision")
     }

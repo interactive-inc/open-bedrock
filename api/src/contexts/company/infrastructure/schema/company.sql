@@ -503,3 +503,366 @@ WHEN NEW.state = 'void'
 BEGIN
   SELECT RAISE(ABORT, 'company_governance_definition_is_in_use');
 END;
+
+CREATE TRIGGER company_workforce_resource_reference_guard
+BEFORE INSERT ON company_resource_revisions
+WHEN NEW.state = 'active' AND (
+  (NEW.resource_type = 'employee' AND NOT EXISTS (
+    SELECT 1 FROM company_resource_heads AS person
+    WHERE person.organization_id = NEW.organization_id
+      AND person.resource_type = 'person'
+      AND person.resource_id = json_extract(NEW.attributes_json, '$.personId')
+      AND person.state = 'active'
+  ))
+  OR (NEW.resource_type IN (
+    'employment', 'assignment', 'reporting-relation', 'office-assignment',
+    'organizational-authority', 'account-employee-link'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM company_resource_heads AS employee
+    WHERE employee.organization_id = NEW.organization_id
+      AND employee.resource_type = 'employee'
+      AND employee.resource_id = json_extract(NEW.attributes_json, '$.employeeId')
+      AND employee.state = 'active'
+  ))
+  OR (NEW.resource_type = 'reporting-relation' AND NOT EXISTS (
+    SELECT 1 FROM company_resource_heads AS manager
+    WHERE manager.organization_id = NEW.organization_id
+      AND manager.resource_type = 'employee'
+      AND manager.resource_id = json_extract(NEW.attributes_json, '$.managerEmployeeId')
+      AND manager.state = 'active'
+  ))
+  OR (NEW.resource_type IN (
+    'assignment', 'office-assignment', 'organizational-authority'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM company_resource_heads AS employment
+    WHERE employment.organization_id = NEW.organization_id
+      AND employment.resource_type = 'employment'
+      AND employment.resource_id = json_extract(NEW.attributes_json, '$.employmentId')
+      AND json_extract(employment.attributes_json, '$.employeeId') =
+          json_extract(NEW.attributes_json, '$.employeeId')
+      AND employment.state = 'active'
+  ))
+)
+BEGIN
+  SELECT RAISE(ABORT, 'company_workforce_reference_not_found');
+END;
+
+CREATE TRIGGER company_workforce_resource_owner_guard
+BEFORE INSERT ON company_resource_revisions
+WHEN EXISTS (
+  SELECT 1 FROM company_resource_heads AS previous
+  WHERE previous.organization_id = NEW.organization_id
+    AND previous.resource_type = NEW.resource_type
+    AND previous.resource_id = NEW.resource_id
+    AND (
+      (NEW.resource_type = 'employee' AND
+       json_extract(previous.attributes_json, '$.personId') IS NOT
+       json_extract(NEW.attributes_json, '$.personId'))
+      OR (NEW.resource_type = 'employment' AND
+          json_extract(previous.attributes_json, '$.employeeId') IS NOT
+          json_extract(NEW.attributes_json, '$.employeeId'))
+    )
+)
+BEGIN
+  SELECT RAISE(ABORT, 'company_workforce_owner_immutable');
+END;
+
+CREATE TRIGGER company_workforce_resource_void_guard
+BEFORE INSERT ON company_resource_revisions
+WHEN NEW.state = 'void'
+  AND NEW.resource_type IN ('person', 'employee', 'employment')
+  AND EXISTS (
+    SELECT 1 FROM company_resource_heads AS dependent
+    WHERE dependent.organization_id = NEW.organization_id
+      AND dependent.state = 'active'
+      AND (
+        (NEW.resource_type = 'person' AND dependent.resource_type = 'employee'
+         AND json_extract(dependent.attributes_json, '$.personId') = NEW.resource_id)
+        OR (NEW.resource_type = 'employee' AND (
+          (dependent.resource_type IN (
+            'employment', 'assignment', 'reporting-relation', 'office-assignment',
+            'collective-body-membership', 'organizational-authority', 'account-employee-link'
+          ) AND json_extract(dependent.attributes_json, '$.employeeId') = NEW.resource_id)
+          OR (dependent.resource_type = 'reporting-relation'
+              AND json_extract(dependent.attributes_json, '$.managerEmployeeId') = NEW.resource_id)
+          OR (dependent.resource_type = 'responsibility-assignment'
+              AND json_extract(dependent.attributes_json, '$.holderType') = 'employee'
+              AND json_extract(dependent.attributes_json, '$.holderId') = NEW.resource_id)
+        ))
+        OR (NEW.resource_type = 'employment' AND dependent.resource_type IN (
+          'assignment', 'office-assignment', 'organizational-authority'
+        ) AND json_extract(dependent.attributes_json, '$.employmentId') = NEW.resource_id)
+      )
+  )
+BEGIN
+  SELECT RAISE(ABORT, 'company_workforce_resource_is_in_use');
+END;
+
+
+-- Company workforce identity and period projections.
+CREATE TABLE company_employees (
+  id TEXT PRIMARY KEY NOT NULL
+    CHECK (length(id) BETWEEN 1 AND 128),
+  official_name TEXT NOT NULL
+    CHECK (length(official_name) BETWEEN 1 AND 200 AND trim(official_name) = official_name),
+  employee_code TEXT
+    CHECK (
+      employee_code IS NULL OR (
+        length(employee_code) BETWEEN 1 AND 64 AND trim(employee_code) = employee_code
+      )
+    ),
+  email TEXT
+    CHECK (email IS NULL OR (length(email) BETWEEN 1 AND 320 AND trim(email) = email)),
+  phone TEXT
+    CHECK (phone IS NULL OR (length(phone) BETWEEN 1 AND 64 AND trim(phone) = phone)),
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+    CHECK (updated_at >= created_at)
+);
+
+CREATE UNIQUE INDEX company_employees_employee_code_uniq
+  ON company_employees(employee_code);
+
+CREATE TABLE company_employments (
+  id TEXT PRIMARY KEY NOT NULL,
+  employee_id TEXT NOT NULL
+    REFERENCES company_employees(id) ON DELETE RESTRICT,
+  contract_name TEXT NOT NULL
+    CHECK (length(contract_name) BETWEEN 1 AND 200 AND trim(contract_name) = contract_name),
+  employment_type TEXT NOT NULL
+    CHECK (employment_type IN ('FULL_TIME', 'PART_TIME')),
+  hire_date TEXT NOT NULL,
+  status TEXT NOT NULL
+    CHECK (status IN ('ACTIVE', 'ON_LEAVE', 'TERMINATED')),
+  termination_date TEXT,
+  created_at INTEGER NOT NULL
+    CHECK (created_at >= 0),
+  updated_at INTEGER NOT NULL
+    CHECK (updated_at >= created_at),
+  CHECK (termination_date IS NULL OR hire_date <= termination_date)
+);
+
+CREATE UNIQUE INDEX company_employments_employee_active_unique
+  ON company_employments(employee_id)
+  WHERE termination_date IS NULL;
+
+CREATE INDEX company_employments_employee_idx
+  ON company_employments(employee_id);
+
+CREATE INDEX company_employments_status_idx
+  ON company_employments(status);
+
+CREATE TABLE company_account_employee_links (
+  account_id TEXT PRIMARY KEY NOT NULL
+    REFERENCES system_accounts(id) ON DELETE RESTRICT,
+  employee_id TEXT NOT NULL
+    REFERENCES company_employees(id) ON DELETE RESTRICT
+);
+
+CREATE INDEX company_account_employee_links_employee_idx
+  ON company_account_employee_links(employee_id);
+
+CREATE UNIQUE INDEX company_account_employee_links_employee_uniq
+  ON company_account_employee_links(employee_id);
+
+CREATE TABLE "company_personnel_actions" (
+  id TEXT PRIMARY KEY,
+  employee_id TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN (
+    'hire', 'rehire', 'primary_assignment_started', 'transferred',
+    'concurrent_assignment_started', 'assignment_ended', 'position_changed',
+    'manager_changed', 'department_responsibility_started',
+    'department_responsibility_ended', 'leave_started', 'returned', 'retired',
+    'corrected', 'initial_state'
+  )),
+  event_on TEXT NOT NULL CHECK (
+    length(event_on) = 10 AND substr(event_on, 5, 1) = '-' AND substr(event_on, 8, 1) = '-'
+  ),
+  recorded_at INTEGER NOT NULL,
+  recorded_by_account_id TEXT,
+  requested_by_employee_id TEXT,
+  source_type TEXT NOT NULL CHECK (source_type IN ('application', 'direct', 'system')),
+  source_application_id INTEGER,
+  corrects_action_id TEXT,
+  operation_id TEXT NOT NULL UNIQUE CHECK (length(operation_id) BETWEEN 1 AND 200),
+  payload_fingerprint TEXT NOT NULL CHECK (length(payload_fingerprint) = 64),
+  summary_json TEXT NOT NULL CHECK (json_valid(summary_json)),
+  CHECK (
+    (source_type = 'application' AND source_application_id IS NOT NULL)
+    OR (source_type != 'application' AND source_application_id IS NULL)
+  ),
+  CHECK (corrects_action_id IS NULL OR corrects_action_id != id),
+  CHECK (recorded_by_account_id IS NULL OR length(recorded_by_account_id) BETWEEN 1 AND 255)
+);
+
+CREATE INDEX idx_company_personnel_actions_employee_timeline
+  ON company_personnel_actions(employee_id, event_on, recorded_at, id);
+
+CREATE UNIQUE INDEX uq_company_personnel_actions_correction
+  ON company_personnel_actions(corrects_action_id)
+  WHERE corrects_action_id IS NOT NULL;
+
+CREATE UNIQUE INDEX uq_company_personnel_actions_source_application
+  ON company_personnel_actions(source_application_id)
+  WHERE source_application_id IS NOT NULL;
+
+CREATE TABLE "company_employee_lifecycle_revisions" (
+  employee_id TEXT PRIMARY KEY,
+  revision INTEGER NOT NULL DEFAULT 0 CHECK (revision >= 0),
+  updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE "company_employment_period_versions" (
+  period_id TEXT NOT NULL,
+  revision INTEGER NOT NULL CHECK (revision > 0),
+  employee_id TEXT NOT NULL,
+  starts_on TEXT NOT NULL CHECK (
+    length(starts_on) = 10 AND substr(starts_on, 5, 1) = '-' AND substr(starts_on, 8, 1) = '-'
+  ),
+  ends_on TEXT CHECK (
+    ends_on IS NULL OR (
+      length(ends_on) = 10 AND substr(ends_on, 5, 1) = '-' AND substr(ends_on, 8, 1) = '-'
+    )
+  ),
+  is_void INTEGER NOT NULL DEFAULT 0 CHECK (is_void IN (0, 1)),
+  recorded_by_action_id TEXT NOT NULL,
+  recorded_at INTEGER NOT NULL,
+  PRIMARY KEY (period_id, revision),
+  CHECK (ends_on IS NULL OR starts_on < ends_on)
+) WITHOUT ROWID;
+
+CREATE INDEX idx_company_employment_period_versions_employee
+  ON company_employment_period_versions(
+    employee_id, starts_on, ends_on, period_id, revision DESC
+  );
+
+CREATE TABLE "company_employee_status_period_versions" (
+  period_id TEXT NOT NULL,
+  revision INTEGER NOT NULL CHECK (revision > 0),
+  employment_period_id TEXT NOT NULL,
+  employee_id TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('active', 'leave')),
+  starts_on TEXT NOT NULL CHECK (
+    length(starts_on) = 10 AND substr(starts_on, 5, 1) = '-' AND substr(starts_on, 8, 1) = '-'
+  ),
+  ends_on TEXT CHECK (
+    ends_on IS NULL OR (
+      length(ends_on) = 10 AND substr(ends_on, 5, 1) = '-' AND substr(ends_on, 8, 1) = '-'
+    )
+  ),
+  is_void INTEGER NOT NULL DEFAULT 0 CHECK (is_void IN (0, 1)),
+  recorded_by_action_id TEXT NOT NULL,
+  recorded_at INTEGER NOT NULL,
+  PRIMARY KEY (period_id, revision),
+  CHECK (ends_on IS NULL OR starts_on < ends_on)
+) WITHOUT ROWID;
+
+CREATE INDEX idx_company_employee_status_period_versions_employee
+  ON company_employee_status_period_versions(
+    employee_id, starts_on, ends_on, period_id, revision DESC
+  );
+
+CREATE INDEX idx_company_employee_status_period_versions_employment
+  ON company_employee_status_period_versions(employment_period_id, period_id, revision DESC);
+
+CREATE TABLE company_workforce_resource_bindings (
+  resource_type TEXT NOT NULL CHECK (resource_type IN ('employee', 'employment')),
+  resource_id TEXT NOT NULL,
+  organization_id TEXT NOT NULL,
+  employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
+  resource_revision INTEGER NOT NULL CHECK (resource_revision > 0),
+  lifecycle_revision INTEGER NOT NULL CHECK (lifecycle_revision >= 0),
+  last_action_id TEXT,
+  PRIMARY KEY (resource_type, resource_id),
+  FOREIGN KEY (organization_id, resource_type, resource_id)
+    REFERENCES company_resource_heads(organization_id, resource_type, resource_id)
+    ON DELETE RESTRICT,
+  CHECK (resource_type != 'employee' OR resource_id = employee_id)
+);
+
+CREATE INDEX company_workforce_resource_bindings_employee_idx
+  ON company_workforce_resource_bindings(employee_id, resource_type);
+
+DROP INDEX IF EXISTS company_employments_employee_active_unique;
+CREATE UNIQUE INDEX company_employments_employee_active_unique
+  ON company_employments(employee_id)
+  WHERE termination_date IS NULL AND status IN ('ACTIVE', 'ON_LEAVE');
+
+DROP TRIGGER IF EXISTS company_workforce_projection_guard;
+CREATE TRIGGER company_workforce_projection_guard
+BEFORE UPDATE OF revision ON company_organizations
+WHEN NEW.revision != OLD.revision
+BEGIN
+  SELECT RAISE(ABORT, 'company_workforce_period_conflict')
+  WHERE EXISTS (
+    WITH latest AS (
+      SELECT period.* FROM company_employment_period_versions AS period
+      JOIN company_workforce_resource_bindings AS binding
+        ON binding.employee_id = period.employee_id AND binding.resource_type = 'employee'
+        AND binding.organization_id = NEW.id
+      WHERE period.is_void = 0 AND NOT EXISTS (
+        SELECT 1 FROM company_employment_period_versions AS newer
+        WHERE newer.period_id = period.period_id AND newer.revision > period.revision
+      )
+    )
+    SELECT 1 FROM latest AS left_period JOIN latest AS right_period
+      ON left_period.employee_id = right_period.employee_id
+      AND left_period.period_id < right_period.period_id
+    WHERE (left_period.ends_on IS NULL OR right_period.starts_on < left_period.ends_on)
+      AND (right_period.ends_on IS NULL OR left_period.starts_on < right_period.ends_on)
+  );
+
+  SELECT RAISE(ABORT, 'company_workforce_reference_period_conflict')
+  WHERE EXISTS (
+    WITH ranked AS (
+      SELECT resource.*,
+        row_number() OVER (PARTITION BY resource_type, resource_id, effective_from ORDER BY revision DESC) AS start_rank
+      FROM company_resource_revisions AS resource
+      WHERE organization_id = NEW.id AND resource_type IN ('person', 'employee')
+    ),
+    slices AS (
+      SELECT resource_type, resource_id, state, attributes_json, effective_from AS starts_on,
+        nullif(min(coalesce(effective_to, '9999-12-32'),
+          coalesce(lead(effective_from) OVER (PARTITION BY resource_type, resource_id ORDER BY effective_from), '9999-12-32')), '9999-12-32') AS ends_on
+      FROM ranked WHERE start_rank = 1
+    ),
+    reference_intervals AS (
+      SELECT 'employee' AS reference_type, period.employee_id AS reference_id,
+        period.starts_on, period.ends_on
+      FROM company_employment_period_versions AS period
+      JOIN company_workforce_resource_bindings AS binding ON binding.resource_type = 'employee'
+        AND binding.employee_id = period.employee_id AND binding.organization_id = NEW.id
+      WHERE period.is_void = 0 AND NOT EXISTS (
+        SELECT 1 FROM company_employment_period_versions AS newer
+        WHERE newer.period_id = period.period_id AND newer.revision > period.revision
+      )
+      UNION ALL
+      SELECT 'person', json_extract(employee.attributes_json, '$.personId'),
+        employee.starts_on, employee.ends_on
+      FROM slices AS employee
+      JOIN company_workforce_resource_bindings AS binding ON binding.resource_type = 'employee'
+        AND binding.resource_id = employee.resource_id AND binding.organization_id = NEW.id
+      WHERE employee.resource_type = 'employee' AND employee.state = 'active'
+    ),
+    reference_boundaries AS (
+      SELECT resource_type, resource_id, starts_on AS boundary_on FROM slices
+      UNION SELECT resource_type, resource_id, ends_on FROM slices WHERE ends_on IS NOT NULL
+    ),
+    reference_points AS (
+      SELECT reference_type, reference_id, starts_on AS effective_on FROM reference_intervals
+      UNION
+      SELECT reference.reference_type, reference.reference_id, boundary.boundary_on
+      FROM reference_intervals AS reference JOIN reference_boundaries AS boundary
+        ON boundary.resource_type = reference.reference_type AND boundary.resource_id = reference.reference_id
+      WHERE reference.starts_on <= boundary.boundary_on
+        AND (reference.ends_on IS NULL OR boundary.boundary_on < reference.ends_on)
+    )
+    SELECT 1 FROM reference_points AS reference
+    WHERE NOT EXISTS (
+      SELECT 1 FROM slices AS target
+      WHERE target.resource_type = reference.reference_type AND target.resource_id = reference.reference_id
+        AND target.state = 'active' AND target.starts_on <= reference.effective_on
+        AND (target.ends_on IS NULL OR reference.effective_on < target.ends_on)
+    )
+  );
+END;
