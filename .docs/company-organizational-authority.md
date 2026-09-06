@@ -100,7 +100,7 @@ flowchart LR
 
 一つの step の primary 条件と escalation 条件は、一回の Company resolver 呼出しで解決する。二回に分けると途中の組織変更で異なる organization revision が混ざり、同じ step snapshot が一つの会社時点を表さなくなる。adapter は一つの解決結果を primary と escalation に分類し、selector index だけを各配列内の index へ戻す。
 
-組織変更後に既存 Task の候補を再解決しない。再解決が必要な場合は新しい round と resolution ID を作り、以前の候補、証拠、判断を残す。
+組織変更後も既存 Task の候補と必要人数を書き換えない。候補を変更する場合は新しい round と resolution ID を作り、以前の候補、証拠、判断を残す。判断時の資格再検査は、保存済み候補のうち現在も同じ条件を満たす Account だけに判断を許可するために行う。
 
 ## System との接続
 
@@ -201,6 +201,10 @@ resolver は同じ `asOf` と organization revision に属する active resource
 
 `CreateCompanyGovernanceProcedureTask` は解決済み Company qualification を System Task の候補証拠へ変換する。個人または役職の責任は一名承認、合議体は参加定足数、必要賛成数、成立不能による否決、代理禁止、差戻し禁止として固定する。異なる assignment、個人資格、合議資格が同じ criterion で混在し意味を一意に決められない場合は Task を作成しない。
 
-現行実装は OrgUnit identity、期間付き階層、Assignment、Job、Position、Grade、OrganizationalOffice、OfficeAssignment、Responsibility、ResponsibilityAssignment、AuthorityScope、CollectiveBody、organization revision、atomic operation、Company 資格候補、時点 snapshot、canonical System Account ID、System Task と Company API への接続を実装する。scope は法人、組織単位、拠点、勤務場所、地域、通貨付き金額を明示型で評価する。Personnel Action も共通の変更 validator に接続する。
+公開 Company resource の resolver は、法人、組織単位、拠点、勤務場所、地域、通貨付き金額の scope を明示型で評価する。ただし、公開 resource の責務・役職・合議体から Task を構成する変換処理は、汎用申請と人事申請の Task 生成には接続されていない。現在の申請は、期間付き組織台帳に対する従業員・上司・部署責任者・責務の条件から候補を解決する。
 
 判断時の Employee 対応と在籍の再検査は Company の公開 resolver を経由し、Account 状態の正本は canonical `system_accounts` である。System HumanAttestation は Company table を直接読まず、API composition が Company の live な主体対応と System の候補資格を合成する。
+
+汎用申請と人事申請の承認・否認・差戻しでは、固定済みの条件を判断時点の Company 営業日で再評価する。代理判断は委任元 Account の資格を確認する。人事申請は発令対象者を資格解決の対象とし、依頼者と発令対象者の除外を維持する。追加候補は保存済み Task の期限以降だけ評価し、再検査の時刻から期限を計算し直さない。
+
+会社上の資格の参照前に組織版、未確定操作、追記専用の期間・人事・対応・公開履歴の件数、条件で参照する従業員番号を固定する。System の判断 batch は同じ状態を再確認してから証言を保存する。途中で状態が変われば HTTP 409 を返し、証言・Task・Case を変更しない。System はこの検査を opaque な SQL statement として受け取り、Company の条件を解釈しない。この検査は現在の申請判断に適用しており、初回 Task の作成や経費・稟議への適用は未完了である。

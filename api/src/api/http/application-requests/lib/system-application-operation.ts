@@ -4,6 +4,9 @@ import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active
 import { resolveActiveCompanyAccountParticipant } from "@/api/http/accounts/resolve-active-company-account-participant"
 import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants"
 import { resolveSystemAccountIdsForEmployees } from "@/api/http/accounts/resolve-system-account-ids-for-employees"
+import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
+import { RevalidateCompanyProcedureAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-authority.adapter"
+import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { type CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
@@ -227,6 +230,15 @@ export async function decideSystemApplication(
   ) {
     return new ConflictError("application is already decided", "already_decided")
   }
+  const policy = parseJsonPolicy(proposal.decisionPolicyJson)
+  const payload = parseJsonValue(proposal.bodyJson)
+  if (policy instanceof Error || payload instanceof Error) {
+    return new UnexpectedError("invalid application procedure")
+  }
+  const step = policy.workflow?.steps.find((candidate) => candidate.key === proposal.currentTaskKey)
+  if (step === undefined) {
+    return new ForbiddenError("decision authority is undefined", "forbidden")
+  }
   const session = c.var.session
   if (session === null || session.employeeId !== input.actorEmployeeId) {
     return new ForbiddenError("cannot decide as another employee", "forbidden")
@@ -236,13 +248,6 @@ export async function decideSystemApplication(
     return new UnexpectedError("failed to resolve canonical workflow actor", {
       cause: actorAccountId,
     })
-  }
-  const actor = await resolveActiveCompanyAccountParticipant(c, actorAccountId)
-  if (actor instanceof Error) {
-    return new UnexpectedError("failed to resolve Company workflow actor", { cause: actor })
-  }
-  if (actor === null || actor.employeeId !== input.actorEmployeeId) {
-    return new ForbiddenError("workflow actor is not active", "forbidden")
   }
   const candidateAccountIds = await query.listTaskCandidateAccountIds({
     caseId: proposal.caseId,
@@ -255,12 +260,28 @@ export async function decideSystemApplication(
       cause: candidateAccountIds,
     })
   }
-  const policy = parseJsonPolicy(proposal.decisionPolicyJson)
-  const payload = parseJsonValue(proposal.bodyJson)
-  if (policy instanceof Error || payload instanceof Error) {
-    return new UnexpectedError("invalid application procedure")
+  const authorityGuard = await new CompanyAuthoritySnapshotGuardAdapter({
+    database: c.env.DB,
+  }).prepare({
+    accountIds: [...candidateAccountIds, proposal.createdByAccountId, actorAccountId],
+    employeeCodes: (policy.workflow?.steps ?? []).flatMap((workflowStep) =>
+      [...workflowStep.approvers, ...workflowStep.escalation_approvers].flatMap((selector) =>
+        selector.type === "employee" ? [selector.employee_code] : [],
+      ),
+    ),
+  })
+  if (authorityGuard instanceof Error) {
+    return new UnexpectedError("failed to capture Company decision authority", {
+      cause: authorityGuard,
+    })
   }
-  const step = policy.workflow?.steps.find((candidate) => candidate.key === proposal.currentTaskKey)
+  const actor = await resolveActiveCompanyAccountParticipant(c, actorAccountId)
+  if (actor instanceof Error) {
+    return new UnexpectedError("failed to resolve Company workflow actor", { cause: actor })
+  }
+  if (actor === null || actor.employeeId !== input.actorEmployeeId) {
+    return new ForbiddenError("workflow actor is not active", "forbidden")
+  }
   let representedAccountId = actorAccountId
   let delegationId: string | null = null
   if (!candidateAccountIds.includes(actorAccountId)) {
@@ -308,29 +329,49 @@ export async function decideSystemApplication(
       cause: applicant instanceof Error ? applicant : undefined,
     })
   }
+  let authoritySubjectEmployeeId: EmployeeId | null | undefined
+  let targetDepartmentCode: string | null | undefined
+  let excludedEmployeeIds: ReadonlySet<EmployeeId> | undefined
+  if (proposal.completionOperationKey === "company.personnel-action.apply") {
+    const personnelRequest = await new FindPersonnelActionRequestAdapter(
+      c,
+    ).findPersonnelActionRequest(session, { applicationId: proposal.number })
+    if (personnelRequest instanceof Error) return personnelRequest
+    if (personnelRequest === null) {
+      return new UnexpectedError("Company personnel action association is missing")
+    }
+    authoritySubjectEmployeeId = personnelRequest.targetEmployeeId
+    targetDepartmentCode = personnelRequest.targetDepartmentCode
+    excludedEmployeeIds = new Set(
+      personnelRequest.targetEmployeeId === null
+        ? [personnelRequest.requestedByEmployeeId]
+        : [personnelRequest.requestedByEmployeeId, personnelRequest.targetEmployeeId],
+    )
+  }
+  const hasCurrentAuthority = await new RevalidateCompanyProcedureAuthorityAdapter(c).revalidate({
+    step,
+    representedAccountId,
+    subjectEmployeeId:
+      authoritySubjectEmployeeId === undefined
+        ? applicantParticipant.employeeId
+        : authoritySubjectEmployeeId,
+    targetDepartmentCode: targetDepartmentCode ?? null,
+    excludedEmployeeIds: excludedEmployeeIds ?? new Set(),
+    dueAt: proposal.currentTaskDueAt,
+    decidedAt: input.decidedAt,
+  })
+  if (hasCurrentAuthority instanceof Error) {
+    return new ForbiddenError("decision authority cannot be revalidated", "forbidden", {
+      cause: hasCurrentAuthority,
+    })
+  }
+  if (!hasCurrentAuthority) {
+    return new ForbiddenError("decision authority no longer applies", "forbidden")
+  }
   const systemAction =
     input.action === "reject" && step?.rejection_behavior === "return" ? "return" : input.action
   let nextTask = null
   if (systemAction === "approve") {
-    let authoritySubjectEmployeeId: EmployeeId | null | undefined
-    let targetDepartmentCode: string | null | undefined
-    let excludedEmployeeIds: ReadonlySet<EmployeeId> | undefined
-    if (proposal.completionOperationKey === "company.personnel-action.apply") {
-      const personnelRequest = await new FindPersonnelActionRequestAdapter(
-        c,
-      ).findPersonnelActionRequest(session, { applicationId: proposal.number })
-      if (personnelRequest instanceof Error) return personnelRequest
-      if (personnelRequest === null) {
-        return new UnexpectedError("Company personnel action association is missing")
-      }
-      authoritySubjectEmployeeId = personnelRequest.targetEmployeeId
-      targetDepartmentCode = personnelRequest.targetDepartmentCode
-      excludedEmployeeIds = new Set(
-        personnelRequest.targetEmployeeId === null
-          ? [personnelRequest.requestedByEmployeeId]
-          : [personnelRequest.requestedByEmployeeId, personnelRequest.targetEmployeeId],
-      )
-    }
     const next = await new ResolveCompanyProcedureTaskAdapter({
       c,
       policy,
@@ -366,7 +407,10 @@ export async function decideSystemApplication(
   }
   const caseId = systemCaseIdSchema.safeParse(proposal.caseId)
   if (!caseId.success) return new UnexpectedError("invalid System Case ID")
-  const workflow = new SystemD1WorkflowAdapter({ env: { DB: c.env.DB } })
+  const workflow = new SystemD1WorkflowAdapter({
+    env: { DB: c.env.DB },
+    decisionGuards: [authorityGuard],
+  })
   const command = {
     caseId: caseId.data,
     taskKey: proposal.currentTaskKey,
@@ -388,6 +432,9 @@ export async function decideSystemApplication(
     result = await new ReturnSystemTask(workflow).execute(command)
   }
   if (result instanceof Error) {
+    if (isAbortedByGuard(result)) {
+      return new ConflictError("decision authority changed during approval", "authority_changed")
+    }
     if (
       isUniqueConstraintError(result) ||
       // System の SQL trigger メッセージ依存。System 側で判別子化するまでの暫定。

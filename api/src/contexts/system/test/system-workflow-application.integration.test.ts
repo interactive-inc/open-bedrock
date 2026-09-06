@@ -118,6 +118,64 @@ function nextTask(
 }
 
 describe("System workflow application", () => {
+  test("上位contextの判断guardが拒否するとTaskと証言を保存しない", async () => {
+    const fixture = await createFixture()
+    const at = new Date(200)
+    const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
+      seriesId: "guarded-series",
+      version: 1,
+      procedureKey: "change",
+      procedureRevision: 1,
+      body: { reason: "Guarded decision" },
+      createdByAccountId: zAccountId.parse("creator"),
+      supersedesProposalId: null,
+      createdAt: at,
+      firstTask: {
+        key: "review",
+        requiredApprovals: 1,
+        openedAt: at,
+        dueAt: null,
+        candidates: [candidate("reviewer-1", at)],
+        excludedAccountIds: [],
+      },
+    })
+    if (started instanceof Error) throw started
+    const guardedWriter = new SystemD1WorkflowAdapter({
+      env: { DB: fixture.database },
+      decisionGuards: [fixture.database.prepare("SELECT json_extract('', '$')")],
+    })
+    const command = {
+      caseId: started.workflowCase.id,
+      taskKey: "review",
+      round: 1,
+      actorAccountId: zAccountId.parse("reviewer-1"),
+      representedAccountId: zAccountId.parse("reviewer-1"),
+      delegationId: null,
+      proposalDigest: started.proposal.digest,
+      comment: null,
+      decidedAt: new Date(210),
+      nextTask: null,
+    }
+    expect(await new ApproveSystemTask(guardedWriter).execute(command)).toBeInstanceOf(Error)
+    expect(
+      await fixture.database
+        .prepare("SELECT count(*) AS total FROM system_human_attestations")
+        .first<number>("total"),
+    ).toBe(0)
+    expect(
+      await fixture.database.prepare("SELECT status FROM system_cases").first<string>("status"),
+    ).toBe("pending")
+    expect(
+      await fixture.database
+        .prepare("SELECT outcome FROM system_decision_tasks")
+        .first<string>("outcome"),
+    ).toBeNull()
+    expect(await new ApproveSystemTask(fixture.writer).execute(command)).toEqual({
+      caseStatus: "approved",
+      taskOutcome: "approved",
+    })
+  })
+
   test("提案、Case、Taskを同時作成し、quorumと次TaskをSystemだけで進める", async () => {
     const fixture = await createFixture()
     const at = new Date(200)
