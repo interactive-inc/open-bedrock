@@ -14,7 +14,7 @@ import type { PersonnelActionInput } from "@/contexts/company/domain/definitions
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { fingerprintPersonnelAction } from "@/contexts/company/domain/definitions/fingerprint-personnel-action.definition"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
-import { CompanyOperationError } from "@/contexts/company/domain/errors"
+import { CompanyOperationError, CompanyConflictError } from "@/contexts/company/domain/errors"
 import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
 import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
@@ -346,6 +346,8 @@ export class CreatePersonnelActionRequest {
       },
       var: { database: this.c.var.database, auditContext: this.c.var.auditContext },
     }).findPersonnelActionRequest(session, { id: input.idempotencyKey })
+    if (existing instanceof CompanyConflictError)
+      return new ConflictError(existing.message, existing.code)
     if (existing instanceof CompanyOperationError) {
       return new UnexpectedError("完了済み人事変更申請を検証できません", { cause: existing })
     }

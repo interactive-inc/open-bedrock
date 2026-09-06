@@ -5,7 +5,9 @@ import { readJsonObjectFile } from "@/lib/input/read-json-file"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-export const help = `bedrock personnel-actions apply --type <type> --payload <json-file> --employee-revision <n> [--organization-revision <n>] --idempotency-key <key>`
+export const help = `bedrock personnel-actions apply --type <type> --payload <json-file> --employee-revision <n> [--organization-revision <n>] --idempotency-key <key>
+
+入社・再入社のpayloadには employmentType（FULL_TIME または PART_TIME）が必要です。訂正でも replacementAction に指定してください。`
 
 export default factory.createHandlers(
   zValidator(

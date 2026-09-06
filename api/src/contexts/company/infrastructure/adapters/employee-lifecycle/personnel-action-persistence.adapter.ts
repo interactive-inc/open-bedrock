@@ -77,7 +77,10 @@ function currentProjection(
 function mutationStatements(
   db: D1Database,
   mutation: LifecycleVersionMutation,
-  businessDate: string,
+  context: {
+    businessDate: string
+    newEmploymentType: PersonnelActionProjection["newEmploymentType"]
+  },
 ): ReadonlyArray<D1PreparedStatement> {
   switch (mutation.periodType) {
     case "employment": {
@@ -100,26 +103,31 @@ function mutationStatements(
             period.recordedByActionId,
             period.recordedAt,
           ),
-        db
-          .prepare(
-            `INSERT OR IGNORE INTO company_employments
+        ...(mutation.before === null
+          ? [
+              db
+                .prepare(
+                  `INSERT INTO company_employments
                (id, employee_id, contract_name, employment_type, hire_date, status,
                 termination_date, created_at, updated_at)
-             SELECT ?1, ?2, employee.official_name, 'FULL_TIME', ?3,
+             SELECT ?1, ?2, employee.official_name, ?7, ?3,
                     CASE WHEN ?4 IS NULL AND ?5 = 0 THEN 'ACTIVE' ELSE 'TERMINATED' END,
                     CASE WHEN ?4 IS NULL THEN NULL ELSE date(?4, '-1 day') END,
                     ?6, ?6
              FROM company_employees AS employee
              WHERE employee.id = ?2`,
-          )
-          .bind(
-            period.employmentId,
-            period.employeeId,
-            period.startsOn,
-            period.endsOn,
-            period.isVoid ? 1 : 0,
-            period.recordedAt * 1_000,
-          ),
+                )
+                .bind(
+                  period.employmentId,
+                  period.employeeId,
+                  period.startsOn,
+                  period.endsOn,
+                  period.isVoid ? 1 : 0,
+                  period.recordedAt * 1_000,
+                  context.newEmploymentType,
+                ),
+            ]
+          : []),
         db
           .prepare(
             `UPDATE company_employments
@@ -173,7 +181,7 @@ function mutationStatements(
             period.recordedAt * 1_000,
             period.isVoid ? 1 : 0,
             period.startsOn,
-            businessDate,
+            context.businessDate,
             period.endsOn,
           ),
       ]
@@ -452,7 +460,10 @@ function preparePersistenceStatements(
       db,
     ).abortWhenPreviousStatementChangedNoRows(),
     ...persistenceMutations.flatMap((mutation) =>
-      mutationStatements(db, mutation, props.businessDate),
+      mutationStatements(db, mutation, {
+        businessDate: props.businessDate,
+        newEmploymentType: props.projection.newEmploymentType,
+      }),
     ),
   )
 
@@ -502,6 +513,13 @@ export class PersonnelActionPersistenceAdapter {
   async prepare(
     props: PersonnelActionPersistenceProps,
   ): Promise<D1PreparedStatement[] | CompanyOperationError> {
+    if (
+      props.projection.newEmploymentType === null &&
+      props.projection.mutations.some(
+        (mutation) => mutation.periodType === "employment" && mutation.before === null,
+      )
+    )
+      return new CompanyUnexpectedError("新しい雇用の区分が指定されていません")
     const statements = preparePersistenceStatements(this.c, props)
     if (statements instanceof CompanyOperationError) return statements
     const journal = await new CompanyEmploymentJournalAdapter(this.c.env.DB).prepare(props)

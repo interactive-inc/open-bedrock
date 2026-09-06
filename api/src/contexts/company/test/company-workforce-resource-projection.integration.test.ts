@@ -301,6 +301,7 @@ describe("公開Company APIから実際の従業員台帳と在籍判定まで",
       await f.applyPersonnelAction(
         {
           kind: "rehire",
+          employmentType: "PART_TIME",
           employeeCode: "RESOURCE-001",
           eventOn: restoreCalendarDate("2027-06-01"),
         },
@@ -316,6 +317,86 @@ describe("公開Company APIから実際の従業員台帳と在籍判定まで",
         expect.objectContaining({ attributes: expect.objectContaining({ status: "ACTIVE" }) }),
       ]),
     })
+    expect(await f.listPersonnelActions()).not.toBeInstanceOf(Error)
+  })
+
+  test("再入社とその訂正の契約区分を保存し、以前の契約の区分を変更しない", async () => {
+    const f = fixture()
+    await f.initialize()
+    expect(
+      await f.applyPersonnelAction(
+        {
+          kind: "retired",
+          employeeCode: "RESOURCE-001",
+          retirementOn: restoreCalendarDate("2026-03-31"),
+        },
+        "type:retire",
+      ),
+    ).not.toBeInstanceOf(Error)
+    const input: PersonnelActionInput = {
+      kind: "rehire",
+      employeeCode: "RESOURCE-001",
+      eventOn: restoreCalendarDate("2026-05-01"),
+      employmentType: "PART_TIME",
+    }
+    expect(await f.applyPersonnelAction(input, "type:rehire")).toMatchObject({
+      action: { summary: { employmentType: "PART_TIME" } },
+      replayed: false,
+    })
+    expect(await f.applyPersonnelAction(input, "type:rehire")).toMatchObject({ replayed: true })
+    expect(
+      await f.applyPersonnelAction({ ...input, employmentType: "FULL_TIME" }, "type:rehire"),
+    ).toMatchObject({ code: "idempotency_conflict" })
+    expect(
+      await f.database
+        .prepare("SELECT employment_type FROM company_employments WHERE id = ?1")
+        .bind(employment.id)
+        .first<{ employment_type: string }>(),
+    ).toEqual({ employment_type: "FULL_TIME" })
+    const oldContract = await f.database
+      .prepare(
+        "SELECT id, employment_type FROM company_employments WHERE id <> ?1 AND employee_id = ?2",
+      )
+      .bind(employment.id, employeeId)
+      .first<{ id: string; employment_type: string }>()
+    expect(oldContract?.employment_type).toBe("PART_TIME")
+    expect(await (await f.readEmployment("2026-05-01")).json()).toMatchObject({
+      resources: expect.arrayContaining([
+        expect.objectContaining({
+          attributes: expect.objectContaining({ employmentType: "PART_TIME", status: "ACTIVE" }),
+        }),
+      ]),
+    })
+    const actionId = await f.database
+      .prepare("SELECT id FROM company_personnel_actions WHERE operation_id = 'type:rehire'")
+      .first<string>("id")
+    if (actionId === null || oldContract === null) throw new Error("missing rehire record")
+    expect(
+      await f.applyPersonnelAction(
+        {
+          kind: "corrected",
+          eventOn: restoreCalendarDate("2026-04-01"),
+          correctsActionId: actionId,
+          reason: "Correct confirmed contract",
+          replacementAction: { ...input, employmentType: "FULL_TIME" },
+        },
+        "type:correct",
+      ),
+    ).not.toBeInstanceOf(Error)
+    expect(await (await f.readEmployment("2026-05-01")).json()).toMatchObject({
+      resources: expect.arrayContaining([
+        expect.objectContaining({
+          state: "active",
+          attributes: expect.objectContaining({ employmentType: "FULL_TIME", status: "ACTIVE" }),
+        }),
+      ]),
+    })
+    expect(
+      await f.database
+        .prepare("SELECT employment_type FROM company_employments WHERE id = ?1")
+        .bind(oldContract.id)
+        .first<{ employment_type: string }>(),
+    ).toEqual({ employment_type: "PART_TIME" })
     expect(await f.listPersonnelActions()).not.toBeInstanceOf(Error)
   })
 

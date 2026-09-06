@@ -18,6 +18,7 @@ export const personnelActionSummarySchema = z.discriminatedUnion("kind", [
   z
     .object({
       kind: z.enum(["hire", "rehire"]),
+      employmentType: z.enum(["FULL_TIME", "PART_TIME"]).optional(),
       eventOn: z.string(),
       department: departmentSnapshotSchema.nullable(),
       positionTitle: z.string().nullable(),

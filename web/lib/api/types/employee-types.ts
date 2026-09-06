@@ -23,6 +23,7 @@ export type EmployeeCreateRequest = {
   password: string
   role: "member" | "manager" | "hr" | "root"
   hire_on: string
+  employment_type: "FULL_TIME" | "PART_TIME"
   department_code?: string | null
   position_code?: string | null
   manager_employee_code?: string | null

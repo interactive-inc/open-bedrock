@@ -1,3 +1,8 @@
+import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
+import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import { ResolveCompanyGovernanceTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-governance-task.adapter"
+import { lifecycleSha256 } from "@/contexts/company/domain/definitions/lifecycle-sha256.definition"
+import { stableLifecycleJson } from "@/contexts/company/domain/definitions/stable-lifecycle-json.definition"
 import { withCurrentDecisionTarget } from "@tests/api/support/with-current-decision-target"
 import { describe, expect, spyOn, test } from "bun:test"
 import { z } from "zod"
@@ -131,6 +136,164 @@ async function createFixture() {
 }
 
 describe("Company公開責務による人事発令", () => {
+  test("区分を含まない旧提案は本文を改変せず承認前に409で止める", async () => {
+    const c = await createFixture()
+    const action = {
+      kind: "hire",
+      employeeCode: "LEGACY",
+      employeeName: "Legacy Applicant",
+      eventOn: c.at.toISOString().slice(0, 10),
+    }
+    const resolved = await new ResolveCompanyGovernanceTaskAdapter(c.context).resolve({
+      step: {
+        ...c.step,
+        governance_authority: {
+          organization_id: "organization:default",
+          responsibility_code: "APPROVE",
+          scope: null,
+        },
+      },
+      payload: action,
+      subjectEmployeeId: null,
+      excludedEmployeeIds: new Set([c.creator.employeeId]),
+      openedAt: c.at,
+      dueAt: null,
+      resolvedAt: c.at,
+    })
+    if (resolved instanceof Error) throw resolved
+    const id = crypto.randomUUID()
+    const started = await new StartSystemProcedure({
+      writer: new SystemD1WorkflowAdapter(c.context),
+    }).run({
+      seriesId: crypto.randomUUID(),
+      version: 1,
+      procedureKey: "personnel_action_request",
+      procedureRevision: 1,
+      body: action,
+      createdByAccountId: c.creator.accountId,
+      supersedesProposalId: null,
+      createdAt: c.at,
+      firstTask: resolved.task,
+      subject: { context: "company", kind: "personnel-action-request", id, version: "1" },
+    })
+    if (started instanceof Error) throw started
+    const fingerprint = await lifecycleSha256(
+      stableLifecycleJson({ employeeId: "prospective:LEGACY", input: action }),
+    )
+    await c.database
+      .prepare(`INSERT INTO company_personnel_action_requests
+      (id, application_id, system_proposal_series_id, target_employee_id, subject_snapshot_json, target_department_code, kind, payload_json, payload_fingerprint, requested_by_employee_id, base_employee_revision, base_organization_revision, created_at, applied_action_id)
+      VALUES (?1, ?2, ?3, NULL, ?4, NULL, 'hire', ?5, ?6, ?7, 0, NULL, ?8, NULL)`)
+      .bind(
+        id,
+        started.number,
+        started.proposal.seriesId,
+        JSON.stringify({ employeeCode: action.employeeCode, employeeName: action.employeeName }),
+        started.proposal.bodyJson,
+        fingerprint,
+        c.creator.employeeId,
+        Math.floor(c.at.getTime() / 1000),
+      )
+      .run()
+    const response = await c.request(2, `/company/application-requests/${started.number}/approve`, {
+      comment: null,
+    })
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({ code: "personnel_action_contract_required" })
+    expect(
+      await c.database
+        .prepare("SELECT count(*) AS total FROM system_human_attestations")
+        .first<number>("total"),
+    ).toBe(0)
+    expect(
+      await c.database
+        .prepare("SELECT payload_json FROM company_personnel_action_requests WHERE id = ?1")
+        .bind(id)
+        .first<string>("payload_json"),
+    ).toBe(started.proposal.bodyJson)
+  })
+
+  test("承認した入社の雇用区分を一回だけ実行する", async () => {
+    const c = await createFixture()
+    const input = {
+      action: {
+        kind: "hire",
+        employeeCode: "NEW-PT",
+        employeeName: "New Part Time Employee",
+        employmentType: "PART_TIME",
+        eventOn: c.at.toISOString().slice(0, 10),
+      },
+      base_employee_revision: 0,
+      base_organization_revision: null,
+    }
+    const submitted = await c.request(
+      0,
+      "/company/personnel-action-requests",
+      input,
+      crypto.randomUUID(),
+    )
+    expect(submitted.status).toBe(201)
+    const number = z
+      .object({ application_id: z.number() })
+      .parse(await submitted.json()).application_id
+    for (const index of [2, 3, 3])
+      expect(
+        (
+          await c.request(index, `/company/application-requests/${number}/approve`, {
+            comment: null,
+          })
+        ).status,
+      ).toBe(200)
+    const employee = await c.database
+      .prepare("SELECT id FROM company_employees WHERE employee_code = 'NEW-PT'")
+      .first<{ id: string }>()
+    if (employee === null) throw new Error("employee was not created")
+    expect(
+      await c.database
+        .prepare("SELECT employment_type FROM company_employments WHERE employee_id = ?1")
+        .bind(employee.id)
+        .all(),
+    ).toMatchObject({ results: [{ employment_type: "PART_TIME" }] })
+    expect(
+      await c.database
+        .prepare(
+          "SELECT json_extract(attributes_json, '$.employmentType') AS employment_type FROM company_resource_revisions WHERE resource_type = 'employment' AND json_extract(attributes_json, '$.employeeId') = ?1",
+        )
+        .bind(employee.id)
+        .all(),
+    ).toMatchObject({ results: [{ employment_type: "PART_TIME" }] })
+  })
+
+  test("雇用区分のない入社・再入社・訂正の依頼を保存しない", async () => {
+    const c = await createFixture()
+    for (const action of [
+      { kind: "hire", employeeCode: "NEW", employeeName: "New Employee", eventOn: "2026-01-01" },
+      { kind: "rehire", employeeCode: "MEMBER-1", eventOn: "2026-01-01" },
+      {
+        kind: "corrected",
+        correctsActionId: crypto.randomUUID(),
+        reason: "Correction",
+        eventOn: "2026-01-01",
+        replacementAction: { kind: "rehire", employeeCode: "MEMBER-1", eventOn: "2026-01-01" },
+      },
+    ])
+      expect(
+        (
+          await c.request(
+            0,
+            "/company/personnel-action-requests",
+            { ...c.input, action },
+            crypto.randomUUID(),
+          )
+        ).status,
+      ).toBe(400)
+    expect(
+      await c.database
+        .prepare("SELECT count(*) AS total FROM company_personnel_action_requests")
+        .first<number>("total"),
+    ).toBe(0)
+  })
+
   test.each(["authority", "account"])(
     "資格確認後の変更でも発令・実行許可を原子的に取り消す: %s",
     async (change) => {

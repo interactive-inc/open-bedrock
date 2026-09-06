@@ -1,5 +1,6 @@
 "use client"
 
+import { EmploymentTypeField } from "@/app/(app)/company/employees/_components/employment-type-field"
 import { submitPersonnelAction } from "@/app/(app)/company/employees/[employee]/actions"
 import type { PersonnelActionFormState } from "@/app/(app)/company/employees/[employee]/actions"
 import { Button } from "@/components/ui/button"
@@ -131,6 +132,7 @@ export function PersonnelActionForm(props: {
               <FieldLabel htmlFor="personnel-date">発令日</FieldLabel>
               <Input id="personnel-date" name="event_on" type="date" autoComplete="off" required />
             </Field>
+            <EmploymentTypeField id="personnel-employment-type" isVisible={kind === "rehire"} />
             {needsDepartment ? (
               <Field>
                 <FieldLabel htmlFor="personnel-department">

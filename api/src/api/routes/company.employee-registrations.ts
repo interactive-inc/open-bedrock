@@ -20,6 +20,7 @@ const bodySchema = z.strictObject({
   password: z.string().min(12).max(200),
   role: z.enum(["member", "manager", "hr", "root"]),
   hire_on: z.string().date(),
+  employment_type: z.enum(["FULL_TIME", "PART_TIME"]),
   department_code: z.string().trim().min(1).max(64).nullable().optional(),
   position_code: z.string().trim().min(1).max(64).nullable().optional(),
   manager_employee_code: z.string().trim().min(1).max(64).nullable().optional(),
@@ -37,6 +38,7 @@ export const POST = factory.createHandlers(
     const body = context.req.valid("json")
     const wire = wirePersonnelActionInputSchema.parse({
       kind: "hire",
+      employmentType: body.employment_type,
       employeeCode: body.code,
       employeeName: body.name,
       eventOn: body.hire_on,

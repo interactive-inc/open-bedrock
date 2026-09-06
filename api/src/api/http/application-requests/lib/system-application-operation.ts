@@ -367,7 +367,10 @@ export async function decideSystemApplication(
     const personnelRequest = await new FindPersonnelActionRequestAdapter(
       c,
     ).findPersonnelActionRequest(session, { applicationId: proposal.number })
-    if (personnelRequest instanceof Error) return personnelRequest
+    if (personnelRequest instanceof CompanyConflictError)
+      return new ConflictError(personnelRequest.message, personnelRequest.code)
+    if (personnelRequest instanceof Error)
+      return new UnexpectedError("failed to load personnel request", { cause: personnelRequest })
     if (personnelRequest === null) {
       return new UnexpectedError("Company personnel action association is missing")
     }

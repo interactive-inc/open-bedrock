@@ -2,8 +2,13 @@ import type { PersonnelActionRequestRecord } from "@/contexts/company/domain/def
 import { personnelActionInputSchema } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
-import { CompanyUnexpectedError } from "@/contexts/company/domain/errors"
+import {
+  CompanyUnexpectedError,
+  CompanyConflictError,
+  CompanyOperationError,
+} from "@/contexts/company/domain/errors"
 import { ReadSystemWorkflowReferencesAdapter } from "@system/infrastructure/adapters/workflow/read-system-workflow-references.adapter"
+import { z } from "zod"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 /** Company申請1件とSystem判断状態を、認可済みの表示recordへ合成する。 */
@@ -11,7 +16,7 @@ async function findPersonnelActionRequest(
   context: CompanyContext,
   session: CompanyPersonnelSession,
   selector: Readonly<{ id: string } | { applicationId: number }>,
-): Promise<PersonnelActionRequestRecord | null | CompanyUnexpectedError> {
+): Promise<PersonnelActionRequestRecord | null | CompanyOperationError> {
   try {
     const byId = "id" in selector
     const row = await context.env.DB.prepare(
@@ -69,7 +74,25 @@ async function findPersonnelActionRequest(
     const workflow = workflows.at(0)
     if (workflow === undefined) return null
 
-    const action = personnelActionInputSchema.safeParse(JSON.parse(row.payload_json))
+    const payload: unknown = JSON.parse(row.payload_json)
+    const missingContract = z.object({
+      kind: z.enum(["hire", "rehire"]),
+      employmentType: z.undefined().optional(),
+    })
+    if (
+      z
+        .union([
+          missingContract,
+          z.object({ kind: z.literal("corrected"), replacementAction: missingContract }),
+        ])
+        .safeParse(payload).success
+    ) {
+      return new CompanyConflictError(
+        "雇用区分のない申請は実行できません。区分を確認して新しく申請してください",
+        "personnel_action_contract_required",
+      )
+    }
+    const action = personnelActionInputSchema.safeParse(payload)
     if (
       !action.success ||
       row.system_proposal_series_id === null ||
@@ -127,7 +150,7 @@ export class FindPersonnelActionRequestAdapter {
   async findPersonnelActionRequest(
     session: CompanyPersonnelSession,
     selector: Readonly<{ id: string } | { applicationId: number }>,
-  ): Promise<PersonnelActionRequestRecord | null | CompanyUnexpectedError> {
+  ): Promise<PersonnelActionRequestRecord | null | CompanyOperationError> {
     return findPersonnelActionRequest(this.c, session, selector)
   }
 }
