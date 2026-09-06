@@ -257,7 +257,7 @@
     "src/contexts/system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter.ts": "ba723f750bff7435fef3bf10ac561f7213e820b9bda62551876bc1385faaf090",
     "src/contexts/system/infrastructure/adapters/workflow/system-d1-procedure-delegation.adapter.ts": "54563f78b2a46a6555c0abd7d0ba35ca05fe2d96ebc04b51f5e3feddb3de9d9d",
     "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter.ts": "125202616ecfae8f9d46a8c1564a5520b44415b34ef11874e069e630f03a8886",
-    "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter.ts": "e649a82046194e80a92cda918d5ab574484176544df6bdba5c15621a9ad7d4d3",
+    "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter.ts": "31f583df8431cc0087fa312ef406bd0c9227c48da7653ca6210dbb43ea98bd0d",
     "src/contexts/system/infrastructure/errors.test.ts": "230c2e5ca72709b7b93e92362fa0cfd15f154a08a7f5bc422cb1c2beed941da5",
     "src/contexts/system/infrastructure/errors.ts": "040587b412053dcd406e03c8d21b53d179df9250f6d66cfdb2eb79132dcfb6ff",
     "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository.test.ts": "d638e6ec824455d51ed24edc1c275d58286119288e12b7276d87d0b774b5c137",
@@ -496,7 +496,7 @@
     "src/contexts/system/test/system-session-application.integration.test.ts": "263566ccca0b07c7a8c181dff51bbcccebc071013944c464adefd93e7090f927",
     "src/contexts/system/test/system-session-applications.factory.integration.test.ts": "3f933fcf2a01de9db306244a69abe8688d10088e103c06891f5d7bd84a8dc338",
     "src/contexts/system/test/system-session-test-context.test-support.ts": "01b7729e7b5e42797177a4dde35e463df2814620ef41caf015a6792f1196c31d",
-    "src/contexts/system/test/system-workflow-application.integration.test.ts": "64e2d9db019026b2513df19b89ef6c7cca93035acbd36c7303d125cf2442e111",
+    "src/contexts/system/test/system-workflow-application.integration.test.ts": "042ca3aa5a5f55339f3977734982483364b45a00c6576eaabf62e39bb6b5df37",
     "src/contexts/system/test/wrap-system-d1-test-database.test-support.ts": "b10dad08b7fff13afcf102246cd714917e2c1a1deec26a797aa45c248dce2ee0",
     "system-context.manifest.json": "5aca161c14e95f48b480213fa928831b9c9fb1cc0742e37932691f670d6ecd1c"
   }

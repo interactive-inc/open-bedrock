@@ -52,6 +52,7 @@ type DecisionStateRow = Readonly<{
 type Context = SystemD1Context &
   Readonly<{
     decisionGuards?: ReadonlyArray<D1PreparedStatement>
+    startGuards?: ReadonlyArray<D1PreparedStatement>
   }>
 
 /** System提案と判断lifecycleをD1 batchで原子的に永続化する。 */
@@ -82,6 +83,7 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
     const workflowCase = input.workflowCase
 
     return [
+      ...(this.c.startGuards ?? []),
       ...this.prepareSupersededCaseStatements(input),
       ...this.prepareSeriesStatements(input),
       database
@@ -321,7 +323,8 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
              AND EXISTS (
                SELECT 1 FROM system_accounts
                WHERE id = ?6 AND status = 'active'
-             )`,
+             )
+             AND NOT EXISTS (SELECT 1 FROM system_principals WHERE account_id IN (?5, ?6) AND kind <> 'human')`,
           )
           .bind(
             attestation.id,
@@ -488,7 +491,8 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
            SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12
            WHERE EXISTS (
              SELECT 1 FROM system_accounts WHERE id = ?4 AND status = 'active'
-           )`,
+           )
+           AND NOT EXISTS (SELECT 1 FROM system_principals WHERE account_id = ?4 AND kind <> 'human')`,
       ).bind(
         input.task.caseId,
         input.task.key,
@@ -572,7 +576,8 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
            )
            AND EXISTS (
              SELECT 1 FROM system_accounts WHERE id = ?4 AND status = 'active'
-           )`,
+           )
+           AND NOT EXISTS (SELECT 1 FROM system_principals WHERE account_id = ?4 AND kind <> 'human')`,
       ).bind(
         task.task.caseId,
         task.task.key,

@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { ApplicationWorkflow } from "@/lib/api/types/application-workflow-types"
 
 /**
- * API の正規スキーマは api/src/domain/application/application-workflow.ts。
+ * API の正規スキーマは api/src/contexts/company/domain/definitions/company-procedure-workflow.definition.ts。
  * Web から API の実行時モジュールを取り込まず、同じ制約で編集途中の入力を安全に検証する。
  */
 const codeSchema = z
@@ -31,6 +31,28 @@ const workflowApproverSelectorSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("management_chain") }),
 ])
 
+const governanceAuthoritySchema = z.strictObject({
+  organization_id: z.literal("organization:default"),
+  responsibility_code: z.string().trim().min(1).max(255),
+  scope: z
+    .discriminatedUnion("scope_type", [
+      z.strictObject({
+        scope_type: z.enum(["organization-unit", "legal-entity", "site", "workplace"]),
+        scope_id: z.string().regex(/^\S{1,255}$/),
+      }),
+      z.strictObject({
+        scope_type: z.literal("region"),
+        region_code: z.string().trim().min(1).max(255),
+      }),
+      z.strictObject({
+        scope_type: z.literal("amount"),
+        currency_code: z.string().regex(/^[A-Z]{3}$/),
+        amount_field: z.string().min(1).max(200),
+      }),
+    ])
+    .nullable(),
+})
+
 const workflowConditionSchema = z.object({
   source: z.enum(["payload", "applicant"]),
   field: z.string().min(1).max(200),
@@ -42,7 +64,8 @@ const applicationWorkflowStepSchema = z
   .object({
     key: codeSchema,
     name: z.string().min(1).max(200),
-    approvers: z.array(workflowApproverSelectorSchema).min(1).max(20),
+    approvers: z.array(workflowApproverSelectorSchema).max(20),
+    governance_authority: governanceAuthoritySchema.optional(),
     approval_mode: z.enum(["any", "all", "minimum"]).default("any"),
     minimum_approvals: z.number().int().min(1).max(100).optional(),
     condition_mode: z.enum(["all", "any"]).default("all"),
@@ -53,6 +76,22 @@ const applicationWorkflowStepSchema = z
     allow_delegation: z.boolean().default(true),
   })
   .superRefine((step, context) => {
+    if (step.governance_authority !== undefined) {
+      if (
+        step.approvers.length !== 0 ||
+        step.escalation_approvers.length !== 0 ||
+        step.approval_mode !== "any" ||
+        step.minimum_approvals !== undefined
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["governance_authority"],
+          message: "governance authority defines its own candidates and quorum",
+        })
+      }
+    } else if (step.approvers.length === 0) {
+      context.addIssue({ code: "custom", path: ["approvers"], message: "approvers are required" })
+    }
     if (step.approval_mode === "minimum" && step.minimum_approvals === undefined) {
       context.addIssue({
         code: z.ZodIssueCode.custom,

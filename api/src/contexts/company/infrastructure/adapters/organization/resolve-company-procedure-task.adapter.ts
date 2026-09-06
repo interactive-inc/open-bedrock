@@ -1,4 +1,6 @@
 import { applicableWorkflowSteps } from "@/contexts/company/domain/policies/company-procedure-applicable-steps.policy"
+import { ResolveCompanyGovernanceTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-governance-task.adapter"
+import { dueAt } from "@/contexts/company/domain/definitions/company-procedure-due-at.definition"
 import { ResolveCompanyProcedureTaskSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task-snapshot.adapter"
 import type { CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import type { ApplicationWorkflowStep } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
@@ -24,6 +26,7 @@ export type ResolvedCompanyProcedureTask = Readonly<{
   rejectionBehavior: "reject" | "return"
   allowDelegation: boolean
   task: StartSystemProcedureTask
+  guards: ReadonlyArray<D1PreparedStatement>
 }>
 
 /** Company policyを評価し、Systemへ渡せるAccount候補とopaque資格証拠だけを返す。 */
@@ -65,6 +68,32 @@ async function resolveConfiguredTask(
   step: ApplicationWorkflowStep,
 ): Promise<ResolvedCompanyProcedureTask | Error> {
   const activatedAt = input.activatedAt.toISOString()
+  if (step.governance_authority !== undefined) {
+    const deadline = dueAt(activatedAt, step.due_days)
+    const governance = await new ResolveCompanyGovernanceTaskAdapter(input.c).resolve({
+      step,
+      payload: input.payload,
+      subjectEmployeeId:
+        input.authoritySubjectEmployeeId === undefined
+          ? input.applicant.employeeId
+          : input.authoritySubjectEmployeeId,
+      excludedEmployeeIds: new Set([
+        input.applicant.employeeId,
+        ...(input.excludedEmployeeIds ?? []),
+      ]),
+      openedAt: input.activatedAt,
+      dueAt: deadline === null ? null : new Date(deadline),
+      resolvedAt: input.activatedAt,
+    })
+    if (governance instanceof Error) return governance
+    return {
+      key: step.key,
+      name: step.name,
+      rejectionBehavior: step.rejection_behavior,
+      allowDelegation: governance.task.delegationPolicy === "allowed",
+      ...governance,
+    }
+  }
   const snapshot = await new ResolveCompanyProcedureTaskSnapshotAdapter({
     c: input.c,
     applicantEmployeeId:
@@ -101,6 +130,7 @@ async function resolveConfiguredTask(
     name: step.name,
     rejectionBehavior: step.rejection_behavior,
     allowDelegation: step.allow_delegation,
+    guards: [],
     task: {
       key: step.key,
       requiredApprovals: snapshot.requiredApprovals,

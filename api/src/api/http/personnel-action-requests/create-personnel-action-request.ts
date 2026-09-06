@@ -1,3 +1,4 @@
+import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id"
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
@@ -227,7 +228,10 @@ export class CreatePersonnelActionRequest {
           })
         : null
 
-    const systemWriter = new SystemD1WorkflowAdapter({ env: { DB: this.c.env.DB } })
+    const systemWriter = new SystemD1WorkflowAdapter({
+      env: { DB: this.c.env.DB },
+      startGuards: task.guards,
+    })
     const writer: SystemWorkflowWriter = {
       start: async (input) => {
         const systemStatements = systemWriter.prepareStartStatements(input)
@@ -304,6 +308,11 @@ export class CreatePersonnelActionRequest {
         baseOrganizationRevision: command.baseOrganizationRevision,
       })
       if (completedAfterRace !== null) return completedAfterRace
+      if (isAbortedByGuard(started))
+        return new ConflictError(
+          "会社上の判断資格が変わったため申請を作成できません",
+          "authority_changed",
+        )
       return new UnexpectedError("人事変更申請を作成できません", { cause: started })
     }
     return {

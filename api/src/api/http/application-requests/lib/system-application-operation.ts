@@ -239,6 +239,14 @@ export async function decideSystemApplication(
   if (step === undefined) {
     return new ForbiddenError("decision authority is undefined", "forbidden")
   }
+  const tasks = await query.listTasks(proposal.caseId)
+  if (tasks instanceof Error)
+    return new UnexpectedError("failed to load frozen decision rules", { cause: tasks })
+  const decisionTask = tasks.find(
+    (task) => task.key === proposal.currentTaskKey && task.round === proposal.currentTaskRound,
+  )
+  if (decisionTask === undefined)
+    return new ConflictError("current decision task is missing", "already_decided")
   const session = c.var.session
   if (session === null || session.employeeId !== input.actorEmployeeId) {
     return new ForbiddenError("cannot decide as another employee", "forbidden")
@@ -285,7 +293,7 @@ export async function decideSystemApplication(
   let representedAccountId = actorAccountId
   let delegationId: string | null = null
   if (!candidateAccountIds.includes(actorAccountId)) {
-    if (step?.allow_delegation === false) {
+    if (step.allow_delegation === false || decisionTask.delegationPolicy === "forbidden") {
       return new ForbiddenError("workflow step does not allow delegation", "forbidden")
     }
     const delegation = await query.findDelegation({
@@ -350,6 +358,8 @@ export async function decideSystemApplication(
   }
   const hasCurrentAuthority = await new RevalidateCompanyProcedureAuthorityAdapter(c).revalidate({
     step,
+    payload: payload.value,
+    task: decisionTask,
     representedAccountId,
     subjectEmployeeId:
       authoritySubjectEmployeeId === undefined
@@ -370,6 +380,10 @@ export async function decideSystemApplication(
   }
   const systemAction =
     input.action === "reject" && step?.rejection_behavior === "return" ? "return" : input.action
+  if (systemAction === "return" && decisionTask.returnPolicy === "forbidden") {
+    return new ForbiddenError("this decision cannot be returned", "forbidden")
+  }
+  let nextTaskGuards: ReadonlyArray<D1PreparedStatement> = []
   let nextTask = null
   if (systemAction === "approve") {
     const next = await new ResolveCompanyProcedureTaskAdapter({
@@ -391,6 +405,7 @@ export async function decideSystemApplication(
       )
     }
     if (next !== null) {
+      nextTaskGuards = next.guards
       const caseId = systemCaseIdSchema.safeParse(proposal.caseId)
       if (!caseId.success) return new UnexpectedError("invalid System Case ID")
       const persistence = createSystemDecisionTask({
@@ -409,7 +424,7 @@ export async function decideSystemApplication(
   if (!caseId.success) return new UnexpectedError("invalid System Case ID")
   const workflow = new SystemD1WorkflowAdapter({
     env: { DB: c.env.DB },
-    decisionGuards: [authorityGuard],
+    decisionGuards: [authorityGuard, ...nextTaskGuards],
   })
   const command = {
     caseId: caseId.data,
@@ -705,7 +720,10 @@ async function startSystemApplication(
     )
   }
   const started = await new StartSystemProcedure({
-    writer: new SystemD1WorkflowAdapter({ env: { DB: c.env.DB } }),
+    writer: new SystemD1WorkflowAdapter({
+      env: { DB: c.env.DB },
+      startGuards: resolvedTask.guards,
+    }),
   }).run({
     seriesId: input.seriesId,
     version: input.version,
@@ -718,6 +736,8 @@ async function startSystemApplication(
     firstTask: resolvedTask.task,
   })
   if (started instanceof Error) {
+    if (isAbortedByGuard(started))
+      return new ConflictError("Company authority changed during submission", "authority_changed")
     return new UnexpectedError("failed to start System procedure", { cause: started })
   }
   const proposal = await systemProposalQuery(c).findByNumber(started.number)

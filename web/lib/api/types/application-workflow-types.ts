@@ -21,6 +21,18 @@ export type WorkflowCondition = {
 export type ApplicationWorkflowStep = {
   key: string
   name: string
+  governance_authority?: {
+    organization_id: "organization:default"
+    responsibility_code: string
+    scope:
+      | null
+      | {
+          scope_type: "organization-unit" | "legal-entity" | "site" | "workplace"
+          scope_id: string
+        }
+      | { scope_type: "region"; region_code: string }
+      | { scope_type: "amount"; currency_code: string; amount_field: string }
+  }
   approvers: Array<WorkflowApproverSelector>
   approval_mode: "any" | "all" | "minimum"
   minimum_approvals?: number

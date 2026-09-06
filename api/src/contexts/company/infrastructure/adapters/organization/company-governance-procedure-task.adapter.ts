@@ -19,14 +19,12 @@ type Command = Readonly<{
 type Context = Readonly<{ evidenceContext: "company" }>
 
 /** Companyの責務snapshotを、意味を失わないSystem判断Taskへ変換する。 */
-export class CreateCompanyGovernanceProcedureTask {
-  constructor(
-    private readonly c: Context = Object.freeze({ evidenceContext: "company" as const }),
-  ) {
+export class CompanyGovernanceProcedureTaskAdapter {
+  constructor(private readonly c: Context = { evidenceContext: "company" }) {
     Object.freeze(this)
   }
 
-  async execute(
+  async prepare(
     command: Command,
   ): Promise<StartSystemProcedureTask | CompanyGovernanceAuthorityError> {
     if (

@@ -16,6 +16,7 @@ import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflo
 import { readFileSync } from "node:fs"
 
 const schema = [
+  readFileSync(new URL("../infrastructure/schema/system-principal.sql", import.meta.url), "utf8"),
   readFileSync(new URL("../infrastructure/schema/system-core.sql", import.meta.url), "utf8"),
   readFileSync(new URL("../infrastructure/schema/system-workflow.sql", import.meta.url), "utf8"),
   readFileSync(
@@ -118,6 +119,69 @@ function nextTask(
 }
 
 describe("System workflow application", () => {
+  test.each(["candidate", "attestation"])(
+    "機械Principalは人の候補・証言に使えない: %s",
+    async (phase) => {
+      const fixture = await createFixture()
+      const machine = () =>
+        fixture.database
+          .prepare(`INSERT INTO system_principals
+      (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
+      VALUES ('machine-reviewer', 'reviewer-1', 'agent', 'Reviewer', NULL, 1, 100, 100)`)
+          .run()
+      if (phase === "candidate") await machine()
+      const at = new Date(200)
+      const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
+        seriesId: "machine-series",
+        version: 1,
+        procedureKey: "change",
+        procedureRevision: 1,
+        body: { reason: "Human decision required" },
+        createdByAccountId: zAccountId.parse("creator"),
+        supersedesProposalId: null,
+        createdAt: at,
+        firstTask: {
+          key: "review",
+          requiredApprovals: 1,
+          openedAt: at,
+          dueAt: null,
+          candidates: [candidate("reviewer-1", at)],
+          excludedAccountIds: [],
+        },
+      })
+      if (phase === "candidate") {
+        expect(started).toBeInstanceOf(Error)
+        expect(
+          await fixture.database
+            .prepare("SELECT count(*) AS total FROM system_proposals")
+            .first<number>("total"),
+        ).toBe(0)
+        return
+      }
+      if (started instanceof Error) throw started
+      await machine()
+      expect(
+        await new ApproveSystemTask(fixture.writer).execute({
+          caseId: started.workflowCase.id,
+          taskKey: "review",
+          round: 1,
+          actorAccountId: zAccountId.parse("reviewer-1"),
+          representedAccountId: zAccountId.parse("reviewer-1"),
+          delegationId: null,
+          proposalDigest: started.proposal.digest,
+          comment: null,
+          decidedAt: new Date(210),
+          nextTask: null,
+        }),
+      ).toBeInstanceOf(Error)
+      expect(
+        await fixture.database
+          .prepare("SELECT count(*) AS total FROM system_human_attestations")
+          .first<number>("total"),
+      ).toBe(0)
+    },
+  )
+
   test("上位contextの判断guardが拒否するとTaskと証言を保存しない", async () => {
     const fixture = await createFixture()
     const at = new Date(200)
