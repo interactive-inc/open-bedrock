@@ -13,6 +13,7 @@ import * as employeeLifecycleCodeEvents from "@/contexts/company/interface/route
 import * as employeeLifecycleCodeState from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.state"
 import * as employees from "@/contexts/company/interface/routes/company.employees"
 import * as employments from "@/contexts/company/interface/routes/company.employments"
+import * as externalIdentityImports from "@/contexts/company/interface/routes/company.external-identity-imports"
 import * as gradeDefinitions from "@/contexts/company/interface/routes/company.grade-definitions"
 import * as gradeDefinitionsId from "@/contexts/company/interface/routes/company.grade-definitions.$id"
 import * as myDirectReports from "@/contexts/company/interface/routes/company.my-direct-reports"
@@ -34,6 +35,11 @@ import * as profile from "@/contexts/company/interface/routes/company.profile"
 import * as reportingLinesEmployeeCode from "@/contexts/company/interface/routes/company.reporting-lines.$employeeCode"
 
 // `bun run gen:app` の生成物。手で編集せず、routeは所有contextのinterface/route-manifest.tsへ足す。
+export const companyPublicRoutes = new Hono<CompanyHttpEnvironment>().post(
+  "/external-identity-imports",
+  ...externalIdentityImports.POST,
+)
+
 export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/account-employee-links", ...accountEmployeeLinks.GET)
   .post("/authority-resolutions", ...authorityResolutions.POST)

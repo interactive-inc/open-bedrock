@@ -12,7 +12,6 @@ export type Props = {
   now?: string
   headers?: Record<string, string>
   companyTimeZone?: string
-  provisioningApiKey?: string
   identityJwks?: string
   identityIssuer?: string
   identityAudience?: string
@@ -53,7 +52,6 @@ export function requestWithContext(props: Props): Promise<Response> {
     AUDIT_HMAC_SECRET: "request-with-context-audit-hmac-secret",
     COMPANY_TIME_ZONE: props.companyTimeZone ?? "Asia/Tokyo",
     NOW: props.now ?? defaultNow,
-    PROVISIONING_API_KEY: props.provisioningApiKey,
     IDENTITY_JWKS: props.identityJwks,
     IDENTITY_ISSUER: props.identityIssuer,
     IDENTITY_AUDIENCE: props.identityAudience,

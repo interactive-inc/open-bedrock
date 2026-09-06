@@ -21,6 +21,7 @@ export class SystemIdentityAttachmentAdapter {
 
   prepare(input: {
     accountId: AccountId
+    actorAccountId?: AccountId
     provider: IdentityProvider
     subject: string
     email: string
@@ -37,7 +38,7 @@ export class SystemIdentityAttachmentAdapter {
     })
     if (afterJson instanceof Error) return afterJson
     const auditEvent = SystemAuditEventEntity.create({
-      actorAccountId: null,
+      actorAccountId: input.actorAccountId ?? null,
       action: "system.identity.attached",
       targetType: "system:identity",
       targetId: identityId.data,

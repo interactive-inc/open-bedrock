@@ -2,6 +2,16 @@
 export const companyRouteManifest = [
   {
     method: "POST",
+    path: "/company/external-identity-imports",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.external-identity-imports",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
     path: "/company/authority-resolutions",
     phase: "authenticated",
     handler: {

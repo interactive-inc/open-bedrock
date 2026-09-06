@@ -196,7 +196,25 @@ describe("inspectRouteFile", () => {
       "export const POST = factory.createHandlers(handler)\n"
     const violations = inspectRouteFile("provisioning/identities/route.ts", source)
     expect(violations).toHaveLength(1)
-    expect(violations[0]?.reason).toContain("verify*Key middleware がありません")
+    expect(violations[0]?.reason).toContain("機械用認証middlewareがありません")
+  })
+
+  test("System機械認証を扱い、人も通すSystem認証だけではmachine宣言を許さない", () => {
+    const prefix = "// @authorization machine - 機械主体の同期\n"
+    expect(
+      inspectRouteFile(
+        "company.external-identity-imports.ts",
+        prefix +
+          "export const POST = factory.createHandlers(authenticateSystemMachineAccessToken, handler)\n",
+      ),
+    ).toEqual([])
+    expect(
+      inspectRouteFile(
+        "company.external-identity-imports.ts",
+        prefix +
+          "export const POST = factory.createHandlers(authenticateSystemAccessToken, handler)\n",
+      ),
+    ).toHaveLength(1)
   })
 })
 

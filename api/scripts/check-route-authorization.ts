@@ -155,13 +155,15 @@ export function inspectRouteFile(
       /\bverifyBearer\b/.test(entry.body) ||
       /\bauthenticateSystemAccessToken\b/.test(entry.body) ||
       /\brequireSystemAuthentication\b/.test(entry.body)
-    const hasMachineGuard = /\bverify[A-Z]\w*Key\b/.test(entry.body)
+    const hasMachineGuard =
+      /\bverify[A-Z]\w*Key\b/.test(entry.body) ||
+      /\bauthenticateSystemMachineAccessToken\b/.test(entry.body)
 
     if (kind === "machine" && !hasMachineGuard) {
       violations.push({
         file,
         method: entry.method,
-        reason: `"@authorization machine" と宣言していますが、機械用の verify*Key middleware がありません。`,
+        reason: `"@authorization machine" と宣言していますが、機械用認証middlewareがありません。`,
       })
       continue
     }
@@ -215,9 +217,11 @@ export async function checkRouteAuthorization(): Promise<{
   const summary = new Map<AuthorizationKind, number>()
   let checked = 0
   const appBase = readFileSync(resolve(SOURCE_ROOT, "api/app-base.ts"), "utf8")
-  const companyHasGlobalBearer = /\.use\(\s*["']\/company\/\*["']\s*,\s*verifyBearer\s*\)/.test(
-    appBase,
-  )
+  // この登録の実際の例外と認証はcompany.external-identity-imports.test.tsが検証する。
+  const companyHasGlobalBearer =
+    /\.use\(\s*["']\/company\/\*["']\s*,\s*(?:verifyBearer|companyAuthenticationMiddleware)\s*\)/.test(
+      appBase,
+    )
 
   for (const routeFile of await collectRouteFiles()) {
     const source = readFileSync(routeFile.absolutePath, "utf8")

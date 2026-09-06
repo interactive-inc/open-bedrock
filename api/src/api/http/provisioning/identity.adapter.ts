@@ -2,13 +2,11 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@system/domain/schemas/identity/identity-provider.schema"
 import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-subject.schema"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { IdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
 import { SystemIdentityLoginAdapter } from "@system/infrastructure/adapters/auth/system-identity-login.adapter"
 import { SystemIdentityByEmailAdapter } from "@system/infrastructure/adapters/identity/system-identity-by-email.adapter"
-import { SystemIdentityProfileUpdateAdapter } from "@system/infrastructure/adapters/identity/system-identity-profile-update.adapter"
 import { SystemIdentityCatalogRepository } from "@system/infrastructure/repositories/identity/system-identity-catalog.repository"
 
 export type ProviderIdentity = {
@@ -113,44 +111,6 @@ export class IdentityAdapter {
       }
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to compose Company Account")
-    }
-  }
-
-  async updateProvisionedIdentity(
-    identityId: IdentityId,
-    accountId: AccountId,
-    employeeId: EmployeeId | null,
-    email: string,
-    name: string,
-  ): Promise<null | Error> {
-    try {
-      const statements: D1PreparedStatement[] = [
-        new SystemIdentityProfileUpdateAdapter({ env: { DB: this.c.env.DB } }).prepare(
-          identityId,
-          email,
-          new Date(this.c.env.NOW ?? Date.now()),
-        ),
-        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-        this.c.env.DB.prepare(
-          `UPDATE company_account_profiles
-           SET display_name = ?2,
-               updated_at = max(updated_at + 1, CAST(strftime('%s', 'now') AS INTEGER) * 1000)
-           WHERE organization_id = 'organization:default' AND account_id = ?1`,
-        ).bind(accountId, name),
-        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-      ]
-      if (employeeId !== null) {
-        statements.push(
-          this.c.env.DB.prepare(
-            "UPDATE company_employees SET official_name = ?2, email = ?3, updated_at = max(updated_at + 1, CAST(strftime('%s', 'now') AS INTEGER) * 1000) WHERE id = ?1",
-          ).bind(employeeId, name, email),
-          abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-        )
-      }
-      await this.c.env.DB.batch(statements)
-      return null
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to update provisioned identity")
     }
   }
 
