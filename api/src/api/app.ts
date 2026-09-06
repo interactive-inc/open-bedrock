@@ -96,6 +96,7 @@ import * as companyEmployeeEventsRoute from "@/contexts/company/interface/routes
 import * as companyEmployeeGradesRoute from "@/contexts/company/interface/routes/company.employee-grades"
 import * as companyEmployeeLifecycleCodeEventsRoute from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.events"
 import * as companyEmployeeLifecycleCodeStateRoute from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.state"
+import * as companyEmployeeResourceAdoptionsRoute from "@/contexts/company/interface/routes/company.employee-resource-adoptions"
 import * as companyEmployeesRoute from "@/contexts/company/interface/routes/company.employees"
 import * as companyEmploymentsRoute from "@/contexts/company/interface/routes/company.employments"
 import * as companyExternalIdentityImportsRoute from "@/contexts/company/interface/routes/company.external-identity-imports"
@@ -572,6 +573,8 @@ const routePart25 = createRouteApp()
   .get("/company/employee-lifecycle/:code/events", ...companyEmployeeLifecycleCodeEventsRoute.GET)
   .get("/company/employee-lifecycle/:code/state", ...companyEmployeeLifecycleCodeStateRoute.GET)
   .post("/company/employee-registrations", ...companyEmployeeRegistrationsRoute.POST)
+  .get("/company/employee-resource-adoptions", ...companyEmployeeResourceAdoptionsRoute.GET)
+  .post("/company/employee-resource-adoptions", ...companyEmployeeResourceAdoptionsRoute.POST)
   .get("/company/employees", ...companyEmployeesRoute.GET)
   .post("/company/employees", ...companyEmployeesRoute.POST)
   .get("/company/employments", ...companyEmploymentsRoute.GET)
@@ -597,10 +600,10 @@ const routePart25 = createRouteApp()
   .post("/company/organization-units", ...companyOrganizationUnitsRoute.POST)
   .get("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.GET)
   .put("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.PUT)
-  .delete("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.DELETE)
-  .get("/company/organization-units/:code/members", ...companyOrganizationUnitsCodeMembersRoute.GET)
 
 const routePart26 = createRouteApp()
+  .delete("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.DELETE)
+  .get("/company/organization-units/:code/members", ...companyOrganizationUnitsCodeMembersRoute.GET)
   .get("/company/people", ...companyPeopleRoute.GET)
   .post("/company/people", ...companyPeopleRoute.POST)
   .post("/company/personnel-action-executions", ...companyPersonnelActionExecutionsRoute.POST)

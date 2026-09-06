@@ -61,8 +61,8 @@
 - 機械access tokenを発行元credentialへ接続し、両製品のAPI認証でAccount状態・token版、Principalへの所属、credential失効・期限、Connector停止を再検査する。別credentialの継続、別Accountのcredential拒否、権限失効、発行処理中のAccount・Connector変更を検証済み。発行元のない旧機械tokenは再発行が必要になる
 - 退職発令の確定・再送から既存tokenの認可までを、実際のApplication・DB・業務handlerで検証済み。退職日中は200、翌日は401
 - 新規登録の公開履歴保存失敗ではAccount・従業員・期間も取り消す。登録の再送で公開履歴を増やさず、準備後のCompany版競合は409を返す。会社の版が進んでいる場合は初期化を重ねない
-- 本製品のAPI全体は固定Bun版で3,279件成功。変更前からあるUI生成ファイルのre-export検査1件は失敗する
-- 共有先のCompany・System全体とAccount表示名のcompositionは900件成功、失敗0件。Company 401ファイルとSystem 500ファイル、manifest、lockは完全一致
+- 本製品のAPI全体は固定Bun版で3,299件成功。変更前からあるUI生成ファイルのre-export検査1件は失敗する
+- 共有先のCompany・System全体とAccount表示名のcompositionは919件成功、失敗0件。Company 410ファイルとSystem 500ファイル、manifest、lockは完全一致
 - API・Webと共有先の型検査、共有source・境界検査、変更箇所のformat・lintは成功。本製品の全体lintはエラー0件で、未変更のUI生成ファイルにある警告3件が残る
 - 両製品の実際のAPI入口から、外部identity登録とprovider scope違い・credential失効の拒否を検証済み。本製品では公開Company APIの読取、更新、再送、旧共有キー・人のtokenの拒否、通常Company入口の認証維持も検証済み。旧同期APIと入力契約は置き換わる
 - 218件の新規従業員を一つのbatchで登録し、654件の公開resourceと218件のcommand receiptを保存するSQLiteテストは成功。本番D1での実行時間と資源制限の検証は未完了であり、大規模一括処理の本番実行を保証しない
@@ -94,3 +94,11 @@
 - 人物情報の更新では、本製品の登録・実認証・権限合成から本人profileまで検証した。共有テスト11件、WebのフォームとServerAction13件、CLI全体347件が成功した。本製品のAPI全体は3,279件成功し、既存re-export検査1件は失敗する。共有先はCompany・Systemと表示名compositionの900件が成功した
 
 - Reactの変更前後の検査は両方完了し、EmployeeDetailの複雑さの警告1件とlocale変更の認証指摘1件は同じ内容・数値だった。新しい診断は残っていない。実ブラウザでの操作確認は未実施。公開Personに未接続の従業員は編集不可として対応確認を求めるため、既存データの移行、製品固有writerの接続、Account表示名の将来発効への対応を継続する
+
+- 既存従業員を公開正本へ接続するAPIとCLIを追加した。現在値を過去へ補わず、確認済みの人物履歴と保存済みの全雇用・在籍区間を照合する。元の台帳・全期間revisionを変更せず、公開履歴・接続・移行証跡を一つのtransactionで確定する。履歴不足の既存データ、部分接続、既存Personへの名寄せ、複数organizationは引き続き自動移行の対象外になる。
+
+- 既存従業員の移行では、共有Companyの実routeで移行・本人連絡先・公開雇用の更新を検証し、共通人事発令処理で復職・退職・再入社を検証した。本製品のAPI入口では認証・管理資格・参照・保存・再送も検証した。氏名・連絡先・番号・契約区分・所有者・期間の不一致、Account表示の不一致、保存直前の変更、退職済み契約、同時再送、保存失敗による全取消、再試行を検証した。
+
+- 移行追加後の本製品API全体は3,299件成功、既存re-export検査1件失敗。CLI全体351件と、API・CLIの型検査、境界・共有source・migration・seed検査は成功した。
+
+- 共有先の移行テスト19件と、Company・System・関連composition全体919件は成功、失敗0件。Company 410ファイル、System 500ファイルと各共有metadataは一致した。本番データへの適用、本番D1の資源制限、履歴不足の既存台帳の修復は未検証・未完了であり、基盤全体の目標は継続する。

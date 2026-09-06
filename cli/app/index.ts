@@ -337,6 +337,7 @@ import careerWithdrawHandler from "@/app/career-applications/withdraw/route"
 import employeeRegisterHandler from "@/app/employees/register/route"
 import employeeShowHandler from "@/app/employees/show/[employee_code]/route"
 import employeeUpdateHandler from "@/app/employees/update/[employee_code]/route"
+import employeeAdoptionHandler from "@/app/employees/adoption/route"
 import employeeTimelineHandler from "@/app/employees/timeline/route"
 import employeeStateHandler from "@/app/employees/state/route"
 import personnelActionRequestHandler from "@/app/personnel-actions/request/route"
@@ -877,6 +878,7 @@ routes.post("/career-applications/withdraw", ...careerWithdrawHandler)
 routes.post("/employees/register", ...employeeRegisterHandler)
 routes.post("/employees/show/:employee_code?", ...employeeShowHandler)
 routes.post("/employees/update/:employee_code?", ...employeeUpdateHandler)
+routes.post("/employees/adoption", ...employeeAdoptionHandler)
 routes.post("/employees/timeline", ...employeeTimelineHandler)
 routes.post("/employees/state", ...employeeStateHandler)
 routes.post("/personnel-actions/request", ...personnelActionRequestHandler)

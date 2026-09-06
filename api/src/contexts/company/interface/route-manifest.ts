@@ -1,6 +1,27 @@
 /** canonical Company APIの宣言的な正本。API rootだけがHTTP runtimeへ合成する。 */
 export const companyRouteManifest = [
   {
+    method: "GET",
+    path: "/company/employee-resource-adoptions",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employee-resource-adoptions",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/employee-resource-adoptions",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employee-resource-adoptions",
+      exportName: "POST",
+    },
+  },
+
+  {
     method: "POST",
     path: "/company/external-identity-imports",
     phase: "public",

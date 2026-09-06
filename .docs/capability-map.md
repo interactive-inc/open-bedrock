@@ -27,7 +27,7 @@ System は業務内容と会社組織から独立した、停止不能な実行�
 
 現行実装には Human、Agent、Service、Connector の Principal、Account、Identity、password、外部 identity、session、token rotation、machine credential、password または外部 identity による短期 step-up がある。machine credential は raw secret を返却時以外に保持しない。機械access tokenは発行元credentialを署名したclaimに保持し、API認証でAccountの状態・token版、Principalへの所属、credentialの失効・期限、Connectorの停止を再検査する。一つのcredentialを失効しても、同じAccountの別credentialは利用を継続できる。
 
-発行元credentialを持たない従来の機械tokenは拒否し、machine sessionから再発行する。機械credentialはweb・mobile sessionには使用できない。Principal導入前の人のAccountは既存sessionを継続できる。[外部identity同期](external-identity-imports.md)は機械主体とprovider scopeを検査し、新規登録と氏名・email変更を公開Company正本へ原子的に反映する。既存の未接続台帳の移行と複数providerへの対応は未完成である。
+発行元credentialを持たない従来の機械tokenは拒否し、machine sessionから再発行する。機械credentialはweb・mobile sessionには使用できない。Principal導入前の人のAccountは既存sessionを継続できる。[外部identity同期](external-identity-imports.md)は機械主体とprovider scopeを検査し、新規登録と氏名・email変更を公開Company正本へ原子的に反映する。確認済みの既存人物・雇用履歴を接続する[移行API](company-api.md#既存従業員の公開履歴への接続)を備える。履歴不足の解消と複数providerへの対応は未完成である。
 
 ### 技術的認可
 
