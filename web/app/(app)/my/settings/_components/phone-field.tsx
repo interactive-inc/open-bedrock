@@ -1,5 +1,7 @@
 "use client"
 
+import { EmployeeProfileFields } from "@/components/employee-profile-fields"
+import type { EmployeeProfileVersion } from "@/lib/api/types/employee-profile-version"
 import { updatePhoneAction } from "@/app/(app)/my/settings/actions"
 import type { UpdatePhoneState } from "@/app/(app)/my/settings/actions"
 import { useFormAction } from "@/hooks/use-form-action"
@@ -17,6 +19,8 @@ const initialState: UpdatePhoneState = { ok: true, error: null }
 
 type Props = {
   phone: string | null
+  profile: EmployeeProfileVersion | null
+  commandId: string
 }
 
 /**
@@ -28,6 +32,9 @@ export function PhoneField(props: Props) {
     initialState,
     "電話番号を更新しました",
   )
+
+  if (props.profile === null)
+    return <p>人物情報の対応確認が完了するまで電話番号を編集できません。</p>
 
   return (
     <form action={dispatch}>
@@ -45,18 +52,22 @@ export function PhoneField(props: Props) {
               aria-labelledby="phone-label"
               name="phone"
               defaultValue={props.phone ?? ""}
-              maxLength={30}
+              maxLength={64}
               placeholder="例: 090-1234-5678"
               className="w-full"
             />
-
-            <Button type="submit" variant="secondary" disabled={isPending}>
-              保存
-            </Button>
           </div>
 
           {state.error !== null ? <p className="text-sm text-destructive">{state.error}</p> : null}
         </Field>
+        <EmployeeProfileFields
+          profile={props.profile}
+          commandId={props.commandId}
+          reasonId="employee-phone-change-reason"
+        />
+        <Button type="submit" variant="secondary" disabled={isPending}>
+          保存
+        </Button>
       </FieldGroup>
     </form>
   )

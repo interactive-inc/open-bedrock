@@ -1,5 +1,7 @@
 "use server"
 
+import { readEmployeeProfileCommand } from "@/lib/form/read-employee-profile-command"
+
 import { revalidatePath } from "next/cache"
 import { createEmployee } from "@/lib/api/create-employee"
 import { updateEmployee } from "@/lib/api/update-employee"
@@ -199,7 +201,13 @@ export async function updateEmployeeAction(
     return { ok: false, error: name.message }
   }
 
-  const updated = await updateEmployee(code, { name })
+  const command = readEmployeeProfileCommand(formData)
+  if (command instanceof Error) return { ok: false, error: command.message }
+  const updated = await updateEmployee(
+    code,
+    { name, profile: command.profile, reason: command.reason },
+    command.commandId,
+  )
 
   if (updated instanceof Error) {
     return { ok: false, error: updated.message }

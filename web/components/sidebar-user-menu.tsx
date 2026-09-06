@@ -114,6 +114,8 @@ export function SidebarUserMenu(props: Props) {
       <SettingsDialog
         locale={props.locale}
         phone={props.currentUser.phone}
+        profile={props.currentUser.profile}
+        profileCommandId={props.currentUser.profileCommandId}
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
       />

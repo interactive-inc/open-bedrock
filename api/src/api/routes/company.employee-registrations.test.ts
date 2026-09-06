@@ -1,3 +1,6 @@
+import { z } from "zod"
+import { employeeProfileVersionSchema } from "@/contexts/company/domain/entities/employee-profile-change.entity"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
@@ -176,5 +179,91 @@ describe("POST /company/employee-registrations", () => {
     expect((await post(db, body, null)).status).toBe(400)
     expect((await post(db, body, "not-a-uuid")).status).toBe(400)
     expect(await count(db, "company_employees", "employee_code = 'E100'")).toBe(0)
+  })
+  test("登録した本人の表示版から氏名と電話を更新し、実認証・権限・競合を通して正本へ反映する", async () => {
+    const db = await createTestDb()
+    expect((await post(db, body)).status).toBe(201)
+    const linked = await db
+      .prepare(`SELECT employee.id, link.account_id
+      FROM company_employees AS employee JOIN company_account_employee_links AS link ON link.employee_id = employee.id
+      WHERE employee.employee_code = 'E100'`)
+      .first<{ id: string; account_id: string }>()
+    if (linked === null) throw new Error("registered account is missing")
+    const token = await createTestToken(jwtSecret, {
+      employeeId: restoreWorkforceId("employee", linked.id),
+      accountId: linked.account_id,
+    })
+    const admin = await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) })
+    const read = () =>
+      requestWithContext({ db, jwtSecret, path: "/company/current-profile", token })
+    const current = z.object({
+      name: z.string(),
+      phone: z.string().nullable(),
+      profile: employeeProfileVersionSchema,
+    })
+    const before = current.parse(await (await read()).json())
+    const update = (path: string, actorToken: string, payload: unknown, key: string) =>
+      requestWithContext({
+        db,
+        jwtSecret,
+        path,
+        token: actorToken,
+        method: "PUT",
+        body: payload,
+        headers: { "idempotency-key": key },
+      })
+    expect(
+      (
+        await update(
+          "/company/employee-directory/E100",
+          admin,
+          { name: "Changed Employee", profile: before.profile, reason: "Confirmed name change" },
+          "name-change",
+        )
+      ).status,
+    ).toBe(200)
+    expect(
+      (
+        await update(
+          "/company/my-profile",
+          token,
+          { phone: "020-2000-2000", profile: before.profile, reason: "Confirmed phone change" },
+          "stale-phone",
+        )
+      ).status,
+    ).toBe(409)
+    const afterName = current.parse(await (await read()).json())
+    expect(afterName.name).toBe("Changed Employee")
+    expect(
+      (
+        await update(
+          "/company/my-profile",
+          token,
+          { phone: "020-2000-2000", profile: afterName.profile, reason: "Confirmed phone change" },
+          "phone-change",
+        )
+      ).status,
+    ).toBe(200)
+    const afterPhone = current.parse(await (await read()).json())
+    expect(afterPhone).toMatchObject({ name: "Changed Employee", phone: "020-2000-2000" })
+    expect(afterPhone.profile.organizationRevision).toBe(afterName.profile.organizationRevision + 1)
+    expect(
+      (
+        await update(
+          "/company/employee-directory/E100",
+          token,
+          {
+            name: "Unauthorized name",
+            profile: afterPhone.profile,
+            reason: "Attempted name change",
+          },
+          "forbidden-name",
+        )
+      ).status,
+    ).toBe(403)
+    expect(
+      (await requestWithContext({ db, jwtSecret, path: "/company/my-profile", token: null }))
+        .status,
+    ).toBe(401)
   })
 })

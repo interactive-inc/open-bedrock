@@ -1,3 +1,5 @@
+import { EmployeeProfileSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-profile-snapshot.adapter"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import type { Context } from "@/env"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
@@ -20,17 +22,29 @@ export class GetCurrentCompanyProfile {
     if (employee instanceof Error) throw new InternalError("failed to load employee profile")
     if (employee === null) throw new NotFoundError("employee not found")
 
+    const effectiveOn = resolveCompanyBusinessDate({
+      now: this.c.env.NOW ?? new Date().toISOString(),
+      timeZone: this.c.env.COMPANY_TIME_ZONE,
+    })
+    if (effectiveOn instanceof Error) throw new InternalError("failed to resolve company date")
+    const profile = await new EmployeeProfileSnapshotAdapter(this.c.env.DB).find({
+      employeeId: employee.id,
+      effectiveOn,
+    })
+    if (profile instanceof Error)
+      throw new InternalError("failed to load employee profile revision")
     return zAppAuthMe.parse({
       id: employee.id,
       code: employee.employeeCode,
-      name: employee.officialName,
+      name: profile?.person.readText("officialName") ?? employee.officialName,
       email: employee.email ?? "",
       role: session.roleKeys[0] ?? "authenticated",
       dept_name: employee.primaryAssignment?.organizationUnitName ?? null,
       position: employee.primaryAssignment?.positionTitle ?? null,
       permissions: [...session.permissions],
       role_keys: [...session.roleKeys],
-      phone: employee.phone,
+      phone: profile === null ? employee.phone : (profile.person.readNullableText("phone") ?? null),
+      profile: profile?.version ?? null,
     })
   }
 }

@@ -108,7 +108,7 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 
 新規Accountの作成・発行と一括登録を合成する製品向けには、同じ初期resourceを既存の登録batchへ組み込むadapterを提供する。一括登録は準備時に会社の版を一度だけ読み、各登録のcommandへ連続した版を割り当てる。別のCompany変更と競合した場合は全登録を取り消し、再試行の際に版を読み直す。
 
-公開resourceに未接続の既存台帳、招待からの登録、氏名変更のその他のwriter、組織・所属・責務・Account対応の保存先統合は未完成である。入社・再入社の発令は`employmentType`に`FULL_TIME`または`PART_TIME`を必須とする。新規従業員登録の入力名は`employment_type`である。選択した区分を承認対象の本文、発令記録、業務台帳、公開雇用へ保存する。再入社と訂正で新しく作る契約にも明示した区分を使い、以前の契約の区分を変更しない。
+公開resourceに未接続の既存台帳、招待からの登録、製品固有の人物情報writer、組織・所属・責務・Account対応の保存先統合は未完成である。入社・再入社の発令は`employmentType`に`FULL_TIME`または`PART_TIME`を必須とする。新規従業員登録の入力名は`employment_type`である。選択した区分を承認対象の本文、発令記録、業務台帳、公開雇用へ保存する。再入社と訂正で新しく作る契約にも明示した区分を使い、以前の契約の区分を変更しない。
 
 雇用区分の欠ける新規入力は400で拒否する。区分を含まない旧提案は、本文やdigestを変更せず承認・実行を409で拒否し、新しい申請を求める。既存の発令履歴に区分がなければ不明のまま参照し、推測して書き足さない。Webの入社・再入社フォームとCLIの`employees register --employment-type`も区分の選択を必須とする。
 
@@ -121,3 +121,15 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 参照整合性とprojectionのmigrationは既存台帳・履歴を保全する。適用前の欠損参照や不足する雇用区分の修復、既存データの削除、既存台帳とresourceの所有関係の推測は行わない。所有関係のない既存データを新しい公開writeへ接続する移行は未完成である。
 
 `company-context.manifest.json`の`sourcePaths`はCompanyの全sourceを列挙し、`company-context.lock.json`はその全pathとhashを固定する。本リポジトリと共有先はDomain、Application、Infrastructure、Interface、testを含むCompanyディレクトリ全体を同一内容に保ち、CIは欠落、余分なpath、内容差を拒否する。製品差はCompanyの外側にあるAPI compositionだけで吸収する。
+
+## 氏名と本人連絡先の変更
+
+従業員詳細と本人profileの参照は、表示するPersonと同じsnapshotから`profile`を返す。`employeeId`、`organizationRevision`、`personRevision`、`effectiveOn`が編集対象を固定する。`personRevision`は予約された変更を含む最新の人物版であり、表示する値は会社営業日に有効な版から読む。
+
+`PUT /company/employee-directory/:code`は氏名変更権限を検査し、`name`、`profile`、`reason`を受け取る。`PUT /company/my-profile`は会社範囲と本人のEmployee対応を検査し、`phone`、`profile`、`reason`を受け取る。両操作とも`Idempotency-Key`を必須とする。電話番号の`null`は明示した削除である。氏名変更からemailを変えるなど、別項目の入力は拒否する。
+
+保存は、閲覧した会社版とPerson版の両方が一致した場合だけ行う。変更理由と主体を持つ人物履歴、従業員表示、Account表示名、command receiptを同じtransactionで確定する。Webは表示時の版と操作キーをフォームへ保持し、CLIは明示した版とキーを送る。409を最新版への自動再送で隠さない。
+
+変更は表示時の会社営業日から有効になる。将来のPerson変更がある場合、現在の区間の値を変更し、予約された別区間の値は保全する。営業日を越えた新しい保存は409を返して再確認を求める。成功済みの同じ操作は翌日や後続変更後も元の結果を返し、過去の履歴や現在値を再更新しない。
+
+公開Personに未接続の従業員では`profile`が`null`になる。Webの編集入口は対応確認が必要な旨を表示する。存在しない版を指定した保存も409で拒否し、従業員台帳だけを変更しない。既存データの対応関係と有効期間を確認する移行は引き続き必要である。

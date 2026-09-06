@@ -27,5 +27,9 @@ export async function getMe(): Promise<MeResponse> {
 
   const profile = await response.json()
 
-  return { ...profile, permissions: toPermissionKeys(profile.permissions) }
+  return {
+    ...profile,
+    profileCommandId: crypto.randomUUID(),
+    permissions: toPermissionKeys(profile.permissions),
+  }
 }

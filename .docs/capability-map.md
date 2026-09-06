@@ -130,7 +130,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - CollectiveBody、構成員、定足数、決議方式
 - 委任可能性と継続責任主体
 
-現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。版付きresourceを参照するCompany resolverは、在籍、System Account、対象本人の除外、scope、合議規則を同一revisionと時点で評価する。System DecisionTaskへの変換部品もあるが、業務の本番経路への接続は未完成である。経費・稟議の独自承認経路を含め、技術的権限と会社上の判断資格の合成を全業務で保証していない。
+現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。版付きresourceを参照するCompany resolverは、在籍、System Account、対象本人の除外、scope、合議規則を同一revisionと時点で評価する。汎用申請と人事変更申請では、Companyの公開責務・役職・合議体をSystem DecisionTaskへ接続している。経費・稟議の独自承認経路を含め、技術的権限と会社上の判断資格の合成を全業務で保証していない。
 
 ### System との対応
 
@@ -139,7 +139,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - System の Case に対する会社上の判断資格の解決
 - 判断時点の Employment、Membership、ResponsibilityAssignment の snapshot
 
-現行実装にはAccountとEmployeeの対応、期間履歴による在籍・組織資格の参照、版付きresourceによる資格解決がある。Accountに対応する従業員表示と在籍判定は、Companyの従業員一覧と同じ期間snapshotを使う。版付きresourceの資格証拠をSystem Taskへ渡す部品はあるが、既存workflow全体がそれを利用する状態には達していない。Account対応を含む二つの保存先の統合も未完成である。
+現行実装にはAccountとEmployeeの対応、期間履歴による在籍・組織資格の参照、版付きresourceによる資格解決がある。Accountに対応する従業員表示と在籍判定は、Companyの従業員一覧と同じ期間snapshotを使う。版付きresourceの資格証拠は汎用申請と人事変更申請のSystem Taskへ接続済みだが、既存workflow全体がそれを利用する状態には達していない。Account対応を含む二つの保存先の統合も未完成である。
 
 ### 雇用事実と人事発令
 

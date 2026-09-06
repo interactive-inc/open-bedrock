@@ -1,5 +1,7 @@
 "use server"
 
+import { readEmployeeProfileCommand } from "@/lib/form/read-employee-profile-command"
+
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { localeCookieName, zLocale } from "@/lib/i18n/locale"
@@ -51,9 +53,16 @@ export async function updatePhoneAction(
 
   const rawPhone = formData.get("phone")
 
-  const phone = typeof rawPhone === "string" && rawPhone.trim() !== "" ? rawPhone.trim() : null
+  if (typeof rawPhone !== "string") return { ok: false, error: "電話番号の入力を確認してください" }
 
-  const updated = await updateMyPhone(phone)
+  const phone = rawPhone.trim() === "" ? null : rawPhone.trim()
+
+  const command = readEmployeeProfileCommand(formData)
+  if (command instanceof Error) return { ok: false, error: command.message }
+  const updated = await updateMyPhone(
+    { phone, profile: command.profile, reason: command.reason },
+    command.commandId,
+  )
 
   if (updated instanceof Error) {
     return { ok: false, error: updated.message }

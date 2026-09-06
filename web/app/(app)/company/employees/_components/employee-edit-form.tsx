@@ -1,5 +1,7 @@
 "use client"
 
+import { EmployeeProfileFields } from "@/components/employee-profile-fields"
+import type { EmployeeProfileVersion } from "@/lib/api/types/employee-profile-version"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { updateEmployeeAction } from "@/app/(app)/company/employees/actions"
@@ -18,6 +20,8 @@ import { Input } from "@/components/ui/input"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
+  profile: EmployeeProfileVersion | null
+  commandId: string
   code: string
   name: string
 }
@@ -56,6 +60,8 @@ export function EmployeeEditForm(props: Props) {
 
   const isPending = action[2]
 
+  if (props.profile === null) return <p>人物情報の対応確認が完了するまで編集できません。</p>
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button variant="secondary" size="sm" />}>編集</DialogTrigger>
@@ -85,6 +91,12 @@ export function EmployeeEditForm(props: Props) {
                 required
               />
             </Field>
+
+            <EmployeeProfileFields
+              profile={props.profile}
+              commandId={props.commandId}
+              reasonId="employee-name-change-reason"
+            />
 
             {state.error !== null ? (
               <div aria-live="polite">

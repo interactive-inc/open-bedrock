@@ -1,3 +1,4 @@
+import type { EmployeeProfileVersion } from "@/lib/api/types/employee-profile-version"
 import type { PermissionKey } from "@/lib/api/types/permission-key"
 
 /**
@@ -20,6 +21,8 @@ export type RefreshResponse = {
 }
 
 export type MeResponse = {
+  profileCommandId: string
+  profile: EmployeeProfileVersion | null
   id: string
   code: string | null
   name: string
