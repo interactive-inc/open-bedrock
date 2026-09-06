@@ -2,13 +2,23 @@ import { describe, expect, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { Hono } from "hono"
+import { drizzle } from "drizzle-orm/d1"
+import type { CompanyContext } from "@/contexts/company/configuration/company-context"
+import type { PersonnelActionInput } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
+import { DirectPersonnelActionAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/direct-personnel-action.adapter"
+import { PersonnelActionAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action.adapter"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { ResolveLiveEmployeeAccessAdapter } from "@/contexts/company/infrastructure/adapters/employee/resolve-live-employee-access.adapter"
 import { POST as POST_PEOPLE } from "@/contexts/company/interface/routes/company.people"
 import { POST as POST_EMPLOYEES } from "@/contexts/company/interface/routes/company.employees"
-import { POST as POST_EMPLOYMENTS } from "@/contexts/company/interface/routes/company.employments"
+import {
+  GET as GET_EMPLOYMENTS,
+  POST as POST_EMPLOYMENTS,
+} from "@/contexts/company/interface/routes/company.employments"
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
@@ -65,17 +75,19 @@ function fixture() {
     Bindings: { DB: D1Database }
     Variables: { companyActor: CompanyActorValue }
   }>()
-    .use("*", async (c, next) => {
-      c.set("companyActor", actor)
-      await next()
-    })
-    .onError((error, c) => {
-      if (!(error instanceof CompanyHTTPException)) throw error
-      return c.json({ code: error.code }, error.status)
-    })
+  app.use("*", async (c, next) => {
+    c.set("companyActor", actor)
+    await next()
+  })
+  app.onError((error, c) => {
+    if (!(error instanceof CompanyHTTPException)) throw error
+    return c.json({ code: error.code }, error.status)
+  })
+  app
     .post("/company/people", ...POST_PEOPLE)
     .post("/company/employees", ...POST_EMPLOYEES)
     .post("/company/employments", ...POST_EMPLOYMENTS)
+    .get("/company/employments", ...GET_EMPLOYMENTS)
   const write = (
     resource: Resource,
     expectedRevision: number,
@@ -98,6 +110,18 @@ function fixture() {
   const context = (now: string) => ({
     env: { DB: database, COMPANY_TIME_ZONE: "Asia/Tokyo", NOW: now },
   })
+  const lifecycleContext: CompanyContext = {
+    env: context("2026-12-01T00:00:00Z").env,
+    var: {
+      database: drizzle(database),
+      auditContext: {
+        requestId: "00000000-0000-4000-8000-000000000001",
+        clientName: "api",
+        clientIp: null,
+        externalRequestId: null,
+      },
+    },
+  }
   return {
     database,
     write,
@@ -105,6 +129,46 @@ function fixture() {
       new CompanyEmployeeDirectoryReadAdapter(context(now)).findById(employeeId),
     access: (now: string) =>
       new ResolveLiveEmployeeAccessAdapter(context(now)).resolveLiveEmployeeAccess(employeeId),
+    readEmployment: (date: string) =>
+      app.request(
+        `/company/employments?as_of=${date}`,
+        {
+          headers: { "x-company-organization-id": organizationId },
+        },
+        { DB: database },
+      ),
+    listPersonnelActions: () =>
+      new PersonnelActionAdapter(lifecycleContext).listForEmployee({
+        employeeId,
+        from: null,
+        to: null,
+        anchorRowId: Number.MAX_SAFE_INTEGER,
+        position: null,
+        limit: 100,
+      }),
+    applyPersonnelAction: async (input: PersonnelActionInput, key: string) => {
+      const employeeRevision = await database
+        .prepare("SELECT revision FROM company_employee_lifecycle_revisions WHERE employee_id = ?1")
+        .bind(employeeId)
+        .first<number>("revision")
+      const organizationRevision = await database
+        .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
+        .first<number>("revision")
+      if (employeeRevision === null || organizationRevision === null)
+        throw new Error("missing lifecycle revision")
+      return new DirectPersonnelActionAdapter(lifecycleContext).apply({
+        session: {
+          accountId: zAccountId.parse(actor.accountId),
+          employeeId: restoreWorkforceId("employee", "employee:operator"),
+          hasPermission: (permission) => permission === "employee:lifecycle:apply",
+        },
+        employeeId,
+        idempotencyKey: key,
+        expectedEmployeeRevision: employeeRevision,
+        expectedOrganizationRevision: organizationRevision,
+        input,
+      })
+    },
     initialize: async () => {
       expect((await write(person, 0)).status).toBe(201)
       expect((await write(employee, 1)).status).toBe(201)
@@ -114,6 +178,206 @@ function fixture() {
 }
 
 describe("公開Company APIから実際の従業員台帳と在籍判定まで", () => {
+  test("公開APIで作った雇用への人事発令が公開履歴へ戻り、次の公開writeも続けられる", async () => {
+    const f = fixture()
+    await f.initialize()
+    const leave: PersonnelActionInput = {
+      kind: "leave_started",
+      employeeCode: "RESOURCE-001",
+      eventOn: restoreCalendarDate("2027-01-01"),
+    }
+    expect(await f.applyPersonnelAction(leave, "journal:leave")).toMatchObject({ replayed: false })
+    expect(await (await f.readEmployment("2026-12-31")).json()).toMatchObject({
+      resources: [{ attributes: { status: "ACTIVE", employmentType: "FULL_TIME" } }],
+    })
+    expect(await (await f.readEmployment("2027-01-01")).json()).toMatchObject({
+      resources: [{ attributes: { status: "ON_LEAVE" } }],
+    })
+    const rowsBefore = await f.database
+      .prepare("SELECT count(*) AS total FROM company_resource_revisions")
+      .first<number>("total")
+    expect(await f.applyPersonnelAction(leave, "journal:leave")).toMatchObject({ replayed: true })
+    expect(
+      await f.database
+        .prepare("SELECT count(*) AS total FROM company_resource_revisions")
+        .first<number>("total"),
+    ).toBe(rowsBefore)
+    const resourceRevision = await f.database
+      .prepare("SELECT revision FROM company_resource_heads WHERE resource_id = ?1")
+      .bind(employment.id)
+      .first<number>("revision")
+    const organizationRevision = await f.database
+      .prepare("SELECT revision FROM company_organizations WHERE id = ?1")
+      .bind(organizationId)
+      .first<number>("revision")
+    if (resourceRevision === null || organizationRevision === null)
+      throw new Error("missing public revision")
+    expect(
+      (
+        await f.write(
+          { ...employment, revision: resourceRevision + 1, effectiveFrom: "2027-02-01" },
+          organizationRevision,
+        )
+      ).status,
+    ).toBe(201)
+    expect(await f.access("2027-01-15T00:00:00Z")).toMatchObject({ status: "ON_LEAVE" })
+    expect(await f.access("2027-02-15T00:00:00Z")).toMatchObject({ status: "ACTIVE" })
+    const actions = await f.listPersonnelActions()
+    expect(actions).not.toBeInstanceOf(Error)
+    if (actions instanceof Error) throw actions
+    expect(actions.map((action) => action.kind).sort()).toEqual([
+      "employment_revised",
+      "employment_revised",
+      "leave_started",
+    ])
+    expect(actions.every((action) => !action.corrected)).toBe(true)
+  })
+
+  test("休職日の訂正・復職・退職・再入社も公開履歴と同じ日付で解決する", async () => {
+    const f = fixture()
+    await f.initialize()
+    expect(
+      await f.applyPersonnelAction(
+        {
+          kind: "leave_started",
+          employeeCode: "RESOURCE-001",
+          eventOn: restoreCalendarDate("2027-01-01"),
+        },
+        "journal:corrected-leave",
+      ),
+    ).toMatchObject({ replayed: false })
+    const actionId = await f.database
+      .prepare(
+        "SELECT id FROM company_personnel_actions WHERE operation_id = 'journal:corrected-leave'",
+      )
+      .first<string>("id")
+    if (actionId === null) throw new Error("missing leave action")
+    expect(
+      await f.applyPersonnelAction(
+        {
+          kind: "corrected",
+          eventOn: restoreCalendarDate("2026-12-01"),
+          correctsActionId: actionId,
+          reason: "Correct the confirmed leave start",
+          replacementAction: {
+            kind: "leave_started",
+            employeeCode: "RESOURCE-001",
+            eventOn: restoreCalendarDate("2027-01-15"),
+          },
+        },
+        "journal:correct-leave",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(
+      await f.applyPersonnelAction(
+        {
+          kind: "returned",
+          employeeCode: "RESOURCE-001",
+          eventOn: restoreCalendarDate("2027-02-01"),
+        },
+        "journal:return",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(
+      await f.applyPersonnelAction(
+        {
+          kind: "retired",
+          employeeCode: "RESOURCE-001",
+          retirementOn: restoreCalendarDate("2027-03-31"),
+        },
+        "journal:retire",
+      ),
+    ).toMatchObject({ replayed: false })
+    for (const scenario of [
+      { date: "2027-01-01", status: "ACTIVE" },
+      { date: "2027-01-15", status: "ON_LEAVE" },
+      { date: "2027-02-01", status: "ACTIVE" },
+      { date: "2027-04-01", status: "TERMINATED" },
+    ])
+      expect(await (await f.readEmployment(scenario.date)).json()).toMatchObject({
+        resources: [{ attributes: { status: scenario.status } }],
+      })
+    expect(
+      await f.applyPersonnelAction(
+        {
+          kind: "rehire",
+          employeeCode: "RESOURCE-001",
+          eventOn: restoreCalendarDate("2027-06-01"),
+        },
+        "journal:rehire",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(await f.access("2027-05-15T00:00:00Z")).toBeNull()
+    expect(await f.access("2027-06-01T00:00:00Z")).toMatchObject({ status: "ACTIVE" })
+    const current = await f.readEmployment("2027-06-01")
+    expect(current.status).toBe(200)
+    expect(await current.json()).toMatchObject({
+      resources: expect.arrayContaining([
+        expect.objectContaining({ attributes: expect.objectContaining({ status: "ACTIVE" }) }),
+      ]),
+    })
+    expect(await f.listPersonnelActions()).not.toBeInstanceOf(Error)
+  })
+
+  test("人事発令の公開履歴保存が失敗したら、期間・発令・監査も確定しない", async () => {
+    const f = fixture()
+    await f.initialize()
+    const tables = [
+      "company_personnel_actions",
+      "company_employee_status_period_versions",
+      "company_resource_revisions",
+      "company_command_receipts",
+      "system_audit_events",
+    ]
+    const counts = async () =>
+      Promise.all(
+        tables.map((table) =>
+          f.database.prepare(`SELECT count(*) AS total FROM ${table}`).first<number>("total"),
+        ),
+      )
+    const before = await counts()
+    await f.database.exec(
+      "CREATE TRIGGER reject_lifecycle_journal BEFORE INSERT ON company_resource_revisions WHEN NEW.command_id LIKE 'lifecycle:%' BEGIN SELECT RAISE(ABORT, 'injected journal failure'); END;",
+    )
+    const leave: PersonnelActionInput = {
+      kind: "leave_started",
+      employeeCode: "RESOURCE-001",
+      eventOn: restoreCalendarDate("2027-01-01"),
+    }
+    expect(await f.applyPersonnelAction(leave, "journal:rollback")).toBeInstanceOf(Error)
+    expect(await counts()).toEqual(before)
+    expect(await f.access("2027-01-15T00:00:00Z")).toMatchObject({ status: "ACTIVE" })
+    await f.database.exec("DROP TRIGGER reject_lifecycle_journal")
+    expect(await f.applyPersonnelAction(leave, "journal:rollback")).toMatchObject({
+      replayed: false,
+    })
+  })
+
+  test("公開writeと既存人事発令が競合したら一方だけを確定する", async () => {
+    const f = fixture()
+    await f.initialize()
+    const [action, response] = await Promise.all([
+      f.applyPersonnelAction(
+        {
+          kind: "leave_started",
+          employeeCode: "RESOURCE-001",
+          eventOn: restoreCalendarDate("2027-01-01"),
+        },
+        "journal:race",
+      ),
+      f.write({ ...employment, revision: 2, effectiveTo: "2027-01-01" }, 3),
+    ])
+    if (action instanceof Error) {
+      expect(action).toMatchObject({ code: "personnel_action_stale" })
+      expect(response.status).toBe(201)
+      expect(await f.access("2027-01-15T00:00:00Z")).toBeNull()
+    } else {
+      expect(action).toMatchObject({ replayed: false })
+      expect(response.status).toBe(409)
+      expect(await f.access("2027-01-15T00:00:00Z")).toMatchObject({ status: "ON_LEAVE" })
+    }
+  })
+
   test("登録した氏名・従業員番号・雇用が名簿と利用資格へ届き、再送で発令を増やさない", async () => {
     const f = fixture()
     await f.initialize()

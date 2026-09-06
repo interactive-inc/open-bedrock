@@ -22,6 +22,7 @@ export const personnelActionKindSchema = z.enum([
   "retired",
   "corrected",
   "initial_state",
+  "employment_revised",
 ])
 
 export type PersonnelActionKind = z.infer<typeof personnelActionKindSchema>

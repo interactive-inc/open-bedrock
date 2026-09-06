@@ -3,8 +3,7 @@ import { CompanyResourceEntity } from "@/contexts/company/domain/entities/compan
 import type { CompanyResourceType } from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
 import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
-import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
-import { compareCompanyResourcePersistence } from "@/contexts/company/domain/definitions/compare-company-resource-persistence.definition"
+import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import { CompanyWorkforceResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter"
 
@@ -57,14 +56,8 @@ type CompanyCommandReceiptRow = Readonly<{
   organization_revision: number
 }>
 
-const textEncoder = new TextEncoder()
-
 function placeholders(values: ReadonlyArray<unknown>): string {
   return values.map(() => "?").join(", ")
-}
-
-function bytesToHex(bytes: Uint8Array): string {
-  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("")
 }
 
 function toCompanyResource(row: CompanyResourceRow): CompanyResourceEntity | Error {
@@ -213,10 +206,9 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     if (organizationId === undefined) {
       return { kind: "unavailable", cause: new Error("Empty change") }
     }
-    const commandFingerprint = await this.fingerprint(change)
-    if (commandFingerprint instanceof Error) {
-      return { kind: "unavailable", cause: commandFingerprint }
-    }
+    const journal = await new CompanyResourceJournalAdapter(this.c).prepare(change)
+    if (journal instanceof Error) return { kind: "unavailable", cause: journal }
+    const commandFingerprint = journal.fingerprint
 
     const replay = await this.readCommandReceipt(organizationId, change.commandId)
     if (replay !== null) {
@@ -239,96 +231,17 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
           ? cause
           : new Error("failed to prepare Company workforce projection", { cause }),
       )
+    if (projection instanceof Error) {
+      const concurrentRevision = await this.readOrganizationRevision(organizationId)
+      if (concurrentRevision !== change.expectedRevision)
+        return { kind: "conflict", actualRevision: concurrentRevision }
+    }
     if (projection instanceof CompanyResourceValidationError)
       return { kind: "invalid", error: projection }
     if (projection instanceof Error) return { kind: "unavailable", cause: projection }
 
     const organizationRevision = change.expectedRevision + 1
-    const statements: D1PreparedStatement[] = []
-    if (change.expectedRevision === 0) {
-      statements.push(
-        this.c
-          .prepare(
-            "INSERT OR IGNORE INTO company_organizations (id, revision, created_at, updated_at) VALUES (?, 0, ?, ?)",
-          )
-          .bind(organizationId, change.recordedAt, change.recordedAt),
-      )
-    }
-    statements.push(
-      this.c
-        .prepare(
-          `INSERT INTO company_command_receipts
-             (organization_id, command_id, fingerprint, expected_revision, organization_revision, recorded_at)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-        )
-        .bind(
-          organizationId,
-          change.commandId,
-          commandFingerprint,
-          change.expectedRevision,
-          organizationRevision,
-          change.recordedAt,
-        ),
-    )
-
-    for (const resource of change.resources.toSorted(compareCompanyResourcePersistence)) {
-      const attributesJson = CanonicalSystemJsonValue.create(resource.attributes)
-      if (attributesJson instanceof Error) return { kind: "unavailable", cause: attributesJson }
-      const values = [
-        resource.organizationId,
-        resource.type,
-        resource.id,
-        resource.revision,
-        organizationRevision,
-        resource.state,
-        resource.effectiveFrom,
-        resource.effectiveTo,
-        attributesJson.toString(),
-      ] as const
-      statements.push(
-        this.c
-          .prepare(
-            `INSERT INTO company_resource_revisions
-               (organization_id, resource_type, resource_id, revision, organization_revision,
-                state, effective_from, effective_to, attributes_json, command_id,
-                actor_account_id, reason, recorded_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          )
-          .bind(
-            ...values,
-            change.commandId,
-            change.actorAccountId,
-            change.reason,
-            change.recordedAt,
-          ),
-      )
-      statements.push(
-        this.c
-          .prepare(
-            `INSERT INTO company_resource_heads
-               (organization_id, resource_type, resource_id, revision, organization_revision,
-                state, effective_from, effective_to, attributes_json, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-             ON CONFLICT (organization_id, resource_type, resource_id) DO UPDATE SET
-               revision = excluded.revision,
-               organization_revision = excluded.organization_revision,
-               state = excluded.state,
-               effective_from = excluded.effective_from,
-               effective_to = excluded.effective_to,
-               attributes_json = excluded.attributes_json,
-               updated_at = excluded.updated_at`,
-          )
-          .bind(...values, change.recordedAt),
-      )
-    }
-    statements.push(...projection)
-    statements.push(
-      this.c
-        .prepare(
-          "UPDATE company_organizations SET revision = ?, updated_at = ? WHERE id = ? AND revision = ?",
-        )
-        .bind(organizationRevision, change.recordedAt, organizationId, change.expectedRevision),
-    )
+    const statements = [...journal.statements, ...projection, journal.commit]
 
     try {
       await this.c.batch(statements)
@@ -373,27 +286,6 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       cause = cause.cause
     }
     return false
-  }
-
-  private async fingerprint(change: CompanyResourceChangeEntity): Promise<string | Error> {
-    const canonical = CanonicalSystemJsonValue.create({
-      expectedRevision: change.expectedRevision,
-      actorAccountId: change.actorAccountId,
-      reason: change.reason,
-      resources: change.resources.map((resource) => ({
-        organizationId: resource.organizationId,
-        type: resource.type,
-        id: resource.id,
-        revision: resource.revision,
-        state: resource.state,
-        effectiveFrom: resource.effectiveFrom,
-        effectiveTo: resource.effectiveTo,
-        attributes: resource.attributes,
-      })),
-    })
-    if (canonical instanceof Error) return canonical
-    const digest = await crypto.subtle.digest("SHA-256", textEncoder.encode(canonical.toString()))
-    return bytesToHex(new Uint8Array(digest))
   }
 
   private readCommandReceipt(

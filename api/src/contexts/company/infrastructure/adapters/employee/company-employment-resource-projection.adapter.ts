@@ -1,5 +1,6 @@
+import { CompanyEmploymentResourceHistoryAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter"
 import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
-import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
+import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyEmploymentResourceTimelineValue } from "@/contexts/company/domain/values/company-employment-resource-timeline.value"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
@@ -41,7 +42,7 @@ export class CompanyEmploymentResourceProjectionAdapter {
 
   async prepare(props: Props): Promise<ReadonlyArray<D1PreparedStatement> | Error> {
     const resource = props.resource
-    const history = await this.history(resource)
+    const history = await new CompanyEmploymentResourceHistoryAdapter(this.c).read(resource)
     if (history instanceof Error) return history
     const timeline = CompanyEmploymentResourceTimelineValue.create([...history, resource])
     if (timeline instanceof Error) return timeline
@@ -127,19 +128,22 @@ export class CompanyEmploymentResourceProjectionAdapter {
     const actionId = crypto.randomUUID()
     const recordedAt = Math.floor(props.change.recordedAt / 1000)
     const summary = CanonicalSystemJsonValue.create({
-      kind:
-        binding.data === null ? (expectedRevision === 0 ? "initial_state" : "rehire") : "corrected",
+      kind: "employment_revised",
       eventOn: resource.effectiveFrom,
       employeeId: timeline.employeeId,
-      status: timeline.periods[0]?.status ?? "retired",
+      status:
+        resource.state === "void" || resource.readText("status") === "TERMINATED"
+          ? "retired"
+          : resource.readText("status") === "ON_LEAVE"
+            ? "leave"
+            : "active",
       resourceId: resource.id,
       resourceRevision: resource.revision,
       resource: resource.attributes,
       reason: props.change.reason,
     })
     if (summary instanceof Error) return summary
-    const actionKind =
-      binding.data === null ? (expectedRevision === 0 ? "initial_state" : "rehire") : "corrected"
+    const actionKind = "employment_revised"
     const statements: D1PreparedStatement[] = []
     if (revision.data === null && props.revisionOffset === 0) {
       statements.push(
@@ -173,7 +177,7 @@ export class CompanyEmploymentResourceProjectionAdapter {
           resource.effectiveFrom,
           recordedAt,
           props.change.actorAccountId,
-          binding.data?.last_action_id ?? null,
+          null,
           `resource:${props.fingerprint}:${props.change.resources.indexOf(resource)}`,
           props.fingerprint,
           summary.toString(),
@@ -272,48 +276,6 @@ export class CompanyEmploymentResourceProjectionAdapter {
         ),
     )
     return statements
-  }
-
-  private async history(
-    resource: CompanyResourceEntity,
-  ): Promise<ReadonlyArray<CompanyResourceEntity> | Error> {
-    const rows = await this.c
-      .prepare(`SELECT revision, state, effective_from, effective_to, attributes_json
-      FROM company_resource_revisions WHERE organization_id = ?1 AND resource_type = 'employment' AND resource_id = ?2
-      ORDER BY revision`)
-      .bind(resource.organizationId, resource.id)
-      .all()
-    if (!rows.success) return new Error("failed to read employment resource history")
-    const parsed = z
-      .array(
-        z.object({
-          revision: z.number().int().positive(),
-          state: z.enum(["active", "void"]),
-          effective_from: date,
-          effective_to: date.nullable(),
-          attributes_json: z.string(),
-        }),
-      )
-      .safeParse(rows.results)
-    if (!parsed.success) return parsed.error
-    const history: CompanyResourceEntity[] = []
-    for (const row of parsed.data) {
-      const attributes = z.record(z.string(), z.json()).safeParse(JSON.parse(row.attributes_json))
-      if (!attributes.success) return attributes.error
-      const entity = CompanyResourceEntity.create({
-        organizationId: resource.organizationId,
-        type: "employment",
-        id: resource.id,
-        revision: row.revision,
-        state: row.state,
-        effectiveFrom: row.effective_from,
-        effectiveTo: row.effective_to,
-        attributes: attributes.data,
-      })
-      if (entity instanceof Error) return entity
-      history.push(entity)
-    }
-    return history
   }
 
   private async statusStatements(

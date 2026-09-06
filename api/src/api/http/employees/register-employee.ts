@@ -171,7 +171,9 @@ export class RegisterEmployee {
         email: input.email,
       },
     }
-    const companyStatements = new PersonnelActionPersistenceAdapter(company).prepare(persistence)
+    const companyStatements = await new PersonnelActionPersistenceAdapter(company).prepare(
+      persistence,
+    )
     if (companyStatements instanceof CompanyOperationError) {
       return new UnexpectedError("入社発令を保存用に変換できません", {
         cause: companyStatements,

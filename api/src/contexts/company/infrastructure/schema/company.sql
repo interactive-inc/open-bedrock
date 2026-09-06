@@ -673,7 +673,7 @@ CREATE TABLE "company_personnel_actions" (
     'concurrent_assignment_started', 'assignment_ended', 'position_changed',
     'manager_changed', 'department_responsibility_started',
     'department_responsibility_ended', 'leave_started', 'returned', 'retired',
-    'corrected', 'initial_state'
+    'corrected', 'initial_state', 'employment_revised'
   )),
   event_on TEXT NOT NULL CHECK (
     length(event_on) = 10 AND substr(event_on, 5, 1) = '-' AND substr(event_on, 8, 1) = '-'
@@ -865,4 +865,18 @@ BEGIN
         AND (target.ends_on IS NULL OR reference.effective_on < target.ends_on)
     )
   );
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_actions_no_delete;
+CREATE TRIGGER company_personnel_actions_no_delete
+BEFORE DELETE ON company_personnel_actions
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel actions are append only');
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_actions_no_update;
+CREATE TRIGGER company_personnel_actions_no_update
+BEFORE UPDATE ON company_personnel_actions
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel actions are append only');
 END;

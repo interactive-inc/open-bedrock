@@ -21,7 +21,7 @@ const companySql = readFileSync(
   new URL("../../infrastructure/schema/company.sql", import.meta.url),
   "utf8",
 )
-const organizationId = "organization:authority-test"
+const organizationId = "organization:default"
 const asOf = restoreCalendarDate("2026-01-01")
 
 describe("Company authority resolution HTTP", () => {
@@ -68,31 +68,31 @@ describe("Company authority resolution HTTP", () => {
 })
 
 function createApp() {
-  return new Hono<CompanyHttpEnvironment>()
-    .use("*", async (context, next) => {
-      context.set(
-        "companyActor",
-        CompanyActorValue.restore({
-          accountId: "account:active",
-          employeeId: "employee:active",
-          organizationIds: [organizationId],
-          capabilities: ["company:read"],
-        }),
-      )
-      context.set("database", {} as SystemDatabase)
-      context.set("auditContext", {
-        requestId: "authority-test",
-        clientName: "system",
-        clientIp: null,
-        externalRequestId: null,
-      })
-      await next()
+  const app = new Hono<CompanyHttpEnvironment>()
+  app.use("*", async (context, next) => {
+    context.set(
+      "companyActor",
+      CompanyActorValue.restore({
+        accountId: "account:active",
+        employeeId: "employee:active",
+        organizationIds: [organizationId],
+        capabilities: ["company:read"],
+      }),
+    )
+    context.set("database", {} as SystemDatabase)
+    context.set("auditContext", {
+      requestId: "authority-test",
+      clientName: "system",
+      clientIp: null,
+      externalRequestId: null,
     })
-    .onError((error, context) => {
-      if (!(error instanceof CompanyHTTPException)) throw error
-      return context.json({ code: error.code, detail: error.detail }, error.status)
-    })
-    .post("/company/authority-resolutions", ...POST)
+    await next()
+  })
+  app.onError((error, context) => {
+    if (!(error instanceof CompanyHTTPException)) throw error
+    return context.json({ code: error.code, detail: error.detail }, error.status)
+  })
+  return app.post("/company/authority-resolutions", ...POST)
 }
 
 async function seed(database: D1Database): Promise<void> {

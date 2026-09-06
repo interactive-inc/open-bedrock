@@ -96,7 +96,15 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 
 `/company/people`、`/company/employees`、`/company/employments`の新しい登録・変更は、版付きresourceと`company_employees`、`company_employments`、在籍・状態のperiod versionを同じtransactionで保存する。雇用履歴から休職・復職・退職の半開期間を再構成し、actor、理由、commandのdigestを人事記録へ残す。再送では人事記録とperiod revisionを増やさない。
 
-`company_workforce_resource_bindings`はorganization、resourceの版、Employeeの版を固定する。同じIDの別organizationへの流用、所有関係のない既存台帳への上書き、別経路の人事変更でEmployeeの版が進んだ状態への更新を拒否する。既存業務の人事発令から版付きresourceへの逆方向の反映、組織・所属・責務・Account対応の保存先統合は未完成である。
+`company_workforce_resource_bindings`はorganization、resourceの版、Employeeの版を固定する。同じIDの別organizationへの流用、所有関係のない既存台帳への上書き、同期処理を通らずEmployeeの版だけが進んだ状態への更新を拒否する。
+
+公開resourceへ接続済みのEmployeeでは、既存の人事発令による休職・復職・退職・再入社・訂正も雇用resourceへ反映する。訂正後の期間と既存の発効境界を比較し、変更点を次のresource revisionとして追記する。発令、期間、監査、公開履歴、command receiptを一つのtransactionで確定し、Employeeとresourceの版を揃える。公開writeとの同時実行では一方だけを確定する。
+
+一つの発令が複数の発効境界を変える場合、公開側のorganization revisionも複数進む。発令の再送では公開履歴を増やさない。開始日を後ろへ訂正した場合は旧開始日の状態も訂正し、古い在籍期間を復活させない。
+
+公開APIによる雇用改訂は`employment_revised`の人事記録とし、対象resourceとrevision、属性、理由を保持する。通常の復職登録や契約情報の改訂で、前の人事発令を訂正済みにしない。履歴のmigrationは既存の全列とrowidを保全し、追記専用の制約を復元する。
+
+公開resourceに未接続の既存台帳・新規登録、氏名変更の既存writer、組織・所属・責務・Account対応の保存先統合は未完成である。既存の入社・再入社発令で作る新しい契約は`FULL_TIME`を使い、公開APIと同じ契約区分入力への統一は未完成である。
 
 既存業務台帳は単一Companyを所有し、organizationを分離する列を持たない。EmployeeとEmploymentの公開writeは`organization:default`に限定し、別organizationは422で拒否する。複数organizationの従業員を同じ台帳へ混在させる機能は未完成である。
 

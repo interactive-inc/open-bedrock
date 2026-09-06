@@ -22,6 +22,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
 import type { ProposalDigest } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import { SystemD1AuthorizedExecutionAdapter } from "@system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter"
+import { CompanyEmploymentJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/company-employment-journal.adapter"
 
 type CurrentLifecycleProjection = {
   status: "active" | "leave" | "retired"
@@ -498,12 +499,18 @@ export class PersonnelActionPersistenceAdapter {
     Object.freeze(this)
   }
 
-  prepare(props: PersonnelActionPersistenceProps): D1PreparedStatement[] | CompanyOperationError {
-    return preparePersistenceStatements(this.c, props)
+  async prepare(
+    props: PersonnelActionPersistenceProps,
+  ): Promise<D1PreparedStatement[] | CompanyOperationError> {
+    const statements = preparePersistenceStatements(this.c, props)
+    if (statements instanceof CompanyOperationError) return statements
+    const journal = await new CompanyEmploymentJournalAdapter(this.c.env.DB).prepare(props)
+    if (journal instanceof CompanyOperationError) return journal
+    return [...statements, ...journal]
   }
 
   async write(props: PersonnelActionPersistenceProps): Promise<true | CompanyOperationError> {
-    const statements = this.prepare(props)
+    const statements = await this.prepare(props)
     if (statements instanceof CompanyOperationError) return statements
 
     try {
@@ -532,7 +539,7 @@ export class PersonnelActionPersistenceAdapter {
       request: Readonly<{ id: string; applicationId: number }>
     }>,
   ): Promise<true | CompanyOperationError | Error> {
-    const statements = this.prepare(props.persistence)
+    const statements = await this.prepare(props.persistence)
     if (statements instanceof CompanyOperationError) return statements
 
     return new SystemD1AuthorizedExecutionAdapter({

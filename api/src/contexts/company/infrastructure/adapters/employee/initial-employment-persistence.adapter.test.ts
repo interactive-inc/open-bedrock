@@ -8,6 +8,7 @@ import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restor
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
+import { personnelActionSummarySchema } from "@/contexts/company/domain/definitions/personnel-action-summary.definition"
 
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
@@ -81,6 +82,9 @@ describe("新規雇用と初期の期間履歴の原子性", () => {
       [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join(""),
     )
     expect(action.source_type).toBe("system")
+    expect(personnelActionSummarySchema.safeParse(JSON.parse(action.summary_json)).success).toBe(
+      true,
+    )
     expect(JSON.parse(action.summary_json)).toMatchObject({
       status: "active",
       reason: input.reason,
