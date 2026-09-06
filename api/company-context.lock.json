@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "ac3a4b16c87ed03adf6f9f913825364daf292278d74ba1ac88b470511f8df388",
+    "company-context.manifest.json": "9b5f50852fb4474a2bcadd973c69d56803b7144e8e1bc0380228867c3e7daf99",
     "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -271,6 +271,7 @@
     "src/contexts/company/infrastructure/adapters/employee/lib/create-employee-employment-test-database.test-support.ts": "563511dfbcb9edeab54840d4306c0af5baa8b4068aec8b181b7b12f2d8efa8d1",
     "src/contexts/company/infrastructure/adapters/employee/resolve-live-employee-access.adapter.test.ts": "3026952de194fe335c1f80730c023e20a59119250e31cccb453698803e18285b",
     "src/contexts/company/infrastructure/adapters/employee/resolve-live-employee-access.adapter.ts": "7ea6592b4d9515e44766b97665d4fa1c372e07679d936d966169548fda3d011b",
+    "src/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter.ts": "09ea0fb385b152bf2b89cf878882435f70b1be3e03f7e704ba213accd7e60bf7",
     "src/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter.ts": "ec122fcb553992f521767cdaeeac468151426474333cd5dc7d84ac3145adf9df",
     "src/contexts/company/infrastructure/adapters/organization/d1-organization-profile.adapter.ts": "b218c2dfbcf7a50abc736ad68b5b9fe813ef89ee0ef9a2d2919ee8ac75241214",
     "src/contexts/company/infrastructure/adapters/organization/list-managed-employee-ids.adapter.ts": "8c815f62770dca8d6008475a90936d6cb62b5da9939f6c402afa4757a89583ff",
@@ -284,6 +285,7 @@
     "src/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter.ts": "4e14dfd87b6fba491d59feacb130ac025e4de58a7503b6e36283eb1138d5f4bb",
     "src/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter.ts": "13083169ae029a98d00f9d7a5017f04081420839dc4d0f7625c677f14020835f",
     "src/contexts/company/infrastructure/adapters/organization/resolve-organizational-authority-candidates.adapter.ts": "88a67575c8e55627f054cb06776b425e964d3c9a8da929d6bd35326b3d6756bb",
+    "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-authority.adapter.ts": "ce961870a139c58c30f559b610a004695d0c2b6657a722645606f4ec557085f6",
     "src/contexts/company/infrastructure/adapters/organization/validate-employee-active.adapter.ts": "fb3fc3e31a9536b126c3e6efe74c3eb25cd4158f2217f6095bec0c96ce50a240",
     "src/contexts/company/infrastructure/adapters/workforce/account-employee-link-read.adapter.ts": "fd1f581fb1345a7bdbc4f7fc37651aa4cdf5d4dc70e5d86b1d78aef61a7a3337",
     "src/contexts/company/infrastructure/adapters/workforce/employee-lifecycle-workforce.adapter.ts": "91690bc6f3f5e3fb45d10f61be4507e930fe20829ddb9753390b4c34ec5e024e",
@@ -383,6 +385,7 @@
     "src/contexts/company/test/company-domain-structure.contract.test.ts": "de082f69d47d72408fe2121df1e3cd9c8bfdd427759caa0e12800044fb4b4d9f",
     "src/contexts/company/test/company-file-responsibility.contract.test.ts": "dda9b39e57199b214c3bd561ec0a06d631d8244a0bedf45ada0e64fed43cd2f1",
     "src/contexts/company/test/company-personnel-action-migration.contract.test.ts": "9b1a1517337ee8d521e954b7351419dfb26b68bcc47c4218ad92eb32cbd8bbfb",
+    "src/contexts/company/test/company-procedure-authority.integration.test.ts": "acc0f010bd63bf26c703115cab6f9ef4513b37e13ed78b83efc6882385ccec0f",
     "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts": "0ce2af55bed2db882677ecae8851398e87171b21cb51e3ce21f14700130dc462",
     "src/contexts/company/test/company.definition-permissions.api.integration.test.ts": "15f3fdba4edc43217e18bb18fce3143e7ac3ba3ecfb7bb30ee02b3af7c910ff1",
     "src/contexts/company/test/d1-test-database.test-support.ts": "160ffda7e0f331adf5fe95c705ce0d45f0716c4388827cf223e0aab9dc852135",

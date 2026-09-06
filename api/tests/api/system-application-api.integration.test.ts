@@ -9,8 +9,10 @@ import {
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
+import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-import { describe, expect, test } from "bun:test"
+import { describe, expect, spyOn, test } from "bun:test"
+import type { ApplicationWorkflowStep } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 
 const now = "2026-01-01T00:00:00.000Z"
 
@@ -20,8 +22,11 @@ async function token(employeeId: EmployeeId): Promise<string> {
   })
 }
 
-async function createDb(): Promise<D1Database> {
-  const db = await createLifecycleRouteDb()
+async function createDb(
+  options?: Parameters<typeof createLifecycleRouteDb>[0],
+  stepOverrides: Partial<ApplicationWorkflowStep> = {},
+): Promise<D1Database> {
+  const db = await createLifecycleRouteDb(options)
   const policy = createCompanyProcedureDecisionPolicy({
     approverRoles: [],
     workflow: {
@@ -38,6 +43,7 @@ async function createDb(): Promise<D1Database> {
           escalation_approvers: [],
           rejection_behavior: "reject",
           allow_delegation: true,
+          ...stepOverrides,
         },
       ],
     },
@@ -107,6 +113,222 @@ async function submit(db: D1Database, reason: string): Promise<number> {
 }
 
 describe("System application API composition", () => {
+  test("在籍を続けていても、提出後に失った上司資格では承認できない", async () => {
+    const db = await createDb({ subjectAssignmentEndsOn: "2026-01-02" })
+    const number = await submit(db, "Authority must still apply at the decision")
+    const response = await request(
+      db,
+      toWorkforceEmployeeId(1),
+      `/company/application-requests/${number}/approve`,
+      {
+        method: "POST",
+        body: { comment: "Former manager" },
+        at: "2026-01-02T00:00:00.000Z",
+      },
+    )
+    expect(response.status).toBe(403)
+    expect(
+      await db
+        .prepare("SELECT count(*) AS total FROM system_human_attestations")
+        .first<number>("total"),
+    ).toBe(0)
+  })
+  test.each(["approve", "reject"])(
+    "委任元の上司資格が失効した場合は代理判断も拒否する: %s",
+    async (action) => {
+      const db = await createDb({ subjectAssignmentEndsOn: "2026-01-02" })
+      const created = await request(db, toWorkforceEmployeeId(1), "/company/approval-delegations", {
+        method: "POST",
+        body: {
+          delegate_employee_code: "E002",
+          template_code: "system_test_request",
+          starts_at: "2026-01-01T00:00:00.000Z",
+          ends_at: "2026-01-03T00:00:00.000Z",
+        },
+      })
+      expect(created.status).toBe(201)
+      const number = await submit(db, "Delegation does not preserve expired authority")
+      const response = await request(
+        db,
+        toWorkforceEmployeeId(2),
+        `/company/application-requests/${number}/${action}`,
+        {
+          method: "POST",
+          body: { comment: "Delegated decision" },
+          at: "2026-01-02T00:00:00.000Z",
+        },
+      )
+      expect(response.status).toBe(403)
+      expect(
+        await db
+          .prepare("SELECT count(*) AS total FROM system_human_attestations")
+          .first<number>("total"),
+      ).toBe(0)
+    },
+  )
+
+  test("資格が有効な委任元の代理承認は保存できる", async () => {
+    const db = await createDb()
+    expect(
+      (
+        await request(db, toWorkforceEmployeeId(1), "/company/approval-delegations", {
+          method: "POST",
+          body: {
+            delegate_employee_code: "E002",
+            template_code: "system_test_request",
+            starts_at: now,
+            ends_at: "2026-01-03T00:00:00.000Z",
+          },
+        })
+      ).status,
+    ).toBe(201)
+    const number = await submit(db, "Valid delegated approval")
+    expect(
+      (
+        await request(
+          db,
+          toWorkforceEmployeeId(2),
+          `/company/application-requests/${number}/approve`,
+          {
+            method: "POST",
+            body: { comment: null },
+            at: "2026-01-02T00:00:00.000Z",
+          },
+        )
+      ).status,
+    ).toBe(200)
+    expect(
+      await db
+        .prepare("SELECT actor_account_id, represented_account_id FROM system_human_attestations")
+        .first<{ actor_account_id: string; represented_account_id: string }>(),
+    ).toEqual({
+      actor_account_id: "2",
+      represented_account_id: "1",
+    })
+  })
+
+  test("再検査時も提出時の期限を保ち、期限後の追加候補だけを許可する", async () => {
+    const db = await createDb(undefined, {
+      due_days: 1,
+      escalation_approvers: [{ type: "employee", employee_code: "E002" }],
+    })
+    const number = await submit(db, "Escalation keeps its original deadline")
+    const path = `/company/application-requests/${number}/approve`
+    expect(
+      (
+        await request(db, toWorkforceEmployeeId(2), path, {
+          method: "POST",
+          body: { comment: null },
+        })
+      ).status,
+    ).toBe(403)
+    expect(
+      (
+        await request(db, toWorkforceEmployeeId(2), path, {
+          method: "POST",
+          body: { comment: null },
+          at: "2026-01-02T00:00:00.000Z",
+        })
+      ).status,
+    ).toBe(200)
+  })
+
+  test("資格の再検査後に条件の従業員番号が変わると判断全体を取り消す", async () => {
+    const db = await createDb(undefined, {
+      approvers: [{ type: "employee", employee_code: "E001" }],
+    })
+    const number = await submit(db, "Revalidation and persistence must use the same facts")
+    const interception = spyOn(SystemD1WorkflowAdapter.prototype, "decide").mockImplementationOnce(
+      async function (this: SystemD1WorkflowAdapter, input) {
+        interception.mockRestore()
+        await db
+          .prepare("UPDATE company_employees SET employee_code = 'RENAMED' WHERE id = '1'")
+          .run()
+        return this.decide(input)
+      },
+    )
+    try {
+      expect(
+        (
+          await request(
+            db,
+            toWorkforceEmployeeId(1),
+            `/company/application-requests/${number}/approve`,
+            {
+              method: "POST",
+              body: { comment: null },
+            },
+          )
+        ).status,
+      ).toBe(409)
+    } finally {
+      interception.mockRestore()
+    }
+    expect(
+      await db
+        .prepare("SELECT count(*) AS total FROM system_human_attestations")
+        .first<number>("total"),
+    ).toBe(0)
+    expect(await db.prepare("SELECT status FROM system_cases").first<string>("status")).toBe(
+      "pending",
+    )
+    expect(
+      await db.prepare("SELECT outcome FROM system_decision_tasks").first<string>("outcome"),
+    ).toBeNull()
+  })
+
+  test("資格再検査後の休職は組織版が変わらなくても判断を取り消す", async () => {
+    const db = await createDb()
+    const number = await submit(db, "Employment status must stay valid until persistence")
+    const revision = await db
+      .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
+      .first<number>("revision")
+    const interception = spyOn(SystemD1WorkflowAdapter.prototype, "decide").mockImplementationOnce(
+      async function (this: SystemD1WorkflowAdapter, input) {
+        interception.mockRestore()
+        await db
+          .prepare(`INSERT INTO company_employee_status_period_versions
+        (period_id, revision, employment_period_id, employee_id, status, starts_on,
+         ends_on, is_void, recorded_by_action_id, recorded_at)
+        SELECT period_id, revision + 1, employment_period_id, employee_id, 'leave', starts_on,
+          ends_on, is_void, recorded_by_action_id, recorded_at + 1
+        FROM company_employee_status_period_versions WHERE employee_id = '1'`)
+          .run()
+        return this.decide(input)
+      },
+    )
+    try {
+      expect(
+        (
+          await request(
+            db,
+            toWorkforceEmployeeId(1),
+            `/company/application-requests/${number}/approve`,
+            {
+              method: "POST",
+              body: { comment: null },
+            },
+          )
+        ).status,
+      ).toBe(409)
+    } finally {
+      interception.mockRestore()
+    }
+    expect(
+      await db
+        .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
+        .first<number>("revision"),
+    ).toBe(revision)
+    expect(
+      await db
+        .prepare("SELECT count(*) AS total FROM system_human_attestations")
+        .first<number>("total"),
+    ).toBe(0)
+    expect(await db.prepare("SELECT status FROM system_cases").first<string>("status")).toBe(
+      "pending",
+    )
+  })
+
   test("publishes, submits, reads and approves without a request context", async () => {
     const db = await createDb()
     const templates = await request(

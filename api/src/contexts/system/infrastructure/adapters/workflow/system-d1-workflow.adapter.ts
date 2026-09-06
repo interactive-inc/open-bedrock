@@ -49,7 +49,10 @@ type DecisionStateRow = Readonly<{
   case_status: "pending" | "approved" | "rejected" | "returned"
   task_outcome: "pending" | "approved" | "rejected" | "returned"
 }>
-type Context = SystemD1Context
+type Context = SystemD1Context &
+  Readonly<{
+    decisionGuards?: ReadonlyArray<D1PreparedStatement>
+  }>
 
 /** System提案と判断lifecycleをD1 batchで原子的に永続化する。 */
 export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
@@ -304,6 +307,7 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
 
     try {
       const statements: D1PreparedStatement[] = [
+        ...(this.c.decisionGuards ?? []),
         database
           .prepare(
             `INSERT INTO system_human_attestations
