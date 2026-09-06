@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { zCompanyProcedureGovernanceAuthority } from "@/contexts/company/domain/definitions/company-procedure-governance-authority.definition"
 
 const code = z
   .string()
@@ -39,7 +40,8 @@ export const zApplicationWorkflowStep = z
   .object({
     key: code,
     name: z.string().min(1).max(200),
-    approvers: z.array(zWorkflowApproverSelector).min(1).max(20),
+    approvers: z.array(zWorkflowApproverSelector).max(20),
+    governance_authority: zCompanyProcedureGovernanceAuthority.optional(),
     approval_mode: z.enum(["any", "all", "minimum"]).default("any"),
     minimum_approvals: z.number().int().min(1).max(100).optional(),
     condition_mode: z.enum(["all", "any"]).default("all"),
@@ -50,6 +52,22 @@ export const zApplicationWorkflowStep = z
     allow_delegation: z.boolean().default(true),
   })
   .superRefine((step, ctx) => {
+    if (step.governance_authority !== undefined) {
+      if (
+        step.approvers.length !== 0 ||
+        step.escalation_approvers.length !== 0 ||
+        step.approval_mode !== "any" ||
+        step.minimum_approvals !== undefined
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["governance_authority"],
+          message: "governance authority defines its own candidates and quorum",
+        })
+      }
+    } else if (step.approvers.length === 0) {
+      ctx.addIssue({ code: "custom", path: ["approvers"], message: "approvers are required" })
+    }
     if (step.approval_mode === "minimum" && step.minimum_approvals === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

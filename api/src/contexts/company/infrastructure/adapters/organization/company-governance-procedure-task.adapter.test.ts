@@ -1,4 +1,4 @@
-import { CreateCompanyGovernanceProcedureTask } from "@/contexts/company/application/organization/create-company-governance-procedure-task"
+import { CompanyGovernanceProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyGovernanceAuthorityError } from "@/contexts/company/domain/errors"
 import type {
@@ -13,10 +13,10 @@ import { describe, expect, test } from "bun:test"
 
 const openedAt = new Date("2026-01-01T00:00:00.000Z")
 
-describe("CreateCompanyGovernanceProcedureTask", () => {
+describe("CompanyGovernanceProcedureTaskAdapter", () => {
   test("合議体の定足数・成立数・否決・委任方針をSystem Taskへ固定する", async () => {
     const resolution = collectiveResolution()
-    const task = await new CreateCompanyGovernanceProcedureTask().execute({
+    const task = await new CompanyGovernanceProcedureTaskAdapter().prepare({
       resolution,
       criterionIndex: 0,
       taskKey: "governance-review",
@@ -81,7 +81,7 @@ describe("CreateCompanyGovernanceProcedureTask", () => {
       ],
     }
 
-    const task = await new CreateCompanyGovernanceProcedureTask().execute({
+    const task = await new CompanyGovernanceProcedureTaskAdapter().prepare({
       resolution: mixed,
       criterionIndex: 0,
       taskKey: "governance-review",

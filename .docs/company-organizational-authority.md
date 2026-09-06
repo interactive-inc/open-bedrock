@@ -199,12 +199,42 @@ resolver は同じ `asOf` と organization revision に属する active resource
 
 `D1CompanyResourceRepository` は LegalEntity、Site、Workplace、Employee、Employment、OrgUnit、OrganizationalOffice、OfficeAssignment、Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody、CollectiveBodyMembership、AccountEmployeeLink を一つの `asOf` と organization revision へ固定して読む。System Account の状態を読めない場合は候補ゼロへ畳まず unavailable として停止し、Account role を候補資格として読まない。
 
-`CreateCompanyGovernanceProcedureTask` は解決済み Company qualification を System Task の候補証拠へ変換する。個人または役職の責任は一名承認、合議体は参加定足数、必要賛成数、成立不能による否決、代理禁止、差戻し禁止として固定する。異なる assignment、個人資格、合議資格が同じ criterion で混在し意味を一意に決められない場合は Task を作成しない。
+`CompanyGovernanceProcedureTaskAdapter` は解決済み Company qualification を System Task の候補証拠へ変換する。個人または役職の責任は一名承認、合議体は参加定足数、必要賛成数、成立不能による否決、代理禁止、差戻し禁止として固定する。異なる assignment、個人資格、合議資格が同じ criterion で混在し意味を一意に決められない場合は Task を作成しない。
 
-公開 Company resource の resolver は、法人、組織単位、拠点、勤務場所、地域、通貨付き金額の scope を明示型で評価する。ただし、公開 resource の責務・役職・合議体から Task を構成する変換処理は、汎用申請と人事申請の Task 生成には接続されていない。現在の申請は、期間付き組織台帳に対する従業員・上司・部署責任者・責務の条件から候補を解決する。
+公開 Company resource の resolver は、法人、組織単位、拠点、勤務場所、地域、通貨付き金額の scope を明示型で評価する。申請の step に `governance_authority` を指定すると、汎用申請と人事申請の Task 生成は公開 resource の責務・役職・合議体を使う。指定しない step は、期間付き組織台帳に対する従業員・上司・部署責任者・責務の条件を使う。
 
 判断時の Employee 対応と在籍の再検査は Company の公開 resolver を経由し、Account 状態の正本は canonical `system_accounts` である。System HumanAttestation は Company table を直接読まず、API composition が Company の live な主体対応と System の候補資格を合成する。
 
 汎用申請と人事申請の承認・否認・差戻しでは、固定済みの条件を判断時点の Company 営業日で再評価する。代理判断は委任元 Account の資格を確認する。人事申請は発令対象者を資格解決の対象とし、依頼者と発令対象者の除外を維持する。追加候補は保存済み Task の期限以降だけ評価し、再検査の時刻から期限を計算し直さない。
 
-会社上の資格の参照前に組織版、未確定操作、追記専用の期間・人事・対応・公開履歴の件数、条件で参照する従業員番号を固定する。System の判断 batch は同じ状態を再確認してから証言を保存する。途中で状態が変われば HTTP 409 を返し、証言・Task・Case を変更しない。System はこの検査を opaque な SQL statement として受け取り、Company の条件を解釈しない。この検査は現在の申請判断に適用しており、初回 Task の作成や経費・稟議への適用は未完了である。
+会社上の資格の参照前に組織版、未確定操作、追記専用の期間・人事・対応・公開履歴の件数、条件で参照する従業員番号を固定する。System の判断 batch は同じ状態を再確認してから証言を保存する。途中で状態が変われば HTTP 409 を返し、証言・Task・Case を変更しない。System はこの検査を opaque な SQL statement として受け取り、Company の条件を解釈しない。公開Companyの資格を使うTaskでは、候補生成前の状態と候補のAccount対応も固定し、初回・後続Taskの保存と同じbatchで確認する。従来の組織条件による初回Task生成、経費・稟議への適用は未完了である。
+
+## 公開責務を使う手続きの条件
+
+`governance_authority` は既定organizationの責務codeと対象scopeを指定する。金額scopeの `amount_field` は、検証・保存される申請payloadの直接のfield名であり、その数値を評価する。数値以外、負数、欠落、規程の範囲外はTaskを作成しない。
+
+```json
+{
+  "version": 1,
+  "steps": [
+    {
+      "key": "review",
+      "name": "決裁",
+      "approvers": [],
+      "governance_authority": {
+        "organization_id": "organization:default",
+        "responsibility_code": "APPROVE",
+        "scope": { "scope_type": "amount", "currency_code": "JPY", "amount_field": "amount" }
+      }
+    }
+  ]
+}
+```
+
+公開責務と従来の候補・追加候補を一つのstepへ混在させない。`approval_mode` は既定の `any` とし、`minimum_approvals` を指定しない。必要人数はCompanyの合議規程から固定する。stepの `allow_delegation: false` は委任を制限できるが、Companyが禁じた委任を許可することはできない。合議体で差戻しを指定した場合はTaskを生成しない。
+
+候補は公開Employee・Employment・Account対応に加えて、業務台帳のAccount対応と有効な在籍を満たす必要がある。二つの対応が違う場合は候補を代替せず停止する。Agent・Service・ConnectorのPrincipalを人の候補へ含めず、SystemのTask候補・証言の保存時にも機械主体を拒否する。
+
+判断時は同じ責務・申請内容から現在の資格を解決する。Companyの必要参加数・必要賛成数・否決条件・委任・差戻しの規則が保存済みTaskから変わっていれば、そのTaskへの判断を拒否する。過去のTaskと提案は変更しない。
+
+公開責務の設定はAPIまたはworkflowのJSON定義で保存する。基本編集欄はCompanyの合議条件を表示しない。必要人数の正本はCompany規程と保存済みSystem Taskである。

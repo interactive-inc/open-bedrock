@@ -1,3 +1,4 @@
+import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type {
   CompanyGovernanceAuthorityCriterion,
@@ -18,8 +19,8 @@ type Context = Readonly<{
 }>
 
 /** Company resource snapshotとliveなSystem Accountを合成し、会社上の判断資格を固定する。 */
-export class CreateCompanyGovernanceAuthorityResolution {
-  private static readonly authorityResourceTypes = [
+export class CompanyGovernanceAuthorityResolutionAdapter {
+  private static readonly authorityResourceTypes: ReadonlyArray<CompanyResourceEntity["type"]> = [
     "legal-entity",
     "site",
     "workplace",
@@ -34,13 +35,13 @@ export class CreateCompanyGovernanceAuthorityResolution {
     "collective-body",
     "collective-body-membership",
     "account-employee-link",
-  ] as const
+  ]
 
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
-  async execute(
+  async resolve(
     input: Readonly<{
       organizationId: string
       asOf: CalendarDate
@@ -50,7 +51,7 @@ export class CreateCompanyGovernanceAuthorityResolution {
   ): Promise<Result> {
     const read = await this.c.repository.findMany({
       organizationId: input.organizationId,
-      types: CreateCompanyGovernanceAuthorityResolution.authorityResourceTypes,
+      types: CompanyGovernanceAuthorityResolutionAdapter.authorityResourceTypes,
       effectiveOn: input.asOf,
     })
     if (!read.ok) return { kind: "unavailable", cause: read.cause }

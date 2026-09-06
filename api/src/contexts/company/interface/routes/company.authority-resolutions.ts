@@ -1,5 +1,5 @@
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
-import { CreateCompanyGovernanceAuthorityResolution } from "@/contexts/company/application/organization/create-company-governance-authority-resolution"
+import { CompanyGovernanceAuthorityResolutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter"
 import { ResolveActiveSystemAccountIdAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/resolve-active-system-account-id.adapter"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import {
@@ -89,7 +89,7 @@ export const POST = factory.createHandlers(
       throw new CompanyAccessDeniedError()
     }
     const body = context.req.valid("json")
-    const result = await new CreateCompanyGovernanceAuthorityResolution({
+    const result = await new CompanyGovernanceAuthorityResolutionAdapter({
       repository: new D1CompanyResourceRepository(database),
       isAccountActive: async (accountId) => {
         return new ResolveActiveSystemAccountIdAdapter({
@@ -106,7 +106,7 @@ export const POST = factory.createHandlers(
           },
         }).isActiveSystemAccount(accountId)
       },
-    }).execute({
+    }).resolve({
       organizationId,
       asOf: restoreCalendarDate(body.as_of),
       subjectEmployeeId: body.subject_employee_id,
