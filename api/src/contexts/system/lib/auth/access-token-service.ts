@@ -24,7 +24,7 @@ export class AccessTokenService {
   }
 
   async create(
-    input: Readonly<{ accountId: string; tokenVersion: number }>,
+    input: Readonly<{ accountId: string; tokenVersion: number; machineCredentialId?: string }>,
     secret: string,
     now: Date,
   ): Promise<string | Error> {
@@ -42,6 +42,9 @@ export class AccessTokenService {
       jti: crypto.randomUUID(),
       iat: issuedAtSeconds,
       issuedAtMs: issuedAtMilliseconds,
+      ...(input.machineCredentialId === undefined
+        ? {}
+        : { machineCredentialId: input.machineCredentialId }),
       exp: issuedAtSeconds + this.props.profile.maxAgeSeconds,
     })
     if (!claims.success) return new Error("System access token claims are invalid")

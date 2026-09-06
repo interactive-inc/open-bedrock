@@ -2,7 +2,7 @@ import { resolveExternalAccessTokenAccount } from "@/api/http/resolve-external-a
 import type { Bindings } from "@/env"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-access-token-secret.value"
-import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
+import { SystemAccessTokenStateAdapter } from "@system/infrastructure/adapters/auth/system-access-token-state.adapter"
 import { AccessTokenService } from "@system/lib/auth/access-token-service"
 import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/lib/auth/system-access-token-profile"
 
@@ -33,10 +33,14 @@ async function resolveSystemSession(props: {
   const accountId = zAccountId.safeParse(claims.sub)
   if (!accountId.success) return { kind: "rejected", reason: "invalid token" }
 
-  const authentication = await SystemAccountRepository.resolveSession({
-    accountRepository: new SystemAccountRepository({ database: props.env.DB }),
+  const authentication = await new SystemAccessTokenStateAdapter({
+    database: props.env.DB,
+  }).resolve({
     accountId: accountId.data,
-    sessionTokenVersion: claims.ver,
+    tokenVersion: claims.ver,
+    issuedAtMs: claims.issuedAtMs,
+    machineCredentialId: claims.machineCredentialId,
+    at: props.now,
   })
   if (authentication instanceof Error) return { kind: "unavailable" }
   if (authentication.kind === "accepted") {
@@ -69,6 +73,16 @@ export async function resolveBearerAccount(props: {
   if (external.kind === "accepted") {
     const accountId = zAccountId.safeParse(external.accountId)
     if (!accountId.success) return { kind: "rejected", reason: "invalid token" }
+    const authentication = await new SystemAccessTokenStateAdapter({
+      database: props.env.DB,
+    }).resolve({
+      accountId: accountId.data,
+      tokenVersion: external.tokenVersion,
+      issuedAtMs: 0,
+      at: props.now,
+    })
+    if (authentication instanceof Error) return { kind: "unavailable" }
+    if (authentication.kind === "rejected") return { kind: "rejected", reason: "invalid token" }
 
     return {
       kind: "accepted",

@@ -7,15 +7,17 @@ import {
   GET as deliveriesGET,
   POST as deliveriesPOST,
 } from "@system/interface/routes/system.deliveries"
-import { createSystemSessionApplications } from "@system/test/create-system-session-applications.test-support"
+import { POST as machineSessionPOST } from "@system/interface/routes/system.machine-sessions"
+import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { seedSystemStepUpGrant } from "@system/test/seed-system-step-up-grant.test-support"
 import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
+import { z } from "zod"
 
 const accountId = zAccountId.parse("delivery-worker-account")
 const jwtSecret = "system-session-test-jwt-secret"
-const now = new Date("2026-01-01T00:00:00.000Z")
+const now = new Date()
 
 describe("System delivery HTTP", () => {
   test("Service Principalがjobを冪等登録・lease・dead letterへ進める", async () => {
@@ -160,20 +162,24 @@ function seedWorker(fixture: SystemSessionTestContext): void {
 }
 
 async function issueAccessToken(fixture: SystemSessionTestContext): Promise<string | Error> {
-  const applications = createSystemSessionApplications({
-    context: fixture.context,
-    jwtSecret,
-    sessionTtlMilliseconds: 604_800_000,
-  })
-  if (applications instanceof Error) return applications
-  const result = await applications.issue.execute({
-    accountId,
-    tokenVersion: 0,
-    now: new Date(),
-    auditContext: { authorizationJson: null, metadataJson: null },
-  })
-  if (result instanceof Error || result.kind === "rejected") {
-    return result instanceof Error ? result : new Error(result.reason)
-  }
-  return result.accessToken
+  const rawSecret = "1".repeat(64)
+  const hash = await new SystemPrincipalSecretService().hashRawSecret(rawSecret)
+  if (hash instanceof Error) throw hash
+  fixture.sqlite
+    .query(`INSERT INTO system_machine_credentials
+    (id, principal_id, name, secret_hash, status, created_at, updated_at)
+    VALUES ('worker-credential', 'principal:worker', 'Primary', ?1, 'active', ?2, ?2)`)
+    .run(hash, now.getTime())
+  const app = systemFactory.createApp().post("/system/machine-sessions", ...machineSessionPOST)
+  const response = await app.request(
+    "/system/machine-sessions",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ credential_id: "worker-credential", secret: rawSecret }),
+    },
+    { DB: fixture.context.env.DB, JWT_SECRET: jwtSecret, NOW: now.toISOString() },
+  )
+  expect(response.status).toBe(201)
+  return z.object({ access_token: z.string() }).parse(await response.json()).access_token
 }

@@ -7,6 +7,9 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import { createSystemIdentityTestKey } from "@system/test/create-system-identity-test-key.test-support"
 import { describe, expect, test } from "bun:test"
 import { SignJWT } from "jose"
+import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
+import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 const jwtSecret = "verify-bearer-test-secret"
 const identityIssuer = "https://identity-broker.example"
@@ -79,6 +82,41 @@ function externalRequest(props: { db: D1Database; token: string }): Promise<Resp
 }
 
 describe("verifyBearer", () => {
+  test("System機械tokenを通常API入口でも検査し、credential失効後は拒否する", async () => {
+    const db = await createTestDb()
+    const issuedAt = new Date()
+    const rawSecretHash = await new SystemPrincipalSecretService().hashRawSecret("1".repeat(64))
+    if (rawSecretHash instanceof Error) throw rawSecretHash
+    await db
+      .prepare(`INSERT INTO system_principals
+      (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
+      VALUES ('service-5', '5', 'service', 'Automation', NULL, 1, 0, 0)`)
+      .run()
+    await db
+      .prepare(`INSERT INTO system_machine_credentials
+      (id, principal_id, name, secret_hash, status, created_at, updated_at, last_used_at)
+      VALUES ('credential-5', 'service-5', 'Primary', ?1, 'active', 0, ?2, ?2)`)
+      .bind(rawSecretHash, issuedAt.getTime())
+      .run()
+    const token = await new SystemAccessTokenIssuer(jwtSecret).issue({
+      accountId: zAccountId.parse("5"),
+      tokenVersion: 0,
+      machineCredentialId: "credential-5",
+      now: issuedAt,
+    })
+    if (token instanceof Error) throw token
+    const call = () =>
+      requestWithContext({ db, jwtSecret, path: "/company/current-profile", token, now })
+    expect((await call()).status).toBe(200)
+    await db
+      .prepare(
+        "UPDATE system_machine_credentials SET status = 'revoked', revoked_at = updated_at WHERE id = 'credential-5'",
+      )
+      .run()
+    expect((await call()).status).toBe(401)
+    expect((await externalRequest({ db, token: await externalToken() })).status).toBe(401)
+  })
+
   test("外部IdPのresource-bound access tokenを既存Identity bindingへ接続する", async () => {
     const response = await externalRequest({
       db: await createTestDb(),

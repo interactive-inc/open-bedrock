@@ -13,8 +13,16 @@ export const zAccessTokenClaims = z
     jti: z.string().min(1),
     iat: z.number().int().nonnegative(),
     issuedAtMs: z.number().int().nonnegative(),
+    machineCredentialId: z
+      .string()
+      .regex(/^\S{1,255}$/)
+      .optional(),
     exp: z.number().int().positive(),
   })
   .strict()
+  .refine(
+    (claims) => claims.machineCredentialId === undefined || claims.purpose === "api-session",
+    "machine credentials require an API access token",
+  )
 
 export type AccessTokenClaims = z.infer<typeof zAccessTokenClaims>

@@ -11,6 +11,16 @@ export function createSystemAttachmentTestDatabase(): D1Database {
     new URL("../infrastructure/schema/system-attachment.sql", import.meta.url),
     "utf8",
   )
+  const integrationSchema = readFileSync(
+    new URL("../infrastructure/schema/system-integration.sql", import.meta.url),
+    "utf8",
+  )
+  const principalSchema = readFileSync(
+    new URL("../infrastructure/schema/system-principal.sql", import.meta.url),
+    "utf8",
+  )
 
-  return createSystemD1TestDatabase(`${coreSchema}\n${attachmentSchema}`)
+  return createSystemD1TestDatabase(
+    `${coreSchema}\n${integrationSchema}\n${principalSchema}\n${attachmentSchema}`,
+  )
 }
