@@ -1,8 +1,6 @@
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
-import type {
-  EmployeeProfileChangeEntity,
-  EmployeeProfileVersion,
-} from "@/contexts/company/domain/entities/employee-profile-change.entity"
+import type { EmployeeProfileChangeEntity } from "@/contexts/company/domain/entities/employee-profile-change.entity"
+import type { EmployeeProfileVersion } from "@/contexts/company/domain/definitions/employee-profile-version.definition"
 import {
   CompanyConflictError,
   CompanyOperationError,

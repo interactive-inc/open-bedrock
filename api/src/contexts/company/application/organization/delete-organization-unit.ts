@@ -35,7 +35,11 @@ export class DeleteOrganizationUnit {
     code: string
     now: Date
   }): Promise<{ replayed: boolean } | CompanyOperationError> {
-    if (!this.c.actor.hasPermission("org:write")) return new CompanyForbiddenError()
+    if (
+      !this.c.actor.canAccessOrganization("organization:default") ||
+      !this.c.actor.hasPermission("org:write")
+    )
+      return new CompanyForbiddenError()
     let operationId
     try {
       operationId = restoreWorkforceId("personnel_action", input.operationId)

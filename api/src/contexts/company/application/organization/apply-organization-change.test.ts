@@ -10,17 +10,14 @@ const actor = CompanyActorValue.restore({
   capabilities: ["company:write"],
 })
 
-test("ApplyOrganizationChangeはsnapshot readの例外をunavailableへ閉じて適用しない", async () => {
-  let changeCount = 0
+test("ApplyOrganizationChangeは永続化経路の例外をunavailableへ閉じる", async () => {
+  let writeAttempts = 0
   const applyOrganizationChange = new ApplyOrganizationChange({
     actor,
     repository: {
-      findMany: async () => {
-        throw new Error("read unavailable")
-      },
-      write: async () => {
-        changeCount += 1
-        return { kind: "applied", organizationRevision: 1, replayed: false }
+      writeOrganizationChange: async () => {
+        writeAttempts += 1
+        throw new Error("write unavailable")
       },
     },
   })
@@ -49,6 +46,6 @@ test("ApplyOrganizationChangeはsnapshot readの例外をunavailableへ閉じて
     ],
   })
 
-  expect(result).toMatchObject({ kind: "unavailable", cause: { message: "read unavailable" } })
-  expect(changeCount).toBe(0)
+  expect(result).toMatchObject({ kind: "unavailable", cause: { message: "write unavailable" } })
+  expect(writeAttempts).toBe(1)
 })

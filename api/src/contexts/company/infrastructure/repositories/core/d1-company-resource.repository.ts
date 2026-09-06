@@ -1,9 +1,13 @@
+import { validateCompanyOrganizationChange } from "@/contexts/company/domain/policies/company-organization.policy"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import type { CompanyResourceType } from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
 import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
-import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
+import {
+  CompanyResourceJournalAdapter,
+  type PreparedCompanyResourceJournal,
+} from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import { CompanyWorkforceResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter"
 import { drizzle } from "drizzle-orm/d1"
@@ -203,6 +207,19 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
   }
 
   async write(change: CompanyResourceChangeEntity): Promise<CompanyResourceWriteResult> {
+    return this.persist(change, false)
+  }
+
+  async writeOrganizationChange(
+    change: CompanyResourceChangeEntity,
+  ): Promise<CompanyResourceWriteResult> {
+    return this.persist(change, true)
+  }
+
+  private async persist(
+    change: CompanyResourceChangeEntity,
+    isOrganizationChange: boolean,
+  ): Promise<CompanyResourceWriteResult> {
     const organizationId = change.resources[0]?.organizationId
     if (organizationId === undefined) {
       return { kind: "unavailable", cause: new Error("Empty change") }
@@ -221,12 +238,43 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         : { kind: "command_conflict" }
     }
 
+    const written = await this.persistPrepared(change, journal, isOrganizationChange).catch(
+      (cause: unknown): CompanyResourceWriteResult => ({ kind: "unavailable", cause }),
+    )
+    if (written.kind === "applied") return written
+    const concurrentReplay = await this.readCommandReceipt(organizationId, change.commandId)
+    if (concurrentReplay !== null) {
+      return concurrentReplay.fingerprint === commandFingerprint
+        ? {
+            kind: "applied",
+            organizationRevision: concurrentReplay.organization_revision,
+            replayed: true,
+          }
+        : { kind: "command_conflict" }
+    }
+    return written
+  }
+
+  private async persistPrepared(
+    change: CompanyResourceChangeEntity,
+    journal: PreparedCompanyResourceJournal,
+    isOrganizationChange: boolean,
+  ): Promise<CompanyResourceWriteResult> {
+    const organizationId = change.resources[0]?.organizationId
+    if (organizationId === undefined)
+      return { kind: "unavailable", cause: new Error("Empty change") }
+    const commandFingerprint = journal.fingerprint
     const actualRevision = await this.readOrganizationRevision(organizationId)
     if (actualRevision !== change.expectedRevision) {
       return { kind: "conflict", actualRevision }
     }
     const resourceConflict = await this.findResourceConflict(change)
     if (resourceConflict !== null) return resourceConflict
+
+    if (isOrganizationChange) {
+      const invalid = await this.validateOrganization(change)
+      if (invalid !== null) return invalid
+    }
 
     const projection = await new CompanyWorkforceResourceProjectionAdapter(this.c)
       .prepare(change, commandFingerprint)
@@ -251,16 +299,6 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       await this.c.batch(statements)
       return { kind: "applied", organizationRevision, replayed: false }
     } catch (cause) {
-      const concurrentReplay = await this.readCommandReceipt(organizationId, change.commandId)
-      if (concurrentReplay !== null) {
-        return concurrentReplay.fingerprint === commandFingerprint
-          ? {
-              kind: "applied",
-              organizationRevision: concurrentReplay.organization_revision,
-              replayed: true,
-            }
-          : { kind: "command_conflict" }
-      }
       const concurrentRevision = await this.readOrganizationRevision(organizationId)
       if (concurrentRevision !== change.expectedRevision) {
         return { kind: "conflict", actualRevision: concurrentRevision }
@@ -272,6 +310,40 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       }
       return { kind: "unavailable", cause }
     }
+  }
+
+  private async validateOrganization(
+    change: CompanyResourceChangeEntity,
+  ): Promise<CompanyResourceWriteResult | null> {
+    const organizationId = change.resources[0]?.organizationId
+    if (organizationId === undefined)
+      return { kind: "unavailable", cause: new Error("empty organization change") }
+    const types: ReadonlyArray<CompanyResourceType> = [
+      "legal-entity",
+      "site",
+      "workplace",
+      "employee",
+      "employment",
+      "organization-unit",
+      "assignment",
+      "reporting-relation",
+      "position",
+      "organizational-office",
+      "office-assignment",
+      "responsibility",
+      "authority-scope",
+      "responsibility-assignment",
+      "collective-body",
+      "collective-body-membership",
+      "organizational-authority",
+    ]
+    const snapshot = await this.findMany({ organizationId, types })
+    if (!snapshot.ok) return { kind: "unavailable", cause: snapshot.cause }
+    if (snapshot.organizationRevision !== change.expectedRevision)
+      return { kind: "conflict", actualRevision: snapshot.organizationRevision }
+    const error = validateCompanyOrganizationChange(snapshot.resources, change)
+    if (error !== null) return { kind: "invalid", error }
+    return null
   }
 
   private isWorkforceConstraintFailure(cause: unknown): boolean {

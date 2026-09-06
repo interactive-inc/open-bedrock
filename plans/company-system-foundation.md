@@ -61,8 +61,8 @@
 - 機械access tokenを発行元credentialへ接続し、両製品のAPI認証でAccount状態・token版、Principalへの所属、credential失効・期限、Connector停止を再検査する。別credentialの継続、別Accountのcredential拒否、権限失効、発行処理中のAccount・Connector変更を検証済み。発行元のない旧機械tokenは再発行が必要になる
 - 退職発令の確定・再送から既存tokenの認可までを、実際のApplication・DB・業務handlerで検証済み。退職日中は200、翌日は401
 - 新規登録の公開履歴保存失敗ではAccount・従業員・期間も取り消す。登録の再送で公開履歴を増やさず、準備後のCompany版競合は409を返す。会社の版が進んでいる場合は初期化を重ねない
-- 本製品のAPI全体は固定Bun版で3,299件成功。変更前からあるUI生成ファイルのre-export検査1件は失敗する
-- 共有先のCompany・System全体とAccount表示名のcompositionは919件成功、失敗0件。Company 410ファイルとSystem 500ファイル、manifest、lockは完全一致
+- 本製品のAPI全体は固定Bun版で3,311件成功。変更前からあるUI生成ファイルのre-export検査1件は失敗する
+- 共有先のCompany・System全体とAccount表示名のcompositionは931件成功、失敗0件。Company 413ファイルとSystem 500ファイル、manifest、lockは完全一致
 - API・Webと共有先の型検査、共有source・境界検査、変更箇所のformat・lintは成功。本製品の全体lintはエラー0件で、未変更のUI生成ファイルにある警告3件が残る
 - 両製品の実際のAPI入口から、外部identity登録とprovider scope違い・credential失効の拒否を検証済み。本製品では公開Company APIの読取、更新、再送、旧共有キー・人のtokenの拒否、通常Company入口の認証維持も検証済み。旧同期APIと入力契約は置き換わる
 - 218件の新規従業員を一つのbatchで登録し、654件の公開resourceと218件のcommand receiptを保存するSQLiteテストは成功。本番D1での実行時間と資源制限の検証は未完了であり、大規模一括処理の本番実行を保証しない
@@ -102,3 +102,9 @@
 - 移行追加後の本製品API全体は3,299件成功、既存re-export検査1件失敗。CLI全体351件と、API・CLIの型検査、境界・共有source・migration・seed検査は成功した。
 
 - 共有先の移行テスト19件と、Company・System・関連composition全体919件は成功、失敗0件。Company 410ファイル、System 500ファイルと各共有metadataは一致した。本番データへの適用、本番D1の資源制限、履歴不足の既存台帳の修復は未検証・未完了であり、基盤全体の目標は継続する。
+
+- 公開組織変更の成功済み再送が会社版の検査で409になる不具合と、初回receipt照会後に同じ依頼が確定した場合も409になる競合を再現した。組織構造の検査をcommand保存経路へ移し、保存済み結果を先に照合する。検査・保存で失敗した場合も同じcommandの確定結果を確認し、別内容の同じキーと未成功の古い版を区別する。
+
+- 既存の組織一覧・ツリー・詳細・所属者・本人所属と作成・更新・削除に、既定organizationへのアクセス検査を追加した。別organizationの管理権限だけでは参照・変更・成功済み依頼の再送ができない。プロフィール変更も対象organizationを検査する。公開組織resourceと期間台帳、所属・責務・Account対応の統合は引き続き完成条件として残る。
+
+- 組織修正後のAPI全体は3,311件成功・既存re-export検査1件失敗、共有先のCompany・Systemと関連compositionは931件成功した。共有先の境界検査で見つかった既存のプロフィールschemaの配置違反も、入力契約を変えず共通定義へ移して解消した。移動後の人物更新・組織変更・構造契約は本製品45件、共有先37件成功した。

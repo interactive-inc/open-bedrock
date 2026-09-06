@@ -18,7 +18,10 @@ export class UpdateOrganizationProfile {
   async execute(
     value: Readonly<{ name: string; representativeName: string }>,
   ): Promise<OrganizationProfileValue | Error> {
-    if (!this.c.actor.hasCapability("company:write")) {
+    if (
+      !this.c.actor.canAccessOrganization(this.c.organizationId) ||
+      !this.c.actor.hasCapability("company:write")
+    ) {
       return new CompanyForbiddenError()
     }
     const profile = OrganizationProfileValue.create(value)

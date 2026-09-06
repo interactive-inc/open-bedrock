@@ -59,6 +59,8 @@ organization revisionは一つのcommandにつき必ず1増える。resource rev
 
 `Idempotency-Key`はactor、expected revision、理由、全resourceを含むcanonical JSONのSHA-256 fingerprintへ結び付ける。同じkeyと同じcommandの再送は保存済みrevisionを`replayed: true`で返す。同じkeyを異なるcommandへ再利用すると`company_command_conflict`で拒否する。
 
+組織変更でも現在のscopeと操作資格を確認した後、保存済みcommandを現在の会社版や親組織の状態より先に照合する。成功後に親組織が取り消されても、再送は保存済みの結果を返し、組織を復活させない。初回照会の後に同じcommandが確定した場合も、検査・保存の失敗を返す前に保存済み結果を再確認する。未成功のcommandには現在の組織構造と版の検査を適用する。
+
 resource revision、current head、command receipt、organization revisionは一つのD1 atomic batchで保存する。DB triggerもexpected revision、resource revisionの連続性、append-only、receipt不変性を再検査する。
 
 ## 人と雇用の参照整合性
@@ -109,6 +111,8 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 新規Accountの作成・発行と一括登録を合成する製品向けには、同じ初期resourceを既存の登録batchへ組み込むadapterを提供する。一括登録は準備時に会社の版を一度だけ読み、各登録のcommandへ連続した版を割り当てる。別のCompany変更と競合した場合は全登録を取り消し、再試行の際に版を読み直す。
 
 公開resourceに未接続の既存台帳、招待からの登録、製品固有の人物情報writer、組織・所属・責務・Account対応の保存先統合は未完成である。入社・再入社の発令は`employmentType`に`FULL_TIME`または`PART_TIME`を必須とする。新規従業員登録の入力名は`employment_type`である。選択した区分を承認対象の本文、発令記録、業務台帳、公開雇用へ保存する。再入社と訂正で新しく作る契約にも明示した区分を使い、以前の契約の区分を変更しない。
+
+既存の組織一覧・組織ツリー・組織詳細・所属者一覧・本人の所属組織と、組織の作成・更新・削除は既定organizationの台帳を扱う。必要なCompany capabilityまたは操作permissionに加え、`organization:default`へのアクセスを必須とする。別organizationの管理者は参照・変更・成功済み変更の再送を行えない。プロフィール変更も対象organizationへのアクセスを検査する。公開組織resourceとこの台帳の保存経路は、引き続き統合されていない。
 
 雇用区分の欠ける新規入力は400で拒否する。区分を含まない旧提案は、本文やdigestを変更せず承認・実行を409で拒否し、新しい申請を求める。既存の発令履歴に区分がなければ不明のまま参照し、推測して書き足さない。Webの入社・再入社フォームとCLIの`employees register --employment-type`も区分の選択を必須とする。
 
