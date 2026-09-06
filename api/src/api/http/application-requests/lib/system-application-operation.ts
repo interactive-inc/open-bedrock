@@ -12,6 +12,12 @@ import { type CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/p
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
+import {
+  CompanyOperationError,
+  CompanyForbiddenError,
+  CompanyConflictError,
+  CompanyNotFoundError,
+} from "@/contexts/company/domain/errors"
 import { FindPersonnelActionRequestAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/find-personnel-action-request.adapter"
 import type { Context } from "@/env"
 import { canRepairWorkflow } from "@/api/http/application-requests/lib/can-repair-workflow"
@@ -485,7 +491,15 @@ async function completeSystemApplicationIfRequired(
     session,
     completedAt,
   })
-  return completed instanceof ApplicationError ? completed : true
+  if (completed instanceof CompanyForbiddenError)
+    return new ForbiddenError(completed.message, completed.code, { cause: completed })
+  if (completed instanceof CompanyConflictError)
+    return new ConflictError(completed.message, completed.code, { cause: completed })
+  if (completed instanceof CompanyNotFoundError)
+    return new NotFoundError(completed.message, completed.code, { cause: completed })
+  if (completed instanceof CompanyOperationError)
+    return new UnexpectedError(completed.message, { cause: completed })
+  return true
 }
 
 export async function reassignSystemApplicationTask(

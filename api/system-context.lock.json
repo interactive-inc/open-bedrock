@@ -254,6 +254,7 @@
     "src/contexts/system/infrastructure/adapters/workflow/list-system-case-monthly-counts.adapter.ts": "a149c67e694a4f18f36b4006d9349cb0e0d707a01ce6aae514c12e4f567d3551",
     "src/contexts/system/infrastructure/adapters/workflow/prepare-system-procedure-cancellation.adapter.ts": "c139160b587033185e084ddfbfe0bc338e85ce5b41c2917a1eb061154e51fdf6",
     "src/contexts/system/infrastructure/adapters/workflow/read-system-workflow-references.adapter.ts": "20e163b41e5d589dbcc3d50e4c36cf709bc6e4e8a2c2f26d949e38c63978ec75",
+    "src/contexts/system/infrastructure/adapters/workflow/revalidate-system-execution-attestations.adapter.ts": "b18f4591aa065e207806bae3342d34ff020a7f99310f83ba4555d3ac0b6899a2",
     "src/contexts/system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter.ts": "ba723f750bff7435fef3bf10ac561f7213e820b9bda62551876bc1385faaf090",
     "src/contexts/system/infrastructure/adapters/workflow/system-d1-procedure-delegation.adapter.ts": "54563f78b2a46a6555c0abd7d0ba35ca05fe2d96ebc04b51f5e3feddb3de9d9d",
     "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter.ts": "125202616ecfae8f9d46a8c1564a5520b44415b34ef11874e069e630f03a8886",
@@ -496,7 +497,7 @@
     "src/contexts/system/test/system-session-application.integration.test.ts": "263566ccca0b07c7a8c181dff51bbcccebc071013944c464adefd93e7090f927",
     "src/contexts/system/test/system-session-applications.factory.integration.test.ts": "3f933fcf2a01de9db306244a69abe8688d10088e103c06891f5d7bd84a8dc338",
     "src/contexts/system/test/system-session-test-context.test-support.ts": "01b7729e7b5e42797177a4dde35e463df2814620ef41caf015a6792f1196c31d",
-    "src/contexts/system/test/system-workflow-application.integration.test.ts": "042ca3aa5a5f55339f3977734982483364b45a00c6576eaabf62e39bb6b5df37",
+    "src/contexts/system/test/system-workflow-application.integration.test.ts": "8333cf5c03c67838084ff872cf968f680d23d8a181691cd4ba9910723bd9ce44",
     "src/contexts/system/test/wrap-system-d1-test-database.test-support.ts": "b10dad08b7fff13afcf102246cd714917e2c1a1deec26a797aa45c248dce2ee0",
     "system-context.manifest.json": "5aca161c14e95f48b480213fa928831b9c9fb1cc0742e37932691f670d6ecd1c"
   }

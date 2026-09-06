@@ -13,6 +13,7 @@ import { systemCaseIdSchema } from "@system/domain/schemas/workflow/system-case.
 import { proposalDigestSchema } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import { RevalidateSystemExecutionAttestationsAdapter } from "@system/infrastructure/adapters/workflow/revalidate-system-execution-attestations.adapter"
 import { readFileSync } from "node:fs"
 
 const schema = [
@@ -24,6 +25,10 @@ const schema = [
     "utf8",
   ),
   readFileSync(new URL("../infrastructure/schema/system-procedure.sql", import.meta.url), "utf8"),
+  readFileSync(
+    new URL("../infrastructure/schema/system-procedure-delegation.sql", import.meta.url),
+    "utf8",
+  ),
 ].join("\n")
 const evidenceDigest = proposalDigestSchema.parse("b".repeat(64))
 
@@ -119,6 +124,88 @@ function nextTask(
 }
 
 describe("System workflow application", () => {
+  test.each(["delegation", "account", "principal"])(
+    "実行時の証言再検査は失効と確認後の競合を検出する: %s",
+    async (change) => {
+      const fixture = await createFixture()
+      const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
+        seriesId: "execution-series",
+        version: 1,
+        procedureKey: "change",
+        procedureRevision: 1,
+        body: { reason: "Execution evidence" },
+        createdByAccountId: zAccountId.parse("creator"),
+        supersedesProposalId: null,
+        createdAt: new Date(200),
+        firstTask: {
+          key: "review",
+          requiredApprovals: 1,
+          openedAt: new Date(200),
+          dueAt: null,
+          candidates: [candidate("reviewer-1", new Date(200))],
+          excludedAccountIds: [],
+        },
+      })
+      if (started instanceof Error) throw started
+      await fixture.database
+        .prepare(`INSERT INTO system_delegations
+        (id, delegator_account_id, delegate_account_id, scope_context, scope_kind, scope_id, scope_version,
+         starts_at, ends_at, created_at, revoked_at)
+        VALUES ('execution-delegation', 'reviewer-1', 'reviewer-2', NULL, NULL, NULL, NULL, 100, 500, 100, NULL)`)
+        .run()
+      const approved = await new ApproveSystemTask(fixture.writer).execute({
+        caseId: started.workflowCase.id,
+        taskKey: "review",
+        round: 1,
+        actorAccountId: zAccountId.parse("reviewer-2"),
+        representedAccountId: zAccountId.parse("reviewer-1"),
+        delegationId: "execution-delegation",
+        proposalDigest: started.proposal.digest,
+        comment: null,
+        decidedAt: new Date(210),
+        nextTask: null,
+      })
+      expect(approved).toEqual({ caseStatus: "approved", taskOutcome: "approved" })
+      const validator = new RevalidateSystemExecutionAttestationsAdapter({
+        env: { DB: fixture.database },
+      })
+      const input = { caseId: started.workflowCase.id, executedAt: new Date(300) }
+      const before = await validator.prepare(input)
+      if (before instanceof Error) throw before
+      expect(before.attestations).toHaveLength(1)
+      expect(before.tasks[0]?.outcome).toBe("approved")
+      await fixture.database.batch([before.guard])
+      const expired = await validator.prepare({ ...input, executedAt: new Date(500) })
+      if (expired instanceof Error) throw expired
+      expect(expired.attestations).toHaveLength(0)
+      if (change === "delegation") {
+        await fixture.database.exec(
+          "UPDATE system_delegations SET revoked_at = 250 WHERE id = 'execution-delegation'",
+        )
+        await fixture.database.exec(`INSERT INTO system_delegations
+          (id, delegator_account_id, delegate_account_id, scope_context, scope_kind, scope_id, scope_version,
+           starts_at, ends_at, created_at, revoked_at)
+          VALUES ('replacement-delegation', 'reviewer-1', 'reviewer-2', NULL, NULL, NULL, NULL, 260, 500, 260, NULL)`)
+      } else if (change === "account") {
+        await fixture.database.exec(
+          "UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1 WHERE id = 'reviewer-1'",
+        )
+      } else {
+        await fixture.database.exec(`INSERT INTO system_principals
+          (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
+          VALUES ('machine-witness', 'reviewer-2', 'agent', 'Reviewer', NULL, 1, 250, 250)`)
+      }
+      const conflict = await fixture.database.batch([before.guard]).then(
+        () => null,
+        (cause: unknown) => cause,
+      )
+      expect(conflict).toBeInstanceOf(Error)
+      const after = await validator.prepare(input)
+      if (after instanceof Error) throw after
+      expect(after.attestations).toHaveLength(0)
+    },
+  )
+
   test.each(["candidate", "attestation"])(
     "機械Principalは人の候補・証言に使えない: %s",
     async (phase) => {

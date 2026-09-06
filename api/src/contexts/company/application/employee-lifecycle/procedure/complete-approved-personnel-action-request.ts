@@ -4,6 +4,7 @@ import { ResolveActiveSystemAccountIdAdapter } from "@/contexts/company/infrastr
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { PersonnelActionPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter"
+import { RevalidatePersonnelActionExecutionAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/revalidate-personnel-action-execution.adapter"
 import {
   CompanyOperationError,
   CompanyConflictError,
@@ -48,6 +49,13 @@ export class CompleteApprovedPersonnelActionRequest {
     }
     if (request.appliedActionId !== null) return { actionId: request.appliedActionId }
 
+    const executionGuards = await new RevalidatePersonnelActionExecutionAdapter(this.c).prepare({
+      request,
+      session: command.session,
+      executedAt: command.completedAt,
+    })
+    if (executionGuards instanceof CompanyOperationError) return executionGuards
+
     const prepared = await new PersonnelActionCompletionPreparationAdapter(this.c).prepare({
       session: command.session,
       employeeId: request.targetEmployeeId,
@@ -89,6 +97,7 @@ export class CompleteApprovedPersonnelActionRequest {
       authorization,
       proposalDigest: digest.data,
       executedAt: command.completedAt,
+      executionGuards,
       persistence: prepared.persistence,
       request: { id: request.id, applicationId: request.applicationId },
     })
@@ -106,6 +115,7 @@ export class CompleteApprovedPersonnelActionRequest {
       ) {
         return { actionId: replay.appliedActionId }
       }
+      if (executed instanceof CompanyOperationError) return executed
       return new CompanyUnexpectedError("承認済み人事変更を実行できません", { cause: executed })
     }
 
