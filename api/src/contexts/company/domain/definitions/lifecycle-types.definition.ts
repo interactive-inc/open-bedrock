@@ -54,6 +54,7 @@ export type LifecycleErrorCode = z.infer<typeof lifecycleErrorCodeSchema>
 const hireActionSchema = z
   .object({
     kind: z.literal("hire"),
+    employmentType: z.enum(["FULL_TIME", "PART_TIME"]),
     employeeCode: z.string().min(1).max(200),
     employeeName: z.string().min(1).max(200),
     eventOn: z.string().refine(isCalendarDate),
@@ -66,6 +67,7 @@ const hireActionSchema = z
 const rehireActionSchema = z
   .object({
     kind: z.literal("rehire"),
+    employmentType: z.enum(["FULL_TIME", "PART_TIME"]),
     employeeCode: z.string().min(1).max(200),
     eventOn: z.string().refine(isCalendarDate),
     departmentCode: z.string().min(1).max(200).nullable().optional(),
@@ -216,6 +218,7 @@ const correctedActionSchema = z
 const initialStateActionSchema = z
   .object({
     kind: z.literal("initial_state"),
+    employmentType: z.enum(["FULL_TIME", "PART_TIME"]).nullable(),
     employeeCode: z.string().min(1).max(200),
     eventOn: z.string().refine(isCalendarDate),
     initialStatus: z.enum(["active", "leave", "retired"]),

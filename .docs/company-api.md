@@ -108,7 +108,9 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 
 新規Accountの作成・発行と一括登録を合成する製品向けには、同じ初期resourceを既存の登録batchへ組み込むadapterを提供する。一括登録は準備時に会社の版を一度だけ読み、各登録のcommandへ連続した版を割り当てる。別のCompany変更と競合した場合は全登録を取り消し、再試行の際に版を読み直す。
 
-公開resourceに未接続の既存台帳、招待からの登録、氏名変更のその他のwriter、組織・所属・責務・Account対応の保存先統合は未完成である。既存の入社・再入社発令で作る新しい契約は`FULL_TIME`を使い、公開APIと同じ契約区分入力への統一は未完成である。
+公開resourceに未接続の既存台帳、招待からの登録、氏名変更のその他のwriter、組織・所属・責務・Account対応の保存先統合は未完成である。入社・再入社の発令は`employmentType`に`FULL_TIME`または`PART_TIME`を必須とする。新規従業員登録の入力名は`employment_type`である。選択した区分を承認対象の本文、発令記録、業務台帳、公開雇用へ保存する。再入社と訂正で新しく作る契約にも明示した区分を使い、以前の契約の区分を変更しない。
+
+雇用区分の欠ける新規入力は400で拒否する。区分を含まない旧提案は、本文やdigestを変更せず承認・実行を409で拒否し、新しい申請を求める。既存の発令履歴に区分がなければ不明のまま参照し、推測して書き足さない。Webの入社・再入社フォームとCLIの`employees register --employment-type`も区分の選択を必須とする。
 
 既存業務台帳は単一Companyを所有し、organizationを分離する列を持たない。EmployeeとEmploymentの公開writeは`organization:default`に限定し、別organizationは422で拒否する。複数organizationの従業員を同じ台帳へ混在させる機能は未完成である。
 

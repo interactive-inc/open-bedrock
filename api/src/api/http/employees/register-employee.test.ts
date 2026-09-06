@@ -53,6 +53,7 @@ function makeInput(
   return {
     action: {
       kind: "hire",
+      employmentType: "FULL_TIME",
       employeeCode: "E900",
       employeeName: "Registration Test Employee",
       eventOn: restoreCalendarDate("2026-01-01"),

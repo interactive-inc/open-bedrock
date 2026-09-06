@@ -1,5 +1,6 @@
 "use client"
 
+import { EmploymentTypeField } from "@/app/(app)/company/employees/_components/employment-type-field"
 import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
@@ -87,6 +88,8 @@ export function EmployeeCreateForm(props: {
             未来日を指定した場合、入社日までは入社予定としてログインできません。
           </FieldDescription>
         </Field>
+
+        <EmploymentTypeField id="employee-employment-type" isVisible />
 
         <Field>
           <FieldLabel htmlFor="employee-email">メール</FieldLabel>

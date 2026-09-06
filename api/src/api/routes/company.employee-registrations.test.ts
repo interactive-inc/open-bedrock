@@ -15,6 +15,7 @@ const body = {
   password: "correct horse battery staple",
   role: "member" as const,
   hire_on: "2026-01-01",
+  employment_type: "FULL_TIME",
   department_code: null,
   position_code: null,
   manager_employee_code: null,
@@ -28,7 +29,7 @@ async function createTestDb(): Promise<D1Database> {
 
 async function post(
   db: D1Database,
-  requestBody: typeof body,
+  requestBody: unknown,
   key: string | null = idempotencyKey,
 ): Promise<Response> {
   return requestWithContext({
@@ -51,6 +52,35 @@ async function count(db: D1Database, table: string, where: string): Promise<numb
 }
 
 describe("POST /company/employee-registrations", () => {
+  test("明示した短時間勤務の契約を台帳と公開雇用へ保存する", async () => {
+    const db = await createTestDb()
+    const created = await post(db, { ...body, employment_type: "PART_TIME" })
+    expect(created.status).toBe(201)
+    expect((await post(db, { ...body, employment_type: "PART_TIME" })).status).toBe(200)
+    expect((await post(db, { ...body, employment_type: "FULL_TIME" })).status).toBe(409)
+    const contract = await db
+      .prepare(`SELECT employment.id, employment.employment_type
+      FROM company_employments AS employment JOIN company_employees AS employee
+      ON employee.id = employment.employee_id WHERE employee.employee_code = 'E100'`)
+      .first()
+    expect(contract).toMatchObject({ employment_type: "PART_TIME" })
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/company/employments?effective_on=2026-01-01",
+      token: await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) }),
+      headers: { "x-company-organization-id": "organization:default" },
+    })
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      resources: expect.arrayContaining([
+        expect.objectContaining({
+          attributes: expect.objectContaining({ employmentType: "PART_TIME" }),
+        }),
+      ]),
+    })
+  })
+
   test("creates the Company employee and System identity once, then replays the same command", async () => {
     const db = await createTestDb()
 
@@ -90,6 +120,16 @@ describe("POST /company/employee-registrations", () => {
       ],
     })
     expect(await count(db, "company_resource_revisions", `resource_id = '${employeeId}'`)).toBe(1)
+  })
+
+  test("雇用区分が欠落・不正ならAccountも従業員も作らない", async () => {
+    const db = await createTestDb()
+    const before = await count(db, "system_accounts", "1 = 1")
+    for (const employment_type of [undefined, null, "UNKNOWN"]) {
+      expect((await post(db, { ...body, employment_type })).status).toBe(400)
+    }
+    expect(await count(db, "system_accounts", "1 = 1")).toBe(before)
+    expect(await count(db, "company_employees", "employee_code = 'E100'")).toBe(0)
   })
 
   test("公開正本の失敗時はAccountと従業員を残さず、同じkeyで再試行できる", async () => {

@@ -98,6 +98,10 @@ export async function createEmployeeAction(
   const role = toRole(formData.get("role"))
 
   const hireOn = toRequiredIsoDate(formData.get("hire_on"), "入社日")
+  const employmentType = formData.get("employment_type")
+  if (employmentType !== "FULL_TIME" && employmentType !== "PART_TIME") {
+    return { ok: false, error: "雇用区分を選択してください" }
+  }
 
   if (role === null) {
     errors.push("ロールを入力してください")
@@ -151,6 +155,7 @@ export async function createEmployeeAction(
     password: password as string,
     role: role as EmployeeRole,
     hire_on: hireOn as string,
+    employment_type: employmentType,
     department_code: departmentCode as string | null,
     position_code: positionCode as string | null,
     manager_employee_code: managerEmployeeCode as string | null,

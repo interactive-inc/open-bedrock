@@ -26,6 +26,7 @@ const assignmentTargetFields = {
 }
 const hire = z.strictObject({
   kind: z.literal("hire"),
+  employmentType: z.enum(["FULL_TIME", "PART_TIME"]),
   employeeCode: code,
   employeeName: z.string().trim().min(1).max(200),
   eventOn: date,
@@ -35,6 +36,7 @@ const hire = z.strictObject({
 })
 const rehire = z.strictObject({
   kind: z.literal("rehire"),
+  employmentType: z.enum(["FULL_TIME", "PART_TIME"]),
   ...eventFields,
   departmentCode: code.nullable().optional(),
   positionCode: code.nullable().optional(),

@@ -187,6 +187,7 @@
     "src/contexts/company/domain/policies/organizational-authority.policy.ts",
     "src/contexts/company/domain/policies/parse-company-procedure-decision.policy.ts",
     "src/contexts/company/domain/policies/period-contains-period.policy.ts",
+    "src/contexts/company/domain/policies/project-personnel-action.policy.test.ts",
     "src/contexts/company/domain/policies/project-personnel-action.policy.ts",
     "src/contexts/company/domain/policies/replace-organization-change-periods.policy.ts",
     "src/contexts/company/domain/policies/resolve-employee-management-authority.policy.ts",

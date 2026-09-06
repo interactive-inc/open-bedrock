@@ -30,8 +30,12 @@ function buildAction(form: FormData): Record<string, unknown> | Error {
   if (kind === "retired") return { kind, employeeCode, retirementOn: eventOn }
   const base = { kind, employeeCode, eventOn }
   if (kind === "rehire") {
+    const employmentType = text(form, "employment_type")
+    if (employmentType !== "FULL_TIME" && employmentType !== "PART_TIME")
+      return new Error("雇用区分を選択してください")
     return {
       ...base,
+      employmentType,
       departmentCode: text(form, "department_code"),
       positionCode: text(form, "position_code"),
       managerEmployeeCode: text(form, "manager_employee_code"),

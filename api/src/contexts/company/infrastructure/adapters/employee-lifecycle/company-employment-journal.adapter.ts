@@ -63,6 +63,8 @@ export class CompanyEmploymentJournalAdapter {
         if (employments.data.length > 0)
           return new CompanyUnexpectedError("公開雇用のEmployee対応が欠けています")
         if (props.prospectiveEmployee !== undefined) {
+          if (props.projection.newEmploymentType === null)
+            return new CompanyUnexpectedError("新規雇用の区分がありません")
           const period = props.projection.schedule.employments[0]
           if (period === undefined || props.projection.schedule.employments.length !== 1)
             return new CompanyUnexpectedError("新規従業員の雇用期間が不正です")
@@ -76,7 +78,7 @@ export class CompanyEmploymentJournalAdapter {
             employeeCode: props.prospectiveEmployee.code,
             email: props.prospectiveEmployee.email ?? null,
             phone: null,
-            employmentType: "FULL_TIME",
+            employmentType: props.projection.newEmploymentType,
             status: "active",
             effectiveOn: restoreCalendarDate(period.startsOn),
             occurredAt: new Date(props.action.recordedAt * 1000),
@@ -172,10 +174,12 @@ export class CompanyEmploymentJournalAdapter {
           history,
           employment: period,
           statuses: props.projection.schedule.statuses,
-          // 新規雇用の契約区分は同じ人事発令の永続化規則に一致させる。
+          // 既存契約の属性は履歴から保全し、新規契約だけ確認済みの区分を使う。
           initialAttributes: {
             employeeId: props.action.employeeId,
-            employmentType: "FULL_TIME",
+            ...(props.projection.newEmploymentType === null
+              ? {}
+              : { employmentType: props.projection.newEmploymentType }),
             status: "ACTIVE",
           },
         })

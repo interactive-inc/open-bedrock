@@ -27,7 +27,10 @@ import {
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 
+import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
+
 export type PersonnelActionProjection = {
+  newEmploymentType: EmploymentType | null
   schedule: LifecycleSchedule
   mutations: ReadonlyArray<LifecycleVersionMutation>
   summary: PersonnelActionSummary
@@ -290,6 +293,7 @@ function projectHireOrRehire(
     positionTitle: input.positionTitle ?? null,
     managerEmployeeCode: input.managerEmployeeCode ?? null,
     status: "active",
+    employmentType: input.employmentType,
   })
 }
 
@@ -639,6 +643,7 @@ function projectInitialState(
   let snapshot: { code: string; name: string } | null = null
 
   if (input.initialStatus !== "retired") {
+    if (input.employmentType === null) return transitionError("有効な初期雇用の区分が必要です")
     const employment = addEmployment(context, input.eventOn)
     addStatus(context, employment, input.initialStatus, input.eventOn)
 
@@ -779,7 +784,10 @@ export function projectPersonnelAction(
     return validationError
   }
 
+  const effectiveInput =
+    parsed.data.kind === "corrected" ? parsed.data.replacementAction : parsed.data
   return {
+    newEmploymentType: "employmentType" in effectiveInput ? effectiveInput.employmentType : null,
     schedule: context.schedule,
     mutations: context.mutations,
     summary,

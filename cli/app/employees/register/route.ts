@@ -5,7 +5,7 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { readSecretStdin } from "@/lib/input/read-secret-stdin"
 
-export const help = `bedrock employees register --code <c> --name <n> --hire-on <YYYY-MM-DD> --email <e> --role <r> --password-stdin [--department-code <c>] [--position-code <c>] [--manager-employee-code <c>]
+export const help = `bedrock employees register --code <c> --name <n> --hire-on <YYYY-MM-DD> --employment-type <FULL_TIME|PART_TIME> --email <e> --role <r> --password-stdin [--idempotency-key <uuid>] [--department-code <c>] [--position-code <c>] [--manager-employee-code <c>]
 
 役職は役職マスタの code を指定してください（自由入力ではありません）。
 初期パスワードはコマンド引数に含めず、標準入力から渡してください。`
@@ -19,6 +19,8 @@ export default factory.createHandlers(
       name: z.string().optional(),
       email: z.string().optional(),
       "password-stdin": z.string().optional(),
+      "idempotency-key": z.string().uuid().optional(),
+      "employment-type": z.enum(["FULL_TIME", "PART_TIME"]).optional(),
       role: z.enum(["member", "manager", "hr", "root"]).optional(),
       "hire-on": z
         .string()
@@ -40,10 +42,11 @@ export default factory.createHandlers(
       !query.email ||
       !query.role ||
       !query["hire-on"] ||
+      !query["employment-type"] ||
       !query["password-stdin"]
     )
       throw new UsageError(
-        "--code, --name, --hire-on, --email, --role, --password-stdin が必要です",
+        "--code, --name, --hire-on, --employment-type, --email, --role, --password-stdin が必要です",
       )
 
     const password = await readSecretStdin()
@@ -55,6 +58,7 @@ export default factory.createHandlers(
       password,
       role: query.role,
       hire_on: query["hire-on"],
+      employment_type: query["employment-type"],
       department_code: query["department-code"] ?? null,
       position_code: query["position-code"] ?? null,
       manager_employee_code: query["manager-employee-code"] ?? null,
@@ -62,7 +66,10 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.company["employee-registrations"].$post({ json: payload })
+    const response = await client.company["employee-registrations"].$post(
+      { json: payload },
+      { headers: { "Idempotency-Key": query["idempotency-key"] ?? crypto.randomUUID() } },
+    )
 
     return c.json(await response.json())
   },
