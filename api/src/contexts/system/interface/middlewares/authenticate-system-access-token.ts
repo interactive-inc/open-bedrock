@@ -4,7 +4,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-access-token-secret.value"
 import { AccessTokenService } from "@system/lib/auth/access-token-service"
 import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/lib/auth/system-access-token-profile"
-import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
+import { SystemAccessTokenStateAdapter } from "@system/infrastructure/adapters/auth/system-access-token-state.adapter"
 import { SystemD1AuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-authorization.adapter"
 import { readBearerAuthorization } from "@system/interface/authorization/lib/bearer-authorization"
 
@@ -38,10 +38,14 @@ export const authenticateSystemAccessToken = systemFactory.createMiddleware(
       throw new SystemInvalidSessionError()
     }
 
-    const accountSession = await SystemAccountRepository.resolveSession({
-      accountRepository: new SystemAccountRepository({ database: context.env.DB }),
+    const accountSession = await new SystemAccessTokenStateAdapter({
+      database: context.env.DB,
+    }).resolve({
       accountId: accountId.data,
-      sessionTokenVersion: claims.ver,
+      tokenVersion: claims.ver,
+      issuedAtMs: claims.issuedAtMs,
+      machineCredentialId: claims.machineCredentialId,
+      at: now,
     })
     if (accountSession instanceof Error) {
       throw new SystemSessionUnavailableError()

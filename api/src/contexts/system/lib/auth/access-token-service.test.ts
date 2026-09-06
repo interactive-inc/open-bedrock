@@ -11,6 +11,27 @@ const profile = Object.freeze({
 }) satisfies AccessTokenProfile
 
 describe("AccessTokenService", () => {
+  test("機械credentialの来歴を署名し、web・mobile用途への混入を拒否する", async () => {
+    const input = { accountId: "account-1", tokenVersion: 0, machineCredentialId: "credential-1" }
+    const service = new AccessTokenService({ profile })
+    const token = await service.create(input, secret, now)
+    if (token instanceof Error) throw token
+    expect(await service.verify(token, secret, now)).toMatchObject({
+      machineCredentialId: "credential-1",
+    })
+    for (const purpose of ["web-session", "mobile-session"] satisfies Array<
+      AccessTokenProfile["purpose"]
+    >) {
+      expect(
+        await new AccessTokenService({ profile: { ...profile, purpose } }).create(
+          input,
+          secret,
+          now,
+        ),
+      ).toBeInstanceOf(Error)
+    }
+  })
+
   test("Accountだけを主体にして固定profileの短命tokenを往復する", async () => {
     const service = new AccessTokenService({ profile })
     const token = await service.create({ accountId: "account-1", tokenVersion: 7 }, secret, now)

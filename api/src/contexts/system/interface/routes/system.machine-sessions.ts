@@ -93,6 +93,7 @@ export const POST = factory.createHandlers(
     const accessToken = await new SystemAccessTokenIssuer(context.env.JWT_SECRET ?? "").issue({
       accountId: authentication.accountId,
       tokenVersion: authentication.tokenVersion,
+      machineCredentialId: authentication.credentialId,
       now,
     })
     if (accessToken instanceof Error) throw new SystemPrincipalUnavailableError(accessToken)

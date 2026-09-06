@@ -25,7 +25,12 @@ type AuthenticationRow = CredentialRow &
   }>
 
 export type SystemMachineAuthentication =
-  | Readonly<{ kind: "authenticated"; accountId: AccountId; tokenVersion: number }>
+  | Readonly<{
+      kind: "authenticated"
+      accountId: AccountId
+      tokenVersion: number
+      credentialId: string
+    }>
   | Readonly<{ kind: "rejected" }>
 
 type Context = SystemD1Context
@@ -131,6 +136,9 @@ export class SystemMachineCredentialRepository {
       if (
         row === null ||
         row.account_status !== "active" ||
+        !["agent", "service", "connector"].includes(row.principal_kind) ||
+        !Number.isSafeInteger(row.token_version) ||
+        row.token_version < 0 ||
         (row.principal_kind === "connector" && row.connector_status !== "active")
       ) {
         return Object.freeze({ kind: "rejected" as const })
@@ -149,8 +157,24 @@ export class SystemMachineCredentialRepository {
           `UPDATE system_machine_credentials
            SET updated_at = ?2, last_used_at = ?2
            WHERE id = ?1 AND status = 'active' AND updated_at = ?3
-             AND (expires_at IS NULL OR expires_at > ?2)`,
-        ).bind(credential.id, now.getTime(), credential.updatedAt.getTime()),
+             AND created_at <= ?2 AND (expires_at IS NULL OR expires_at > ?2)
+             AND EXISTS (
+               SELECT 1 FROM system_principals AS principal
+               INNER JOIN system_accounts AS account ON account.id = principal.account_id
+               LEFT JOIN system_connectors AS connector ON connector.id = principal.connector_id
+               WHERE principal.id = system_machine_credentials.principal_id
+                 AND principal.account_id = ?4 AND account.status = 'active'
+                 AND account.token_version = ?5
+                 AND principal.kind IN ('agent', 'service', 'connector')
+                 AND (principal.kind <> 'connector' OR connector.status = 'active')
+             )`,
+        ).bind(
+          credential.id,
+          now.getTime(),
+          credential.updatedAt.getTime(),
+          accountId.data,
+          row.token_version,
+        ),
         this.c.env.DB.prepare(
           "SELECT CASE WHEN changes() = 1 THEN 1 ELSE abs(-9223372036854775808) END AS ok",
         ),
@@ -164,6 +188,7 @@ export class SystemMachineCredentialRepository {
         kind: "authenticated" as const,
         accountId: accountId.data,
         tokenVersion: row.token_version,
+        credentialId: credential.id,
       })
     } catch (caught) {
       if (caught instanceof Error && caught.message.includes("integer overflow")) {

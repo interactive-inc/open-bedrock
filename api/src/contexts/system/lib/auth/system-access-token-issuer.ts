@@ -6,6 +6,7 @@ import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/lib/auth/system-access-toke
 type Props = Readonly<{
   accountId: AccountId
   tokenVersion: number
+  machineCredentialId?: string
   now: Date
 }>
 
@@ -20,7 +21,11 @@ export class SystemAccessTokenIssuer {
     if (!(accessTokenSecret instanceof SystemAccessTokenSecretValue)) return accessTokenSecret
 
     return new AccessTokenService({ profile: SYSTEM_ACCESS_TOKEN_PROFILE }).create(
-      { accountId: String(input.accountId), tokenVersion: input.tokenVersion },
+      {
+        accountId: String(input.accountId),
+        tokenVersion: input.tokenVersion,
+        machineCredentialId: input.machineCredentialId,
+      },
       accessTokenSecret.toString(),
       input.now,
     )
