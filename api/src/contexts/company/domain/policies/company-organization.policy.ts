@@ -1,4 +1,5 @@
 import { periodsContainPeriod } from "@/contexts/company/domain/definitions/periods-contain-period.definition"
+import { hasManagementCycle } from "@/contexts/company/domain/definitions/has-management-cycle.definition"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { OrganizationStructureValue } from "@/contexts/company/domain/values/organization-structure.value"
@@ -47,22 +48,15 @@ function relationsHaveManagementCycle(
   relations: ReadonlyArray<OrganizationRelation>,
   date: string,
 ): boolean {
-  const managerByEmployee = new Map<string, string>()
+  const managersByEmployee = new Map<string, string[]>()
   for (const relation of relations) {
     if (relation.startsOn <= date && (relation.endsOn === null || date < relation.endsOn)) {
-      managerByEmployee.set(relation.employeeId, relation.managerEmployeeId)
+      const managers = managersByEmployee.get(relation.employeeId) ?? []
+      managers.push(relation.managerEmployeeId)
+      managersByEmployee.set(relation.employeeId, managers)
     }
   }
-  for (const employeeId of managerByEmployee.keys()) {
-    const visited = new Set<string>()
-    let current: string | undefined = employeeId
-    while (current !== undefined) {
-      if (visited.has(current)) return true
-      visited.add(current)
-      current = managerByEmployee.get(current)
-    }
-  }
-  return false
+  return hasManagementCycle(managersByEmployee)
 }
 
 /** Generic Company resourcesの変更後全体を、組織・配属・指揮命令・権限の横断規則で検証する。 */
