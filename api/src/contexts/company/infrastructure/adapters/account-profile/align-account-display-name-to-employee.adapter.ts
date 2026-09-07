@@ -2,7 +2,6 @@ import { accountEmployeeLinks } from "@/contexts/company/infrastructure/schema/e
 import { companyAccountProfiles } from "@/contexts/company/infrastructure/schema/company"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { and, eq, inArray } from "drizzle-orm"
-import type { BatchItem } from "drizzle-orm/batch"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 
 /** Companyの既定organization。 */
@@ -43,7 +42,7 @@ export class AlignAccountDisplayNameToEmployeeAdapter {
    * ここで正規化を挟むと DB の CHECK を通る値どうしでズレを作れてしまう。正規化は書き込み境界
    * （職員詳細 PUT・従業員名簿 PUT・アカウント発行）の zod / NameValue が済ませている前提とする。
    */
-  buildAlignment(props: Props): BatchItem<"sqlite"> {
+  buildAlignment(props: Props) {
     return this.c
       .update(companyAccountProfiles)
       .set({ displayName: props.officialName, updatedAt: props.now.getTime() })

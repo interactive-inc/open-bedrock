@@ -294,6 +294,8 @@
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/revalidate-personnel-action-execution.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-snapshot.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-resource-adoption/lib/employee-resource-adoption-snapshot-sql.ts",
+    "src/contexts/company/infrastructure/adapters/employee/additional-employment-persistence.adapter.test.ts",
+    "src/contexts/company/infrastructure/adapters/employee/additional-employment-persistence.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/company-employment-resource-projection.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter.ts",

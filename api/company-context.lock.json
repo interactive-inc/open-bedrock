@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "c795f944cc1eb2fa9a4ed2193c4b64b85c934853aaa9c171cde219bf351e9482",
+    "company-context.manifest.json": "186b72dfb95966ccf041f789babd3783d65abc4a8eff7bf5c016be51ad17fe9a",
     "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -269,7 +269,7 @@
     "src/contexts/company/domain/values/workforce-invariant-violation.value.ts": "6c7dadcaa6510818098c4bf728882d5d345a6a523184c136c07b65d37a2eb64c",
     "src/contexts/company/domain/values/workforce-state.value.test.ts": "c450a264d29dafb33e180dde25b214cd8cf6c58457d1b798ad06b2d2d1612b19",
     "src/contexts/company/domain/values/workforce-state.value.ts": "0ea0702522d193daf97f039656410288750711a3d349bab5433607191915d8a2",
-    "src/contexts/company/infrastructure/adapters/account-profile/align-account-display-name-to-employee.adapter.ts": "c486a4e264fe56cc92275606b53185a460adc918f47fbf35fd3169df1efe819c",
+    "src/contexts/company/infrastructure/adapters/account-profile/align-account-display-name-to-employee.adapter.ts": "79eea7a4d2f1115e241cd2bb6507430d6f2ce9ca2f510b22981c140bca841891",
     "src/contexts/company/infrastructure/adapters/account-profile/company-account-profile-rename-guard.adapter.test.ts": "8187144819fb94f5a639ea92899297c5f32878e2f9010acfd6ff0e7a90809995",
     "src/contexts/company/infrastructure/adapters/account-profile/company-account-profile-rename-guard.adapter.ts": "59587df0f0ba1fe8cec6bd5742520c7150beefe68166fca0ee4715e9a98dbfe1",
     "src/contexts/company/infrastructure/adapters/account-profile/read-company-account-display-names.adapter.ts": "8475422d8d90c4d3ba3c9b8d6a87237372e8275fcf5b37434810b76572bcee85",
@@ -294,6 +294,8 @@
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/revalidate-personnel-action-execution.adapter.ts": "666233a981e2a05d689d05048c5e7b521528aa6fc4bdd1b845126e164cd7d9fb",
     "src/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-snapshot.adapter.ts": "adf3dda5b529a8b144567cf16980cd5eb4ddfe4faf46543700781783e440c3d2",
     "src/contexts/company/infrastructure/adapters/employee-resource-adoption/lib/employee-resource-adoption-snapshot-sql.ts": "f895f0459ac50b1b18cd69a65cf15463164560e2d11059c1267ce7bb9fc7e45d",
+    "src/contexts/company/infrastructure/adapters/employee/additional-employment-persistence.adapter.test.ts": "db2a9d7a2436a14f77d8c0bf730256027c81bb9eb1ed960217a8d06562420e2f",
+    "src/contexts/company/infrastructure/adapters/employee/additional-employment-persistence.adapter.ts": "4bfa6233632c8566fb637452713a1ede0c3cd0e57470f6b8d6a76ed184dc4893",
     "src/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter.ts": "9514b6c108a94b50daa4ac7365409cc0409001aaf30abdfa3291156b281d668d",
     "src/contexts/company/infrastructure/adapters/employee/company-employment-resource-projection.adapter.ts": "cd5b1e03c8b3a3713ca1f5e4c62d34feaf7a7bd0b72b497dad7fe74355be50fb",
     "src/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter.ts": "38ba8d9ca0e1f7fea43af38cae649a307e98187697a24126d3170302b984e0b7",
