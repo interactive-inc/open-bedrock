@@ -1,3 +1,4 @@
+import { toWorkforceResponsibilityType } from "@/contexts/company/domain/definitions/to-workforce-responsibility-type.definition"
 import { createCompanySystemAuditEvent } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/create-company-system-audit-event"
 import { containsDate } from "@/contexts/company/domain/definitions/contains-date.definition"
 import type { DirectPersonnelActionCommand } from "@/contexts/company/domain/definitions/direct-personnel-action-command.definition"
@@ -225,7 +226,7 @@ function mutationStatements(
              (period_id, revision, employment_id, employee_id, organization_unit_id,
               responsibility_type,
               starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, 'MANAGER', ?6, ?7, ?8, ?9, ?10)`,
+             VALUES (?1, ?2, ?3, ?4, ?5, ?11, ?6, ?7, ?8, ?9, ?10)`,
           )
           .bind(
             period.periodId,
@@ -238,6 +239,7 @@ function mutationStatements(
             period.isVoid ? 1 : 0,
             period.recordedByActionId,
             period.recordedAt * 1_000,
+            toWorkforceResponsibilityType(period.responsibilityType),
           ),
       ]
     }
@@ -258,7 +260,15 @@ function orderedMutations(
   const closingOrder = { responsibility: 0, assignment: 1, status: 2, employment: 3 } as const
   const openingOrder = { employment: 4, status: 5, assignment: 6, responsibility: 7 } as const
   const orderOf = (mutation: LifecycleVersionMutation): number => {
-    const closesPeriod = mutation.after.isVoid || mutation.after.endsOn !== null
+    const previous = mutation.before
+    const next = mutation.after
+    const closesPeriod =
+      next.isVoid ||
+      (previous !== null &&
+        !previous.isVoid &&
+        next.startsOn >= previous.startsOn &&
+        next.endsOn !== null &&
+        (previous.endsOn === null || next.endsOn <= previous.endsOn))
     return closesPeriod ? closingOrder[mutation.periodType] : openingOrder[mutation.periodType]
   }
 
@@ -349,7 +359,12 @@ function preparePersistenceStatements(
   const db = c.env.DB
   const nextEmployeeRevision = props.revisions.employeeRevision + 1
   const canonicalMutations = organizationMutations(props.projection.mutations)
-  const persistenceMutations = orderedMutations(props.projection.mutations)
+  // 訂正元を戻す途中で置換後の雇用を再び閉じない。各段階で親を開いてから子を開き、子を閉じてから親を閉じる。
+  const restored = props.projection.restorationMutationCount
+  const persistenceMutations = [
+    ...orderedMutations(props.projection.mutations.slice(0, restored)),
+    ...orderedMutations(props.projection.mutations.slice(restored)),
+  ]
   const nextOrganizationRevision = props.revisions.organizationRevision + canonicalMutations.length
   const before = currentProjection(props.scheduleBefore, props.businessDate, props.employeeCodes)
   const after = currentProjection(

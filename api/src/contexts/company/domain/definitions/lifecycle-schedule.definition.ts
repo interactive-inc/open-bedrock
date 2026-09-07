@@ -1,3 +1,4 @@
+import type { OrgResponsibilityType } from "@/contexts/company/domain/definitions/org-responsibility-type.definition"
 import type {
   EmployeeId,
   EmploymentId,
@@ -40,7 +41,7 @@ export type OrgResponsibilityPeriod = LifecyclePeriodBase & {
   employmentId: EmploymentId
   organizationUnitId: OrganizationUnitId
   departmentCode: string
-  responsibilityType: "department_manager"
+  responsibilityType: "department_manager" | OrgResponsibilityType
   employeeId: EmployeeId
 }
 

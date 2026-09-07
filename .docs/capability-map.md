@@ -124,7 +124,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 
 現行実装には opaque OrgUnit identity、名称・kind・親子関係の period version、期間付き Assignment、organization revision、atomic change operation がある。単一 root、code 重複、親期間、循環、主務重複、上司在籍、部分適用を Domain と DB の両方で拒否する。旧部署表と membership は既存 wire の互換 projection に限定し、検証済み lifecycle の判断正本には使わない。既定organizationの接続済みOrgUnitでは、公開APIと既存APIが期間IDと全訂正履歴を共有する。既存組織は管理者が親から順に履歴を確認して接続する。片側だけの保存はDBでも拒否する。
 
-公開Assignmentの変更は所属期間へ原子的に反映し、公開ReportingRelationは業務の管理範囲と判断候補へ接続する。[公開所属と期間台帳](company-organizational-authority.md#公開所属と期間台帳)に接続の制約を記載する。接続済み所属の役職変更・異動・終了・訂正・退職は、人事発令から公開履歴と期間対応を一括更新する。会社初期化時の所属と、公開Employee・接続済みOrgUnitへの新規配属も公開履歴を作る。上長付きの配属・上長変更は対応するReportingRelationを記録し、独立した複数上長と将来予約を保全する。既存所属と上長の移行、上長本人の退職に伴う再割当、責務・Account対応と既存編集画面の版照合は未完成である。
+公開Assignmentの変更は所属期間へ原子的に反映し、公開ReportingRelationは業務の管理範囲と判断候補へ接続する。[公開所属と期間台帳](company-organizational-authority.md#公開所属と期間台帳)に接続の制約を記載する。接続済み所属の役職変更・異動・終了・訂正・退職は、人事発令から公開履歴と期間対応を一括更新する。会社初期化時の所属と、公開Employee・接続済みOrgUnitへの新規配属も公開履歴を作る。上長付きの配属・上長変更は対応するReportingRelationを記録し、独立した複数上長と将来予約を保全する。既存所属と上長の移行、上長本人の退職に伴う再割当、責務の公開履歴との接続と既存編集画面の版照合は未完成である。
 
 `/company` は LegalEntity、CompanyProfile、Site、Workplace、Person、Employee、Employment、OrgUnit、Assignment、ReportingRelation、Job、Position、Grade、OrganizationalOffice、OfficeAssignment、Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody、CollectiveBodyMembership、OrganizationalAuthority、AccountEmployeeLink、PersonnelAction を同じ resource、revision、半開期間、command 契約で公開する。read は D1 atomic batch で一つの organization revision へ固定し、write は expected revision、resource revision、SHA-256 fingerprint 付き idempotency receipt、append-only 履歴を強制する。契約と失敗条件は [Company API](./company-api.md) に定める。
 
@@ -151,7 +151,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - System の Case に対する会社上の判断資格の解決
 - 判断時点の Employment、Membership、ResponsibilityAssignment の snapshot
 
-現行実装にはAccountとEmployeeの対応、期間履歴による在籍・組織資格の参照、版付きresourceによる資格解決がある。Accountに対応する従業員表示と在籍判定は、Companyの従業員一覧と同じ期間snapshotを使う。版付きresourceの資格証拠は汎用申請と人事変更申請のSystem Taskへ接続済みだが、既存workflow全体がそれを利用する状態には達していない。Account対応を含む二つの保存先の統合も未完成である。
+現行実装にはAccountとEmployeeの対応、期間履歴による在籍・組織資格の参照、版付きresourceによる資格解決がある。Accountに対応する従業員表示と在籍判定は、Companyの従業員一覧と同じ期間snapshotを使う。版付きresourceの資格証拠は汎用申請と人事変更申請のSystem Taskへ接続済みだが、既存workflow全体がそれを利用する状態には達していない。Accountの一対一の同一性を保持し、有効期間は公開履歴へ接続している。終了・取消・期間の空白を従来の対応表で補わず、確認済みの既存対応は同じ公開履歴へ接続する。
 
 ### 雇用事実と人事発令
 

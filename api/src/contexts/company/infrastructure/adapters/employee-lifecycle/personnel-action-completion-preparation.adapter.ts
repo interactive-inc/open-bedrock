@@ -16,7 +16,7 @@ import type {
 import { ValidateOrganizationChange } from "@/contexts/company/lib/workforce/validate-organization-change"
 import { toWorkforceLifecycleSchedules } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
-import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
+import { toWorkforceResponsibilityType } from "@/contexts/company/domain/definitions/to-workforce-responsibility-type.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { EmployeeLifecycleAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle.adapter"
@@ -97,7 +97,7 @@ export class PersonnelActionCompletionPreparationAdapter {
           employmentId: period.employmentId,
           employeeId: period.employeeId,
           organizationUnitId: period.organizationUnitId,
-          responsibilityType: restoreOrgResponsibilityType("MANAGER"),
+          responsibilityType: toWorkforceResponsibilityType(period.responsibilityType),
           startsOn: restoreCalendarDate(period.startsOn),
           endsOn: period.endsOn === null ? null : restoreCalendarDate(period.endsOn),
           isVoid: period.isVoid,

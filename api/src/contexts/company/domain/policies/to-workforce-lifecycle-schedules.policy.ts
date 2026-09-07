@@ -1,5 +1,5 @@
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
-import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
+import { toWorkforceResponsibilityType } from "@/contexts/company/domain/definitions/to-workforce-responsibility-type.definition"
 import type {
   WorkforceLifecycleSchedule,
   WorkforcePeriodVersion,
@@ -81,7 +81,7 @@ export function toWorkforceLifecycleSchedules(
                 employmentId: period.employmentId,
                 employeeId: sourceEmployeeId,
                 organizationUnitId: period.organizationUnitId,
-                responsibilityType: restoreOrgResponsibilityType("MANAGER"),
+                responsibilityType: toWorkforceResponsibilityType(period.responsibilityType),
               }
             }),
         }

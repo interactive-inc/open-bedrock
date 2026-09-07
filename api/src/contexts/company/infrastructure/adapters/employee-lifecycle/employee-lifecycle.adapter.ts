@@ -1,3 +1,4 @@
+import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import { OrganizationUnitReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/organization-unit-read.adapter"
 import type {
@@ -49,7 +50,7 @@ type ResponsibilityRow = Omit<EmploymentRow, "employee_id"> & {
   employment_id: EmploymentId
   organization_unit_id: string
   organization_unit_code: string
-  responsibility_type: "MANAGER"
+  responsibility_type: string
   employee_id: EmployeeId
 }
 
@@ -94,7 +95,10 @@ function toResponsibility(row: ResponsibilityRow): OrgResponsibilityPeriod {
     employmentId: row.employment_id,
     organizationUnitId: restoreWorkforceId("organization_unit", row.organization_unit_id),
     departmentCode: row.organization_unit_code,
-    responsibilityType: "department_manager",
+    responsibilityType:
+      row.responsibility_type === "MANAGER"
+        ? "department_manager"
+        : restoreOrgResponsibilityType(row.responsibility_type),
     employeeId: row.employee_id,
     startsOn: row.starts_on,
     endsOn: row.ends_on,
@@ -178,8 +182,7 @@ const responsibilitySelect = `
     SELECT MAX(candidate.revision)
     FROM company_organization_responsibility_period_versions AS candidate
     WHERE candidate.period_id = current.period_id
-  ) AND current.is_void = 0
-    AND current.responsibility_type = 'MANAGER'`
+  ) AND current.is_void = 0`
 type Context = CompanyContext
 
 export class EmployeeLifecycleAdapter {

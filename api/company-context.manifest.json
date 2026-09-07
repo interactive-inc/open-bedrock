@@ -144,6 +144,7 @@
     "src/contexts/company/domain/definitions/stable-lifecycle-json.definition.ts",
     "src/contexts/company/domain/definitions/to-workforce-employee-id.definition.ts",
     "src/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition.ts",
+    "src/contexts/company/domain/definitions/to-workforce-responsibility-type.definition.ts",
     "src/contexts/company/domain/definitions/workforce-id-validation.definition.ts",
     "src/contexts/company/domain/definitions/workforce-id.definition.test.ts",
     "src/contexts/company/domain/definitions/workforce-id.definition.ts",

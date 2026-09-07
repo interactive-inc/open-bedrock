@@ -1,3 +1,4 @@
+import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
 import type {
   EmployeeStatusPeriod,
   EmploymentPeriod,
@@ -89,7 +90,7 @@ type ResponsibilityVersionRow = BaseVersionRow & {
   employment_id: EmploymentId
   organization_unit_id: string
   organization_unit_code: string
-  responsibility_type: "MANAGER"
+  responsibility_type: string
   employee_id: EmployeeId
 }
 
@@ -166,7 +167,10 @@ function responsibility(row: ResponsibilityVersionRow): OrgResponsibilityPeriod 
     employmentId: row.employment_id,
     organizationUnitId: restoreWorkforceId("organization_unit", row.organization_unit_id),
     departmentCode: row.organization_unit_code,
-    responsibilityType: "department_manager",
+    responsibilityType:
+      row.responsibility_type === "MANAGER"
+        ? "department_manager"
+        : restoreOrgResponsibilityType(row.responsibility_type),
     employeeId: row.employee_id,
   }
 }
@@ -399,7 +403,7 @@ export class PersonnelActionAdapter {
              FROM company_organization_responsibility_period_versions AS responsibility
              WHERE period_id IN (
                SELECT period_id FROM company_organization_responsibility_period_versions WHERE recorded_by_action_id = ?1
-             ) AND responsibility_type = 'MANAGER' ORDER BY period_id, revision`,
+             ) ORDER BY period_id, revision`,
           )
           .bind(actionId)
           .all<ResponsibilityVersionRow>(),
