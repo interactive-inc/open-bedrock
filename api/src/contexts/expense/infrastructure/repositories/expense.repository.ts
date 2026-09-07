@@ -1,14 +1,71 @@
 import { Expense, expenseRowSchema } from "@/contexts/expense/domain/entities/expense.entity"
 import { ExpenseApproval } from "@/contexts/expense/domain/entities/expense-approval.entity"
-import type { Context } from "@/env"
+import type { CompanyContext as Context } from "@/contexts/company/configuration/company-context"
 import { parseD1Row } from "@/lib/d1/parse-d1-row"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { expenseApprovals, expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { and, eq } from "drizzle-orm"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 
 export class ExpenseRepository {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
+
+  async prepareSubmissionGuard(accountId: AccountId): Promise<D1PreparedStatement | Error> {
+    return new CompanyAuthoritySnapshotGuardAdapter({ database: this.c.env.DB }).prepare({
+      accountIds: [accountId],
+      employeeCodes: [],
+    })
+  }
+
+  /** 添付の状態と経費本体・対応を同じtransactionへ保存する。 */
+  async createWithAttachments(
+    input: Readonly<{
+      expense: Expense
+      attachmentIds: ReadonlyArray<string>
+      guards: ReadonlyArray<D1PreparedStatement>
+      effects: ReadonlyArray<D1PreparedStatement>
+    }>,
+  ): Promise<Expense | Error> {
+    const expense = input.expense
+    try {
+      const before = [...input.guards, ...input.effects]
+      const saved = await this.c.env.DB.batch([
+        ...before,
+        this.c.env.DB.prepare(`INSERT INTO expenses
+          (employee_id,organization_unit_id,category,amount,spent_at,note,status,created_at)
+          VALUES (?1,?2,?3,?4,?5,?6,'pending',?7)
+          RETURNING id,employee_id AS employeeId,organization_unit_id AS organizationUnitId,
+          category,amount,spent_at AS spentAt,note,status,created_at AS createdAt`).bind(
+          expense.employeeId,
+          expense.organizationUnitId,
+          expense.category,
+          expense.amount,
+          expense.spentAt,
+          expense.note,
+          expense.createdAt,
+        ),
+        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+        this.c.env.DB.prepare(`WITH inserted_expense AS MATERIALIZED (SELECT last_insert_rowid() AS id)
+          INSERT INTO expense_attachments (expense_id,attachment_id,created_at)
+          SELECT inserted_expense.id, attachment.value, ?2 FROM inserted_expense CROSS JOIN json_each(?1) attachment`).bind(
+          JSON.stringify(input.attachmentIds),
+          expense.createdAt,
+        ),
+      ])
+      const row = parseD1Row(saved.at(before.length), expenseRowSchema)
+      return row === undefined
+        ? new Error("expense was not saved")
+        : row instanceof Error
+          ? row
+          : Expense.fromRow(row)
+    } catch (cause) {
+      return new Error("expense and attachments could not be saved", { cause })
+    }
+  }
 
   async findById(expenseId: number): Promise<Expense | null | Error> {
     try {

@@ -3,6 +3,8 @@ export const EXPENSE_PERMISSION_KEYS = [
   "budget:manage",
   "budget:read:all",
   "expense:approve",
+  "expense:submit",
+  "expense:procedure:manage",
   "expense:read:all",
 ] as const
 

@@ -7,6 +7,7 @@ import {
 } from "@/contexts/expense/domain/definitions/expense.definition"
 import type { ExpenseRow } from "@/contexts/expense/infrastructure/schema/expense"
 import { z } from "zod"
+import type { AttachmentEvidence } from "@system/domain/definitions/attachments/attachment-evidence.definition"
 
 /** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const expenseRowSchema = z.object({
@@ -103,6 +104,19 @@ export class Expense implements Props {
 
   withStatus(status: Props["status"]) {
     return new Expense({ ...this.props, status })
+  }
+
+  /** 金額・負担組織・利用日・添付を変更不能な判断対象へ渡す。 */
+  toProposalBody(attachments: ReadonlyArray<AttachmentEvidence>) {
+    return {
+      employeeId: this.employeeId,
+      organizationUnitId: this.organizationUnitId,
+      category: this.category,
+      amount: this.amount,
+      spentAt: this.spentAt,
+      note: this.note,
+      attachments,
+    }
   }
 
   /** 申請内容（種別・金額・利用日・備考）を変更した新しい経費申請を返す。 */

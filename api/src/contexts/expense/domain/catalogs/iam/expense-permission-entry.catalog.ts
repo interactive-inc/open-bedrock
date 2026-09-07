@@ -14,6 +14,18 @@ type PermissionEntry = {
  */
 export const EXPENSE_PERMISSION_ENTRIES = [
   {
+    key: "expense:submit",
+    category: "expense",
+    featureKey: "expenses",
+    description: "本人の経費を規程へ提出・取消する",
+  },
+  {
+    key: "expense:procedure:manage",
+    category: "expense",
+    featureKey: "expenses",
+    description: "経費の承認規程を設定する",
+  },
+  {
     key: "budget:manage",
     category: "budget",
     featureKey: "budgets",
