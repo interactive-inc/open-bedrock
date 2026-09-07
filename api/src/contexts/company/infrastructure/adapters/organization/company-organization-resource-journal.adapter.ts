@@ -39,7 +39,8 @@ export class CompanyOrganizationResourceJournalAdapter {
         connected.has(period.organizationUnitId),
       )
       if (periods.length === 0) return []
-      const current = await new D1CompanyResourceRepository(this.c).findMany({
+      const repository = new D1CompanyResourceRepository(this.c)
+      const current = await repository.findMany({
         organizationId: "organization:default",
         types: ["organization-unit"],
       })
@@ -76,7 +77,21 @@ export class CompanyOrganizationResourceJournalAdapter {
         return new CompanyValidationError("公開組織の変更内容が不正です", "invalid_change", {
           cause: command,
         })
-      const invalid = validateCompanyOrganizationChange(current.resources, command)
+      const reportingHistory = await repository.findReportingRelationHistory(
+        "organization:default",
+        current.organizationRevision,
+      )
+      if (reportingHistory instanceof Error)
+        return new CompanyUnavailableError(
+          "指揮命令の履歴を参照できません",
+          "organization_change_unavailable",
+          { cause: reportingHistory },
+        )
+      const invalid = validateCompanyOrganizationChange(
+        current.resources,
+        command,
+        reportingHistory,
+      )
       if (invalid !== null)
         return new CompanyValidationError(
           "親組織の接続と公開組織の期間を確認してください",

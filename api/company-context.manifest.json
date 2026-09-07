@@ -245,6 +245,8 @@
     "src/contexts/company/domain/values/company-employment-journal-change.value.ts",
     "src/contexts/company/domain/values/company-employment-resource-timeline.value.test.ts",
     "src/contexts/company/domain/values/company-employment-resource-timeline.value.ts",
+    "src/contexts/company/domain/values/company-reporting-relation-timeline.value.test.ts",
+    "src/contexts/company/domain/values/company-reporting-relation-timeline.value.ts",
     "src/contexts/company/domain/values/company-session.value.ts",
     "src/contexts/company/domain/values/employee-resource-adoption-snapshot.value.ts",
     "src/contexts/company/domain/values/organization-invariant-violation.value.ts",
