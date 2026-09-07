@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
-import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { getDecisionDetail } from "@/lib/api/get-decision-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
+import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "意思決定記録の詳細" }
 
@@ -47,9 +47,13 @@ export default async function DecisionDetailPage(props: Props) {
 
       <div className="flex flex-wrap items-center gap-2">
         {decision.status === "superseded" ? (
-          <Badge variant="outline">置き換え済み</Badge>
+          <Button type="button" variant="secondary" size="sm">
+            置き換え済み
+          </Button>
         ) : (
-          <Badge variant="secondary">有効</Badge>
+          <Button type="button" variant="secondary" size="sm">
+            有効
+          </Button>
         )}
 
         {decision.superseded_by_id === null ? null : (

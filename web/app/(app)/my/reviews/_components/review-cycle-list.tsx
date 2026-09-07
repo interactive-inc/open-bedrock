@@ -10,7 +10,6 @@ import {
 } from "@/app/(app)/my/reviews/actions"
 import { ReviewCycleEditForm } from "@/app/(app)/my/reviews/_components/review-cycle-edit-form"
 import { toCycleStatusLabel } from "@/app/(app)/my/reviews/_lib/to-cycle-status-label"
-import { toCycleStatusVariant } from "@/app/(app)/my/reviews/_lib/to-cycle-status-variant"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +23,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { EmptyState } from "@/components/empty-state"
 import { TableRowActions } from "@/components/table-row-actions"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
@@ -120,9 +118,9 @@ export function ReviewCycleList(props: Props) {
               <div className="flex items-center gap-2">
                 <span className="font-medium">{cycle.title}</span>
 
-                <Badge variant={toCycleStatusVariant(cycle.status)}>
+                <Button type="button" variant="secondary" size="sm">
                   {toCycleStatusLabel(cycle.status)}
-                </Badge>
+                </Button>
               </div>
 
               <span className="text-xs text-muted-foreground">{cycle.period}</span>
