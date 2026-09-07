@@ -7,8 +7,8 @@ import { DecisionRepository } from "@/contexts/meeting/infrastructure/repositori
 
 export type Command = {
   session: CompanySessionValue
-  decisionId: number
-  supersededById: number
+  decisionId: string
+  supersededById: string
 }
 
 /**

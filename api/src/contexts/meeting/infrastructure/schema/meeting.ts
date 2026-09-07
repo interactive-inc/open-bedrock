@@ -1,6 +1,8 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { uuidCheckPredicate } from "@/lib/uuid/uuid.schema"
+import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** 会議体マスタ（定例会議などの器。cadence は開催頻度メモ） */
 export const meetings = sqliteTable(
@@ -41,17 +43,22 @@ export type MeetingMinutesRow = InferSelectModel<typeof meetingMinutes>
 export const decisions = sqliteTable(
   "decision_records",
   {
-    id: integer("id").primaryKey(),
+    id: text("id").primaryKey(),
     title: text("title").notNull(),
     decidedOn: text("decided_on").notNull(),
     context: text("context").notNull(),
     decision: text("decision").notNull(),
     consequences: text("consequences"),
     status: text("status").notNull(),
-    supersededById: integer("superseded_by_id"),
+    supersededById: text("superseded_by_id"),
     createdAt: text("created_at").notNull(),
   },
-  (table) => [index("idx_decisions_status").on(table.status)],
+  (table) => [
+    check("decision_records_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    check(
+      "decision_records_superseded_by_id_uuid",
+      sql.raw(`superseded_by_id IS NULL OR (${uuidCheckPredicate("superseded_by_id")})`),
+    ),index("idx_decisions_status").on(table.status)],
 )
 
 export type DecisionRow = InferSelectModel<typeof decisions>

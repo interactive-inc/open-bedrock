@@ -1,15 +1,17 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import type { DecisionRow } from "@/contexts/meeting/infrastructure/schema/meeting"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   title: z.string(),
   decidedOn: z.string(),
   context: z.string(),
   decision: z.string(),
   consequences: z.string().nullable(),
   status: z.enum(["active", "superseded"]),
-  supersededById: z.number().nullable(),
+  supersededById: uuidSchema.nullable(),
   createdAt: z.string(),
 })
 
@@ -53,7 +55,7 @@ export class Decision implements Props {
     createdAt: string
   }): Decision {
     return new Decision({
-      id: null,
+      id: createUuidV7(),
       title: props.title,
       decidedOn: props.decidedOn,
       context: props.context,
