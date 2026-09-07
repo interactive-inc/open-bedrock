@@ -2,11 +2,11 @@ import { notFound } from "next/navigation"
 import { CareerPostingApplyForm } from "@/app/(app)/my/career/_components/career-posting-apply-form"
 import { PostingManagement } from "@/app/(app)/my/career/_components/posting-management"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { getCareerPosting } from "@/lib/api/get-career-posting"
 import { getCareerPostings } from "@/lib/api/get-career-postings"
 import type { CareerPosting } from "@/lib/api/types/career-types"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   postingId: number
@@ -65,7 +65,9 @@ export async function CareerPostingDetailSection(props: Props) {
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-semibold">{posting.title}</h2>
 
-            <Badge variant="secondary">{posting.status === "closed" ? "締切" : "募集中"}</Badge>
+            <Button type="button" variant="secondary" size="sm">
+              {posting.status === "closed" ? "締切" : "募集中"}
+            </Button>
           </div>
 
           <div className="flex flex-col gap-2">
