@@ -17,6 +17,11 @@ export function validateOrganizationalAuthorityProjection(
   if (
     !Number.isSafeInteger(revision) ||
     revision < 0 ||
+    (projection.snapshot.companyRevision !== undefined &&
+      (!Number.isSafeInteger(projection.snapshot.companyRevision) ||
+        projection.snapshot.companyRevision < 0)) ||
+    (projection.managementRelations.some((relation) => "reportingRelationId" in relation) &&
+      projection.snapshot.companyRevision === undefined) ||
     !isCalendarDate(projection.snapshot.asOf)
   ) {
     return new OrganizationalAuthorityError("organizational_authority_snapshot_invalid")

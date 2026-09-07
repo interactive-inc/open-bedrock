@@ -63,6 +63,11 @@ async function resolveWorkflowApproverMatches(props: {
             source: resolution.snapshot.source,
             as_of: resolution.snapshot.asOf,
             organization_revision: resolution.snapshot.organizationRevision,
+            ...(resolution.snapshot.companyRevision === undefined
+              ? {}
+              : {
+                  company_revision: resolution.snapshot.companyRevision,
+                }),
           },
         },
       },

@@ -1,4 +1,5 @@
-import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
+import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
+import { ReadCompanySnapshotEmployeesAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-company-snapshot-employees.adapter"
 import {
   CompanyAuthenticationRequiredError,
   CompanyDatabaseUnavailableError,
@@ -14,11 +15,12 @@ const factory = createFactory<CompanyHttpEnvironment>()
 export const GET = factory.createHandlers(async (context) => {
   const actor = context.var.companyActor
   if (actor === undefined) throw new CompanyAuthenticationRequiredError()
-  if (!actor.hasCapability("company:read")) throw new CompanyReadForbiddenError()
+  if (!actor.hasCapability("company:read") || !actor.canAccessOrganization("organization:default"))
+    throw new CompanyReadForbiddenError()
   if (actor.employeeId === null) return context.json({ data: [] }, 200)
   if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()
 
-  const organization = await new CurrentOrganizationReadModelAdapter({
+  const companyContext = {
     env: {
       DB: context.env.DB,
       COMPANY_TIME_ZONE: context.env.COMPANY_TIME_ZONE,
@@ -27,31 +29,36 @@ export const GET = factory.createHandlers(async (context) => {
         : { NOW: context.var.companyClock().toISOString() }),
     },
     var: { database: context.var.database, auditContext: context.var.auditContext },
-  }).loadCurrentOrganization()
+  }
+  const organization = await new ReadCanonicalOrganizationStateAdapter(
+    companyContext,
+  ).readCanonicalOrganizationState()
   if (organization instanceof Error) throw new CompanyReadUnavailableError(organization)
 
-  const viewer = [...organization.employeesByCode.values()].find(
-    (employee) => employee.id === actor.employeeId,
+  const reportIds = new Set(
+    organization.managementRelations
+      .filter((relation) => relation.managerEmployeeId === actor.employeeId)
+      .map((relation) => relation.employeeId),
   )
-  if (viewer === undefined) return context.json({ data: [] }, 200)
-  const nameByCode = new Map(
-    organization.departments.map((department) => [department.code, department.name] as const),
-  )
-  const data = [...organization.employeesByCode.values()]
-    .filter(
-      (employee) =>
-        employee.status === "active" &&
-        employee.assignments.some((assignment) => assignment.managerEmployeeCode === viewer.code),
+  const employees = await new ReadCompanySnapshotEmployeesAdapter(companyContext).read({
+    employeeIds: organization.employees
+      .filter((employee) => employee.status === "ACTIVE" && reportIds.has(employee.employeeId))
+      .map((employee) => employee.employeeId),
+    asOf: organization.organization.asOf,
+    organizationRevision: organization.organization.revision,
+    companyRevision: organization.companyRevision,
+  })
+  if (employees instanceof Error) throw new CompanyReadUnavailableError(employees)
+  const data = employees
+    .toSorted((left, right) =>
+      (left.employeeCode ?? left.id).localeCompare(right.employeeCode ?? right.id),
     )
-    .sort((left, right) => left.code.localeCompare(right.code))
     .map((employee) => ({
-      code: employee.code,
-      name: employee.name,
-      dept_name:
-        employee.primaryDepartmentCode === null
-          ? null
-          : (nameByCode.get(employee.primaryDepartmentCode) ?? null),
-      position: employee.position,
+      employee_id: employee.id,
+      code: employee.employeeCode,
+      name: employee.officialName,
+      dept_name: employee.primaryAssignment?.organizationUnitName ?? null,
+      position: employee.primaryAssignment?.positionTitle ?? null,
     }))
 
   return context.json({ data }, 200)

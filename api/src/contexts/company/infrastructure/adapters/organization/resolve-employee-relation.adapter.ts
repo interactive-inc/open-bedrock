@@ -22,6 +22,7 @@ export class ResolveEmployeeRelationAdapter {
 
     return resolveWorkforceEmployeeRelation({
       states: snapshot.employees,
+      managementRelations: snapshot.managementRelations,
       viewerEmployeeId: props.viewerEmployeeId,
       targetEmployeeId: props.targetEmployeeId,
     })

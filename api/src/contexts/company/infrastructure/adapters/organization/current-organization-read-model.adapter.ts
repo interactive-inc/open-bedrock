@@ -1,3 +1,5 @@
+import { ReadCompanySnapshotEmployeesAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-company-snapshot-employees.adapter"
+import { CompanyReportingRelationsReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-reporting-relations-read.adapter"
 import { periodContainsDate } from "@/contexts/company/domain/definitions/period-contains-date.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
@@ -5,19 +7,19 @@ import type {
   EmployeeId,
   OrganizationUnitId,
 } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { OrganizationUnitReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/organization-unit-read.adapter"
 import { OrganizationWorkforceSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/workforce/organization-workforce-snapshot.adapter"
 import { ReadOrganizationWorkforceState } from "@/contexts/company/lib/workforce/read-organization-workforce-state"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { CompanyUnavailableError } from "@/contexts/company/domain/errors"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
-import { asc } from "drizzle-orm"
 
 export type CurrentOrganizationAssignment = {
   departmentCode: string
   position: string | null
   managerEmployeeCode: string | null
+  managerEmployeeCodes: ReadonlyArray<string>
+  managerEmployeeIds: ReadonlyArray<EmployeeId>
   assignmentType: "primary" | "concurrent"
 }
 
@@ -29,6 +31,8 @@ export type CurrentOrganizationEmployee = {
   position: string | null
   primaryDepartmentCode: string | null
   managerEmployeeCode: string | null
+  managerEmployeeCodes: ReadonlyArray<string>
+  managerEmployeeIds: ReadonlyArray<EmployeeId>
   departmentCodes: ReadonlyArray<string>
   assignments: ReadonlyArray<CurrentOrganizationAssignment>
 }
@@ -69,21 +73,11 @@ async function loadCurrentOrganization(c: Context): Promise<CurrentOrganizationR
       timeZone: c.env.COMPANY_TIME_ZONE,
     })
     if (typeof businessDate !== "string") return businessDate
-
-    const [employeeRows, snapshot] = await Promise.all([
-      c.var.database
-        .select({
-          id: employees.id,
-          employeeCode: employees.employeeCode,
-          officialName: employees.officialName,
-        })
-        .from(employees)
-        .orderBy(asc(employees.id)),
-      new ReadOrganizationWorkforceState({
-        organization: new OrganizationUnitReadAdapter(c.var.database),
-        workforce: new OrganizationWorkforceSnapshotAdapter(c),
-      }).execute(restoreCalendarDate(businessDate)),
-    ])
+    const snapshot = await new ReadOrganizationWorkforceState({
+      organization: new OrganizationUnitReadAdapter(c.var.database),
+      workforce: new OrganizationWorkforceSnapshotAdapter(c),
+      reporting: new CompanyReportingRelationsReadAdapter(c.env.DB),
+    }).execute(restoreCalendarDate(businessDate))
     if (snapshot.kind !== "found") {
       return new CompanyUnavailableError(
         "Company organization snapshotを安全に解決できません",
@@ -93,6 +87,15 @@ async function loadCurrentOrganization(c: Context): Promise<CurrentOrganizationR
         snapshot.kind === "unavailable" ? { cause: snapshot.cause } : undefined,
       )
     }
+    const employeeRows = await new ReadCompanySnapshotEmployeesAdapter(c).read({
+      employeeIds: snapshot.employees
+        .filter((employee) => activeStatus(employee) !== null)
+        .map((employee) => employee.employeeId),
+      asOf: snapshot.organization.asOf,
+      organizationRevision: snapshot.organization.revision,
+      companyRevision: snapshot.companyRevision,
+    })
+    if (employeeRows instanceof Error) return employeeRows
 
     const employeeById = new Map<EmployeeId, EmployeeDirectoryRow>(
       employeeRows.map((employee) => [employee.id, employee]),
@@ -126,6 +129,13 @@ async function loadCurrentOrganization(c: Context): Promise<CurrentOrganizationR
 
     const employeesByCode = new Map<string, CurrentOrganizationEmployee>()
     const managersByDepartment = new Map<string, string[]>()
+    const managerIdsByScope = new Map<string, Set<EmployeeId>>()
+    for (const relation of snapshot.managementRelations) {
+      const scope = JSON.stringify([relation.employeeId, relation.organizationUnitId])
+      const ids = managerIdsByScope.get(scope)
+      if (ids === undefined) managerIdsByScope.set(scope, new Set([relation.managerEmployeeId]))
+      else ids.add(relation.managerEmployeeId)
+    }
     for (const state of snapshot.employees) {
       const employee = employeeById.get(state.employeeId)
       const status = activeStatus(state)
@@ -138,15 +148,26 @@ async function loadCurrentOrganization(c: Context): Promise<CurrentOrganizationR
       ].flatMap((assignment) => {
         const departmentCode = codeByUnitId.get(assignment.organizationUnitId)
         if (departmentCode === undefined) return []
+        const managerEmployeeIds = [
+          ...(managerIdsByScope.get(
+            JSON.stringify([state.employeeId, assignment.organizationUnitId]),
+          ) ?? []),
+        ].toSorted()
+        const managerEmployeeCodes = managerEmployeeIds
+          .flatMap((id) => {
+            const code = employeeById.get(id)?.employeeCode
+            return code === undefined || code === null ? [] : [code]
+          })
+          .toSorted()
 
         return [
           {
             departmentCode,
             position: assignment.positionTitle,
             managerEmployeeCode:
-              assignment.managerEmployeeId === null
-                ? null
-                : (employeeById.get(assignment.managerEmployeeId)?.employeeCode ?? null),
+              managerEmployeeIds.length === 1 ? (managerEmployeeCodes[0] ?? null) : null,
+            managerEmployeeCodes,
+            managerEmployeeIds,
             assignmentType:
               assignment.assignmentType === "PRIMARY"
                 ? ("primary" as const)
@@ -170,6 +191,8 @@ async function loadCurrentOrganization(c: Context): Promise<CurrentOrganizationR
         position: primary?.position ?? null,
         primaryDepartmentCode: primary?.departmentCode ?? null,
         managerEmployeeCode: primary?.managerEmployeeCode ?? null,
+        managerEmployeeCodes: primary?.managerEmployeeCodes ?? [],
+        managerEmployeeIds: primary?.managerEmployeeIds ?? [],
         departmentCodes: [...new Set(assignments.map((assignment) => assignment.departmentCode))],
         assignments,
       })

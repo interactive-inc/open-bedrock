@@ -1,3 +1,4 @@
+import type { OrganizationalAuthorityProjection } from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import {
   noEmployeeManagementAuthority,
   type EmployeeManagementAuthority,
@@ -11,6 +12,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 /** 検証済みCompany snapshotだけから、actorの対象Employeeに対する管理範囲を解決する。 */
 export function resolveEmployeeManagementAuthority(props: {
   states: ReadonlyArray<WorkforceStateAt>
+  managementRelations: OrganizationalAuthorityProjection["managementRelations"]
   actorEmployeeId: EmployeeId
   targetEmployeeId: EmployeeId
 }): EmployeeManagementAuthority {
@@ -24,8 +26,10 @@ export function resolveEmployeeManagementAuthority(props: {
   }
 
   const targetAssignments = listWorkforceAssignments(target)
-  const directManager = targetAssignments.some(
-    (assignment) => assignment.managerEmployeeId === props.actorEmployeeId,
+  const directManager = props.managementRelations.some(
+    (relation) =>
+      relation.employeeId === props.targetEmployeeId &&
+      relation.managerEmployeeId === props.actorEmployeeId,
   )
   const targetOrganizationUnitIds = new Set(
     targetAssignments.map((assignment) => assignment.organizationUnitId),
@@ -41,6 +45,7 @@ export function resolveEmployeeManagementAuthority(props: {
     departmentManager,
     managementChain: isInWorkforceManagementChain({
       states,
+      managementRelations: props.managementRelations,
       actorEmployeeId: props.actorEmployeeId,
       targetEmployeeId: props.targetEmployeeId,
     }),

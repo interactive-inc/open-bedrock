@@ -1,5 +1,6 @@
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
@@ -35,7 +36,7 @@ export type CompanyAccountEmployeeDirectoryEntry = Readonly<{
   employee: CompanyEmployeeDirectoryEntry
 }>
 
-type Context = Readonly<{ env: CompanyContext["env"] }>
+type Context = Readonly<{ env: CompanyContext["env"]; asOf?: CalendarDate }>
 
 /** 会社営業日の期間履歴を使い、一覧と単体参照の在籍判定を揃える。 */
 export class CompanyEmployeeDirectoryReadAdapter {
@@ -49,6 +50,46 @@ export class CompanyEmployeeDirectoryReadAdapter {
 
   findByCode(employeeCode: string): Promise<CompanyEmployeeDirectoryEntry | null | Error> {
     return this.find("employee.employee_code = ?2", employeeCode)
+  }
+
+  async findForEmployeeIds(
+    employeeIds: ReadonlyArray<EmployeeId>,
+  ): Promise<ReadonlyArray<CompanyEmployeeDirectoryEntry> | Error> {
+    const unique = [...new Set(employeeIds)]
+    if (unique.length === 0) return []
+    const businessDate = this.businessDate()
+    if (businessDate instanceof Error) return businessDate
+
+    try {
+      const statements: D1PreparedStatement[] = []
+      for (let offset = 0; offset < unique.length; offset += 99) {
+        const chunk = unique.slice(offset, offset + 99)
+        const placeholders = chunk.map((_, index) => `?${index + 2}`).join(", ")
+        statements.push(
+          this.c.env.DB.prepare(
+            `${companyEmployeeDirectorySql()} ${this.selectSql()} ${this.fromSql()}
+             WHERE employee.id IN (${placeholders}) ORDER BY employee.id`,
+          ).bind(businessDate, ...chunk),
+        )
+      }
+      const snapshots = await this.c.env.DB.batch(statements)
+      if (snapshots.length !== statements.length || snapshots.some((snapshot) => !snapshot.success))
+        return new Error("failed to read Company employee snapshot")
+      const entries: CompanyEmployeeDirectoryEntry[] = []
+      const seen = new Set<EmployeeId>()
+      for (const snapshot of snapshots) {
+        for (const row of snapshot.results) {
+          const employee = this.restore(row)
+          if (employee instanceof Error) return employee
+          if (seen.has(employee.id)) return new Error("Company employee identity is ambiguous")
+          seen.add(employee.id)
+          entries.push(employee)
+        }
+      }
+      return entries
+    } catch (cause) {
+      return cause instanceof Error ? cause : new Error("failed to read Company employees")
+    }
   }
 
   async findForAccountIds(
@@ -197,6 +238,7 @@ export class CompanyEmployeeDirectoryReadAdapter {
   }
 
   private businessDate() {
+    if (this.c.asOf !== undefined) return this.c.asOf
     return resolveCompanyBusinessDate({
       now: this.c.env.NOW ?? new Date().toISOString(),
       timeZone: this.c.env.COMPANY_TIME_ZONE,

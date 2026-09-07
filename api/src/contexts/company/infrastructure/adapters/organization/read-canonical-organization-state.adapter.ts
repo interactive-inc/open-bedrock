@@ -1,3 +1,4 @@
+import { CompanyReportingRelationsReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-reporting-relations-read.adapter"
 import { ReadOrganizationWorkforceState } from "@/contexts/company/lib/workforce/read-organization-workforce-state"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
@@ -25,6 +26,7 @@ async function readCanonicalOrganizationState(c: CompanyContext, asOf?: Calendar
   const result = await new ReadOrganizationWorkforceState({
     organization: new OrganizationUnitReadAdapter(c.var.database),
     workforce: new OrganizationWorkforceSnapshotAdapter(c),
+    reporting: new CompanyReportingRelationsReadAdapter(c.env.DB),
   }).execute(restoreCalendarDate(businessDate))
   if (result.kind === "unavailable") {
     return new CompanyUnavailableError(

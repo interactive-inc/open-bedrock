@@ -30,6 +30,7 @@ export type OrganizationalAuthoritySnapshot = Readonly<{
   source: "lifecycle"
   asOf: CalendarDate
   organizationRevision: number
+  companyRevision?: number
 }>
 
 export type OrganizationalAuthorityAssignmentEvidence = Readonly<{

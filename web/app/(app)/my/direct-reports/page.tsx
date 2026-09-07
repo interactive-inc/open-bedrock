@@ -6,7 +6,7 @@ import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
-import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatDate } from "@/lib/format-date"
 import { getMe } from "@/lib/api/get-me"
 import { getMyReports } from "@/lib/api/get-my-reports"
@@ -81,7 +81,7 @@ export default async function MyReportsPage() {
   )
 }
 
-/** 直属部下のカード一覧。各人は従業員詳細へ遷移する。 */
+/** 直属部下のカード一覧。コードが設定済みなら従業員詳細へ遷移する。 */
 async function ReportsGrid() {
   const result = await getMyReports()
 
@@ -101,20 +101,30 @@ async function ReportsGrid() {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {result.data.map((report) => (
-        <CardLink
-          key={report.code}
-          href={`/company/employees/${report.code}`}
-          className="flex min-h-24 flex-col gap-2"
-        >
-          <CardTitle>{report.name}</CardTitle>
-
-          <CardDescription>
-            {[report.dept_name, report.position].filter((value) => value !== null).join(" / ") ||
-              "所属未設定"}
-          </CardDescription>
-        </CardLink>
-      ))}
+      {result.data.map((report) => {
+        const content = (
+          <>
+            <CardTitle>{report.name}</CardTitle>
+            <CardDescription>
+              {[report.dept_name, report.position].filter((value) => value !== null).join(" / ") ||
+                "所属未設定"}
+            </CardDescription>
+          </>
+        )
+        return report.code === null ? (
+          <Card key={report.employee_id}>
+            <CardHeader>{content}</CardHeader>
+          </Card>
+        ) : (
+          <CardLink
+            key={report.employee_id}
+            href={`/company/employees/${encodeURIComponent(report.code)}`}
+            className="flex min-h-24 flex-col gap-2"
+          >
+            {content}
+          </CardLink>
+        )
+      })}
     </div>
   )
 }

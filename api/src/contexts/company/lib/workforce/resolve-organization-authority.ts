@@ -1,6 +1,7 @@
+import { ReadOrganizationWorkforceState } from "@/contexts/company/lib/workforce/read-organization-workforce-state"
+import type { CompanyReportingRelationsReadPort } from "@/contexts/company/domain/definitions/company-reporting-relations-read.definition"
 import type { WorkforceSnapshotReadPort } from "@/contexts/company/domain/definitions/organization-change.definition"
 import { type OrganizationUnitReadPort } from "@/contexts/company/domain/definitions/organization-change.definition"
-import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/errors"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type {
   OrganizationalAuthorityCriterion,
@@ -8,16 +9,9 @@ import type {
 } from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import { OrganizationalAuthorityError } from "@/contexts/company/domain/errors"
 import { resolveOrganizationalAuthority } from "@/contexts/company/domain/policies/resolve-organizational-authority.policy"
-import { listAssignmentManagementRelations } from "@/contexts/company/domain/policies/list-assignment-management-relations.policy"
-import {
-  resolveWorkforceStateAt,
-  type WorkforceStateAt,
-} from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
 import type { WorkforceStateResolutionError } from "@/contexts/company/domain/errors"
 import { type OrganizationInvariantViolation } from "@/contexts/company/domain/definitions/organization-invariant.definition"
-import { validateOrganizationUnitSnapshot } from "@/contexts/company/domain/policies/validate-organization-unit-snapshot.policy"
 import type { WorkforceInvariantViolation } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
-import { validateWorkforceSchedules } from "@/contexts/company/domain/policies/validate-workforce-schedules.policy"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type ResolveOrganizationAuthorityResult =
@@ -38,6 +32,7 @@ export class ResolveOrganizationAuthority {
     private readonly ports: Readonly<{
       organization: OrganizationUnitReadPort
       workforce: WorkforceSnapshotReadPort
+      reporting: CompanyReportingRelationsReadPort
     }>,
   ) {
     Object.freeze(this)
@@ -51,56 +46,22 @@ export class ResolveOrganizationAuthority {
     }>,
   ): Promise<ResolveOrganizationAuthorityResult> {
     try {
-      const organization = await this.ports.organization.readSnapshot(props.asOf)
-      if (!organization.ok) return { kind: "unavailable", cause: organization.cause }
-      const organizationError = validateOrganizationUnitSnapshot(organization.snapshot)
-      if (organizationError !== null) return { kind: "invalid", error: organizationError }
-
-      const workforce = await this.ports.workforce.readAllSnapshot()
-      if (!workforce.ok) return { kind: "unavailable", cause: workforce.cause }
-      const currentRevision = await this.ports.organization.readRevision()
-      if (!currentRevision.ok) return { kind: "unavailable", cause: currentRevision.cause }
-      if (currentRevision.revision !== organization.snapshot.revision) {
-        return { kind: "unavailable", cause: new WorkforceSnapshotChangedError() }
-      }
-
-      const workforceError = validateWorkforceSchedules({
-        schedules: workforce.schedules,
-        organizationUnitPeriods: organization.snapshot.units,
-      })
-      if (workforceError !== null) return { kind: "invalid", error: workforceError }
-
-      const states: WorkforceStateAt[] = []
-      for (const schedule of workforce.schedules) {
-        const state = resolveWorkforceStateAt(
-          {
-            employeeId: schedule.employee.id,
-            baselineState: schedule.baselineState,
-            employments: schedule.employments,
-            statuses: schedule.statuses,
-            assignments: schedule.assignments,
-            responsibilities: schedule.responsibilities,
-          },
-          props.asOf,
-        )
-        if (state instanceof Error) return { kind: "invalid", error: state }
-        states.push(state)
-      }
+      const snapshot = await new ReadOrganizationWorkforceState(this.ports).execute(props.asOf)
+      if (snapshot.kind !== "found") return snapshot
 
       const resolution = resolveOrganizationalAuthority({
         snapshot: {
           schemaVersion: 1,
           source: "lifecycle",
           asOf: props.asOf,
-          organizationRevision: organization.snapshot.revision,
+          organizationRevision: snapshot.organization.revision,
+          companyRevision: snapshot.companyRevision,
         },
         subjectEmployeeId: props.subjectEmployeeId,
         criteria: props.criteria,
-        states,
-        managementRelations: listAssignmentManagementRelations(states),
-        accountLinks: workforce.schedules.flatMap((schedule) =>
-          schedule.accountLink === null ? [] : [schedule.accountLink],
-        ),
+        states: snapshot.employees,
+        managementRelations: snapshot.managementRelations,
+        accountLinks: snapshot.accountLinks,
       })
       return resolution instanceof OrganizationalAuthorityError
         ? { kind: "invalid", error: resolution }

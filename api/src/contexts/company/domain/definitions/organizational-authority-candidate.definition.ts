@@ -26,6 +26,7 @@ export type OrganizationalAuthoritySnapshot = Readonly<{
   source: "lifecycle"
   asOf: string
   organizationRevision: number
+  companyRevision?: number
 }>
 
 /** 一つの条件が一つの候補を導いた根拠。呼び出し側は正本ではなく証拠として保存する。 */

@@ -24,6 +24,7 @@ export type OrganizationalAuthorityErrorCode =
   | "organizational_authority_account_duplicate"
   | "organizational_authority_account_employee_missing"
   | "organizational_authority_manager_cycle"
+  | "organizational_authority_reporting_source_conflict"
 
 export type CompanyGovernanceAuthorityErrorCode =
   | "governance_authority_snapshot_invalid"

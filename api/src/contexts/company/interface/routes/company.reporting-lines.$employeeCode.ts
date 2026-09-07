@@ -1,5 +1,7 @@
 /** /company/reporting-lines/:employeeCode */
-import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
+import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
+import { ReadCompanySnapshotEmployeesAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-company-snapshot-employees.adapter"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import {
   CompanyAuthenticationRequiredError,
   CompanyDatabaseUnavailableError,
@@ -19,7 +21,7 @@ const factory = createFactory<CompanyHttpEnvironment>()
 export const GET = factory.createHandlers(
   zValidator(
     "param",
-    z.object({ employeeCode: z.string().trim().min(1).max(64) }),
+    z.object({ employeeCode: z.string().trim().min(1).max(255) }),
     (validation) => {
       if (!validation.success) throw new CompanyQueryInvalidError(validation.error)
     },
@@ -27,10 +29,14 @@ export const GET = factory.createHandlers(
   async (context) => {
     const actor = context.var.companyActor
     if (actor === undefined) throw new CompanyAuthenticationRequiredError()
-    if (!actor.hasCapability("company:read")) throw new CompanyReadForbiddenError()
+    if (
+      !actor.hasCapability("company:read") ||
+      !actor.canAccessOrganization("organization:default")
+    )
+      throw new CompanyReadForbiddenError()
     if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()
 
-    const organization = await new CurrentOrganizationReadModelAdapter({
+    const companyContext = {
       env: {
         DB: context.env.DB,
         COMPANY_TIME_ZONE: context.env.COMPANY_TIME_ZONE,
@@ -39,35 +45,66 @@ export const GET = factory.createHandlers(
           : { NOW: context.var.companyClock().toISOString() }),
       },
       var: { database: context.var.database, auditContext: context.var.auditContext },
-    }).loadCurrentOrganization()
-    if (organization instanceof Error) throw new CompanyReadUnavailableError(organization)
-    const employeeCode = context.req.valid("param").employeeCode
-    const employee = organization.employeesByCode.get(employeeCode)
-    if (employee === undefined || employee.primaryDepartmentCode === null) {
-      throw new CompanyReportingLineNotFoundError()
     }
+    const organization = await new ReadCanonicalOrganizationStateAdapter(
+      companyContext,
+    ).readCanonicalOrganizationState()
+    if (organization instanceof Error) throw new CompanyReadUnavailableError(organization)
+    const employees = await new ReadCompanySnapshotEmployeesAdapter(companyContext).read({
+      employeeIds: organization.employees
+        .filter((employee) => employee.status === "ACTIVE" || employee.status === "ON_LEAVE")
+        .map((employee) => employee.employeeId),
+      asOf: organization.organization.asOf,
+      organizationRevision: organization.organization.revision,
+      companyRevision: organization.companyRevision,
+    })
+    if (employees instanceof Error) throw new CompanyReadUnavailableError(employees)
+    const identifier = context.req.valid("param").employeeCode
+    const employee =
+      employees.find((entry) => entry.id === identifier) ??
+      employees.find((entry) => entry.employeeCode === identifier)
+    if (employee === undefined) throw new CompanyReportingLineNotFoundError()
 
+    const employeeById = new Map(employees.map((entry) => [entry.id, entry]))
+    const managersByEmployeeId = new Map<EmployeeId, Set<EmployeeId>>()
+    for (const relation of organization.managementRelations) {
+      const managers = managersByEmployeeId.get(relation.employeeId)
+      if (managers === undefined)
+        managersByEmployeeId.set(relation.employeeId, new Set([relation.managerEmployeeId]))
+      else managers.add(relation.managerEmployeeId)
+    }
     const nodes: Array<{
-      employee_code: string
+      employee_id: EmployeeId
+      employee_code: string | null
       employee_name: string
-      department_code: string
+      department_code: string | null
       position: string | null
       depth: number
+      manager_employee_ids: ReadonlyArray<EmployeeId>
     }> = []
-    const visited = new Set<string>()
-    let currentCode: string | null = employeeCode
-    while (currentCode !== null && !visited.has(currentCode)) {
-      const current = organization.employeesByCode.get(currentCode)
-      if (current === undefined || current.primaryDepartmentCode === null) break
-      visited.add(currentCode)
+    const visited = new Set<EmployeeId>([employee.id])
+    const queue = [{ id: employee.id, depth: 0 }]
+    for (let offset = 0; offset < queue.length; offset += 1) {
+      const next = queue[offset]
+      if (next === undefined) continue
+      const current = employeeById.get(next.id)
+      if (current === undefined)
+        throw new CompanyReadUnavailableError(new Error("Company reporting employee missing"))
+      const managerIds = [...(managersByEmployeeId.get(current.id) ?? [])].toSorted()
       nodes.push({
-        employee_code: current.code,
-        employee_name: current.name,
-        department_code: current.primaryDepartmentCode,
-        position: current.position,
-        depth: nodes.length,
+        employee_id: current.id,
+        employee_code: current.employeeCode,
+        employee_name: current.officialName,
+        department_code: current.primaryAssignment?.organizationUnitCode ?? null,
+        position: current.primaryAssignment?.positionTitle ?? null,
+        depth: next.depth,
+        manager_employee_ids: managerIds,
       })
-      currentCode = current.managerEmployeeCode
+      for (const id of managerIds) {
+        if (visited.has(id)) continue
+        visited.add(id)
+        queue.push({ id, depth: next.depth + 1 })
+      }
     }
 
     return context.json(nodes, 200)
