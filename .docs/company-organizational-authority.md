@@ -189,7 +189,7 @@ OrgUnit は変更される名称や親子関係そのものを ID にしない�
 
 Personnel Action はCompanyへの人事入力adapterであり、所属または責務を変える発令は同じ `OrganizationChangeSet` validator を必ず通す。採用予定者は、同一 transaction で作成される Employee profile、Employment、Status だけを検証用 snapshot に補い、所属を二重適用しない。発令事実、組織 operation、period version、current projection、監査は同じ batch で確定する。
 
-初期化は明示済みの OrgUnit、lifecycle assignment、manager responsibility だけを決定的に作る。Account role、役職名、権限から会社上の責務を推測しない。`PEOPLE_OPERATIONS` など manager 以外の責務は、Company の組織変更 operation として明示的に割り当てる。authority workflow と必要な Responsibility が設定されていない判断は拒否する。
+[会社の初期化](company-api.md#会社の初期化)は確認済みのOrgUnitと所属を作り、明示された`MANAGER`と`PEOPLE_OPERATIONS`だけをCompanyの組織変更operationで割り当てる。空配列なら責務を作らない。Account role、役職名、権限から会社上の責務を推測しない。authority workflow と必要な Responsibility が設定されていない判断は拒否する。
 
 ## 現行実装
 

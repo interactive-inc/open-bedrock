@@ -1,3 +1,4 @@
+import { periodsContainPeriod } from "@/contexts/company/domain/definitions/periods-contain-period.definition"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { OrganizationStructureValue } from "@/contexts/company/domain/values/organization-structure.value"
@@ -12,9 +13,11 @@ function hasContainingOrganizationUnit(
   organizationUnitId: string,
   activeUnits: ReadonlyArray<CompanyResourceEntity>,
 ): boolean {
-  return activeUnits.some(
-    (unit) =>
-      unit.readText("organizationUnitId") === organizationUnitId && unit.containsPeriod(resource),
+  return periodsContainPeriod(
+    activeUnits
+      .filter((unit) => unit.readText("organizationUnitId") === organizationUnitId)
+      .map((unit) => ({ startsOn: unit.effectiveFrom, endsOn: unit.effectiveTo })),
+    { startsOn: resource.effectiveFrom, endsOn: resource.effectiveTo },
   )
 }
 

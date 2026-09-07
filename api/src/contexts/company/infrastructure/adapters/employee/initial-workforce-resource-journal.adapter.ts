@@ -32,6 +32,7 @@ export type InitialWorkforceResource = Readonly<{
   operationId: string
   reason: string
   lifecycleRevision: number
+  expectedOrganizationRevision?: number
 }>
 type Context = Readonly<{
   env: Readonly<{ DB: D1Database }>
@@ -85,7 +86,7 @@ export class InitialWorkforceResourceJournalAdapter {
         const change = CompanyResourceChangeEntity.create({
           commandId: `initial-workforce:${input.operationId}`,
           actorAccountId: input.actorAccountId,
-          expectedRevision: revision.data + index,
+          expectedRevision: input.expectedOrganizationRevision ?? revision.data + index,
           reason: input.reason,
           recordedAt,
           resources: [

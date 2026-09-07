@@ -1,3 +1,4 @@
+import { periodsContainPeriod } from "@/contexts/company/domain/definitions/periods-contain-period.definition"
 import {
   EmployeeEntity,
   type EmployeeProps,
@@ -303,11 +304,14 @@ export class WorkforceScheduleEntity {
         )
       }
       if (
-        !assignments.some(
-          (assignment) =>
-            assignment.employmentId === responsibility.employmentId &&
-            assignment.organizationUnitId === responsibility.organizationUnitId &&
-            containsPeriod(assignment, responsibility),
+        !periodsContainPeriod(
+          assignments.filter(
+            (assignment) =>
+              assignment.employeeId === responsibility.employeeId &&
+              assignment.employmentId === responsibility.employmentId &&
+              assignment.organizationUnitId === responsibility.organizationUnitId,
+          ),
+          responsibility,
         )
       ) {
         return violation(

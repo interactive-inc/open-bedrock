@@ -1,3 +1,4 @@
+import { periodsContainPeriod } from "@/contexts/company/domain/definitions/periods-contain-period.definition"
 import { activeWorkforcePeriods } from "@/contexts/company/domain/policies/active-workforce-periods.policy"
 import { WorkforceInvariantViolationValue } from "@/contexts/company/domain/values/workforce-invariant-violation.value"
 import { isOrgResponsibilityType } from "@/contexts/company/domain/definitions/is-org-responsibility-type.definition"
@@ -22,11 +23,11 @@ export function validateWorkforceResponsibilities(
       )
     }
     if (
-      !organizationUnitPeriods.some(
-        (unit) =>
-          !unit.isVoid &&
-          unit.organizationUnitId === responsibility.organizationUnitId &&
-          workforcePeriodContainsPeriod(unit, responsibility),
+      !periodsContainPeriod(
+        organizationUnitPeriods.filter(
+          (unit) => !unit.isVoid && unit.organizationUnitId === responsibility.organizationUnitId,
+        ),
+        responsibility,
       )
     ) {
       return new WorkforceInvariantViolationValue(
@@ -47,14 +48,15 @@ export function validateWorkforceResponsibilities(
         "responsibility holder is not employed for the full period",
       )
     }
-    const assignment = holder?.assignments.find(
-      (period) =>
-        !period.isVoid &&
-        period.employmentId === responsibility.employmentId &&
-        period.organizationUnitId === responsibility.organizationUnitId &&
-        workforcePeriodContainsPeriod(period, responsibility),
-    )
-    if (assignment === undefined) {
+    const assignments =
+      holder?.assignments.filter(
+        (period) =>
+          !period.isVoid &&
+          period.employeeId === responsibility.employeeId &&
+          period.employmentId === responsibility.employmentId &&
+          period.organizationUnitId === responsibility.organizationUnitId,
+      ) ?? []
+    if (!periodsContainPeriod(assignments, responsibility)) {
       return new WorkforceInvariantViolationValue(
         "responsibility_without_assignment",
         "responsibility holder is not assigned to the organization unit",

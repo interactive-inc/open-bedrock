@@ -122,19 +122,6 @@ export class CompanyApplicationValidationError extends CompanyHTTPException {
   }
 }
 
-export class CompanyBootstrapConflictError extends CompanyHTTPException {
-  constructor(code: "already_initialized" | "company_bootstrap_conflict") {
-    super({
-      status: 409,
-      code,
-      detail:
-        code === "already_initialized"
-          ? "Company is already initialized"
-          : "Company is already initialized without this account link",
-    })
-  }
-}
-
 export class CompanyBootstrapInputInvalidError extends CompanyHTTPException {
   constructor(cause?: unknown) {
     super({

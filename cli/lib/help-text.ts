@@ -9,7 +9,7 @@ usage: bedrock [command]
 
 commands:
   login                                       ログインしてトークンを取得 (--email --password [--base-url])
-  bootstrap                                   初期 ROOT を1度だけ作成 (--email --password --name [--code --token])
+  bootstrap                                   Systemと会社を初期化 (--email --password --company-data --idempotency-key)
   whoami                                      自分の情報を表示
   employees search                            社員検索 (--q --dept --status)
   employees register                          社員を登録

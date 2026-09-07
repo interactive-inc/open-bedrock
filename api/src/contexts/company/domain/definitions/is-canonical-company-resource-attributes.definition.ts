@@ -18,6 +18,7 @@ const resourceAttributeSchemas = {
   "company-profile": z
     .object({
       displayName: text,
+      representativeName: text.optional(),
       locale: z.string().regex(/^[a-z]{2,3}(?:-[A-Z]{2})?$/),
       timeZone: z.string().regex(/^(?:UTC|[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)+)$/),
       fiscalYearStartMonth: z.number().int().min(1).max(12),

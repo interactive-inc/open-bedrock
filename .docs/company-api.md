@@ -18,6 +18,27 @@ writeは次のheaderを必須とする。
 
 bodyは`reason`と1件以上100件以下の`resources`を持つ。Actor Account IDと記録時刻はbodyから受け取らずserverが設定する。全resourceは同じorganizationに属し、同じcommand内で`type + id`を重複させない。
 
+## 会社の初期化
+
+`POST /company/bootstrap`は、空の既定Companyへ確認済みの会社情報と最初の従業員を登録する。Systemの認証と`company:admin`、`organization:default`へのアクセスを要求し、従業員sessionの作成前に利用できる。`Idempotency-Key`を必須とし、初期状態と会社版は保存時にも検査する。
+
+JSONは次の全項目を必須とする。
+
+- `name`、`code`: 最初の従業員の氏名と従業員番号
+- `organization_name`、`representative_name`: 確認した会社名と代表者名
+- `initial_responsibilities`: 最初の従業員へ割り当てる`MANAGER`、`PEOPLE_OPERATIONS`の重複しない配列。割当がなければ空配列
+- `hire_date`、`employment_type`: 確認した入社日と`FULL_TIME`または`PART_TIME`
+- `locale`、`time_zone`、`fiscal_year_start_month`: 会社の言語、timezone、会計年度の開始月
+- `reason`: 初期登録の理由
+
+入社日は会社営業日以前を要求し、確認可能な組織履歴より前の在籍は422で拒否する。新規登録のtimezoneが実行環境の会社timezoneと一致しない場合は409で拒否する。代表者名は従業員名から補わず、Accountの管理権限から会社上の責務を推測しない。
+
+Person・Employee・Employment、会社profile、ルートOrgUnit、在籍・所属・明示した責務、Account対応、監査と再送結果を同じtransactionで保存する。会社profileと確認した会社名・責務は初期化日の会社営業日から有効とし、入社日にさかのぼって現在の会社情報を補わない。ルートOrgUnitの元の期間と訂正履歴を保全する。法人の法域や通貨を推測してLegalEntityを作らない。
+
+成功は201で`account_id`、opaque文字列の`employee_id`、`organization_revision: 3`、`replayed: false`を返す。同じ主体・入力・キーの再送は現在の認証と管理資格を検査したうえで、元の結果を200と`replayed: true`で返す。同じキーの別内容、他の初期化、既存Companyへの上書きは409で拒否する。従業員・業務履歴がない初期状態に会社名・代表者名だけが設定済みの場合は、入力が既存値と一致するときだけ初期化できる。保存に失敗した場合は全Company変更を取り消し、同じ入力とキーで再試行できる。
+
+CLIの`bootstrap`は`--company-data`で確認済みJSONファイル、`--idempotency-key`で再送用のキーを受け取り、System初期化、ログイン、Company初期化を順に行う。Companyの409を成功扱いせず、成功または一致する再送が確認できてからログイン情報を保存する。
+
 ## Resource envelope
 
 resource APIのCompany resourceは次を持つ。
@@ -58,6 +79,8 @@ organization revisionは一つのcommandにつき必ず1増える。resource rev
 訂正は同じresource IDへ次のrevisionを追記する。将来変更は新しい`effectiveFrom`を持つrevisionを追記する。取消は`state: void`の次revisionを、取消が発効する日付とともに追記する。既存revisionをUPDATEまたはDELETEしない。
 
 OrgUnitの`id`は期間IDで、`attributes.organizationUnitId`が改組後も変わらない組織の同一性を表す。OrgUnitのrevisionはその期間全体の訂正である。将来の改組は現在期間を閉じ、別の期間IDで登録する。日付指定の参照では各期間の最新訂正だけを評価するため、開始日を後ろへ訂正しても旧revisionの期間は復活しない。`void`はその期間全体を取り消す。
+
+親組織・所属先・責務の対応する所属は、同じ所有者の最新の有効期間が切れ目なく続いていれば複数の期間を通して参照できる。途中の空白、取消済み期間、別の従業員や雇用の期間で参照期間を補うことはできない。既存の所属や責務を孤立させる訂正・取消もDBで拒否する。
 
 `Idempotency-Key`はactor、expected revision、理由、全resourceを含むcanonical JSONのSHA-256 fingerprintへ結び付ける。同じkeyと同じcommandの再送は保存済みrevisionを`replayed: true`で返す。同じkeyを異なるcommandへ再利用すると`company_command_conflict`で拒否する。
 
@@ -111,6 +134,8 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 会社の初期化と新規従業員の入社発令は、Person・Employee・Employmentの初期resourceと対応関係を同じtransactionで作る。初期宣言と台帳の氏名・連絡先・雇用区分・発効日・状態・期間履歴が一致しない場合は登録全体を取り消す。初期resourceの版は1とし、登録後は公開APIと人事発令の両方から同じ履歴を更新できる。
 
 新規Accountの作成・発行と一括登録を合成する製品向けには、同じ初期resourceを既存の登録batchへ組み込むadapterを提供する。一括登録は準備時に会社の版を一度だけ読み、各登録のcommandへ連続した版を割り当てる。別のCompany変更と競合した場合は全登録を取り消し、再試行の際に版を読み直す。
+
+会社profileは初期化時に公開resourceと既存の会社情報を同時に保存するが、初期化後の両方の更新経路の統合は未完成である。所属・責務・Account対応も、初期化が作る期間台帳と公開resource APIの全保存経路は統合されていない。
 
 公開resourceに未接続の既存台帳、招待からの登録、製品固有の人物情報writer、未接続の組織・所属・責務・Account対応の保存先統合は未完成である。入社・再入社の発令は`employmentType`に`FULL_TIME`または`PART_TIME`を必須とする。新規従業員登録の入力名は`employment_type`である。選択した区分を承認対象の本文、発令記録、業務台帳、公開雇用へ保存する。再入社と訂正で新しく作る契約にも明示した区分を使い、以前の契約の区分を変更しない。
 

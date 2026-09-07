@@ -1,3 +1,4 @@
+import { periodsContainPeriod } from "@/contexts/company/domain/definitions/periods-contain-period.definition"
 import { activeWorkforcePeriods } from "@/contexts/company/domain/policies/active-workforce-periods.policy"
 import { WorkforceInvariantViolationValue } from "@/contexts/company/domain/values/workforce-invariant-violation.value"
 import { findWorkforceEmployment } from "@/contexts/company/domain/policies/find-workforce-employment.policy"
@@ -22,11 +23,11 @@ export function validateWorkforceAssignments(
       )
     }
     if (
-      !organizationUnitPeriods.some(
-        (unit) =>
-          !unit.isVoid &&
-          unit.organizationUnitId === assignment.organizationUnitId &&
-          workforcePeriodContainsPeriod(unit, assignment),
+      !periodsContainPeriod(
+        organizationUnitPeriods.filter(
+          (unit) => !unit.isVoid && unit.organizationUnitId === assignment.organizationUnitId,
+        ),
+        assignment,
       )
     ) {
       return new WorkforceInvariantViolationValue(
