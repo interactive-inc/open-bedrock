@@ -1,7 +1,6 @@
 import { EmployeeEventCreateForm } from "@/app/(app)/company/employees/[employee]/_components/employee-event-create-form"
 import { toEmployeeEventKindLabel } from "@/lib/employee-event/to-employee-event-kind-label"
 import { getEmployeeEventList } from "@/lib/api/get-employee-event-list"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -11,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   code: string
@@ -67,7 +67,9 @@ export async function EmployeeEventHistory(props: Props) {
                     <TableCell>{event.effective_date}</TableCell>
 
                     <TableCell>
-                      <Badge variant="outline">{toEmployeeEventKindLabel(event.kind)}</Badge>
+                      <Button type="button" variant="secondary" size="sm">
+                        {toEmployeeEventKindLabel(event.kind)}
+                      </Button>
                     </TableCell>
 
                     <TableCell>{event.from_department_code ?? "-"}</TableCell>

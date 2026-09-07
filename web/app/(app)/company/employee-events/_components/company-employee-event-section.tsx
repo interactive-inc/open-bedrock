@@ -1,6 +1,5 @@
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -12,6 +11,7 @@ import {
 import { getEmployeeEventList } from "@/lib/api/get-employee-event-list"
 import type { EmployeeEventKind } from "@/lib/api/types/employee-event-types"
 import { toEmployeeEventKindLabel } from "@/lib/employee-event/to-employee-event-kind-label"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   employeeCode: string
@@ -61,7 +61,9 @@ export async function CompanyEmployeeEventSection(props: Props) {
               <TableCell className="whitespace-nowrap">{event.effective_date}</TableCell>
 
               <TableCell>
-                <Badge variant="outline">{toEmployeeEventKindLabel(event.kind)}</Badge>
+                <Button type="button" variant="secondary" size="sm">
+                  {toEmployeeEventKindLabel(event.kind)}
+                </Button>
               </TableCell>
 
               <TableCell>{event.from_department_code ?? "-"}</TableCell>

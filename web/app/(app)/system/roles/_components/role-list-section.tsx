@@ -9,8 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { getRoles } from "@/lib/api/get-roles"
 import Link from "next/link"
 
@@ -52,9 +51,13 @@ export async function RoleListSection(props: { actorPermissionKeys: ReadonlyArra
                 <TableCell>{role.description ?? "—"}</TableCell>
                 <TableCell>
                   {role.is_system ? (
-                    <Badge variant="secondary">システム</Badge>
+                    <Button type="button" variant="secondary" size="sm">
+                      システム
+                    </Button>
                   ) : (
-                    <Badge variant="outline">動的</Badge>
+                    <Button type="button" variant="secondary" size="sm">
+                      動的
+                    </Button>
                   )}
                 </TableCell>
                 <TableCell>
