@@ -22,6 +22,7 @@ import * as myOrganizationUnits from "@/contexts/company/interface/routes/compan
 import * as myProfile from "@/contexts/company/interface/routes/company.my-profile"
 import * as organizationChanges from "@/contexts/company/interface/routes/company.organization-changes"
 import * as organizationProfile from "@/contexts/company/interface/routes/company.organization-profile"
+import * as organizationResourceAdoptions from "@/contexts/company/interface/routes/company.organization-resource-adoptions"
 import * as organizationSnapshots from "@/contexts/company/interface/routes/company.organization-snapshots"
 import * as organizationTree from "@/contexts/company/interface/routes/company.organization-tree"
 import * as organizationUnits from "@/contexts/company/interface/routes/company.organization-units"
@@ -61,6 +62,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/my-organization-units", ...myOrganizationUnits.GET)
   .get("/my-profile", ...myProfile.GET)
   .get("/organization-profile", ...organizationProfile.GET)
+  .get("/organization-resource-adoptions", ...organizationResourceAdoptions.GET)
   .get("/organization-snapshots", ...organizationSnapshots.GET)
   .get("/organization-tree", ...organizationTree.GET)
   .get("/organization-units", ...organizationUnits.GET)
@@ -87,6 +89,7 @@ export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .put("/my-profile", ...myProfile.PUT)
   .post("/organization-changes", ...organizationChanges.POST)
   .put("/organization-profile", ...organizationProfile.PUT)
+  .post("/organization-resource-adoptions", ...organizationResourceAdoptions.POST)
   .post("/organization-units", ...organizationUnits.POST)
   .put("/organization-units/:code", ...organizationUnitsCode.PUT)
   .delete("/organization-units/:code", ...organizationUnitsCode.DELETE)

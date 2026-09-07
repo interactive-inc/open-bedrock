@@ -57,6 +57,8 @@ organization revisionは一つのcommandにつき必ず1増える。resource rev
 
 訂正は同じresource IDへ次のrevisionを追記する。将来変更は新しい`effectiveFrom`を持つrevisionを追記する。取消は`state: void`の次revisionを、取消が発効する日付とともに追記する。既存revisionをUPDATEまたはDELETEしない。
 
+OrgUnitの`id`は期間IDで、`attributes.organizationUnitId`が改組後も変わらない組織の同一性を表す。OrgUnitのrevisionはその期間全体の訂正である。将来の改組は現在期間を閉じ、別の期間IDで登録する。日付指定の参照では各期間の最新訂正だけを評価するため、開始日を後ろへ訂正しても旧revisionの期間は復活しない。`void`はその期間全体を取り消す。
+
 `Idempotency-Key`はactor、expected revision、理由、全resourceを含むcanonical JSONのSHA-256 fingerprintへ結び付ける。同じkeyと同じcommandの再送は保存済みrevisionを`replayed: true`で返す。同じkeyを異なるcommandへ再利用すると`company_command_conflict`で拒否する。
 
 組織変更でも現在のscopeと操作資格を確認した後、保存済みcommandを現在の会社版や親組織の状態より先に照合する。成功後に親組織が取り消されても、再送は保存済みの結果を返し、組織を復活させない。初回照会の後に同じcommandが確定した場合も、検査・保存の失敗を返す前に保存済み結果を再確認する。未成功のcommandには現在の組織構造と版の検査を適用する。
@@ -110,9 +112,9 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 
 新規Accountの作成・発行と一括登録を合成する製品向けには、同じ初期resourceを既存の登録batchへ組み込むadapterを提供する。一括登録は準備時に会社の版を一度だけ読み、各登録のcommandへ連続した版を割り当てる。別のCompany変更と競合した場合は全登録を取り消し、再試行の際に版を読み直す。
 
-公開resourceに未接続の既存台帳、招待からの登録、製品固有の人物情報writer、組織・所属・責務・Account対応の保存先統合は未完成である。入社・再入社の発令は`employmentType`に`FULL_TIME`または`PART_TIME`を必須とする。新規従業員登録の入力名は`employment_type`である。選択した区分を承認対象の本文、発令記録、業務台帳、公開雇用へ保存する。再入社と訂正で新しく作る契約にも明示した区分を使い、以前の契約の区分を変更しない。
+公開resourceに未接続の既存台帳、招待からの登録、製品固有の人物情報writer、未接続の組織・所属・責務・Account対応の保存先統合は未完成である。入社・再入社の発令は`employmentType`に`FULL_TIME`または`PART_TIME`を必須とする。新規従業員登録の入力名は`employment_type`である。選択した区分を承認対象の本文、発令記録、業務台帳、公開雇用へ保存する。再入社と訂正で新しく作る契約にも明示した区分を使い、以前の契約の区分を変更しない。
 
-既存の組織一覧・組織ツリー・組織詳細・所属者一覧・本人の所属組織と、組織の作成・更新・削除は既定organizationの台帳を扱う。必要なCompany capabilityまたは操作permissionに加え、`organization:default`へのアクセスを必須とする。別organizationの管理者は参照・変更・成功済み変更の再送を行えない。プロフィール変更も対象organizationへのアクセスを検査する。公開組織resourceとこの台帳の保存経路は、引き続き統合されていない。
+既存の組織一覧・組織ツリー・組織詳細・所属者一覧・本人の所属組織と、組織の作成・更新・削除は既定organizationの台帳を扱う。必要なCompany capabilityまたは操作permissionに加え、`organization:default`へのアクセスを必須とする。別organizationの管理者は参照・変更・成功済み変更の再送を行えない。プロフィール変更も対象organizationへのアクセスを検査する。接続済みのOrgUnitは公開APIと既存APIの変更を同じtransactionで両方の履歴へ保存する。公開APIで新設した既定organizationのOrgUnitと、接続済みの親から既存APIで新設したOrgUnitも接続される。既存の未接続OrgUnitは管理者による履歴確認を必要とする。
 
 雇用区分の欠ける新規入力は400で拒否する。区分を含まない旧提案は、本文やdigestを変更せず承認・実行を409で拒否し、新しい申請を求める。既存の発令履歴に区分がなければ不明のまま参照し、推測して書き足さない。Webの入社・再入社フォームとCLIの`employees register --employment-type`も区分の選択を必須とする。
 
@@ -122,7 +124,7 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 
 [外部identity同期](external-identity-imports.md)は機械主体を認証し、新規Accountと公開Person・Employee・Employment、初期人事記録、期間履歴を同じtransactionで保存する。既存の公開Personの氏名・email更新にも接続する。初期記録には明示された発効日・区分・理由と内容digestを残す。既存データの過去の状態を現在の雇用statusから補完する処理は持たない。
 
-参照整合性とprojectionのmigrationは既存台帳・履歴を保全する。適用前の欠損参照や不足する雇用区分の修復、既存データの削除、既存台帳とresourceの所有関係の推測は行わない。所有関係のない既存データを新しい公開writeへ接続する移行は未完成である。
+参照整合性とprojectionのmigrationは既存台帳・履歴を保全する。適用前の欠損参照や不足する雇用区分の修復、既存データの削除、既存台帳とresourceの所有関係の推測は行わない。履歴確認で接続できない既存データの修復と、未対応のresource種別の移行は未完成である。
 
 `company-context.manifest.json`の`sourcePaths`はCompanyの全sourceを列挙し、`company-context.lock.json`はその全pathとhashを固定する。本リポジトリと共有先はDomain、Application、Infrastructure、Interface、testを含むCompanyディレクトリ全体を同一内容に保ち、CIは欠落、余分なpath、内容差を拒否する。製品差はCompanyの外側にあるAPI compositionだけで吸収する。
 
@@ -151,3 +153,15 @@ resourcesには、一人のPerson、そのPersonに対応する既存IDのEmploy
 確認後の台帳・期間・会社版の変更は保存直前にも検査する。新規依頼が会社営業日を越えた場合も409になる。人物・従業員・雇用の公開履歴、既存台帳との接続、操作主体・理由・元のsnapshotを持つ変更不能な移行記録を一つのtransactionで保存する。元の台帳と期間履歴は変更しない。保存済みの同じ依頼は翌日以降も元の結果を返す。
 
 CLIの `employees adoption --employee-id <id>` で照合対象を参照し、`employees adoption --data <confirmed-history.json> --idempotency-key <uuid>` で確認済みの履歴を送信できる。競合時に最新版への自動再送は行わない。
+
+## 既存組織の公開履歴への接続
+
+`GET /company/organization-resource-adoptions?organization_unit_id=<id>` は組織の同一性、保存済みの全期間revision、元の操作主体・理由・証拠・digest、接続状態、照合用digest、会社版、会社営業日を返す。既定organizationへのアクセスと `company:admin` が必要になる。
+
+`POST /company/organization-resource-adoptions` は確認した `organizationUnitId`、`snapshotDigest`、`expectedRevision`、`observedOn`、確認理由 `reason` と `Idempotency-Key` を受け取る。親組織から順に接続し、期間IDと全revisionをそのまま公開履歴へ保存する。元の台帳・履歴は変更せず、元のsnapshotと移行主体・理由を変更不能な接続記録へ残す。一回の対象は一つの組織で、全期間revisionが1件から100件、元のsnapshotがUTF-8で750,000バイト以内でなければならない。
+
+履歴の欠落、未完了の変更、既存の公開IDとの衝突、部分接続を拒否する。確認後の会社版・組織履歴の変更と営業日の変更は409になり、保存直前にも同じsnapshotを検査する。保存済みの同じ依頼は翌日以降も元の結果を返す。接続・公開履歴・会社版・移行記録の保存失敗では全体を取り消す。
+
+接続後は会社版と組織操作の確定時にDBでも両方の最新期間を照合し、片側だけの更新を拒否する。将来の期間や取消済み期間は現在の組織一覧・詳細に混ぜない。既定organization以外の公開OrgUnitは単一Companyの既存台帳へ接続しない。所属・責務・Account対応の統合、既存組織編集画面が表示した版の照合は未完成である。
+
+CLIは `departments adoption --organization-unit-id <id>` で確認内容を取得し、`departments adoption --data <confirmed-history.json> --idempotency-key <key>` で確認済みの依頼を送る。会社版を自動取得して変更を再送する処理は持たない。

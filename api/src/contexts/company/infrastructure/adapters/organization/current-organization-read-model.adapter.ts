@@ -1,3 +1,4 @@
+import { periodContainsDate } from "@/contexts/company/domain/definitions/period-contains-date.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
 import type {
@@ -96,10 +97,11 @@ async function loadCurrentOrganization(c: Context): Promise<CurrentOrganizationR
     const employeeById = new Map<EmployeeId, EmployeeDirectoryRow>(
       employeeRows.map((employee) => [employee.id, employee]),
     )
-    const unitById = new Map(
-      snapshot.organization.units.map((unit) => [unit.organizationUnitId, unit]),
+    const currentUnits = snapshot.organization.units.filter(
+      (unit) => !unit.isVoid && periodContainsDate(unit, restoreCalendarDate(businessDate)),
     )
-    const organizationUnits = snapshot.organization.units.filter((unit) => unit.kind !== "COMPANY")
+    const unitById = new Map(currentUnits.map((unit) => [unit.organizationUnitId, unit]))
+    const organizationUnits = currentUnits.filter((unit) => unit.kind !== "COMPANY")
     const organizationCodes = new Set(organizationUnits.map((unit) => unit.code))
     const codeByUnitId = new Map<OrganizationUnitId, string>()
     for (const unit of organizationUnits) {

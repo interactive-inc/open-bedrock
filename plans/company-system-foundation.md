@@ -61,8 +61,8 @@
 - 機械access tokenを発行元credentialへ接続し、両製品のAPI認証でAccount状態・token版、Principalへの所属、credential失効・期限、Connector停止を再検査する。別credentialの継続、別Accountのcredential拒否、権限失効、発行処理中のAccount・Connector変更を検証済み。発行元のない旧機械tokenは再発行が必要になる
 - 退職発令の確定・再送から既存tokenの認可までを、実際のApplication・DB・業務handlerで検証済み。退職日中は200、翌日は401
 - 新規登録の公開履歴保存失敗ではAccount・従業員・期間も取り消す。登録の再送で公開履歴を増やさず、準備後のCompany版競合は409を返す。会社の版が進んでいる場合は初期化を重ねない
-- 本製品のAPI全体は固定Bun版で3,311件成功。変更前からあるUI生成ファイルのre-export検査1件は失敗する
-- 共有先のCompany・System全体とAccount表示名のcompositionは931件成功、失敗0件。Company 413ファイルとSystem 500ファイル、manifest、lockは完全一致
+- 本製品のAPI全体は固定Bun版で3,327件成功。変更前からあるUI生成ファイルのre-export検査1件は失敗する
+- 共有先のCompany・System全体とAccount表示名のcompositionは946件成功、失敗0件。Company 423ファイルとSystem 500ファイル、manifest、lockは完全一致
 - API・Webと共有先の型検査、共有source・境界検査、変更箇所のformat・lintは成功。本製品の全体lintはエラー0件で、未変更のUI生成ファイルにある警告3件が残る
 - 両製品の実際のAPI入口から、外部identity登録とprovider scope違い・credential失効の拒否を検証済み。本製品では公開Company APIの読取、更新、再送、旧共有キー・人のtokenの拒否、通常Company入口の認証維持も検証済み。旧同期APIと入力契約は置き換わる
 - 218件の新規従業員を一つのbatchで登録し、654件の公開resourceと218件のcommand receiptを保存するSQLiteテストは成功。本番D1での実行時間と資源制限の検証は未完了であり、大規模一括処理の本番実行を保証しない
@@ -108,3 +108,13 @@
 - 既存の組織一覧・ツリー・詳細・所属者・本人所属と作成・更新・削除に、既定organizationへのアクセス検査を追加した。別organizationの管理権限だけでは参照・変更・成功済み依頼の再送ができない。プロフィール変更も対象organizationを検査する。公開組織resourceと期間台帳、所属・責務・Account対応の統合は引き続き完成条件として残る。
 
 - 組織修正後のAPI全体は3,311件成功・既存re-export検査1件失敗、共有先のCompany・Systemと関連compositionは931件成功した。共有先の境界検査で見つかった既存のプロフィールschemaの配置違反も、入力契約を変えず共通定義へ移して解消した。移動後の人物更新・組織変更・構造契約は本製品45件、共有先37件成功した。
+
+- 既存組織の全期間revisionを公開APIへ接続するAPIとCLIを追加した。元の期間ID、訂正履歴、操作主体・理由・証拠を保全し、親から順に管理者が確認して接続する。公開・既存APIの変更は同じtransactionで保存し、片側だけの更新をDBで拒否する。
+
+- OrgUnitは期間IDと組織の同一性を区別し、最新revisionを期間全体の訂正として評価する。将来の改組は別期間として登録し、既存APIの変更は会社営業日に有効な期間だけを対象にする。開始日訂正で旧期間が復活する不具合と、将来・取消済み組織を現在表示に混ぜる不具合を修正した。
+
+- 所属・責務・Account対応の保存経路、会社初期化で使うルートOrgUnitの公開正本への接続、既存の組織編集画面とCLIが表示した期間・版の照合、複数organizationの業務台帳は引き続き完成条件として残る。
+
+- 組織接続後の本製品API全体は3,327件成功・既存re-export検査1件失敗、CLI全体は355件成功した。共有先はCompany・Systemと関連compositionの946件が成功し、失敗0件。役職の承認候補テストは既存ルートの履歴確認を経て公開組織へ接続するfixtureに更新した。欠落履歴のテストは、両製品の既存スキーマから対象の制約を特定して破損を再現する。
+
+- API・Web・CLIと共有先の型検査、共有source・境界・migration・seed検査は成功した。全体format・lintはエラー0件、既存のUI生成ファイルの警告3件が残る。Company 423ファイル、System 500ファイルと共有metadata、9本の追記migrationは一致する。本番DBへの適用と本番D1の資源制限は未検証であり、基盤全体の目標を継続する。

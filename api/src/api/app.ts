@@ -107,6 +107,7 @@ import * as companyMyOrganizationUnitsRoute from "@/contexts/company/interface/r
 import * as companyMyProfileRoute from "@/contexts/company/interface/routes/company.my-profile"
 import * as companyOrganizationChangesRoute from "@/contexts/company/interface/routes/company.organization-changes"
 import * as companyOrganizationProfileRoute from "@/contexts/company/interface/routes/company.organization-profile"
+import * as companyOrganizationResourceAdoptionsRoute from "@/contexts/company/interface/routes/company.organization-resource-adoptions"
 import * as companyOrganizationSnapshotsRoute from "@/contexts/company/interface/routes/company.organization-snapshots"
 import * as companyOrganizationTreeRoute from "@/contexts/company/interface/routes/company.organization-tree"
 import * as companyOrganizationUnitsRoute from "@/contexts/company/interface/routes/company.organization-units"
@@ -594,14 +595,19 @@ const routePart25 = createRouteApp()
   .post("/company/organization-changes", ...companyOrganizationChangesRoute.POST)
   .get("/company/organization-profile", ...companyOrganizationProfileRoute.GET)
   .put("/company/organization-profile", ...companyOrganizationProfileRoute.PUT)
+  .get("/company/organization-resource-adoptions", ...companyOrganizationResourceAdoptionsRoute.GET)
+  .post(
+    "/company/organization-resource-adoptions",
+    ...companyOrganizationResourceAdoptionsRoute.POST,
+  )
   .get("/company/organization-snapshots", ...companyOrganizationSnapshotsRoute.GET)
   .get("/company/organization-tree", ...companyOrganizationTreeRoute.GET)
   .get("/company/organization-units", ...companyOrganizationUnitsRoute.GET)
   .post("/company/organization-units", ...companyOrganizationUnitsRoute.POST)
-  .get("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.GET)
-  .put("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.PUT)
 
 const routePart26 = createRouteApp()
+  .get("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.GET)
+  .put("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.PUT)
   .delete("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.DELETE)
   .get("/company/organization-units/:code/members", ...companyOrganizationUnitsCodeMembersRoute.GET)
   .get("/company/people", ...companyPeopleRoute.GET)

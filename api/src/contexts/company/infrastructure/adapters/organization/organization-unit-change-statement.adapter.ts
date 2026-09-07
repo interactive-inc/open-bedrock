@@ -1,0 +1,76 @@
+import type { OrganizationWorkforceChangeEntity } from "@/contexts/company/domain/entities/organization-workforce-change.entity"
+
+type Context = D1Database
+
+/** 公開APIと既存の組織変更が共有する、期間台帳の一括保存statement。 */
+export class OrganizationUnitChangeStatementAdapter {
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
+  prepare(
+    change: OrganizationWorkforceChangeEntity,
+    requestFingerprint: string,
+  ): ReadonlyArray<D1PreparedStatement> {
+    const statements: D1PreparedStatement[] = [
+      this.c
+        .prepare(
+          `INSERT INTO company_organization_change_operations
+           (id, expected_revision, change_count, applied_count, resulting_revision, status,
+            recorded_at, actor_account_id, reason, evidence_references_json,
+            request_fingerprint)
+         VALUES (?1, ?2, ?3, 0, ?2 + ?3, 'PENDING', ?4, ?5, ?6, ?7, ?8)`,
+        )
+        .bind(
+          change.operationId,
+          change.expectedRevision,
+          change.periodCount,
+          change.recordedAt,
+          change.actorAccountId,
+          change.reason,
+          JSON.stringify(change.evidenceReferences),
+          requestFingerprint,
+        ),
+    ]
+    for (const identity of change.organizationUnits) {
+      statements.push(
+        this.c
+          .prepare("INSERT INTO company_organization_units (id, created_at) VALUES (?1, ?2)")
+          .bind(identity.id, identity.createdAt),
+      )
+    }
+    for (const period of change.unitPeriods) {
+      statements.push(
+        this.c
+          .prepare(
+            `INSERT INTO company_organization_unit_period_versions
+             (period_id, revision, organization_unit_id, code, official_name, kind,
+              parent_organization_unit_id, starts_on, ends_on, is_void,
+              recorded_by_action_id, recorded_at)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`,
+          )
+          .bind(
+            period.periodId,
+            period.revision,
+            period.organizationUnitId,
+            period.code,
+            period.officialName,
+            period.kind,
+            period.parentOrganizationUnitId,
+            period.startsOn,
+            period.endsOn,
+            period.isVoid ? 1 : 0,
+            period.recordedByActionId,
+            period.recordedAt,
+          ),
+      )
+    }
+    statements.push(
+      this.c
+        .prepare(
+          "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = ?1 AND status = 'PENDING'",
+        )
+        .bind(change.operationId),
+    )
+    return statements
+  }
+}

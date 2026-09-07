@@ -1,3 +1,5 @@
+import { CompanyOrganizationResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter"
+import { OrganizationUnitChangeStatementAdapter } from "@/contexts/company/infrastructure/adapters/organization/organization-unit-change-statement.adapter"
 import { OrganizationWorkforceChangeEntity } from "@/contexts/company/domain/entities/organization-workforce-change.entity"
 import {
   CompanyConflictError,
@@ -10,7 +12,10 @@ import { OrganizationUnitReadAdapter } from "@/contexts/company/infrastructure/a
 
 function writeError(cause: unknown): CompanyOperationError {
   const message = cause instanceof Error ? cause.message : String(cause)
-  if (message.includes("organization revision conflict")) {
+  if (
+    message.includes("organization revision conflict") ||
+    message.includes("company_revision_conflict")
+  ) {
     return new CompanyConflictError("組織情報が更新されています", "personnel_action_stale")
   }
   if (message.includes("UNIQUE constraint") || message.includes("request fingerprint")) {
@@ -103,61 +108,18 @@ export class OrganizationWorkforceChangeRepository {
       if (existing instanceof CompanyOperationError) return existing
       if (existing !== null) return { ...existing, replayed: true }
 
-      const statements: D1PreparedStatement[] = [
-        this.c.env.DB.prepare(
-          `INSERT INTO company_organization_change_operations
-               (id, expected_revision, change_count, applied_count, resulting_revision, status,
-                recorded_at, actor_account_id, reason, evidence_references_json,
-                request_fingerprint)
-             VALUES (?1, ?2, ?3, 0, ?2 + ?3, 'PENDING', ?4, ?5, ?6, ?7, ?8)`,
-        ).bind(
-          change.operationId,
-          change.expectedRevision,
-          change.periodCount,
-          change.recordedAt,
-          change.actorAccountId,
-          change.reason,
-          JSON.stringify(change.evidenceReferences),
-          requestFingerprint,
-        ),
-      ]
-      for (const identity of change.organizationUnits) {
-        statements.push(
-          this.c.env.DB.prepare(
-            "INSERT INTO company_organization_units (id, created_at) VALUES (?1, ?2)",
-          ).bind(identity.id, identity.createdAt),
-        )
-      }
-      for (const period of change.unitPeriods) {
-        statements.push(
-          this.c.env.DB.prepare(
-            `INSERT INTO company_organization_unit_period_versions
-                 (period_id, revision, organization_unit_id, code, official_name, kind,
-                  parent_organization_unit_id, starts_on, ends_on, is_void,
-                  recorded_by_action_id, recorded_at)
-               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`,
-          ).bind(
-            period.periodId,
-            period.revision,
-            period.organizationUnitId,
-            period.code,
-            period.officialName,
-            period.kind,
-            period.parentOrganizationUnitId,
-            period.startsOn,
-            period.endsOn,
-            period.isVoid ? 1 : 0,
-            period.recordedByActionId,
-            period.recordedAt,
-          ),
-        )
-      }
-      statements.push(
-        this.c.env.DB.prepare(
-          "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = ?1 AND status = 'PENDING'",
-        ).bind(change.operationId),
+      const journal = await new CompanyOrganizationResourceJournalAdapter(this.c.env.DB).prepare(
+        change,
       )
-      await this.c.env.DB.batch(statements)
+      if (journal instanceof CompanyOperationError) return journal
+      const statements = new OrganizationUnitChangeStatementAdapter(this.c.env.DB).prepare(
+        change,
+        requestFingerprint,
+      )
+      const completed = statements.at(-1)
+      if (completed === undefined)
+        return writeError(new Error("organization completion statement missing"))
+      await this.c.env.DB.batch([...statements.slice(0, -1), ...journal, completed])
       return {
         resultingRevision: change.expectedRevision + change.periodCount,
         organizationUnitId: change.unitPeriods[0]?.organizationUnitId ?? "",
