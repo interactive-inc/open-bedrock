@@ -1,8 +1,9 @@
 import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { describe, expect, test } from "bun:test"
 
 describe("CareerPosting.create", () => {
-  test("builds with null id", () => {
+  test("採番済みの id で組み立てる", () => {
     const posting = CareerPosting.create({
       title: "Backend Engineer",
       deptId: 10,
@@ -12,7 +13,7 @@ describe("CareerPosting.create", () => {
     })
 
     expect(posting).toBeInstanceOf(CareerPosting)
-    expect(posting.id).toBeNull()
+    expect(uuidSchema.safeParse(posting.id).success).toBe(true)
     expect(posting.title).toBe("Backend Engineer")
     expect(posting.deptId).toBe(10)
     expect(posting.deptName).toBe("Engineering")
@@ -45,6 +46,6 @@ describe("CareerPosting.withDetails", () => {
     expect(updated.deptName).toBe("Design")
     expect(updated.requiredSkills).toBe("React, CSS")
     expect(updated.status).toBe("closed")
-    expect(updated.id).toBeNull()
+    expect(uuidSchema.safeParse(updated.id).success).toBe(true)
   })
 })

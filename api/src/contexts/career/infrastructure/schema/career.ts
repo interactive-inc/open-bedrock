@@ -1,16 +1,26 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { uuidCheckPredicate } from "@/lib/uuid/uuid.schema"
+import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 /** 社内公募（部署・必要スキル・公開状態）。 */
-export const careerPostings = sqliteTable("career_postings", {
-  id: integer("id").primaryKey(),
-  title: text("title").notNull(),
-  deptId: integer("dept_id"),
-  deptName: text("dept_name"),
-  requiredSkills: text("required_skills"),
-  status: text("status").notNull(),
-})
+export const careerPostings = sqliteTable(
+  "career_postings",
+  {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    // 参照先を持たない既存の不具合。UUID 化の対象外 (Issue #1329)。
+    deptId: integer("dept_id"),
+    deptName: text("dept_name"),
+    requiredSkills: text("required_skills"),
+    status: text("status").notNull(),
+  },
+  (table) => [
+    index("idx_career_postings_status").on(table.status),
+    check("career_postings_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+  ],
+)
 
 export type CareerPostingRow = InferSelectModel<typeof careerPostings>
 
@@ -18,15 +28,21 @@ export type CareerPostingRow = InferSelectModel<typeof careerPostings>
 export const careerApplications = sqliteTable(
   "career_applications",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    postingId: integer("posting_id").notNull(),
+    id: text("id").primaryKey(),
+    postingId: text("posting_id")
+      .notNull()
+      .references(() => careerPostings.id, { onDelete: "restrict" }),
     applicantId: text("applicant_id").$type<EmployeeId>().notNull(),
     message: text("message"),
     status: text("status").notNull(),
   },
   // 同一公募への重複応募を防ぐ。
   (table) => [
+    index("idx_career_applications_applicant").on(table.applicantId),
+    index("idx_career_applications_posting").on(table.postingId),
     uniqueIndex("idx_career_applications_posting_applicant").on(table.postingId, table.applicantId),
+    check("career_applications_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    check("career_applications_posting_id_uuid", sql.raw(uuidCheckPredicate("posting_id"))),
   ],
 )
 

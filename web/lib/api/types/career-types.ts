@@ -12,7 +12,7 @@ export type CareerSheetUpdateRequest = {
 
 export type CareerPosting = {
   // 作成系ハンドラは insert 直後の autoincrement id（number | null）を返す。
-  id: number | null
+  id: string
   title: string
   dept_id: number | null
   dept_name: string | null
@@ -38,8 +38,8 @@ export type CareerPostingUpdateRequest = {
 
 export type CareerApplication = {
   // api は永続化前を null とするため number | null。
-  id: number | null
-  posting_id: number
+  id: string
+  posting_id: string
   applicant_id: string
   message: string | null
   status: "applied" | "accepted" | "rejected"

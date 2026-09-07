@@ -12,7 +12,7 @@ import { expectApplicationError } from "@tests/api/support/expect-application-er
 import { createTestContext } from "@tests/api/support/create-test-context"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 
-async function seedPosting(context: Context): Promise<number> {
+async function seedPosting(context: Context): Promise<string> {
   const created = await new CreateCareerPosting(context).run({
     session: makeTestSession("root"),
     title: "Platform Engineer",
@@ -22,7 +22,7 @@ async function seedPosting(context: Context): Promise<number> {
     status: "open",
   })
 
-  if (created instanceof ApplicationError || created.id === null) {
+  if (created instanceof ApplicationError) {
     throw new Error("seed failed")
   }
 
@@ -103,7 +103,7 @@ describe("UpdateCareerPosting", () => {
 
     const updated = await new UpdateCareerPosting(context).run({
       session: makeTestSession("root"),
-      postingId: 9999,
+      postingId: "0190000d-0000-7000-8000-00000000ffff",
       title: "X",
       deptId: null,
       deptName: null,
@@ -161,9 +161,9 @@ describe("DeleteCareerPosting", () => {
     // Seed a rejected application directly (no service sets status=rejected on career_applications)
     await db
       .prepare(
-        "INSERT INTO career_applications (posting_id, applicant_id, message, status) VALUES (?1, ?2, NULL, 'rejected')",
+        "INSERT INTO career_applications (id, posting_id, applicant_id, message, status) VALUES (?1, ?2, ?3, NULL, 'rejected')",
       )
-      .bind(postingId, 10)
+      .bind("0190000d-0000-7000-8000-0000000000f1", postingId, 10)
       .run()
 
     // Now delete the posting — should succeed (no applied applications)

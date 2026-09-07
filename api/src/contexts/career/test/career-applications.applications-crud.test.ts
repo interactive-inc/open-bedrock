@@ -11,12 +11,13 @@ import { requestWithContext } from "@tests/api/support/request-with-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const careerApplicationResponseSchema = z.object({
-  id: z.number(),
-  posting_id: z.number(),
+  id: uuidSchema,
+  posting_id: uuidSchema,
   applicant_id: zEmployeeId,
   message: z.string().nullable(),
   status: z.enum(["applied", "accepted", "rejected"]),
@@ -25,9 +26,20 @@ const careerApplicationResponseSchema = z.object({
 const jwtSecret = "career-applications-crud-test-secret"
 
 /** 応募 id 1: 応募者 6・status applied / 応募 id 2: 応募者 15・status accepted。 */
-const appliedApplicationId = 1
+/** seed の並び順に依存せず、状態から対象の応募を引く。 */
+function applicationIdWithStatus(status: string): string {
+  const found = seedCareerApplications.find((application) => application.status === status)
 
-const decidedApplicationId = 2
+  if (found === undefined) {
+    throw new Error(`seed に ${status} の応募がありません`)
+  }
+
+  return found.id
+}
+
+const appliedApplicationId = applicationIdWithStatus("applied")
+
+const decidedApplicationId = applicationIdWithStatus("accepted")
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
@@ -155,7 +167,7 @@ describe("GET /career-applications/:id", () => {
 
   test("returns 404 for an unknown application", async () => {
     const response = await request({
-      path: "/career/career-applications/9999",
+      path: "/career/career-applications/0190000d-0000-7000-8000-00000000ffff",
       token: await tokenForEmployee(6),
     })
 
@@ -216,7 +228,7 @@ describe("PUT /career-applications/:id", () => {
 
   test("returns 404 for an unknown application", async () => {
     const response = await request({
-      path: "/career/career-applications/9999",
+      path: "/career/career-applications/0190000d-0000-7000-8000-00000000ffff",
       token: await tokenForEmployee(6),
       method: "PUT",
       body: { message: "ghost" },
@@ -259,7 +271,7 @@ describe("DELETE /career-applications/:id", () => {
 
   test("returns 404 for an unknown application", async () => {
     const response = await request({
-      path: "/career/career-applications/9999",
+      path: "/career/career-applications/0190000d-0000-7000-8000-00000000ffff",
       token: await tokenForEmployee(6),
       method: "DELETE",
     })

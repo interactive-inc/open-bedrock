@@ -1,5 +1,5 @@
 type SeedCareerPosting = {
-  id: number
+  id: string
   title: string
   deptId: number | null
   deptName: string | null
@@ -9,7 +9,7 @@ type SeedCareerPosting = {
 
 export const seedCareerPostings: ReadonlyArray<SeedCareerPosting> = [
   {
-    id: 1,
+    id: "0190000d-0000-7000-8000-000000000001",
     title: "プロダクト開発リード",
     deptId: 3,
     deptName: "開発部",
@@ -17,7 +17,7 @@ export const seedCareerPostings: ReadonlyArray<SeedCareerPosting> = [
     status: "open",
   },
   {
-    id: 2,
+    id: "0190000d-0000-7000-8000-000000000002",
     title: "カスタマーサクセスマネージャー",
     deptId: 5,
     deptName: "カスタマーサクセス部",
@@ -25,7 +25,7 @@ export const seedCareerPostings: ReadonlyArray<SeedCareerPosting> = [
     status: "open",
   },
   {
-    id: 3,
+    id: "0190000d-0000-7000-8000-000000000003",
     title: "経営企画スペシャリスト",
     deptId: 1,
     deptName: "経営企画部",

@@ -1,9 +1,10 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { z } from "zod"
 
 /** ===== career ===== */
 export const zAppCareerPosting = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   title: z.string(),
   dept_id: z.number().nullable(),
   dept_name: z.string().nullable(),
@@ -17,8 +18,8 @@ export const zAppCareerPostingList = z.object({
 })
 
 export const zAppCareerApplication = z.object({
-  id: z.number().nullable(),
-  posting_id: z.number(),
+  id: uuidSchema,
+  posting_id: uuidSchema,
   applicant_id: zEmployeeId,
   message: z.string().nullable(),
   status: z.enum(["applied", "accepted", "rejected"]),

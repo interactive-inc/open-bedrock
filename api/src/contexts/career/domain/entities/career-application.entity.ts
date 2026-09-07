@@ -1,11 +1,13 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CareerApplicationRow } from "@/contexts/career/infrastructure/schema/career"
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
-  postingId: z.number(),
+  id: uuidSchema,
+  postingId: uuidSchema,
   applicantId: zEmployeeId,
   message: z.string().nullable(),
   status: z.enum(["applied", "accepted", "rejected"]),
@@ -34,14 +36,14 @@ export class CareerApplication implements Props {
     Object.freeze(this)
   }
 
-  /** 新規の応募を組み立てる。id は未採番、初期状態は applied。 */
+  /** 新規の応募を組み立てる。id はここで採番し、初期状態は applied。 */
   static create(props: {
-    postingId: number
+    postingId: string
     applicantId: EmployeeId
     message: string | null
   }): CareerApplication {
     return new CareerApplication({
-      id: null,
+      id: createUuidV7(),
       postingId: props.postingId,
       applicantId: props.applicantId,
       message: props.message,

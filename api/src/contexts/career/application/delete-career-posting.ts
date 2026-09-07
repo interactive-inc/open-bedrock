@@ -7,7 +7,7 @@ import type { CareerPosting } from "@/contexts/career/domain/entities/career-pos
 
 export type Command = {
   session: CompanySessionValue
-  postingId: number
+  postingId: string
 }
 
 export type Deleted = { reason: "deleted" }

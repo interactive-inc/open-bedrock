@@ -10,7 +10,7 @@ describe("CareerPostingRepository", () => {
 
     await seedD1(db, "career_postings", [
       {
-        id: 1,
+        id: "0190000d-0000-7000-8000-000000000001",
         title: "バックエンドエンジニア",
         dept_id: null,
         dept_name: null,
@@ -21,7 +21,7 @@ describe("CareerPostingRepository", () => {
 
     const repository = new CareerPostingRepository(context)
 
-    const found = await repository.findById(1)
+    const found = await repository.findById("0190000d-0000-7000-8000-000000000001")
 
     expect(found).toBeInstanceOf(CareerPosting)
 
@@ -38,7 +38,7 @@ describe("CareerPostingRepository", () => {
 
     const repository = new CareerPostingRepository(context)
 
-    const found = await repository.findById(9999)
+    const found = await repository.findById("0190000d-0000-7000-8000-00000000ffff")
 
     expect(found).toBeNull()
   })

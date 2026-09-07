@@ -5,22 +5,22 @@ import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 /** テスト用: career_postings に open な公募を挿入する。 */
-async function seedOpenPosting(db: D1Database, postingId: number): Promise<void> {
+async function seedOpenPosting(db: D1Database, postingId: string): Promise<void> {
   await db.exec(
-    `INSERT INTO career_postings (id, title, status) VALUES (${postingId}, 'Test Posting', 'open')`,
+    `INSERT INTO career_postings (id, title, status) VALUES ('${postingId}', 'Test Posting', 'open')`,
   )
 }
 
 describe("CareerApplicationRepository", () => {
   test("create then findByPostingAndApplicant round-trips the application", async () => {
     const { context, db } = await createTestContext()
-    await seedOpenPosting(db, 1)
+    await seedOpenPosting(db, "0190000d-0000-7000-8000-000000000001")
 
     const repository = new CareerApplicationRepository(context)
 
     const created = await repository.create(
       CareerApplication.create({
-        postingId: 1,
+        postingId: "0190000d-0000-7000-8000-000000000001",
         applicantId: toWorkforceEmployeeId(2),
         message: "応募します",
       }),
@@ -28,11 +28,14 @@ describe("CareerApplicationRepository", () => {
 
     expect(created).toBeInstanceOf(CareerApplication)
 
-    if (created instanceof Error || "reason" in created || created.id === null) {
+    if (created instanceof Error || "reason" in created) {
       throw new Error("create failed")
     }
 
-    const found = await repository.findByPostingAndApplicant(1, toWorkforceEmployeeId(2))
+    const found = await repository.findByPostingAndApplicant(
+      "0190000d-0000-7000-8000-000000000001",
+      toWorkforceEmployeeId(2),
+    )
 
     expect(found).toBeInstanceOf(CareerApplication)
 
@@ -47,14 +50,14 @@ describe("CareerApplicationRepository", () => {
   test("create returns posting_closed when the posting is not open", async () => {
     const { context, db } = await createTestContext()
     await db.exec(
-      "INSERT INTO career_postings (id, title, status) VALUES (1, 'Closed Posting', 'closed')",
+      "INSERT INTO career_postings (id, title, status) VALUES ('0190000d-0000-7000-8000-000000000001', 'Closed Posting', 'closed')",
     )
 
     const repository = new CareerApplicationRepository(context)
 
     const result = await repository.create(
       CareerApplication.create({
-        postingId: 1,
+        postingId: "0190000d-0000-7000-8000-000000000001",
         applicantId: toWorkforceEmployeeId(2),
         message: null,
       }),
@@ -72,14 +75,14 @@ describe("CareerApplicationRepository", () => {
 
   test("findByApplicantId returns the applicant's applications", async () => {
     const { context, db } = await createTestContext()
-    await seedOpenPosting(db, 1)
-    await seedOpenPosting(db, 2)
+    await seedOpenPosting(db, "0190000d-0000-7000-8000-000000000001")
+    await seedOpenPosting(db, "0190000d-0000-7000-8000-000000000002")
 
     const repository = new CareerApplicationRepository(context)
 
     await repository.create(
       CareerApplication.create({
-        postingId: 1,
+        postingId: "0190000d-0000-7000-8000-000000000001",
         applicantId: toWorkforceEmployeeId(7),
         message: "a",
       }),
@@ -87,7 +90,7 @@ describe("CareerApplicationRepository", () => {
 
     await repository.create(
       CareerApplication.create({
-        postingId: 2,
+        postingId: "0190000d-0000-7000-8000-000000000002",
         applicantId: toWorkforceEmployeeId(7),
         message: "b",
       }),
@@ -110,19 +113,19 @@ describe("CareerApplicationRepository", () => {
 
   test("update changes the message and findById round-trips it", async () => {
     const { context, db } = await createTestContext()
-    await seedOpenPosting(db, 1)
+    await seedOpenPosting(db, "0190000d-0000-7000-8000-000000000001")
 
     const repository = new CareerApplicationRepository(context)
 
     const created = await repository.create(
       CareerApplication.create({
-        postingId: 1,
+        postingId: "0190000d-0000-7000-8000-000000000001",
         applicantId: toWorkforceEmployeeId(8),
         message: "before",
       }),
     )
 
-    if (created instanceof Error || "reason" in created || created.id === null) {
+    if (created instanceof Error || "reason" in created) {
       throw new Error("create failed")
     }
 
@@ -139,24 +142,24 @@ describe("CareerApplicationRepository", () => {
 
   test("update returns application_decided when status is not applied", async () => {
     const { context, db } = await createTestContext()
-    await seedOpenPosting(db, 1)
+    await seedOpenPosting(db, "0190000d-0000-7000-8000-000000000001")
 
     const repository = new CareerApplicationRepository(context)
 
     const created = await repository.create(
       CareerApplication.create({
-        postingId: 1,
+        postingId: "0190000d-0000-7000-8000-000000000001",
         applicantId: toWorkforceEmployeeId(8),
         message: "msg",
       }),
     )
 
-    if (created instanceof Error || "reason" in created || created.id === null) {
+    if (created instanceof Error || "reason" in created) {
       throw new Error("create failed")
     }
 
     // 直接 status を変更して選考確定を模擬する
-    await db.exec(`UPDATE career_applications SET status = 'accepted' WHERE id = ${created.id}`)
+    await db.exec(`UPDATE career_applications SET status = 'accepted' WHERE id = '${created.id}'`)
 
     const result = await repository.update(created.withMessage("updated"))
 
@@ -172,19 +175,19 @@ describe("CareerApplicationRepository", () => {
 
   test("delete removes the application", async () => {
     const { context, db } = await createTestContext()
-    await seedOpenPosting(db, 1)
+    await seedOpenPosting(db, "0190000d-0000-7000-8000-000000000001")
 
     const repository = new CareerApplicationRepository(context)
 
     const created = await repository.create(
       CareerApplication.create({
-        postingId: 1,
+        postingId: "0190000d-0000-7000-8000-000000000001",
         applicantId: toWorkforceEmployeeId(9),
         message: "x",
       }),
     )
 
-    if (created instanceof Error || "reason" in created || created.id === null) {
+    if (created instanceof Error || "reason" in created) {
       throw new Error("create failed")
     }
 
@@ -197,24 +200,24 @@ describe("CareerApplicationRepository", () => {
 
   test("delete returns application_decided when status is not applied", async () => {
     const { context, db } = await createTestContext()
-    await seedOpenPosting(db, 1)
+    await seedOpenPosting(db, "0190000d-0000-7000-8000-000000000001")
 
     const repository = new CareerApplicationRepository(context)
 
     const created = await repository.create(
       CareerApplication.create({
-        postingId: 1,
+        postingId: "0190000d-0000-7000-8000-000000000001",
         applicantId: toWorkforceEmployeeId(9),
         message: "x",
       }),
     )
 
-    if (created instanceof Error || "reason" in created || created.id === null) {
+    if (created instanceof Error || "reason" in created) {
       throw new Error("create failed")
     }
 
     // 直接 status を変更して選考確定を模擬する
-    await db.exec(`UPDATE career_applications SET status = 'rejected' WHERE id = ${created.id}`)
+    await db.exec(`UPDATE career_applications SET status = 'rejected' WHERE id = '${created.id}'`)
 
     const result = await repository.delete(created.id)
 
