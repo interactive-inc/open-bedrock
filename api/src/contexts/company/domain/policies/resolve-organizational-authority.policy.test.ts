@@ -3,9 +3,11 @@ import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definiti
 import { OrganizationalAuthorityError } from "@/contexts/company/domain/errors"
 import type {
   OrganizationalAuthorityCriterion,
+  OrganizationalAuthorityReportingRelationEvidence,
   OrganizationalAuthorityProjection,
 } from "@/contexts/company/domain/definitions/organizational-authority.definition"
-import { resolveOrganizationalAuthority } from "@/contexts/company/domain/policies/organizational-authority.policy"
+import { resolveOrganizationalAuthority } from "@/contexts/company/domain/policies/resolve-organizational-authority.policy"
+import { listAssignmentManagementRelations } from "@/contexts/company/domain/policies/list-assignment-management-relations.policy"
 import type { WorkforceStateProps } from "@/contexts/company/domain/values/workforce-state.value"
 import type {
   AccountEmployeeLink,
@@ -166,6 +168,7 @@ function baseProjection(
     subjectEmployeeId: subjectId,
     criteria: [],
     states,
+    managementRelations: listAssignmentManagementRelations(overrides.states ?? states),
     accountLinks: states.map((item) => link(item.employeeId)),
     ...overrides,
   }
@@ -181,7 +184,195 @@ function expectError(
   expect(result).toMatchObject({ code })
 }
 
+function reportingRelation(
+  id: string,
+  employee: EmployeeId,
+  manager: EmployeeId,
+): OrganizationalAuthorityReportingRelationEvidence {
+  return {
+    reportingRelationId: id,
+    reportingRelationRevision: 2,
+    employeeId: employee,
+    managerEmployeeId: manager,
+    organizationUnitId: productId,
+    asOf,
+  }
+}
+
 describe("resolveOrganizationalAuthority", () => {
+  test("resolves multiple managers in one unit without creating assignments", () => {
+    const relations = [
+      reportingRelation("relation-2", subjectId, organizationManagerId),
+      reportingRelation("relation-1", subjectId, executiveId),
+    ]
+    const projection = baseProjection({
+      criteria: [{ kind: "direct_manager" }],
+      managementRelations: relations,
+    })
+    const before = structuredClone(projection)
+    expect(resolveOrganizationalAuthority(projection)).toEqual({
+      snapshot: projection.snapshot,
+      candidates: [
+        {
+          employeeId: executiveId,
+          accountId: link(executiveId).accountId,
+          qualification: {
+            criterionIndex: 0,
+            evidence: { kind: "direct_manager", reportingRelation: relations[1] },
+          },
+        },
+        {
+          employeeId: organizationManagerId,
+          accountId: link(organizationManagerId).accountId,
+          qualification: {
+            criterionIndex: 0,
+            evidence: { kind: "direct_manager", reportingRelation: relations[0] },
+          },
+        },
+      ],
+    })
+    expect(projection).toEqual(before)
+    expect(projection.states[0]?.concurrentAssignments).toEqual([])
+  })
+
+  test("does not restore assignment managers when explicit relations are empty", () => {
+    const projection = baseProjection({
+      criteria: [{ kind: "direct_manager" }, { kind: "management_chain" }],
+      managementRelations: [],
+    })
+    expect(resolveOrganizationalAuthority(projection)).toEqual({
+      snapshot: projection.snapshot,
+      candidates: [],
+    })
+  })
+
+  test("preserves assignment provenance exactly for existing callers", () => {
+    const projection = baseProjection({ criteria: [{ kind: "direct_manager" }] })
+    expect(resolveOrganizationalAuthority(projection)).toEqual({
+      snapshot: projection.snapshot,
+      candidates: [
+        {
+          employeeId: managerId,
+          accountId: link(managerId).accountId,
+          qualification: {
+            criterionIndex: 0,
+            evidence: {
+              kind: "direct_manager",
+              assignment: {
+                employeeId: subjectId,
+                managerEmployeeId: managerId,
+                organizationUnitId: productId,
+                assignmentPeriodId: restoreWorkforceId("period", `assignment-${subjectId}-primary`),
+                assignmentRevision: 3,
+                asOf,
+              },
+            },
+          },
+        },
+      ],
+    })
+  })
+
+  test("uses deterministic relation paths through a branching management chain", () => {
+    const first = reportingRelation("first", subjectId, managerId)
+    const second = reportingRelation("second", subjectId, executiveId)
+    const third = reportingRelation("third", managerId, organizationManagerId)
+    const fourth = reportingRelation("fourth", executiveId, organizationManagerId)
+    const projection = baseProjection({
+      criteria: [{ kind: "management_chain" }],
+      managementRelations: [fourth, second, third, first],
+    })
+    const result = resolveOrganizationalAuthority(projection)
+    expect(result).toEqual(
+      resolveOrganizationalAuthority({
+        ...projection,
+        managementRelations: [...projection.managementRelations].reverse(),
+        states: [...projection.states].reverse(),
+      }),
+    )
+    expect(result).toMatchObject({
+      candidates: [
+        { employeeId: managerId, qualification: { evidence: { path: [first] } } },
+        { employeeId: executiveId, qualification: { evidence: { path: [second] } } },
+        {
+          employeeId: organizationManagerId,
+          qualification: { evidence: { path: [first, third] } },
+        },
+      ],
+    })
+  })
+
+  test("rejects a cycle among independent relations including self management", () => {
+    for (const relations of [
+      [reportingRelation("self", subjectId, subjectId)],
+      [
+        reportingRelation("a", subjectId, managerId),
+        reportingRelation("b", managerId, executiveId),
+        reportingRelation("c", executiveId, subjectId),
+      ],
+    ]) {
+      expectError(
+        baseProjection({ managementRelations: relations }),
+        "organizational_authority_manager_cycle",
+      )
+    }
+  })
+
+  test("rejects missing or inactive relation endpoints", () => {
+    for (const missing of [employeeId("employee-missing"), inactiveId]) {
+      for (const relation of [
+        reportingRelation("relation", missing, managerId),
+        reportingRelation("relation", subjectId, missing),
+      ]) {
+        expectError(
+          baseProjection({ managementRelations: [relation] }),
+          missing === inactiveId
+            ? "organizational_authority_state_invalid"
+            : "organizational_authority_employee_reference_missing",
+        )
+      }
+    }
+  })
+
+  test("rejects relations from another date and unresolved duplicate source versions", () => {
+    const relation = reportingRelation("relation", subjectId, managerId)
+    expectError(
+      baseProjection({
+        managementRelations: [{ ...relation, asOf: restoreCalendarDate("2026-06-02") }],
+      }),
+      "organizational_authority_state_as_of_mismatch",
+    )
+    expectError(
+      baseProjection({
+        managementRelations: [relation, { ...relation, reportingRelationRevision: 3 }],
+      }),
+      "organizational_authority_period_duplicate",
+    )
+    for (const revision of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
+      expectError(
+        baseProjection({
+          managementRelations: [{ ...relation, reportingRelationRevision: revision }],
+        }),
+        "organizational_authority_period_invalid",
+      )
+    }
+  })
+
+  test("rejects assignment evidence that changes its manager, unit, or source revision", () => {
+    const relation = baseProjection().managementRelations[0]!
+    for (const changed of [
+      { ...relation, managerEmployeeId: executiveId },
+      { ...relation, organizationUnitId: financeId },
+      { ...relation, assignmentRevision: 4 },
+      { ...relation, assignmentPeriodId: restoreWorkforceId("period", "missing") },
+    ]) {
+      expectError(
+        baseProjection({ managementRelations: [changed] }),
+        "organizational_authority_period_invalid",
+      )
+    }
+  })
+
   test("resolves every canonical criterion in criterion and opaque ID order", () => {
     const criteria: ReadonlyArray<OrganizationalAuthorityCriterion> = [
       { kind: "direct_manager" },

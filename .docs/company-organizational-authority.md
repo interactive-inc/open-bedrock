@@ -71,7 +71,7 @@ canonical履歴の下限はmigrationで確定した`baseline_on`である。そ�
 
 resolver は lifecycle 投影を読む前に organization revision を固定し、各 Employee state が同じ revision を参照することを検査し、Account 対応まで解決した後でもう一度 revision を読む。この三点が一致しない場合は途中で組織更新が確定した可能性があるため、候補を返さず conflict にする。呼び出し側は新しい `resolvedAt` を勝手に生成せず、同じ command の値を保ったまま解決全体を再試行する。
 
-各 lifecycle 証拠には assignment period ID、Employee revision、organization revision、`asOf` を含める。管理系列では各 edge の証拠を順番付き path として保存する。現在の組織図だけから過去の経路を推測しない。
+所属由来の指揮命令の証拠には assignment period ID、assignment revision、`asOf` を含め、organization revision は解決結果の snapshot に保持する。独立した指揮命令の証拠は reporting relation ID と revision を持つ。管理系列では各 edge の証拠を順番付き path として保存する。現在の組織図だけから過去の経路を推測しない。
 
 organization revisionを持たないsnapshotは完全な履歴証拠として受理しない。canonicalなlifecycleを検証できなければ、新しい判断を停止する。
 
@@ -196,6 +196,10 @@ Personnel Action はCompanyへの人事入力adapterであり、所属または�
 [会社の初期化](company-api.md#会社の初期化)は確認済みのOrgUnitと所属を作り、明示された`MANAGER`と`PEOPLE_OPERATIONS`だけをCompanyの組織変更operationで割り当てる。空配列なら責務を作らない。Account role、役職名、権限から会社上の責務を推測しない。authority workflow と必要な Responsibility が設定されていない判断は拒否する。
 
 ## 現行実装
+
+Workforceの純粋な資格resolverは、所属と別の`managementRelations`を必須入力とする。同じEmployee・OrgUnitに複数の上長を持てるため、上長を追加する目的で所属を増やす必要はない。空の関係を所属の上長で補完せず、関係の日付、両端のEmployeeの存在と在籍、記録の重複、循環を検査する。所属由来の証拠では、所属の所有者、OrgUnit、上長、期間ID、版の一致も検査する。
+
+`ResolveOrganizationAuthority`は現在、既存の所属履歴から明示的に関係を作る。元の期間IDと版、および既存の内部応答形式を維持する。独立した関係の変換形式も用意しているが、公開ReportingRelationの保存からこのresolverへの接続は未完成である。公開履歴の時点選択、既存writerとの統合、保存直前の変更検知を接続してから業務に使う必要がある。Employeeに対する管理範囲の判定も、引き続き既存の所属履歴を参照する。
 
 `api/src/contexts/company/domain/policies/company-governance-authority.policy.ts` は、固定済み Company resource と active な System Account ID の集合から資格候補を解決する。DB、Hono、Worker、暗黙の時計を読まず、criterion、scope、snapshot、candidate、qualification は opaque ID と明示型だけで表す。
 

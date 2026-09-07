@@ -4,7 +4,8 @@ import { isOrgResponsibilityType } from "@/contexts/company/domain/definitions/i
 import { isOrganizationalAuthorityStateEligible } from "@/contexts/company/domain/policies/is-organizational-authority-state-eligible.policy"
 import { listWorkforceStateAssignments } from "@/contexts/company/domain/definitions/list-workforce-state-assignments.definition"
 import type { OrganizationalAuthorityProjection } from "@/contexts/company/domain/definitions/organizational-authority.definition"
-import { organizationalAuthorityStatesHaveManagementCycle } from "@/contexts/company/domain/policies/organizational-authority-states-have-management-cycle.policy"
+import { hasManagementCycle } from "@/contexts/company/domain/definitions/has-management-cycle.definition"
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import { periodContainsDate } from "@/contexts/company/domain/definitions/period-contains-date.definition"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
@@ -13,7 +14,11 @@ export function validateOrganizationalAuthorityProjection(
   projection: OrganizationalAuthorityProjection,
 ): OrganizationalAuthorityError | null {
   const revision = projection.snapshot.organizationRevision
-  if (!Number.isSafeInteger(revision) || revision < 0) {
+  if (
+    !Number.isSafeInteger(revision) ||
+    revision < 0 ||
+    !isCalendarDate(projection.snapshot.asOf)
+  ) {
     return new OrganizationalAuthorityError("organizational_authority_snapshot_invalid")
   }
 
@@ -97,18 +102,57 @@ export function validateOrganizationalAuthorityProjection(
       return new OrganizationalAuthorityError("organizational_authority_period_invalid")
     }
   }
-  for (const state of projection.states) {
-    for (const assignment of listWorkforceStateAssignments(state)) {
-      if (assignment.managerEmployeeId === null) continue
-      const manager = statesByEmployee.get(assignment.managerEmployeeId)
-      if (manager === undefined) {
-        return new OrganizationalAuthorityError(
-          "organizational_authority_employee_reference_missing",
+  const relationSources = new Set<string>()
+  const managersByEmployee = new Map<EmployeeId, EmployeeId[]>()
+  for (const relation of projection.managementRelations) {
+    if (relation.asOf !== projection.snapshot.asOf) {
+      return new OrganizationalAuthorityError("organizational_authority_state_as_of_mismatch")
+    }
+    const employee = statesByEmployee.get(relation.employeeId)
+    const manager = statesByEmployee.get(relation.managerEmployeeId)
+    if (employee === undefined || manager === undefined) {
+      return new OrganizationalAuthorityError("organizational_authority_employee_reference_missing")
+    }
+    if (
+      !isOrganizationalAuthorityStateEligible(employee) ||
+      !isOrganizationalAuthorityStateEligible(manager)
+    ) {
+      return new OrganizationalAuthorityError("organizational_authority_state_invalid")
+    }
+    let source: string
+    if ("assignmentPeriodId" in relation) {
+      if (
+        !listWorkforceStateAssignments(employee).some(
+          (assignment) =>
+            assignment.periodId === relation.assignmentPeriodId &&
+            assignment.revision === relation.assignmentRevision &&
+            assignment.managerEmployeeId === relation.managerEmployeeId &&
+            assignment.organizationUnitId === relation.organizationUnitId,
         )
+      ) {
+        return new OrganizationalAuthorityError("organizational_authority_period_invalid")
       }
-      if (!isOrganizationalAuthorityStateEligible(manager)) {
-        return new OrganizationalAuthorityError("organizational_authority_state_invalid")
+      source = `assignment:${relation.assignmentPeriodId}`
+    } else {
+      if (
+        relation.reportingRelationId.trim().length === 0 ||
+        !Number.isSafeInteger(relation.reportingRelationRevision) ||
+        relation.reportingRelationRevision < 1 ||
+        relation.organizationUnitId.trim().length === 0
+      ) {
+        return new OrganizationalAuthorityError("organizational_authority_period_invalid")
       }
+      source = `reporting-relation:${relation.reportingRelationId}`
+    }
+    if (relationSources.has(source)) {
+      return new OrganizationalAuthorityError("organizational_authority_period_duplicate")
+    }
+    relationSources.add(source)
+    const managers = managersByEmployee.get(relation.employeeId)
+    if (managers === undefined) {
+      managersByEmployee.set(relation.employeeId, [relation.managerEmployeeId])
+    } else {
+      managers.push(relation.managerEmployeeId)
     }
   }
 
@@ -128,7 +172,7 @@ export function validateOrganizationalAuthorityProjection(
     linkedAccounts.add(link.accountId)
   }
 
-  return organizationalAuthorityStatesHaveManagementCycle(projection.states)
+  return hasManagementCycle(managersByEmployee)
     ? new OrganizationalAuthorityError("organizational_authority_manager_cycle")
     : null
 }

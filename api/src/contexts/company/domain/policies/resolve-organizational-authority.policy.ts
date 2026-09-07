@@ -26,6 +26,7 @@ export function resolveOrganizationalAuthority(
     for (const candidate of resolveOrganizationalAuthorityCriterion({
       criterion,
       statesByEmployee,
+      managementRelations: projection.managementRelations,
       subjectEmployeeId: projection.subjectEmployeeId,
       asOf: projection.snapshot.asOf,
     })) {
