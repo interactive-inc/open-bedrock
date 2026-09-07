@@ -251,6 +251,8 @@
     "src/contexts/company/domain/values/company-employment-resource-timeline.value.ts",
     "src/contexts/company/domain/values/company-personnel-reporting-change.value.test.ts",
     "src/contexts/company/domain/values/company-personnel-reporting-change.value.ts",
+    "src/contexts/company/domain/values/company-reporting-employment-change.value.test.ts",
+    "src/contexts/company/domain/values/company-reporting-employment-change.value.ts",
     "src/contexts/company/domain/values/company-reporting-relation-timeline.value.test.ts",
     "src/contexts/company/domain/values/company-reporting-relation-timeline.value.ts",
     "src/contexts/company/domain/values/company-session.value.ts",

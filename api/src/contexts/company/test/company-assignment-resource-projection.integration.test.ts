@@ -10,6 +10,8 @@ import type { CompanyHttpEnvironment } from "@/contexts/company/interface/reques
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import * as adoptions from "@/contexts/company/interface/routes/company.organization-resource-adoptions"
 import * as changes from "@/contexts/company/interface/routes/company.organization-changes"
+import * as executions from "@/contexts/company/interface/routes/company.personnel-action-executions"
+import * as employments from "@/contexts/company/interface/routes/company.employments"
 import * as employees from "@/contexts/company/interface/routes/company.employees"
 import { DirectPersonnelActionAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/direct-personnel-action.adapter"
 import { EmployeeLifecycleAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle.adapter"
@@ -46,6 +48,8 @@ async function fixture() {
     .post("/adoptions", ...adoptions.POST)
     .post("/changes", ...changes.POST)
     .post("/employees", ...employees.POST)
+    .post("/executions", ...executions.POST)
+    .post("/employments", ...employments.POST)
   const client = hc<typeof routes>("http://localhost", {
     fetch: Object.assign(
       async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) =>
@@ -126,11 +130,14 @@ async function fixture() {
     (SELECT count(*) FROM company_resource_revisions) AS resources,
     (SELECT count(*) FROM company_organization_assignment_period_versions) AS periods,
     (SELECT count(*) FROM company_assignment_period_bindings) AS bindings,
-    (SELECT count(*) FROM company_command_receipts) AS receipts`)
+    (SELECT count(*) FROM company_command_receipts) AS receipts,
+    (SELECT count(*) FROM company_personnel_actions) AS actions,
+    (SELECT count(*) FROM company_employment_period_versions) AS employments,
+    (SELECT count(*) FROM company_lifecycle_outbox_entries) AS outbox`)
       .first()
-  const personnel = async (input: PersonnelActionInput, key: string) => {
+  const personnel = async (input: PersonnelActionInput, key: string, targetId = employeeId) => {
     const context = { ...base.context, env: { ...base.context.env, NOW: "2030-06-01T00:00:00Z" } }
-    const revisions = await new EmployeeLifecycleAdapter(context).loadRevisions(employeeId)
+    const revisions = await new EmployeeLifecycleAdapter(context).loadRevisions(targetId)
     if (revisions instanceof Error) throw revisions
     return new DirectPersonnelActionAdapter(context).apply({
       session: {
@@ -138,7 +145,7 @@ async function fixture() {
         employeeId,
         hasPermission: (permission) => permission === "employee:lifecycle:apply",
       },
-      employeeId,
+      employeeId: targetId,
       idempotencyKey: key,
       expectedEmployeeRevision: revisions.employeeRevision,
       expectedOrganizationRevision: revisions.organizationRevision,
@@ -247,6 +254,7 @@ async function fixture() {
   }
   return {
     ...base,
+    client,
     assignment,
     write,
     read,
@@ -263,6 +271,454 @@ async function fixture() {
 }
 
 describe("公開Assignmentと業務の所属期間", () => {
+  test("上長本人の退職APIは部下の関係を終了し、再送・訂正・再入社で旧上長を復活させない", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    const managerId = f.people[1]!.employeeId
+    await f.assignEmployeeCode(managerId, "MANAGER-001")
+    expect(
+      await f.personnel(
+        {
+          kind: "manager_changed",
+          employeeCode: "EMPLOYEE-001",
+          eventOn: restoreCalendarDate("2030-03-01"),
+          departmentCode: "TEAM",
+          assignmentType: "primary",
+          managerEmployeeCode: "MANAGER-001",
+        },
+        "reporting:manager-before-exit",
+      ),
+    ).toMatchObject({ replayed: false })
+    const revisions = await new EmployeeLifecycleAdapter(f.context).loadRevisions(managerId)
+    if (revisions instanceof Error) throw revisions
+    const request = {
+      json: {
+        action: { kind: "retired", employeeCode: "MANAGER-001", retirementOn: "2030-06-30" },
+        expected_employee_revision: revisions.employeeRevision,
+        expected_organization_revision: revisions.organizationRevision,
+      },
+    } satisfies Parameters<typeof f.client.executions.$post>[0]
+    const options = { headers: { "idempotency-key": "reporting:manager-exit" } }
+    const retired = await f.client.executions.$post(request, options)
+    expect(Number(retired.status)).toBe(201)
+    const action = z.object({ id: z.string() }).parse(await retired.json())
+    expect(await f.publicReporting("2030-06-30")).toHaveLength(1)
+    expect(await f.publicReporting("2030-07-01")).toEqual([])
+    const saved = await f.persisted()
+    expect(Number((await f.client.executions.$post(request, options)).status)).toBe(200)
+    expect(await f.persisted()).toEqual(saved)
+    expect(
+      await f.personnel(
+        {
+          kind: "corrected",
+          correctsActionId: action.id,
+          eventOn: restoreCalendarDate("2030-06-01"),
+          reason: "Correct retirement date",
+          replacementAction: {
+            kind: "retired",
+            employeeCode: "MANAGER-001",
+            retirementOn: restoreCalendarDate("2030-07-31"),
+          },
+        },
+        "reporting:correct-manager-exit",
+        managerId,
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(await f.publicReporting("2030-07-31")).toHaveLength(1)
+    expect(await f.publicReporting("2030-08-01")).toEqual([])
+    expect(
+      await f.personnel(
+        {
+          kind: "rehire",
+          employeeCode: "MANAGER-001",
+          eventOn: restoreCalendarDate("2030-09-01"),
+          employmentType: "FULL_TIME",
+        },
+        "reporting:manager-rehire",
+        managerId,
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(await f.publicReporting("2030-09-01")).toEqual([])
+  })
+
+  test("退職は独立した部下側の関係も閉じ、別上長と将来の交代予約を保つ", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
+    const relation = {
+      organizationId: "organization:default",
+      type: "reporting-relation",
+      id: "reporting:reserved",
+      revision: 1,
+      state: "active",
+      effectiveFrom: "2030-03-01",
+      effectiveTo: null,
+      attributes: {
+        employeeId: f.people[0]!.employeeId,
+        managerEmployeeId: f.people[1]!.employeeId,
+        organizationUnitId: "unit:journal",
+      },
+    } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
+    expect(
+      Number(
+        (
+          await f.write(
+            [
+              relation,
+              {
+                ...relation,
+                id: "reporting:other-report",
+                attributes: { ...relation.attributes, employeeId: f.people[2]!.employeeId },
+              },
+              {
+                ...relation,
+                id: "reporting:parallel",
+                attributes: { ...relation.attributes, managerEmployeeId: f.people[3]!.employeeId },
+              },
+            ],
+            await f.companyRevision(),
+            "reporting:independent-lines",
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    expect(
+      Number(
+        (
+          await f.write(
+            [
+              {
+                ...relation,
+                revision: 2,
+                effectiveFrom: "2030-09-01",
+                attributes: { ...relation.attributes, managerEmployeeId: f.people[2]!.employeeId },
+              },
+            ],
+            await f.companyRevision(),
+            "reporting:future",
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    expect(
+      await f.personnel(
+        {
+          kind: "retired",
+          employeeCode: "MANAGER-001",
+          retirementOn: restoreCalendarDate("2030-06-30"),
+        },
+        "reporting:retire-many",
+        f.people[1]!.employeeId,
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(await f.publicReporting("2030-06-30")).toHaveLength(3)
+    expect((await f.publicReporting("2030-07-01")).map((resource) => resource.id)).toEqual([
+      "reporting:parallel",
+    ])
+    expect(
+      (await f.publicReporting("2030-09-01"))
+        .map((resource) => resource.readText("managerEmployeeId"))
+        .sort(),
+    ).toEqual([f.people[2]!.employeeId, f.people[3]!.employeeId].sort())
+    const resolution = await new ResolveCanonicalOrganizationAuthorityAdapter({
+      c: f.context,
+      subjectEmployeeId: f.people[0]!.employeeId,
+      criteria: [{ kind: "direct_manager" }],
+      employeeRows: f.people.map((person) => ({ id: person.employeeId, code: null })),
+      targetDepartmentCode: null,
+      asOf: "2030-07-01",
+    }).resolveCanonicalOrganizationAuthority()
+    if (resolution instanceof Error) throw resolution
+    expect(resolution.candidates.map((candidate) => candidate.employeeId)).toEqual([
+      f.people[3]!.employeeId,
+    ])
+  })
+
+  test("部下側の保存失敗は上長の退職も巻き戻し、後続の再割当は退職訂正で上書きしない", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
+    await f.assignEmployeeCode(f.people[2]!.employeeId, "MANAGER-002")
+    const assignment = {
+      kind: "manager_changed",
+      employeeCode: "EMPLOYEE-001",
+      eventOn: restoreCalendarDate("2030-03-01"),
+      departmentCode: "TEAM",
+      assignmentType: "primary",
+      managerEmployeeCode: "MANAGER-001",
+    } satisfies PersonnelActionInput
+    expect(await f.personnel(assignment, "reporting:before-failure")).toMatchObject({
+      replayed: false,
+    })
+    const retirement = {
+      kind: "retired",
+      employeeCode: "MANAGER-001",
+      retirementOn: restoreCalendarDate("2030-06-30"),
+    } satisfies PersonnelActionInput
+    const before = await f.persisted()
+    await f.database.exec(
+      "CREATE TRIGGER reject_manager_exit BEFORE INSERT ON company_resource_revisions WHEN NEW.resource_type = 'reporting-relation' BEGIN SELECT RAISE(ABORT, 'injected manager exit failure'); END;",
+    )
+    expect(
+      await f.personnel(retirement, "reporting:exit-failure", f.people[1]!.employeeId),
+    ).toBeInstanceOf(Error)
+    expect(await f.persisted()).toEqual(before)
+    await f.database.exec("DROP TRIGGER reject_manager_exit")
+    const retired = await f.personnel(retirement, "reporting:exit-failure", f.people[1]!.employeeId)
+    if (retired instanceof Error) throw retired
+    expect(
+      await f.personnel(
+        {
+          ...assignment,
+          eventOn: restoreCalendarDate("2030-07-01"),
+          managerEmployeeCode: "MANAGER-002",
+        },
+        "reporting:reassign",
+      ),
+    ).toMatchObject({ replayed: false })
+    const reassigned = await f.persisted()
+    expect(
+      await f.personnel(
+        {
+          kind: "corrected",
+          correctsActionId: retired.action.id,
+          eventOn: restoreCalendarDate("2030-06-01"),
+          reason: "Correct exit after reassignment",
+          replacementAction: { ...retirement, retirementOn: restoreCalendarDate("2030-07-31") },
+        },
+        "reporting:stale-exit-correction",
+        f.people[1]!.employeeId,
+      ),
+    ).toMatchObject({ code: "personnel_action_stale" })
+    expect(await f.persisted()).toEqual(reassigned)
+    expect(
+      (await f.publicReporting("2030-07-15")).map((resource) =>
+        resource.readText("managerEmployeeId"),
+      ),
+    ).toEqual([f.people[2]!.employeeId])
+  })
+
+  test("百件を超える部下側の関係も同じ退職のtransactionで終了する", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
+    const relations = Array.from(
+      { length: 101 },
+      (_, index) =>
+        ({
+          organizationId: "organization:default",
+          type: "reporting-relation",
+          id: `reporting:many:${index}`,
+          revision: 1,
+          state: "active",
+          effectiveFrom: "2030-03-01",
+          effectiveTo: null,
+          attributes: {
+            employeeId: f.people[0]!.employeeId,
+            managerEmployeeId: f.people[1]!.employeeId,
+            organizationUnitId: "unit:journal",
+          },
+        }) satisfies NonNullable<Parameters<typeof f.write>[0]>[number],
+    )
+    for (const [index, batch] of [relations.slice(0, 100), relations.slice(100)].entries())
+      expect(
+        Number(
+          (await f.write(batch, await f.companyRevision(), `reporting:many-start:${index}`)).status,
+        ),
+      ).toBe(201)
+    const retired = await f.personnel(
+      {
+        kind: "retired",
+        employeeCode: "MANAGER-001",
+        retirementOn: restoreCalendarDate("2030-06-30"),
+      },
+      "reporting:many-exit",
+      f.people[1]!.employeeId,
+    )
+    if (retired instanceof Error) throw retired
+    expect(await f.publicReporting("2030-06-30")).toHaveLength(101)
+    expect(await f.publicReporting("2030-07-01")).toEqual([])
+    expect(
+      await f.database
+        .prepare(
+          "SELECT count(*) AS total FROM company_command_receipts WHERE substr(command_id, 1, length(?1)) = ?1",
+        )
+        .bind(`lifecycle:${retired.action.id}:`)
+        .first<number>("total"),
+    ).toBe(2)
+    expect(
+      await f.database
+        .prepare("SELECT count(*) AS total FROM company_reporting_employment_violations")
+        .first<number>("total"),
+    ).toBe(0)
+  })
+
+  test("上長の退職準備中の部下側変更は競合にし、更新した版で再試行する", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
+    expect(
+      await f.personnel(
+        {
+          kind: "manager_changed",
+          employeeCode: "EMPLOYEE-001",
+          eventOn: restoreCalendarDate("2030-03-01"),
+          departmentCode: "TEAM",
+          assignmentType: "primary",
+          managerEmployeeCode: "MANAGER-001",
+        },
+        "reporting:race-start",
+      ),
+    ).toMatchObject({ replayed: false })
+    const relation = (await f.publicReporting("2030-03-01"))[0]!
+    const retirement = {
+      kind: "retired",
+      employeeCode: "MANAGER-001",
+      retirementOn: restoreCalendarDate("2030-06-30"),
+    } satisfies PersonnelActionInput
+    const original = D1CompanyResourceRepository.prototype.findReportingRelationHistory
+    const intercepted = spyOn(
+      D1CompanyResourceRepository.prototype,
+      "findReportingRelationHistory",
+    ).mockImplementationOnce(async function (this: D1CompanyResourceRepository, ...args) {
+      const history = await original.apply(this, args)
+      expect(
+        Number(
+          (
+            await f.write(
+              [
+                {
+                  ...relation,
+                  type: "reporting-relation",
+                  revision: relation.revision + 1,
+                  effectiveFrom: "2030-07-01",
+                  attributes: {
+                    employeeId: f.people[0]!.employeeId,
+                    managerEmployeeId: f.people[2]!.employeeId,
+                    organizationUnitId: "unit:journal",
+                  },
+                },
+              ],
+              await f.companyRevision(),
+              "reporting:race-reservation",
+            )
+          ).status,
+        ),
+      ).toBe(201)
+      return history
+    })
+    try {
+      expect(
+        await f.personnel(retirement, "reporting:race-exit", f.people[1]!.employeeId),
+      ).toMatchObject({ code: "personnel_action_stale" })
+    } finally {
+      intercepted.mockRestore()
+    }
+    expect(
+      await f.database
+        .prepare(
+          "SELECT count(*) AS total FROM company_personnel_actions WHERE operation_id = 'reporting:race-exit'",
+        )
+        .first<number>("total"),
+    ).toBe(0)
+    expect(
+      await f.personnel(retirement, "reporting:race-exit", f.people[1]!.employeeId),
+    ).toMatchObject({ replayed: false })
+    expect(
+      (await f.publicReporting("2030-07-01")).map((resource) =>
+        resource.readText("managerEmployeeId"),
+      ),
+    ).toEqual([f.people[2]!.employeeId])
+  })
+
+  test("公開APIも上長の雇用短縮だけを拒否し、関係の終了を同じcommandで確定する", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    const managerId = f.people[1]!.employeeId
+    const relation = {
+      organizationId: "organization:default",
+      type: "reporting-relation",
+      id: "reporting:employment-guard",
+      revision: 1,
+      state: "active",
+      effectiveFrom: "2030-03-01",
+      effectiveTo: null,
+      attributes: {
+        employeeId: f.people[0]!.employeeId,
+        managerEmployeeId: managerId,
+        organizationUnitId: "unit:journal",
+      },
+    } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
+    expect(
+      Number(
+        (await f.write([relation], await f.companyRevision(), "reporting:employment-start")).status,
+      ),
+    ).toBe(201)
+    const snapshot = await new D1CompanyResourceRepository(f.database).findMany({
+      organizationId: "organization:default",
+      types: ["employment"],
+    })
+    if (!snapshot.ok) throw snapshot.cause
+    const employment = snapshot.resources.find(
+      (resource) => resource.readText("employeeId") === managerId,
+    )
+    if (employment === undefined) throw new Error("manager employment missing")
+    const shortened = {
+      ...employment,
+      type: "employment",
+      attributes: z
+        .object({
+          employeeId: z.string(),
+          status: z.enum(["ACTIVE", "ON_LEAVE", "TERMINATED"]),
+          employmentType: z.enum(["FULL_TIME", "PART_TIME"]),
+        })
+        .parse(employment.attributes),
+      revision: employment.revision + 1,
+      effectiveTo: "2030-07-01",
+    } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
+    const before = await f.persisted()
+    expect(
+      Number(
+        (
+          await f.client.employments.$post({
+            header: {
+              "idempotency-key": "reporting:shorten-only",
+              "if-match": String(await f.companyRevision()),
+              "x-company-organization-id": "organization:default",
+            },
+            json: { reason: "Shorten employment", resources: [shortened] },
+          })
+        ).status,
+      ),
+    ).toBe(422)
+    expect(await f.persisted()).toEqual(before)
+    expect(
+      Number(
+        (
+          await f.write(
+            [shortened, { ...relation, revision: 2, effectiveTo: "2030-07-01" }],
+            await f.companyRevision(),
+            "reporting:shorten-together",
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    const saved = await f.persisted()
+    expect(
+      Number(
+        (
+          await f.write(
+            [{ ...relation, revision: 3, effectiveFrom: "2030-06-01", effectiveTo: "2030-08-01" }],
+            await f.companyRevision(),
+            "reporting:invalid-expansion",
+          )
+        ).status,
+      ),
+    ).toBe(422)
+    expect(await f.persisted()).toEqual(saved)
+    expect(await f.publicReporting("2030-07-01")).toEqual([])
+  })
+
   test("同じ組織の主務と兼務は別の直属上長を持ち、兼務終了では主務の上長を残す", async () => {
     const f = await fixture()
     await f.initializeAssignment()
