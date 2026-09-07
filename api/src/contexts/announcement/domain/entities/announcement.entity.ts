@@ -1,6 +1,8 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { AnnouncementRow } from "@/contexts/announcement/infrastructure/schema/announcement"
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { z } from "zod"
 
 export const announcementStatusSchema = z.enum(["draft", "published", "archived"])
@@ -8,7 +10,7 @@ export const announcementStatusSchema = z.enum(["draft", "published", "archived"
 export type AnnouncementStatus = z.infer<typeof announcementStatusSchema>
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   title: z.string(),
   bodyMd: z.string(),
   publishedOn: z.string().nullable(),
@@ -43,7 +45,7 @@ export class Announcement implements Props {
     Object.freeze(this)
   }
 
-  /** 新規アナウンスを組み立てる。id は未採番、初期状態は draft。 */
+  /** 新規アナウンスを組み立てる。id はここで採番し、初期状態は draft。 */
   static create(props: {
     title: string
     bodyMd: string
@@ -51,7 +53,7 @@ export class Announcement implements Props {
     createdAt: string
   }): Announcement {
     return new Announcement({
-      id: null,
+      id: createUuidV7(),
       title: props.title,
       bodyMd: props.bodyMd,
       publishedOn: null,

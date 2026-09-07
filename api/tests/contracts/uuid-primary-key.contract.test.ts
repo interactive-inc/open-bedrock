@@ -59,7 +59,6 @@ const PERMANENTLY_NON_UUID: ReadonlySet<string> = new Set([
  * (Issue #1311 の判断 3)、これらは ID の振り直しではなく CHECK 追加だけで完了する。
  */
 const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
-  "announcements", // 連番
   "asset_lendings", // 連番
   "assets", // 業務コード/prefix
   "attendance_records", // 連番
@@ -317,6 +316,21 @@ describe("主キーは UUID に統一する (#1311)", () => {
     )
 
     expect(stale).toEqual([])
+  })
+
+  test("変換済みの table の CHECK は uuidCheckPredicate と完全に一致する", () => {
+    // migration には述語を文字列として埋め込むため、述語を直した後に過去の
+    // migration が古い CHECK を持ち続けても気づけない。ここで乖離を落とす。
+    const converted = tableNames.filter(
+      (table) => !PERMANENTLY_NON_UUID.has(table) && !NOT_YET_CONVERTED.has(table),
+    )
+    const drifted = converted.flatMap((table) =>
+      primaryKeyColumns(table)
+        .filter((column) => !hasUuidCheck(table, column.name))
+        .map((column) => `${table}.${column.name}`),
+    )
+
+    expect(drifted).toEqual([])
   })
 
   test("同じ table を両方の list に載せない", () => {
