@@ -17,6 +17,7 @@ import type {
   OrganizationalAuthorityResponsibilityEvidence,
 } from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
+import { hasManagementCycle } from "@/contexts/company/domain/definitions/has-management-cycle.definition"
 import { isOrgResponsibilityType } from "@/contexts/company/domain/definitions/org-responsibility-type.definition"
 import {
   WorkforceStateValue,
@@ -111,27 +112,13 @@ function responsibilityEvidence(
 function statesHaveManagementCycle(states: ReadonlyArray<WorkforceStateProps>): boolean {
   const managersByEmployee = new Map<EmployeeId, ReadonlyArray<EmployeeId>>()
   for (const state of states) {
-    const managers = assignments(state)
-      .flatMap((assignment) =>
-        assignment.managerEmployeeId === null ? [] : [assignment.managerEmployeeId],
-      )
-      .toSorted()
+    const managers = assignments(state).flatMap((assignment) =>
+      assignment.managerEmployeeId === null ? [] : [assignment.managerEmployeeId],
+    )
     managersByEmployee.set(state.employeeId, managers)
   }
 
-  for (const employeeId of [...managersByEmployee.keys()].toSorted()) {
-    const pending = [{ employeeId, path: new Set<EmployeeId>() }]
-    while (pending.length > 0) {
-      const current = pending.pop()
-      if (current === undefined) break
-      if (current.path.has(current.employeeId)) return true
-      const path = new Set(current.path).add(current.employeeId)
-      for (const managerEmployeeId of managersByEmployee.get(current.employeeId) ?? []) {
-        pending.push({ employeeId: managerEmployeeId, path })
-      }
-    }
-  }
-  return false
+  return hasManagementCycle(managersByEmployee)
 }
 
 function validateProjection(
