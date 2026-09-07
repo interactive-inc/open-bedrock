@@ -3,7 +3,6 @@ import Link from "next/link"
 import { getSurveyList } from "@/lib/api/get-survey-list"
 import { EmptyState } from "@/components/empty-state"
 import { TableRowActions } from "@/components/table-row-actions"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -47,9 +46,9 @@ export async function SurveyListTable(props: { canViewSummary: boolean }) {
               <TableCell>{survey.title}</TableCell>
 
               <TableCell>
-                <Badge variant={survey.status === "open" ? "default" : "secondary"}>
+                <Button type="button" variant="secondary" size="sm">
                   {survey.status === "open" ? "実施中" : "終了"}
-                </Badge>
+                </Button>
               </TableCell>
 
               <TableCell>{survey.questions_json.length}</TableCell>

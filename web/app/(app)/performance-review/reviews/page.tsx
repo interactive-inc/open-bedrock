@@ -6,7 +6,6 @@ import { BackButton } from "@/components/back-button"
 import { EmptyState } from "@/components/empty-state"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/table"
 import { getReviewResults } from "@/lib/api/get-review-results"
 import type { ReviewFormResponse } from "@/lib/api/types/review-types"
+import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "評価結果" }
 
@@ -128,9 +128,13 @@ function ResultsTable(props: ResultsTableProps) {
 
               <TableCell>
                 {form.status === "submitted" ? (
-                  <Badge variant="secondary">提出済み</Badge>
+                  <Button type="button" variant="secondary" size="sm">
+                    提出済み
+                  </Button>
                 ) : (
-                  <Badge>未提出</Badge>
+                  <Button type="button" variant="secondary" size="sm">
+                    未提出
+                  </Button>
                 )}
               </TableCell>
 

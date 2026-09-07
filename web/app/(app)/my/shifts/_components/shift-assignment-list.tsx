@@ -10,7 +10,6 @@ import {
 } from "@/app/(app)/my/shifts/actions"
 import { EmptyState } from "@/components/empty-state"
 import { TableRowActions } from "@/components/table-row-actions"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -103,9 +102,13 @@ export function ShiftAssignmentList(props: Props) {
 
               <TableCell>
                 {assignment.published_at !== null ? (
-                  <Badge>公開済み</Badge>
+                  <Button type="button" variant="secondary" size="sm">
+                    公開済み
+                  </Button>
                 ) : (
-                  <Badge variant="outline">未公開</Badge>
+                  <Button type="button" variant="secondary" size="sm">
+                    未公開
+                  </Button>
                 )}
               </TableCell>
 

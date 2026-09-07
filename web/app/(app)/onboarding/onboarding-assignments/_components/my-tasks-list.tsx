@@ -2,7 +2,6 @@ import { CompleteTaskButton } from "@/app/(app)/onboarding/onboarding-assignment
 import { UncompleteTaskButton } from "@/app/(app)/onboarding/onboarding-assignments/_components/uncomplete-task-button"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
 import { getOnboardingMe } from "@/lib/api/get-onboarding-me"
 import {
   Table,
@@ -12,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 
 /**
  * GET /onboarding-assignments/me を取得して自分のタスク一覧を描画する非同期 RSC。
@@ -48,9 +48,9 @@ export async function MyTasksList() {
               <TableCell>{task.title}</TableCell>
 
               <TableCell>
-                <Badge variant={task.status === "done" ? "secondary" : "outline"}>
+                <Button type="button" variant="secondary" size="sm">
                   {task.status === "done" ? "完了" : "未完了"}
-                </Badge>
+                </Button>
               </TableCell>
 
               <TableCell className="text-right">

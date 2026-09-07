@@ -1,7 +1,6 @@
 import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { getOrgDepartmentMembers } from "@/lib/api/get-org-department-members"
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   code: string
@@ -57,9 +57,13 @@ export async function OrgMembersTable(props: Props) {
 
               <TableCell>
                 {member.is_manager ? (
-                  <Badge>マネージャー</Badge>
+                  <Button type="button" variant="secondary" size="sm">
+                    マネージャー
+                  </Button>
                 ) : (
-                  <Badge variant="secondary">メンバー</Badge>
+                  <Button type="button" variant="secondary" size="sm">
+                    メンバー
+                  </Button>
                 )}
               </TableCell>
             </TableRow>

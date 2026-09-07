@@ -1,6 +1,5 @@
 import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
 import { EmptyState } from "@/components/empty-state"
 import { SortableTableHead } from "@/components/sortable-table-head"
 import {
@@ -12,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { RedemptionAdminSort, RedemptionStatus } from "@/lib/api/get-redemption-admin-list"
+import { Button } from "@/components/ui/button"
 
 const pointFormatter = new Intl.NumberFormat("ja-JP")
 
@@ -38,14 +38,26 @@ type Props = {
 
 function StatusBadge(props: { status: RedemptionStatus }) {
   if (props.status === "fulfilled") {
-    return <Badge>交換済み</Badge>
+    return (
+      <Button type="button" variant="secondary" size="sm">
+        交換済み
+      </Button>
+    )
   }
 
   if (props.status === "rejected") {
-    return <Badge variant="destructive">却下</Badge>
+    return (
+      <Button type="button" variant="destructive" size="sm">
+        却下
+      </Button>
+    )
   }
 
-  return <Badge variant="secondary">承認待ち</Badge>
+  return (
+    <Button type="button" variant="secondary" size="sm">
+      承認待ち
+    </Button>
+  )
 }
 
 export function RedemptionAdminTable(props: Props) {

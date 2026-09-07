@@ -1,7 +1,6 @@
 import { FetchError } from "@/components/fetch-error"
 import { getMySkillList } from "@/lib/api/get-my-skill-list"
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 
 /** GET /employee-skills/me を認証付きで取得し、本人の登録スキルをテーブル描画する非同期 RSC。 */
 export async function MySkillList() {
@@ -52,7 +52,9 @@ export async function MySkillList() {
                 </span>
               </TableCell>
               <TableCell>
-                <Badge variant="secondary">{mySkill.skill_category}</Badge>
+                <Button type="button" variant="secondary" size="sm">
+                  {mySkill.skill_category}
+                </Button>
               </TableCell>
               <TableCell>{mySkill.level}</TableCell>
               <TableCell>{mySkill.years === null ? "-" : `${mySkill.years}年`}</TableCell>

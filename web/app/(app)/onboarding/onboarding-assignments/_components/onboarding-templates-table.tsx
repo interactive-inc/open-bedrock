@@ -1,7 +1,6 @@
 import { TemplateManagement } from "@/app/(app)/onboarding/onboarding-assignments/_components/template-management"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
 import { getOnboardingTemplates } from "@/lib/api/get-onboarding-templates"
 import {
   Table,
@@ -11,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 
 /** GET /onboarding-templates を取得してテンプレート一覧テーブルを描画する非同期 RSC。 */
 export async function OnboardingTemplatesTable() {
@@ -47,9 +47,9 @@ export async function OnboardingTemplatesTable() {
               <TableCell>{template.name}</TableCell>
 
               <TableCell>
-                <Badge variant={template.kind === "join" ? "default" : "secondary"}>
+                <Button type="button" variant="secondary" size="sm">
                   {template.kind === "join" ? "入社" : "退社"}
-                </Badge>
+                </Button>
               </TableCell>
 
               <TableCell>{template.description ?? "—"}</TableCell>
@@ -60,9 +60,9 @@ export async function OnboardingTemplatesTable() {
                 {template.lifecycle_effect === null ? (
                   <span className="text-muted-foreground">未設定</span>
                 ) : (
-                  <Badge variant="outline">
+                  <Button type="button" variant="secondary" size="sm">
                     {template.lifecycle_effect === "hire" ? "入社" : "退職"}
-                  </Badge>
+                  </Button>
                 )}
               </TableCell>
 
