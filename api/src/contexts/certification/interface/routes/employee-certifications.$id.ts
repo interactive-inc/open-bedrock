@@ -1,3 +1,4 @@
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/repositories/employee-certification.repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 
@@ -19,11 +20,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const id = Number(c.req.param("id"))
-
-  if (Number.isInteger(id) === false) {
-    throw new BadRequestError("invalid parameter")
-  }
+  const id = validateUuidParam(c.req.param("id"), "id")
 
   const deleted = await (async () => {
     const props = { id }

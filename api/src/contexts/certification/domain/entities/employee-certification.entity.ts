@@ -1,11 +1,12 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeCertificationRow } from "@/contexts/certification/infrastructure/schema/certification"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employeeId: zEmployeeId,
-  certificationId: z.number(),
+  certificationId: uuidSchema,
   acquiredOn: z.string(),
   expiresOn: z.string().nullable(),
   note: z.string().nullable(),

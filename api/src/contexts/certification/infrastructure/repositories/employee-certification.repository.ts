@@ -1,3 +1,4 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { EmployeeCertification } from "@/contexts/certification/domain/entities/employee-certification.entity"
 import type { Context } from "@/env"
@@ -25,7 +26,7 @@ export class EmployeeCertificationRepository {
   }
 
   /** id で 1 件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<EmployeeCertification | null | Error> {
+  async findById(id: string): Promise<EmployeeCertification | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -46,7 +47,7 @@ export class EmployeeCertificationRepository {
    */
   async create(props: {
     employeeId: EmployeeId
-    certificationId: number
+    certificationId: string
     acquiredOn: string
     expiresOn: string | null
     note: string | null
@@ -56,6 +57,7 @@ export class EmployeeCertificationRepository {
       const rows = await this.c.var.database
         .insert(employeeCertifications)
         .values({
+          id: createUuidV7(),
           employeeId: props.employeeId,
           certificationId: props.certificationId,
           acquiredOn: props.acquiredOn,
@@ -75,7 +77,7 @@ export class EmployeeCertificationRepository {
   }
 
   /** 保有記録を削除する。0 行削除（対象なし）なら null を返す。 */
-  async delete(id: number): Promise<true | null | Error> {
+  async delete(id: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
         .delete(employeeCertifications)
@@ -91,7 +93,7 @@ export class EmployeeCertificationRepository {
   /** 従業員 x 資格の保有記録が既に存在するか（重複チェック補助）。 */
   async existsForEmployeeCertification(props: {
     employeeId: EmployeeId
-    certificationId: number
+    certificationId: string
     acquiredOn: string
   }): Promise<boolean | Error> {
     try {

@@ -1,8 +1,9 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import type { CertificationRow } from "@/contexts/certification/infrastructure/schema/certification"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number(),
+  id: uuidSchema,
   code: z.string(),
   name: z.string(),
   issuer: z.string().nullable(),
