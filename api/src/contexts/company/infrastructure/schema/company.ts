@@ -1,3 +1,4 @@
+import { organizationUnits } from "@/contexts/company/infrastructure/schema/organization"
 import { sql } from "drizzle-orm"
 import {
   check,
@@ -319,7 +320,71 @@ export const companyEmployeeResourceAdoptions = sqliteTable(
   ],
 )
 
+export const companyOrganizationResourceBindings = sqliteTable(
+  "company_organization_resource_bindings",
+  {
+    organizationUnitId: text("organization_unit_id")
+      .primaryKey()
+      .references(() => organizationUnits.id, { onDelete: "restrict" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => companyOrganizations.id, { onDelete: "restrict" }),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    check("company_org_binding_default", sql`${table.organizationId} = 'organization:default'`),
+    check("company_org_binding_time", sql`${table.recordedAt} >= 0`),
+  ],
+)
+
+export const companyOrganizationResourceAdoptions = sqliteTable(
+  "company_organization_resource_adoptions",
+  {
+    commandId: text("command_id").primaryKey(),
+    organizationUnitId: text("organization_unit_id")
+      .notNull()
+      .unique()
+      .references(() => organizationUnits.id, { onDelete: "restrict" }),
+    fingerprint: text("fingerprint").notNull(),
+    actorAccountId: text("actor_account_id")
+      .notNull()
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
+    reason: text("reason").notNull(),
+    expectedRevision: integer("expected_revision").notNull(),
+    organizationRevision: integer("organization_revision").notNull(),
+    observedOn: text("observed_on").notNull(),
+    snapshotDigest: text("snapshot_digest").notNull(),
+    sourceJson: text("source_json").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    check("company_org_adoption_command", sql`length(${table.commandId}) BETWEEN 1 AND 200`),
+    check(
+      "company_org_adoption_fingerprint",
+      sql`length(${table.fingerprint}) = 64 AND ${table.fingerprint} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+    check("company_org_adoption_reason", sql`length(trim(${table.reason})) BETWEEN 1 AND 1000`),
+    check("company_org_adoption_expected", sql`${table.expectedRevision} >= 0`),
+    check(
+      "company_org_adoption_revision",
+      sql`${table.organizationRevision} > ${table.expectedRevision} AND ${table.organizationRevision} <= ${table.expectedRevision} + 100`,
+    ),
+    check("company_org_adoption_day", sql`length(${table.observedOn}) = 10`),
+    check(
+      "company_org_adoption_digest",
+      sql`length(${table.snapshotDigest}) = 64 AND ${table.snapshotDigest} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+    check(
+      "company_org_adoption_source",
+      sql`json_valid(${table.sourceJson}) AND length(CAST(${table.sourceJson} AS BLOB)) <= 750000`,
+    ),
+    check("company_org_adoption_recorded_at", sql`${table.recordedAt} >= 0`),
+  ],
+)
+
 export const companySchema = {
+  companyOrganizationResourceAdoptions,
+  companyOrganizationResourceBindings,
   companyEmployeeResourceAdoptions,
   companyExternalIdentityImports,
   companyExternalIdentitySources,

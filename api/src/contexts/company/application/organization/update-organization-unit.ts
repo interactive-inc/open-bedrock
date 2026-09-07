@@ -1,3 +1,4 @@
+import { periodContainsDate } from "@/contexts/company/domain/definitions/period-contains-date.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { fingerprintOrganizationUnitCommand } from "@/contexts/company/domain/definitions/fingerprint-organization-unit-command.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
@@ -89,17 +90,20 @@ export class UpdateOrganizationUnit {
         { cause: snapshot.cause },
       )
     }
-    const current = snapshot.snapshot.units.find(
+    const currentUnits = snapshot.snapshot.units.filter(
+      (unit) => !unit.isVoid && periodContainsDate(unit, asOf),
+    )
+    const current = currentUnits.find(
       (unit) => !unit.isVoid && unit.kind !== "COMPANY" && unit.code === input.code,
     )
     if (current === undefined) {
       return new CompanyNotFoundError("組織単位が見つかりません", "organization_unit_not_found")
     }
-    const root = snapshot.snapshot.units.find((unit) => !unit.isVoid && unit.kind === "COMPANY")
+    const root = currentUnits.find((unit) => !unit.isVoid && unit.kind === "COMPANY")
     const parent =
       input.parentCode === null
         ? root
-        : snapshot.snapshot.units.find((unit) => !unit.isVoid && unit.code === input.parentCode)
+        : currentUnits.find((unit) => !unit.isVoid && unit.code === input.parentCode)
     if (parent === undefined) {
       return new CompanyNotFoundError("親組織が見つかりません", "organization_unit_not_found")
     }

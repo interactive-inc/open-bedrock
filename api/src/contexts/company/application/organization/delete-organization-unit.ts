@@ -1,3 +1,4 @@
+import { periodContainsDate } from "@/contexts/company/domain/definitions/period-contains-date.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { fingerprintOrganizationUnitCommand } from "@/contexts/company/domain/definitions/fingerprint-organization-unit-command.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
@@ -74,7 +75,10 @@ export class DeleteOrganizationUnit {
         { cause: snapshot.cause },
       )
     }
-    const current = snapshot.snapshot.units.find(
+    const currentUnits = snapshot.snapshot.units.filter(
+      (unit) => !unit.isVoid && periodContainsDate(unit, asOf),
+    )
+    const current = currentUnits.find(
       (unit) => !unit.isVoid && unit.kind !== "COMPANY" && unit.code === input.code,
     )
     if (current === undefined) {

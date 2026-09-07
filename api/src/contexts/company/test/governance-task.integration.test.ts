@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test"
+import { OrganizationResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/organization-resource-adoption-snapshot.adapter"
+import { OrganizationResourceAdoptionEntity } from "@/contexts/company/domain/entities/organization-resource-adoption.entity"
+import { OrganizationResourceAdoptionRepository } from "@/contexts/company/infrastructure/repositories/organization/organization-resource-adoption.repository"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 import { ResolveCompanyGovernanceTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-governance-task.adapter"
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
@@ -24,6 +27,31 @@ describe("公開Companyから業務Taskへの接続", () => {
           .bind(person.employeeId)
           .first<string>("resource_id")
         if (employmentId === null) throw new Error("employment fixture is missing")
+        const rootId = await c.database
+          .prepare(
+            "SELECT organization_unit_id FROM company_organization_unit_period_versions WHERE kind = 'COMPANY' LIMIT 1",
+          )
+          .first<string>("organization_unit_id")
+        if (rootId === null) throw new Error("company root fixture missing")
+        const snapshot = await new OrganizationResourceAdoptionSnapshotAdapter(c.database).find(
+          rootId,
+        )
+        if (snapshot === null || snapshot instanceof Error) throw new Error("root snapshot missing")
+        const adoption = OrganizationResourceAdoptionEntity.create({
+          commandId: "governance-root-adoption",
+          organizationUnitId: rootId,
+          expectedRevision: snapshot.props.value.organizationRevision ?? 0,
+          snapshotDigest: snapshot.props.digest,
+          observedOn: assignment.effectiveFrom,
+          reason: "Confirmed company root history",
+          actorAccountId: person.accountId,
+          recordedAt: c.at.getTime(),
+        })
+        if (adoption instanceof Error) throw adoption
+        const adopted = await new OrganizationResourceAdoptionRepository({
+          env: c.context.env,
+        }).adopt(adoption)
+        if (adopted instanceof Error) throw adopted
         changes.push(
           {
             ...assignment,
@@ -35,7 +63,7 @@ describe("公開Companyから業務Taskへの接続", () => {
               code: "REVIEW",
               officialName: "Review",
               kind: "DEPARTMENT",
-              parentOrganizationUnitId: null,
+              parentOrganizationUnitId: rootId,
             },
           },
           {

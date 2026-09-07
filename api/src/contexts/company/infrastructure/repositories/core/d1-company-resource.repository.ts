@@ -1,3 +1,4 @@
+import { CompanyOrganizationResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-organization-resource-projection.adapter"
 import { validateCompanyOrganizationChange } from "@/contexts/company/domain/policies/company-organization.policy"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
@@ -144,13 +145,13 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                           resource.attributes_json,
                           row_number() OVER (
                             PARTITION BY resource.resource_type, resource.resource_id
-                            ORDER BY resource.effective_from DESC, resource.revision DESC
+                            ORDER BY CASE WHEN resource.resource_type = 'organization-unit' THEN NULL ELSE resource.effective_from END DESC, resource.revision DESC
                           ) AS effective_rank
                      FROM company_resource_revisions AS resource
                      CROSS JOIN snapshot
                     WHERE resource.organization_id = ?
                       AND resource.organization_revision <= snapshot.revision
-                      AND resource.effective_from <= ?
+                      AND (resource.resource_type = 'organization-unit' OR resource.effective_from <= ?)
                       AND ${conditions.map((condition) => `resource.${condition}`).join(" AND ")}
                  )
                  SELECT organization_id, resource_type, resource_id, revision, state,
@@ -158,6 +159,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                    FROM ranked_resources
                   WHERE effective_rank = 1
                     AND state = 'active'
+                    AND effective_from <= ?
                     AND (effective_to IS NULL OR effective_to > ?)
                   ORDER BY resource_type, resource_id`,
               )
@@ -166,6 +168,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                 query.organizationId,
                 query.effectiveOn,
                 ...binds,
+                query.effectiveOn,
                 query.effectiveOn,
               )
 
@@ -292,8 +295,20 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       return { kind: "invalid", error: projection }
     if (projection instanceof Error) return { kind: "unavailable", cause: projection }
 
+    const organizationProjection = await new CompanyOrganizationResourceProjectionAdapter(
+      this.c,
+    ).prepare(change, commandFingerprint)
+    if (organizationProjection instanceof CompanyResourceValidationError)
+      return { kind: "invalid", error: organizationProjection }
+    if (organizationProjection instanceof Error)
+      return { kind: "unavailable", cause: organizationProjection }
     const organizationRevision = change.expectedRevision + 1
-    const statements = [...journal.statements, ...projection, journal.commit]
+    const statements = [
+      ...journal.statements,
+      ...projection,
+      ...organizationProjection,
+      journal.commit,
+    ]
 
     try {
       await this.c.batch(statements)
@@ -305,6 +320,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       }
       const concurrentResourceConflict = await this.findResourceConflict(change)
       if (concurrentResourceConflict !== null) return concurrentResourceConflict
+      if (cause instanceof Error && cause.message.includes("organization revision conflict"))
+        return { kind: "conflict", actualRevision: concurrentRevision }
       if (this.isWorkforceConstraintFailure(cause)) {
         return { kind: "invalid", error: new CompanyResourceValidationError("invalid_resource") }
       }
@@ -351,6 +368,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     while (cause instanceof Error && !visited.has(cause)) {
       visited.add(cause)
       if (
+        /\borganization (?:unit|root|change|resource)\b/.test(cause.message) ||
         /\bcompany_workforce_(?:reference_not_found|owner_immutable|resource_is_in_use|period_conflict|reference_period_conflict)\b/.test(
           cause.message,
         ) ||

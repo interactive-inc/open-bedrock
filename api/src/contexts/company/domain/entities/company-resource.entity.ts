@@ -152,7 +152,7 @@ export class CompanyResourceEntity {
         startsOn: this.effectiveFrom,
         endsOn: this.effectiveTo,
         isVoid: this.state === "void",
-        recordedByActionId: restoreWorkforceId("personnel_action", `company-resource:${this.id}`),
+        recordedByActionId: restoreWorkforceId("personnel_action", "company-resource"),
         recordedAt: 0,
         organizationUnitId: restoreWorkforceId("organization_unit", organizationUnitId),
         code,

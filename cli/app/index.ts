@@ -1,3 +1,4 @@
+import organizationAdoptionHandler from "@/app/departments/adoption/route"
 import { HTTPException } from "hono/http-exception"
 import { factory } from "@/factory"
 import { loadConfig } from "@/lib/config/load-config"
@@ -926,6 +927,7 @@ routes.post("/onboarding-assignments/cancel/:assignment_id?", ...onboardingAssig
 routes.post("/onboarding-assignments/show/:assignment_id?", ...onboardingAssignmentShowHandler)
 routes.post("/onboarding-assignments/update/:assignment_id?", ...onboardingAssignmentUpdateHandler)
 routes.post("/onboarding-tasks/uncomplete/:task_id?", ...onboardingUncompleteHandler)
+routes.post("/departments/adoption", ...organizationAdoptionHandler)
 routes.post("/departments/create", ...orgDeptCreateHandler)
 routes.post("/departments/delete", ...orgDeptDeleteHandler)
 routes.post("/departments/list", ...orgDeptListHandler)
