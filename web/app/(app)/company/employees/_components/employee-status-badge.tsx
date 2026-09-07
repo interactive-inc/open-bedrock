@@ -37,15 +37,7 @@ function toStatusLabel(status: string): string {
 }
 
 /** status コードを Button のバリアントに対応づける。 */
-function toStatusVariant(status: string): "default" | "secondary" | "destructive" {
-  if (status === "active") {
-    return "default"
-  }
-
-  if (status === "leave") {
-    return "secondary"
-  }
-
+function toStatusVariant(status: string): "secondary" | "destructive" {
   if (status === "retired") {
     return "destructive"
   }

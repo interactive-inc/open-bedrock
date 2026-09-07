@@ -8,7 +8,7 @@ type Props = {
 export function StocktakeStatusBadge(props: Props) {
   if (props.status === "open") {
     return (
-      <Button type="button" size="sm">
+      <Button type="button" variant="secondary" size="sm">
         実施中
       </Button>
     )

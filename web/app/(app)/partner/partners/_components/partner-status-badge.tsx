@@ -8,7 +8,7 @@ type Props = {
 export function PartnerStatusBadge(props: Props) {
   if (props.status === "active") {
     return (
-      <Button type="button" size="sm">
+      <Button type="button" variant="secondary" size="sm">
         取引中
       </Button>
     )

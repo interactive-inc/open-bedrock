@@ -9,7 +9,7 @@ type Props = {
 export function ExpenseStatusBadge(props: Props) {
   if (props.status === "approved") {
     return (
-      <Button type="button" size="sm">
+      <Button type="button" variant="secondary" size="sm">
         承認済み
       </Button>
     )
@@ -17,7 +17,7 @@ export function ExpenseStatusBadge(props: Props) {
 
   if (props.status === "settled") {
     return (
-      <Button type="button" size="sm">
+      <Button type="button" variant="secondary" size="sm">
         精算済み
       </Button>
     )

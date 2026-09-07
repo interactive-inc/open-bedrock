@@ -28,7 +28,7 @@ function actorLabel(event: AuditEventSummary): string {
 }
 
 const outcomeVariant = {
-  succeeded: "default",
+  succeeded: "secondary",
   denied: "secondary",
   failed: "destructive",
 } as const
