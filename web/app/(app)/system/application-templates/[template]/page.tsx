@@ -3,7 +3,7 @@ import { SubmitApplicationForm } from "@/app/(app)/system/application-templates/
 import { TemplateManagement } from "@/app/(app)/system/application-templates/_components/template-management"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { getApplicationTemplate } from "@/lib/api/get-application-template"
 import { getMe } from "@/lib/api/get-me"
@@ -43,7 +43,9 @@ export default async function ApplicationTemplateDetailPage(props: Props) {
       </PageHeader>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary">{categoryLabel(template.category)}</Badge>
+        <Button type="button" variant="secondary" size="sm">
+          {categoryLabel(template.category)}
+        </Button>
 
         {canManage ? <TemplateManagement template={template} /> : null}
       </div>
