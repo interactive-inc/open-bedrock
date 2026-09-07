@@ -2,7 +2,7 @@ import type { CalendarDayKind } from "@/contexts/company-calendar/domain/definit
 import { uuidCheckPredicate } from "@/lib/uuid/uuid.schema"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { check, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { check, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 /** 会社カレンダー（会社休日と振替出勤日の記録）。通常営業日は行を持たない。判定・計算は持たず記録のみ。 */
 export const companyCalendarDays = sqliteTable(

@@ -5,7 +5,7 @@ import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 
 // @authorization permission - 権限キーで判定する
 /** DELETE /employee-certifications/:id — 資格保有記録を削除する。certification:manage が必要。 */

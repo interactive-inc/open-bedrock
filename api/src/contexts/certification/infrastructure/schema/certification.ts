@@ -2,7 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { uuidCheckPredicate } from "@/lib/uuid/uuid.schema"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { check, index, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 /** 資格・免許マスタ（コード・名称・発行元・説明）。会社で管理対象とする資格の台帳。 */
 export const certifications = sqliteTable(
@@ -15,7 +15,7 @@ export const certifications = sqliteTable(
     description: text("description"),
     createdAt: text("created_at").notNull(),
   },
-  (table) => [check("certification_definitions_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+  () => [check("certification_definitions_id_uuid", sql.raw(uuidCheckPredicate("id")))],
 )
 
 export type CertificationRow = InferSelectModel<typeof certifications>

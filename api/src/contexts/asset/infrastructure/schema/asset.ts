@@ -2,7 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { uuidCheckPredicate } from "@/lib/uuid/uuid.schema"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { check, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** 資産台帳（asset ドメイン）。code がPK。在庫/貸出/廃棄状態と保有者を持つ。 */
 export const assets = sqliteTable("assets", {
@@ -29,7 +29,7 @@ export const assetLendings = sqliteTable(
     lentAt: text("lent_at").notNull(),
     returnedAt: text("returned_at"),
   },
-  (table) => [check("asset_lendings_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+  () => [check("asset_lendings_id_uuid", sql.raw(uuidCheckPredicate("id")))],
 )
 
 export type AssetLendingRow = InferSelectModel<typeof assetLendings>

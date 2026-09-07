@@ -2,7 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { uuidCheckPredicate } from "@/lib/uuid/uuid.schema"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { check, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** ナレッジ記事（社内手続き・規程などの記事） */
 export const knowledgeArticles = sqliteTable(
@@ -16,7 +16,7 @@ export const knowledgeArticles = sqliteTable(
     authorId: text("author_id").$type<EmployeeId>().notNull(),
     createdAt: text("created_at").notNull(),
   },
-  (table) => [check("knowledge_articles_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+  () => [check("knowledge_articles_id_uuid", sql.raw(uuidCheckPredicate("id")))],
 )
 
 export type KnowledgeArticleRow = InferSelectModel<typeof knowledgeArticles>

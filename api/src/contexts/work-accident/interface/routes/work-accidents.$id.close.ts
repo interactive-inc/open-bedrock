@@ -4,7 +4,7 @@ import { factory } from "@/api/http/factory"
 import { zAppWorkAccident } from "@/contexts/work-accident/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 
 // @authorization permission - 権限キーで判定する
 /** POST /work-accidents/:id/close — 発生記録を closed にする。work_accident:manage が必要。 */
