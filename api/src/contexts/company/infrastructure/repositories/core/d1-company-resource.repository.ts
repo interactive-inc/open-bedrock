@@ -295,9 +295,18 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       return { kind: "invalid", error: projection }
     if (projection instanceof Error) return { kind: "unavailable", cause: projection }
 
-    const organizationProjection = await new CompanyOrganizationResourceProjectionAdapter(
-      this.c,
-    ).prepare(change, commandFingerprint)
+    const organizationProjection = await new CompanyOrganizationResourceProjectionAdapter(this.c)
+      .prepare(change, commandFingerprint)
+      .catch((cause: unknown) =>
+        cause instanceof Error
+          ? cause
+          : new Error("failed to prepare Company organization projection", { cause }),
+      )
+    if (organizationProjection instanceof Error) {
+      const concurrentRevision = await this.readOrganizationRevision(organizationId)
+      if (concurrentRevision !== change.expectedRevision)
+        return { kind: "conflict", actualRevision: concurrentRevision }
+    }
     if (organizationProjection instanceof CompanyResourceValidationError)
       return { kind: "invalid", error: organizationProjection }
     if (organizationProjection instanceof Error)
@@ -398,7 +407,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         cause.message.endsWith(
           "UNIQUE constraint failed: company_resource_heads.organization_id",
         ) ||
-        /\borganization (?:unit|root|change|resource)\b/.test(cause.message) ||
+        /\borganization (?:unit|root|change|resource|assignment)\b/.test(cause.message) ||
         /\bcompany_workforce_(?:reference_not_found|owner_immutable|resource_is_in_use|period_conflict|reference_period_conflict)\b/.test(
           cause.message,
         ) ||
