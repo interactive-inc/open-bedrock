@@ -26,7 +26,6 @@ import {
 } from "@/contexts/company/domain/errors"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
-
 import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
 
 export type PersonnelActionProjection = {
