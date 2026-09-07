@@ -134,6 +134,8 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 
 現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。版付きresourceを参照するCompany resolverは、在籍、System Account、対象本人の除外、scope、合議規則を同一revisionと時点で評価する。汎用申請と人事変更申請では、Companyの公開責務・役職・合議体をSystem DecisionTaskへ接続している。経費・稟議の独自承認経路を含め、技術的権限と会社上の判断資格の合成を全業務で保証していない。
 
+稟議の新しいApplicationは、会社の規程から候補を解決し、提案・案件・業務データ・提出監査を同時に保存する。決裁結果の確定では、人事と共通のCompany資格再検査、Systemの実行許可、稟議の更新と実行監査を使用する。現在の稟議HTTP・Web・CLIは旧経路のままであり、規程設定、判断対象の参照、判断操作と既存稟議の移行の接続は未完成である。
+
 ### System との対応
 
 - AccountEmployeeLink

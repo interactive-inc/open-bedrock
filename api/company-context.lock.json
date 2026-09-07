@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "186b72dfb95966ccf041f789babd3783d65abc4a8eff7bf5c016be51ad17fe9a",
+    "company-context.manifest.json": "721652b44b587a512cac1818f0aacb6d99d27b2fb4be7bfefd184f5e0143c2a1",
     "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -291,7 +291,7 @@
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-completion-preparation.adapter.ts": "27a6fefcc3341185c4a8862626311bd2dfa31a9357ad5a94a566465629b75232",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter.ts": "229269ce72dac7d9ba0875ab38a20c50932862761d868ff245a8c7861ab6e562",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action.adapter.ts": "eab1a4018a1f4536e7663544a794476f0854590fe32396b6d7035a237f6d589d",
-    "src/contexts/company/infrastructure/adapters/employee-lifecycle/revalidate-personnel-action-execution.adapter.ts": "666233a981e2a05d689d05048c5e7b521528aa6fc4bdd1b845126e164cd7d9fb",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/revalidate-personnel-action-execution.adapter.ts": "0537f442da1668a8ee570ad49e63b863807ba8eeb50f43213c32936eeabc37c1",
     "src/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-snapshot.adapter.ts": "adf3dda5b529a8b144567cf16980cd5eb4ddfe4faf46543700781783e440c3d2",
     "src/contexts/company/infrastructure/adapters/employee-resource-adoption/lib/employee-resource-adoption-snapshot-sql.ts": "f895f0459ac50b1b18cd69a65cf15463164560e2d11059c1267ce7bb9fc7e45d",
     "src/contexts/company/infrastructure/adapters/employee/additional-employment-persistence.adapter.test.ts": "db2a9d7a2436a14f77d8c0bf730256027c81bb9eb1ed960217a8d06562420e2f",
@@ -341,6 +341,7 @@
     "src/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter.ts": "4a568ba04654350bb517a88cd9212f8884f8736b541fbb653fcade2a40feb4df",
     "src/contexts/company/infrastructure/adapters/organization/resolve-organizational-authority-candidates.adapter.ts": "02ecfe80ac173d274509b08564fb184e5493801a5747eff0103ec635b684848d",
     "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-authority.adapter.ts": "ec8f4a292065291c6864088553793448bb85e083edd53d92c5467c9681411906",
+    "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter.ts": "4622ac40a09fa8553f15a3bfe451707bdc342ba900937d7f03ddf5742971d729",
     "src/contexts/company/infrastructure/adapters/organization/validate-employee-active.adapter.ts": "fb3fc3e31a9536b126c3e6efe74c3eb25cd4158f2217f6095bec0c96ce50a240",
     "src/contexts/company/infrastructure/adapters/workforce/account-employee-link-read.adapter.ts": "88ad622e2887ad4b4199689a175af0f110381e4b4399f758e96543dd076f9e8d",
     "src/contexts/company/infrastructure/adapters/workforce/canonical-organization-authority-evidence.adapter.test.ts": "6f753d6e3e27cfa967aab18304cd126ef954b72881814f9e1d7c2672acf2f8f4",
