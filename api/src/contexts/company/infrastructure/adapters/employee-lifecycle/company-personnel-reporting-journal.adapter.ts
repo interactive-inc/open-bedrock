@@ -3,6 +3,7 @@ import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/c
 import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 import type { OrganizationRelation } from "@/contexts/company/domain/definitions/organization-relation.definition"
 import { CompanyPersonnelReportingChangeValue } from "@/contexts/company/domain/values/company-personnel-reporting-change.value"
+import { CompanyReportingEmploymentChangeValue } from "@/contexts/company/domain/values/company-reporting-employment-change.value"
 import { CompanyReportingRelationTimelineValue } from "@/contexts/company/domain/values/company-reporting-relation-timeline.value"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
@@ -42,7 +43,7 @@ export class CompanyPersonnelReportingJournalAdapter {
     periodIds: ReadonlySet<string>,
     organizationRevision: number | null,
   ): Promise<Prepared | CompanyOperationError> {
-    if (periodIds.size === 0 || organizationRevision === null)
+    if (organizationRevision === null)
       return { resources: [], bindings: [], summary: props.action.summary }
     try {
       const history = await new D1CompanyResourceRepository(this.c).findReportingRelationHistory(
@@ -176,6 +177,54 @@ export class CompanyPersonnelReportingJournalAdapter {
                 props.action.id,
               ),
           )
+      }
+      if (props.projection.mutations.some((mutation) => mutation.periodType === "employment")) {
+        const dependentIds = new Set(
+          history
+            .filter(
+              (resource) =>
+                resource.readText("employeeId") === props.action.employeeId ||
+                resource.readText("managerEmployeeId") === props.action.employeeId,
+            )
+            .map((resource) => resource.id),
+        )
+        for (const resourceId of dependentIds) {
+          if (scopes.some((scope) => scope.resource_id === resourceId)) continue
+          const versions = history.filter((resource) => resource.id === resourceId)
+          const original = correction.filter((row) => row.resource_id === resourceId)
+          if (
+            original.length > 0 &&
+            versions.some(
+              (resource) => resource.revision > Math.max(...original.map((row) => row.revision)),
+            )
+          )
+            return new CompanyConflictError(
+              "訂正対象の上長関係は後続の変更を受けています",
+              "personnel_action_stale",
+            )
+          const basis =
+            original.length === 0
+              ? versions
+              : versions.filter(
+                  (resource) =>
+                    resource.revision < Math.min(...original.map((row) => row.revision)),
+                )
+          const change = CompanyReportingEmploymentChangeValue.create({
+            employeeId: props.action.employeeId,
+            history: versions,
+            basis,
+            employments: props.projection.schedule.employments
+              .filter((period) => !period.isVoid)
+              .map((period) => this.period(period)),
+          })
+          if (change instanceof Error)
+            return new CompanyValidationError(
+              "雇用変更後の上長関係を準備できません",
+              "lifecycle_projection_mismatch",
+              { cause: change },
+            )
+          resources.push(...change.resources)
+        }
       }
       const validation = await this.validate(props, periodIds, history, resources)
       return validation ?? { resources, bindings, summary }
