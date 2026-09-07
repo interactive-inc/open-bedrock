@@ -76,10 +76,6 @@ describe("UpdateKnowledgeArticle", () => {
 
     const article = await seedArticle(context, 1)
 
-    if (article.id === null) {
-      throw new Error("seed returned null id")
-    }
-
     const result = await new UpdateKnowledgeArticle(context).run({
       articleId: article.id,
       authorId: toWorkforceEmployeeId(1),
@@ -104,10 +100,6 @@ describe("UpdateKnowledgeArticle", () => {
 
     const article = await seedArticle(context, 1)
 
-    if (article.id === null) {
-      throw new Error("seed returned null id")
-    }
-
     const result = await new UpdateKnowledgeArticle(context).run({
       articleId: article.id,
       authorId: toWorkforceEmployeeId(999),
@@ -124,7 +116,7 @@ describe("UpdateKnowledgeArticle", () => {
     const { context } = await createTestContext()
 
     const result = await new UpdateKnowledgeArticle(context).run({
-      articleId: 9999,
+      articleId: "0190001d-0000-7000-8000-00000000ffff",
       authorId: toWorkforceEmployeeId(1),
       title: "Ghost",
       category: "ghost",

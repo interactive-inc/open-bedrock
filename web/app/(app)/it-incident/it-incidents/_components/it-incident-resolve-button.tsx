@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 const initialState: ItIncidentActionState = { ok: false, error: null }
 
 type Props = {
-  id: number
+  id: string
 }
 
 /**

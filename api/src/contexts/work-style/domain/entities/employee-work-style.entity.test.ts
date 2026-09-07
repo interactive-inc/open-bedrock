@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { EmployeeWorkStyle } from "@/contexts/work-style/domain/entities/employee-work-style.entity"
 import { describe, expect, test } from "bun:test"
@@ -14,7 +15,7 @@ describe("EmployeeWorkStyle.create", () => {
     })
 
     expect(workStyle).toBeInstanceOf(EmployeeWorkStyle)
-    expect(workStyle.id).toBe(null)
+    expect(uuidSchema.safeParse(workStyle.id).success).toBe(true)
     expect(workStyle.employeeId).toBe(toWorkforceEmployeeId(1))
     expect(workStyle.style).toBe("flextime")
     expect(workStyle.startsOn).toBe("2026-04-01")

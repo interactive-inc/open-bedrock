@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
@@ -14,7 +15,7 @@ import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const knowledgeArticleResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   title: z.string(),
   category: z.string(),
   tags: z.string().nullable(),
@@ -72,7 +73,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /knowledge-articles/:id", () => {
   test("returns 200 with the article in CLI detail shape", async () => {
-    const response = await request("/knowledge/knowledge-articles/4", await memberToken())
+    const response = await request("/knowledge/knowledge-articles/0190001d-0000-7000-8000-000000000004", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -81,7 +82,7 @@ describe("GET /knowledge-articles/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(4)
+      expect(parsed.data.id).toBe("0190001d-0000-7000-8000-000000000004")
       expect(parsed.data.title).toBe("目標設定と評価")
       expect(parsed.data.category).toBe("評価")
       expect(parsed.data.tags).toBe("目標,評価,MBO")
@@ -90,7 +91,7 @@ describe("GET /knowledge-articles/:id", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/knowledge/knowledge-articles/4", null)
+    const response = await request("/knowledge/knowledge-articles/0190001d-0000-7000-8000-000000000004", null)
 
     expect(response.status).toBe(401)
   })
@@ -102,7 +103,7 @@ describe("GET /knowledge-articles/:id", () => {
   })
 
   test("returns 404 when the article does not exist", async () => {
-    const response = await request("/knowledge/knowledge-articles/9999", await memberToken())
+    const response = await request("/knowledge/knowledge-articles/0190001d-0000-7000-8000-000000009999", await memberToken())
 
     expect(response.status).toBe(404)
   })

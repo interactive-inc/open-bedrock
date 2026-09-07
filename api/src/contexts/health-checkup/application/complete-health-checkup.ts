@@ -13,7 +13,7 @@ export class CompleteHealthCheckup {
     Object.freeze(this)
   }
 
-  async run(props: { id: number; conductedOn: string }): Promise<HealthCheckup | ApplicationError> {
+  async run(props: { id: string; conductedOn: string }): Promise<HealthCheckup | ApplicationError> {
     const repository = new HealthCheckupRepository(this.c)
 
     const existing = await repository.findById(props.id)

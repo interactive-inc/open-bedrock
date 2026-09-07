@@ -1,10 +1,12 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { KnowledgeArticleRow } from "@/contexts/knowledge/infrastructure/schema/knowledge"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   title: z.string(),
   category: z.string(),
   tags: z.string().nullable(),
@@ -49,7 +51,7 @@ export class KnowledgeArticle implements Props {
     createdAt: string
   }): KnowledgeArticle {
     return new KnowledgeArticle({
-      id: null,
+      id: createUuidV7(),
       title: props.title,
       category: props.category,
       tags: props.tags,

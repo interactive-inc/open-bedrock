@@ -1,3 +1,4 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { HealthCheckup } from "@/contexts/health-checkup/domain/entities/health-checkup.entity"
 import type { Context } from "@/env"
@@ -39,7 +40,7 @@ export class HealthCheckupRepository {
   }
 
   /** id で 1 件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<HealthCheckup | null | Error> {
+  async findById(id: string): Promise<HealthCheckup | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -68,6 +69,7 @@ export class HealthCheckupRepository {
       const rows = await this.c.var.database
         .insert(healthCheckups)
         .values({
+          id: createUuidV7(),
           employeeId: props.employeeId,
           fiscalYear: props.fiscalYear,
           checkupKind: props.checkupKind,
@@ -90,7 +92,7 @@ export class HealthCheckupRepository {
 
   /** status を completed へ遷移し conducted_on を記録する。対象が scheduled でなければ null。 */
   async complete(props: {
-    id: number
+    id: string
     conductedOn: string
   }): Promise<HealthCheckup | null | Error> {
     try {
