@@ -1,18 +1,16 @@
+import type { OrganizationUnitPeriod } from "@/contexts/company/domain/definitions/organization-unit.definition"
 import type { LifecycleSchedule } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
-import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import { toWorkforceLifecycleSchedules } from "@/contexts/company/domain/policies/to-workforce-lifecycle-schedules.policy"
 import type {
   WorkforceInvariantCode,
   WorkforceInvariantViolation,
 } from "@/contexts/company/domain/definitions/workforce-invariant.definition"
 import { validateWorkforceLifecycleSchedules } from "@/contexts/company/domain/policies/validate-workforce-lifecycle-schedules.policy"
-import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { CompanyOperationError, CompanyConflictError } from "@/contexts/company/domain/errors"
 
 type ValidateLifecycleSchedulesProps = {
   schedules: ReadonlyArray<LifecycleSchedule>
-  departments: ReadonlyArray<string>
+  departments: ReadonlyArray<OrganizationUnitPeriod>
 }
 
 type InvariantConflict = Readonly<{
@@ -123,20 +121,7 @@ export function validateLifecycleSchedules(
   try {
     const violation = validateWorkforceLifecycleSchedules({
       schedules: toWorkforceLifecycleSchedules(props.schedules),
-      organizationUnitPeriods: props.departments.map((department) => ({
-        periodId: restoreWorkforceId("period", `initial-department-period:${department}`),
-        revision: 1,
-        organizationUnitId: toWorkforceOrganizationUnitId(department),
-        code: department,
-        officialName: department,
-        kind: "DEPARTMENT" as const,
-        parentOrganizationUnitId: null,
-        startsOn: restoreCalendarDate("0001-01-01"),
-        endsOn: null,
-        isVoid: false,
-        recordedByActionId: restoreWorkforceId("personnel_action", "initial-department-validation"),
-        recordedAt: 0,
-      })),
+      organizationUnitPeriods: props.departments,
     })
 
     return violation === null ? undefined : toInvariantConflict(violation)

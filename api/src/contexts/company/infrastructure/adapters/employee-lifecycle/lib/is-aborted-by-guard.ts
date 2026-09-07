@@ -7,6 +7,7 @@ export function isAbortedByGuard(error: unknown): boolean {
     visited.add(error)
     if (
       error.message.includes(BATCH_ABORT_SENTINEL) ||
+      /\borganization revision conflict\b/.test(error.message) ||
       /\bcompany_(?:resource_)?revision_conflict\b/.test(error.message)
     )
       return true

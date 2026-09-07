@@ -1,5 +1,5 @@
 import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter"
-import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyEmploymentJournalChangeValue } from "@/contexts/company/domain/values/company-employment-journal-change.value"
 import {
   CompanyConflictError,
@@ -7,7 +7,6 @@ import {
   CompanyUnexpectedError,
   CompanyValidationError,
 } from "@/contexts/company/domain/errors"
-import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
 import { CompanyEmploymentResourceHistoryAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter"
 import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/company/infrastructure/adapters/database/abort-when-previous-statement-changed-no-rows.adapter"
 import { z } from "zod"
@@ -20,6 +19,12 @@ const bindingRow = z.object({
   resource_revision: z.number().int().positive(),
   lifecycle_revision: z.number().int().nonnegative(),
 })
+export type PreparedCompanyEmploymentJournal = Readonly<{
+  statements: ReadonlyArray<D1PreparedStatement>
+  bindings: ReadonlyArray<D1PreparedStatement>
+  resources: ReadonlyArray<CompanyResourceEntity>
+  organizationRevision: number | null
+}>
 type Context = D1Database
 
 /** 人事発令で更新する期間を公開履歴へ反映し、同じEmployeeの版を一緒に進める。 */
@@ -30,18 +35,16 @@ export class CompanyEmploymentJournalAdapter {
 
   async prepare(
     props: PersonnelActionPersistenceProps,
-  ): Promise<ReadonlyArray<D1PreparedStatement> | CompanyOperationError> {
+  ): Promise<PreparedCompanyEmploymentJournal | CompanyOperationError> {
     try {
       const snapshot = await this.c.batch([
         this.c
           .prepare(`SELECT organization_id, resource_revision, lifecycle_revision
           FROM company_workforce_resource_bindings WHERE resource_type = 'employee' AND resource_id = ?1`)
           .bind(props.action.employeeId),
-        this.c
-          .prepare(`SELECT organization.revision FROM company_organizations AS organization
-          JOIN company_workforce_resource_bindings AS binding ON binding.organization_id = organization.id
-          WHERE binding.resource_type = 'employee' AND binding.resource_id = ?1`)
-          .bind(props.action.employeeId),
+        this.c.prepare(
+          `SELECT revision FROM company_organizations WHERE id = 'organization:default'`,
+        ),
         this.c
           .prepare(`SELECT resource_id, organization_id, resource_revision, lifecycle_revision
           FROM company_workforce_resource_bindings WHERE resource_type = 'employment' AND employee_id = ?1`)
@@ -86,14 +89,20 @@ export class CompanyEmploymentJournalAdapter {
             operationId: props.action.id,
             reason: `personnel_action:${props.action.kind}:${props.action.id}`,
             lifecycleRevision: props.revisions.employeeRevision + 1,
+            expectedOrganizationRevision: revision.data?.revision,
           })
           return initial instanceof Error
             ? new CompanyUnexpectedError("公開Companyの初期記録を準備できません", {
                 cause: initial,
               })
-            : initial
+            : {
+                statements: initial,
+                bindings: [],
+                resources: [],
+                organizationRevision: (revision.data?.revision ?? 0) + 1,
+              }
         }
-        return []
+        return { statements: [], bindings: [], resources: [], organizationRevision: null }
       }
       if (
         revision.data === null ||
@@ -110,8 +119,8 @@ export class CompanyEmploymentJournalAdapter {
           "personnel_action_stale",
         )
       const organizationId = employee.data.organization_id
-      let organizationRevision = revision.data.revision
-      let commandIndex = 0
+      const resources: CompanyResourceEntity[] = []
+      const bindings: D1PreparedStatement[] = []
       const statements: D1PreparedStatement[] = [
         this.c
           .prepare(`UPDATE company_workforce_resource_bindings SET lifecycle_revision = lifecycle_revision
@@ -189,31 +198,11 @@ export class CompanyEmploymentJournalAdapter {
             "lifecycle_projection_mismatch",
             { cause: changes },
           )
-        for (const resource of changes.resources) {
-          const change = CompanyResourceChangeEntity.create({
-            commandId: `lifecycle:${props.action.id}:${commandIndex++}`,
-            expectedRevision: organizationRevision++,
-            actorAccountId: props.command.session.accountId,
-            reason: `personnel_action:${props.action.kind}:${props.action.id}`,
-            recordedAt: props.action.recordedAt * 1000,
-            resources: [resource],
-          })
-          if (change instanceof Error)
-            return new CompanyUnexpectedError("公開雇用のcommandを作成できません", {
-              cause: change,
-            })
-          const journal = await new CompanyResourceJournalAdapter({
-            database: drizzle(this.c),
-            d1: this.c,
-          }).prepare(change)
-          if (journal instanceof Error)
-            return new CompanyUnexpectedError("公開雇用の履歴を準備できません", { cause: journal })
-          statements.push(...journal.statements, journal.commit)
-        }
+        resources.push(...changes.resources)
         const resourceRevision = changes.resources.at(-1)?.revision ?? binding?.resource_revision
         if (resourceRevision === undefined)
           return new CompanyUnexpectedError("公開雇用の結果revisionがありません")
-        statements.push(
+        bindings.push(
           this.c
             .prepare(`INSERT INTO company_workforce_resource_bindings
           (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision, last_action_id)
@@ -231,19 +220,19 @@ export class CompanyEmploymentJournalAdapter {
               props.action.id,
             ),
         )
-        statements.push(
+        bindings.push(
           new AbortWhenPreviousStatementChangedNoRowsAdapter(
             this.c,
           ).abortWhenPreviousStatementChangedNoRows(),
         )
       }
-      statements.push(
+      bindings.push(
         this.c
           .prepare(`UPDATE company_workforce_resource_bindings SET lifecycle_revision = ?1
         WHERE employee_id = ?2 AND organization_id = ?3`)
           .bind(props.revisions.employeeRevision + 1, props.action.employeeId, organizationId),
       )
-      return statements
+      return { statements, bindings, resources, organizationRevision: revision.data.revision }
     } catch (cause) {
       return new CompanyUnexpectedError("公開雇用の履歴を準備できません", { cause })
     }

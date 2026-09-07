@@ -79,6 +79,7 @@ type StatusVersionRow = EmploymentVersionRow & {
 }
 type AssignmentVersionRow = EmploymentVersionRow & {
   employment_id: EmploymentId
+  organization_unit_id: string
   organization_unit_code: string
   assignment_type: "PRIMARY" | "CONCURRENT"
   position_title: string | null
@@ -86,6 +87,7 @@ type AssignmentVersionRow = EmploymentVersionRow & {
 }
 type ResponsibilityVersionRow = BaseVersionRow & {
   employment_id: EmploymentId
+  organization_unit_id: string
   organization_unit_code: string
   responsibility_type: "MANAGER"
   employee_id: EmployeeId
@@ -150,6 +152,7 @@ function assignment(row: AssignmentVersionRow): OrgAssignmentPeriod {
   return {
     ...employment(row),
     employmentPeriodId: row.employment_id,
+    organizationUnitId: restoreWorkforceId("organization_unit", row.organization_unit_id),
     departmentCode: row.organization_unit_code,
     assignmentType: row.assignment_type === "PRIMARY" ? "primary" : "concurrent",
     positionTitle: row.position_title,
@@ -161,6 +164,7 @@ function responsibility(row: ResponsibilityVersionRow): OrgResponsibilityPeriod 
   return {
     ...base(row),
     employmentId: row.employment_id,
+    organizationUnitId: restoreWorkforceId("organization_unit", row.organization_unit_id),
     departmentCode: row.organization_unit_code,
     responsibilityType: "department_manager",
     employeeId: row.employee_id,
@@ -347,7 +351,7 @@ export class PersonnelActionAdapter {
           .all<StatusVersionRow>(),
         db
           .prepare(
-            `SELECT period_id, revision, employment_id, employee_id,
+            `SELECT period_id, revision, employment_id, employee_id, organization_unit_id,
                     (
                       SELECT unit.code
                       FROM company_organization_unit_period_versions AS unit
@@ -374,7 +378,7 @@ export class PersonnelActionAdapter {
           .all<AssignmentVersionRow>(),
         db
           .prepare(
-            `SELECT period_id, revision, employment_id, employee_id,
+            `SELECT period_id, revision, employment_id, employee_id, organization_unit_id,
                     (
                       SELECT unit.code
                       FROM company_organization_unit_period_versions AS unit
