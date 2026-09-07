@@ -135,7 +135,7 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 
 新規Accountの作成・発行と一括登録を合成する製品向けには、同じ初期resourceを既存の登録batchへ組み込むadapterを提供する。一括登録は準備時に会社の版を一度だけ読み、各登録のcommandへ連続した版を割り当てる。別のCompany変更と競合した場合は全登録を取り消し、再試行の際に版を読み直す。
 
-会社profileは初期化時に公開resourceと既存の会社情報を同時に保存するが、初期化後の両方の更新経路の統合は未完成である。所属・責務・Account対応も、初期化が作る期間台帳と公開resource APIの全保存経路は統合されていない。
+会社profileは初期化時から公開resourceを正本とする。接続前の会社名・代表者名は変更せず保全し、接続後は公開APIと既存の会社情報APIが同じ履歴を参照・変更する。所属・責務・Account対応は、初期化が作る期間台帳と公開resource APIの全保存経路が統合されていない。
 
 公開resourceに未接続の既存台帳、招待からの登録、製品固有の人物情報writer、未接続の組織・所属・責務・Account対応の保存先統合は未完成である。入社・再入社の発令は`employmentType`に`FULL_TIME`または`PART_TIME`を必須とする。新規従業員登録の入力名は`employment_type`である。選択した区分を承認対象の本文、発令記録、業務台帳、公開雇用へ保存する。再入社と訂正で新しく作る契約にも明示した区分を使い、以前の契約の区分を変更しない。
 
@@ -190,3 +190,17 @@ CLIの `employees adoption --employee-id <id>` で照合対象を参照し、`em
 接続後は会社版と組織操作の確定時にDBでも両方の最新期間を照合し、片側だけの更新を拒否する。将来の期間や取消済み期間は現在の組織一覧・詳細に混ぜない。既定organization以外の公開OrgUnitは単一Companyの既存台帳へ接続しない。所属・責務・Account対応の統合、既存組織編集画面が表示した版の照合は未完成である。
 
 CLIは `departments adoption --organization-unit-id <id>` で確認内容を取得し、`departments adoption --data <confirmed-history.json> --idempotency-key <key>` で確認済みの依頼を送る。会社版を自動取得して変更を再送する処理は持たない。
+
+## 会社プロフィールの確認と変更
+
+一つのorganizationが持つ会社profileのidentityは一つとし、取消後も別identityを作らない。複数のidentityを持つ既存データは一意制約の追加時に拒否する。移行時に一方を自動選択したり削除したりしない。
+
+`GET /company/organization-profile`は一つのorganizationへのCompany参照資格を要求し、会社営業日に有効な会社名・代表者名・言語・timezone・会計年度開始月と`version`を返す。`version`はorganization・会社版・resource identityと最新版・表示営業日・期間終端・表示元のfingerprintを含む。公開profileに接続する前の設定では、不明な言語・timezone・会計年度は`null`とする。接続後の代表者名が不明な場合も、旧情報から補わない。
+
+`PUT /company/organization-profile`は対象organizationへのCompany書込資格、`Idempotency-Key`、表示した`version`、全項目と確認・変更理由を要求する。保存時に表示元と会社版を再検査し、公開履歴・監査・変更前情報・再送結果を同じtransactionで確定する。成功は200で`organizationRevision`と`replayed`を返す。同じ内容・主体・キーの成功済み再送は翌日や別変更後でも元の結果を返す。別内容のキー再利用、公開APIで既に使ったキー、未成功の古い表示は409で拒否する。
+
+現在の編集は表示中の区間終端を保持し、将来予約された変更を取り消さない。公開profileに接続した後の期間の空白や取消では404となり、保全した旧会社情報へ戻らない。接続後の旧会社名・代表者名の直接更新もDBで拒否する。
+
+`GET /company/profile`は`effective_on`または`as_of`を省略した場合、会社営業日で有効なprofileを読む。`POST /company/profile`は代表者名を含む取得結果を再入力できる。localeとtimezoneは実行環境が解釈可能な値を要求する。
+
+保存した会社timezoneや会計年度開始月を、すべての業務計算の実行設定として利用する接続は未完成である。会社営業日の解決には引き続き環境の`COMPANY_TIME_ZONE`を使う。

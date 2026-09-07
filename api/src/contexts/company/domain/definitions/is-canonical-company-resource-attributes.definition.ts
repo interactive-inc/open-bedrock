@@ -1,3 +1,4 @@
+import { isCompanyLocaleAndTimeZone } from "@/contexts/company/domain/definitions/is-company-locale-and-time-zone.definition"
 import type { CompanyResourceType } from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
 import { z } from "zod"
 
@@ -23,7 +24,8 @@ const resourceAttributeSchemas = {
       timeZone: z.string().regex(/^(?:UTC|[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)+)$/),
       fiscalYearStartMonth: z.number().int().min(1).max(12),
     })
-    .strict(),
+    .strict()
+    .refine((profile) => isCompanyLocaleAndTimeZone(profile.locale, profile.timeZone)),
   site: z
     .object({
       code: placeCode,

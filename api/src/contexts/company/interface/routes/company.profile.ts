@@ -1,3 +1,4 @@
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 /** /company/profile */
 import { CreateCompanyProfile } from "@/contexts/company/application/profile/create-company-profile"
 import { DeleteCompanyProfile } from "@/contexts/company/application/profile/delete-company-profile"
@@ -86,7 +87,17 @@ export const GET = factory.createHandlers(
         : Array.isArray(requestQuery.id)
           ? requestQuery.id
           : [requestQuery.id]
-    const effectiveOn = requestQuery.effective_on ?? requestQuery.as_of
+    const explicitDate = requestQuery.effective_on ?? requestQuery.as_of
+    const clock = context.var.companyClock
+    if (explicitDate === undefined && clock === undefined)
+      throw new CompanyReadUnavailableError(new Error("Company clock is unavailable"))
+    const effectiveOn =
+      explicitDate ??
+      resolveCompanyBusinessDate({
+        now: clock?.().toISOString() ?? "",
+        timeZone: context.env.COMPANY_TIME_ZONE,
+      })
+    if (effectiveOn instanceof Error) throw new CompanyReadUnavailableError(effectiveOn)
     const query = {
       organizationId: headers["x-company-organization-id"],
       types: ["legal-entity", "company-profile"] as const,
@@ -184,6 +195,7 @@ export const POST = factory.createHandlers(
               attributes: z
                 .object({
                   displayName: z.string().trim().min(1).max(2_000),
+                  representativeName: z.string().trim().min(1).max(2_000).optional(),
                   locale: z.string().regex(/^[a-z]{2,3}(?:-[A-Z]{2})?$/),
                   timeZone: z.string().regex(/^(?:UTC|[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)+)$/),
                   fiscalYearStartMonth: z.number().int().min(1).max(12),
