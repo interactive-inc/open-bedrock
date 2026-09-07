@@ -79,13 +79,19 @@ describe("uuidSchema と uuidCheckPredicate の一致", () => {
     "",
   ]
 
-  /** SQL 側の CHECK 制約を実際の SQLite で評価する。 */
+  /**
+   * SQL 側の CHECK 制約を実際の SQLite で評価する。
+   *
+   * 主キーの一意制約が混ざると、同じ値が二度現れただけで「CHECK に落ちた」ように
+   * 見えてしまう。CHECK だけを見たいので毎回入れ直す。
+   */
   function sqlAccepts(values: readonly string[]): boolean[] {
     const database = new Database(":memory:")
-    database.run(`CREATE TABLE probe (id TEXT PRIMARY KEY, CHECK (${uuidCheckPredicate("id")}))`)
+    database.run(`CREATE TABLE probe (id TEXT, CHECK (${uuidCheckPredicate("id")}))`)
 
     return values.map((value) => {
       try {
+        database.run("DELETE FROM probe")
         database.run("INSERT INTO probe (id) VALUES (?)", [value])
         return true
       } catch {
@@ -102,5 +108,47 @@ describe("uuidSchema と uuidCheckPredicate の一致", () => {
   test("UUID でない値は Zod と SQL の両方が拒否する", () => {
     expect(rejected.some((value) => uuidSchema.safeParse(value).success)).toBe(false)
     expect(sqlAccepts(rejected).some(Boolean)).toBe(false)
+  })
+
+  /**
+   * Zod と SQL が「同じ集合を表す」ことを、両方に同じ入力を通して突き合わせる。
+   *
+   * 桁と文字種だけを一致させても version / variant の扱いがずれると、DB には入るが
+   * API の入口で弾かれる ID が生まれる。以後この 2 つが乖離したらここで落ちる。
+   */
+  test("Zod と SQL の判定はあらゆる形の入力で一致する", () => {
+    const probes = [
+      ...Array.from({ length: 200 }, createUuidV7),
+      ...Array.from({ length: 50 }, () => crypto.randomUUID()),
+      // version nibble (13 文字目) の全パターン
+      ...Array.from(
+        { length: 16 },
+        (_, index) => `abcdefab-cdef-${index.toString(16)}abc-8def-abcdefabcdef`,
+      ),
+      // variant nibble (17 文字目) の全パターン
+      ...Array.from(
+        { length: 16 },
+        (_, index) => `abcdefab-cdef-4abc-${index.toString(16)}def-abcdefabcdef`,
+      ),
+      "11111111-1111-1111-1111-111111111111",
+      "00000000-0000-0000-0000-000000000000",
+      "ffffffff-ffff-ffff-ffff-ffffffffffff",
+      "0195E2A1-4C3F-7ABC-8DEF-0123456789AB",
+      "0195e2a1-4c3f-7abc-8def-0123456789a",
+      "0195e2a1-4c3f-7abc-8def-0123456789abc",
+      "0195e2a1_4c3f_7abc_8def_0123456789ab",
+      "0195e2a1-4c3f-7abc-8def-0123456789ag",
+      "organization:default",
+      "employment:seed-employment-1",
+      "password:1",
+      "1",
+      "",
+    ]
+    const sqlResults = sqlAccepts(probes)
+    const disagreements = probes.filter(
+      (value, index) => uuidSchema.safeParse(value).success !== sqlResults[index],
+    )
+
+    expect(disagreements).toEqual([])
   })
 })
