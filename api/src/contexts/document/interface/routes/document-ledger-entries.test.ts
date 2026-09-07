@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { seedDocuments } from "@/contexts/document/test/seed/seed-documents.test-support"
@@ -15,7 +16,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const jwtSecret = "document-route-test-secret"
 
 const listItemSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   title: z.string(),
   category: z.string().nullable(),
   location: z.string(),
@@ -97,9 +98,9 @@ describe("GET /document-ledger-entries", () => {
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(3)
       // 2026-09-30 (id 2) < 2027-03-31 (id 1) < null (id 3)
-      expect(parsed.data.data[0]?.id).toBe(2)
-      expect(parsed.data.data[1]?.id).toBe(1)
-      expect(parsed.data.data[2]?.id).toBe(3)
+      expect(parsed.data.data[0]?.id).toBe("01900018-0000-7000-8000-000000000002")
+      expect(parsed.data.data[1]?.id).toBe("01900018-0000-7000-8000-000000000001")
+      expect(parsed.data.data[2]?.id).toBe("01900018-0000-7000-8000-000000000003")
     }
   })
 
@@ -123,7 +124,7 @@ describe("GET /document-ledger-entries", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0]?.id).toBe(2)
+      expect(parsed.data.data[0]?.id).toBe("01900018-0000-7000-8000-000000000002")
     }
   })
 
@@ -166,7 +167,7 @@ describe("POST /document-ledger-entries", () => {
 describe("PUT /document-ledger-entries/:id", () => {
   test("admin updates a document", async () => {
     const response = await request(
-      "/document/document-ledger-entries/1",
+      "/document/document-ledger-entries/01900018-0000-7000-8000-000000000001",
       await tokenFor(1),
       "PUT",
       {
@@ -191,7 +192,7 @@ describe("PUT /document-ledger-entries/:id", () => {
 
   test("member is forbidden", async () => {
     const response = await request(
-      "/document/document-ledger-entries/1",
+      "/document/document-ledger-entries/01900018-0000-7000-8000-000000000001",
       await tokenFor(5),
       "PUT",
       {

@@ -19,7 +19,7 @@ import type {
 } from "@/contexts/leave/domain/definitions/leave-request.definition"
 
 export type Command = {
-  leaveRequestId: number
+  leaveRequestId: string
   employeeId: EmployeeId
   leaveType: LeaveType
   startDate: string

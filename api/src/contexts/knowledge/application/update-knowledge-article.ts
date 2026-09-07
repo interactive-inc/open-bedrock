@@ -6,7 +6,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  articleId: number
+  articleId: string
   authorId: EmployeeId
   title: string
   category: string

@@ -10,11 +10,12 @@ import { requestWithContext } from "@tests/api/support/request-with-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const careerPostingResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   title: z.string(),
   dept_id: z.number().nullable(),
   dept_name: z.string().nullable(),
@@ -180,7 +181,7 @@ describe("POST /career-postings", () => {
 describe("GET /career-postings/:postingId", () => {
   test("admin reads a posting and returns 200", async () => {
     const response = await request({
-      path: "/career/career-postings/1",
+      path: "/career/career-postings/0190000d-0000-7000-8000-000000000001",
       token: await tokenFor(1),
     })
 
@@ -191,14 +192,14 @@ describe("GET /career-postings/:postingId", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.id).toBe("0190000d-0000-7000-8000-000000000001")
       expect(parsed.data.title).toBe("プロダクト開発リード")
     }
   })
 
   test("reads a closed posting too (admin scope, not the public list)", async () => {
     const response = await request({
-      path: "/career/career-postings/3",
+      path: "/career/career-postings/0190000d-0000-7000-8000-000000000003",
       token: await tokenFor(1),
     })
 
@@ -207,7 +208,7 @@ describe("GET /career-postings/:postingId", () => {
 
   test("member can read a posting to apply", async () => {
     const response = await request({
-      path: "/career/career-postings/1",
+      path: "/career/career-postings/0190000d-0000-7000-8000-000000000001",
       token: await tokenFor(5),
     })
 
@@ -216,7 +217,7 @@ describe("GET /career-postings/:postingId", () => {
 
   test("returns 404 when the posting does not exist", async () => {
     const response = await request({
-      path: "/career/career-postings/9999",
+      path: "/career/career-postings/0190000d-0000-7000-8000-00000000ffff",
       token: await tokenFor(1),
     })
 
@@ -225,7 +226,7 @@ describe("GET /career-postings/:postingId", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/career/career-postings/1",
+      path: "/career/career-postings/0190000d-0000-7000-8000-000000000001",
       token: null,
     })
 
@@ -236,7 +237,7 @@ describe("GET /career-postings/:postingId", () => {
 describe("PUT /career-postings/:postingId", () => {
   test("admin updates a posting and returns 200", async () => {
     const response = await request({
-      path: "/career/career-postings/1",
+      path: "/career/career-postings/0190000d-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "PUT",
       body: {
@@ -262,7 +263,7 @@ describe("PUT /career-postings/:postingId", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/career/career-postings/1",
+      path: "/career/career-postings/0190000d-0000-7000-8000-000000000001",
       token: await tokenFor(5),
       method: "PUT",
       body: { title: "X" },
@@ -273,7 +274,7 @@ describe("PUT /career-postings/:postingId", () => {
 
   test("returns 404 when the posting does not exist", async () => {
     const response = await request({
-      path: "/career/career-postings/9999",
+      path: "/career/career-postings/0190000d-0000-7000-8000-00000000ffff",
       token: await tokenFor(1),
       method: "PUT",
       body: { title: "X" },
@@ -284,7 +285,7 @@ describe("PUT /career-postings/:postingId", () => {
 
   test("returns 400 when dept_id is zero", async () => {
     const response = await request({
-      path: "/career/career-postings/1",
+      path: "/career/career-postings/0190000d-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "PUT",
       body: { title: "Updated Lead", dept_id: 0 },
@@ -295,7 +296,7 @@ describe("PUT /career-postings/:postingId", () => {
 
   test("returns 400 when dept_id is negative", async () => {
     const response = await request({
-      path: "/career/career-postings/1",
+      path: "/career/career-postings/0190000d-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "PUT",
       body: { title: "Updated Lead", dept_id: -5 },
@@ -308,7 +309,7 @@ describe("PUT /career-postings/:postingId", () => {
 describe("DELETE /career-postings/:postingId", () => {
   test("admin deletes a posting and returns 204", async () => {
     const response = await request({
-      path: "/career/career-postings/2",
+      path: "/career/career-postings/0190000d-0000-7000-8000-000000000002",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -318,7 +319,7 @@ describe("DELETE /career-postings/:postingId", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/career/career-postings/1",
+      path: "/career/career-postings/0190000d-0000-7000-8000-000000000001",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -328,7 +329,7 @@ describe("DELETE /career-postings/:postingId", () => {
 
   test("returns 404 when the posting does not exist", async () => {
     const response = await request({
-      path: "/career/career-postings/9999",
+      path: "/career/career-postings/0190000d-0000-7000-8000-00000000ffff",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -341,7 +342,7 @@ describe("DELETE /career-postings/:postingId", () => {
     const response = await requestWithContext({
       db: await createTestDbWithApplications(),
       jwtSecret,
-      path: "/career/career-postings/1",
+      path: "/career/career-postings/0190000d-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "DELETE",
     })

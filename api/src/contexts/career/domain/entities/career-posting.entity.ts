@@ -1,8 +1,10 @@
 import type { CareerPostingRow } from "@/contexts/career/infrastructure/schema/career"
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   title: z.string(),
   deptId: z.number().nullable(),
   deptName: z.string().nullable(),
@@ -44,7 +46,7 @@ export class CareerPosting implements Props {
     status: "open" | "closed"
   }): CareerPosting {
     return new CareerPosting({
-      id: null,
+      id: createUuidV7(),
       title: props.title,
       deptId: props.deptId,
       deptName: props.deptName,

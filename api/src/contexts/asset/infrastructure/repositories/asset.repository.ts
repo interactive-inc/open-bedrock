@@ -1,3 +1,4 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Asset, assetRowSchema } from "@/contexts/asset/domain/entities/asset.entity"
 import type { Context } from "@/env"
@@ -96,11 +97,11 @@ export class AssetRepository {
         const results = await this.c.env.DB.batch([
           this.c.env.DB.prepare(
             `
-            INSERT INTO asset_lendings (asset_code, employee_id, lent_at)
-            SELECT ?1, ?2, ?3
+            INSERT INTO asset_lendings (id, asset_code, employee_id, lent_at)
+            SELECT ?4, ?1, ?2, ?3
             WHERE EXISTS (SELECT 1 FROM assets WHERE code = ?1 AND status = 'in_stock')
             `,
-          ).bind(props.assetCode, props.employeeId, props.lentAt),
+          ).bind(props.assetCode, props.employeeId, props.lentAt, createUuidV7()),
           abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
           this.c.env.DB.prepare(
             `

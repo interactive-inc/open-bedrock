@@ -33,6 +33,7 @@ export class AttendanceRecordRepository {
       const rows = await this.c.var.database
         .insert(attendanceRecords)
         .values({
+          id: attendanceRecord.id,
           employeeId: attendanceRecord.employeeId,
           workDate: attendanceRecord.workDate,
           clockInAt: attendanceRecord.clockInAt,
@@ -63,10 +64,6 @@ export class AttendanceRecordRepository {
 
   async update(attendanceRecord: AttendanceRecord): Promise<AttendanceRecord | null | Error> {
     try {
-      if (attendanceRecord.id === null) {
-        return new Error("cannot update unsaved attendance record")
-      }
-
       const rows = await this.c.var.database
         .update(attendanceRecords)
         .set({

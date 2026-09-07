@@ -1,9 +1,10 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
 
 /** 勤怠記録 1 件のレスポンス。 */
 export const zAppAttendanceRecord = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employee_id: zEmployeeId,
   work_date: z.string(),
   clock_in_at: z.string().nullable(),

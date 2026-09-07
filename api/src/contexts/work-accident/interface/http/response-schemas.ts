@@ -1,9 +1,10 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
 
 /** 労災・事故の発生記録 1 件のレスポンス。 */
 export const zAppWorkAccident = z.object({
-  id: z.number(),
+  id: uuidSchema,
   occurred_on: z.string(),
   employee_id: zEmployeeId.nullable(),
   location: z.string().nullable(),

@@ -1,5 +1,5 @@
 type SeedItIncident = {
-  id: number
+  id: string
   occurredAt: string
   title: string
   summary: string
@@ -11,7 +11,7 @@ type SeedItIncident = {
 
 export const seedItIncidents: ReadonlyArray<SeedItIncident> = [
   {
-    id: 1,
+    id: "0190001c-0000-7000-8000-000000000001",
     occurredAt: "2026-01-20T09:00:00Z",
     title: "ログイン障害",
     summary: "30分間ログインできない状態が発生した。",
@@ -21,7 +21,7 @@ export const seedItIncidents: ReadonlyArray<SeedItIncident> = [
     createdAt: "2026-01-20T09:35:00Z",
   },
   {
-    id: 2,
+    id: "0190001c-0000-7000-8000-000000000002",
     occurredAt: "2026-02-01T14:00:00Z",
     title: "レポート生成の遅延",
     summary: "月次レポートの生成が通常より遅かった。",

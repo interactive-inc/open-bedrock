@@ -9,11 +9,12 @@ import { requestWithContext } from "@tests/api/support/request-with-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const careerPostingResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   title: z.string(),
   dept_id: z.number().nullable(),
   dept_name: z.string().nullable(),
@@ -98,13 +99,17 @@ describe("GET /career-postings", () => {
     if (parsed.success) {
       expect(parsed.data.data.every((posting) => posting.status === "open")).toBe(true)
 
-      const first = parsed.data.data.find((posting) => posting.id === 1)
+      const first = parsed.data.data.find(
+        (posting) => posting.id === "0190000d-0000-7000-8000-000000000001",
+      )
 
       expect(first?.title).toBe("プロダクト開発リード")
       expect(first?.dept_name).toBe("開発部")
       expect(first?.required_skills).toBe("typescript,project_mgmt")
 
-      const closed = parsed.data.data.find((posting) => posting.id === 3)
+      const closed = parsed.data.data.find(
+        (posting) => posting.id === "0190000d-0000-7000-8000-000000000003",
+      )
 
       expect(closed).toBeUndefined()
     }

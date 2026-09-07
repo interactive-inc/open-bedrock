@@ -46,6 +46,7 @@ export class EmployeeWorkStyleRepository {
       const rows = await this.c.var.database
         .insert(employeeWorkStyles)
         .values({
+          id: workStyle.id,
           employeeId: workStyle.employeeId,
           style: workStyle.style,
           startsOn: workStyle.startsOn,

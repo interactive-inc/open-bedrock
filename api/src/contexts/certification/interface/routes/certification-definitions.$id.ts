@@ -1,9 +1,10 @@
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { UpdateCertification } from "@/contexts/certification/application/update-certification"
 import { factory } from "@/api/http/factory"
 import { zAppCertification } from "@/contexts/certification/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -30,11 +31,7 @@ export const PUT = factory.createHandlers(
       throw new ForbiddenError()
     }
 
-    const id = Number(c.req.param("id"))
-
-    if (Number.isInteger(id) === false) {
-      throw new BadRequestError("invalid parameter")
-    }
+    const id = validateUuidParam(c.req.param("id"), "id")
 
     const json = c.req.valid("json")
 

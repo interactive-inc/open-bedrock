@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm"
 export class DocumentRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(id: number): Promise<Document | null | Error> {
+  async findById(id: string): Promise<Document | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -27,6 +27,7 @@ export class DocumentRepository {
       const rows = await this.c.var.database
         .insert(documents)
         .values({
+          id: document.id,
           title: document.title,
           category: document.category,
           location: document.location,
@@ -47,10 +48,6 @@ export class DocumentRepository {
 
   async update(document: Document): Promise<Document | null | Error> {
     try {
-      if (document.id === null) {
-        return new Error("cannot update unsaved document")
-      }
-
       const rows = await this.c.var.database
         .update(documents)
         .set({

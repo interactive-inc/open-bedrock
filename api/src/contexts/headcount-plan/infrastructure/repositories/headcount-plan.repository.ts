@@ -73,7 +73,7 @@ export class HeadcountPlanRepository {
     }
   }
 
-  async findById(id: number): Promise<HeadcountPlan | null | Error> {
+  async findById(id: string): Promise<HeadcountPlan | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -94,6 +94,7 @@ export class HeadcountPlanRepository {
       const rows = await this.c.var.database
         .insert(headcountPlans)
         .values({
+          id: plan.id,
           fiscalYear: plan.fiscalYear,
           departmentCode: plan.departmentCode,
           plannedCount: plan.plannedCount,
@@ -116,7 +117,7 @@ export class HeadcountPlanRepository {
     }
   }
 
-  async update(id: number, plan: HeadcountPlan): Promise<HeadcountPlan | Error> {
+  async update(id: string, plan: HeadcountPlan): Promise<HeadcountPlan | Error> {
     try {
       const rows = await this.c.var.database
         .update(headcountPlans)

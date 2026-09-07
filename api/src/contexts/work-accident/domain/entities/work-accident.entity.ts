@@ -1,9 +1,10 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { WorkAccidentRow } from "@/contexts/work-accident/infrastructure/schema/work-accident"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number(),
+  id: uuidSchema,
   occurredOn: z.string(),
   employeeId: zEmployeeId.nullable(),
   location: z.string().nullable(),

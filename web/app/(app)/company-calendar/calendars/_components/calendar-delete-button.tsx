@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 
 type Props = {
   // 削除対象の会社カレンダー日 ID。hidden フィールドへ埋め込む。
-  id: number
+  id: string
 }
 
 const initialState: CalendarActionState = { ok: false, error: null }

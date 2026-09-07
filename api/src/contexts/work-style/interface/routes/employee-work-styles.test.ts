@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
@@ -15,7 +16,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const jwtSecret = "work-style-route-test-secret"
 
 const workStyleResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employee_id: zEmployeeId,
   style: z.enum(["regular", "flextime", "discretionary", "shift"]),
   starts_on: z.string(),
@@ -44,7 +45,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "employee_work_styles", [
     {
-      id: 1,
+      id: "01900019-0000-7000-8000-000000000001",
       employee_id: "5",
       style: "flextime",
       starts_on: "2026-04-01",

@@ -2,7 +2,7 @@ import { DeleteCompanyCalendarDay } from "@/contexts/company-calendar/applicatio
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 
@@ -17,7 +17,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const result = await new DeleteCompanyCalendarDay(c).run({
     session,
-    id: validateIntParam(c.req.param("id") ?? "", "calendar_day"),
+    id: validateUuidParam(c.req.param("id") ?? "", "calendar_day"),
   })
 
   if (result instanceof ApplicationError) {

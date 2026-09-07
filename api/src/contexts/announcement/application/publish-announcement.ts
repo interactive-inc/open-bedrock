@@ -8,7 +8,7 @@ import { PublishAnnouncementNotificationAdapter } from "@/contexts/announcement/
 
 export type Command = {
   session: CompanySessionValue
-  announcementId: number
+  announcementId: string
   publishedOn: string
   createdAt: string
 }

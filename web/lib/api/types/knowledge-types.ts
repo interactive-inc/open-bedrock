@@ -14,7 +14,7 @@ export type KnowledgeSearchQuery = {
  * id は knowledgeArticles.id（schema 上 integer）なので number。author_id も integer。
  */
 export type KnowledgeSearchResult = {
-  id: number
+  id: string
   category: string
   title: string
   snippet: string
@@ -28,7 +28,7 @@ export type KnowledgeSearchResult = {
  * author_id/created_at を含む。author_id は integer（number）、created_at は text（string）。
  */
 export type KnowledgeDetailResponse = {
-  id: number
+  id: string
   title: string
   category: string
   tags: string | null

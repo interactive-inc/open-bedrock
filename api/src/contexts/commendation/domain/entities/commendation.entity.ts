@@ -1,10 +1,12 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CommendationRow } from "@/contexts/commendation/infrastructure/schema/commendation"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   employeeId: zEmployeeId,
   title: z.string(),
   reason: z.string(),
@@ -44,7 +46,7 @@ export class Commendation implements Props {
     createdAt: string
   }): Commendation {
     return new Commendation({
-      id: null,
+      id: createUuidV7(),
       employeeId: props.employeeId,
       title: props.title,
       reason: props.reason,

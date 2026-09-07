@@ -27,7 +27,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "certification_definitions", [
     {
-      id: 1,
+      id: "01900010-0000-7000-8000-000000000001",
       code: "FE",
       name: "基本情報技術者",
       issuer: "IPA",
@@ -38,9 +38,9 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "employee_certifications", [
     {
-      id: 1,
+      id: "01900011-0000-7000-8000-000000000001",
       employee_id: "5",
-      certification_id: 1,
+      certification_id: "01900010-0000-7000-8000-000000000001",
       acquired_on: "2024-04-01",
       expires_on: null,
       note: null,
@@ -140,7 +140,11 @@ describe("POST /employee-certifications", () => {
       path: "/certification/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "6", certification_id: 1, acquired_on: "2025-04-01" },
+      body: {
+        employee_id: "6",
+        certification_id: "01900010-0000-7000-8000-000000000001",
+        acquired_on: "2025-04-01",
+      },
     })
 
     expect(response.status).toBe(201)
@@ -151,7 +155,11 @@ describe("POST /employee-certifications", () => {
       path: "/certification/employee-certifications",
       token: await tokenFor(5),
       method: "POST",
-      body: { employee_id: "5", certification_id: 1, acquired_on: "2025-04-01" },
+      body: {
+        employee_id: "5",
+        certification_id: "01900010-0000-7000-8000-000000000001",
+        acquired_on: "2025-04-01",
+      },
     })
 
     expect(response.status).toBe(403)
@@ -162,7 +170,11 @@ describe("POST /employee-certifications", () => {
       path: "/certification/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "5", certification_id: 1, acquired_on: "2024-04-01" },
+      body: {
+        employee_id: "5",
+        certification_id: "01900010-0000-7000-8000-000000000001",
+        acquired_on: "2024-04-01",
+      },
     })
 
     expect(response.status).toBe(409)
@@ -173,7 +185,11 @@ describe("POST /employee-certifications", () => {
       path: "/certification/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "6", certification_id: 999, acquired_on: "2025-04-01" },
+      body: {
+        employee_id: "6",
+        certification_id: "01900010-0000-7000-8000-000000000999",
+        acquired_on: "2025-04-01",
+      },
     })
 
     expect(response.status).toBe(404)
@@ -183,7 +199,7 @@ describe("POST /employee-certifications", () => {
 describe("DELETE /employee-certifications/:id", () => {
   test("deletes a record for admin (certification:manage)", async () => {
     const response = await request({
-      path: "/certification/employee-certifications/1",
+      path: "/certification/employee-certifications/01900011-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -193,7 +209,7 @@ describe("DELETE /employee-certifications/:id", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/certification/employee-certifications/1",
+      path: "/certification/employee-certifications/01900011-0000-7000-8000-000000000001",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -203,7 +219,7 @@ describe("DELETE /employee-certifications/:id", () => {
 
   test("returns 404 for a missing record", async () => {
     const response = await request({
-      path: "/certification/employee-certifications/999",
+      path: "/certification/employee-certifications/01900011-0000-7000-8000-000000009999",
       token: await tokenFor(1),
       method: "DELETE",
     })

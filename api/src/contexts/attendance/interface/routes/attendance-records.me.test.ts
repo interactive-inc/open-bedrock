@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
@@ -16,7 +17,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const jwtSecret = "attendance-me-route-test-secret"
 
 const attendanceRecordResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employee_id: zEmployeeId,
   work_date: z.string(),
   clock_in_at: z.string().nullable(),
@@ -113,7 +114,7 @@ describe("GET /attendance-records/me", () => {
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
       expect(parsed.data.total).toBe(1)
-      expect(parsed.data.data[0]?.id).toBe(2)
+      expect(parsed.data.data[0]?.id).toBe("01900015-0000-7000-8000-000000000002")
     }
   })
 

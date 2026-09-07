@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -17,7 +18,7 @@ import {
 import { z } from "zod"
 
 const leaveInboxResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   applicant_name: z.string(),
   leave_type: z.string(),
   start_date: z.string(),
@@ -128,7 +129,7 @@ describe("GET /leave-requests/inbox", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0]?.id).toBe(1)
+      expect(parsed.data.data[0]?.id).toBe("0190001e-0000-7000-8000-000000000001")
       expect(parsed.data.data[0]?.applicant_name).toBe("Emery Lane")
     }
   })

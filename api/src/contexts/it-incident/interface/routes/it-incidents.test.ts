@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -15,7 +16,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const jwtSecret = "it-incident-route-test-secret"
 
 const incidentSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   occurred_at: z.string(),
   title: z.string(),
   summary: z.string(),
@@ -150,7 +151,11 @@ describe("POST /it-incidents", () => {
 
 describe("POST /it-incidents/:id/resolve", () => {
   test("resolves an open incident as admin", async () => {
-    const response = await request("/it-incident/it-incidents/2/resolve", await tokenFor(1), "POST")
+    const response = await request(
+      "/it-incident/it-incidents/0190001c-0000-7000-8000-000000000002/resolve",
+      await tokenFor(1),
+      "POST",
+    )
 
     expect(response.status).toBe(200)
 
@@ -165,13 +170,21 @@ describe("POST /it-incidents/:id/resolve", () => {
   })
 
   test("returns 409 when already resolved", async () => {
-    const response = await request("/it-incident/it-incidents/1/resolve", await tokenFor(1), "POST")
+    const response = await request(
+      "/it-incident/it-incidents/0190001c-0000-7000-8000-000000000001/resolve",
+      await tokenFor(1),
+      "POST",
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/it-incident/it-incidents/2/resolve", await tokenFor(5), "POST")
+    const response = await request(
+      "/it-incident/it-incidents/0190001c-0000-7000-8000-000000000002/resolve",
+      await tokenFor(5),
+      "POST",
+    )
 
     expect(response.status).toBe(403)
   })

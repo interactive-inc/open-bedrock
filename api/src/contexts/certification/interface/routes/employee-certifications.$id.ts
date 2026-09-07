@@ -1,10 +1,11 @@
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/repositories/employee-certification.repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 
 import { factory } from "@/api/http/factory"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 
 // @authorization permission - 権限キーで判定する
 /** DELETE /employee-certifications/:id — 資格保有記録を削除する。certification:manage が必要。 */
@@ -19,11 +20,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const id = Number(c.req.param("id"))
-
-  if (Number.isInteger(id) === false) {
-    throw new BadRequestError("invalid parameter")
-  }
+  const id = validateUuidParam(c.req.param("id"), "id")
 
   const deleted = await (async () => {
     const props = { id }

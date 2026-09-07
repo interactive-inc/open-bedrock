@@ -11,9 +11,10 @@ import { BadRequestError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppCareerApplication } from "@/contexts/career/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { z } from "zod"
 
-const applicationIdSchema = z.coerce.number().int().positive()
+const applicationIdSchema = uuidSchema
 
 /** 応募をレスポンス用の snake_case に整形する。 */
 function toResponseBody(application: CareerApplication) {

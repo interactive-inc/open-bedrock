@@ -1,6 +1,6 @@
 /** GET /document-ledger-entries の各要素。 */
 export type DocumentListItem = {
-  id: number
+  id: string
   title: string
   category: string | null
   location: string

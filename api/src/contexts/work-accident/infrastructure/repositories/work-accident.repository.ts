@@ -1,3 +1,4 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { WorkAccident } from "@/contexts/work-accident/domain/entities/work-accident.entity"
 import type { Context } from "@/env"
@@ -39,7 +40,7 @@ export class WorkAccidentRepository {
   }
 
   /** id で 1 件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<WorkAccident | null | Error> {
+  async findById(id: string): Promise<WorkAccident | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -68,6 +69,7 @@ export class WorkAccidentRepository {
       const rows = await this.c.var.database
         .insert(workAccidents)
         .values({
+          id: createUuidV7(),
           occurredOn: props.occurredOn,
           employeeId: props.employeeId,
           location: props.location,
@@ -89,7 +91,7 @@ export class WorkAccidentRepository {
   }
 
   /** status を closed へ遷移する。対象が reported でなければ null。 */
-  async close(id: number): Promise<WorkAccident | null | Error> {
+  async close(id: string): Promise<WorkAccident | null | Error> {
     try {
       const rows = await this.c.var.database
         .update(workAccidents)

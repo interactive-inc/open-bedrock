@@ -24,7 +24,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "work_accidents", [
     {
-      id: 1,
+      id: "01900020-0000-7000-8000-000000000001",
       occurred_on: "2026-03-01",
       employee_id: "5",
       location: "倉庫",
@@ -34,7 +34,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-01-01T00:00:00.000Z",
     },
     {
-      id: 2,
+      id: "01900020-0000-7000-8000-000000000002",
       occurred_on: "2026-02-01",
       employee_id: null,
       location: null,
@@ -160,7 +160,7 @@ describe("POST /work-accidents", () => {
 describe("POST /work-accidents/:id/close", () => {
   test("closes a reported accident for admin", async () => {
     const response = await request({
-      path: "/work-accident/work-accidents/1/close",
+      path: "/work-accident/work-accidents/01900020-0000-7000-8000-000000000001/close",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -178,7 +178,7 @@ describe("POST /work-accidents/:id/close", () => {
 
   test("returns 409 when already closed", async () => {
     const response = await request({
-      path: "/work-accident/work-accidents/2/close",
+      path: "/work-accident/work-accidents/01900020-0000-7000-8000-000000000002/close",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -188,7 +188,7 @@ describe("POST /work-accidents/:id/close", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/work-accident/work-accidents/1/close",
+      path: "/work-accident/work-accidents/01900020-0000-7000-8000-000000000001/close",
       token: await tokenFor(5),
       method: "POST",
     })

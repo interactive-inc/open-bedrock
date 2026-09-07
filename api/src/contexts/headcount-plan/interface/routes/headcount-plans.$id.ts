@@ -5,7 +5,7 @@ import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppHeadcountPlan } from "@/contexts/headcount-plan/interface/http/response-schemas"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -31,7 +31,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdateHeadcountPlan(c).run({
       session,
-      id: validateIntParam(c.req.param("id"), "headcount plan"),
+      id: validateUuidParam(c.req.param("id"), "headcount plan"),
       plannedCount: json.planned_count,
       note: json.note ?? null,
     })

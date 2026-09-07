@@ -100,7 +100,7 @@ describe("LeaveRequestRepository", () => {
       employeeId: EmployeeId
       startDate: string
       endDate: string
-    }): Promise<{ repository: LeaveRequestRepository; id: number }> {
+    }): Promise<{ repository: LeaveRequestRepository; id: string }> {
       const { context } = await createTestContext()
 
       const repository = new LeaveRequestRepository(context)
