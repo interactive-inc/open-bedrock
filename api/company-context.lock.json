@@ -365,7 +365,7 @@
     "src/contexts/company/infrastructure/repositories/employee/lib/is-company-unique-constraint-error.ts": "9f537c07d467c2d9d67cb840c05f51a4ce87c59244d084f8d3bb60d2f1bd3645",
     "src/contexts/company/infrastructure/repositories/external-identities/external-identity-import.repository.ts": "edcc1448865bd7a20a7f9b807809feedd64c58ee7b3a8c4d748ddf2bc8e624ca",
     "src/contexts/company/infrastructure/repositories/organization/assignment-resource-adoption.repository.ts": "7874a17e4d4822086e3affca699a14d0deb2822e642693643acf9be7bbe0bba4",
-    "src/contexts/company/infrastructure/repositories/organization/company-bootstrap.repository.ts": "2da9631bcba05152a956d40cfc6cf245a81e606ca7620e41fdecd9f9f61ca238",
+    "src/contexts/company/infrastructure/repositories/organization/company-bootstrap.repository.ts": "fbe16a21705bc97c764fbe4bb934380033925b6933bed68736eae8e3555b04bd",
     "src/contexts/company/infrastructure/repositories/organization/organization-profile-change.repository.ts": "6d4158815038a90e3e97c13aeb4778650e06efe0ff86e15f9c49bba025739b1a",
     "src/contexts/company/infrastructure/repositories/organization/organization-resource-adoption.repository.ts": "81c327ba93bd1c6a6e16d1caf91ab08c48a35b0098f82747ae15c5113cfc6d55",
     "src/contexts/company/infrastructure/repositories/organization/organization-workforce-change.repository.ts": "b217310ba83f56e40cd427cc04d639bfa3eb4d656b9bfea3e342b6d870316e4e",
