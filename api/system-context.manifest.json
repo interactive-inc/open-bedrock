@@ -51,6 +51,7 @@
     "systemNotificationMessages",
     "systemOidcAccessTokens",
     "systemOidcAuthorizationCodes",
+    "systemOperationReceipts",
     "systemOutboxMessages",
     "systemPasswordCredentials",
     "systemPasswordResetChallenges",
