@@ -18,6 +18,7 @@ export class UpdateCompanyAccountProfile {
 
     const updated = current.rename(displayName, now)
     if (updated instanceof Error) return updated
+    if (updated.displayName === current.displayName) return current
 
     const saved = await this.c.save(updated)
     return saved instanceof Error ? saved : updated

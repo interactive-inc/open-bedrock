@@ -2,6 +2,7 @@ import { UpdateCompanyAccountProfile } from "@/contexts/company/application/acco
 import { D1CompanyAccountProfileRepository } from "@/contexts/company/infrastructure/repositories/account-profile/d1-company-account-profile.repository"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { describe, expect, test } from "bun:test"
+import { CompanyAccountNameManagedByEmployeeError } from "@/contexts/company/domain/errors"
 
 const schemaSql = `
   CREATE TABLE system_accounts (
@@ -25,11 +26,59 @@ const schemaSql = `
     updated_at INTEGER NOT NULL,
     PRIMARY KEY (organization_id, account_id)
   );
+  CREATE TABLE company_account_employee_links (
+    account_id TEXT PRIMARY KEY NOT NULL,
+    employee_id TEXT NOT NULL UNIQUE
+  );
   INSERT INTO company_organizations (id, revision, created_at, updated_at)
     VALUES ('organization:default', 0, 0, 0);
 `
 
 describe("Company Account Profile", () => {
+  test("読み取り後の従業員紐付けを保存時に再検査する", async () => {
+    const database = createCompanyD1TestDatabase(`${schemaSql}
+      INSERT INTO system_accounts VALUES ('account-1', 'active', 7, 100, 100);
+      INSERT INTO company_account_profiles VALUES ('organization:default', 'account-1', 'Employee name', 100, 100);
+    `)
+    const repository = new D1CompanyAccountProfileRepository(database)
+    const commit = database.batch.bind(database)
+    database.batch = async (statements) => {
+      await database
+        .prepare("INSERT INTO company_account_employee_links VALUES ('account-1', 'employee-1')")
+        .run()
+      return commit(statements)
+    }
+    const result = await new UpdateCompanyAccountProfile(repository).execute(
+      "organization:default",
+      "account-1",
+      "Stale rename",
+      new Date(200),
+    )
+    expect(result).toBeInstanceOf(CompanyAccountNameManagedByEmployeeError)
+    expect(
+      await database
+        .prepare("SELECT display_name, updated_at FROM company_account_profiles")
+        .first<{ display_name: string; updated_at: number }>(),
+    ).toEqual({ display_name: "Employee name", updated_at: 100 })
+  })
+
+  test("紐付いたAccountでも同じ表示名は履歴時刻を変えずに返す", async () => {
+    const database = createCompanyD1TestDatabase(`${schemaSql}
+      INSERT INTO system_accounts VALUES ('account-1', 'active', 7, 100, 100);
+      INSERT INTO company_account_profiles VALUES ('organization:default', 'account-1', 'Employee name', 100, 100);
+      INSERT INTO company_account_employee_links VALUES ('account-1', 'employee-1');
+    `)
+    const result = await new UpdateCompanyAccountProfile(
+      new D1CompanyAccountProfileRepository(database),
+    ).execute("organization:default", "account-1", "Employee name", new Date(200))
+    expect(result).not.toBeInstanceOf(Error)
+    expect(
+      await database
+        .prepare("SELECT display_name, updated_at FROM company_account_profiles")
+        .first<{ display_name: string; updated_at: number }>(),
+    ).toEqual({ display_name: "Employee name", updated_at: 100 })
+  })
+
   test("reads and updates the Company-owned display name without changing System Account", async () => {
     const database = createCompanyD1TestDatabase(`${schemaSql}
       INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)

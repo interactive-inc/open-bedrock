@@ -1,4 +1,7 @@
 import { CompanyAccountProfileEntity } from "@/contexts/company/domain/entities/company-account-profile.entity"
+import { CompanyAccountNameManagedByEmployeeError } from "@/contexts/company/domain/errors"
+import { CompanyAccountProfileRenameGuardAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/company-account-profile-rename-guard.adapter"
+import { drizzle } from "drizzle-orm/d1"
 
 export type FindCompanyAccountProfileProps = Readonly<{
   organizationId: string
@@ -54,7 +57,10 @@ export class D1CompanyAccountProfileRepository implements CompanyAccountProfileR
 
   async save(profile: CompanyAccountProfileEntity): Promise<void | Error> {
     try {
-      const result = await this.c
+      const guard = new CompanyAccountProfileRenameGuardAdapter(drizzle(this.c))
+        .build(profile.accountId)
+        .toSQL()
+      const update = this.c
         .prepare(
           `UPDATE company_account_profiles
            SET display_name = ?3, updated_at = ?4
@@ -66,11 +72,15 @@ export class D1CompanyAccountProfileRepository implements CompanyAccountProfileR
           profile.displayName,
           profile.updatedAt.getTime(),
         )
-        .run()
-      return result.meta.changes === 1
+      const results = await this.c.batch([this.c.prepare(guard.sql).bind(...guard.params), update])
+      return results.length === 2 &&
+        results.every((result) => result.success) &&
+        results[1]?.meta.changes === 1
         ? undefined
         : new Error("Company Account Profile does not exist")
     } catch (caught) {
+      if (CompanyAccountProfileRenameGuardAdapter.isBlocked(caught))
+        return new CompanyAccountNameManagedByEmployeeError({ cause: caught })
       return caught instanceof Error ? caught : new Error("failed to write Company Account Profile")
     }
   }

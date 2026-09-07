@@ -1,6 +1,15 @@
 import { type WorkforceIdKind } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { DomainError } from "@/contexts/system/domain/errors"
 
+export class CompanyAccountNameManagedByEmployeeError extends DomainError {
+  readonly code = "account_name_managed_by_employee"
+
+  constructor(options?: ErrorOptions) {
+    super("account name is managed by the employee record", options)
+    this.name = "CompanyAccountNameManagedByEmployeeError"
+  }
+}
+
 export type CompanyResourceValidationCode =
   | "invalid_identifier"
   | "invalid_revision"
