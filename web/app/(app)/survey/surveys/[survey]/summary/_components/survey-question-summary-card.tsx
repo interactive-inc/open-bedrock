@@ -1,7 +1,7 @@
 import type { SurveyQuestionSummary } from "@/lib/api/types/survey-types"
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   question: SurveyQuestionSummary
@@ -25,7 +25,9 @@ export function SurveyQuestionSummaryCard(props: Props) {
         <CardTitle className="flex items-center gap-2">
           <span>{props.question.title}</span>
 
-          <Badge variant="outline">{props.question.type}</Badge>
+          <Button type="button" variant="secondary" size="sm">
+            {props.question.type}
+          </Button>
         </CardTitle>
       </CardHeader>
 

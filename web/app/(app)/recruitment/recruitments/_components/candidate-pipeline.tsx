@@ -1,10 +1,10 @@
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { getRecruitmentCandidateList } from "@/lib/api/get-recruitment-candidate-list"
 import { CandidateStageControls } from "@/app/(app)/recruitment/recruitments/_components/candidate-stage-controls"
 import { toCandidateStageLabel } from "@/app/(app)/recruitment/recruitments/_lib/to-candidate-stage-label"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   positionId: number
@@ -33,7 +33,9 @@ export async function CandidatePipeline(props: Props) {
         <Card key={candidate.id} className="gap-0">
           <div className="flex flex-col gap-4 p-4">
             <div className="flex items-center gap-4">
-              <Badge variant="secondary">{toCandidateStageLabel(candidate.stage)}</Badge>
+              <Button type="button" variant="secondary" size="sm">
+                {toCandidateStageLabel(candidate.stage)}
+              </Button>
 
               <span className="text-base font-medium">{candidate.name}</span>
 
