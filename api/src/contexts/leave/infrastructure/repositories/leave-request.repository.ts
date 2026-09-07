@@ -19,7 +19,7 @@ export type ApproveWithBalanceOutcome =
 export class LeaveRequestRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(leaveRequestId: number): Promise<LeaveRequest | null | Error> {
+  async findById(leaveRequestId: string): Promise<LeaveRequest | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -45,7 +45,7 @@ export class LeaveRequestRepository {
     employeeId: EmployeeId
     startDate: string
     endDate: string
-    excludeId?: number
+    excludeId?: string
   }): Promise<ReadonlyArray<LeaveRequest> | Error> {
     try {
       const rows = await this.c.var.database
@@ -74,8 +74,8 @@ export class LeaveRequestRepository {
   async create(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
     try {
       const result = await this.c.var.database.run(
-        sql`INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, days, unit, hours, consumed_days, reason, status, approver_id, decided_comment, created_at)
-            SELECT ${leaveRequest.employeeId}, ${leaveRequest.leaveType},
+        sql`INSERT INTO leave_requests (id, employee_id, leave_type, start_date, end_date, days, unit, hours, consumed_days, reason, status, approver_id, decided_comment, created_at)
+            SELECT ${leaveRequest.id}, ${leaveRequest.employeeId}, ${leaveRequest.leaveType},
                    ${leaveRequest.startDate}, ${leaveRequest.endDate},
                    ${leaveRequest.days}, ${leaveRequest.unit}, ${leaveRequest.hours},
                    ${leaveRequest.consumedDays},
@@ -98,7 +98,7 @@ export class LeaveRequestRepository {
       const rows = await this.c.var.database
         .select()
         .from(leaveRequests)
-        .where(eq(leaveRequests.id, Number(result.meta.last_row_id)))
+        .where(eq(leaveRequests.id, leaveRequest.id))
         .limit(1)
 
       const row = rows.at(0)
@@ -113,9 +113,6 @@ export class LeaveRequestRepository {
 
   async update(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
     try {
-      if (leaveRequest.id === null) {
-        return new Error("cannot update unsaved leave request")
-      }
 
       const rows = await this.c.var.database
         .update(leaveRequests)
@@ -140,7 +137,7 @@ export class LeaveRequestRepository {
    * 再決定と残数の二重減算を防ぐ冪等性ガード（TOCTOU 競合にも強い）。
    */
   async decideFromPending(props: {
-    leaveRequestId: number
+    leaveRequestId: string
     status: "approved" | "rejected"
     approverId: EmployeeId
     decidedComment: string | null
@@ -170,7 +167,7 @@ export class LeaveRequestRepository {
    * 順次実行と失敗時 rollback を提供する。
    */
   async approveFromPendingAndConsumeBalance(props: {
-    leaveRequestId: number
+    leaveRequestId: string
     approverId: EmployeeId
     decidedComment: string | null
     fiscalYear: string
@@ -298,9 +295,6 @@ export class LeaveRequestRepository {
     leaveRequest: LeaveRequest,
   ): Promise<LeaveRequest | "already_decided" | "overlapping" | Error> {
     try {
-      if (leaveRequest.id === null) {
-        return new Error("cannot revise unsaved leave request")
-      }
 
       const result = await this.c.var.database.run(
         sql`UPDATE leave_requests
@@ -359,7 +353,7 @@ export class LeaveRequestRepository {
    * 休暇申請を削除する。
    * pending 状態のみ削除可。承認済み・却下済みは 0 行削除となり null を返す（TOCTOU 競合を防ぐ）。
    */
-  async delete(leaveRequestId: number): Promise<true | null | Error> {
+  async delete(leaveRequestId: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
         .delete(leaveRequests)

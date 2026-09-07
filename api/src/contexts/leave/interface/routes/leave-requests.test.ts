@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
@@ -19,7 +20,7 @@ import { initializeCompanyTestFixture } from "@tests/api/support/initialize-comp
 import { z } from "zod"
 
 const leaveRequestCreateResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employee_id: zEmployeeId,
   leave_type: z.string(),
   start_date: z.string(),
@@ -322,7 +323,7 @@ describe("POST /leave-requests", () => {
 })
 
 const leaveAdminItemSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   applicant_id: zEmployeeId,
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),
@@ -376,7 +377,7 @@ async function createScopeTestDb(): Promise<D1Database> {
 
   await seedD1(db, "leave_requests", [
     {
-      id: 100,
+      id: "0190001e-0000-7000-8000-000000000100",
       employee_id: "20",
       leave_type: "annual",
       start_date: "2026-06-01",
@@ -389,7 +390,7 @@ async function createScopeTestDb(): Promise<D1Database> {
       created_at: "2026-05-20T00:00:00Z",
     },
     {
-      id: 101,
+      id: "0190001e-0000-7000-8000-000000000101",
       employee_id: "21",
       leave_type: "special",
       start_date: "2026-07-01",

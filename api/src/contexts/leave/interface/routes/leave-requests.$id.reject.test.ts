@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
@@ -26,7 +27,7 @@ const leaveBalanceResponseSchema = z.object({
 })
 
 const leaveDecisionResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employee_id: zEmployeeId,
   leave_type: z.string(),
   start_date: z.string(),
@@ -136,7 +137,7 @@ describe("POST /leave-requests/:id/reject", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave/leave-requests/1/reject",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001/reject",
       token: managerToken,
       method: "POST",
       body: { comment: "not this time" },
@@ -175,7 +176,7 @@ describe("POST /leave-requests/:id/reject", () => {
 
   test("returns 400 when comment is empty", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1/reject",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001/reject",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "" },
@@ -186,7 +187,7 @@ describe("POST /leave-requests/:id/reject", () => {
 
   test("returns 400 when comment is null", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1/reject",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001/reject",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: null },
@@ -197,7 +198,7 @@ describe("POST /leave-requests/:id/reject", () => {
 
   test("returns 400 when comment is omitted", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1/reject",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001/reject",
       token: await tokenFor(4),
       method: "POST",
       body: {},
@@ -208,7 +209,7 @@ describe("POST /leave-requests/:id/reject", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1/reject",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001/reject",
       token: await tokenFor(5),
       method: "POST",
       body: { comment: "rejected" },

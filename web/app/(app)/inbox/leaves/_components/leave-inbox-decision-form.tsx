@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
 type Props = {
-  leaveRequestId: number
+  leaveRequestId: string
 }
 
 const initialState: LeaveDecisionState = { ok: false, error: null }

@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -14,7 +15,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const jwtSecret = "calendar-route-test-secret"
 
 const calendarDayResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   calendar_date: z.string(),
   kind: z.enum(["holiday", "workday"]),
   name: z.string().nullable(),
@@ -41,21 +42,21 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "company_calendar_days", [
     {
-      id: 1,
+      id: "0190001f-0000-7000-8000-000000000001",
       calendar_date: "2026-01-01",
       kind: "holiday",
       name: "元日",
       created_at: "2026-01-01T00:00:00.000Z",
     },
     {
-      id: 2,
+      id: "0190001f-0000-7000-8000-000000000002",
       calendar_date: "2026-05-02",
       kind: "workday",
       name: null,
       created_at: "2026-01-01T00:00:00.000Z",
     },
     {
-      id: 3,
+      id: "0190001f-0000-7000-8000-000000000003",
       calendar_date: "2025-12-31",
       kind: "holiday",
       name: "大晦日",
@@ -187,7 +188,7 @@ describe("DELETE /company-calendar-days/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar/company-calendar-days/1",
+      path: "/company-calendar/company-calendar-days/0190001f-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -199,7 +200,7 @@ describe("DELETE /company-calendar-days/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar/company-calendar-days/1",
+      path: "/company-calendar/company-calendar-days/0190001f-0000-7000-8000-000000000001",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -211,7 +212,7 @@ describe("DELETE /company-calendar-days/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/company-calendar/company-calendar-days/999",
+      path: "/company-calendar/company-calendar-days/0190001f-0000-7000-8000-000000009999",
       token: await tokenFor(1),
       method: "DELETE",
     })

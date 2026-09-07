@@ -16,7 +16,7 @@ import type { LeaveAdminSort } from "@/lib/api/get-leave-admin-list"
 import type { LeaveStatus, LeaveType } from "@/lib/api/types/leave-types"
 
 export type LeaveAdminRow = {
-  id: number
+  id: string
   applicant_id: string
   applicant_name: string
   applicant_dept_name: string | null

@@ -7,7 +7,7 @@ import type { CompanyCalendarDay } from "@/contexts/company-calendar/domain/enti
 
 export type Command = {
   session: CompanySessionValue
-  id: number
+  id: string
 }
 
 /**
