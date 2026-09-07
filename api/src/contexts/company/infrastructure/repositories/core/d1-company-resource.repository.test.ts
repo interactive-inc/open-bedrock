@@ -391,7 +391,24 @@ describe("Company workforce resourceの参照整合性", () => {
         organizationUnitId: "unit:1",
       },
     }
-    expect(await repository.write(command([person, employee, manager, reporting]))).toMatchObject({
+    const managerEmployment = {
+      ...employment,
+      id: "employment:manager",
+      attributes: { ...employment.attributes, employeeId: manager.id },
+    }
+    expect(
+      await repository.write(
+        command([
+          person,
+          employee,
+          manager,
+          employment,
+          managerEmployment,
+          organizationUnit,
+          reporting,
+        ]),
+      ),
+    ).toMatchObject({
       kind: "applied",
     })
     expect(

@@ -2230,3 +2230,437 @@ BEGIN
       )
   );
 END;
+
+CREATE TABLE company_personnel_reporting_bindings (
+  resource_id TEXT PRIMARY KEY NOT NULL,
+  organization_id TEXT NOT NULL DEFAULT 'organization:default' CHECK (organization_id = 'organization:default'),
+  resource_type TEXT NOT NULL DEFAULT 'reporting-relation' CHECK (resource_type = 'reporting-relation'),
+  employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
+  employment_id TEXT NOT NULL REFERENCES company_employments(id) ON DELETE RESTRICT,
+  organization_unit_id TEXT NOT NULL REFERENCES company_organization_units(id) ON DELETE RESTRICT,
+  assignment_type TEXT NOT NULL CHECK (assignment_type IN ('PRIMARY', 'CONCURRENT')),
+  recorded_by_action_id TEXT NOT NULL REFERENCES company_personnel_actions(id) ON DELETE RESTRICT,
+  UNIQUE (employee_id, employment_id, organization_unit_id, assignment_type),
+  FOREIGN KEY (organization_id, resource_type, resource_id)
+    REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT
+);
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_binding_update_guard;
+CREATE TRIGGER company_personnel_reporting_binding_update_guard
+BEFORE UPDATE ON company_personnel_reporting_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting binding is immutable');
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_binding_delete_guard;
+CREATE TRIGGER company_personnel_reporting_binding_delete_guard
+BEFORE DELETE ON company_personnel_reporting_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting binding is immutable');
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_owner_guard;
+CREATE TRIGGER company_personnel_reporting_owner_guard
+BEFORE UPDATE ON company_resource_heads
+WHEN OLD.resource_type = 'reporting-relation'
+  AND EXISTS (SELECT 1 FROM company_personnel_reporting_bindings binding
+    WHERE binding.resource_id = OLD.resource_id AND binding.organization_id = OLD.organization_id)
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting owner is immutable')
+  WHERE NEW.organization_id IS NOT OLD.organization_id OR NEW.resource_type IS NOT OLD.resource_type
+    OR NEW.resource_id IS NOT OLD.resource_id
+    OR json_extract(NEW.attributes_json, '$.employeeId') IS NOT json_extract(OLD.attributes_json, '$.employeeId')
+    OR json_extract(NEW.attributes_json, '$.organizationUnitId') IS NOT json_extract(OLD.attributes_json, '$.organizationUnitId');
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_binding_insert_guard;
+CREATE TRIGGER company_personnel_reporting_binding_insert_guard
+BEFORE INSERT ON company_personnel_reporting_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting owner does not match')
+  WHERE NOT EXISTS (
+    SELECT 1 FROM company_resource_heads resource
+    JOIN company_employments employment ON employment.id = NEW.employment_id
+    WHERE resource.organization_id = NEW.organization_id AND resource.resource_type = 'reporting-relation'
+      AND resource.resource_id = NEW.resource_id AND employment.employee_id = NEW.employee_id
+      AND json_extract(resource.attributes_json, '$.employeeId') = NEW.employee_id
+      AND json_extract(resource.attributes_json, '$.organizationUnitId') = NEW.organization_unit_id
+  );
+END;
+
+CREATE VIEW company_personnel_reporting_periods AS
+WITH effective_versions AS (
+  SELECT resource.*, binding.employee_id, binding.employment_id, binding.organization_unit_id, binding.assignment_type
+  FROM company_resource_revisions resource
+  JOIN company_personnel_reporting_bindings binding
+    ON binding.organization_id = resource.organization_id AND resource.resource_type = 'reporting-relation'
+      AND binding.resource_id = resource.resource_id
+  WHERE resource.revision = (
+    SELECT max(latest.revision) FROM company_resource_revisions latest
+    WHERE latest.organization_id = resource.organization_id AND latest.resource_type = resource.resource_type
+      AND latest.resource_id = resource.resource_id AND latest.effective_from = resource.effective_from
+  )
+), next_versions AS (
+  SELECT *, lead(effective_from) OVER (PARTITION BY organization_id, resource_id ORDER BY effective_from) AS next_from
+  FROM effective_versions
+)
+SELECT organization_id, resource_id, employee_id, employment_id, organization_unit_id, assignment_type,
+  effective_from AS starts_on,
+  CASE WHEN next_from IS NULL OR (effective_to IS NOT NULL AND effective_to < next_from)
+    THEN effective_to ELSE next_from END AS ends_on
+FROM next_versions WHERE state = 'active';
+
+CREATE VIEW company_personnel_reporting_assignment_coverage AS
+WITH heads AS (
+  SELECT employment_id, employee_id, organization_unit_id, assignment_type, starts_on, ends_on
+  FROM company_organization_assignment_period_versions period
+  JOIN company_assignment_period_bindings binding ON binding.period_id = period.period_id
+  WHERE is_void = 0 AND revision = (SELECT max(latest.revision)
+    FROM company_organization_assignment_period_versions latest WHERE latest.period_id = period.period_id)
+), prior AS (
+  SELECT *, max(coalesce(ends_on, '9999-12-31')) OVER (
+    PARTITION BY employment_id, employee_id, organization_unit_id, assignment_type
+    ORDER BY starts_on, ends_on ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS covered_until
+  FROM heads
+), groups AS (
+  SELECT *, sum(CASE WHEN covered_until IS NULL OR starts_on > covered_until THEN 1 ELSE 0 END) OVER (
+    PARTITION BY employment_id, employee_id, organization_unit_id, assignment_type
+    ORDER BY starts_on, ends_on ROWS UNBOUNDED PRECEDING) AS island
+  FROM prior
+)
+SELECT employment_id, employee_id, organization_unit_id, assignment_type, min(starts_on) AS starts_on,
+  CASE WHEN max(ends_on IS NULL) = 1 THEN NULL ELSE max(ends_on) END AS ends_on
+FROM groups GROUP BY employment_id, employee_id, organization_unit_id, assignment_type, island;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_commit_guard;
+CREATE TRIGGER company_personnel_reporting_commit_guard
+BEFORE UPDATE OF revision ON company_organizations
+WHEN NEW.revision != OLD.revision AND NOT EXISTS (
+  SELECT 1 FROM company_organization_change_operations WHERE status = 'PENDING'
+)
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting assignment period is not covered')
+  WHERE EXISTS (
+    SELECT 1 FROM company_personnel_reporting_periods reporting
+    WHERE NOT EXISTS (
+      SELECT 1 FROM company_personnel_reporting_assignment_coverage assignment
+      WHERE assignment.employee_id = reporting.employee_id AND assignment.employment_id = reporting.employment_id
+        AND assignment.organization_unit_id = reporting.organization_unit_id
+        AND assignment.assignment_type = reporting.assignment_type
+        AND assignment.starts_on <= reporting.starts_on
+        AND (assignment.ends_on IS NULL OR
+          (reporting.ends_on IS NOT NULL AND reporting.ends_on <= assignment.ends_on))
+    )
+  );
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_completion_guard;
+CREATE TRIGGER company_personnel_reporting_completion_guard
+BEFORE UPDATE OF status ON company_organization_change_operations
+WHEN NEW.status = 'COMPLETED'
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting assignment period is not covered')
+  WHERE EXISTS (
+    SELECT 1 FROM company_personnel_reporting_periods reporting
+    WHERE NOT EXISTS (
+      SELECT 1 FROM company_personnel_reporting_assignment_coverage assignment
+      WHERE assignment.employee_id = reporting.employee_id AND assignment.employment_id = reporting.employment_id
+        AND assignment.organization_unit_id = reporting.organization_unit_id
+        AND assignment.assignment_type = reporting.assignment_type
+        AND assignment.starts_on <= reporting.starts_on
+        AND (assignment.ends_on IS NULL OR
+          (reporting.ends_on IS NOT NULL AND reporting.ends_on <= assignment.ends_on))
+    )
+  );
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_coverage_insert_guard;
+CREATE TRIGGER company_personnel_reporting_coverage_insert_guard
+AFTER INSERT ON company_personnel_reporting_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting assignment period is not covered')
+  WHERE EXISTS (
+    SELECT 1 FROM company_personnel_reporting_periods reporting
+    WHERE NOT EXISTS (
+      SELECT 1 FROM company_personnel_reporting_assignment_coverage assignment
+      WHERE assignment.employee_id = reporting.employee_id AND assignment.employment_id = reporting.employment_id
+        AND assignment.organization_unit_id = reporting.organization_unit_id
+        AND assignment.assignment_type = reporting.assignment_type
+        AND assignment.starts_on <= reporting.starts_on
+        AND (assignment.ends_on IS NULL OR
+          (reporting.ends_on IS NOT NULL AND reporting.ends_on <= assignment.ends_on))
+    )
+  );
+END;
+
+CREATE VIEW company_reporting_employment_violations AS
+WITH effective_versions AS (
+  SELECT resource.* FROM company_resource_revisions resource
+  WHERE resource.resource_type = 'reporting-relation' AND resource.revision = (
+    SELECT max(latest.revision) FROM company_resource_revisions latest
+    WHERE latest.organization_id = resource.organization_id AND latest.resource_type = resource.resource_type
+      AND latest.resource_id = resource.resource_id AND latest.effective_from = resource.effective_from
+  )
+), next_versions AS (
+  SELECT *, lead(effective_from) OVER (PARTITION BY organization_id, resource_id ORDER BY effective_from) AS next_from
+  FROM effective_versions
+), relations AS (
+  SELECT organization_id, resource_id, attributes_json, effective_from AS starts_on,
+    CASE WHEN next_from IS NULL OR (effective_to IS NOT NULL AND effective_to < next_from)
+      THEN effective_to ELSE next_from END AS ends_on
+  FROM next_versions WHERE state = 'active'
+), participants AS (
+  SELECT organization_id, resource_id, starts_on, ends_on,
+    json_extract(attributes_json, '$.employeeId') AS employee_id FROM relations
+  UNION ALL
+  SELECT organization_id, resource_id, starts_on, ends_on,
+    json_extract(attributes_json, '$.managerEmployeeId') AS employee_id FROM relations
+), heads AS (
+  SELECT binding.organization_id, period.employee_id, period.starts_on, period.ends_on
+  FROM company_employment_period_versions period
+  JOIN company_workforce_resource_bindings binding
+    ON binding.resource_type = 'employee' AND binding.resource_id = period.employee_id
+  WHERE period.is_void = 0 AND period.revision = (SELECT max(latest.revision)
+    FROM company_employment_period_versions latest WHERE latest.period_id = period.period_id)
+), prior AS (
+  SELECT *, max(coalesce(ends_on, '9999-12-31')) OVER (
+    PARTITION BY organization_id, employee_id ORDER BY starts_on, ends_on
+    ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS covered_until
+  FROM heads
+), groups AS (
+  SELECT *, sum(CASE WHEN covered_until IS NULL OR starts_on > covered_until THEN 1 ELSE 0 END) OVER (
+    PARTITION BY organization_id, employee_id ORDER BY starts_on, ends_on ROWS UNBOUNDED PRECEDING) AS island
+  FROM prior
+), coverage AS (
+  SELECT organization_id, employee_id, min(starts_on) AS starts_on,
+    CASE WHEN max(ends_on IS NULL) = 1 THEN NULL ELSE max(ends_on) END AS ends_on
+  FROM groups GROUP BY organization_id, employee_id, island
+)
+SELECT participant.* FROM participants participant WHERE NOT EXISTS (
+  SELECT 1 FROM coverage WHERE coverage.organization_id = participant.organization_id
+    AND coverage.employee_id = participant.employee_id AND coverage.starts_on <= participant.starts_on
+    AND (coverage.ends_on IS NULL OR
+      (participant.ends_on IS NOT NULL AND participant.ends_on <= coverage.ends_on))
+);
+
+DROP TRIGGER IF EXISTS company_reporting_employment_commit_guard;
+CREATE TRIGGER company_reporting_employment_commit_guard
+AFTER UPDATE OF revision ON company_organizations
+WHEN NOT EXISTS (
+  SELECT 1 FROM company_workforce_resource_bindings binding
+  JOIN company_employee_lifecycle_revisions lifecycle ON lifecycle.employee_id = binding.employee_id
+  WHERE binding.organization_id = NEW.id AND binding.resource_type = 'employee'
+    AND binding.lifecycle_revision != lifecycle.revision
+)
+BEGIN
+  SELECT RAISE(ABORT, 'company reporting employment period is not covered')
+  WHERE EXISTS (SELECT 1 FROM company_reporting_employment_violations WHERE organization_id = NEW.id);
+END;
+
+DROP TRIGGER IF EXISTS company_reporting_employment_projection_guard;
+CREATE TRIGGER company_reporting_employment_projection_guard
+AFTER UPDATE OF lifecycle_revision ON company_workforce_resource_bindings
+WHEN NEW.resource_type = 'employee' AND NEW.lifecycle_revision = (
+  SELECT revision FROM company_employee_lifecycle_revisions WHERE employee_id = NEW.employee_id
+)
+BEGIN
+  SELECT RAISE(ABORT, 'company reporting employment period is not covered')
+  WHERE EXISTS (SELECT 1 FROM company_reporting_employment_violations
+    WHERE organization_id = NEW.organization_id AND employee_id = NEW.employee_id);
+END;
+
+CREATE TABLE company_assignment_resource_adoptions (
+  command_id TEXT PRIMARY KEY NOT NULL CHECK (length(command_id) BETWEEN 1 AND 200),
+  employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
+  fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64),
+  actor_account_id TEXT NOT NULL,
+  reason TEXT NOT NULL CHECK (length(reason) BETWEEN 1 AND 1000),
+  expected_revision INTEGER NOT NULL CHECK (expected_revision >= 0),
+  organization_revision INTEGER NOT NULL CHECK (organization_revision > expected_revision),
+  observed_on TEXT NOT NULL,
+  adopted_periods INTEGER NOT NULL CHECK (adopted_periods BETWEEN 1 AND 1000),
+  snapshot_digest TEXT NOT NULL CHECK (length(snapshot_digest) = 64),
+  source_json TEXT NOT NULL CHECK (json_valid(source_json)),
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
+  UNIQUE (employee_id, snapshot_digest)
+);
+
+DROP TRIGGER IF EXISTS company_assignment_resource_adoptions_update_guard;
+CREATE TRIGGER company_assignment_resource_adoptions_update_guard
+BEFORE UPDATE ON company_assignment_resource_adoptions
+BEGIN
+  SELECT RAISE(ABORT, 'assignment adoption evidence is immutable');
+END;
+
+DROP TRIGGER IF EXISTS company_assignment_resource_adoptions_delete_guard;
+CREATE TRIGGER company_assignment_resource_adoptions_delete_guard
+BEFORE DELETE ON company_assignment_resource_adoptions
+BEGIN
+  SELECT RAISE(ABORT, 'assignment adoption evidence is immutable');
+END;
+
+CREATE TABLE _company_reporting_bindings_with_adoptions (
+  resource_id TEXT PRIMARY KEY NOT NULL,
+  organization_id TEXT NOT NULL DEFAULT 'organization:default' CHECK (organization_id = 'organization:default'),
+  resource_type TEXT NOT NULL DEFAULT 'reporting-relation' CHECK (resource_type = 'reporting-relation'),
+  employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
+  employment_id TEXT NOT NULL REFERENCES company_employments(id) ON DELETE RESTRICT,
+  organization_unit_id TEXT NOT NULL REFERENCES company_organization_units(id) ON DELETE RESTRICT,
+  assignment_type TEXT NOT NULL CHECK (assignment_type IN ('PRIMARY', 'CONCURRENT')),
+  recorded_by_action_id TEXT REFERENCES company_personnel_actions(id) ON DELETE RESTRICT,
+  recorded_by_adoption_id TEXT REFERENCES company_assignment_resource_adoptions(command_id) ON DELETE RESTRICT,
+  CHECK ((recorded_by_action_id IS NULL) != (recorded_by_adoption_id IS NULL)),
+  UNIQUE (employee_id, employment_id, organization_unit_id, assignment_type),
+  FOREIGN KEY (organization_id, resource_type, resource_id)
+    REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT
+);
+
+INSERT INTO _company_reporting_bindings_with_adoptions (rowid, resource_id, organization_id, resource_type, employee_id, employment_id, organization_unit_id, assignment_type, recorded_by_action_id)
+SELECT rowid, resource_id, organization_id, resource_type, employee_id, employment_id, organization_unit_id, assignment_type, recorded_by_action_id FROM company_personnel_reporting_bindings;
+CREATE TABLE _company_reporting_binding_copy_check (ok INTEGER NOT NULL CHECK (ok = 1));
+INSERT INTO _company_reporting_binding_copy_check (ok)
+SELECT NOT EXISTS (
+  SELECT rowid, resource_id, organization_id, resource_type, employee_id, employment_id, organization_unit_id, assignment_type, recorded_by_action_id FROM company_personnel_reporting_bindings
+  EXCEPT SELECT rowid, resource_id, organization_id, resource_type, employee_id, employment_id, organization_unit_id, assignment_type, recorded_by_action_id FROM _company_reporting_bindings_with_adoptions
+) AND NOT EXISTS (
+  SELECT rowid, resource_id, organization_id, resource_type, employee_id, employment_id, organization_unit_id, assignment_type, recorded_by_action_id FROM _company_reporting_bindings_with_adoptions
+  EXCEPT SELECT rowid, resource_id, organization_id, resource_type, employee_id, employment_id, organization_unit_id, assignment_type, recorded_by_action_id FROM company_personnel_reporting_bindings
+);
+DROP TRIGGER IF EXISTS company_personnel_reporting_binding_update_guard;
+DROP TRIGGER IF EXISTS company_personnel_reporting_binding_delete_guard;
+DROP TRIGGER IF EXISTS company_personnel_reporting_binding_insert_guard;
+DROP TRIGGER IF EXISTS company_personnel_reporting_coverage_insert_guard;
+DROP TRIGGER IF EXISTS company_personnel_reporting_owner_guard;
+DROP TRIGGER IF EXISTS company_personnel_reporting_commit_guard;
+DROP TRIGGER IF EXISTS company_personnel_reporting_completion_guard;
+DROP VIEW company_personnel_reporting_periods;
+DROP TABLE company_personnel_reporting_bindings;
+ALTER TABLE _company_reporting_bindings_with_adoptions RENAME TO company_personnel_reporting_bindings;
+DROP TABLE _company_reporting_binding_copy_check;
+
+CREATE VIEW company_personnel_reporting_periods AS
+WITH effective_versions AS (
+  SELECT resource.*, binding.employee_id, binding.employment_id, binding.organization_unit_id, binding.assignment_type
+  FROM company_resource_revisions resource
+  JOIN company_personnel_reporting_bindings binding
+    ON binding.organization_id = resource.organization_id AND resource.resource_type = 'reporting-relation'
+      AND binding.resource_id = resource.resource_id
+  WHERE resource.revision = (
+    SELECT max(latest.revision) FROM company_resource_revisions latest
+    WHERE latest.organization_id = resource.organization_id AND latest.resource_type = resource.resource_type
+      AND latest.resource_id = resource.resource_id AND latest.effective_from = resource.effective_from
+  )
+), next_versions AS (
+  SELECT *, lead(effective_from) OVER (PARTITION BY organization_id, resource_id ORDER BY effective_from) AS next_from
+  FROM effective_versions
+)
+SELECT organization_id, resource_id, employee_id, employment_id, organization_unit_id, assignment_type,
+  effective_from AS starts_on,
+  CASE WHEN next_from IS NULL OR (effective_to IS NOT NULL AND effective_to < next_from)
+    THEN effective_to ELSE next_from END AS ends_on
+FROM next_versions WHERE state = 'active';
+
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_binding_update_guard;
+CREATE TRIGGER company_personnel_reporting_binding_update_guard
+BEFORE UPDATE ON company_personnel_reporting_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting binding is immutable');
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_binding_delete_guard;
+CREATE TRIGGER company_personnel_reporting_binding_delete_guard
+BEFORE DELETE ON company_personnel_reporting_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting binding is immutable');
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_owner_guard;
+CREATE TRIGGER company_personnel_reporting_owner_guard
+BEFORE UPDATE ON company_resource_heads
+WHEN OLD.resource_type = 'reporting-relation'
+  AND EXISTS (SELECT 1 FROM company_personnel_reporting_bindings binding
+    WHERE binding.resource_id = OLD.resource_id AND binding.organization_id = OLD.organization_id)
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting owner is immutable')
+  WHERE NEW.organization_id IS NOT OLD.organization_id OR NEW.resource_type IS NOT OLD.resource_type
+    OR NEW.resource_id IS NOT OLD.resource_id
+    OR json_extract(NEW.attributes_json, '$.employeeId') IS NOT json_extract(OLD.attributes_json, '$.employeeId')
+    OR json_extract(NEW.attributes_json, '$.organizationUnitId') IS NOT json_extract(OLD.attributes_json, '$.organizationUnitId');
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_binding_insert_guard;
+CREATE TRIGGER company_personnel_reporting_binding_insert_guard
+BEFORE INSERT ON company_personnel_reporting_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting owner does not match')
+  WHERE NOT EXISTS (
+    SELECT 1 FROM company_resource_heads resource
+    JOIN company_employments employment ON employment.id = NEW.employment_id
+    WHERE resource.organization_id = NEW.organization_id AND resource.resource_type = 'reporting-relation'
+      AND resource.resource_id = NEW.resource_id AND employment.employee_id = NEW.employee_id
+      AND json_extract(resource.attributes_json, '$.employeeId') = NEW.employee_id
+      AND json_extract(resource.attributes_json, '$.organizationUnitId') = NEW.organization_unit_id
+  );
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_commit_guard;
+CREATE TRIGGER company_personnel_reporting_commit_guard
+BEFORE UPDATE OF revision ON company_organizations
+WHEN NEW.revision != OLD.revision AND NOT EXISTS (
+  SELECT 1 FROM company_organization_change_operations WHERE status = 'PENDING'
+)
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting assignment period is not covered')
+  WHERE EXISTS (
+    SELECT 1 FROM company_personnel_reporting_periods reporting
+    WHERE NOT EXISTS (
+      SELECT 1 FROM company_personnel_reporting_assignment_coverage assignment
+      WHERE assignment.employee_id = reporting.employee_id AND assignment.employment_id = reporting.employment_id
+        AND assignment.organization_unit_id = reporting.organization_unit_id
+        AND assignment.assignment_type = reporting.assignment_type
+        AND assignment.starts_on <= reporting.starts_on
+        AND (assignment.ends_on IS NULL OR
+          (reporting.ends_on IS NOT NULL AND reporting.ends_on <= assignment.ends_on))
+    )
+  );
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_completion_guard;
+CREATE TRIGGER company_personnel_reporting_completion_guard
+BEFORE UPDATE OF status ON company_organization_change_operations
+WHEN NEW.status = 'COMPLETED'
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting assignment period is not covered')
+  WHERE EXISTS (
+    SELECT 1 FROM company_personnel_reporting_periods reporting
+    WHERE NOT EXISTS (
+      SELECT 1 FROM company_personnel_reporting_assignment_coverage assignment
+      WHERE assignment.employee_id = reporting.employee_id AND assignment.employment_id = reporting.employment_id
+        AND assignment.organization_unit_id = reporting.organization_unit_id
+        AND assignment.assignment_type = reporting.assignment_type
+        AND assignment.starts_on <= reporting.starts_on
+        AND (assignment.ends_on IS NULL OR
+          (reporting.ends_on IS NOT NULL AND reporting.ends_on <= assignment.ends_on))
+    )
+  );
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_reporting_coverage_insert_guard;
+CREATE TRIGGER company_personnel_reporting_coverage_insert_guard
+AFTER INSERT ON company_personnel_reporting_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel reporting assignment period is not covered')
+  WHERE EXISTS (
+    SELECT 1 FROM company_personnel_reporting_periods reporting
+    WHERE NOT EXISTS (
+      SELECT 1 FROM company_personnel_reporting_assignment_coverage assignment
+      WHERE assignment.employee_id = reporting.employee_id AND assignment.employment_id = reporting.employment_id
+        AND assignment.organization_unit_id = reporting.organization_unit_id
+        AND assignment.assignment_type = reporting.assignment_type
+        AND assignment.starts_on <= reporting.starts_on
+        AND (assignment.ends_on IS NULL OR
+          (reporting.ends_on IS NOT NULL AND reporting.ends_on <= assignment.ends_on))
+    )
+  );
+END;

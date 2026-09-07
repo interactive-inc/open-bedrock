@@ -1,6 +1,7 @@
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { Hono } from "hono"
 import * as accountEmployeeLinks from "@/contexts/company/interface/routes/company.account-employee-links"
+import * as assignmentResourceAdoptions from "@/contexts/company/interface/routes/company.assignment-resource-adoptions"
 import * as authorityResolutions from "@/contexts/company/interface/routes/company.authority-resolutions"
 import * as bootstrap from "@/contexts/company/interface/routes/company.bootstrap"
 import * as capabilities from "@/contexts/company/interface/routes/company.capabilities"
@@ -44,6 +45,7 @@ export const companyPublicRoutes = new Hono<CompanyHttpEnvironment>().post(
 
 export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/account-employee-links", ...accountEmployeeLinks.GET)
+  .get("/assignment-resource-adoptions", ...assignmentResourceAdoptions.GET)
   .post("/authority-resolutions", ...authorityResolutions.POST)
   .post("/bootstrap", ...bootstrap.POST)
   .get("/capabilities", ...capabilities.GET)
@@ -76,6 +78,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
 
 export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/account-employee-links", ...accountEmployeeLinks.POST)
+  .post("/assignment-resource-adoptions", ...assignmentResourceAdoptions.POST)
   .post("/definitions", ...definitions.POST)
   .put("/employee-directory/:code", ...employeeDirectoryCode.PUT)
   .post("/employee-events", ...employeeEvents.POST)
