@@ -83,6 +83,7 @@ export const PATCH = systemFactory.createHandlers(
     const current = await repository.find(input.kind, context.req.valid("param").deliveryId)
     if (current instanceof Error) throw new SystemDeliveryUnavailableError(current)
     if (current === null) throw new SystemDeliveryNotFoundError()
+    if (current.handlerKey !== null) throw new SystemForbiddenError()
     const material = new SystemPrincipalSecretService()
     const rawLeaseToken = input.action === "claim" ? material.generateRawSecret() : null
     if (rawLeaseToken instanceof Error) throw new SystemDeliveryUnavailableError(rawLeaseToken)

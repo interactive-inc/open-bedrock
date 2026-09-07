@@ -49,6 +49,12 @@ export const POST = systemFactory.createHandlers(
     const deadLetter = await repository.findDeadLetter(deadLetterId)
     if (deadLetter instanceof Error) throw new SystemDeliveryUnavailableError(deadLetter)
     if (deadLetter === null) throw new SystemDeliveryNotFoundError()
+    if (deadLetter.sourceType !== "inbox") {
+      const source = await repository.find(deadLetter.sourceType, deadLetter.sourceId)
+      if (source instanceof Error) throw new SystemDeliveryUnavailableError(source)
+      if (source === null) throw new SystemDeliveryNotFoundError()
+      if (source.handlerKey !== null) throw new SystemForbiddenError()
+    }
     if (deadLetter.requeuedJobId !== null) {
       return context.json({ job_id: deadLetter.requeuedJobId, replayed: true }, 200)
     }

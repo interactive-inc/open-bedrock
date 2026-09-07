@@ -1,6 +1,7 @@
 CREATE TABLE system_jobs (
   id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 255),
   operation_key TEXT NOT NULL CHECK (operation_key GLOB '[a-z]*' AND length(operation_key) <= 200),
+  handler_key TEXT CHECK (handler_key IS NULL OR length(handler_key) BETWEEN 1 AND 200),
   payload_digest TEXT NOT NULL CHECK (length(payload_digest) = 64 AND payload_digest NOT GLOB '*[^0-9a-f]*'),
   idempotency_key TEXT NOT NULL CHECK (length(idempotency_key) BETWEEN 1 AND 255),
   created_by_account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
@@ -35,6 +36,7 @@ CREATE INDEX system_jobs_lease_idx ON system_jobs (status, lease_expires_at);
 CREATE TABLE system_outbox_messages (
   id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 255),
   topic TEXT NOT NULL CHECK (length(topic) BETWEEN 1 AND 200),
+  handler_key TEXT CHECK (handler_key IS NULL OR length(handler_key) BETWEEN 1 AND 200),
   source_context TEXT NOT NULL CHECK (length(source_context) BETWEEN 1 AND 100),
   source_kind TEXT NOT NULL CHECK (length(source_kind) BETWEEN 1 AND 100),
   source_id TEXT NOT NULL CHECK (length(source_id) BETWEEN 1 AND 255),
@@ -196,3 +198,24 @@ DROP TRIGGER IF EXISTS system_dead_letters_no_delete;
 
 CREATE TRIGGER system_dead_letters_no_delete BEFORE DELETE ON system_dead_letters
 BEGIN SELECT RAISE(ABORT, 'system_dead_letters_are_retained'); END;
+
+DROP TRIGGER IF EXISTS system_jobs_handler_immutable;
+
+CREATE TRIGGER system_jobs_handler_immutable
+BEFORE UPDATE ON system_jobs
+WHEN NEW.handler_key IS NOT OLD.handler_key
+BEGIN
+  SELECT RAISE(ABORT, 'system_delivery_handler_immutable');
+END;
+
+DROP TRIGGER IF EXISTS system_outbox_handler_immutable;
+
+CREATE TRIGGER system_outbox_handler_immutable
+BEFORE UPDATE ON system_outbox_messages
+WHEN NEW.handler_key IS NOT OLD.handler_key
+BEGIN
+  SELECT RAISE(ABORT, 'system_delivery_handler_immutable');
+END;
+
+CREATE INDEX system_jobs_handler_claim_idx ON system_jobs(handler_key, status, available_at, id);
+CREATE INDEX system_outbox_handler_claim_idx ON system_outbox_messages(handler_key, status, available_at, id);

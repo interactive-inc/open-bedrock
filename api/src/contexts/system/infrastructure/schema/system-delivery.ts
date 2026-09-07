@@ -8,6 +8,7 @@ export const systemJobs = sqliteTable(
   {
     id: text("id").primaryKey(),
     operationKey: text("operation_key").notNull(),
+    handlerKey: text("handler_key"),
     payloadDigest: text("payload_digest").notNull(),
     idempotencyKey: text("idempotency_key").notNull(),
     createdByAccountId: text("created_by_account_id")
@@ -32,9 +33,19 @@ export const systemJobs = sqliteTable(
   (table) => [
     uniqueIndex("system_jobs_idempotency_uniq").on(table.operationKey, table.idempotencyKey),
     index("system_jobs_claim_idx").on(table.status, table.availableAt, table.id),
+    index("system_jobs_handler_claim_idx").on(
+      table.handlerKey,
+      table.status,
+      table.availableAt,
+      table.id,
+    ),
     index("system_jobs_lease_idx").on(table.status, table.leaseExpiresAt),
     check("system_jobs_attempt", sql`${table.attempt} BETWEEN 0 AND ${table.maxAttempts}`),
     check("system_jobs_max_attempts", sql`${table.maxAttempts} BETWEEN 1 AND 100`),
+    check(
+      "system_jobs_handler_key",
+      sql`${table.handlerKey} IS NULL OR length(${table.handlerKey}) BETWEEN 1 AND 200`,
+    ),
     check(
       "system_jobs_digest",
       sql`length(${table.payloadDigest}) = 64 AND ${table.payloadDigest} NOT GLOB '*[^0-9a-f]*'`,
@@ -49,6 +60,7 @@ export const systemOutboxMessages = sqliteTable(
   {
     id: text("id").primaryKey(),
     topic: text("topic").notNull(),
+    handlerKey: text("handler_key"),
     sourceContext: text("source_context").notNull(),
     sourceKind: text("source_kind").notNull(),
     sourceId: text("source_id").notNull(),
@@ -77,12 +89,22 @@ export const systemOutboxMessages = sqliteTable(
   (table) => [
     uniqueIndex("system_outbox_messages_idempotency_uniq").on(table.topic, table.idempotencyKey),
     index("system_outbox_messages_claim_idx").on(table.status, table.availableAt, table.id),
+    index("system_outbox_handler_claim_idx").on(
+      table.handlerKey,
+      table.status,
+      table.availableAt,
+      table.id,
+    ),
     index("system_outbox_messages_lease_idx").on(table.status, table.leaseExpiresAt),
     check(
       "system_outbox_messages_attempt",
       sql`${table.attempt} BETWEEN 0 AND ${table.maxAttempts}`,
     ),
     check("system_outbox_messages_max_attempts", sql`${table.maxAttempts} BETWEEN 1 AND 100`),
+    check(
+      "system_outbox_handler_key",
+      sql`${table.handlerKey} IS NULL OR length(${table.handlerKey}) BETWEEN 1 AND 200`,
+    ),
     check(
       "system_outbox_messages_digest",
       sql`length(${table.payloadDigest}) = 64 AND ${table.payloadDigest} NOT GLOB '*[^0-9a-f]*'`,

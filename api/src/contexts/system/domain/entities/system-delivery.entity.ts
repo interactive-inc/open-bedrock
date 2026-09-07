@@ -7,6 +7,11 @@ const propsSchema = z
     id: z.string().regex(/^\S{1,255}$/),
     kind: z.enum(["job", "outbox"]),
     operationKey: z.string().regex(/^[a-z][a-z0-9_.:-]{0,199}$/),
+    handlerKey: z
+      .string()
+      .regex(/^[a-z][a-z0-9_.:-]{0,199}$/)
+      .nullable()
+      .default(null),
     payloadDigest: z.string().regex(/^[0-9a-f]{64}$/),
     idempotencyKey: z.string().regex(/^\S{1,255}$/),
     status: z.enum(["queued", "leased", "succeeded", "dead_letter"]),
@@ -36,6 +41,7 @@ export class SystemDeliveryEntity {
   readonly id: string
   readonly kind: Props["kind"]
   readonly operationKey: string
+  readonly handlerKey: string | null
   readonly payloadDigest: string
   readonly idempotencyKey: string
   readonly status: Props["status"]
@@ -54,6 +60,7 @@ export class SystemDeliveryEntity {
     this.id = props.id
     this.kind = props.kind
     this.operationKey = props.operationKey
+    this.handlerKey = props.handlerKey
     this.payloadDigest = props.payloadDigest
     this.idempotencyKey = props.idempotencyKey
     this.status = props.status
@@ -242,6 +249,7 @@ export class SystemDeliveryEntity {
       id: this.id,
       kind: this.kind,
       operationKey: this.operationKey,
+      handlerKey: this.handlerKey,
       payloadDigest: this.payloadDigest,
       idempotencyKey: this.idempotencyKey,
       status: this.status,

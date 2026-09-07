@@ -1,4 +1,7 @@
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
+import { SystemDeliveryRepository } from "@system/infrastructure/repositories/events/system-delivery.repository"
+import { SystemForbiddenError } from "@system/interface/errors"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { GET as deadLettersGET } from "@system/interface/routes/system.dead-letters"
 import { POST as deadLetterRequeuePOST } from "@system/interface/routes/system.dead-letters.$deadLetterId.requeue"
@@ -20,6 +23,104 @@ const jwtSecret = "system-session-test-jwt-secret"
 const now = new Date()
 
 describe("System delivery HTTP", () => {
+  test("登録処理のjobは管理者の汎用APIからclaim・完了・再投入できない", async () => {
+    const fixture = new SystemSessionTestContext()
+    seedWorker(fixture)
+    const stepUpToken = await seedSystemStepUpGrant(fixture, accountId, now)
+    const accessToken = await issueAccessToken(fixture)
+    if (accessToken instanceof Error) throw accessToken
+    const repository = new SystemDeliveryRepository(fixture.context)
+    const queued = SystemDeliveryEntity.create({
+      id: "managed:1",
+      kind: "job",
+      handlerKey: "example.record",
+      operationKey: "example.record",
+      payloadDigest: "a".repeat(64),
+      idempotencyKey: "event:1",
+      status: "queued",
+      attempt: 0,
+      maxAttempts: 1,
+      availableAt: now,
+      leaseAccountId: null,
+      leaseTokenHash: null,
+      leaseExpiresAt: null,
+      lastErrorCode: null,
+      createdAt: now,
+      updatedAt: now,
+      completedAt: null,
+    })
+    if (queued instanceof Error) throw queued
+    expect(await repository.create(queued, accountId, null, [])).toBe("created")
+    const app = systemFactory
+      .createApp()
+      .onError((error, context) =>
+        context.json({ message: error.message }, error instanceof SystemForbiddenError ? 403 : 500),
+      )
+      .use("*", async (context, next) => {
+        context.set("now", () => now)
+        await next()
+      })
+      .patch("/system/deliveries/:deliveryId", ...deliveryPATCH)
+      .post("/system/dead-letters/:deadLetterId/requeue", ...deadLetterRequeuePOST)
+    const request = (path: string, method: string, body: unknown) =>
+      app.request(
+        path,
+        {
+          method,
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+            "x-system-step-up": stepUpToken,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(body),
+        },
+        { DB: fixture.context.env.DB, JWT_SECRET: jwtSecret },
+      )
+    expect(
+      (
+        await request("/system/deliveries/managed:1", "PATCH", {
+          kind: "job",
+          action: "claim",
+          lease_seconds: 30,
+        })
+      ).status,
+    ).toBe(403)
+    const leased = queued.claim(accountId, "b".repeat(64), now, 30_000)
+    if (leased instanceof Error) throw leased
+    expect(await repository.update(queued, leased, [])).toBe("updated")
+    for (const action of ["succeed", "heartbeat", "fail", "recover"]) {
+      const body =
+        action === "recover"
+          ? { kind: "job", action }
+          : {
+              kind: "job",
+              action,
+              lease_token: "1".repeat(64),
+              ...(action === "heartbeat" ? { lease_seconds: 30 } : {}),
+              ...(action === "fail"
+                ? { error_code: "handler.failed", retry_at: now.toISOString() }
+                : {}),
+            }
+      expect((await request("/system/deliveries/managed:1", "PATCH", body)).status).toBe(403)
+    }
+    expect(await repository.find("job", queued.id)).toMatchObject({ status: "leased", attempt: 1 })
+    const failed = leased.fail(accountId, "b".repeat(64), "handler.failed", now, now)
+    if (failed instanceof Error) throw failed
+    expect(await repository.update(leased, failed, [])).toBe("updated")
+    const letters = await repository.findDeadLetters()
+    if (letters instanceof Error || letters[0] === undefined) throw new Error("missing dead letter")
+    expect(
+      (
+        await request(`/system/dead-letters/${letters[0].id}/requeue`, "POST", {
+          max_attempts: 1,
+          available_at: now.toISOString(),
+          reason: "retry",
+        })
+      ).status,
+    ).toBe(403)
+    expect(await repository.findDeadLetter(letters[0].id)).toMatchObject({ requeuedJobId: null })
+  })
+
   test("Service Principalがjobを冪等登録・lease・dead letterへ進める", async () => {
     const fixture = new SystemSessionTestContext()
     seedWorker(fixture)

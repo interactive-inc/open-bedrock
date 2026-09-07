@@ -57,6 +57,9 @@ describe("System delivery schema", () => {
          'accepted', 1, NULL, NULL);`,
     )
     expect(() =>
+      database.exec("UPDATE system_jobs SET handler_key = 'example.record' WHERE id = 'job:1'"),
+    ).toThrow("system_delivery_handler_immutable")
+    expect(() =>
       database.exec(
         `UPDATE system_jobs SET status = 'succeeded', updated_at = 2, completed_at = 2
          WHERE id = 'job:1'`,
