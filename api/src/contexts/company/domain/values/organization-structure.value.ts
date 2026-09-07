@@ -1,3 +1,4 @@
+import { periodsContainPeriod } from "@/contexts/company/domain/definitions/periods-contain-period.definition"
 import type { WorkforcePeriodVersion } from "@/contexts/company/domain/entities/workforce-schedule.entity"
 import type { OrganizationInvariantViolation } from "@/contexts/company/domain/definitions/organization-invariant.definition"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
@@ -45,16 +46,6 @@ export class OrganizationStructureValue {
 
   private static isValidText(value: string, maxLength: number): boolean {
     return value.length > 0 && value.length <= maxLength && value.trim() === value
-  }
-
-  private static containsPeriod(
-    outer: WorkforcePeriodVersion,
-    inner: WorkforcePeriodVersion,
-  ): boolean {
-    return (
-      outer.startsOn <= inner.startsOn &&
-      (outer.endsOn === null || (inner.endsOn !== null && inner.endsOn <= outer.endsOn))
-    )
   }
 
   private static periodsOverlap(
@@ -167,10 +158,11 @@ export class OrganizationStructureValue {
     for (const child of activePeriods) {
       if (child.parentOrganizationUnitId === null) continue
       if (
-        !activePeriods.some(
-          (candidate) =>
-            candidate.organizationUnitId === child.parentOrganizationUnitId &&
-            OrganizationStructureValue.containsPeriod(candidate, child),
+        !periodsContainPeriod(
+          activePeriods.filter(
+            (candidate) => candidate.organizationUnitId === child.parentOrganizationUnitId,
+          ),
+          child,
         )
       ) {
         return OrganizationStructureValue.violation(
@@ -211,10 +203,9 @@ export class OrganizationStructureValue {
     organizationUnitId: OrganizationUnitId,
     period: WorkforcePeriodVersion,
   ): boolean {
-    return this.activePeriods.some(
-      (unit) =>
-        unit.organizationUnitId === organizationUnitId &&
-        OrganizationStructureValue.containsPeriod(unit, period),
+    return periodsContainPeriod(
+      this.activePeriods.filter((unit) => unit.organizationUnitId === organizationUnitId),
+      period,
     )
   }
 

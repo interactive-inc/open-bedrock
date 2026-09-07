@@ -5,6 +5,7 @@ import { seedPepperSecret } from "@tests/api/support/company/seed-password-hash.
 export type Props = {
   db: D1Database
   jwtSecret: string
+  bootstrapToken?: string
   path: string
   token: string | null
   method?: string
@@ -48,6 +49,7 @@ export function requestWithContext(props: Props): Promise<Response> {
   const bindings: Bindings = {
     DB: props.db,
     JWT_SECRET: props.jwtSecret,
+    BOOTSTRAP_TOKEN: props.bootstrapToken,
     PEPPER_SECRET: seedPepperSecret,
     AUDIT_HMAC_SECRET: "request-with-context-audit-hmac-secret",
     COMPANY_TIME_ZONE: props.companyTimeZone ?? "Asia/Tokyo",

@@ -45,6 +45,20 @@
 - 共有先の並行作業を混入させず、取り込み済みの差分とGit状態を確認する
 - 各条件を現在のsource・テスト・実行結果で再監査し、未接続・未検証が残れば目標を継続する
 
+## 会社初期化の接続
+
+- 初期化を確認済みの会社名・代表者名・言語・timezone・会計年度、雇用日・区分、明示した責務から行う。管理権限から責務を補わず、会社情報を入社日へさかのぼって補わない
+- ルートOrgUnitの元の期間を保全し、確認当日からの会社profileと組織名を公開履歴へ接続する。既存台帳、在籍・所属・責務、監査、再送結果を一つのtransactionで保存する
+- 再送用のキーと確認済みJSONをCLIからAPIへ引き継ぐ。Companyの競合を成功に変換せず、opaqueな従業員IDを受け取る
+- 従業員登録前のCompany初期化はSystemの認証と管理資格を使う。通常のCompany操作には引き続き従業員sessionを要求する
+- 組織と所属の隣接する有効期間をつなぎ、親・所属・責務を参照できるようにする。空白、取消、別の所有者による補完、既存参照を孤立させる訂正は拒否する
+- 会社名・代表者名が事前設定された初期状態では、確認済み入力と既存値が一致する場合だけ登録する。不一致と保存直前の変更は拒否し、製品ごとの初期schemaを同じ空文字へ書き換えない
+- Companyprofileの初期化後の更新経路、公開所属・責務・Account対応と既存台帳の全writer、製品固有の初期登録経路の統合は未完成である
+- 初期化の準備後に起きるSystem権限変更の同一transactionでの検査、機械Principalと最初の従業員の対応条件も追加の確認対象とする。認証時の管理権限検査だけを基盤全体の認可完成と数えない
+
+- 変更後の本製品API全体は3,349件成功・既存re-export検査1件失敗、CLI全体は357件成功した。共有先はCompany・System・関連compositionの982件が成功した。両製品の実APIで初期化・再送・現在の管理資格失効を検証し、共有testでは全取消・履歴境界・既存プロフィールの不一致と保存直前の競合を検証した
+- API・Web・CLIと共有先の型検査、共有source・境界・migration・seed検査は成功した。全体format・lintはエラー0件で、既存のUI警告3件が残る。Company 429ファイルとSystem 500ファイル、共有metadata、8本の追記migrationは一致する。本番DBへの適用と本番D1の実行制限は未検証である
+
 ## 現在の検証
 
 - 在籍認可、従業員一覧、Accountに対応する承認候補の参照を、最新の期間履歴と会社営業日へ接続済み
@@ -61,8 +75,8 @@
 - 機械access tokenを発行元credentialへ接続し、両製品のAPI認証でAccount状態・token版、Principalへの所属、credential失効・期限、Connector停止を再検査する。別credentialの継続、別Accountのcredential拒否、権限失効、発行処理中のAccount・Connector変更を検証済み。発行元のない旧機械tokenは再発行が必要になる
 - 退職発令の確定・再送から既存tokenの認可までを、実際のApplication・DB・業務handlerで検証済み。退職日中は200、翌日は401
 - 新規登録の公開履歴保存失敗ではAccount・従業員・期間も取り消す。登録の再送で公開履歴を増やさず、準備後のCompany版競合は409を返す。会社の版が進んでいる場合は初期化を重ねない
-- 本製品のAPI全体は固定Bun版で3,327件成功。変更前からあるUI生成ファイルのre-export検査1件は失敗する
-- 共有先のCompany・System全体とAccount表示名のcompositionは946件成功、失敗0件。Company 423ファイルとSystem 500ファイル、manifest、lockは完全一致
+- 本製品のAPI全体は固定Bun版で3,349件成功。変更前からあるUI生成ファイルのre-export検査1件は失敗する
+- 共有先のCompany・System全体とAccount表示名・初期化のcompositionは982件成功、失敗0件。Company 429ファイルとSystem 500ファイル、manifest、lockは完全一致
 - API・Webと共有先の型検査、共有source・境界検査、変更箇所のformat・lintは成功。本製品の全体lintはエラー0件で、未変更のUI生成ファイルにある警告3件が残る
 - 両製品の実際のAPI入口から、外部identity登録とprovider scope違い・credential失効の拒否を検証済み。本製品では公開Company APIの読取、更新、再送、旧共有キー・人のtokenの拒否、通常Company入口の認証維持も検証済み。旧同期APIと入力契約は置き換わる
 - 218件の新規従業員を一つのbatchで登録し、654件の公開resourceと218件のcommand receiptを保存するSQLiteテストは成功。本番D1での実行時間と資源制限の検証は未完了であり、大規模一括処理の本番実行を保証しない

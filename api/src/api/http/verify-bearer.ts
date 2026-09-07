@@ -16,11 +16,6 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
  * tokenVersion 不一致・account 非 active・employee retired は即 401。
  */
 export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
-  if (c.req.path === "/company/bootstrap") {
-    await next()
-    return
-  }
-
   await authenticateSystemBearer(c)
   const accountId = zAccountId.parse(c.var.userId)
   const workforceAccountId = restoreWorkforceId("system_account", accountId)

@@ -1,3 +1,4 @@
+import { authenticateSystemBearer } from "@/api/http/authenticate-system-bearer"
 import { HTTPException } from "hono/http-exception"
 import { handleApiError } from "@/api/error-response/handle-api-error"
 import { companyValidationErrorMiddleware } from "@/api/http/company-validation-error-middleware"
@@ -95,7 +96,7 @@ const systemContextMiddleware = factory.createMiddleware(async (c, next) => {
 
 const systemAuthorizationMiddleware = factory.createMiddleware(async (c, next) => {
   const session = c.var.session
-  if (session === null) throw new HTTPException(401, { message: "authentication required" })
+  if (!session) throw new HTTPException(401, { message: "authentication required" })
 
   c.set("userId", String(session.accountId))
   c.set("permissions", session.permissions)
@@ -116,7 +117,7 @@ const globalBodyLimitExceptAuditExport = factory.createMiddleware(async (c, next
 
 const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
   const session = c.var.session
-  if (session === null) throw new HTTPException(401, { message: "authentication required" })
+  if (!session) throw new HTTPException(401, { message: "authentication required" })
 
   const capabilities: CompanyCapability[] = []
   const permissions: CompanyPermissionKey[] = []
@@ -186,8 +187,24 @@ const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
   await next()
 })
 
-/** 外部同期のPOSTは共有handlerで機械認証し、他のCompany入口は従業員sessionを要求する。 */
+/** 初期化はSystem認証、外部同期は共有handlerの機械認証、通常操作は従業員sessionを要求する。 */
 const companyAuthenticationMiddleware = factory.createMiddleware(async (c, next) => {
+  if (c.req.path === "/company/bootstrap" && c.req.method === "POST") {
+    await authenticateSystemBearer(c)
+    const capabilities: CompanyCapability[] = []
+    if (c.var.permissions.has("system:admin")) capabilities.push("company:admin")
+    c.set(
+      "companyActor",
+      CompanyActorValue.restore({
+        accountId: String(c.var.userId),
+        employeeId: null,
+        organizationIds: ["organization:default"],
+        capabilities,
+      }),
+    )
+    await next()
+    return
+  }
   if (c.req.path === "/company/external-identity-imports" && c.req.method === "POST") {
     await next()
     return

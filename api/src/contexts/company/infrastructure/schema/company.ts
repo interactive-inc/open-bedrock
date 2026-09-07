@@ -382,7 +382,45 @@ export const companyOrganizationResourceAdoptions = sqliteTable(
   ],
 )
 
+export const companyBootstrapReceipts = sqliteTable(
+  "company_bootstrap_receipts",
+  {
+    commandId: text("command_id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .unique()
+      .references(() => companyOrganizations.id),
+    actorAccountId: text("actor_account_id")
+      .notNull()
+      .references(() => systemAccounts.id),
+    fingerprint: text("fingerprint").notNull(),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id),
+    organizationRevision: integer("organization_revision").notNull(),
+    declarationJson: text("declaration_json").notNull(),
+    sourceJson: text("source_json").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    check("company_bootstrap_command", sql`length(${table.commandId}) BETWEEN 1 AND 200`),
+    check("company_bootstrap_default", sql`${table.organizationId} = 'organization:default'`),
+    check(
+      "company_bootstrap_fingerprint",
+      sql`length(${table.fingerprint}) = 64 AND ${table.fingerprint} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+    check("company_bootstrap_revision", sql`${table.organizationRevision} > 0`),
+    check("company_bootstrap_declaration", sql`json_valid(${table.declarationJson})`),
+    check(
+      "company_bootstrap_source",
+      sql`json_valid(${table.sourceJson}) AND length(CAST(${table.sourceJson} AS BLOB)) <= 750000`,
+    ),
+    check("company_bootstrap_time", sql`${table.recordedAt} >= 0`),
+  ],
+)
+
 export const companySchema = {
+  companyBootstrapReceipts,
   companyOrganizationResourceAdoptions,
   companyOrganizationResourceBindings,
   companyEmployeeResourceAdoptions,

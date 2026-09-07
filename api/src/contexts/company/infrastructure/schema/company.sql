@@ -1747,3 +1747,345 @@ BEGIN
   SELECT RAISE(ABORT, 'organization resource history mismatch')
   WHERE EXISTS (SELECT 1 FROM company_organization_resource_mismatches WHERE organization_unit_id = NEW.organization_unit_id) OR NOT EXISTS (SELECT 1 FROM company_organization_unit_period_versions WHERE organization_unit_id = NEW.organization_unit_id);
 END;
+
+CREATE TABLE company_bootstrap_receipts (
+  command_id TEXT PRIMARY KEY NOT NULL CHECK (length(command_id) BETWEEN 1 AND 200),
+  organization_id TEXT NOT NULL UNIQUE REFERENCES company_organizations(id) CHECK (organization_id = 'organization:default'),
+  actor_account_id TEXT NOT NULL REFERENCES system_accounts(id),
+  fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64 AND fingerprint NOT GLOB '*[^0-9a-f]*'),
+  employee_id TEXT NOT NULL REFERENCES company_employees(id),
+  organization_revision INTEGER NOT NULL CHECK (organization_revision > 0),
+  declaration_json TEXT NOT NULL CHECK (json_valid(declaration_json)),
+  source_json TEXT NOT NULL CHECK (json_valid(source_json) AND length(CAST(source_json AS BLOB)) <= 750000),
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0)
+);
+
+CREATE TRIGGER company_bootstrap_receipts_immutable_update
+BEFORE UPDATE ON company_bootstrap_receipts
+BEGIN
+  SELECT RAISE(ABORT, 'company bootstrap receipt immutable');
+END;
+
+CREATE TRIGGER company_bootstrap_receipts_immutable_delete
+BEFORE DELETE ON company_bootstrap_receipts
+BEGIN
+  SELECT RAISE(ABORT, 'company bootstrap receipt immutable');
+END;
+
+CREATE VIEW company_organization_unit_coverage AS
+WITH heads AS (
+  SELECT organization_unit_id, starts_on, ends_on FROM company_organization_unit_period_versions AS period
+  WHERE is_void = 0 AND revision = (SELECT max(latest.revision) FROM company_organization_unit_period_versions AS latest WHERE latest.period_id = period.period_id)
+), prior AS (
+  SELECT *, max(coalesce(ends_on, '9999-12-31')) OVER (PARTITION BY organization_unit_id ORDER BY starts_on, ends_on ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS covered_until FROM heads
+), groups AS (
+  SELECT *, sum(CASE WHEN covered_until IS NULL OR starts_on > covered_until THEN 1 ELSE 0 END) OVER (PARTITION BY organization_unit_id ORDER BY starts_on, ends_on ROWS UNBOUNDED PRECEDING) AS island FROM prior
+)
+SELECT organization_unit_id, min(starts_on) AS starts_on, CASE WHEN max(ends_on IS NULL) = 1 THEN NULL ELSE max(ends_on) END AS ends_on
+FROM groups GROUP BY organization_unit_id, island;
+
+CREATE VIEW company_organization_assignment_coverage AS
+WITH heads AS (
+  SELECT employment_id, employee_id, organization_unit_id, starts_on, ends_on FROM company_organization_assignment_period_versions AS period
+  WHERE is_void = 0 AND revision = (SELECT max(latest.revision) FROM company_organization_assignment_period_versions AS latest WHERE latest.period_id = period.period_id)
+), prior AS (
+  SELECT *, max(coalesce(ends_on, '9999-12-31')) OVER (PARTITION BY employment_id, employee_id, organization_unit_id ORDER BY starts_on, ends_on ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS covered_until FROM heads
+), groups AS (
+  SELECT *, sum(CASE WHEN covered_until IS NULL OR starts_on > covered_until THEN 1 ELSE 0 END) OVER (PARTITION BY employment_id, employee_id, organization_unit_id ORDER BY starts_on, ends_on ROWS UNBOUNDED PRECEDING) AS island FROM prior
+)
+SELECT employment_id, employee_id, organization_unit_id, min(starts_on) AS starts_on, CASE WHEN max(ends_on IS NULL) = 1 THEN NULL ELSE max(ends_on) END AS ends_on
+FROM groups GROUP BY employment_id, employee_id, organization_unit_id, island;
+
+DROP TRIGGER IF EXISTS organization_assignment_period_versions_guard;
+DROP TRIGGER IF EXISTS company_organization_assignment_period_versions_guard;
+CREATE TRIGGER company_organization_assignment_period_versions_guard
+BEFORE INSERT ON company_organization_assignment_period_versions
+BEGIN
+  SELECT RAISE(ABORT, 'organization change operation is missing or stale')
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM company_organization_change_operations operation
+    JOIN company_organization_lifecycle_states state ON state.id = 1
+    WHERE operation.id = NEW.recorded_by_action_id
+      AND operation.status = 'PENDING'
+      AND operation.applied_count < operation.change_count
+      AND state.revision = operation.expected_revision + operation.applied_count
+  );
+
+  SELECT RAISE(ABORT, 'organization assignment revision is not sequential')
+  WHERE NEW.revision != coalesce(
+    (
+      SELECT max(revision)
+      FROM company_organization_assignment_period_versions
+      WHERE period_id = NEW.period_id
+    ),
+    0
+  ) + 1;
+
+  SELECT RAISE(ABORT, 'organization assignment owner is immutable')
+  WHERE EXISTS (
+    SELECT 1 FROM company_organization_assignment_period_versions previous
+    WHERE previous.period_id = NEW.period_id
+      AND (
+        previous.employment_id != NEW.employment_id
+        OR previous.employee_id != NEW.employee_id
+        OR previous.organization_unit_id != NEW.organization_unit_id
+        OR previous.assignment_type != NEW.assignment_type
+      )
+  );
+
+  SELECT RAISE(ABORT, 'organization assignment employment mismatch')
+  WHERE NOT EXISTS (
+    SELECT 1 FROM company_employments employment
+    WHERE employment.id = NEW.employment_id
+      AND employment.employee_id = NEW.employee_id
+      AND employment.hire_date <= NEW.starts_on
+      AND (
+        employment.termination_date IS NULL
+        OR (
+          NEW.ends_on IS NOT NULL
+          AND NEW.ends_on <= date(employment.termination_date, '+1 day')
+        )
+      )
+  );
+
+  SELECT RAISE(ABORT, 'organization assignment unit is not active')
+  WHERE NEW.is_void = 0 AND NOT EXISTS (
+    SELECT 1 FROM company_organization_unit_coverage unit
+    WHERE unit.organization_unit_id = NEW.organization_unit_id
+      AND unit.starts_on <= NEW.starts_on
+      AND (
+        unit.ends_on IS NULL
+        OR (NEW.ends_on IS NOT NULL AND NEW.ends_on <= unit.ends_on)
+      )
+  );
+
+  SELECT RAISE(ABORT, 'organization assignment overlaps')
+  WHERE NEW.is_void = 0 AND EXISTS (
+    SELECT 1 FROM company_organization_assignment_period_versions current
+    WHERE current.period_id != NEW.period_id
+      AND current.employee_id = NEW.employee_id
+      AND current.is_void = 0
+      AND current.revision = (
+        SELECT max(latest.revision)
+        FROM company_organization_assignment_period_versions latest
+        WHERE latest.period_id = current.period_id
+      )
+      AND (
+        (current.assignment_type = 'PRIMARY' AND NEW.assignment_type = 'PRIMARY')
+        OR (
+          current.organization_unit_id = NEW.organization_unit_id
+          AND current.assignment_type = NEW.assignment_type
+        )
+      )
+      AND (current.ends_on IS NULL OR NEW.starts_on < current.ends_on)
+      AND (NEW.ends_on IS NULL OR current.starts_on < NEW.ends_on)
+  );
+
+  SELECT RAISE(ABORT, 'organization assignment manager is not employed')
+  WHERE NEW.is_void = 0
+    AND NEW.manager_employee_id IS NOT NULL
+    AND NOT EXISTS (
+      SELECT 1 FROM company_employments manager_employment
+      WHERE manager_employment.employee_id = NEW.manager_employee_id
+        AND manager_employment.hire_date <= NEW.starts_on
+        AND (
+          manager_employment.termination_date IS NULL
+          OR (
+            NEW.ends_on IS NOT NULL
+            AND NEW.ends_on <= date(manager_employment.termination_date, '+1 day')
+          )
+        )
+    );
+END;
+
+DROP TRIGGER IF EXISTS organization_responsibility_period_versions_guard;
+DROP TRIGGER IF EXISTS company_organization_responsibility_period_versions_guard;
+CREATE TRIGGER company_organization_responsibility_period_versions_guard
+BEFORE INSERT ON company_organization_responsibility_period_versions
+BEGIN
+  SELECT RAISE(ABORT, 'organization change operation is missing or stale')
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM company_organization_change_operations operation
+    JOIN company_organization_lifecycle_states state ON state.id = 1
+    WHERE operation.id = NEW.recorded_by_action_id
+      AND operation.status = 'PENDING'
+      AND operation.applied_count < operation.change_count
+      AND state.revision = operation.expected_revision + operation.applied_count
+  );
+
+  SELECT RAISE(ABORT, 'organization responsibility revision is not sequential')
+  WHERE NEW.revision != coalesce(
+    (
+      SELECT max(revision)
+      FROM company_organization_responsibility_period_versions
+      WHERE period_id = NEW.period_id
+    ),
+    0
+  ) + 1;
+
+  SELECT RAISE(ABORT, 'organization responsibility owner is immutable')
+  WHERE EXISTS (
+    SELECT 1 FROM company_organization_responsibility_period_versions previous
+    WHERE previous.period_id = NEW.period_id
+      AND (
+        previous.employment_id != NEW.employment_id
+        OR previous.employee_id != NEW.employee_id
+        OR previous.organization_unit_id != NEW.organization_unit_id
+        OR previous.responsibility_type != NEW.responsibility_type
+      )
+  );
+
+  SELECT RAISE(ABORT, 'organization responsibility employment mismatch')
+  WHERE NOT EXISTS (
+    SELECT 1 FROM company_employments employment
+    WHERE employment.id = NEW.employment_id
+      AND employment.employee_id = NEW.employee_id
+      AND employment.hire_date <= NEW.starts_on
+      AND (
+        employment.termination_date IS NULL
+        OR (
+          NEW.ends_on IS NOT NULL
+          AND NEW.ends_on <= date(employment.termination_date, '+1 day')
+        )
+      )
+  );
+
+  SELECT RAISE(ABORT, 'organization responsibility unit is not active')
+  WHERE NEW.is_void = 0 AND NOT EXISTS (
+    SELECT 1 FROM company_organization_unit_coverage unit
+    WHERE unit.organization_unit_id = NEW.organization_unit_id
+      AND unit.starts_on <= NEW.starts_on
+      AND (
+        unit.ends_on IS NULL
+        OR (NEW.ends_on IS NOT NULL AND NEW.ends_on <= unit.ends_on)
+      )
+  );
+
+  SELECT RAISE(ABORT, 'organization responsibility requires matching assignment')
+  WHERE NEW.is_void = 0 AND NOT EXISTS (
+    SELECT 1 FROM company_organization_assignment_coverage assignment
+    WHERE assignment.employment_id = NEW.employment_id
+      AND assignment.employee_id = NEW.employee_id
+      AND assignment.organization_unit_id = NEW.organization_unit_id
+      AND assignment.starts_on <= NEW.starts_on
+      AND (
+        assignment.ends_on IS NULL
+        OR (NEW.ends_on IS NOT NULL AND NEW.ends_on <= assignment.ends_on)
+      )
+  );
+
+  SELECT RAISE(ABORT, 'organization responsibility overlaps')
+  WHERE NEW.is_void = 0 AND EXISTS (
+    SELECT 1 FROM company_organization_responsibility_period_versions current
+    WHERE current.period_id != NEW.period_id
+      AND current.employee_id = NEW.employee_id
+      AND current.organization_unit_id = NEW.organization_unit_id
+      AND current.responsibility_type = NEW.responsibility_type
+      AND current.is_void = 0
+      AND current.revision = (
+        SELECT max(latest.revision)
+        FROM company_organization_responsibility_period_versions latest
+        WHERE latest.period_id = current.period_id
+      )
+      AND (current.ends_on IS NULL OR NEW.starts_on < current.ends_on)
+      AND (NEW.ends_on IS NULL OR current.starts_on < NEW.ends_on)
+  );
+END;
+
+DROP TRIGGER IF EXISTS organization_change_operations_completion_guard;
+DROP TRIGGER IF EXISTS company_organization_change_operations_completion_guard;
+CREATE TRIGGER company_organization_change_operations_completion_guard
+BEFORE UPDATE OF status ON company_organization_change_operations
+BEGIN
+  SELECT RAISE(ABORT, 'organization change operation is incomplete')
+  WHERE OLD.status != 'PENDING'
+    OR NEW.status != 'COMPLETED'
+    OR NEW.applied_count != NEW.change_count
+    OR NOT EXISTS (
+      SELECT 1 FROM company_organization_lifecycle_states state
+      WHERE state.id = 1 AND state.revision = NEW.resulting_revision
+    );
+
+  SELECT RAISE(ABORT, 'organization change leaves an orphan organization unit')
+  WHERE EXISTS (
+    SELECT 1 FROM company_organization_unit_period_versions child
+    WHERE child.is_void = 0
+      AND child.parent_organization_unit_id IS NOT NULL
+      AND child.revision = (
+        SELECT max(latest.revision)
+        FROM company_organization_unit_period_versions latest
+        WHERE latest.period_id = child.period_id
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM company_organization_unit_coverage parent
+        WHERE parent.organization_unit_id = child.parent_organization_unit_id
+          AND parent.starts_on <= child.starts_on
+          AND (
+            parent.ends_on IS NULL
+            OR (child.ends_on IS NOT NULL AND child.ends_on <= parent.ends_on)
+          )
+      )
+  );
+
+  SELECT RAISE(ABORT, 'organization change leaves an orphan assignment')
+  WHERE EXISTS (
+    SELECT 1 FROM company_organization_assignment_period_versions assignment
+    WHERE assignment.is_void = 0
+      AND assignment.revision = (
+        SELECT max(latest.revision)
+        FROM company_organization_assignment_period_versions latest
+        WHERE latest.period_id = assignment.period_id
+      )
+      AND (
+        NOT EXISTS (
+          SELECT 1 FROM company_employments employment
+          WHERE employment.id = assignment.employment_id
+            AND employment.employee_id = assignment.employee_id
+            AND employment.hire_date <= assignment.starts_on
+            AND (
+              employment.termination_date IS NULL
+              OR (
+                assignment.ends_on IS NOT NULL
+                AND assignment.ends_on <= date(employment.termination_date, '+1 day')
+              )
+            )
+        )
+        OR NOT EXISTS (
+          SELECT 1 FROM company_organization_unit_coverage unit
+          WHERE unit.organization_unit_id = assignment.organization_unit_id
+            AND unit.starts_on <= assignment.starts_on
+            AND (
+              unit.ends_on IS NULL
+              OR (assignment.ends_on IS NOT NULL AND assignment.ends_on <= unit.ends_on)
+            )
+        )
+      )
+  );
+
+  SELECT RAISE(ABORT, 'organization change leaves an orphan responsibility')
+  WHERE EXISTS (
+    SELECT 1 FROM company_organization_responsibility_period_versions responsibility
+    WHERE responsibility.is_void = 0
+      AND responsibility.revision = (
+        SELECT max(latest.revision)
+        FROM company_organization_responsibility_period_versions latest
+        WHERE latest.period_id = responsibility.period_id
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM company_organization_assignment_coverage assignment
+        WHERE assignment.employment_id = responsibility.employment_id
+          AND assignment.employee_id = responsibility.employee_id
+          AND assignment.organization_unit_id = responsibility.organization_unit_id
+          AND assignment.starts_on <= responsibility.starts_on
+          AND (
+            assignment.ends_on IS NULL
+            OR (
+              responsibility.ends_on IS NOT NULL
+              AND responsibility.ends_on <= assignment.ends_on
+            )
+          )
+      )
+  );
+END;
