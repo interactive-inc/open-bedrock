@@ -51,7 +51,7 @@ export const POST = factory.createHandlers(
     }
 
     const body = c.req.valid("json")
-    if (body.code === "ringi_request")
+    if (["ringi_request", "expense_request"].includes(body.code))
       throw new ForbiddenError("稟議専用の規程設定を使用してください")
     const approverRoles = body.approver_roles ?? []
     const unknownRoles = await findUnknownCompanyApproverRoles(c.env.DB, approverRoles)

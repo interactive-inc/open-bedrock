@@ -62,7 +62,11 @@ export const PUT = factory.createHandlers(
     const definition = await loadSystemProcedure(c, code)
     if (definition instanceof Error) throw new InternalError("failed to load template")
     if (definition === null) throw new NotFoundError("template not found")
-    if (definition.completionOperationKey === "ringi.request.authorize")
+    if (
+      ["ringi.request.authorize", "expense.request.authorize"].includes(
+        definition.completionOperationKey ?? "",
+      )
+    )
       throw new ForbiddenError("稟議専用の規程設定を使用してください")
     const currentPolicy = parseSystemProcedurePolicy(definition)
     const schema = parseSystemProcedureInputSchema(definition)

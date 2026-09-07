@@ -1,9 +1,3 @@
-import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
-import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
-
-import { expenseAttachments } from "@/contexts/expense/infrastructure/schema/expense"
-import { UnexpectedError } from "@/lib/errors"
-
 import { SubmitExpense } from "@/contexts/expense/application/submit-expense"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -33,13 +27,16 @@ export const POST = factory.createHandlers(
   async (c) => {
     const session = c.var.session
 
-    if (session === null) {
+    if (session === null || c.var.accountTokenVersion === null) {
       throw new UnauthorizedError()
     }
 
     const body = c.req.valid("json")
 
     const created = await new SubmitExpense(c).run({
+      accountId: session.accountId,
+      tokenVersion: c.var.accountTokenVersion,
+      attachmentIds: body.attachment_ids ?? [],
       employeeId: session.employeeId,
       category: body.category,
       amount: body.amount,
@@ -50,88 +47,6 @@ export const POST = factory.createHandlers(
 
     if (created instanceof ApplicationError) {
       throw toHttpException(created)
-    }
-
-    const attached = await (async () => {
-      const attachmentCommand = {
-        expenseId: created.id ?? 0,
-        attachmentIds: body.attachment_ids ?? [],
-        ownerAccountId: String(session.accountId),
-        now: c.var.now(),
-      }
-
-      if (attachmentCommand.attachmentIds.length === 0) return undefined
-
-      const linked = await (async () => {
-        const linkCommand = {
-          attachmentIds: attachmentCommand.attachmentIds,
-          ownerAccountId: attachmentCommand.ownerAccountId,
-          now: attachmentCommand.now,
-        }
-
-        if (linkCommand.attachmentIds.length === 0) return undefined
-
-        const unique = new Set(linkCommand.attachmentIds)
-
-        if (unique.size !== linkCommand.attachmentIds.length) {
-          return new ValidationError("添付が重複しています", "attachment_duplicated")
-        }
-
-        const repository = new AttachmentAdapter(c)
-
-        const rows = await repository.findManyByIds(linkCommand.attachmentIds)
-
-        if (rows instanceof Error) return rows
-
-        if (rows.length !== unique.size) {
-          return new NotFoundError("添付が見つかりません", "attachment_not_found")
-        }
-
-        for (const row of rows) {
-          if (row.ownerAccountId !== linkCommand.ownerAccountId) {
-            return new ForbiddenError("他人の添付は紐づけできません", "attachment_not_owned")
-          }
-
-          if (row.status !== "pending") {
-            return new ValidationError(
-              "この添付は紐づけできる状態ではありません",
-              "attachment_not_pending",
-            )
-          }
-        }
-
-        for (const row of rows) {
-          const linked = await repository.markLinked(row.id, linkCommand.now)
-
-          if (linked instanceof Error) return linked
-        }
-
-        return undefined
-      })()
-
-      if (linked instanceof ApplicationError) return linked
-
-      if (linked instanceof Error) {
-        return new UnexpectedError("failed to link attachments", { cause: linked })
-      }
-
-      try {
-        await c.var.database.insert(expenseAttachments).values(
-          attachmentCommand.attachmentIds.map((attachmentId) => ({
-            expenseId: attachmentCommand.expenseId,
-            attachmentId,
-            createdAt: attachmentCommand.now.toISOString(),
-          })),
-        )
-
-        return undefined
-      } catch (error) {
-        return new UnexpectedError("failed to attach expense attachments", { cause: error })
-      }
-    })()
-
-    if (attached instanceof ApplicationError) {
-      throw toHttpException(attached)
     }
 
     const responseBody = zAppExpense.parse({

@@ -13,6 +13,8 @@ import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-te
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
+import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
+import { drizzle } from "drizzle-orm/d1"
 
 const categoryEnum = z.enum(["transport", "supplies", "entertainment", "books", "other"])
 
@@ -52,6 +54,16 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+
+  await db.exec(`INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
+    VALUES ('expense-submit-test','test:expense:submit','custom','Expense submit',0,0);
+    INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES ('expense-submit-test','expense:submit');`)
+  await db
+    .prepare(
+      "INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('expense-submit-test',?1,'expense-submit-test',0)",
+    )
+    .bind(String(toWorkforceEmployeeId(5)))
+    .run()
 
   await seedD1(
     db,
@@ -109,6 +121,83 @@ async function request(props: RequestProps): Promise<Response> {
 }
 
 describe("POST /expenses", () => {
+  test("二件目の添付保存に失敗しても全変更を戻し、再試行で両方を同じ経費へ紐付ける", async () => {
+    const db = await createTestDb()
+    const attachments = new AttachmentAdapter({ var: { database: drizzle(db) } })
+    const ids = ["receipt-first", "receipt-second"]
+    for (const id of ids) {
+      const stored = await attachments.reserve({
+        id,
+        ownerAccountId: String(toWorkforceEmployeeId(5)),
+        objectKey: `att/${id}`,
+        contentType: "application/pdf",
+        byteSize: 100,
+        fileName: `${id}.pdf`,
+        plaintextSha256: "a".repeat(64),
+        wrappedDek: "test-key",
+        wrappedDekIv: "test-key-iv",
+        contentIv: "test-content-iv",
+        kekVersion: 1,
+        createdAt: new Date(now),
+      })
+      if (stored instanceof Error) throw stored
+      const pending = await attachments.markPending(id)
+      if (pending instanceof Error) throw pending
+    }
+    const before = await db.prepare("SELECT count(*) AS total FROM expenses").first<number>("total")
+    const send = async () =>
+      requestWithContext({
+        db,
+        jwtSecret,
+        path: "/expense/expenses",
+        token: await tokenFor(5),
+        method: "POST",
+        body: { category: "transport", amount: 500, spent_at: "2026-01-01", attachment_ids: ids },
+      })
+    await db.exec(
+      "CREATE TRIGGER fail_second_expense_attachment BEFORE INSERT ON expense_attachments WHEN NEW.attachment_id = 'receipt-second' BEGIN SELECT RAISE(ABORT, 'attachment unavailable'); END",
+    )
+    expect((await send()).status).toBe(500)
+    expect(await db.prepare("SELECT count(*) AS total FROM expenses").first<number>("total")).toBe(
+      before,
+    )
+    for (const id of ids)
+      expect(await attachments.findById(id)).toMatchObject({ status: "pending", linkedAt: null })
+    await db.exec("DROP TRIGGER fail_second_expense_attachment")
+    const response = await send()
+    expect(response.status).toBe(201)
+    const expense = expenseResponseSchema.parse(await response.json())
+    expect(
+      (
+        await db
+          .prepare(
+            "SELECT expense_id,attachment_id FROM expense_attachments ORDER BY attachment_id",
+          )
+          .all()
+      ).results,
+    ).toEqual(ids.map((attachment_id) => ({ expense_id: expense.id, attachment_id })))
+  })
+  test("添付が存在しない場合は申請本体も作らない", async () => {
+    const db = await createTestDb()
+    const before = await db.prepare("SELECT count(*) AS total FROM expenses").first<number>("total")
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/expense/expenses",
+      token: await tokenFor(5),
+      method: "POST",
+      body: {
+        category: "transport",
+        amount: 500,
+        spent_at: "2026-01-01",
+        attachment_ids: ["missing-attachment"],
+      },
+    })
+    expect(response.status).toBe(404)
+    expect(await db.prepare("SELECT count(*) AS total FROM expenses").first<number>("total")).toBe(
+      before,
+    )
+  })
   test("returns 201 with a pending expense from the token employee", async () => {
     const response = await request({
       path: "/expense/expenses",

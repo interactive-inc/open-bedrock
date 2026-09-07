@@ -51,6 +51,8 @@ export const permissionKeys = [
   "employee_event:read:all",
   "evaluation:administer",
   "expense:approve",
+  "expense:submit",
+  "expense:procedure:manage",
   "expense:read:all",
   "export:run",
   "family_care_leave:manage",

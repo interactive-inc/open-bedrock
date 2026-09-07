@@ -8,6 +8,11 @@ import type {
   ExpenseStatus,
 } from "@/contexts/expense/domain/definitions/expense.definition"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { systemCases } from "@system/infrastructure/schema/system-workflow"
+import {
+  systemProposalNumbers,
+  systemProposalSeries,
+} from "@system/infrastructure/schema/system-procedure"
 import { organizationUnits } from "@/contexts/company/infrastructure/schema/organization"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
@@ -66,3 +71,30 @@ export const expenseAttachments = sqliteTable(
 )
 
 export type ExpenseAttachmentRow = InferSelectModel<typeof expenseAttachments>
+
+/** 経費と変更不能な承認対象・添付の対応。 */
+export const expenseProcedureBindings = sqliteTable("expense_procedure_bindings", {
+  requestKey: text("request_key").primaryKey(),
+  expenseId: integer("expense_id")
+    .notNull()
+    .unique()
+    .references(() => expenses.id, { onDelete: "restrict" }),
+  previousExpenseId: integer("previous_expense_id")
+    .unique()
+    .references(() => expenses.id, { onDelete: "restrict" }),
+  applicationId: integer("application_id")
+    .notNull()
+    .unique()
+    .references(() => systemProposalNumbers.number, { onDelete: "restrict" }),
+  seriesId: text("series_id")
+    .notNull()
+    .unique()
+    .references(() => systemProposalSeries.id, { onDelete: "restrict" }),
+  caseId: text("case_id")
+    .notNull()
+    .unique()
+    .references(() => systemCases.id, { onDelete: "restrict" }),
+  proposalDigest: text("proposal_digest").notNull(),
+  attachmentEvidenceJson: text("attachment_evidence_json").notNull(),
+  createdAt: integer("created_at").notNull(),
+})
