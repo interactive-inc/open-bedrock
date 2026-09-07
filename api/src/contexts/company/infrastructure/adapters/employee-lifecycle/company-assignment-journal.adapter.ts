@@ -39,7 +39,7 @@ type PreparedAssignments = Readonly<{
   bindings: ReadonlyArray<D1PreparedStatement>
 }>
 
-/** 公開所属に接続済みの発令を、同じ正本の履歴と期間対応へ戻す。 */
+/** 公開Employeeの新しい所属と接続済み所属の変更を、同じ履歴と期間対応へ記録する。 */
 export class CompanyAssignmentJournalAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -85,7 +85,19 @@ export class CompanyAssignmentJournalAdapter {
           return binding === undefined ? [] : [binding.resource_id]
         }),
       )
-      if (affected.size === 0) return { resources: [], bindings: [] }
+      if (affected.size === 0 && props.prospectiveEmployee === undefined) {
+        const employee = await this.c
+          .prepare(`SELECT organization_id FROM company_workforce_resource_bindings
+          WHERE resource_type = 'employee' AND resource_id = ?1`)
+          .bind(props.action.employeeId)
+          .first<{ organization_id: string }>()
+        if (employee === null) return { resources: [], bindings: [] }
+        if (employee.organization_id !== "organization:default")
+          return new CompanyValidationError(
+            "従業員の会社が所属台帳と一致しません",
+            "lifecycle_projection_mismatch",
+          )
+      }
       const periodsByResource = new Map<string, Map<string, OrgAssignmentPeriod>>()
       for (const resourceId of affected) {
         periodsByResource.set(

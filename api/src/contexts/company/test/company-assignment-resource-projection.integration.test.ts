@@ -252,6 +252,112 @@ async function fixture() {
 }
 
 describe("公開Assignmentと業務の所属期間", () => {
+  test("主務を変えない兼務の追加も公開し、保存失敗と再送で所属を重複させない", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    const code = await f.database
+      .prepare(
+        "SELECT code FROM company_organization_unit_period_versions WHERE organization_unit_id = ?1 LIMIT 1",
+      )
+      .bind(f.root.id)
+      .first<string>("code")
+    if (code === null) throw new Error("root code missing")
+    const input = {
+      kind: "concurrent_assignment_started",
+      employeeCode: "EMPLOYEE-001",
+      eventOn: restoreCalendarDate("2030-04-01"),
+      departmentCode: code,
+      positionTitle: "Coordinator",
+      managerEmployeeCode: null,
+    } satisfies PersonnelActionInput
+    const before = await f.persisted()
+    await f.database.exec(
+      "CREATE TRIGGER reject_new_assignment_binding BEFORE INSERT ON company_assignment_period_bindings BEGIN SELECT RAISE(ABORT, 'injected assignment binding failure'); END;",
+    )
+    expect(await f.personnel(input, "personnel:first-concurrent")).toBeInstanceOf(Error)
+    expect(await f.persisted()).toEqual(before)
+    await f.database.exec("DROP TRIGGER reject_new_assignment_binding")
+    expect(await f.personnel(input, "personnel:first-concurrent")).toMatchObject({
+      replayed: false,
+    })
+    expect(
+      (await f.publicAssignments("2030-03-01")).map((resource) =>
+        resource.readText("assignmentType"),
+      ),
+    ).toEqual(["PRIMARY"])
+    expect(
+      (await f.publicAssignments("2030-04-01"))
+        .map((resource) => resource.readText("assignmentType"))
+        .sort((left, right) => (left ?? "").localeCompare(right ?? "")),
+    ).toEqual(["CONCURRENT", "PRIMARY"])
+    const applied = await f.persisted()
+    expect(await f.personnel(input, "personnel:first-concurrent")).toMatchObject({ replayed: true })
+    expect(await f.persisted()).toEqual(applied)
+  })
+  test("組織番号の将来変更後も、配属時と同じ組織IDで役職を変更する", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    const unit = {
+      organizationId: "organization:default",
+      type: "organization-unit",
+      revision: 1,
+      state: "active",
+      effectiveFrom: "2030-01-01",
+      effectiveTo: null,
+      attributes: {
+        organizationUnitId: "unit:journal",
+        code: "TEAM",
+        officialName: "Example Team",
+        kind: "TEAM",
+        parentOrganizationUnitId: f.root.id,
+      },
+    } satisfies Omit<
+      Extract<NonNullable<Parameters<typeof f.write>[0]>[number], { type: "organization-unit" }>,
+      "id"
+    >
+    expect(
+      Number(
+        (
+          await f.write(
+            [
+              { ...unit, id: "unit-period:journal", revision: 2, effectiveTo: "2030-07-01" },
+              {
+                ...unit,
+                id: "unit-period:renamed",
+                effectiveFrom: "2030-07-01",
+                attributes: { ...unit.attributes, code: "TEAM-NEW" },
+              },
+            ],
+            await f.companyRevision(),
+            "unit:future-code",
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    expect(
+      await f.personnel(
+        {
+          kind: "position_changed",
+          employeeCode: "EMPLOYEE-001",
+          eventOn: restoreCalendarDate("2030-08-01"),
+          departmentCode: "TEAM-NEW",
+          assignmentType: "primary",
+          positionTitle: "Lead",
+          changeType: "promotion",
+        },
+        "personnel:renamed-unit",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(
+      (await f.publicAssignments("2030-08-01")).map((resource) => ({
+        unit: resource.readText("organizationUnitId"),
+        title: resource.readText("positionTitle"),
+      })),
+    ).toEqual([{ unit: "unit:journal", title: "Lead" }])
+    expect(await f.read("2030-08-01")).toMatchObject({
+      primaryAssignment: { organizationUnitId: "unit:journal", positionTitle: "Lead" },
+    })
+  })
   test("異動先の組織IDと将来予約の境界を公開履歴へ保つ", async () => {
     const f = await fixture()
     const source = await f.initializeAssignment()
@@ -719,6 +825,11 @@ describe("公開Assignmentと業務の所属期間", () => {
     expect(await f.read("2030-06-01")).toMatchObject({
       primaryAssignment: { organizationUnitId: "unit:opaque" },
     })
+    expect(
+      (await f.publicAssignments("2030-06-01")).map((resource) =>
+        resource.readText("organizationUnitId"),
+      ),
+    ).toEqual(["unit:opaque"])
   })
   test("公開APIに保存した所属が同じ基準日の従業員一覧へ届く", async () => {
     const f = await fixture()

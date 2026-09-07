@@ -33,7 +33,7 @@ JSONは次の全項目を必須とする。
 
 入社日は会社営業日以前を要求し、確認可能な組織履歴より前の在籍は422で拒否する。新規登録のtimezoneが実行環境の会社timezoneと一致しない場合は409で拒否する。代表者名は従業員名から補わず、Accountの管理権限から会社上の責務を推測しない。
 
-Person・Employee・Employment、会社profile、ルートOrgUnit、在籍・所属・明示した責務、Account対応、監査と再送結果を同じtransactionで保存する。会社profileと確認した会社名・責務は初期化日の会社営業日から有効とし、入社日にさかのぼって現在の会社情報を補わない。ルートOrgUnitの元の期間と訂正履歴を保全する。法人の法域や通貨を推測してLegalEntityを作らない。
+Person・Employee・Employment・Assignment、会社profile、ルートOrgUnit、在籍・所属・明示した責務、Account対応、監査と再送結果を同じtransactionで保存する。会社profileと確認した会社名・責務は初期化日の会社営業日から有効とし、入社日にさかのぼって現在の会社情報を補わない。ルートOrgUnitの元の期間と訂正履歴を保全する。法人の法域や通貨を推測してLegalEntityを作らない。
 
 成功は201で`account_id`、opaque文字列の`employee_id`、`organization_revision: 3`、`replayed: false`を返す。同じ主体・入力・キーの再送は現在の認証と管理資格を検査したうえで、元の結果を200と`replayed: true`で返す。同じキーの別内容、他の初期化、既存Companyへの上書きは409で拒否する。従業員・業務履歴がない初期状態に会社名・代表者名だけが設定済みの場合は、入力が既存値と一致するときだけ初期化できる。保存に失敗した場合は全Company変更を取り消し、同じ入力とキーで再試行できる。
 
@@ -135,7 +135,7 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 
 新規Accountの作成・発行と一括登録を合成する製品向けには、同じ初期resourceを既存の登録batchへ組み込むadapterを提供する。一括登録は準備時に会社の版を一度だけ読み、各登録のcommandへ連続した版を割り当てる。別のCompany変更と競合した場合は全登録を取り消し、再試行の際に版を読み直す。
 
-会社profileは初期化時から公開resourceを正本とする。接続前の会社名・代表者名は変更せず保全し、接続後は公開APIと既存の会社情報APIが同じ履歴を参照・変更する。所属・責務・Account対応は、初期化が作る期間台帳と公開resource APIの全保存経路が統合されていない。
+会社profileは初期化時から公開resourceを正本とする。接続前の会社名・代表者名は変更せず保全し、接続後は公開APIと既存の会社情報APIが同じ履歴を参照・変更する。初期化が作る所属は公開Assignmentと同じ期間対応を保持し、人事発令と公開APIから更新できる。責務・Account対応と既存所属の全保存経路の統合は未完成である。
 
 公開resourceに未接続の既存台帳、招待からの登録、製品固有の人物情報writer、未接続の組織・所属・責務・Account対応の保存先統合は未完成である。入社・再入社の発令は`employmentType`に`FULL_TIME`または`PART_TIME`を必須とする。新規従業員登録の入力名は`employment_type`である。選択した区分を承認対象の本文、発令記録、業務台帳、公開雇用へ保存する。再入社と訂正で新しく作る契約にも明示した区分を使い、以前の契約の区分を変更しない。
 

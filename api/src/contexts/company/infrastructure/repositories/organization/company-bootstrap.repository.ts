@@ -72,15 +72,17 @@ export class CompanyBootstrapRepository {
     const snapshot = await snapshots.find(rootId)
     if (snapshot instanceof Error) return this.unavailable(snapshot)
     if (snapshot === null) return this.conflict()
+    const employeeId = crypto.randomUUID()
+    const employmentId = `employment:${crypto.randomUUID()}`
+    const assignmentPeriodId = `bootstrap-assignment:${employeeId}`
     const companyResources = await new InitialCompanyResourceJournalAdapter(this.c.env.DB).prepare(
       command,
       snapshot,
       fingerprint,
+      { employeeId, employmentId, assignmentPeriodId },
     )
     if (companyResources instanceof Error) return companyResources
-    const employeeId = crypto.randomUUID()
     const actionId = `bootstrap:employee:${employeeId}`
-    const employmentId = `employment:${crypto.randomUUID()}`
     const organizationActionId = `bootstrap:organization:${employeeId}`
     const recordedAt = write.recordedAt
     const actionRecordedAt = Math.floor(recordedAt / 1_000)
@@ -252,7 +254,7 @@ export class CompanyBootstrapRepository {
            VALUES (?1, 1, ?2, ?3, ?7, 'PRIMARY', NULL, NULL, ?4,
                    NULL, 0, ?5, ?6)`,
       ).bind(
-        `bootstrap-assignment:${employeeId}`,
+        assignmentPeriodId,
         employmentId,
         employeeId,
         write.effectiveOn,

@@ -141,34 +141,39 @@ async function createFixture() {
   return { ...c, target, input, idempotencyKey, request, submit, withdrawAuthority }
 }
 
+async function connectRoot(c: Awaited<ReturnType<typeof createFixture>>) {
+  const rootId = await c.database
+    .prepare(
+      "SELECT organization_unit_id FROM company_organization_unit_period_versions WHERE kind = 'COMPANY' LIMIT 1",
+    )
+    .first<string>("organization_unit_id")
+  if (rootId === null) throw new Error("root missing")
+  const snapshot = await new OrganizationResourceAdoptionSnapshotAdapter(c.database).find(rootId)
+  if (snapshot === null || snapshot instanceof Error) throw new Error("root history missing")
+  const adopted = await new ApplyOrganizationResourceAdoption({
+    actor: CompanyActorValue.restore({
+      ...c.creator,
+      organizationIds: ["organization:default"],
+      capabilities: ["company:admin"],
+    }),
+    repository: new OrganizationResourceAdoptionRepository({ env: c.context.env }),
+    now: c.at,
+  }).execute({
+    organizationUnitId: rootId,
+    expectedRevision: snapshot.props.value.organizationRevision ?? 0,
+    snapshotDigest: snapshot.props.digest,
+    observedOn: c.input.action.eventOn,
+    reason: "Confirm root history",
+    commandId: "approved-assignment-root",
+  })
+  expect(adopted).toMatchObject({ replayed: false })
+  return rootId
+}
+
 describe("Company公開責務による人事発令", () => {
   test("承認された役職変更を公開所属と期間台帳へ一回だけ反映する", async () => {
     const c = await createFixture()
-    const rootId = await c.database
-      .prepare(
-        "SELECT organization_unit_id FROM company_organization_unit_period_versions WHERE kind = 'COMPANY' LIMIT 1",
-      )
-      .first<string>("organization_unit_id")
-    if (rootId === null) throw new Error("root missing")
-    const snapshot = await new OrganizationResourceAdoptionSnapshotAdapter(c.database).find(rootId)
-    if (snapshot === null || snapshot instanceof Error) throw new Error("root history missing")
-    const adopted = await new ApplyOrganizationResourceAdoption({
-      actor: CompanyActorValue.restore({
-        ...c.creator,
-        organizationIds: ["organization:default"],
-        capabilities: ["company:admin"],
-      }),
-      repository: new OrganizationResourceAdoptionRepository({ env: c.context.env }),
-      now: c.at,
-    }).execute({
-      organizationUnitId: rootId,
-      expectedRevision: snapshot.props.value.organizationRevision ?? 0,
-      snapshotDigest: snapshot.props.digest,
-      observedOn: c.input.action.eventOn,
-      reason: "Confirm root history",
-      commandId: "approved-assignment-root",
-    })
-    expect(adopted).toMatchObject({ replayed: false })
+    const rootId = await connectRoot(c)
     const employmentId = await c.database
       .prepare("SELECT id FROM company_employments WHERE employee_id = ?1")
       .bind(c.target.employeeId)
@@ -364,18 +369,30 @@ describe("Company公開責務による人事発令", () => {
     ).toBe(started.proposal.bodyJson)
   })
 
-  test("承認した入社の雇用区分を一回だけ実行する", async () => {
+  test("承認した入社の雇用区分と初回所属を一回だけ公開する", async () => {
     const c = await createFixture()
+    const rootId = await connectRoot(c)
+    const rootCode = await c.database
+      .prepare(
+        "SELECT code FROM company_organization_unit_period_versions WHERE organization_unit_id = ?1 LIMIT 1",
+      )
+      .bind(rootId)
+      .first<string>("code")
+    if (rootCode === null) throw new Error("root code missing")
+    const organizationRevision = await c.database
+      .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
+      .first<number>("revision")
     const input = {
       action: {
         kind: "hire",
         employeeCode: "NEW-PT",
         employeeName: "New Part Time Employee",
         employmentType: "PART_TIME",
+        departmentCode: rootCode,
         eventOn: c.at.toISOString().slice(0, 10),
       },
       base_employee_revision: 0,
-      base_organization_revision: null,
+      base_organization_revision: organizationRevision,
     }
     const submitted = await c.request(
       0,
@@ -399,6 +416,27 @@ describe("Company公開責務による人事発令", () => {
       .prepare("SELECT id FROM company_employees WHERE employee_code = 'NEW-PT'")
       .first<{ id: string }>()
     if (employee === null) throw new Error("employee was not created")
+    const assignments = await new D1CompanyResourceRepository(c.database).findMany({
+      organizationId: "organization:default",
+      types: ["assignment"],
+      effectiveOn: c.input.action.eventOn,
+    })
+    if (!assignments.ok) throw assignments.cause
+    expect(assignments.resources.map((resource) => resource.attributes)).toEqual([
+      {
+        employeeId: employee.id,
+        employmentId: expect.any(String),
+        organizationUnitId: rootId,
+        assignmentType: "PRIMARY",
+        positionTitle: null,
+      },
+    ])
+    expect(
+      await c.database
+        .prepare("SELECT count(*) FROM company_assignment_period_bindings")
+        .first<number>("count(*)"),
+    ).toBe(1)
+
     expect(
       await c.database
         .prepare("SELECT employment_type FROM company_employments WHERE employee_id = ?1")

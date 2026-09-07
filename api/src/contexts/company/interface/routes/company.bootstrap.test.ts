@@ -24,6 +24,12 @@ import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { z } from "zod"
 import { drizzle } from "drizzle-orm/d1"
+import { DirectPersonnelActionAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/direct-personnel-action.adapter"
+import { EmployeeLifecycleAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle.adapter"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
@@ -195,6 +201,64 @@ async function fixture() {
 }
 
 describe("Company bootstrap through System authentication", () => {
+  test("会社を確認した日の組織期間境界で、最初の所属も人事発令から終了できる", async () => {
+    const f = await fixture()
+    const response = await f.post()
+    expect(Number(response.status)).toBe(201)
+    const created = responseSchema.parse(await response.json())
+    const employeeId = restoreWorkforceId("employee", created.employee_id)
+    const context: CompanyContext = {
+      env: { ...f.environment, NOW: f.clock.now.toISOString() },
+      var: {
+        database: drizzle(f.database),
+        auditContext: {
+          requestId: "bootstrap-lifecycle",
+          clientName: "api",
+          clientIp: null,
+          externalRequestId: null,
+        },
+      },
+    }
+    const revisions = await new EmployeeLifecycleAdapter(context).loadRevisions(employeeId)
+    if (revisions instanceof Error) throw revisions
+    const code = await f.database
+      .prepare(
+        "SELECT code FROM company_organization_unit_period_versions WHERE kind = 'COMPANY' LIMIT 1",
+      )
+      .first<string>("code")
+    if (code === null) throw new Error("root code missing")
+    const command = {
+      session: {
+        accountId: zAccountId.parse(created.account_id),
+        employeeId,
+        hasPermission: (permission: string) => permission === "employee:lifecycle:apply",
+      },
+      employeeId,
+      idempotencyKey: "bootstrap:end-assignment",
+      expectedEmployeeRevision: revisions.employeeRevision,
+      expectedOrganizationRevision: revisions.organizationRevision,
+      input: {
+        kind: "assignment_ended",
+        employeeCode: declaration.code,
+        eventOn: restoreCalendarDate(f.observedOn),
+        departmentCode: code,
+        assignmentType: "primary",
+      },
+    } satisfies Parameters<DirectPersonnelActionAdapter["apply"]>[0]
+    expect(await new DirectPersonnelActionAdapter(context).apply(command)).toMatchObject({
+      replayed: false,
+    })
+    expect(await new DirectPersonnelActionAdapter(context).apply(command)).toMatchObject({
+      replayed: true,
+    })
+    expect(
+      await f.database
+        .prepare(
+          "SELECT state, effective_from FROM company_resource_heads WHERE resource_type = 'assignment'",
+        )
+        .first<{ state: string; effective_from: string }>(),
+    ).toEqual({ state: "void", effective_from: f.observedOn })
+  })
   test("明示した会社文脈と雇用を公開し、元のルート履歴を保ち、会社責務を自動付与しない", async () => {
     const f = await fixture()
     const original = await f.database
@@ -210,7 +274,7 @@ describe("Company bootstrap through System authentication", () => {
     })
     expect(await f.state()).toEqual({
       employees: 1,
-      resources: 7,
+      resources: 8,
       commands: 3,
       bootstraps: 1,
       bindings: 1,
@@ -231,6 +295,21 @@ describe("Company bootstrap through System authentication", () => {
         .prepare("SELECT employment_type, hire_date FROM company_employments")
         .first<{ employment_type: string; hire_date: string }>(),
     ).toEqual({ employment_type: "PART_TIME", hire_date: declaration.hire_date })
+    expect(
+      await f.database
+        .prepare(`SELECT head.state, head.effective_from, binding.period_revision,
+      json_extract(head.attributes_json, '$.employeeId') AS employee_id,
+      json_extract(head.attributes_json, '$.organizationUnitId') AS organization_unit_id
+      FROM company_resource_heads head JOIN company_assignment_period_bindings binding ON binding.resource_id = head.resource_id
+      WHERE head.resource_type = 'assignment'`)
+        .first(),
+    ).toMatchObject({
+      state: "active",
+      effective_from: declaration.hire_date,
+      period_revision: 1,
+      employee_id: created.employee_id,
+      organization_unit_id: original?.organization_unit_id,
+    })
     const profile = await f.client.company.profile.$get(
       { header: { "x-company-organization-id": "organization:default" }, query: {} },
       { headers: f.headers },
@@ -270,6 +349,12 @@ describe("Company bootstrap through System authentication", () => {
     expect(await snapshot.json()).toMatchObject({
       resources: [
         {
+          type: "assignment",
+          revision: 1,
+          effectiveFrom: declaration.hire_date,
+          attributes: { employeeId: created.employee_id, assignmentType: "PRIMARY" },
+        },
+        {
           revision: 1,
           attributes: { officialName: declaration.organization_name, kind: "COMPANY" },
         },
@@ -307,7 +392,7 @@ describe("Company bootstrap through System authentication", () => {
     expect(Number((await f.post({ ...declaration, name: "Different" })).status)).toBe(409)
   })
 
-  test.each(["company-profile", "unit-period", "receipt"])(
+  test.each(["company-profile", "unit-period", "assignment", "assignment-binding", "receipt"])(
     "%sの保存失敗を全取消し、同じ依頼で再試行する",
     async (stage) => {
       const f = await fixture()
@@ -322,6 +407,11 @@ describe("Company bootstrap through System authentication", () => {
           "BEFORE INSERT ON company_organization_unit_period_versions WHEN NEW.revision = 2",
         ],
         ["receipt", "BEFORE INSERT ON company_bootstrap_receipts"],
+        [
+          "assignment",
+          "BEFORE INSERT ON company_resource_revisions WHEN NEW.resource_type = 'assignment'",
+        ],
+        ["assignment-binding", "BEFORE INSERT ON company_assignment_period_bindings"],
       ])
       const definition = definitions.get(stage)
       if (definition === undefined) throw new Error("stage missing")
