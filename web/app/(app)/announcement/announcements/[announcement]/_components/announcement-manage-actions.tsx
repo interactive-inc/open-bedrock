@@ -12,7 +12,7 @@ import { FieldError } from "@/components/ui/field"
 const initialState: AnnouncementActionState = { ok: false, error: null }
 
 type Props = {
-  announcementId: number
+  announcementId: string
   status: string
 }
 

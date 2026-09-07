@@ -7,7 +7,7 @@ import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   session: CompanySessionValue
-  announcementId: number
+  announcementId: string
 }
 
 /**

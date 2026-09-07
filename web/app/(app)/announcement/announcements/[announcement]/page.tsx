@@ -6,6 +6,7 @@ import { AnnouncementManageActions } from "@/app/(app)/announcement/announcement
 import { getAnnouncementDetail } from "@/lib/api/get-announcement-detail"
 import { getMe } from "@/lib/api/get-me"
 import { canManageAnnouncements } from "@/lib/announcement/can-manage-announcements"
+import { toUuidParam } from "@/lib/routing/to-uuid-param"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
 
 export const metadata = { title: "アナウンス詳細" }
@@ -14,22 +15,11 @@ type Props = {
   params: Promise<{ announcement: string }>
 }
 
-/** id 文字列を正の整数へ変換する。無効なら null。 */
-function toAnnouncementId(rawId: string): number | null {
-  const parsed = Number(rawId)
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return null
-  }
-
-  return parsed
-}
-
 /** /announcements/:id 詳細画面。本文を表示し、管理者には公開・アーカイブ操作を出す。 */
 export default async function AnnouncementDetailPage(props: Props) {
   const params = await props.params
 
-  const announcementId = toAnnouncementId(params.announcement)
+  const announcementId = toUuidParam(params.announcement)
 
   if (announcementId === null) {
     notFound()

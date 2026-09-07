@@ -1,9 +1,10 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { z } from "zod"
 
 /** 社内アナウンス一覧の 1 件。 */
 export const zAppAnnouncementListItem = z.object({
-  id: z.number(),
+  id: uuidSchema,
   title: z.string(),
   status: z.string(),
   published_on: z.string().nullable(),
@@ -19,7 +20,7 @@ export const zAppAnnouncementList = z.object({
 
 /** 社内アナウンス 1 件の詳細・作成・更新レスポンス。 */
 export const zAppAnnouncement = z.object({
-  id: z.number(),
+  id: uuidSchema,
   title: z.string(),
   body_md: z.string(),
   status: z.string(),
