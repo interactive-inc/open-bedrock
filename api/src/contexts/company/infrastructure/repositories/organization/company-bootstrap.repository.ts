@@ -14,7 +14,11 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { drizzle } from "drizzle-orm/d1"
 import { z } from "zod"
-type Context = Readonly<{ env: Readonly<{ DB: D1Database; COMPANY_TIME_ZONE?: string }> }>
+type Context = Readonly<{
+  env: Readonly<{ DB: D1Database; COMPANY_TIME_ZONE?: string }>
+  /** 合成元が解決したSystem資格などの条件を、Companyの保存と同じtransactionで照合する。 */
+  commitAssertions?: ReadonlyArray<D1PreparedStatement>
+}>
 export type CompanyBootstrapResult = Readonly<{
   employeeId: string
   organizationRevision: number
@@ -126,6 +130,7 @@ export class CompanyBootstrapRepository {
     if (initialResources instanceof Error) return initialResources
 
     const statements: D1PreparedStatement[] = [
+      ...(this.c.commitAssertions ?? []),
       snapshots.prepareGuard(snapshot),
       this.c.env.DB.prepare(`SELECT CASE WHEN
         NOT EXISTS (SELECT 1 FROM company_employees) AND
