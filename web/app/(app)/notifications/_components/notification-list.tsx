@@ -86,11 +86,9 @@ export function NotificationList(props: Props) {
                     </Link>
                   ) : null}
 
-                  {notification.is_read ? (
-                    <Badge variant="outline">既読</Badge>
-                  ) : (
-                    <Badge>未読</Badge>
-                  )}
+                  <Button type="button" variant="secondary" size="sm">
+                    {notification.is_read ? "既読" : "未読"}
+                  </Button>
                 </div>
 
                 <span className="text-xs text-muted-foreground">
