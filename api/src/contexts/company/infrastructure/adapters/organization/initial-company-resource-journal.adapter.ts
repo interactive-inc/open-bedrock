@@ -17,6 +17,7 @@ export class InitialCompanyResourceJournalAdapter {
     command: CompanyBootstrapEntity,
     snapshot: OrganizationResourceAdoptionSnapshotValue,
     fingerprint: string,
+    workforce: Readonly<{ employeeId: string; employmentId: string; assignmentPeriodId: string }>,
   ) {
     const source = snapshot.props.value
     const root = source.periods[0]
@@ -94,6 +95,22 @@ export class InitialCompanyResourceJournalAdapter {
         currentRoot,
         {
           organizationId: "organization:default",
+          type: "assignment",
+          id: `assignment:${workforce.assignmentPeriodId}`,
+          revision: 1,
+          state: "active",
+          effectiveFrom: restoreCalendarDate(write.effectiveOn),
+          effectiveTo: null,
+          attributes: {
+            employeeId: workforce.employeeId,
+            employmentId: workforce.employmentId,
+            organizationUnitId: root.organizationUnitId,
+            assignmentType: "PRIMARY",
+            positionTitle: null,
+          },
+        },
+        {
+          organizationId: "organization:default",
           type: "company-profile",
           id: "company-profile:default",
           revision: 1,
@@ -129,7 +146,23 @@ export class InitialCompanyResourceJournalAdapter {
           .bind(root.organizationUnitId, write.recordedAt),
         beginning.commit,
       ],
-      completion: [...completion.statements, completion.commit],
+      completion: [
+        ...completion.statements,
+        this.c
+          .prepare(`INSERT INTO company_assignment_resource_bindings
+          (resource_id, organization_id, employee_id, resource_revision, recorded_at)
+          VALUES (?1, 'organization:default', ?2, 1, ?3)`)
+          .bind(
+            `assignment:${workforce.assignmentPeriodId}`,
+            workforce.employeeId,
+            write.recordedAt,
+          ),
+        this.c
+          .prepare(`INSERT INTO company_assignment_period_bindings
+          (period_id, resource_id, period_revision, source_revision) VALUES (?1, ?2, 1, 1)`)
+          .bind(workforce.assignmentPeriodId, `assignment:${workforce.assignmentPeriodId}`),
+        completion.commit,
+      ],
     }
   }
 }

@@ -138,9 +138,13 @@ function department(
         date < candidate.endsOn ||
         (!requireActive && date === candidate.endsOn)),
   )
-  if (references.length !== 1 || references[0] === undefined)
+  const active = references.filter(
+    (candidate) => candidate.endsOn === null || date < candidate.endsOn,
+  )
+  const candidates = active.length === 0 ? references : active
+  if (candidates.length !== 1 || candidates[0] === undefined)
     return new CompanyConflictError("利用できない部署が指定されています", "department_not_active")
-  return references[0]
+  return candidates[0]
 }
 
 function employeeId(
@@ -178,14 +182,14 @@ function employmentAt(
 function assignmentAt(
   context: ProjectionContext,
   date: string,
-  departmentCode: string,
+  organizationUnitId: OrganizationUnitId,
   assignmentType: "primary" | "concurrent",
 ): OrgAssignmentPeriod | CompanyOperationError {
   return (
     context.schedule.assignments.find(
       (period) =>
         period.employeeId === context.command.employeeId &&
-        period.departmentCode === departmentCode &&
+        period.organizationUnitId === organizationUnitId &&
         period.assignmentType === assignmentType &&
         containsDate(period, date),
     ) ?? transitionError("対象日に有効な所属期間がありません")
@@ -381,17 +385,19 @@ function projectAssignmentEnd(
   context: ProjectionContext,
   input: Extract<PersonnelActionInput, { kind: "assignment_ended" }>,
 ): PersonnelActionSummary | CompanyOperationError {
-  const current = assignmentAt(context, input.eventOn, input.departmentCode, input.assignmentType)
-
-  if (current instanceof CompanyOperationError) {
-    return current
-  }
-
   const departmentReference = department(context, input.departmentCode, false)
 
   if (departmentReference instanceof CompanyOperationError) {
     return departmentReference
   }
+
+  const current = assignmentAt(
+    context,
+    input.eventOn,
+    departmentReference.organizationUnitId,
+    input.assignmentType,
+  )
+  if (current instanceof CompanyOperationError) return current
 
   closePeriod(context, "assignment", current, input.eventOn)
   return personnelActionSummarySchema.parse({
@@ -406,12 +412,6 @@ function projectAssignmentAttributeChange(
   context: ProjectionContext,
   input: Extract<PersonnelActionInput, { kind: "position_changed" | "manager_changed" }>,
 ): PersonnelActionSummary | CompanyOperationError {
-  const current = assignmentAt(context, input.eventOn, input.departmentCode, input.assignmentType)
-
-  if (current instanceof CompanyOperationError) {
-    return current
-  }
-
   const employment = employmentAt(context, input.eventOn)
 
   if (employment instanceof CompanyOperationError) {
@@ -423,6 +423,14 @@ function projectAssignmentAttributeChange(
   if (departmentReference instanceof CompanyOperationError) {
     return departmentReference
   }
+
+  const current = assignmentAt(
+    context,
+    input.eventOn,
+    departmentReference.organizationUnitId,
+    input.assignmentType,
+  )
+  if (current instanceof CompanyOperationError) return current
 
   const nextManagerId =
     input.kind === "manager_changed"
@@ -438,7 +446,7 @@ function projectAssignmentAttributeChange(
     employment,
     startsOn: input.eventOn,
     endsOn: current.endsOn,
-    departmentCode: current.departmentCode,
+    departmentCode: departmentReference.code,
     organizationUnitId: current.organizationUnitId,
     assignmentType: current.assignmentType,
     positionTitle: input.kind === "position_changed" ? input.positionTitle : current.positionTitle,
@@ -540,7 +548,7 @@ function projectResponsibility(
     const current = context.schedule.responsibilities.find(
       (period) =>
         period.employeeId === context.command.employeeId &&
-        period.departmentCode === input.departmentCode &&
+        period.organizationUnitId === departmentReference.organizationUnitId &&
         containsDate(period, input.eventOn),
     )
 
