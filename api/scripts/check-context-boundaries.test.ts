@@ -28,6 +28,8 @@ describe("API root structure", () => {
     expect(inspectApiRootPath("src/api/database-middleware.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/route-module.registry.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/http/dashboard/get-dashboard.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/scheduled/run-onboarding.ts")).toEqual([])
+    expect(inspectApiRootPath("src/api/scheduled/domain/entity.ts")).not.toEqual([])
     expect(inspectApiRootPath("src/api/error-response/handle-api-error.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/routes/inbox/counts/route.ts")).toEqual([])
     expect(inspectApiRootPath("src/api/test/app.test.ts")).not.toEqual([])

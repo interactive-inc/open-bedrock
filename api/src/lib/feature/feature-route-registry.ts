@@ -4,6 +4,7 @@
  * ここに無いルート（システム層・company）はゲート対象外で常に有効。
  */
 export const optInAppRoutePrefixes: Readonly<Record<string, ReadonlyArray<string>>> = {
+  onboarding: ["/onboarding"],
   "one-on-ones": ["/one-on-one/one-on-ones"],
   thanks: [
     "/thanks/thanks-messages",

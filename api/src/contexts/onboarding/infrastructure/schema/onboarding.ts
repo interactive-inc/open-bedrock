@@ -1,7 +1,17 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
-import { integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import {
+  check,
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core"
+import { personnelActions } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
+import { systemJobs } from "@system/infrastructure/schema/system-delivery"
 
 /** 入社/退職手続きのテンプレート（チェックリストの雛形） */
 export const onboardingTemplates = sqliteTable("onboarding_templates", {
@@ -39,9 +49,13 @@ export const onboardingAssignments = sqliteTable(
     kind: text("kind").notNull(),
     status: text("status").notNull(),
     assignedAt: text("assigned_at").notNull(),
+    lifecycleActionId: text("lifecycle_action_id").references(() => personnelActions.id, {
+      onDelete: "restrict",
+    }),
   },
   // 同一社員・同一テンプレートで未完了の割当は 1 件まで（重複割当を防ぐ）。
   (table) => [
+    uniqueIndex("onboarding_assignments_lifecycle_action_uniq").on(table.lifecycleActionId),
     uniqueIndex("uq_onboarding_assignments_employee_template")
       .on(table.employeeId, table.templateCode)
       .where(sql`status != 'completed'`),
@@ -62,3 +76,36 @@ export const onboardingTasks = sqliteTable("onboarding_tasks", {
 })
 
 export type OnboardingTaskRow = InferSelectModel<typeof onboardingTasks>
+
+export const onboardingLifecycleDeliveries = sqliteTable(
+  "onboarding_lifecycle_deliveries",
+  {
+    jobId: text("job_id")
+      .primaryKey()
+      .notNull()
+      .references(() => systemJobs.id, { onDelete: "restrict" }),
+    actionId: text("action_id")
+      .notNull()
+      .references(() => personnelActions.id, { onDelete: "restrict" }),
+    createdAt: integer("created_at").notNull(),
+    outcome: text("outcome", { enum: ["assigned", "superseded", "obsolete"] }),
+    assignmentId: integer("assignment_id").references(() => onboardingAssignments.id, {
+      onDelete: "restrict",
+    }),
+    processedAt: integer("processed_at"),
+  },
+  (table) => [
+    index("onboarding_lifecycle_deliveries_action_idx").on(table.actionId, table.createdAt),
+    check("onboarding_lifecycle_delivery_created_at", sql`${table.createdAt} >= 0`),
+    check(
+      "onboarding_lifecycle_delivery_processed_at",
+      sql`${table.processedAt} IS NULL OR ${table.processedAt} >= ${table.createdAt}`,
+    ),
+    check(
+      "onboarding_lifecycle_delivery_outcome",
+      sql`(${table.outcome} IS NULL AND ${table.processedAt} IS NULL AND ${table.assignmentId} IS NULL)
+    OR (${table.outcome} IS NOT NULL AND ${table.outcome} = 'assigned' AND ${table.processedAt} IS NOT NULL AND ${table.assignmentId} IS NOT NULL)
+    OR (${table.outcome} IS NOT NULL AND ${table.outcome} IN ('superseded', 'obsolete') AND ${table.processedAt} IS NOT NULL AND ${table.assignmentId} IS NULL)`,
+    ),
+  ],
+)

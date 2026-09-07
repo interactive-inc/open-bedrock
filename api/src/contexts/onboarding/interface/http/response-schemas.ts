@@ -59,3 +59,23 @@ export const zAppOnboardingAssignmentList = z.object({
   data: z.array(zAppOnboardingAssignment),
   total: z.number(),
 })
+
+/** 入退社の配送状態と受領結果。時刻はUnixミリ秒。 */
+export const zAppOnboardingLifecycleDeliveryList = z.object({
+  data: z.array(
+    z.object({
+      job_id: z.string(),
+      action_id: z.string(),
+      outcome: z.enum(["assigned", "superseded", "obsolete"]).nullable(),
+      assignment_id: z.number().int().nullable(),
+      processed_at: z.number().int().nullable(),
+      status: z.enum(["queued", "leased", "succeeded", "dead_letter"]),
+      attempt: z.number().int(),
+      max_attempts: z.number().int(),
+      available_at: z.number().int(),
+      last_error_code: z.string().nullable(),
+      dead_letter_id: z.string().nullable(),
+      requeued_job_id: z.string().nullable(),
+    }),
+  ),
+})
