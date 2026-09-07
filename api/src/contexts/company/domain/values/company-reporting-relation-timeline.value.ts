@@ -78,18 +78,23 @@ export class CompanyReportingRelationTimelineValue {
     }
   }
 
-  hasManagementCycle(): boolean {
+  readPeriods(): ReadonlyArray<OrganizationRelation> {
+    return this.relations
+  }
+
+  hasManagementCycle(additional: ReadonlyArray<OrganizationRelation> = []): boolean {
+    const relations = [...this.relations, ...additional]
     const boundaries = new Set(
-      this.relations.flatMap((relation) =>
+      relations.flatMap((relation) =>
         relation.endsOn === null ? [relation.startsOn] : [relation.startsOn, relation.endsOn],
       ),
     )
-    return [...boundaries].some((date) => this.hasCycleAt(date))
+    return [...boundaries].some((date) => this.hasCycleAt(date, relations))
   }
 
-  private hasCycleAt(date: string): boolean {
+  private hasCycleAt(date: string, relations: ReadonlyArray<OrganizationRelation>): boolean {
     const managersByEmployee = new Map<string, string[]>()
-    for (const relation of this.relations) {
+    for (const relation of relations) {
       if (relation.startsOn <= date && (relation.endsOn === null || date < relation.endsOn)) {
         const managers = managersByEmployee.get(relation.employeeId) ?? []
         managers.push(relation.managerEmployeeId)

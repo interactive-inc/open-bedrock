@@ -18,6 +18,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import { ResolveCanonicalOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/workforce/resolve-canonical-organization-authority.adapter"
 
 async function fixture() {
   const base = await createGovernanceTaskTestContext()
@@ -144,12 +145,12 @@ async function fixture() {
       input,
     })
   }
-  const assignEmployeeCode = async () => {
+  const assignEmployeeCode = async (targetId = employeeId, code = "EMPLOYEE-001") => {
     const head = await base.database
-      .prepare(`SELECT revision, attributes_json FROM company_resource_heads
+      .prepare(`SELECT revision, attributes_json, effective_from FROM company_resource_heads
       WHERE organization_id = 'organization:default' AND resource_type = 'employee' AND resource_id = ?1`)
-      .bind(employeeId)
-      .first<{ revision: number; attributes_json: string }>()
+      .bind(targetId)
+      .first<{ revision: number; attributes_json: string; effective_from: string }>()
     if (head === null) throw new Error("employee resource missing")
     const attributes = z.object({ personId: z.string() }).parse(JSON.parse(head.attributes_json))
     const revision = await base.database
@@ -160,7 +161,7 @@ async function fixture() {
         (
           await client.employees.$post({
             header: {
-              "idempotency-key": "employee-code",
+              "idempotency-key": `employee-code:${code}`,
               "if-match": String(revision),
               "x-company-organization-id": "organization:default",
             },
@@ -170,12 +171,12 @@ async function fixture() {
                 {
                   organizationId: "organization:default",
                   type: "employee",
-                  id: employeeId,
+                  id: targetId,
                   revision: head.revision + 1,
                   state: "active",
-                  effectiveFrom: "2030-01-01",
+                  effectiveFrom: head.effective_from,
                   effectiveTo: null,
-                  attributes: { ...attributes, employeeCode: "EMPLOYEE-001" },
+                  attributes: { ...attributes, employeeCode: code },
                 },
               ],
             },
@@ -195,6 +196,15 @@ async function fixture() {
     const snapshot = await new D1CompanyResourceRepository(base.database).findMany({
       organizationId: "organization:default",
       types: ["assignment"],
+      effectiveOn: restoreCalendarDate(date),
+    })
+    if (!snapshot.ok) throw snapshot.cause
+    return snapshot.resources
+  }
+  const publicReporting = async (date: string) => {
+    const snapshot = await new D1CompanyResourceRepository(base.database).findMany({
+      organizationId: "organization:default",
+      types: ["reporting-relation"],
       effectiveOn: restoreCalendarDate(date),
     })
     if (!snapshot.ok) throw snapshot.cause
@@ -247,11 +257,608 @@ async function fixture() {
     assignEmployeeCode,
     companyRevision,
     publicAssignments,
+    publicReporting,
     initializeAssignment,
   }
 }
 
 describe("公開Assignmentと業務の所属期間", () => {
+  test("同じ組織の主務と兼務は別の直属上長を持ち、兼務終了では主務の上長を残す", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
+    await f.assignEmployeeCode(f.people[2]!.employeeId, "MANAGER-002")
+    expect(
+      await f.personnel(
+        {
+          kind: "manager_changed",
+          employeeCode: "EMPLOYEE-001",
+          eventOn: restoreCalendarDate("2030-03-01"),
+          departmentCode: "TEAM",
+          assignmentType: "primary",
+          managerEmployeeCode: "MANAGER-001",
+        },
+        "reporting:primary-line",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(
+      await f.personnel(
+        {
+          kind: "concurrent_assignment_started",
+          employeeCode: "EMPLOYEE-001",
+          eventOn: restoreCalendarDate("2030-04-01"),
+          departmentCode: "TEAM",
+          positionTitle: "Reviewer",
+          managerEmployeeCode: "MANAGER-002",
+        },
+        "reporting:concurrent-line",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(
+      (await f.publicReporting("2030-04-01"))
+        .map((resource) => resource.readText("managerEmployeeId"))
+        .toSorted((left, right) => (left ?? "").localeCompare(right ?? "")),
+    ).toEqual([f.people[1]!.employeeId, f.people[2]!.employeeId].toSorted())
+    expect(
+      await f.personnel(
+        {
+          kind: "assignment_ended",
+          employeeCode: "EMPLOYEE-001",
+          eventOn: restoreCalendarDate("2030-05-01"),
+          departmentCode: "TEAM",
+          assignmentType: "concurrent",
+        },
+        "reporting:concurrent-end",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(
+      (await f.publicReporting("2030-05-01")).map((resource) =>
+        resource.readText("managerEmployeeId"),
+      ),
+    ).toEqual([f.people[1]!.employeeId])
+  })
+
+  test("未接続所属の上長を役職変更で引き継ぎ、退職と再入社は別の雇用の関係にする", async () => {
+    const f = await fixture()
+    await f.assignEmployeeCode()
+    await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
+    const revision = await f.database
+      .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
+      .first<number>("revision")
+    const code = await f.database
+      .prepare(
+        "SELECT code FROM company_organization_unit_period_versions WHERE organization_unit_id = ?1 LIMIT 1",
+      )
+      .bind(f.root.id)
+      .first<string>("code")
+    if (revision === null || code === null) throw new Error("organization missing")
+    await f.database.batch([
+      f.database
+        .prepare(`INSERT INTO company_organization_change_operations
+        (id, expected_revision, change_count, applied_count, resulting_revision, status, recorded_at)
+        VALUES ('legacy:manager', ?1, 1, 0, ?1 + 1, 'PENDING', 0)`)
+        .bind(revision),
+      f.database
+        .prepare(`INSERT INTO company_organization_assignment_period_versions
+        (period_id, revision, employment_id, employee_id, organization_unit_id, assignment_type, position_title,
+          manager_employee_id, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
+        VALUES ('assignment:legacy-manager', 1, ?1, ?2, ?3, 'PRIMARY', 'Coordinator', ?4, '2030-01-01', NULL, 0, 'legacy:manager', 0)`)
+        .bind(
+          f.assignment.attributes.employmentId,
+          f.people[0]!.employeeId,
+          f.root.id,
+          f.people[1]!.employeeId,
+        ),
+      f.database.prepare(
+        "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = 'legacy:manager'",
+      ),
+    ])
+    expect(
+      await f.personnel(
+        {
+          kind: "position_changed",
+          employeeCode: "EMPLOYEE-001",
+          eventOn: restoreCalendarDate("2030-03-01"),
+          departmentCode: code,
+          assignmentType: "primary",
+          positionTitle: "Lead",
+          changeType: "promotion",
+        },
+        "reporting:legacy-position",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(await f.publicReporting("2030-02-28")).toEqual([])
+    const first = (await f.publicReporting("2030-03-01"))[0]!
+    expect(first.readText("managerEmployeeId")).toBe(f.people[1]!.employeeId)
+    const beforeBackdate = await f.persisted()
+    expect(
+      Number(
+        (
+          await f.write(
+            [
+              {
+                organizationId: "organization:default",
+                type: "reporting-relation",
+                id: first.id,
+                revision: first.revision + 1,
+                state: "active",
+                effectiveFrom: "2030-01-01",
+                effectiveTo: null,
+                attributes: {
+                  employeeId: f.people[0]!.employeeId,
+                  managerEmployeeId: f.people[1]!.employeeId,
+                  organizationUnitId: f.root.id,
+                },
+              },
+            ],
+            await f.companyRevision(),
+            "reporting:unadopted-past",
+          )
+        ).status,
+      ),
+    ).toBe(422)
+    expect(await f.persisted()).toEqual(beforeBackdate)
+    expect(
+      await f.database
+        .prepare(
+          "SELECT manager_employee_id, ends_on FROM company_organization_assignment_period_versions WHERE period_id = 'assignment:legacy-manager' ORDER BY revision DESC LIMIT 1",
+        )
+        .first<{ manager_employee_id: string; ends_on: string }>(),
+    ).toEqual({ manager_employee_id: f.people[1]!.employeeId, ends_on: "2030-03-01" })
+    expect(
+      await f.personnel(
+        {
+          kind: "retired",
+          employeeCode: "EMPLOYEE-001",
+          retirementOn: restoreCalendarDate("2030-06-30"),
+        },
+        "reporting:legacy-retire",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(
+      await f.personnel(
+        {
+          kind: "rehire",
+          employeeCode: "EMPLOYEE-001",
+          eventOn: restoreCalendarDate("2030-09-01"),
+          employmentType: "PART_TIME",
+          departmentCode: code,
+          managerEmployeeCode: "MANAGER-001",
+          positionTitle: "Coordinator",
+        },
+        "reporting:legacy-rehire",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(await f.publicReporting("2030-08-01")).toEqual([])
+    const second = (await f.publicReporting("2030-09-01"))[0]!
+    expect(second.id).not.toBe(first.id)
+    expect(second.readText("managerEmployeeId")).toBe(f.people[1]!.employeeId)
+    expect(
+      await f.database
+        .prepare(
+          "SELECT count(DISTINCT employment_id) AS count FROM company_personnel_reporting_bindings",
+        )
+        .first<number>("count"),
+    ).toBe(2)
+  })
+
+  test("公開APIでも上長だけを所属期間外へ残せず、所属と上長の同時終了は確定できる", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
+    expect(
+      await f.personnel(
+        {
+          kind: "manager_changed",
+          employeeCode: "EMPLOYEE-001",
+          eventOn: restoreCalendarDate("2030-03-01"),
+          departmentCode: "TEAM",
+          assignmentType: "primary",
+          managerEmployeeCode: "MANAGER-001",
+        },
+        "reporting:coverage",
+      ),
+    ).toMatchObject({ replayed: false })
+    const assignment = (await f.publicAssignments("2030-04-01"))[0]!
+    const reporting = (await f.publicReporting("2030-04-01"))[0]!
+    const end = {
+      ...f.assignment,
+      id: assignment.id,
+      revision: assignment.revision + 1,
+      effectiveFrom: assignment.effectiveFrom,
+      effectiveTo: "2030-06-01",
+      attributes: { ...f.assignment.attributes, organizationUnitId: "unit:journal" },
+    }
+    const before = await f.persisted()
+    expect(
+      Number((await f.write([end], await f.companyRevision(), "reporting:uncovered-end")).status),
+    ).toBe(422)
+    expect(await f.persisted()).toEqual(before)
+    const relation = {
+      organizationId: "organization:default",
+      type: "reporting-relation",
+      id: reporting.id,
+      revision: reporting.revision + 1,
+      state: "active",
+      effectiveFrom: reporting.effectiveFrom,
+      effectiveTo: "2030-06-01",
+      attributes: {
+        employeeId: f.people[0]!.employeeId,
+        managerEmployeeId: f.people[1]!.employeeId,
+        organizationUnitId: "unit:journal",
+      },
+    } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
+    expect(
+      Number(
+        (await f.write([end, relation], await f.companyRevision(), "reporting:covered-end")).status,
+      ),
+    ).toBe(201)
+    expect(await f.publicAssignments("2030-06-01")).toEqual([])
+    expect(await f.publicReporting("2030-06-01")).toEqual([])
+    const saved = await f.persisted()
+    expect(
+      Number(
+        (
+          await f.write(
+            [{ ...relation, revision: relation.revision + 1, effectiveTo: null }],
+            await f.companyRevision(),
+            "reporting:outside-assignment",
+          )
+        ).status,
+      ),
+    ).toBe(422)
+    expect(await f.persisted()).toEqual(saved)
+    expect(
+      Number(
+        (
+          await f.write(
+            [
+              {
+                ...relation,
+                revision: relation.revision + 1,
+                attributes: { ...relation.attributes, employeeId: f.people[2]!.employeeId },
+              },
+            ],
+            await f.companyRevision(),
+            "reporting:change-owner",
+          )
+        ).status,
+      ),
+    ).toBe(422)
+    expect(await f.persisted()).toEqual(saved)
+  })
+
+  test("公開APIの将来上長を発令で保全し、後続の公開編集がある訂正を拒否する", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    for (const index of [1, 2, 3])
+      await f.assignEmployeeCode(f.people[index]!.employeeId, `MANAGER-00${index}`)
+    const input = {
+      kind: "manager_changed",
+      employeeCode: "EMPLOYEE-001",
+      eventOn: restoreCalendarDate("2030-03-01"),
+      departmentCode: "TEAM",
+      assignmentType: "primary",
+      managerEmployeeCode: "MANAGER-001",
+    } satisfies PersonnelActionInput
+    expect(await f.personnel(input, "reporting:initial")).toMatchObject({ replayed: false })
+    const first = (await f.publicReporting("2030-03-01"))[0]!
+    const future = {
+      organizationId: "organization:default",
+      type: "reporting-relation",
+      id: first.id,
+      revision: first.revision + 1,
+      state: "active",
+      effectiveFrom: "2030-07-01",
+      effectiveTo: null,
+      attributes: {
+        employeeId: f.people[0]!.employeeId,
+        managerEmployeeId: f.people[2]!.employeeId,
+        organizationUnitId: "unit:journal",
+      },
+    } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
+    expect(
+      Number((await f.write([future], await f.companyRevision(), "reporting:future")).status),
+    ).toBe(201)
+    const current = await f.personnel(
+      { ...input, eventOn: restoreCalendarDate("2030-04-01"), managerEmployeeCode: "MANAGER-003" },
+      "reporting:current",
+    )
+    if (current instanceof Error) throw current
+    expect(current.action.summary).toMatchObject({
+      previousManagerEmployeeCode: "MANAGER-001",
+      managerEmployeeCode: "MANAGER-003",
+    })
+    for (const [date, index] of [
+      ["2030-03-31", 1],
+      ["2030-04-01", 3],
+      ["2030-07-01", 2],
+    ] satisfies Array<[string, number]>) {
+      expect(
+        (await f.publicReporting(date)).map((resource) => resource.readText("managerEmployeeId")),
+      ).toEqual([f.people[index]!.employeeId])
+    }
+    const head = await f.database
+      .prepare(
+        "SELECT revision FROM company_resource_heads WHERE resource_type = 'reporting-relation' AND resource_id = ?1",
+      )
+      .bind(first.id)
+      .first<number>("revision")
+    if (head === null) throw new Error("reporting head missing")
+    expect(
+      Number(
+        (
+          await f.write(
+            [{ ...future, revision: head + 1, effectiveFrom: "2030-05-01" }],
+            await f.companyRevision(),
+            "reporting:external-edit",
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    const before = await f.persisted()
+    expect(
+      await f.personnel(
+        {
+          kind: "corrected",
+          correctsActionId: current.action.id,
+          eventOn: restoreCalendarDate("2030-06-01"),
+          reason: "Correct earlier manager",
+          replacementAction: { ...input, eventOn: restoreCalendarDate("2030-04-15") },
+        },
+        "reporting:conflicting-correction",
+      ),
+    ).toMatchObject({ code: "personnel_action_stale" })
+    expect(await f.persisted()).toEqual(before)
+  })
+
+  test("同じ直属上長への競合は一方だけ確定し、再試行と再送で履歴を重複させない", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
+    await f.assignEmployeeCode(f.people[2]!.employeeId, "MANAGER-002")
+    const inputs = ["MANAGER-001", "MANAGER-002"].map(
+      (managerEmployeeCode) =>
+        ({
+          kind: "manager_changed",
+          employeeCode: "EMPLOYEE-001",
+          eventOn: restoreCalendarDate("2030-03-01"),
+          departmentCode: "TEAM",
+          assignmentType: "primary",
+          managerEmployeeCode,
+        }) satisfies PersonnelActionInput,
+    )
+    const results = await Promise.all(
+      inputs.map((input, index) => f.personnel(input, `reporting:race:${index}`)),
+    )
+    expect(results.filter((result) => !(result instanceof Error))).toHaveLength(1)
+    const rejected = results.findIndex((result) => result instanceof Error)
+    expect(await f.personnel(inputs[rejected]!, `reporting:race:${rejected}`)).toMatchObject({
+      replayed: false,
+    })
+    const applied = await f.persisted()
+    expect(await f.personnel(inputs[rejected]!, `reporting:race:${rejected}`)).toMatchObject({
+      replayed: true,
+    })
+    expect(await f.persisted()).toEqual(applied)
+    expect(
+      (await f.publicReporting("2030-03-01")).map((resource) =>
+        resource.readText("managerEmployeeId"),
+      ),
+    ).toEqual([f.people[rejected + 1]!.employeeId])
+    expect(
+      await f.database
+        .prepare("SELECT count(*) AS count FROM company_personnel_reporting_bindings")
+        .first<number>("count"),
+    ).toBe(1)
+  })
+
+  test("上長変更を公開履歴へ保存し、役職変更と独立した複数上長を保全する", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    const manager = f.people[1]!
+    const additional = f.people[2]!
+    await f.assignEmployeeCode(manager.employeeId, "MANAGER-001")
+    const input = {
+      kind: "manager_changed",
+      employeeCode: "EMPLOYEE-001",
+      eventOn: restoreCalendarDate("2030-03-01"),
+      departmentCode: "TEAM",
+      assignmentType: "primary",
+      managerEmployeeCode: "MANAGER-001",
+    } satisfies PersonnelActionInput
+    const before = await f.persisted()
+    await f.database.exec(
+      "CREATE TRIGGER reject_reporting_binding BEFORE INSERT ON company_personnel_reporting_bindings BEGIN SELECT RAISE(ABORT, 'injected reporting binding failure'); END;",
+    )
+    expect(await f.personnel(input, "reporting:start")).toBeInstanceOf(Error)
+    expect(await f.persisted()).toEqual(before)
+    await f.database.exec("DROP TRIGGER reject_reporting_binding")
+    expect(await f.personnel(input, "reporting:start")).toMatchObject({ replayed: false })
+    const saved = await f.persisted()
+    expect(await f.personnel(input, "reporting:start")).toMatchObject({ replayed: true })
+    expect(await f.persisted()).toEqual(saved)
+    expect(await f.publicReporting("2030-02-28")).toEqual([])
+    const relation = (await f.publicReporting("2030-03-01"))[0]!
+    expect(relation.readText("managerEmployeeId")).toBe(manager.employeeId)
+    expect(
+      Number(
+        (
+          await f.write(
+            [
+              {
+                organizationId: "organization:default",
+                type: "reporting-relation",
+                id: "reporting:independent",
+                revision: 1,
+                state: "active",
+                effectiveFrom: "2030-01-01",
+                effectiveTo: null,
+                attributes: {
+                  employeeId: f.people[0]!.employeeId,
+                  managerEmployeeId: additional.employeeId,
+                  organizationUnitId: "unit:journal",
+                },
+              },
+            ],
+            await f.companyRevision(),
+            "reporting:independent",
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    expect(
+      await f.personnel(
+        {
+          kind: "position_changed",
+          employeeCode: "EMPLOYEE-001",
+          eventOn: restoreCalendarDate("2030-04-01"),
+          departmentCode: "TEAM",
+          assignmentType: "primary",
+          positionTitle: "Lead",
+          changeType: "promotion",
+        },
+        "reporting:position",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(
+      (await f.publicReporting("2030-04-01"))
+        .map((resource) => resource.readText("managerEmployeeId"))
+        .sort((left, right) => (left ?? "").localeCompare(right ?? "")),
+    ).toEqual([manager.employeeId, additional.employeeId].sort())
+    const resolution = await new ResolveCanonicalOrganizationAuthorityAdapter({
+      c: f.context,
+      subjectEmployeeId: f.people[0]!.employeeId,
+      criteria: [{ kind: "direct_manager" }],
+      employeeRows: f.people.map((person) => ({ id: person.employeeId, code: null })),
+      targetDepartmentCode: null,
+      asOf: "2030-04-01",
+    }).resolveCanonicalOrganizationAuthority()
+    if (resolution instanceof Error) throw resolution
+    expect(resolution.candidates.map((candidate) => candidate.employeeId).sort()).toEqual(
+      [manager.employeeId, additional.employeeId].sort(),
+    )
+    expect(
+      await f.database
+        .prepare(
+          "SELECT count(*) AS count FROM company_organization_assignment_period_versions WHERE manager_employee_id IS NOT NULL",
+        )
+        .first<number>("count"),
+    ).toBe(0)
+  })
+
+  test("上長変更の訂正で発効前を復元し、退職で対応する指揮命令を終了する", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
+    const input = {
+      kind: "manager_changed",
+      employeeCode: "EMPLOYEE-001",
+      eventOn: restoreCalendarDate("2030-03-01"),
+      departmentCode: "TEAM",
+      assignmentType: "primary",
+      managerEmployeeCode: "MANAGER-001",
+    } satisfies PersonnelActionInput
+    const original = await f.personnel(input, "reporting:original")
+    if (original instanceof Error) throw original
+    const corrected = await f.personnel(
+      {
+        kind: "corrected",
+        correctsActionId: original.action.id,
+        eventOn: restoreCalendarDate("2030-06-01"),
+        reason: "Correct manager effective date",
+        replacementAction: { ...input, eventOn: restoreCalendarDate("2030-04-01") },
+      },
+      "reporting:correct",
+    )
+    if (corrected instanceof Error) throw corrected
+    expect(corrected).toMatchObject({ replayed: false })
+    expect(await f.publicReporting("2030-03-15")).toEqual([])
+    expect(
+      (await f.publicReporting("2030-04-01")).map((resource) =>
+        resource.readText("managerEmployeeId"),
+      ),
+    ).toEqual([f.people[1]!.employeeId])
+    expect(
+      await f.personnel(
+        {
+          kind: "retired",
+          employeeCode: "EMPLOYEE-001",
+          retirementOn: restoreCalendarDate("2030-06-30"),
+        },
+        "reporting:retire",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(await f.publicReporting("2030-06-30")).toHaveLength(1)
+    expect(await f.publicReporting("2030-07-01")).toEqual([])
+  })
+
+  test("公開履歴の過去と発令後の上長を合わせた循環を拒否し、履歴読取失敗も巻き戻す", async () => {
+    const f = await fixture()
+    await f.initializeAssignment()
+    await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
+    const backward = {
+      organizationId: "organization:default",
+      type: "reporting-relation",
+      id: "reporting:backward",
+      revision: 1,
+      state: "active",
+      effectiveFrom: "2030-01-01",
+      effectiveTo: null,
+      attributes: {
+        employeeId: f.people[1]!.employeeId,
+        managerEmployeeId: f.people[0]!.employeeId,
+        organizationUnitId: "unit:journal",
+      },
+    } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
+    expect(
+      Number((await f.write([backward], await f.companyRevision(), "reporting:backward")).status),
+    ).toBe(201)
+    expect(
+      Number(
+        (
+          await f.write(
+            [{ ...backward, revision: 2, state: "void", effectiveFrom: "2030-07-01" }],
+            await f.companyRevision(),
+            "reporting:future-end",
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    const input = {
+      kind: "manager_changed",
+      employeeCode: "EMPLOYEE-001",
+      eventOn: restoreCalendarDate("2030-03-01"),
+      departmentCode: "TEAM",
+      assignmentType: "primary",
+      managerEmployeeCode: "MANAGER-001",
+    } satisfies PersonnelActionInput
+    const before = await f.persisted()
+    expect(await f.personnel(input, "reporting:cycle")).toBeInstanceOf(Error)
+    expect(await f.persisted()).toEqual(before)
+    const reader = spyOn(
+      D1CompanyResourceRepository.prototype,
+      "findReportingRelationHistory",
+    ).mockResolvedValue(new Error("injected reporting read failure"))
+    try {
+      expect(
+        await f.personnel(
+          { ...input, eventOn: restoreCalendarDate("2030-08-01") },
+          "reporting:retry",
+        ),
+      ).toBeInstanceOf(Error)
+      expect(await f.persisted()).toEqual(before)
+    } finally {
+      reader.mockRestore()
+    }
+    expect(
+      await f.personnel(
+        { ...input, eventOn: restoreCalendarDate("2030-08-01") },
+        "reporting:retry",
+      ),
+    ).toMatchObject({ replayed: false })
+  })
+
   test("主務を変えない兼務の追加も公開し、保存失敗と再送で所属を重複させない", async () => {
     const f = await fixture()
     await f.initializeAssignment()

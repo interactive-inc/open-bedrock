@@ -369,7 +369,7 @@ describe("Company公開責務による人事発令", () => {
     ).toBe(started.proposal.bodyJson)
   })
 
-  test("承認した入社の雇用区分と初回所属を一回だけ公開する", async () => {
+  test("承認した入社の雇用区分・初回所属・上長を一回だけ公開する", async () => {
     const c = await createFixture()
     const rootId = await connectRoot(c)
     const rootCode = await c.database
@@ -389,6 +389,7 @@ describe("Company公開責務による人事発令", () => {
         employeeName: "New Part Time Employee",
         employmentType: "PART_TIME",
         departmentCode: rootCode,
+        managerEmployeeCode: "MEMBER-1",
         eventOn: c.at.toISOString().slice(0, 10),
       },
       base_employee_revision: 0,
@@ -436,6 +437,20 @@ describe("Company公開責務による人事発令", () => {
         .prepare("SELECT count(*) FROM company_assignment_period_bindings")
         .first<number>("count(*)"),
     ).toBe(1)
+
+    const reporting = await new D1CompanyResourceRepository(c.database).findMany({
+      organizationId: "organization:default",
+      types: ["reporting-relation"],
+      effectiveOn: c.input.action.eventOn,
+    })
+    if (!reporting.ok) throw reporting.cause
+    expect(reporting.resources.map((resource) => resource.attributes)).toEqual([
+      {
+        employeeId: employee.id,
+        managerEmployeeId: c.target.employeeId,
+        organizationUnitId: rootId,
+      },
+    ])
 
     expect(
       await c.database

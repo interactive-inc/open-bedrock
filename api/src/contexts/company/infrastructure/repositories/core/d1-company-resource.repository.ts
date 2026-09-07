@@ -408,6 +408,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
           "UNIQUE constraint failed: company_resource_heads.organization_id",
         ) ||
         /\borganization (?:unit|root|change|resource|assignment)\b/.test(cause.message) ||
+        /\bcompany personnel reporting (?:owner|assignment)\b/.test(cause.message) ||
         /\bcompany_workforce_(?:reference_not_found|owner_immutable|resource_is_in_use|period_conflict|reference_period_conflict)\b/.test(
           cause.message,
         ) ||
