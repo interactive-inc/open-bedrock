@@ -5,6 +5,7 @@ export function systemDeliveryResponse(delivery: SystemDeliveryEntity) {
     id: delivery.id,
     kind: delivery.kind,
     operation_key: delivery.operationKey,
+    handler_key: delivery.handlerKey,
     payload_digest: delivery.payloadDigest,
     idempotency_key: delivery.idempotencyKey,
     status: delivery.status,
