@@ -1,90 +1,59 @@
+import { zRingiProcedureView } from "@/contexts/ringi/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
-import { zAppRingiMineList } from "@/contexts/ringi/interface/http/response-schemas"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import { RingiProcedureListAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-procedure-list.adapter"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { ringiStatusSchema } from "@/contexts/ringi/domain/definitions/ringi-status.definition"
-import { verifyBearer } from "@/api/http/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { ringiRequests } from "@/contexts/ringi/infrastructure/schema/ringi"
-import { zValidator } from "@hono/zod-validator"
-import { and, count, desc, eq } from "drizzle-orm"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { z } from "zod"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 
-// @authorization owner - 本人のリソースに限定する
-/** GET /ringi-requests/me — 本人が起案した稟議一覧（status で絞り込み可能） */
+// @authorization service - 本人の申請だけを参照する
 export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(
     "query",
     z.object({
-      status: ringiStatusSchema.optional(),
+      status: z
+        .enum(["pending", "approved", "rejected", "returned", "cancelled", "awaiting_execution"])
+        .optional(),
+      applicant_id: zEmployeeId.optional(),
+      sort: z.enum(["created_at_desc", "created_at_asc", "amount_desc", "amount_asc"]).optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
     }),
   ),
   async (c) => {
     const session = c.var.session
-
-    if (session === null) {
-      throw new UnauthorizedError()
-    }
-
+    if (session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
     const query = c.req.valid("query")
-
-    const limit = toBoundedInt({
-      raw: query.limit,
-      fallback: DEFAULT_LIST_LIMIT,
-      min: 1,
-      max: MAX_LIST_LIMIT,
+    const result = await new RingiProcedureListAdapter(c).list({
+      session,
+      tokenVersion: c.var.accountTokenVersion,
+      at: new Date(c.env.NOW ?? Date.now()),
+      mode: "mine",
+      status: query.status ?? null,
+      applicantId: query.applicant_id ?? null,
+      sort: query.sort ?? "created_at_desc",
+      limit: toBoundedInt({
+        raw: query.limit,
+        fallback: DEFAULT_LIST_LIMIT,
+        min: 1,
+        max: MAX_LIST_LIMIT,
+      }),
+      offset: toBoundedInt({ raw: query.offset, fallback: 0, min: 0, max: MAX_LIST_OFFSET }),
     })
-
-    const offset = toBoundedInt({
-      raw: query.offset,
-      fallback: 0,
-      min: 0,
-      max: MAX_LIST_OFFSET,
-    })
-
-    const conditions = [eq(ringiRequests.applicantId, session.employeeId)]
-
-    if (query.status !== undefined) {
-      conditions.push(eq(ringiRequests.status, query.status))
-    }
-
-    const [rows, totalRows] = await Promise.all([
-      c.var.database
-        .select({ ringi: ringiRequests, approverName: employees.officialName })
-        .from(ringiRequests)
-        .leftJoin(employees, eq(employees.id, ringiRequests.approverId))
-        .where(and(...conditions))
-        .orderBy(desc(ringiRequests.id))
-        .limit(limit)
-        .offset(offset),
-      c.var.database
-        .select({ total: count() })
-        .from(ringiRequests)
-        .where(and(...conditions)),
-    ])
-
-    const responseBody = zAppRingiMineList.parse({
-      data: rows.map((row) => ({
-        id: row.ringi.id,
-        approver_id: row.ringi.approverId,
-        approver_name: row.approverName ?? "",
-        title: row.ringi.title,
-        amount: row.ringi.amount,
-        status: row.ringi.status,
-        decided_at: row.ringi.decidedAt,
-        created_at: row.ringi.createdAt,
-      })),
-      total: totalRows.at(0)?.total ?? 0,
-    })
-
-    return c.json(responseBody, 200)
+    if (result instanceof ApplicationError) throw toHttpException(result)
+    return c.json(
+      { data: result.data.map((view) => zRingiProcedureView.parse(view)), total: result.total },
+      200,
+    )
   },
 )

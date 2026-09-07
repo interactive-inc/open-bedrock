@@ -51,6 +51,7 @@ function firstAvailableDefaultStep(steps: ReadonlyArray<ApplicationWorkflowStep>
 
 export function WorkflowEditor(props: {
   code: string
+  saveAction?: typeof saveWorkflowAction
   initial: ApplicationWorkflow
   revision: number
 }) {
@@ -60,7 +61,7 @@ export function WorkflowEditor(props: {
   const definitionError = definition.success ? null : definition.error
   const [state, action, pending] = useActionState(
     async (previous: WorkflowFormState, data: FormData) => {
-      const next = await saveWorkflowAction(previous, data)
+      const next = await (props.saveAction ?? saveWorkflowAction)(previous, data)
       if (next.ok) toast.success("承認フローを保存しました")
       else if (next.error !== null) toast.error(next.error)
       return next

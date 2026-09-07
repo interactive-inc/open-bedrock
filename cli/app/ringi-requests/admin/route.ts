@@ -10,9 +10,11 @@ export default factory.createHandlers(
     "json",
     z.object({
       help: z.string().optional(),
-      status: z.enum(["pending", "approved", "rejected"]).optional(),
+      status: z
+        .enum(["pending", "approved", "rejected", "returned", "cancelled", "awaiting_execution"])
+        .optional(),
       "applicant-id": z.string().optional(),
-      sort: z.string().optional(),
+      sort: z.enum(["created_at_desc", "created_at_asc", "amount_desc", "amount_asc"]).optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
     }),

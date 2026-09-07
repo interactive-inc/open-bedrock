@@ -79,3 +79,46 @@ export const zAppRingiAdminList = z.object({
   data: z.array(zAppRingiAdminItem),
   total: z.number(),
 })
+
+/** 同じ案件から取得する稟議の内容・操作資格・判断対象。 */
+export const zRingiProcedureView = zAppRingi.extend({
+  status: z.enum([
+    "pending",
+    "approved",
+    "rejected",
+    "returned",
+    "cancelled",
+    "awaiting_execution",
+  ]),
+  applicant_name: z.string(),
+  applicant_dept_name: z.string().nullable(),
+  approver_name: z.string(),
+  procedure_required: z.boolean(),
+  application_id: z.number().int().positive().nullable(),
+  previous_ringi_id: z.number().int().positive().nullable(),
+  decision_target: z
+    .object({
+      proposal_version: z.number().int().positive(),
+      proposal_digest: z.string().regex(/^[a-f0-9]{64}$/),
+      task_key: z.string().min(1),
+      task_round: z.number().int().positive(),
+    })
+    .nullable(),
+  next_ringi_id: z.number().int().positive().nullable(),
+  can_submit_legacy: z.boolean(),
+  can_decide: z.boolean(),
+  can_execute: z.boolean(),
+  can_cancel: z.boolean(),
+  can_resubmit: z.boolean(),
+  required_approvals: z.number().int().positive().nullable(),
+  approvals: z.number().int().nonnegative(),
+  decisions: z.array(
+    z.object({
+      task_key: z.string(),
+      task_round: z.number().int().positive(),
+      action: z.enum(["approve", "reject", "return"]),
+      comment: z.string().nullable(),
+      decided_at: z.string(),
+    }),
+  ),
+})

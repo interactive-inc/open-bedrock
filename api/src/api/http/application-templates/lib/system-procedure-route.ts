@@ -56,6 +56,8 @@ export async function publishSystemProcedure(
     completionOperationKey: string | null
   }>,
 ): Promise<ProcedureDefinitionEntity | "revision_conflict" | Error> {
+  if (input.code === "ringi_request")
+    return new Error("App procedure requires its dedicated configuration route")
   const session = c.var.session
   if (session === null) return new Error("authenticated session is missing")
   const accountId = await resolveActiveSystemAccountId(c, session.accountId)

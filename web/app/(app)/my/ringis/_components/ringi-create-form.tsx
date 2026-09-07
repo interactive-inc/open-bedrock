@@ -13,11 +13,15 @@ import { Textarea } from "@/components/ui/textarea"
 const initialState: RingiSubmitFormState = { ok: false, error: null }
 
 /**
- * 稟議起案フォーム。承認者 ID・件名・金額・理由を native form で送る。
+ * 稟議起案フォーム。提出先の従業員 ID・件名・金額・理由を native form で送る。
  * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
  * 成功時は自分の稟議一覧へ遷移し、起案がステータス付きで並んだことを見せる。
  */
-export function RingiCreateForm() {
+export function RingiCreateForm(props: {
+  requestKey: string
+  initial?: { id: number; approver_id: string; title: string; amount: number; reason: string }
+  mode?: "adopt" | "resubmit"
+}) {
   const router = useRouter()
 
   async function reduce(
@@ -47,17 +51,24 @@ export function RingiCreateForm() {
 
   return (
     <form action={formAction}>
+      <input type="hidden" name="request_key" value={props.requestKey} />
+      {props.initial && props.mode === "adopt" ? (
+        <input type="hidden" name="existing_ringi_id" value={props.initial.id} />
+      ) : null}
+      {props.initial && props.mode === "resubmit" ? (
+        <input type="hidden" name="previous_ringi_id" value={props.initial.id} />
+      ) : null}
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="ringi-approver-id">承認者 ID</FieldLabel>
+          <FieldLabel htmlFor="ringi-approver-id">提出先の従業員 ID</FieldLabel>
 
           <Input
             id="ringi-approver-id"
             name="approver_id"
-            type="number"
-            min={1}
-            step={1}
-            placeholder="例: 5"
+            type="text"
+            defaultValue={props.initial?.approver_id}
+            readOnly={props.mode === "adopt"}
+            placeholder="従業員 ID"
             required
           />
         </Field>
@@ -65,7 +76,15 @@ export function RingiCreateForm() {
         <Field>
           <FieldLabel htmlFor="ringi-title">件名</FieldLabel>
 
-          <Input id="ringi-title" name="title" type="text" placeholder="件名を入力" required />
+          <Input
+            id="ringi-title"
+            name="title"
+            type="text"
+            defaultValue={props.initial?.title}
+            readOnly={props.mode === "adopt"}
+            placeholder="件名を入力"
+            required
+          />
         </Field>
 
         <Field>
@@ -74,6 +93,8 @@ export function RingiCreateForm() {
           <Input
             id="ringi-amount"
             name="amount"
+            defaultValue={props.initial?.amount}
+            readOnly={props.mode === "adopt"}
             type="number"
             min={1}
             step={1}
@@ -88,6 +109,8 @@ export function RingiCreateForm() {
           <Textarea
             id="ringi-reason"
             name="reason"
+            defaultValue={props.initial?.reason}
+            readOnly={props.mode === "adopt"}
             rows={4}
             placeholder="起案の背景や目的など"
             required
@@ -98,7 +121,7 @@ export function RingiCreateForm() {
 
         <Field orientation="horizontal">
           <Button type="submit" disabled={isPending}>
-            {isPending ? "起案中..." : "稟議を起案"}
+            {isPending ? "起案中..." : "承認規程へ提出"}
           </Button>
         </Field>
       </FieldGroup>

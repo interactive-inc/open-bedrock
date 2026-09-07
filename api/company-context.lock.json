@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "721652b44b587a512cac1818f0aacb6d99d27b2fb4be7bfefd184f5e0143c2a1",
+    "company-context.manifest.json": "66bc5577ae7bb689eb7fd5d5eb02352d8fbe8c07d5df8c8d48a9dfb0e7893dde",
     "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -328,6 +328,7 @@
     "src/contexts/company/infrastructure/adapters/organization/list-managed-employee-ids.adapter.ts": "ffb2de4dcf0f96c8ad066b914570a93c875fe6a831e4d70df5858e6b13905495",
     "src/contexts/company/infrastructure/adapters/organization/organization-resource-adoption-snapshot.adapter.ts": "fb5838227ef9767a77b86f5ce3bedc5ff687500f77f2b75b65de3f538b338881",
     "src/contexts/company/infrastructure/adapters/organization/organization-unit-change-statement.adapter.ts": "196dce34830a2fa55e4d98caea753a629ed994256a50250c90e637ec0f00567e",
+    "src/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter.ts": "2a4b6ce55a59612791c2dbd89f0c15011d4294ee23745d0697760b33a05c90b5",
     "src/contexts/company/infrastructure/adapters/organization/read-active-headcount.adapter.ts": "3cf33dc4bcd4fcafc91964446be7abe484a2288c038ddafa56773b913ef88af9",
     "src/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter.ts": "4e17d2f618ed093d7acd20866e1b1b32c803288b191e6bf70cc6ebcc8085bf4b",
     "src/contexts/company/infrastructure/adapters/organization/read-company-snapshot-employees.adapter.ts": "f6bea41aa6cfe1527962e7d29dab5b3845e06fd5bfe55f8a94ad5d5a037c5e8f",
@@ -462,6 +463,7 @@
     "src/contexts/company/test/company-file-responsibility.contract.test.ts": "dda9b39e57199b214c3bd561ec0a06d631d8244a0bedf45ada0e64fed43cd2f1",
     "src/contexts/company/test/company-personnel-action-migration.contract.test.ts": "9b1a1517337ee8d521e954b7351419dfb26b68bcc47c4218ad92eb32cbd8bbfb",
     "src/contexts/company/test/company-procedure-authority.integration.test.ts": "6bd6194e8faa0dff64b30d2dc947f9cf9f0c6ce297e54bcf3cad0d1fbab0c39d",
+    "src/contexts/company/test/company-procedure-decision.integration.test.ts": "2432ff4bc647606c7aaebc96aaadb6b0d54606bc4d0dc75597b985816646bf23",
     "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts": "70c0ec3b388826bb4fceb9d441c1dc95ced28d2ffc028efa4e71cda1a3dc3ff4",
     "src/contexts/company/test/company.definition-permissions.api.integration.test.ts": "a8695ceb13afafa967bd18f10d7a08b6eaa59a0751a609a873dd92d68474d632",
     "src/contexts/company/test/d1-test-database.test-support.ts": "160ffda7e0f331adf5fe95c705ce0d45f0716c4388827cf223e0aab9dc852135",

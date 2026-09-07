@@ -52,6 +52,9 @@ type DecisionStateRow = Readonly<{
 type Context = SystemD1Context &
   Readonly<{
     decisionGuards?: ReadonlyArray<D1PreparedStatement>
+    decisionEffects?: ReadonlyArray<D1PreparedStatement>
+    cancelGuards?: ReadonlyArray<D1PreparedStatement>
+    cancelEffects?: ReadonlyArray<D1PreparedStatement>
     startGuards?: ReadonlyArray<D1PreparedStatement>
   }>
 
@@ -164,6 +167,7 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
       if (current.status !== "pending") return "not_pending"
 
       await database.batch([
+        ...(this.c.cancelGuards ?? []),
         database
           .prepare(
             `UPDATE system_decision_tasks
@@ -179,6 +183,7 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
           )
           .bind(current.id, input.cancelledAt.getTime()),
         abortWhenPreviousStatementChangedNoRows(database),
+        ...(this.c.cancelEffects ?? []),
       ])
 
       return true
@@ -413,6 +418,7 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
                )`,
           )
           .bind(attestation.caseId, input.decidedAt.getTime()),
+        ...(this.c.decisionEffects ?? []),
         database
           .prepare(
             `SELECT

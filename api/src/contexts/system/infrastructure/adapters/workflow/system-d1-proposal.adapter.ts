@@ -181,17 +181,17 @@ const proposalSelect = `SELECT
   (
     SELECT latest_task.task_key FROM system_decision_tasks AS latest_task
     WHERE latest_task.case_id = workflow_case.id
-    ORDER BY latest_task.opened_at DESC, latest_task.round DESC LIMIT 1
+    ORDER BY latest_task.opened_at DESC, latest_task.rowid DESC LIMIT 1
   ) AS last_task_key,
   (
     SELECT latest_task.round FROM system_decision_tasks AS latest_task
     WHERE latest_task.case_id = workflow_case.id
-    ORDER BY latest_task.opened_at DESC, latest_task.round DESC LIMIT 1
+    ORDER BY latest_task.opened_at DESC, latest_task.rowid DESC LIMIT 1
   ) AS last_task_round,
   coalesce((
     SELECT latest_task.outcome FROM system_decision_tasks AS latest_task
     WHERE latest_task.case_id = workflow_case.id
-    ORDER BY latest_task.opened_at DESC, latest_task.round DESC LIMIT 1
+    ORDER BY latest_task.opened_at DESC, latest_task.rowid DESC LIMIT 1
   ), 'pending') AS last_task_outcome
 FROM system_proposal_numbers AS number
 JOIN system_proposals AS proposal ON proposal.series_id = number.series_id
@@ -204,7 +204,8 @@ JOIN system_proposal_cases AS proposal_case ON proposal_case.proposal_id = propo
 JOIN system_cases AS workflow_case ON workflow_case.id = proposal_case.case_id
 LEFT JOIN system_decision_tasks AS current_task
   ON current_task.case_id = workflow_case.id AND current_task.outcome IS NULL`
-type Context = SystemD1Context
+type Context = SystemD1Context &
+  Readonly<{ visibleCompletionOperationKeys?: ReadonlyArray<string | null> }>
 
 /** Systemの判断正本だけを読み、Company表示や業務意味を組み立てないquery adapter。 */
 export class SystemD1ProposalAdapter implements SystemProposalQuery {
@@ -224,7 +225,11 @@ export class SystemD1ProposalAdapter implements SystemProposalQuery {
         .bind(number)
         .first<ProposalRow>()
 
-      return row === null ? null : this.restoreProposal(row)
+      return row === null ||
+        (this.c.visibleCompletionOperationKeys !== undefined &&
+          !this.c.visibleCompletionOperationKeys.includes(row.completion_operation_key))
+        ? null
+        : this.restoreProposal(row)
     } catch (cause) {
       return cause instanceof Error ? cause : new Error("failed to load system proposal", { cause })
     }
@@ -247,6 +252,18 @@ export class SystemD1ProposalAdapter implements SystemProposalQuery {
         return `?${bindings.length}`
       }
 
+      if (this.c.visibleCompletionOperationKeys !== undefined) {
+        const keys = this.c.visibleCompletionOperationKeys
+        if (keys.length === 0) return { proposals: [], total: 0 }
+        const nonNull = keys.filter((key) => key !== null)
+        const terms = []
+        if (keys.includes(null)) terms.push("revision.completion_operation_key IS NULL")
+        if (nonNull.length > 0)
+          terms.push(
+            `revision.completion_operation_key IN (${nonNull.map((key) => bind(key)).join(", ")})`,
+          )
+        conditions.push(`(${terms.join(" OR ")})`)
+      }
       if (input.creatorAccountIds !== null) {
         if (input.creatorAccountIds.length === 0) return { proposals: [], total: 0 }
         conditions.push(

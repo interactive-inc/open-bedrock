@@ -1,5 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
-import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import { zRingiProcedureView } from "@/contexts/ringi/interface/http/response-schemas"
 import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedRingiRequests } from "@/contexts/ringi/test/seed/seed-ringi-requests.test-support"
@@ -12,25 +12,6 @@ import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-te
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
-
-const statusEnum = z.enum(["pending", "approved", "rejected"])
-
-const ringiResponseSchema = z.object({
-  id: z.number(),
-  applicant_id: zEmployeeId,
-  approver_id: zEmployeeId,
-  title: z.string(),
-  amount: z.number(),
-  reason: z.string(),
-  status: statusEnum,
-  decided_at: z.string().nullable(),
-  decision_comment: z.string().nullable(),
-  created_at: z.string(),
-})
-
-const decisionResponseSchema = z.object({
-  status: statusEnum,
-})
 
 const jwtSecret = "ringi-route-test-secret"
 
@@ -97,317 +78,105 @@ async function request(props: RequestProps): Promise<Response> {
   })
 }
 
-describe("POST /ringi-requests", () => {
-  test("returns 201 with a pending ringi from the token employee", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests",
-      token: await tokenFor(5),
-      method: "POST",
-      body: { approver_id: "4", title: "Office chairs", amount: 90000, reason: "ergonomics" },
-    })
-
-    expect(response.status).toBe(201)
-
-    const parsed = ringiResponseSchema.safeParse(await response.json())
-
-    expect(parsed.success).toBe(true)
-
-    if (parsed.success) {
-      expect(parsed.data.applicant_id).toBe(toWorkforceEmployeeId(5))
-      expect(parsed.data.approver_id).toBe(toWorkforceEmployeeId(4))
-      expect(parsed.data.status).toBe("pending")
-      expect(parsed.data.decided_at).toBeNull()
-    }
+describe("既存稟議の参照と承認経路の切替", () => {
+  test("未認証の提出と参照を拒否する", async () => {
+    expect(
+      (
+        await request({
+          path: "/ringi/ringi-requests",
+          token: null,
+          method: "POST",
+          body: {
+            request_key: crypto.randomUUID(),
+            approver_id: "4",
+            title: "Request",
+            amount: 500,
+            reason: "Reason",
+          },
+        })
+      ).status,
+    ).toBe(401)
+    for (const path of ["me", "inbox", "admin", "1"])
+      expect((await request({ path: `/ringi/ringi-requests/${path}`, token: null })).status).toBe(
+        401,
+      )
   })
 
-  test("returns 401 without a token", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests",
-      token: null,
-      method: "POST",
-      body: { approver_id: "4", title: "x", amount: 1, reason: "y" },
-    })
-
-    expect(response.status).toBe(401)
+  test("再送キーなしの旧提出を受け付けない", async () => {
+    expect(
+      (
+        await request({
+          path: "/ringi/ringi-requests",
+          token: await tokenFor(5),
+          method: "POST",
+          body: { approver_id: "4", title: "Request", amount: 500, reason: "Reason" },
+        })
+      ).status,
+    ).toBe(400)
   })
 
-  test("returns 400 when approver does not exist", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests",
-      token: await tokenFor(5),
-      method: "POST",
-      body: { approver_id: "9999", title: "x", amount: 1, reason: "y" },
-    })
-
-    expect(response.status).toBe(400)
-  })
-
-  test("returns 400 when approver is the applicant", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests",
-      token: await tokenFor(5),
-      method: "POST",
-      body: { approver_id: "5", title: "x", amount: 1, reason: "y" },
-    })
-
-    expect(response.status).toBe(400)
-  })
-
-  test("returns 400 when amount is not a positive integer", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests",
-      token: await tokenFor(5),
-      method: "POST",
-      body: { approver_id: "4", title: "x", amount: -1, reason: "y" },
-    })
-
-    expect(response.status).toBe(400)
-  })
-})
-
-describe("GET /ringi-requests/me", () => {
-  test("returns only the applicant's own ringi", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/me",
-      token: await tokenFor(5),
-    })
-
+  test("本人一覧は既存の番号・決裁結果を保全し、他人の稟議を含まない", async () => {
+    const response = await request({ path: "/ringi/ringi-requests/me", token: await tokenFor(5) })
     expect(response.status).toBe(200)
-
-    const body = (await response.json()) as { data: Array<{ id: number }>; total: number }
-
-    expect(body.total).toBe(2)
-    expect(body.data.every((item) => [1, 2].includes(item.id))).toBe(true)
+    const rows = z
+      .object({ data: z.array(zRingiProcedureView), total: z.number() })
+      .parse(await response.json())
+    expect(rows.total).toBe(2)
+    expect(rows.data.map((row) => row.id)).toEqual([2, 1])
+    expect(rows.data.find((row) => row.id === 2)?.status).toBe("approved")
+    expect(rows.data.find((row) => row.id === 1)?.procedure_required).toBe(true)
   })
 
-  test("filters by status", async () => {
+  test("全社閲覧権限と本人の範囲を別に検査する", async () => {
+    expect(
+      (await request({ path: "/ringi/ringi-requests/admin", token: await tokenFor(5) })).status,
+    ).toBe(403)
     const response = await request({
-      path: "/ringi/ringi-requests/me?status=approved",
-      token: await tokenFor(5),
+      path: "/ringi/ringi-requests/admin?status=pending&limit=1",
+      token: await tokenFor(1),
     })
-
     expect(response.status).toBe(200)
-
-    const body = (await response.json()) as { data: Array<{ id: number }>; total: number }
-
-    expect(body.total).toBe(1)
-    expect(body.data.at(0)?.id).toBe(2)
+    const result = z
+      .object({ data: z.array(zRingiProcedureView), total: z.number() })
+      .parse(await response.json())
+    expect(result.total).toBe(2)
+    expect(result.data).toHaveLength(1)
   })
 
-  test("returns 401 without a token", async () => {
-    const response = await request({ path: "/ringi/ringi-requests/me", token: null })
-
-    expect(response.status).toBe(401)
+  test("保存された提出先や管理権限だけで旧稟議を決裁できない", async () => {
+    expect(
+      (await request({ path: "/ringi/ringi-requests/1", token: await tokenFor(4) })).status,
+    ).toBe(403)
+    for (const action of ["approve", "reject"])
+      expect(
+        (
+          await request({
+            path: `/ringi/ringi-requests/1/${action}`,
+            token: await tokenFor(1),
+            method: "POST",
+            body: {
+              decision_target: {
+                proposal_version: 1,
+                proposal_digest: "0".repeat(64),
+                task_key: "legacy",
+                task_round: 1,
+              },
+              comment: null,
+            },
+          })
+        ).status,
+      ).toBe(409)
   })
-})
 
-describe("GET /ringi-requests/inbox", () => {
-  test("returns only pending ringi where the token employee is approver", async () => {
+  test("受信箱に未提出の旧稟議を承認対象として混ぜない", async () => {
+    expect(
+      (await request({ path: "/ringi/ringi-requests/inbox", token: await tokenFor(4) })).status,
+    ).toBe(403)
     const response = await request({
       path: "/ringi/ringi-requests/inbox",
-      token: await tokenFor(4),
-    })
-
-    expect(response.status).toBe(200)
-
-    const body = (await response.json()) as { data: Array<{ id: number }>; total: number }
-
-    expect(body.total).toBe(1)
-    expect(body.data.at(0)?.id).toBe(1)
-  })
-
-  test("returns empty for an employee who approves nothing pending", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/inbox",
-      token: await tokenFor(6),
-    })
-
-    expect(response.status).toBe(200)
-
-    const body = (await response.json()) as { total: number }
-
-    expect(body.total).toBe(0)
-  })
-
-  test("returns 401 without a token", async () => {
-    const response = await request({ path: "/ringi/ringi-requests/inbox", token: null })
-
-    expect(response.status).toBe(401)
-  })
-})
-
-describe("POST /ringi-requests/:id/approve", () => {
-  test("returns 200 and flips status to approved for the named approver", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/1/approve",
-      token: await tokenFor(4),
-      method: "POST",
-      body: { comment: "ok" },
-    })
-
-    expect(response.status).toBe(200)
-
-    const parsed = decisionResponseSchema.safeParse(await response.json())
-
-    expect(parsed.success).toBe(true)
-
-    if (parsed.success) {
-      expect(parsed.data.status).toBe("approved")
-    }
-  })
-
-  test("returns 200 without a comment (comment optional)", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/1/approve",
-      token: await tokenFor(4),
-      method: "POST",
-      body: {},
-    })
-
-    expect(response.status).toBe(200)
-  })
-
-  test("returns 403 when the token employee is not the named approver", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/1/approve",
-      token: await tokenFor(9),
-      method: "POST",
-      body: { comment: "ok" },
-    })
-
-    expect(response.status).toBe(403)
-  })
-
-  test("returns 409 when the ringi is already decided", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/2/approve",
-      token: await tokenFor(4),
-      method: "POST",
-      body: { comment: "ok" },
-    })
-
-    expect(response.status).toBe(409)
-  })
-
-  test("returns 404 for a missing ringi", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/9999/approve",
-      token: await tokenFor(4),
-      method: "POST",
-      body: { comment: "ok" },
-    })
-
-    expect(response.status).toBe(404)
-  })
-
-  test("returns 401 without a token", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/1/approve",
-      token: null,
-      method: "POST",
-      body: { comment: "ok" },
-    })
-
-    expect(response.status).toBe(401)
-  })
-})
-
-describe("POST /ringi-requests/:id/reject", () => {
-  test("returns 200 and flips status to rejected for the named approver", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/1/reject",
-      token: await tokenFor(4),
-      method: "POST",
-      body: { comment: "over budget" },
-    })
-
-    expect(response.status).toBe(200)
-
-    const parsed = decisionResponseSchema.safeParse(await response.json())
-
-    expect(parsed.success).toBe(true)
-
-    if (parsed.success) {
-      expect(parsed.data.status).toBe("rejected")
-    }
-  })
-
-  test("returns 403 when the token employee is not the named approver", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/1/reject",
-      token: await tokenFor(9),
-      method: "POST",
-      body: { comment: "no" },
-    })
-
-    expect(response.status).toBe(403)
-  })
-
-  test("returns 409 when the ringi is already decided", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/2/reject",
-      token: await tokenFor(4),
-      method: "POST",
-      body: { comment: "no" },
-    })
-
-    expect(response.status).toBe(409)
-  })
-})
-
-describe("GET /ringi-requests/admin", () => {
-  test("returns the whole company list for a ringi:read:all holder", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/admin",
       token: await tokenFor(1),
     })
-
     expect(response.status).toBe(200)
-
-    const body = (await response.json()) as { data: Array<{ id: number }>; total: number }
-
-    expect(body.total).toBe(3)
-  })
-
-  test("filters by status", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/admin?status=pending",
-      token: await tokenFor(1),
-    })
-
-    expect(response.status).toBe(200)
-
-    const body = (await response.json()) as { data: Array<{ id: number }>; total: number }
-
-    expect(body.total).toBe(2)
-  })
-
-  test("filters by applicant_id", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/admin?applicant_id=10",
-      token: await tokenFor(1),
-    })
-
-    expect(response.status).toBe(200)
-
-    const body = (await response.json()) as { data: Array<{ id: number }>; total: number }
-
-    expect(body.total).toBe(1)
-    expect(body.data.at(0)?.id).toBe(3)
-  })
-
-  test("returns 403 for an employee without ringi:read:all", async () => {
-    const response = await request({
-      path: "/ringi/ringi-requests/admin",
-      token: await tokenFor(5),
-    })
-
-    expect(response.status).toBe(403)
-  })
-
-  test("returns 401 without a token", async () => {
-    const response = await request({ path: "/ringi/ringi-requests/admin", token: null })
-
-    expect(response.status).toBe(401)
+    expect(await response.json()).toEqual({ data: [], next_offset: null })
   })
 })

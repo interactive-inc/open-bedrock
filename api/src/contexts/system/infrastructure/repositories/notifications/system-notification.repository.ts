@@ -52,22 +52,29 @@ export class SystemNotificationRepository {
     Object.freeze(this)
   }
 
+  /** 業務変更と通知を同じtransactionへ保存するための検証済みstatement。 */
+  preparePublish(
+    message: NotificationMessageEntity,
+    deliveries: NotificationDeliveryBatchValue,
+  ): ReadonlyArray<D1PreparedStatement> | Error {
+    const payload = toDeliveryPayload(deliveries)
+    if (payload instanceof Error) return payload
+    const database = this.c.context.env.DB
+    return [
+      prepareMessageInsert(database, message),
+      prepareDeliveryFanOut(database, message, payload),
+      preparePublicationInvariant(database, message, payload),
+    ]
+  }
+
   async publish(
     message: NotificationMessageEntity,
     deliveries: NotificationDeliveryBatchValue,
   ): Promise<void | Error> {
-    const payload = toDeliveryPayload(deliveries)
-
-    if (payload instanceof Error) return payload
-
+    const statements = this.preparePublish(message, deliveries)
+    if (statements instanceof Error) return statements
     try {
-      const database = this.c.context.env.DB
-      const results = await database.batch([
-        prepareMessageInsert(database, message),
-        prepareDeliveryFanOut(database, message, payload),
-        preparePublicationInvariant(database, message, payload),
-      ])
-
+      const results = await this.c.context.env.DB.batch([...statements])
       return results.length === 3 && results.every((result) => result.success)
         ? undefined
         : new Error("System Notification publication did not succeed")

@@ -23,7 +23,11 @@ export type SystemProcedureList = Readonly<{
   definitions: ReadonlyArray<ProcedureDefinitionEntity>
   total: number
 }>
-type Context = SystemD1Context
+type Context = SystemD1Context &
+  Readonly<{
+    publishGuards?: ReadonlyArray<D1PreparedStatement>
+    publishEffects?: ReadonlyArray<D1PreparedStatement>
+  }>
 
 /** System手続の版とlifecycleをD1へ永続化する。 */
 export class SystemD1ProcedureRepository {
@@ -151,9 +155,11 @@ export class SystemD1ProcedureRepository {
   ): Promise<true | "revision_conflict" | Error> {
     try {
       await this.c.env.DB.batch([
+        ...(this.c.publishGuards ?? []),
         ...(expectedRevision === 0
           ? this.prepareInitialPublish(definition)
           : this.prepareRevisionPublish(definition, expectedRevision)),
+        ...(this.c.publishEffects ?? []),
       ])
 
       return true

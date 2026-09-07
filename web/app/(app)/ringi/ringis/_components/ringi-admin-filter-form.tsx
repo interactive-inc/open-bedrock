@@ -5,7 +5,14 @@ import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 type Props = {
-  statusValue: "pending" | "approved" | "rejected" | ""
+  statusValue:
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "returned"
+    | "cancelled"
+    | "awaiting_execution"
+    | ""
   applicantIdValue: string
 }
 
@@ -14,6 +21,9 @@ const statusOptions = [
   { value: "pending", label: "承認待ち" },
   { value: "approved", label: "承認済み" },
   { value: "rejected", label: "却下" },
+  { value: "returned", label: "差戻し" },
+  { value: "cancelled", label: "取消済み" },
+  { value: "awaiting_execution", label: "決裁の確定待ち" },
 ]
 
 export function RingiAdminFilterForm(props: Props) {

@@ -79,11 +79,15 @@ commands:
   expenses mine                               自分の経費申請一覧
   expenses update <id>                        経費申請を変更
   expenses delete <id>                        経費申請を取り下げ
-  ringi-requests submit                       稟議申請 (--approver-id --title --amount --reason)
+  ringi-procedures                            稟議規程の参照・設定 ([--definition --expected-revision])
+  ringi-requests submit                       稟議提出 (--request-key --approver-id --title --amount --reason)
+  ringi-requests show <id>                    稟議の内容・履歴・判断対象を確認
   ringi-requests me                           自分の稟議一覧 ([--status])
-  ringi-requests inbox                        承認待ちの稟議一覧
-  ringi-requests approve <id>                 稟議を承認 ([--comment])
-  ringi-requests reject <id>                  稟議を却下 (--comment)
+  ringi-requests inbox                        判断・確定待ちの稟議一覧 ([--limit --offset])
+  ringi-requests approve <id>                 承認を記録 (--decision-target [--comment])
+  ringi-requests reject <id>                  否認を記録 (--decision-target [--comment])
+  ringi-requests cancel <id>                  本人の稟議を取消 (--decision-target)
+  ringi-requests execute <id>                 決裁確定を再試行 (--decision-target)
   ringi-requests admin                        稟議全件参照 ([--status --applicant-id --sort --limit --offset])
   department-budgets list                     部署予算一覧 ([--department-id --fiscal-period])
   department-budgets show <id>                予算詳細（消化額・残額）

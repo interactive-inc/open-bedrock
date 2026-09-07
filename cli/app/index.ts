@@ -63,6 +63,10 @@ import expenseMineHandler from "@/app/expenses/mine/route"
 import expenseRejectHandler from "@/app/expenses/reject/[expense_id]/route"
 import expenseShowHandler from "@/app/expenses/show/[expense_id]/route"
 import expenseSubmitHandler from "@/app/expenses/submit/route"
+import ringiShowHandler from "@/app/ringi-requests/show/[ringi_id]/route"
+import ringiCancelHandler from "@/app/ringi-requests/cancel/[ringi_id]/route"
+import ringiExecuteHandler from "@/app/ringi-requests/execute/[ringi_id]/route"
+import ringiProcedureHandler from "@/app/ringi-procedures/route"
 import ringiHandler from "@/app/ringi-requests/route"
 import ringiAdminHandler from "@/app/ringi-requests/admin/route"
 import ringiApproveHandler from "@/app/ringi-requests/approve/[ringi_id]/route"
@@ -570,6 +574,10 @@ routes.post("/department-budgets/show/:budget_id?", ...budgetShowHandler)
 routes.post("/department-budgets/update/:budget_id?", ...budgetUpdateHandler)
 routes.post("/department-budgets/delete/:budget_id?", ...budgetDeleteHandler)
 
+routes.post("/ringi-procedures", ...ringiProcedureHandler)
+routes.post("/ringi-requests/show/:ringi_id?", ...ringiShowHandler)
+routes.post("/ringi-requests/cancel/:ringi_id?", ...ringiCancelHandler)
+routes.post("/ringi-requests/execute/:ringi_id?", ...ringiExecuteHandler)
 routes.post("/ringi-requests", ...ringiHandler)
 routes.post("/ringi-requests/submit", ...ringiSubmitHandler)
 routes.post("/ringi-requests/me", ...ringiMeHandler)

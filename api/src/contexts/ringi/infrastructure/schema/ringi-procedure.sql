@@ -1,4 +1,5 @@
 CREATE TABLE ringi_procedure_bindings (
+  previous_ringi_id INTEGER REFERENCES ringi_requests(id) ON DELETE RESTRICT,
   request_key TEXT PRIMARY KEY NOT NULL CHECK (length(request_key) BETWEEN 1 AND 255),
   ringi_id INTEGER NOT NULL UNIQUE REFERENCES ringi_requests(id) ON DELETE RESTRICT,
   application_id INTEGER NOT NULL UNIQUE REFERENCES system_proposal_numbers(number) ON DELETE RESTRICT,
@@ -7,6 +8,8 @@ CREATE TABLE ringi_procedure_bindings (
   proposal_digest TEXT NOT NULL CHECK (length(proposal_digest) = 64),
   created_at INTEGER NOT NULL CHECK (created_at >= 0)
 );
+
+CREATE UNIQUE INDEX ringi_resubmission_once ON ringi_procedure_bindings(previous_ringi_id) WHERE previous_ringi_id IS NOT NULL;
 
 CREATE TRIGGER ringi_procedure_binding_matches_proposal
 BEFORE INSERT ON ringi_procedure_bindings
@@ -21,7 +24,7 @@ WHEN NOT EXISTS (
   WHERE request.id = NEW.ringi_id AND request.status = 'pending'
     AND request.applicant_id <> request.approver_id
     AND proposal.digest = NEW.proposal_digest AND proposal.created_at = NEW.created_at
-    AND request.created_at = strftime('%Y-%m-%dT%H:%M:%fZ', proposal.created_at / 1000.0, 'unixepoch')
+    AND request.created_at <= strftime('%Y-%m-%dT%H:%M:%fZ', proposal.created_at / 1000.0, 'unixepoch')
     AND definition.completion_operation_key = 'ringi.request.authorize'
     AND workflow_case.subject_context = 'ringi' AND workflow_case.subject_kind = 'request'
     AND workflow_case.subject_id = NEW.request_key AND workflow_case.subject_version = '1'
@@ -31,6 +34,15 @@ WHEN NOT EXISTS (
     AND json_extract(proposal.body_json, '$.title') IS request.title
     AND json_extract(proposal.body_json, '$.amount') IS request.amount
     AND json_extract(proposal.body_json, '$.reason') IS request.reason
+    AND (NEW.previous_ringi_id IS NULL OR EXISTS (
+      SELECT 1 FROM ringi_procedure_bindings previous
+      JOIN ringi_requests original ON original.id = previous.ringi_id
+      JOIN system_cases previous_case ON previous_case.id = previous.case_id
+      WHERE previous.ringi_id = NEW.previous_ringi_id AND previous.ringi_id <> NEW.ringi_id
+        AND original.applicant_id = request.applicant_id AND previous_case.status = 'returned'
+        AND previous_case.created_by_account_id = proposal.created_by_account_id
+        AND previous_case.updated_at <= NEW.created_at
+    ))
 )
 BEGIN
   SELECT RAISE(ABORT, 'ringi_procedure_proposal_mismatch');
