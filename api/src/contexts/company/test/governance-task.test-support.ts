@@ -11,8 +11,8 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { drizzle } from "drizzle-orm/d1"
 
 /** 公開Companyへの入社登録と責務規程を、両製品の実migrationへ作成する。 */
-export async function createGovernanceTaskTestContext() {
-  const imported = await createExternalIdentityImportTestContext()
+export async function createGovernanceTaskTestContext(databaseOverride?: D1Database) {
+  const imported = await createExternalIdentityImportTestContext("oidc", databaseOverride)
   const source = imported.input.identities[0]
   if (source === undefined) throw new Error("identity fixture is missing")
   const applied = await imported.application.execute({

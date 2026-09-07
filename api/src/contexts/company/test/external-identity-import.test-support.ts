@@ -20,8 +20,10 @@ const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
 export const EXTERNAL_IMPORT_TEST_SECRET = "external-import-test-signing-secret"
 
 /** 両製品の実migrationと機械session発行を使うCompany同期fixture。 */
-export async function createExternalIdentityImportTestContext(providerScope = "oidc") {
-  const database = createCompanyD1TestDatabase(schemaSql)
+export async function createExternalIdentityImportTestContext(
+  providerScope = "oidc",
+  database = createCompanyD1TestDatabase(schemaSql),
+) {
   const now = new Date()
   const accountId = zAccountId.parse("external-import-service")
   const credentialId = "external-import-credential"

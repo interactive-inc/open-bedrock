@@ -1,3 +1,4 @@
+import assignmentAdoptionHandler from "@/app/employees/assignment-adoption/route"
 import organizationAdoptionHandler from "@/app/departments/adoption/route"
 import { HTTPException } from "hono/http-exception"
 import { factory } from "@/factory"
@@ -880,6 +881,7 @@ routes.post("/employees/register", ...employeeRegisterHandler)
 routes.post("/employees/show/:employee_code?", ...employeeShowHandler)
 routes.post("/employees/update/:employee_code?", ...employeeUpdateHandler)
 routes.post("/employees/adoption", ...employeeAdoptionHandler)
+routes.post("/employees/assignment-adoption", ...assignmentAdoptionHandler)
 routes.post("/employees/timeline", ...employeeTimelineHandler)
 routes.post("/employees/state", ...employeeStateHandler)
 routes.post("/personnel-actions/request", ...personnelActionRequestHandler)

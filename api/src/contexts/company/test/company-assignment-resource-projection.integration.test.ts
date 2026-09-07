@@ -1,278 +1,18 @@
 import { CompanyAssignmentResourceHistoryAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-assignment-resource-history.adapter"
 import { describe, expect, test, spyOn } from "bun:test"
-import { Hono } from "hono"
-import { hc } from "hono/client"
 import { z } from "zod"
-import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
-import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
-import { CompanyHTTPException } from "@/contexts/company/interface/errors"
-import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import * as adoptions from "@/contexts/company/interface/routes/company.organization-resource-adoptions"
-import * as changes from "@/contexts/company/interface/routes/company.organization-changes"
-import * as executions from "@/contexts/company/interface/routes/company.personnel-action-executions"
-import * as employments from "@/contexts/company/interface/routes/company.employments"
-import * as employees from "@/contexts/company/interface/routes/company.employees"
-import { DirectPersonnelActionAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/direct-personnel-action.adapter"
 import { EmployeeLifecycleAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle.adapter"
 import type { PersonnelActionInput } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
-import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { ResolveCanonicalOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/workforce/resolve-canonical-organization-authority.adapter"
 
-async function fixture() {
-  const base = await createGovernanceTaskTestContext()
-  const app = new Hono<CompanyHttpEnvironment>()
-  app.use("*", async (context, next) => {
-    context.set(
-      "companyActor",
-      CompanyActorValue.restore({
-        ...base.creator,
-        organizationIds: ["organization:default"],
-        capabilities: ["company:admin"],
-      }),
-    )
-    context.set("companyClock", () => base.at)
-    context.set("database", base.context.var.database)
-    context.set("auditContext", base.context.var.auditContext)
-    await next()
-  })
-  app.onError((error, context) => {
-    if (!(error instanceof CompanyHTTPException)) throw error
-    return context.json({ code: error.code }, error.status)
-  })
-  const routes = app
-    .get("/adoptions", ...adoptions.GET)
-    .post("/adoptions", ...adoptions.POST)
-    .post("/changes", ...changes.POST)
-    .post("/employees", ...employees.POST)
-    .post("/executions", ...executions.POST)
-    .post("/employments", ...employments.POST)
-  const client = hc<typeof routes>("http://localhost", {
-    fetch: Object.assign(
-      async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) =>
-        routes.request(input, init, base.context.env),
-      { preconnect: fetch.preconnect },
-    ),
-  })
-  const root = await base.database
-    .prepare(
-      "SELECT organization_unit_id AS id FROM company_organization_unit_period_versions WHERE kind = 'COMPANY' LIMIT 1",
-    )
-    .first<{ id: string }>()
-  if (root === null) throw new Error("root missing")
-  const preview = await client.adoptions.$get({ query: { organization_unit_id: root.id } })
-  expect(Number(preview.status)).toBe(200)
-  const body = z
-    .object({ expectedRevision: z.number(), snapshotDigest: z.string(), observedOn: z.string() })
-    .parse(await preview.json())
-  expect(
-    Number(
-      (
-        await client.adoptions.$post({
-          header: { "idempotency-key": "assignment-root" },
-          json: { ...body, organizationUnitId: root.id, reason: "Confirm organization history" },
-        })
-      ).status,
-    ),
-  ).toBe(201)
-  const employeeId = base.people[0]!.employeeId
-  const employment = await base.database
-    .prepare("SELECT id FROM company_employments WHERE employee_id = ?")
-    .bind(employeeId)
-    .first<{ id: string }>()
-  if (employment === null) throw new Error("employment missing")
-  const revision = await base.database
-    .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
-    .first<number>("revision")
-  if (revision === null) throw new Error("revision missing")
-  type Resource = Parameters<typeof client.changes.$post>[0]["json"]["resources"][number]
-  const assignment: Extract<Resource, { type: "assignment" }> = {
-    organizationId: "organization:default",
-    type: "assignment",
-    id: "assignment:public",
-    revision: 1,
-    state: "active",
-    effectiveFrom: "2030-01-01",
-    effectiveTo: null,
-    attributes: {
-      employeeId,
-      employmentId: employment.id,
-      organizationUnitId: root.id,
-      assignmentType: "PRIMARY",
-      positionTitle: "Coordinator",
-    },
-  }
-  const write = (
-    resources: Resource[] = [assignment],
-    expectedRevision = revision,
-    key = "assignment-write",
-  ) =>
-    client.changes.$post({
-      header: {
-        "idempotency-key": key,
-        "if-match": String(expectedRevision),
-        "x-company-organization-id": "organization:default",
-      },
-      json: { reason: "Confirm assignment", resources },
-    })
-  const read = (date: string) =>
-    new CompanyEmployeeDirectoryReadAdapter({
-      env: { ...base.context.env, NOW: `${date}T00:00:00Z` },
-    }).findById(employeeId)
-  const persisted = () =>
-    base.database
-      .prepare(`SELECT
-    (SELECT revision FROM company_organizations WHERE id = 'organization:default') AS company_revision,
-    (SELECT revision FROM company_organization_lifecycle_states WHERE id = 1) AS organization_revision,
-    (SELECT count(*) FROM company_resource_revisions) AS resources,
-    (SELECT count(*) FROM company_organization_assignment_period_versions) AS periods,
-    (SELECT count(*) FROM company_assignment_period_bindings) AS bindings,
-    (SELECT count(*) FROM company_command_receipts) AS receipts,
-    (SELECT count(*) FROM company_personnel_actions) AS actions,
-    (SELECT count(*) FROM company_employment_period_versions) AS employments,
-    (SELECT count(*) FROM company_lifecycle_outbox_entries) AS outbox`)
-      .first()
-  const personnel = async (input: PersonnelActionInput, key: string, targetId = employeeId) => {
-    const context = { ...base.context, env: { ...base.context.env, NOW: "2030-06-01T00:00:00Z" } }
-    const revisions = await new EmployeeLifecycleAdapter(context).loadRevisions(targetId)
-    if (revisions instanceof Error) throw revisions
-    return new DirectPersonnelActionAdapter(context).apply({
-      session: {
-        accountId: zAccountId.parse(base.creator.accountId),
-        employeeId,
-        hasPermission: (permission) => permission === "employee:lifecycle:apply",
-      },
-      employeeId: targetId,
-      idempotencyKey: key,
-      expectedEmployeeRevision: revisions.employeeRevision,
-      expectedOrganizationRevision: revisions.organizationRevision,
-      input,
-    })
-  }
-  const assignEmployeeCode = async (targetId = employeeId, code = "EMPLOYEE-001") => {
-    const head = await base.database
-      .prepare(`SELECT revision, attributes_json, effective_from FROM company_resource_heads
-      WHERE organization_id = 'organization:default' AND resource_type = 'employee' AND resource_id = ?1`)
-      .bind(targetId)
-      .first<{ revision: number; attributes_json: string; effective_from: string }>()
-    if (head === null) throw new Error("employee resource missing")
-    const attributes = z.object({ personId: z.string() }).parse(JSON.parse(head.attributes_json))
-    const revision = await base.database
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
-      .first<number>("revision")
-    expect(
-      Number(
-        (
-          await client.employees.$post({
-            header: {
-              "idempotency-key": `employee-code:${code}`,
-              "if-match": String(revision),
-              "x-company-organization-id": "organization:default",
-            },
-            json: {
-              reason: "Confirm employee code",
-              resources: [
-                {
-                  organizationId: "organization:default",
-                  type: "employee",
-                  id: targetId,
-                  revision: head.revision + 1,
-                  state: "active",
-                  effectiveFrom: head.effective_from,
-                  effectiveTo: null,
-                  attributes: { ...attributes, employeeCode: code },
-                },
-              ],
-            },
-          })
-        ).status,
-      ),
-    ).toBe(201)
-  }
-  const companyRevision = async () => {
-    const revision = await base.database
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
-      .first<number>("revision")
-    if (revision === null) throw new Error("company revision missing")
-    return revision
-  }
-  const publicAssignments = async (date: string) => {
-    const snapshot = await new D1CompanyResourceRepository(base.database).findMany({
-      organizationId: "organization:default",
-      types: ["assignment"],
-      effectiveOn: restoreCalendarDate(date),
-    })
-    if (!snapshot.ok) throw snapshot.cause
-    return snapshot.resources
-  }
-  const publicReporting = async (date: string) => {
-    const snapshot = await new D1CompanyResourceRepository(base.database).findMany({
-      organizationId: "organization:default",
-      types: ["reporting-relation"],
-      effectiveOn: restoreCalendarDate(date),
-    })
-    if (!snapshot.ok) throw snapshot.cause
-    return snapshot.resources
-  }
-  const initializeAssignment = async () => {
-    expect(
-      Number(
-        (
-          await write([
-            {
-              organizationId: "organization:default",
-              type: "organization-unit",
-              id: "unit-period:journal",
-              revision: 1,
-              state: "active",
-              effectiveFrom: "2030-01-01",
-              effectiveTo: null,
-              attributes: {
-                organizationUnitId: "unit:journal",
-                code: "TEAM",
-                officialName: "Example Team",
-                kind: "TEAM",
-                parentOrganizationUnitId: root.id,
-              },
-            },
-          ])
-        ).status,
-      ),
-    ).toBe(201)
-    await assignEmployeeCode()
-    const source = {
-      ...assignment,
-      attributes: { ...assignment.attributes, organizationUnitId: "unit:journal" },
-    }
-    expect(Number((await write([source], await companyRevision(), "public-start")).status)).toBe(
-      201,
-    )
-    return source
-  }
-  return {
-    ...base,
-    client,
-    assignment,
-    write,
-    read,
-    revision,
-    root,
-    persisted,
-    personnel,
-    assignEmployeeCode,
-    companyRevision,
-    publicAssignments,
-    publicReporting,
-    initializeAssignment,
-  }
-}
+import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
 
 describe("公開Assignmentと業務の所属期間", () => {
   test("上長本人の退職APIは部下の関係を終了し、再送・訂正・再入社で旧上長を復活させない", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     const managerId = f.people[1]!.employeeId
     await f.assignEmployeeCode(managerId, "MANAGER-001")
@@ -342,7 +82,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("退職は独立した部下側の関係も閉じ、別上長と将来の交代予約を保つ", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     const relation = {
@@ -435,7 +175,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("部下側の保存失敗は上長の退職も巻き戻し、後続の再割当は退職訂正で上書きしない", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     await f.assignEmployeeCode(f.people[2]!.employeeId, "MANAGER-002")
@@ -499,7 +239,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("百件を超える部下側の関係も同じ退職のtransactionで終了する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     const relations = Array.from(
@@ -554,7 +294,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("上長の退職準備中の部下側変更は競合にし、更新した版で再試行する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     expect(
@@ -632,7 +372,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("公開APIも上長の雇用短縮だけを拒否し、関係の終了を同じcommandで確定する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     const managerId = f.people[1]!.employeeId
     const relation = {
@@ -720,7 +460,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("同じ組織の主務と兼務は別の直属上長を持ち、兼務終了では主務の上長を残す", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     await f.assignEmployeeCode(f.people[2]!.employeeId, "MANAGER-002")
@@ -775,7 +515,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("未接続所属の上長を役職変更で引き継ぎ、退職と再入社は別の雇用の関係にする", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.assignEmployeeCode()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     const revision = await f.database
@@ -899,7 +639,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("公開APIでも上長だけを所属期間外へ残せず、所属と上長の同時終了は確定できる", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     expect(
@@ -985,7 +725,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("公開APIの将来上長を発令で保全し、後続の公開編集がある訂正を拒否する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     for (const index of [1, 2, 3])
       await f.assignEmployeeCode(f.people[index]!.employeeId, `MANAGER-00${index}`)
@@ -1069,7 +809,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("同じ直属上長への競合は一方だけ確定し、再試行と再送で履歴を重複させない", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     await f.assignEmployeeCode(f.people[2]!.employeeId, "MANAGER-002")
@@ -1110,7 +850,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("上長変更を公開履歴へ保存し、役職変更と独立した複数上長を保全する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     const manager = f.people[1]!
     const additional = f.people[2]!
@@ -1204,7 +944,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("上長変更の訂正で発効前を復元し、退職で対応する指揮命令を終了する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     const input = {
@@ -1250,7 +990,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("公開履歴の過去と発令後の上長を合わせた循環を拒否し、履歴読取失敗も巻き戻す", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     const backward = {
@@ -1316,7 +1056,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("主務を変えない兼務の追加も公開し、保存失敗と再送で所属を重複させない", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     const code = await f.database
       .prepare(
@@ -1358,7 +1098,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     expect(await f.persisted()).toEqual(applied)
   })
   test("組織番号の将来変更後も、配属時と同じ組織IDで役職を変更する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     const unit = {
       organizationId: "organization:default",
@@ -1422,7 +1162,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     })
   })
   test("異動先の組織IDと将来予約の境界を公開履歴へ保つ", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     const source = await f.initializeAssignment()
     expect(
       Number(
@@ -1486,7 +1226,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("最新の公開版が取消でも将来の所属を孤立させる雇用取消は保存しない", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     const source = await f.initializeAssignment()
     expect(
       Number(
@@ -1557,7 +1297,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("会社直下の公開所属も人事発令で終了できる", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.assignEmployeeCode()
     expect(
       Number((await f.write([f.assignment], await f.companyRevision(), "root-start")).status),
@@ -1585,7 +1325,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("同じ所属への競合発令は片方だけ確定する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     const results = await Promise.all(
       ["2030-04-01", "2030-05-01"].map((date) =>
@@ -1615,7 +1355,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("将来の所属予約を保った役職変更と訂正を公開履歴へ反映する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     const source = await f.initializeAssignment()
     expect(
       Number(
@@ -1696,7 +1436,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("公開所属の保存失敗で発令も履歴も残さず、同じキーで再試行する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     const input: PersonnelActionInput = {
       kind: "assignment_ended",
@@ -1732,7 +1472,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     expect(await f.persisted()).toEqual(after)
   })
   test("公開所属への発令と公開APIの再更新を往復し、退職時も両方の期間を閉じる", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     expect(
       Number(
         (
@@ -1843,7 +1583,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     expect(await f.read("2030-07-01")).toMatchObject({ primaryAssignment: null })
   })
   test("公開APIで作った組織へ人事発令で配属し、実際の組織IDを保つ", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     expect(
       Number(
         (
@@ -1895,7 +1635,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     ).toEqual(["unit:opaque"])
   })
   test("公開APIに保存した所属が同じ基準日の従業員一覧へ届く", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     expect(Number((await f.write()).status)).toBe(201)
     expect(await f.read("2029-12-31")).toMatchObject({ primaryAssignment: null })
     expect(await f.read("2030-06-01")).toMatchObject({
@@ -1903,7 +1643,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     })
   })
   test("将来予約・過去訂正・空白・取消を公開履歴と同じ所属期間へ投影する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     const future = {
       ...f.assignment,
       revision: 2,
@@ -1947,7 +1687,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("組織の作成と配属を一つの変更で保存し、主務の重複は全体を巻き戻す", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     const unit = {
       organizationId: "organization:default",
       type: "organization-unit",
@@ -1979,7 +1719,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("競合した所属変更は一つだけ確定し、更新した版で再試行できる", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     expect(Number((await f.write()).status)).toBe(201)
     const responses = await Promise.all(
       ["First", "Second"].map((positionTitle) =>
@@ -2022,7 +1762,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("所属履歴の読取前に別変更が確定しても入力不正とせず競合を返す", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     expect(Number((await f.write()).status)).toBe(201)
     const pending = {
       ...f.assignment,
@@ -2070,7 +1810,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("履歴を読めない場合は変更を保存せず、再試行で一度だけ確定する", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     const before = await f.persisted()
     const unavailable = spyOn(
       CompanyAssignmentResourceHistoryAdapter.prototype,
@@ -2089,7 +1829,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   })
 
   test("期間台帳だけを更新する操作は公開所属を置き去りにできない", async () => {
-    const f = await fixture()
+    const f = await createCompanyAssignmentResourceTestContext()
     expect(Number((await f.write()).status)).toBe(201)
     const before = await f.persisted()
     const failure = await f.database

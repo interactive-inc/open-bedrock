@@ -86,6 +86,7 @@ import * as commendationsIdRoute from "@/contexts/commendation/interface/routes/
 import * as companyCalendarDaysRoute from "@/contexts/company-calendar/interface/routes/company-calendar-days"
 import * as companyCalendarDaysIdRoute from "@/contexts/company-calendar/interface/routes/company-calendar-days.$id"
 import * as companyAccountEmployeeLinksRoute from "@/contexts/company/interface/routes/company.account-employee-links"
+import * as companyAssignmentResourceAdoptionsRoute from "@/contexts/company/interface/routes/company.assignment-resource-adoptions"
 import * as companyAuthorityResolutionsRoute from "@/contexts/company/interface/routes/company.authority-resolutions"
 import * as companyBootstrapRoute from "@/contexts/company/interface/routes/company.bootstrap"
 import * as companyCapabilitiesRoute from "@/contexts/company/interface/routes/company.capabilities"
@@ -553,6 +554,8 @@ const routePart24 = createRouteApp().delete(
 )
 
 const routePart25 = createRouteApp()
+  .get("/company/assignment-resource-adoptions", ...companyAssignmentResourceAdoptionsRoute.GET)
+  .post("/company/assignment-resource-adoptions", ...companyAssignmentResourceAdoptionsRoute.POST)
   .post("/company/audit-event-exports", ...companyAuditEventExportsRoute.POST)
   .get("/company/audit-events", ...companyAuditEventsRoute.GET)
   .get("/company/audit-events/:eventId", ...companyAuditEventsEventIdRoute.GET)
@@ -602,10 +605,10 @@ const routePart25 = createRouteApp()
   )
   .get("/company/organization-snapshots", ...companyOrganizationSnapshotsRoute.GET)
   .get("/company/organization-tree", ...companyOrganizationTreeRoute.GET)
-  .get("/company/organization-units", ...companyOrganizationUnitsRoute.GET)
-  .post("/company/organization-units", ...companyOrganizationUnitsRoute.POST)
 
 const routePart26 = createRouteApp()
+  .get("/company/organization-units", ...companyOrganizationUnitsRoute.GET)
+  .post("/company/organization-units", ...companyOrganizationUnitsRoute.POST)
   .get("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.GET)
   .put("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.PUT)
   .delete("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.DELETE)
