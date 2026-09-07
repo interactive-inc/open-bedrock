@@ -47,7 +47,7 @@
     "src/contexts/system/application/workflow/reject-system-task.ts": "f0255cb8a64fa50b93929daba957f595704bff6050793929653fce9ff3a6193d",
     "src/contexts/system/application/workflow/return-system-task.ts": "84d7b6ec7183f7285b39028511fb0ae851a9a42e242223723ebfe3c38f9120fd",
     "src/contexts/system/application/workflow/start-system-procedure.ts": "9bb99e4bcc236317eea98cc08241b729b5ba12b6d402615bb549d981ed8a113f",
-    "src/contexts/system/configuration/system-context.ts": "a8030a8499a62cc0af1b8314fa364074f75a3f01b34298f1d8badd6572cf3d08",
+    "src/contexts/system/configuration/system-context.ts": "736bd331894fc29e6895ee65456f41b6e41638e1970828d36c084e6e3c5dc280",
     "src/contexts/system/domain/catalogs/attachments/attachment-content.catalog.ts": "38a45edfb70f5580ebc50e8968b8f76d861ca9794f3f37e2054f426af7a3112c",
     "src/contexts/system/domain/catalogs/attachments/unlinked-attachment-retention.catalog.ts": "58387968539e0c613b1c0ef7f77b70fcd3959f4b4b04e9a3bc54b9f33b3e5821",
     "src/contexts/system/domain/catalogs/configuration/system-capability.catalog.ts": "add4391ba8af780203585b35a240300d3d8ebfa83acfed2f21ff1476a83f86da",
@@ -114,6 +114,7 @@
     "src/contexts/system/domain/entities/system-delivery.entity.ts": "b2f5f0d0dce79ecdf0dc89ddd47bfa65f3c2603624a43ba0188b1dab64ab1433",
     "src/contexts/system/domain/entities/system-machine-credential.entity.test.ts": "f8cc3a2ce34d171fef674711a9a6e403064e48c57d684b9652a0970f876d6ee6",
     "src/contexts/system/domain/entities/system-machine-credential.entity.ts": "33d3f833a05213e19f0576a90eecd2f4b7351c6b9ccdff61b153735311318388",
+    "src/contexts/system/domain/entities/system-operation-receipt.entity.ts": "12349373053e367b5393982d4f40c1b1050fc18b9dc5280723f66e35d48f3bf0",
     "src/contexts/system/domain/entities/system-principal.entity.test.ts": "5a03345d7c33b5b33a4d305cd127ffe28ce96a83e8b2af0d8ee3c913b31d0960",
     "src/contexts/system/domain/entities/system-principal.entity.ts": "a3347a6a7f0ccacacbf6d6f10100239477c2876731b8f91fed7977d3bc99d415",
     "src/contexts/system/domain/entities/system-step-up-grant.entity.test.ts": "7a896193742609c78420ff0e8e084cde71a5d37784f4e84e3163bf43da16e691",
@@ -235,6 +236,8 @@
     "src/contexts/system/infrastructure/adapters/iam/d1-system-root-bootstrap.adapter.ts": "331630687fec40814a3d7f8e6a20f458bbf9cf41abab6b9eb10d086712dbe10d",
     "src/contexts/system/infrastructure/adapters/iam/system-account-suspension.adapter.ts": "a056b7fb07ad284c371ffb2841063966ce0f72ad36693b94084b2cf0ea537159",
     "src/contexts/system/infrastructure/adapters/iam/system-authorization.adapter.ts": "8eae53db2c1b647df94338b3a12a2a2e72e292f84c0f700f34f21aa817685c16",
+    "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter.test.ts": "78c05d079f710c57c33607fede3f40dc8d4a6f9bb253a5702355869971d555b5",
+    "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter.ts": "88a9e098a56d9e1dc4af407dac1239c956b75f5631a060cd349e5026db9be407",
     "src/contexts/system/infrastructure/adapters/iam/system-machine-operation-authorization.adapter.ts": "1265ff894d48c81bd9ae09f30878bf3e07f736a131758c29e1b524b067da5ca2",
     "src/contexts/system/infrastructure/adapters/identity/consume-oidc-authorization-code.adapter.test.ts": "6d85a0694f90f16435dd509d482b681ce2e510e22e822d623b1dcc8371bc4889",
     "src/contexts/system/infrastructure/adapters/identity/consume-oidc-authorization-code.adapter.ts": "7e651c2a291382f12b62beca1be460dc0f8f3d445af8fe9e8f83cb240e88e6d1",
@@ -271,6 +274,8 @@
     "src/contexts/system/infrastructure/repositories/auth/system-session.repository.ts": "370d22559722de0907717f8feb5642e842dd9135b58275cd616a0a17a4d38954",
     "src/contexts/system/infrastructure/repositories/events/system-delivery.repository.test.ts": "549f19483705702a6d7fda771533bea366eefebb91ee1969274f6e7af06d2534",
     "src/contexts/system/infrastructure/repositories/events/system-delivery.repository.ts": "002465bfe7cb3e9d2421a87dd488b1a991281d26212b763a844a2a646b4e0a97",
+    "src/contexts/system/infrastructure/repositories/events/system-operation-receipt.repository.test.ts": "c1397eb02cc87c5a19eb398871713f10d92bf5314765a11e482c15f8434aa142",
+    "src/contexts/system/infrastructure/repositories/events/system-operation-receipt.repository.ts": "fc7a93b1bb784997ffa8a6550c6c36461272ba6f7fbd9a5ce0e8ce73c9a8440e",
     "src/contexts/system/infrastructure/repositories/iam/system-account-catalog.repository.ts": "d6a96a25090f3e60eda80306b90c95ac5debbf92973019b885d5d99351f96ea8",
     "src/contexts/system/infrastructure/repositories/iam/system-machine-credential.repository.ts": "e2c7e4f50fcd14e5270f17858dd0e4216a6d78d1ea0c59e60660bae791371190",
     "src/contexts/system/infrastructure/repositories/iam/system-principal.repository.ts": "f0cf16cd75ab8c3ef7b109fd9c82de2f8501059bab02b4e6e3398f1f9ae75025",
@@ -301,6 +306,8 @@
     "src/contexts/system/infrastructure/schema/system-integration.sql": "c2a68d2a0bbe3a5fa6f2ae249f1c3160a22efa31715be996c265711c1e35c845",
     "src/contexts/system/infrastructure/schema/system-integration.test.ts": "774ae7b72a9f642c43191d2f9eab9398565c0d6731de1403620c940e2212b669",
     "src/contexts/system/infrastructure/schema/system-integration.ts": "ff15406c708c1664e5f7f6b39f119c6e2e47b4417d780ed765660b7a464f0649",
+    "src/contexts/system/infrastructure/schema/system-operation-receipt.sql": "8ea7eeb0e81385e85c970e12ae391d9660a9b8ed228ba9b8ba93c2e7c3b72a61",
+    "src/contexts/system/infrastructure/schema/system-operation-receipt.ts": "f14c1522b807cb7daf32e93b01cd577d950a5ed989a831cd9a34398c6f96e9f8",
     "src/contexts/system/infrastructure/schema/system-principal.sql": "b2997f6a95b2a29ccbe1be77973a4227c71784e8e4740c11b7c803149a0b10f4",
     "src/contexts/system/infrastructure/schema/system-principal.test.ts": "5fa2980aac0468324fec26fabb6611f7495daa86f9ce16d92e74259425e1ccb0",
     "src/contexts/system/infrastructure/schema/system-principal.ts": "fc14d9cdf9360b190f83148c4617e178e87fc4b2701fe65f451deb8bc6f4620d",
@@ -501,6 +508,6 @@
     "src/contexts/system/test/system-session-test-context.test-support.ts": "01b7729e7b5e42797177a4dde35e463df2814620ef41caf015a6792f1196c31d",
     "src/contexts/system/test/system-workflow-application.integration.test.ts": "8333cf5c03c67838084ff872cf968f680d23d8a181691cd4ba9910723bd9ce44",
     "src/contexts/system/test/wrap-system-d1-test-database.test-support.ts": "b10dad08b7fff13afcf102246cd714917e2c1a1deec26a797aa45c248dce2ee0",
-    "system-context.manifest.json": "5aca161c14e95f48b480213fa928831b9c9fb1cc0742e37932691f670d6ecd1c"
+    "system-context.manifest.json": "1868cff76897a93fc1c0a79e368e01e8b5e21e8db60e3a039aa69ff42b0b3927"
   }
 }

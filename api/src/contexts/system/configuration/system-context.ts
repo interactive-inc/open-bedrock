@@ -5,6 +5,7 @@ import * as systemAttachmentSchema from "@system/infrastructure/schema/system-at
 import * as systemCoreSchema from "@system/infrastructure/schema/system-core"
 import * as systemDeliverySchema from "@system/infrastructure/schema/system-delivery"
 import * as systemIntegrationSchema from "@system/infrastructure/schema/system-integration"
+import * as systemOperationReceiptSchema from "@system/infrastructure/schema/system-operation-receipt"
 import * as systemPrincipalSchema from "@system/infrastructure/schema/system-principal"
 import * as systemProcedureSchema from "@system/infrastructure/schema/system-procedure"
 import * as systemProcedureDelegationSchema from "@system/infrastructure/schema/system-procedure-delegation"
@@ -17,6 +18,7 @@ const systemSchema = {
   ...systemCoreSchema,
   ...systemDeliverySchema,
   ...systemIntegrationSchema,
+  ...systemOperationReceiptSchema,
   ...systemPrincipalSchema,
   ...systemProcedureSchema,
   ...systemProcedureDelegationSchema,
