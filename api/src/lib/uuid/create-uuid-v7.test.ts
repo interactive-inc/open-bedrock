@@ -138,6 +138,10 @@ describe("uuidSchema と uuidCheckPredicate の一致", () => {
       "0195e2a1-4c3f-7abc-8def-0123456789abc",
       "0195e2a1_4c3f_7abc_8def_0123456789ab",
       "0195e2a1-4c3f-7abc-8def-0123456789ag",
+      // 36 文字だが区切りが 5 個ある。桁数だけでは弾けない形。
+      "0190000--0000-7000-8000-000000000a01",
+      "01900000-0000-7000-8000-00000000-a01",
+      "-1900000-0000-7000-8000-000000000a01",
       "organization:default",
       "employment:seed-employment-1",
       "password:1",
