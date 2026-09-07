@@ -1,10 +1,12 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { DisciplinaryActionRow } from "@/contexts/disciplinary-action/infrastructure/schema/disciplinary-action"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   employeeId: zEmployeeId,
   kind: z.string(),
   summary: z.string(),
@@ -44,7 +46,7 @@ export class DisciplinaryAction implements Props {
     createdAt: string
   }): DisciplinaryAction {
     return new DisciplinaryAction({
-      id: null,
+      id: createUuidV7(),
       employeeId: props.employeeId,
       kind: props.kind,
       summary: props.summary,

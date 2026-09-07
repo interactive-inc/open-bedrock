@@ -41,7 +41,7 @@ export class CommendationRepository {
     }
   }
 
-  async findById(id: number): Promise<Commendation | null | Error> {
+  async findById(id: string): Promise<Commendation | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -60,6 +60,7 @@ export class CommendationRepository {
       const rows = await this.c.var.database
         .insert(commendations)
         .values({
+          id: commendation.id,
           employeeId: commendation.employeeId,
           title: commendation.title,
           reason: commendation.reason,
@@ -79,7 +80,6 @@ export class CommendationRepository {
   }
 
   async delete(commendation: Commendation): Promise<boolean | Error> {
-    if (commendation.id === null) return new Error("cannot delete unsaved commendation")
     try {
       const rows = await this.c.var.database
         .delete(commendations)

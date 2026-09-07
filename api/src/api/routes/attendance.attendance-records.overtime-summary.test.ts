@@ -65,11 +65,14 @@ async function createScopeTestDb(): Promise<D1Database> {
   // R021 は毎日 600 分×22 日 = 13200 分（時間外 2640 分）。
   const records: Array<Record<string, string | number | boolean | null>> = []
 
-  let id = 100
+  let sequence = 100
+
+  /** attendance_records の主キーは UUID なので、連番から決定的な UUID を作る。 */
+  const nextId = (): string => `01900015-0000-7000-8000-${String(sequence++).padStart(12, "0")}`
 
   for (let day = 1; day <= 12; day++) {
     records.push({
-      id: id++,
+      id: nextId(),
       employee_id: "20",
       work_date: `2026-06-${String(day).padStart(2, "0")}`,
       clock_in_at: null,
@@ -81,7 +84,7 @@ async function createScopeTestDb(): Promise<D1Database> {
 
   for (let day = 1; day <= 22; day++) {
     records.push({
-      id: id++,
+      id: nextId(),
       employee_id: "21",
       work_date: `2026-06-${String(day).padStart(2, "0")}`,
       clock_in_at: null,

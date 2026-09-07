@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
@@ -21,7 +22,7 @@ import { z } from "zod"
 const jwtSecret = "attendance-list-route-test-secret"
 
 const attendanceRecordResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employee_id: zEmployeeId,
   work_date: z.string(),
   clock_in_at: z.string().nullable(),
@@ -208,7 +209,7 @@ async function createScopeTestDb(): Promise<D1Database> {
 
   await seedD1(db, "attendance_records", [
     {
-      id: 100,
+      id: "01900015-0000-7000-8000-000000000100",
       employee_id: "20",
       work_date: "2026-06-01",
       clock_in_at: "2026-06-01T09:00:00Z",
@@ -217,7 +218,7 @@ async function createScopeTestDb(): Promise<D1Database> {
       status: "closed",
     },
     {
-      id: 101,
+      id: "01900015-0000-7000-8000-000000000101",
       employee_id: "21",
       work_date: "2026-06-01",
       clock_in_at: "2026-06-01T09:00:00Z",

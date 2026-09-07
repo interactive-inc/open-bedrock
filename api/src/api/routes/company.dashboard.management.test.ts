@@ -169,15 +169,15 @@ async function createTestDb(): Promise<D1Database> {
 
   // 当月の打刻 2 件、前月 1 件(数えない)。
   await seedD1(db, "attendance_records", [
-    { id: 1, employee_id: "2", work_date: "2026-06-02", status: "closed" },
-    { id: 2, employee_id: "2", work_date: "2026-06-03", status: "closed" },
-    { id: 3, employee_id: "2", work_date: "2026-05-30", status: "closed" },
+    { id: "01900015-0000-7000-8000-000000000001", employee_id: "2", work_date: "2026-06-02", status: "closed" },
+    { id: "01900015-0000-7000-8000-000000000002", employee_id: "2", work_date: "2026-06-03", status: "closed" },
+    { id: "01900015-0000-7000-8000-000000000003", employee_id: "2", work_date: "2026-05-30", status: "closed" },
   ])
 
   // 休暇: 当月 2 件(うち pending 1)、前月 pending 1(件数は当月外だが pending は全期間)。
   await seedD1(db, "leave_requests", [
     {
-      id: 1,
+      id: "0190001e-0000-7000-8000-000000000001",
       employee_id: "2",
       leave_type: "annual",
       start_date: "2026-06-20",
@@ -190,7 +190,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-06-05T00:00:00.000Z",
     },
     {
-      id: 2,
+      id: "0190001e-0000-7000-8000-000000000002",
       employee_id: "3",
       leave_type: "annual",
       start_date: "2026-06-22",
@@ -203,7 +203,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-06-06T00:00:00.000Z",
     },
     {
-      id: 3,
+      id: "0190001e-0000-7000-8000-000000000003",
       employee_id: "3",
       leave_type: "annual",
       start_date: "2026-05-10",

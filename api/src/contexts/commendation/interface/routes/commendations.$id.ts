@@ -4,7 +4,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 
 // @authorization service - session を application service に渡して判定する
 /** DELETE /commendations/:id — 表彰の記録を削除（commendation:manage）。 */
@@ -17,7 +17,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const result = await new DeleteCommendation(c).run({
     session,
-    id: validateIntParam(c.req.param("id"), "commendation"),
+    id: validateUuidParam(c.req.param("id"), "commendation"),
   })
 
   if (result instanceof ApplicationError) {
