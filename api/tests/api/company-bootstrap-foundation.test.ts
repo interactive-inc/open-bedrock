@@ -1,3 +1,4 @@
+import { organizationProfileVersionSchema } from "@/contexts/company/domain/definitions/organization-profile-version.definition"
 import { expect, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
@@ -106,8 +107,60 @@ test("実APIでSystem初期化・ログインからCompany初期化・公開プ�
   const replay = await company(token)
   expect(replay.status).toBe(200)
   expect(await replay.json()).toEqual({ ...saved, replayed: true })
+  const shownResponse = await requestWithContext({
+    ...environment,
+    path: "/company/organization-profile",
+    token,
+  })
+  expect(shownResponse.status).toBe(200)
+  const shown = z
+    .object({ version: organizationProfileVersionSchema })
+    .parse(await shownResponse.json())
+  const profileInput = {
+    name: "Updated Company",
+    representativeName: "Updated Representative",
+    locale: "ja-JP",
+    timeZone: "Asia/Tokyo",
+    fiscalYearStartMonth: 4,
+    version: shown.version,
+    reason: "Confirmed company update",
+  }
+  const editProfile = (accessToken: string | null) =>
+    requestWithContext({
+      ...environment,
+      path: "/company/organization-profile",
+      method: "PUT",
+      token: accessToken,
+      headers: { "idempotency-key": "company-profile:composition" },
+      body: profileInput,
+    })
+  expect((await editProfile(null)).status).toBe(401)
+  expect((await editProfile(token)).status).toBe(200)
+  const updatedProfile = await requestWithContext({
+    ...environment,
+    path: "/company/profile",
+    token,
+    headers: { "x-company-organization-id": "organization:default" },
+  })
+  expect(updatedProfile.status).toBe(200)
+  expect(await updatedProfile.json()).toMatchObject({
+    organizationRevision: 4,
+    resources: [
+      {
+        attributes: {
+          displayName: "Updated Company",
+          representativeName: "Updated Representative",
+        },
+      },
+    ],
+  })
+  expect(await (await editProfile(token)).json()).toMatchObject({
+    organizationRevision: 4,
+    replayed: true,
+  })
   await database.exec("UPDATE system_role_bindings SET revoked_at = created_at")
   expect((await company(token)).status).toBe(403)
+  expect((await editProfile(token)).status).toBe(403)
   expect(
     await database
       .prepare("SELECT count(*) AS total FROM company_bootstrap_receipts")
@@ -115,4 +168,5 @@ test("実APIでSystem初期化・ログインからCompany初期化・公開プ�
   ).toBe(1)
   await database.exec("UPDATE system_accounts SET token_version = token_version + 1")
   expect((await company(token)).status).toBe(401)
+  expect((await editProfile(token)).status).toBe(401)
 })

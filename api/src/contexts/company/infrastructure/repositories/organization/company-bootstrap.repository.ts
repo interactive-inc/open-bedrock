@@ -280,11 +280,6 @@ export class CompanyBootstrapRepository {
            SET status = 'COMPLETED'
            WHERE id = ?1 AND status = 'PENDING'`,
       ).bind(organizationActionId),
-      this.c.env.DB.prepare(
-        `UPDATE company_organizations
-           SET name = ?1, representative_name = ?2, updated_at = ?3
-           WHERE id = 'organization:default' AND revision = 3`,
-      ).bind(write.organizationName, write.representativeName, recordedAt),
       this.c.env.DB.prepare(`INSERT INTO company_bootstrap_receipts
         (command_id, organization_id, actor_account_id, fingerprint, employee_id, organization_revision, declaration_json, source_json, recorded_at)
         VALUES (?1, 'organization:default', ?2, ?3, ?4, 3, ?5, ?6, ?7)`).bind(

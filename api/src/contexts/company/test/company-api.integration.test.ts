@@ -24,8 +24,8 @@ const companySql = readFileSync(
 )
 
 type TestEnv = {
-  Bindings: { DB: D1Database }
-  Variables: { companyActor: CompanyActorValue }
+  Bindings: { DB: D1Database; COMPANY_TIME_ZONE: string }
+  Variables: { companyActor: CompanyActorValue; companyClock: () => Date }
 }
 
 const actor = CompanyActorValue.restore({
@@ -39,6 +39,7 @@ function createClient(database: D1Database, currentActor: CompanyActorValue = ac
   const app = new Hono<TestEnv>()
     .use("*", async (context, next) => {
       context.set("companyActor", currentActor)
+      context.set("companyClock", () => new Date("2026-09-07T03:00:00.000Z"))
       await next()
     })
     .onError((error, context) => {
@@ -59,7 +60,7 @@ function createClient(database: D1Database, currentActor: CompanyActorValue = ac
   const request = (
     input: Parameters<typeof app.request>[0],
     init?: Parameters<typeof app.request>[1],
-  ) => app.request(input, init, { DB: database })
+  ) => app.request(input, init, { DB: database, COMPANY_TIME_ZONE: "Asia/Tokyo" })
   return hc<typeof app>("http://company.test", { fetch: request })
 }
 
@@ -72,6 +73,24 @@ async function seedOrganization(database: D1Database): Promise<void> {
     )
     .bind("organization:default")
     .run()
+}
+
+const organizationProfileInput = {
+  name: "Example Corporation",
+  representativeName: "Alex Example",
+  locale: "ja-JP",
+  timeZone: "Asia/Tokyo",
+  fiscalYearStartMonth: 4,
+  version: {
+    organizationId: "organization:default",
+    organizationRevision: 0,
+    resourceId: null,
+    resourceRevision: 0,
+    effectiveOn: "2026-09-07",
+    effectiveTo: null,
+    sourceFingerprint: "0".repeat(64),
+  },
+  reason: "Confirmed company profile",
 }
 
 const readHeaders = {
@@ -155,30 +174,12 @@ describe("canonical Company API", () => {
     ).toBe(201)
   })
 
-  test("法人プロフィールを設定するまでは404へ閉じ、設定後は同じorganizationから読める", async () => {
+  test("会社情報のないorganizationは404を返す", async () => {
     const database = createCompanyD1TestDatabase(companySql)
     await seedOrganization(database)
-    const client = createClient(database)
-
-    const missing = await client.company["organization-profile"].$get()
-    expect(Number(missing.status)).toBe(404)
-    expect(await missing.json()).toMatchObject({ code: "organization_profile_not_configured" })
-
-    const updated = await client.company["organization-profile"].$put({
-      json: { name: "Example Corporation", representativeName: "Alex Example" },
-    })
-    expect(updated.status).toBe(200)
-    expect(await updated.json()).toEqual({
-      name: "Example Corporation",
-      representativeName: "Alex Example",
-    })
-
-    const read = await client.company["organization-profile"].$get()
-    expect(read.status).toBe(200)
-    expect(await read.json()).toEqual({
-      name: "Example Corporation",
-      representativeName: "Alex Example",
-    })
+    const response = await createClient(database).company["organization-profile"].$get()
+    expect(Number(response.status)).toBe(404)
+    expect(await response.json()).toMatchObject({ code: "organization_profile_not_configured" })
   })
 
   test("Company write capabilityなしでは法人プロフィールを更新できない", async () => {
@@ -194,11 +195,12 @@ describe("canonical Company API", () => {
       }),
     )
     const response = await client.company["organization-profile"].$put({
-      json: { name: "Example Corporation", representativeName: "Alex Example" },
+      header: { "idempotency-key": "company-profile:unauthorized" },
+      json: organizationProfileInput,
     })
 
     expect(Number(response.status)).toBe(403)
-    expect(await response.json()).toMatchObject({ code: "company_write_forbidden" })
+    expect(await response.json()).toMatchObject({ code: "forbidden" })
   })
 
   test("write・replay・readを同じportable D1 contractで実行する", async () => {
@@ -541,7 +543,9 @@ describe("canonical Company API", () => {
     })
     void ((input: Parameters<(typeof client.company)["organization-profile"]["$put"]>[0]) => input)(
       {
+        header: { "idempotency-key": "company-profile:typed" },
         json: {
+          ...organizationProfileInput,
           // @ts-expect-error name must be a string
           name: 1,
           representativeName: "Alex Example",

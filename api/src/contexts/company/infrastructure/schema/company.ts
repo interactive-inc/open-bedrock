@@ -93,6 +93,9 @@ export const companyResourceHeads = sqliteTable(
       table.resourceType,
       table.resourceId,
     ),
+    uniqueIndex("company_profile_organization_identity")
+      .on(table.organizationId)
+      .where(sql`${table.resourceType} = 'company-profile'`),
     check("company_resource_heads_revision_positive", sql`${table.revision} >= 1`),
     check("company_resource_heads_state_valid", sql`${table.state} IN ('active', 'void')`),
     check(
@@ -419,7 +422,41 @@ export const companyBootstrapReceipts = sqliteTable(
   ],
 )
 
+export const companyProfileChangeReceipts = sqliteTable(
+  "company_profile_change_receipts",
+  {
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => companyOrganizations.id),
+    commandId: text("command_id").notNull(),
+    fingerprint: text("fingerprint").notNull(),
+    actorAccountId: text("actor_account_id")
+      .notNull()
+      .references(() => systemAccounts.id),
+    organizationRevision: integer("organization_revision").notNull(),
+    declarationJson: text("declaration_json").notNull(),
+    sourceJson: text("source_json").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.organizationId, table.commandId] }),
+    foreignKey({
+      columns: [table.organizationId, table.commandId],
+      foreignColumns: [companyCommandReceipts.organizationId, companyCommandReceipts.commandId],
+    }),
+    check(
+      "company_profile_change_fingerprint",
+      sql`length(${table.fingerprint}) = 64 AND ${table.fingerprint} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+    check("company_profile_change_revision", sql`${table.organizationRevision} > 0`),
+    check("company_profile_change_declaration", sql`json_valid(${table.declarationJson})`),
+    check("company_profile_change_source", sql`json_valid(${table.sourceJson})`),
+    check("company_profile_change_time", sql`${table.recordedAt} >= 0`),
+  ],
+)
+
 export const companySchema = {
+  companyProfileChangeReceipts,
   companyBootstrapReceipts,
   companyOrganizationResourceAdoptions,
   companyOrganizationResourceBindings,
