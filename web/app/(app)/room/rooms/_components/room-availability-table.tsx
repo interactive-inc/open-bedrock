@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -8,6 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { RoomAvailability } from "@/lib/api/types/room-types"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   availabilities: ReadonlyArray<RoomAvailability>
@@ -36,9 +36,13 @@ export function RoomAvailabilityTable(props: Props) {
 
               <TableCell>
                 {availability.available ? (
-                  <Badge variant="secondary">空き</Badge>
+                  <Button type="button" variant="secondary" size="sm">
+                    空き
+                  </Button>
                 ) : (
-                  <Badge variant="destructive">予約あり</Badge>
+                  <Button type="button" variant="destructive" size="sm">
+                    予約あり
+                  </Button>
                 )}
               </TableCell>
 
