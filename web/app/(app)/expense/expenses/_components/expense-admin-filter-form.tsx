@@ -5,7 +5,15 @@ import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 type Props = {
-  statusValue: "pending" | "approved" | "rejected" | "settled" | ""
+  statusValue:
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "settled"
+    | "returned"
+    | "cancelled"
+    | "awaiting_execution"
+    | ""
   categoryValue: "transport" | "supplies" | "entertainment" | "books" | "other" | ""
   applicantIdValue: string
   fromValue: string
@@ -18,6 +26,9 @@ const statusOptions = [
   { value: "approved", label: "承認済み" },
   { value: "rejected", label: "却下" },
   { value: "settled", label: "精算済み" },
+  { value: "returned", label: "差戻し" },
+  { value: "cancelled", label: "取消済み" },
+  { value: "awaiting_execution", label: "決裁確定待ち" },
 ]
 
 const categoryOptions = [

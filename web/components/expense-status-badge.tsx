@@ -19,5 +19,8 @@ export function ExpenseStatusBadge(props: Props) {
     return <Badge variant="destructive">却下</Badge>
   }
 
+  if (props.status === "returned") return <Badge variant="secondary">差戻し</Badge>
+  if (props.status === "cancelled") return <Badge variant="outline">取消済み</Badge>
+  if (props.status === "awaiting_execution") return <Badge variant="secondary">決裁確定待ち</Badge>
   return <Badge variant="secondary">承認待ち</Badge>
 }

@@ -28,7 +28,7 @@ export async function uploadAttachment(file: File): Promise<UploadedAttachment |
   form.set("file", file)
 
   try {
-    const response = await fetch(new URL("/attachments", baseUrl), {
+    const response = await fetch(new URL("/system/attachments", baseUrl), {
       method: "POST",
       headers,
       body: form,

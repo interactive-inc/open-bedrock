@@ -128,10 +128,13 @@ import * as documentLedgerEntriesIdRoute from "@/contexts/document/interface/rou
 import * as departmentBudgetsRoute from "@/contexts/expense/interface/routes/department-budgets"
 import * as departmentBudgetsIdRoute from "@/contexts/expense/interface/routes/department-budgets.$id"
 import * as departmentBudgetsSummaryRoute from "@/contexts/expense/interface/routes/department-budgets.summary"
+import * as expenseProceduresRoute from "@/contexts/expense/interface/routes/expense-procedures"
 import * as expensesRoute from "@/contexts/expense/interface/routes/expenses"
 import * as expensesIdRoute from "@/contexts/expense/interface/routes/expenses.$id"
 import * as expensesIdApproveRoute from "@/contexts/expense/interface/routes/expenses.$id.approve"
 import * as expensesIdAttachmentsAttachmentIdRoute from "@/contexts/expense/interface/routes/expenses.$id.attachments.$attachmentId"
+import * as expensesIdCancelRoute from "@/contexts/expense/interface/routes/expenses.$id.cancel"
+import * as expensesIdExecuteRoute from "@/contexts/expense/interface/routes/expenses.$id.execute"
 import * as expensesIdRejectRoute from "@/contexts/expense/interface/routes/expenses.$id.reject"
 import * as expensesAdminRoute from "@/contexts/expense/interface/routes/expenses.admin"
 import * as expensesInboxRoute from "@/contexts/expense/interface/routes/expenses.inbox"
@@ -657,18 +660,20 @@ const routePart29 = createRouteApp()
   .get("/expense/department-budgets/:id", ...departmentBudgetsIdRoute.GET)
   .patch("/expense/department-budgets/:id", ...departmentBudgetsIdRoute.PATCH)
   .delete("/expense/department-budgets/:id", ...departmentBudgetsIdRoute.DELETE)
+  .get("/expense/expense-procedures", ...expenseProceduresRoute.GET)
+  .put("/expense/expense-procedures", ...expenseProceduresRoute.PUT)
   .post("/expense/expenses", ...expensesRoute.POST)
   .get("/expense/expenses/admin", ...expensesAdminRoute.GET)
   .get("/expense/expenses/inbox", ...expensesInboxRoute.GET)
   .get("/expense/expenses/me", ...expensesMeRoute.GET)
   .get("/expense/expenses/:id", ...expensesIdRoute.GET)
-  .put("/expense/expenses/:id", ...expensesIdRoute.PUT)
-  .delete("/expense/expenses/:id", ...expensesIdRoute.DELETE)
   .post("/expense/expenses/:id/approve", ...expensesIdApproveRoute.POST)
   .get(
     "/expense/expenses/:id/attachments/:attachmentId",
     ...expensesIdAttachmentsAttachmentIdRoute.GET,
   )
+  .post("/expense/expenses/:id/cancel", ...expensesIdCancelRoute.POST)
+  .post("/expense/expenses/:id/execute", ...expensesIdExecuteRoute.POST)
   .post("/expense/expenses/:id/reject", ...expensesIdRejectRoute.POST)
   .post("/family-care-leave/family-care-leaves", ...familyCareLeavesRoute.POST)
   .get("/family-care-leave/family-care-leaves/admin", ...familyCareLeavesAdminRoute.GET)
@@ -681,10 +686,10 @@ const routePart29 = createRouteApp()
   .get("/governance/governance-capabilities", ...governanceCapabilitiesRoute.GET)
   .get("/governance/governance-documents", ...governanceDocumentsRoute.GET)
   .get("/governance/governance-documents/impact", ...governanceGovernanceDocumentsImpactRoute.GET)
-  .post("/governance/governance-documents/sync", ...governanceGovernanceDocumentsSyncRoute.POST)
-  .get("/governance/governance-documents/:code", ...governanceDocumentsCodeRoute.GET)
 
 const routePart30 = createRouteApp()
+  .post("/governance/governance-documents/sync", ...governanceGovernanceDocumentsSyncRoute.POST)
+  .get("/governance/governance-documents/:code", ...governanceDocumentsCodeRoute.GET)
   .post(
     "/governance/governance-documents/:code/acknowledge",
     ...governanceDocumentsCodeAcknowledgeRoute.POST,
@@ -749,10 +754,10 @@ const routePart30 = createRouteApp()
   .get("/meeting/decision-records/:id", ...decisionRecordsIdRoute.GET)
   .put("/meeting/decision-records/:id", ...decisionRecordsIdRoute.PUT)
   .post("/meeting/decision-records/:id/supersede", ...decisionRecordsIdSupersedeRoute.POST)
-  .get("/meeting/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.GET)
-  .put("/meeting/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.PUT)
 
 const routePart31 = createRouteApp()
+  .get("/meeting/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.GET)
+  .put("/meeting/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.PUT)
   .get("/meeting/meetings", ...meetingsRoute.GET)
   .post("/meeting/meetings", ...meetingsRoute.POST)
   .get("/meeting/meetings/:code", ...meetingsCodeRoute.GET)
@@ -820,13 +825,13 @@ const routePart31 = createRouteApp()
     "/performance-review/evaluation-templates/:templateId",
     ...evaluationTemplatesTemplateIdRoute.PUT,
   )
+
+const routePart32 = createRouteApp()
   .patch(
     "/performance-review/evaluation-templates/:templateId",
     ...evaluationTemplatesTemplateIdRoute.PATCH,
   )
   .get("/performance-review/performance-goals", ...performanceGoalsRoute.GET)
-
-const routePart32 = createRouteApp()
   .post("/performance-review/performance-goals", ...performanceGoalsRoute.POST)
   .get("/performance-review/performance-goals/me", ...performanceGoalsMeRoute.GET)
   .get("/performance-review/performance-goals/tree", ...performanceGoalsTreeRoute.GET)
@@ -897,10 +902,10 @@ const routePart32 = createRouteApp()
   .post("/rental/rental-reservations/:id/return", ...rentalReservationsIdReturnRoute.POST)
   .post("/resignation/resignations", ...resignationsRoute.POST)
   .get("/resignation/resignations/admin", ...resignationsAdminRoute.GET)
-  .get("/resignation/resignations/me", ...resignationsMeRoute.GET)
-  .get("/resignation/resignations/:id", ...resignationsIdRoute.GET)
 
 const routePart33 = createRouteApp()
+  .get("/resignation/resignations/me", ...resignationsMeRoute.GET)
+  .get("/resignation/resignations/:id", ...resignationsIdRoute.GET)
   .put("/resignation/resignations/:id", ...resignationsIdRoute.PUT)
   .delete("/resignation/resignations/:id", ...resignationsIdRoute.DELETE)
   .post("/resignation/resignations/:id/accept", ...resignationsIdAcceptRoute.POST)
@@ -947,10 +952,10 @@ const routePart33 = createRouteApp()
   .delete("/shift/shift-swap-requests/:id", ...shiftSwapRequestsIdRoute.DELETE)
   .post("/shift/shift-swap-requests/:id/approve", ...shiftSwapRequestsIdApproveRoute.POST)
   .get("/skill/employee-skills/me", ...employeeSkillsMeRoute.GET)
-  .put("/skill/employee-skills/me", ...employeeSkillsMeRoute.PUT)
-  .get("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.GET)
 
 const routePart34 = createRouteApp()
+  .put("/skill/employee-skills/me", ...employeeSkillsMeRoute.PUT)
+  .get("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.GET)
   .delete("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.DELETE)
   .get("/skill/skill-definitions", ...skillDefinitionsRoute.GET)
   .get("/software-license/software-licenses", ...softwareLicensesRoute.GET)
@@ -1012,13 +1017,13 @@ const routePart34 = createRouteApp()
   .get("/system/connectors", ...systemConnectorsRoute.GET)
   .post("/system/connectors", ...systemConnectorsRoute.POST)
   .patch("/system/connectors/:connectorId", ...systemConnectorsConnectorIdRoute.PATCH)
+
+const routePart35 = createRouteApp()
   .get("/system/dead-letters", ...systemDeadLettersRoute.GET)
   .post(
     "/system/dead-letters/:deadLetterId/requeue",
     ...systemDeadLettersDeadLetterIdRequeueRoute.POST,
   )
-
-const routePart35 = createRouteApp()
   .get("/system/deliveries", ...systemDeliveriesRoute.GET)
   .post("/system/deliveries", ...systemDeliveriesRoute.POST)
   .patch("/system/deliveries/:deliveryId", ...systemDeliveriesDeliveryIdRoute.PATCH)
@@ -1086,10 +1091,10 @@ const routePart35 = createRouteApp()
   .post("/thanks/thanks-messages", ...thanksMessagesRoute.POST)
   .get("/thanks/thanks-messages/me", ...thanksMessagesMeRoute.GET)
   .get("/thanks/thanks-point-balances/me", ...thanksPointBalancesMeRoute.GET)
-  .get("/thanks/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
-  .post("/thanks/thanks-redemptions", ...thanksRedemptionsRoute.POST)
 
 const routePart36 = createRouteApp()
+  .get("/thanks/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
+  .post("/thanks/thanks-redemptions", ...thanksRedemptionsRoute.POST)
   .get("/thanks/thanks-redemptions/admin", ...thanksRedemptionsAdminRoute.GET)
   .get("/thanks/thanks-redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)
   .get("/thanks/thanks-redemptions/me", ...thanksRedemptionsMeRoute.GET)

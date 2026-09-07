@@ -28,6 +28,7 @@ export default async function InboxPage() {
   const cards = types.map((inboxType) => ({
     inboxType,
     count: inboxCountFor(inboxType, counts),
+    hasMore: inboxType.countKey === "expenses" && counts.expenses_has_more === true,
   }))
 
   const totalPending = cards.reduce((sum, card) => sum + (card.count ?? 0), 0)
@@ -36,7 +37,7 @@ export default async function InboxPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {hasCountable && totalPending === 0 ? (
+      {hasCountable && totalPending === 0 && !cards.some((card) => card.hasMore) ? (
         <EmptyState
           icon={Inbox}
           title="対応待ちはありません"
@@ -54,16 +55,21 @@ export default async function InboxPage() {
                 <CardTitle>{card.inboxType.label}</CardTitle>
 
                 {card.count !== null ? (
-                  <span className="text-2xl font-semibold tabular-nums">{card.count}</span>
+                  <span className="text-2xl font-semibold tabular-nums">
+                    {card.count}
+                    {card.hasMore ? "+" : ""}
+                  </span>
                 ) : null}
               </div>
 
               <CardDescription>
-                {card.count === null
-                  ? "受信箱を開く"
-                  : card.count === 0
-                    ? "対応待ちはありません"
-                    : `${card.count} 件の対応待ち`}
+                {card.hasMore
+                  ? "受信箱を開いて続きを確認"
+                  : card.count === null
+                    ? "受信箱を開く"
+                    : card.count === 0
+                      ? "対応待ちはありません"
+                      : `${card.count} 件の対応待ち`}
               </CardDescription>
             </CardLink>
           ))}

@@ -57,7 +57,7 @@ export async function uploadAttachment(
     headers.Authorization = `Bearer ${tokens.token}`
   }
 
-  const response = await fetch(new URL("/attachments", baseUrl), {
+  const response = await fetch(new URL("/system/attachments", baseUrl), {
     method: "POST",
     headers,
     body: form,

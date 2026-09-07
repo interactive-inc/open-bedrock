@@ -1,84 +1,53 @@
+import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
+import { zExpenseProcedureView } from "@/contexts/expense/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
-import { zAppExpenseInboxList } from "@/contexts/expense/interface/http/response-schemas"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { UnauthorizedError } from "@/lib/http/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { verifyBearer } from "@/api/http/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
-import { and, count, desc, eq, inArray, sql } from "drizzle-orm"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
-import { ListManagedEmployeeIdsAdapter } from "@/contexts/company/infrastructure/adapters/organization/list-managed-employee-ids.adapter"
+import { ExpenseProcedureInboxAdapter } from "@/contexts/expense/infrastructure/adapters/expense-procedure-inbox.adapter"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 
-// @authorization permission - 権限キーで判定する
-/** GET /expenses/inbox — 承認待ちの経費一覧（承認権限が必要） */
-export const GET = factory.createHandlers(verifyBearer, async (c) => {
-  const session = c.var.session
-
-  if (session === null) {
-    throw new UnauthorizedError()
-  }
-
-  if (session.hasPermission("expense:approve") === false) {
-    throw new ForbiddenError()
-  }
-
-  const managedEmployeeIds = session.hasPermission("org:manage")
-    ? null
-    : await new ListManagedEmployeeIdsAdapter(c).listManagedEmployeeIds(session.employeeId)
-
-  if (managedEmployeeIds instanceof Error) {
-    throw new InternalError("failed to resolve organization scope")
-  }
-
-  const pendingInScope =
-    managedEmployeeIds === null
-      ? eq(expenses.status, "pending")
-      : managedEmployeeIds.length === 0
-        ? and(eq(expenses.status, "pending"), sql`0 = 1`)
-        : and(eq(expenses.status, "pending"), inArray(expenses.employeeId, [...managedEmployeeIds]))
-
-  const limit = toBoundedInt({
-    raw: c.req.query("limit"),
-    fallback: DEFAULT_LIST_LIMIT,
-    min: 1,
-    max: MAX_LIST_LIMIT,
-  })
-
-  const offset = toBoundedInt({
-    raw: c.req.query("offset"),
-    fallback: 0,
-    min: 0,
-    max: MAX_LIST_OFFSET,
-  })
-
-  const [rows, totalRows] = await Promise.all([
-    c.var.database
-      .select({ expense: expenses, applicantName: employees.officialName })
-      .from(expenses)
-      .leftJoin(employees, eq(employees.id, expenses.employeeId))
-      .where(pendingInScope)
-      .orderBy(desc(expenses.id))
-      .limit(limit)
-      .offset(offset),
-    c.var.database.select({ total: count() }).from(expenses).where(pendingInScope),
-  ])
-
-  const responseBody = zAppExpenseInboxList.parse({
-    data: rows.map((row) => ({
-      id: row.expense.id,
-      applicant_name: row.applicantName ?? "",
-      category: row.expense.category,
-      amount: row.expense.amount,
-      spent_at: row.expense.spentAt,
-      status: row.expense.status,
-      created_at: row.expense.createdAt,
-    })),
-    total: totalRows.at(0)?.total ?? 0,
-  })
-
-  return c.json(responseBody, 200)
-})
+// @authorization service - 現在の判断・実行資格を持つ案件だけを返す
+export const GET = factory.createHandlers(
+  verifyBearer,
+  zValidator("query", z.object({ limit: z.string().optional(), offset: z.string().optional() })),
+  async (c) => {
+    const session = c.var.session
+    if (session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
+    const at = new Date(c.env.NOW ?? Date.now())
+    const limit = toBoundedInt({
+      raw: c.req.query("limit"),
+      fallback: DEFAULT_LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    })
+    const offset = toBoundedInt({
+      raw: c.req.query("offset"),
+      fallback: 0,
+      min: 0,
+      max: MAX_LIST_OFFSET,
+    })
+    const result = await new ExpenseProcedureInboxAdapter(c).list({
+      session,
+      tokenVersion: c.var.accountTokenVersion,
+      at,
+      limit,
+      offset,
+    })
+    if (result instanceof ApplicationError) throw toHttpException(result)
+    return c.json(
+      {
+        data: result.data.map((view) => zExpenseProcedureView.parse(view)),
+        next_offset: result.next_offset,
+      },
+      200,
+    )
+  },
+)

@@ -289,9 +289,15 @@ export function SidebarNav(props: Props) {
           />
           <span className="truncate">{item.label}</span>
 
-          {badgeMap[item.href] != null && badgeMap[item.href] > 0 ? (
-            <Badge className="ml-auto" aria-label={`未処理 ${badgeMap[item.href]} 件`}>
+          {badgeMap[item.href] != null &&
+          (badgeMap[item.href] > 0 ||
+            (item.href === "/inbox" && props.inboxCounts.expenses_has_more)) ? (
+            <Badge
+              className="ml-auto"
+              aria-label={`未処理 ${badgeMap[item.href]}${item.href === "/inbox" && props.inboxCounts.expenses_has_more ? "+" : ""} 件`}
+            >
               {badgeMap[item.href]}
+              {item.href === "/inbox" && props.inboxCounts.expenses_has_more ? "+" : ""}
             </Badge>
           ) : null}
         </SidebarMenuButton>

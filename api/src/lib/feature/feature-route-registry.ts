@@ -28,7 +28,7 @@ export const defaultAppRoutePrefixes: Readonly<Record<string, ReadonlyArray<stri
   "family-care-leave": ["/family-care-leave/family-care-leaves"],
   shifts: ["/shift/shift-assignments", "/shift/shift-patterns", "/shift/shift-swap-requests"],
   "company-calendar": ["/company-calendar/company-calendar-days"],
-  expenses: ["/expense/expenses"],
+  expenses: ["/expense/expenses", "/expense/expense-procedures"],
   "business-trips": ["/business-trip/business-trips"],
   "life-events": ["/life-event/life-events"],
   ringi: ["/ringi/ringi-requests"],

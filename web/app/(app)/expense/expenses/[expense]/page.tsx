@@ -1,7 +1,10 @@
+import { ExpenseResubmission } from "@/app/(app)/expense/expenses/_components/expense-resubmission"
+import { ExpenseProcedureControls } from "@/app/(app)/expense/expenses/_components/expense-procedure-controls"
+import { ExpenseDecisionHistory } from "@/app/(app)/expense/expenses/_components/expense-decision-history"
+import Link from "next/link"
 import { formatDate } from "@/lib/format-date"
 import { formatDateTime } from "@/lib/format-date-time"
 import { Suspense } from "react"
-import { ExpenseDecisionForm } from "@/app/(app)/my/expenses/_components/expense-decision-form"
 import { BackButton } from "@/components/back-button"
 import { DetailField } from "@/components/detail-field"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
@@ -12,8 +15,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getExpenseDetail } from "@/lib/api/get-expense-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
 import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
-import { getMe } from "@/lib/api/get-me"
-import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 
 export const metadata = { title: "経費詳細" }
 
@@ -25,11 +26,7 @@ const amountFormatter = new Intl.NumberFormat("ja-JP")
 
 /** 経費詳細画面。params.expense で対象を取得し、詳細と承認・却下フォームを描画する RSC。 */
 export default async function ExpenseDetailPage(props: Props) {
-  const [params, currentUser] = await Promise.all([props.params, getMe()])
-
-  const canDecide = currentUser instanceof Error ? false : canDecideExpense(currentUser.permissions)
-
-  const viewerEmployeeId = currentUser instanceof Error ? null : currentUser.id
+  const params = await props.params
 
   return (
     <div className="flex flex-col gap-8">
@@ -38,11 +35,7 @@ export default async function ExpenseDetailPage(props: Props) {
       </PageHeader>
 
       <Suspense fallback={<DetailSkeleton fields={5} />}>
-        <ExpenseDetailView
-          id={params.expense}
-          canDecide={canDecide}
-          viewerEmployeeId={viewerEmployeeId}
-        />
+        <ExpenseDetailView id={params.expense} />
       </Suspense>
     </div>
   )
@@ -50,8 +43,6 @@ export default async function ExpenseDetailPage(props: Props) {
 
 type ViewProps = {
   id: string
-  canDecide: boolean
-  viewerEmployeeId: string | null
 }
 
 /** /expenses/:id を認証付きで取得して詳細カードと意思決定フォームを描画する非同期 RSC。 */
@@ -68,7 +59,7 @@ async function ExpenseDetailView(props: ViewProps) {
     handleDetailError(expense)
   }
 
-  const isPending = expense.status === "pending"
+  const requestKey = crypto.randomUUID()
 
   return (
     <div className="flex flex-col gap-8">
@@ -84,6 +75,14 @@ async function ExpenseDetailView(props: ViewProps) {
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
             <DetailField label="申請者">{expense.applicant_name}</DetailField>
+            <DetailField label="負担組織">
+              {expense.organization_unit_name ?? expense.organization_unit_id}
+            </DetailField>
+            {expense.required_approvals !== null ? (
+              <DetailField label="現在の段階の承認">
+                {expense.approvals} / {expense.required_approvals} 名
+              </DetailField>
+            ) : null}
 
             <DetailField label="金額">
               <span className="tabular-nums">{amountFormatter.format(expense.amount)} 円</span>
@@ -119,21 +118,25 @@ async function ExpenseDetailView(props: ViewProps) {
         </CardContent>
       </Card>
 
-      {isPending && props.canDecide && expense.employee_id !== props.viewerEmployeeId ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>承認・却下</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <ExpenseDecisionForm expenseId={expense.id} />
-          </CardContent>
-        </Card>
-      ) : isPending ? null : (
-        <p className="text-sm text-muted-foreground">
-          この経費は既に処理済みのため、承認・却下はできません
+      {expense.procedure_required ? (
+        <p>
+          この経費は現在の承認規程へ未接続です。本人が内容と添付を確認して接続すると、番号と履歴を保ったまま審査を開始します。
         </p>
-      )}
+      ) : null}
+      {!expense.evidence_available ? (
+        <p role="alert">確認した領収書を利用できないため、判断・決裁確定を停止しています。</p>
+      ) : null}
+      <ExpenseProcedureControls expense={expense} />
+      <ExpenseResubmission expense={expense} requestKey={requestKey} />
+      {expense.previous_expense_id !== null ? (
+        <Link href={`/expense/expenses/${expense.previous_expense_id}`}>差戻し元の経費を見る</Link>
+      ) : null}
+      {expense.next_expense_id !== null ? (
+        <Link href={`/expense/expenses/${expense.next_expense_id}`}>
+          修正して再提出した経費を見る
+        </Link>
+      ) : null}
+      <ExpenseDecisionHistory decisions={expense.decisions} />
     </div>
   )
 }

@@ -2,6 +2,7 @@
 export type InboxCounts = {
   applications: number
   expenses: number
+  expenses_has_more?: boolean
   leaves: number
   shifts: number
   thanks: number

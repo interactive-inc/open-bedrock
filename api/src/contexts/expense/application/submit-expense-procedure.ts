@@ -1,3 +1,4 @@
+import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
@@ -139,6 +140,14 @@ export class SubmitExpenseProcedure {
             guards,
           }),
       })
+    const scope = await new PrepareExpenseApprovalScopeAdapter(this.c).prepare({
+      organizationUnitId: expense.organizationUnitId,
+      at: command.createdAt,
+    })
+    if (scope instanceof Error)
+      return new ConflictError("負担組織を確認できません", "organization_scope_changed", {
+        cause: scope,
+      })
     if (original !== null && original.status !== "pending")
       return new ConflictError("決定済みの経費は提出できません", "already_decided")
     const reusedFrom = command.existingExpenseId ?? command.previousExpenseId
@@ -175,6 +184,7 @@ export class SubmitExpenseProcedure {
       payload,
       activatedAt: command.createdAt,
       afterTaskKey: null,
+      targetDepartmentCode: scope.targetDepartmentCode,
       applicant: {
         employeeId: applicant.id,
         employeeCode: applicant.employeeCode,
@@ -250,7 +260,7 @@ export class SubmitExpenseProcedure {
       attachments: evidence.evidence,
       attachmentEffects: evidence.effects,
       workflow: { proposal, workflowCase, firstTask },
-      guards: [...guards, ...evidence.guards, ...resolved.guards],
+      guards: [...guards, scope.guard, ...evidence.guards, ...resolved.guards],
       audit,
     })
     if (!(created instanceof Error)) return { request: created, replayed: false }
