@@ -103,6 +103,8 @@ export const permissionKeys = [
   "resignation:read:all",
   "review:administer",
   "ringi:read:all",
+  "ringi:approve",
+  "ringi:submit",
   "room:manage",
   "salary_revision:manage",
   "salary_revision:read:all",

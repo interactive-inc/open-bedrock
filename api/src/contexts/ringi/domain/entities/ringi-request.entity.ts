@@ -33,7 +33,7 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-/** 稟議申請（金額つきの汎用決裁。単段決裁で、決裁結果を行に inline 保持する）。集約ルート。 */
+/** 稟議の申請内容、起案時の提出先、業務上の決裁結果を保持する。 */
 export class RingiRequest implements Props {
   /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
@@ -85,6 +85,16 @@ export class RingiRequest implements Props {
       decisionComment: null,
       createdAt: props.createdAt,
     })
+  }
+
+  toProposalBody() {
+    return {
+      applicantId: this.applicantId,
+      requestedApproverId: this.approverId,
+      title: this.title,
+      amount: this.amount,
+      reason: this.reason,
+    }
   }
 
   static fromRow(row: RingiRequestRow): RingiRequest {

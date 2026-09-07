@@ -2,8 +2,13 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { RingiStatus } from "@/contexts/ringi/domain/definitions/ringi-status.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { systemCases } from "@system/infrastructure/schema/system-workflow"
+import {
+  systemProposalNumbers,
+  systemProposalSeries,
+} from "@system/infrastructure/schema/system-procedure"
 
-/** 稟議（金額つきの汎用決裁）。起案時に承認者を 1 名指定する単段決裁。決裁結果は行に inline 保持する。 */
+/** 起案時の提出先と業務上の決裁結果を保持する稟議。 */
 export const ringiRequests = sqliteTable("ringi_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   applicantId: text("applicant_id").$type<EmployeeId>().notNull(),
@@ -18,3 +23,26 @@ export const ringiRequests = sqliteTable("ringi_requests", {
 })
 
 export type RingiRequestRow = InferSelectModel<typeof ringiRequests>
+
+/** 業務稟議と、確認対象を固定したSystem案件の不変な対応。 */
+export const ringiProcedureBindings = sqliteTable("ringi_procedure_bindings", {
+  requestKey: text("request_key").primaryKey(),
+  ringiId: integer("ringi_id")
+    .notNull()
+    .unique()
+    .references(() => ringiRequests.id, { onDelete: "restrict" }),
+  applicationId: integer("application_id")
+    .notNull()
+    .unique()
+    .references(() => systemProposalNumbers.number, { onDelete: "restrict" }),
+  seriesId: text("series_id")
+    .notNull()
+    .unique()
+    .references(() => systemProposalSeries.id, { onDelete: "restrict" }),
+  caseId: text("case_id")
+    .notNull()
+    .unique()
+    .references(() => systemCases.id, { onDelete: "restrict" }),
+  proposalDigest: text("proposal_digest").notNull(),
+  createdAt: integer("created_at").notNull(),
+})

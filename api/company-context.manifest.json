@@ -341,6 +341,7 @@
     "src/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/resolve-organizational-authority-candidates.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-authority.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/validate-employee-active.adapter.ts",
     "src/contexts/company/infrastructure/adapters/workforce/account-employee-link-read.adapter.ts",
     "src/contexts/company/infrastructure/adapters/workforce/canonical-organization-authority-evidence.adapter.test.ts",
