@@ -1,18 +1,30 @@
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   status: string
 }
 
-/** 棚卸しセッションの状態を日本語ラベルと配色付きの Badge で表示する。 */
+/** 棚卸しセッションの状態を日本語ラベルと配色付きの Button で表示する。 */
 export function StocktakeStatusBadge(props: Props) {
   if (props.status === "open") {
-    return <Badge>実施中</Badge>
+    return (
+      <Button type="button" size="sm">
+        実施中
+      </Button>
+    )
   }
 
   if (props.status === "closed") {
-    return <Badge variant="secondary">締め済み</Badge>
+    return (
+      <Button type="button" variant="secondary" size="sm">
+        締め済み
+      </Button>
+    )
   }
 
-  return <Badge variant="secondary">{props.status}</Badge>
+  return (
+    <Button type="button" variant="secondary" size="sm">
+      {props.status}
+    </Button>
+  )
 }
