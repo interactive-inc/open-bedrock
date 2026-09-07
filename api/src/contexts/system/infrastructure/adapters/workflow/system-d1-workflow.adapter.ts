@@ -318,13 +318,14 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
              SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11
              WHERE EXISTS (
                SELECT 1 FROM system_accounts
-               WHERE id = ?5 AND status = 'active'
+               WHERE id = ?5 AND status = 'active' AND closed_at IS NULL AND created_at <= ?11
              )
              AND EXISTS (
                SELECT 1 FROM system_accounts
-               WHERE id = ?6 AND status = 'active'
+               WHERE id = ?6 AND status = 'active' AND closed_at IS NULL AND created_at <= ?11
              )
-             AND NOT EXISTS (SELECT 1 FROM system_principals WHERE account_id IN (?5, ?6) AND kind <> 'human')`,
+             AND EXISTS (SELECT 1 FROM system_principals WHERE account_id = ?5 AND kind = 'human' AND created_at <= ?11)
+             AND EXISTS (SELECT 1 FROM system_principals WHERE account_id = ?6 AND kind = 'human' AND created_at <= ?11)`,
           )
           .bind(
             attestation.id,
@@ -490,9 +491,9 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
               eligibility_digest, eligible_from, resolved_at)
            SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12
            WHERE EXISTS (
-             SELECT 1 FROM system_accounts WHERE id = ?4 AND status = 'active'
+             SELECT 1 FROM system_accounts WHERE id = ?4 AND status = 'active' AND closed_at IS NULL AND created_at <= ?12
            )
-           AND NOT EXISTS (SELECT 1 FROM system_principals WHERE account_id = ?4 AND kind <> 'human')`,
+           AND EXISTS (SELECT 1 FROM system_principals WHERE account_id = ?4 AND kind = 'human' AND created_at <= ?12)`,
       ).bind(
         input.task.caseId,
         input.task.key,
@@ -575,9 +576,9 @@ export class SystemD1WorkflowAdapter implements SystemWorkflowWriter {
              WHERE case_id = ?1 AND task_key = ?2 AND round = ?3 AND outcome IS NULL
            )
            AND EXISTS (
-             SELECT 1 FROM system_accounts WHERE id = ?4 AND status = 'active'
+             SELECT 1 FROM system_accounts WHERE id = ?4 AND status = 'active' AND closed_at IS NULL AND created_at <= ?12
            )
-           AND NOT EXISTS (SELECT 1 FROM system_principals WHERE account_id = ?4 AND kind <> 'human')`,
+           AND EXISTS (SELECT 1 FROM system_principals WHERE account_id = ?4 AND kind = 'human' AND created_at <= ?12)`,
       ).bind(
         task.task.caseId,
         task.task.key,

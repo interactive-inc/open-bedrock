@@ -331,7 +331,7 @@
     "src/contexts/company/infrastructure/adapters/organization/read-active-headcount.adapter.ts": "3cf33dc4bcd4fcafc91964446be7abe484a2288c038ddafa56773b913ef88af9",
     "src/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter.ts": "4e17d2f618ed093d7acd20866e1b1b32c803288b191e6bf70cc6ebcc8085bf4b",
     "src/contexts/company/infrastructure/adapters/organization/read-company-snapshot-employees.adapter.ts": "f6bea41aa6cfe1527962e7d29dab5b3845e06fd5bfe55f8a94ad5d5a037c5e8f",
-    "src/contexts/company/infrastructure/adapters/organization/resolve-company-governance-task.adapter.ts": "222a5b9de919ee5932010dd9babea1644117195cacca206dbe1005837d09b81c",
+    "src/contexts/company/infrastructure/adapters/organization/resolve-company-governance-task.adapter.ts": "5418612289782039deceee800f9ef7ae77aa31417cba07e970f1a48361ac73e6",
     "src/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-approver-matches.adapter.ts": "87f240d8c6fc0d6bd56660fe6034e1d91c4f713e5603f301144304eca599b6cb",
     "src/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task-snapshot.adapter.ts": "fdd7bcd9e4ec04fdcdd61f13d79a116a07bd7777a00092880bde0937cb3f4241",
     "src/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter.ts": "77b9702895e448e18507dbc2fc47f559b91928b5ca6ec4aa993ada5917c16297",
@@ -469,7 +469,7 @@
     "src/contexts/company/test/employee-resource-adoption.test-support.ts": "9e85ac02aa1cb7b0d6aad7841f73a1a8c3011445cfcbca1bb0d1c565747e429c",
     "src/contexts/company/test/external-identity-import.integration.test.ts": "77684cbd77ac82895291bfed6bcc6285ee08549aa50b3742cf7eb2e3d968231d",
     "src/contexts/company/test/external-identity-import.test-support.ts": "8829dacdb36260a1317b45b446d81885c4b140358977ceda1593625a6c546f2a",
-    "src/contexts/company/test/governance-task.integration.test.ts": "44c7162c5eb8cb8432701a04f7e2f1463cda6f84b432e3197d512a963da2ac56",
+    "src/contexts/company/test/governance-task.integration.test.ts": "6d94e5b8dc03c1929166ff71ddde674ba130ff484b35fe5a5c3fd680b1e2eba1",
     "src/contexts/company/test/governance-task.test-support.ts": "980f071d0f4024c1dd2abd378e1f82ea9f4ba34ae0eae95906e5515de70b41cc",
     "src/contexts/company/test/management-relations.integration.test.ts": "bd1bd2335510814800495c02277fcc056b4447b9c0a48f49415a6833bc192e88",
     "src/contexts/company/test/migrations-directory.test-support.ts": "d240e87177cc36b5284bfccdc524487782d58a467a5a7c31ec2cddaee57b8cb3",
@@ -478,6 +478,6 @@
     "src/contexts/company/test/organization-profile.integration.test.ts": "69c3d703e332e3e501a233e199fa12c56fb1e8467f9c80dbc8f6663e8aecb3f1",
     "src/contexts/company/test/organization-profile.test-support.ts": "b3d57cbb942b8f7da3b60dba4415b5d6104869cccca02842fb7004df532b2336",
     "src/contexts/company/test/organization-resource-connection.integration.test.ts": "6acfb4ac66bbf624b2d78205f65f00546312e725404bf495e9dd4f7018ff6ae3",
-    "src/contexts/company/test/personnel-execution.integration.test.ts": "fb2e49ba4c37565e8c2742d1a5f2a7a917c54c750c41d45565eee162ee10d196"
+    "src/contexts/company/test/personnel-execution.integration.test.ts": "51db94c6d8f64c51cafa7c6977bd0965ea04ce153f445e174143ae09079dbea0"
   }
 }

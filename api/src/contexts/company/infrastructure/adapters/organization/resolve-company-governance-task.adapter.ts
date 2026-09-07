@@ -55,7 +55,7 @@ export class ResolveCompanyGovernanceTaskAdapter {
     if (before instanceof Error) return before
     const resolved = await new CompanyGovernanceAuthorityResolutionAdapter({
       repository: new D1CompanyResourceRepository(this.c.env.DB),
-      isAccountActive: (accountId) => this.isHumanAccount(accountId),
+      isAccountActive: (accountId) => this.isHumanAccount(accountId, input.resolvedAt),
     }).resolve({
       organizationId: authority.organization_id,
       asOf: restoreCalendarDate(asOf),
@@ -120,17 +120,18 @@ export class ResolveCompanyGovernanceTaskAdapter {
     }
   }
 
-  private async isHumanAccount(accountId: string): Promise<boolean | Error> {
+  private async isHumanAccount(accountId: string, resolvedAt: Date): Promise<boolean | Error> {
     const account = await new SystemAccountRepository({ database: this.c.env.DB }).find(
       zAccountId.parse(accountId),
     )
     if (account instanceof Error) return account
-    if (account?.status !== "active") return false
+    if (account?.status !== "active" || account.closedAt !== null || account.createdAt > resolvedAt)
+      return false
     const principal = await new SystemPrincipalRepository({ env: { DB: this.c.env.DB } }).find({
       accountId,
     })
     if (principal instanceof Error) return principal
-    return principal === null || principal.kind === "human"
+    return principal !== null && principal.kind === "human" && principal.createdAt <= resolvedAt
   }
 
   private scope(input: Input): CompanyGovernanceScope | null | Error {

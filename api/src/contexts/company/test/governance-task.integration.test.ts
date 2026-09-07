@@ -8,6 +8,57 @@ import type { CompanyResourceProps } from "@/contexts/company/domain/entities/co
 import { zApplicationWorkflowStep } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 
 describe("公開Companyから業務Taskへの接続", () => {
+  test.each(["missing", "future"])(
+    "会社の責務があっても、人のPrincipalを確認できない候補を採用しない: %s",
+    async (kind) => {
+      const c = await createGovernanceTaskTestContext()
+      const person = c.people[1]
+      const assignment = c.resources.find(
+        (resource) => resource.type === "responsibility-assignment",
+      )
+      if (person === undefined || assignment === undefined)
+        throw new Error("holder fixture is missing")
+      await c.write([
+        {
+          ...assignment,
+          revision: 2,
+          attributes: {
+            ...assignment.attributes,
+            holderType: "employee",
+            holderId: person.employeeId,
+          },
+        },
+      ])
+      const resolver = new ResolveCompanyGovernanceTaskAdapter(c.context)
+      const input = {
+        step: c.step,
+        payload: { amount: 500 },
+        subjectEmployeeId: c.creator.employeeId,
+        excludedEmployeeIds: new Set([c.creator.employeeId]),
+        openedAt: c.at,
+        dueAt: null,
+        resolvedAt: c.at,
+      }
+      const resolved = await resolver.resolve(input)
+      if (resolved instanceof Error) throw resolved
+      expect(resolved.task.candidates.map((candidate) => candidate.accountId)).toEqual([
+        person.accountId,
+      ])
+      if (kind === "missing")
+        await c.database
+          .prepare("DELETE FROM system_principals WHERE account_id = ?1")
+          .bind(person.accountId)
+          .run()
+      else
+        await c.database
+          .prepare(
+            "UPDATE system_principals SET created_at = ?2, updated_at = ?2, revision = revision + 1 WHERE account_id = ?1",
+          )
+          .bind(person.accountId, c.at.getTime() + 1)
+          .run()
+      expect(await resolver.resolve(input)).toBeInstanceOf(Error)
+    },
+  )
   test.each(["employee", "organizational-office"])(
     "個人・役職への責務割当を候補と委任規則へ接続する: %s",
     async (holderType) => {

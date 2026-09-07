@@ -68,13 +68,16 @@ export class RevalidateSystemExecutionAttestationsAdapter {
         FROM system_human_attestations AS attestation
         JOIN system_accounts AS actor ON actor.id = attestation.actor_account_id
         JOIN system_accounts AS represented ON represented.id = attestation.represented_account_id
-        LEFT JOIN system_principals AS actor_principal ON actor_principal.account_id = actor.id
-        LEFT JOIN system_principals AS represented_principal ON represented_principal.account_id = represented.id
+        JOIN system_principals AS actor_principal ON actor_principal.account_id = actor.id
+        JOIN system_principals AS represented_principal ON represented_principal.account_id = represented.id
         JOIN system_cases AS workflow_case ON workflow_case.id = attestation.case_id
         WHERE attestation.case_id = ?1 AND attestation.decided_at <= ?2
           AND actor.status = 'active' AND represented.status = 'active'
-          AND (actor_principal.kind IS NULL OR actor_principal.kind = 'human')
-          AND (represented_principal.kind IS NULL OR represented_principal.kind = 'human')
+          AND actor.closed_at IS NULL AND represented.closed_at IS NULL
+          AND actor.created_at <= attestation.decided_at AND represented.created_at <= attestation.decided_at
+          AND actor_principal.kind = 'human' AND represented_principal.kind = 'human'
+          AND actor_principal.created_at <= attestation.decided_at
+          AND represented_principal.created_at <= attestation.decided_at
           AND (
             (attestation.actor_account_id = attestation.represented_account_id AND attestation.delegation_id IS NULL)
             OR EXISTS (

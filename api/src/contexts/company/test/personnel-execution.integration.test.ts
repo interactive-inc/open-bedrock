@@ -195,6 +195,22 @@ async function createFixture(delegated = false) {
 }
 
 describe("人事発令の全段階の実行資格", () => {
+  test("承認者のPrincipalが欠落した場合は、保存済みの承認を人事実行へ使用しない", async () => {
+    const c = await createFixture()
+    const input = { request: c.request, session: c.session, executedAt: c.at }
+    const valid = await c.validator.prepare(input)
+    if (valid instanceof Error) throw valid
+    await c.database
+      .prepare("DELETE FROM system_principals WHERE account_id = ?1")
+      .bind(c.session.accountId)
+      .run()
+    const saved = await c.database.batch([...valid]).then(
+      () => null,
+      (cause: unknown) => cause,
+    )
+    expect(saved).toBeInstanceOf(Error)
+    expect(await c.validator.prepare(input)).toBeInstanceOf(CompanyForbiddenError)
+  })
   test.each([false, true])(
     "全段階の有効な承認を受け付け、最終段階以外の失効も拒否する: delegation=%s",
     async (delegated) => {

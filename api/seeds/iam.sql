@@ -12,6 +12,17 @@ INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) 
   ('13', 'active', 0, 0, 0),
   ('16', 'active', 0, 0, 0);
 
+INSERT INTO system_principals (id, account_id, kind, name, revision, created_at, updated_at) VALUES
+  ('seed:human:1', '1', 'human', 'Employee 1', 1, 0, 0),
+  ('seed:human:2', '2', 'human', 'Employee 2', 1, 0, 0),
+  ('seed:human:3', '3', 'human', 'Employee 3', 1, 0, 0),
+  ('seed:human:4', '4', 'human', 'Employee 4', 1, 0, 0),
+  ('seed:human:5', '5', 'human', 'Employee 5', 1, 0, 0),
+  ('seed:human:9', '9', 'human', 'Employee 9', 1, 0, 0),
+  ('seed:human:10', '10', 'human', 'Employee 10', 1, 0, 0),
+  ('seed:human:13', '13', 'human', 'Employee 13', 1, 0, 0),
+  ('seed:human:16', '16', 'human', 'Employee 16', 1, 0, 0);
+
 INSERT INTO company_account_employee_links (account_id, employee_id) VALUES
   ('1', '1'),
   ('2', '2'),
