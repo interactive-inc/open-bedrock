@@ -3,9 +3,11 @@ import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/c
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { CompanyEmploymentJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/company-employment-journal.adapter"
 import { CompanyAssignmentJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/company-assignment-journal.adapter"
+import { CompanyPersonnelReportingJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/company-personnel-reporting-journal.adapter"
 import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
 import { CompanyOperationError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import { drizzle } from "drizzle-orm/d1"
+import type { PersonnelActionSummary } from "@/contexts/company/domain/definitions/personnel-action-summary.definition"
 
 type Context = D1Database
 
@@ -15,16 +17,31 @@ export class CompanyPersonnelResourceJournalAdapter {
     Object.freeze(this)
   }
 
-  async prepare(
-    props: PersonnelActionPersistenceProps,
-  ): Promise<ReadonlyArray<D1PreparedStatement> | CompanyOperationError> {
+  async prepare(props: PersonnelActionPersistenceProps): Promise<
+    | Readonly<{
+        statements: ReadonlyArray<D1PreparedStatement>
+        assignmentPeriodIds: ReadonlySet<string>
+        summary: PersonnelActionSummary
+      }>
+    | CompanyOperationError
+  > {
     try {
       const employment = await new CompanyEmploymentJournalAdapter(this.c).prepare(props)
       if (employment instanceof CompanyOperationError) return employment
       const assignment = await new CompanyAssignmentJournalAdapter(this.c).prepare(props)
       if (assignment instanceof CompanyOperationError) return assignment
+      const reporting = await new CompanyPersonnelReportingJournalAdapter(this.c).prepare(
+        props,
+        assignment.periodIds,
+        employment.organizationRevision,
+      )
+      if (reporting instanceof CompanyOperationError) return reporting
       const groups = new Map<string, CompanyResourceEntity[]>()
-      for (const resource of [...employment.resources, ...assignment.resources]) {
+      for (const resource of [
+        ...employment.resources,
+        ...assignment.resources,
+        ...reporting.resources,
+      ]) {
         const key = `${resource.type}:${resource.id}`
         const versions = groups.get(key) ?? []
         versions.push(resource)
@@ -65,7 +82,16 @@ export class CompanyPersonnelResourceJournalAdapter {
         statements.push(...journal.statements, journal.commit)
         commandIndex += 1
       }
-      return [...statements, ...employment.bindings, ...assignment.bindings]
+      return {
+        statements: [
+          ...statements,
+          ...employment.bindings,
+          ...assignment.bindings,
+          ...reporting.bindings,
+        ],
+        assignmentPeriodIds: assignment.periodIds,
+        summary: reporting.summary,
+      }
     } catch (cause) {
       return new CompanyUnexpectedError("人事発令の公開履歴を準備できません", { cause })
     }

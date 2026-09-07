@@ -37,6 +37,7 @@ type Context = D1Database
 type PreparedAssignments = Readonly<{
   resources: ReadonlyArray<CompanyResourceEntity>
   bindings: ReadonlyArray<D1PreparedStatement>
+  periodIds: ReadonlySet<string>
 }>
 
 /** 公開Employeeの新しい所属と接続済み所属の変更を、同じ履歴と期間対応へ記録する。 */
@@ -52,7 +53,7 @@ export class CompanyAssignmentJournalAdapter {
       const mutations = props.projection.mutations.filter(
         (mutation) => mutation.periodType === "assignment",
       )
-      if (mutations.length === 0) return { resources: [], bindings: [] }
+      if (mutations.length === 0) return { resources: [], bindings: [], periodIds: new Set() }
       const selected = await this.c
         .prepare(`SELECT period.*, binding.resource_id, binding.period_revision,
         resource.resource_revision, resource.employee_id AS source_employee_id
@@ -91,7 +92,7 @@ export class CompanyAssignmentJournalAdapter {
           WHERE resource_type = 'employee' AND resource_id = ?1`)
           .bind(props.action.employeeId)
           .first<{ organization_id: string }>()
-        if (employee === null) return { resources: [], bindings: [] }
+        if (employee === null) return { resources: [], bindings: [], periodIds: new Set() }
         if (employee.organization_id !== "organization:default")
           return new CompanyValidationError(
             "従業員の会社が所属台帳と一致しません",
@@ -99,6 +100,7 @@ export class CompanyAssignmentJournalAdapter {
           )
       }
       const periodsByResource = new Map<string, Map<string, OrgAssignmentPeriod>>()
+      const periodIds = new Set(rows.data.map((row) => row.period_id))
       for (const resourceId of affected) {
         periodsByResource.set(
           resourceId,
@@ -113,11 +115,7 @@ export class CompanyAssignmentJournalAdapter {
         const binding = byPeriod.get(mutation.after.periodId)
         if (binding === undefined && mutation.before !== null) continue
         const period = mutation.after
-        if (period.managerEmployeeId !== null)
-          return new CompanyValidationError(
-            "公開所属の上長変更には指揮命令の履歴との接続が必要です",
-            "lifecycle_projection_mismatch",
-          )
+        periodIds.add(period.periodId)
         const resourceId = binding?.resource_id ?? `assignment:${period.periodId}`
         if (binding === undefined) {
           const unit = await this.c
@@ -204,7 +202,7 @@ export class CompanyAssignmentJournalAdapter {
           )
         }
       }
-      return { resources, bindings }
+      return { resources, bindings, periodIds }
     } catch (cause) {
       return new CompanyUnexpectedError("公開所属の履歴を準備できません", { cause })
     }

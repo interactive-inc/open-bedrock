@@ -131,6 +131,7 @@ export class DirectPersonnelActionAdapter {
   private async validateCanonicalOrganizationChange(
     props: Parameters<typeof DirectPersonnelActionAdapter.canonicalOrganizationChange>[0] &
       Readonly<{
+        employeeId: EmployeeId
         prospectiveEmployee?: Readonly<{ id: EmployeeId; code: string; name: string }>
       }>,
   ): Promise<CompanyOperationError | null> {
@@ -139,50 +140,60 @@ export class DirectPersonnelActionAdapter {
 
     const currentWorkforce = new OrganizationWorkforceSnapshotAdapter(this.c)
     const prospectiveEmployee = props.prospectiveEmployee
-    const workforce: WorkforceSnapshotReadPort =
-      prospectiveEmployee === undefined
-        ? currentWorkforce
-        : {
-            async readAllSnapshot() {
-              const current = await currentWorkforce.readAllSnapshot()
-              if (!current.ok) return current
+    const workforce: WorkforceSnapshotReadPort = {
+      async readAllSnapshot() {
+        const current = await currentWorkforce.readAllSnapshot()
+        if (!current.ok) return current
 
-              const employeeId = prospectiveEmployee.id
-              const lifecycle = toWorkforceLifecycleSchedules([props.projection.schedule]).find(
-                (schedule) => schedule.employeeId === employeeId,
-              )
-              if (lifecycle === undefined) {
-                return {
-                  ok: false as const,
-                  cause: new Error("prospective employee lifecycle was not projected"),
-                }
-              }
-
-              // 採用確定前のEmployeeはDB snapshotにまだ存在しない。
-              // 同一transactionで追加するprofile・雇用・状態だけを検証前snapshotへ補い、
-              // 所属と責務はOrganizationChangeSetを一度だけ適用して検証する。
-              return {
-                ok: true as const,
-                schedules: [
-                  ...current.schedules,
-                  {
-                    employee: {
-                      id: employeeId,
-                      officialName: prospectiveEmployee.name,
-                      employeeCode: prospectiveEmployee.code,
-                      email: null,
-                      phone: null,
-                    },
-                    employments: lifecycle.employments,
-                    statuses: lifecycle.statuses,
-                    assignments: [],
-                    responsibilities: [],
-                    accountLink: null,
-                  },
-                ],
-              }
-            },
+        const employeeId = props.employeeId
+        const lifecycle = toWorkforceLifecycleSchedules([props.projection.schedule]).find(
+          (schedule) => schedule.employeeId === employeeId,
+        )
+        if (lifecycle === undefined) {
+          return {
+            ok: false as const,
+            cause: new Error("prospective employee lifecycle was not projected"),
           }
+        }
+
+        if (prospectiveEmployee === undefined) {
+          if (!current.schedules.some((schedule) => schedule.employee.id === employeeId))
+            return { ok: false, cause: new Error("employee workforce snapshot is missing") }
+          return {
+            ok: true,
+            schedules: current.schedules.map((schedule) =>
+              schedule.employee.id === employeeId
+                ? { ...schedule, employments: lifecycle.employments, statuses: lifecycle.statuses }
+                : schedule,
+            ),
+          }
+        }
+
+        // 採用確定前のEmployeeはDB snapshotにまだ存在しない。
+        // 同一transactionで追加するprofile・雇用・状態だけを検証前snapshotへ補い、
+        // 所属と責務はOrganizationChangeSetを一度だけ適用して検証する。
+        return {
+          ok: true as const,
+          schedules: [
+            ...current.schedules,
+            {
+              employee: {
+                id: employeeId,
+                officialName: prospectiveEmployee.name,
+                employeeCode: prospectiveEmployee.code,
+                email: null,
+                phone: null,
+              },
+              employments: lifecycle.employments,
+              statuses: lifecycle.statuses,
+              assignments: [],
+              responsibilities: [],
+              accountLink: null,
+            },
+          ],
+        }
+      },
+    }
 
     const result = await new ValidateOrganizationChange({
       organization: OrganizationUnitReadAdapter.fromContext(this.c),
@@ -374,6 +385,7 @@ export class DirectPersonnelActionAdapter {
     if (projected.affectsOrganization) {
       const validation = await this.validateCanonicalOrganizationChange({
         actionId,
+        employeeId: command.employeeId,
         expectedRevision: loadedRevisions.organizationRevision,
         businessDate,
         recordedAt,
@@ -447,8 +459,8 @@ export class DirectPersonnelActionAdapter {
   ): Promise<{ action: PersonnelActionRecord; replayed: boolean } | CompanyOperationError> {
     const writeResult = await new PersonnelActionPersistenceAdapter(this.c).write(props)
 
-    if (writeResult === true) {
-      return { action: props.action, replayed: false }
+    if (!(writeResult instanceof CompanyOperationError)) {
+      return { action: writeResult, replayed: false }
     }
 
     const raced = await new PersonnelActionAdapter(this.c).findByOperationId(

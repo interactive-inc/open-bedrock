@@ -79,6 +79,7 @@ function mutationStatements(
   context: {
     businessDate: string
     newEmploymentType: PersonnelActionProjection["newEmploymentType"]
+    publicAssignmentPeriodIds: ReadonlySet<string>
   },
 ): ReadonlyArray<D1PreparedStatement> {
   switch (mutation.periodType) {
@@ -204,7 +205,9 @@ function mutationStatements(
             period.organizationUnitId,
             period.assignmentType === "primary" ? "PRIMARY" : "CONCURRENT",
             period.positionTitle,
-            period.managerEmployeeId,
+            context.publicAssignmentPeriodIds.has(period.periodId)
+              ? null
+              : period.managerEmployeeId,
             period.startsOn,
             period.endsOn,
             period.isVoid ? 1 : 0,
@@ -259,7 +262,7 @@ function orderedMutations(
     return closesPeriod ? closingOrder[mutation.periodType] : openingOrder[mutation.periodType]
   }
 
-  return mutations.toSorted((left, right) => {
+  const compare = (left: LifecycleVersionMutation, right: LifecycleVersionMutation): number => {
     const typeOrder = orderOf(left) - orderOf(right)
     if (typeOrder !== 0) return typeOrder
 
@@ -274,24 +277,45 @@ function orderedMutations(
     const phaseOrder = phase(left) - phase(right)
     if (phaseOrder !== 0) return phaseOrder
 
-    if (left.after.periodId === right.after.periodId) {
-      return left.after.revision - right.after.revision
-    }
     return 0
-  })
+  }
+  // 同じ期間の次版を候補に出す前に前版を保存する。訂正による再開と再終了でも順序を逆転させない。
+  const groups = new Map<string, LifecycleVersionMutation[]>()
+  for (const mutation of mutations) {
+    const key = `${mutation.periodType}:${mutation.after.periodId}`
+    const versions = groups.get(key) ?? []
+    versions.push(mutation)
+    groups.set(key, versions)
+  }
+  for (const versions of groups.values())
+    versions.sort((left, right) => left.after.revision - right.after.revision)
+  const ordered: LifecycleVersionMutation[] = []
+  while (groups.size > 0) {
+    const next = [...groups.entries()].toSorted((left, right) => {
+      const a = left[1][0]
+      const b = right[1][0]
+      return a === undefined || b === undefined ? 0 : compare(a, b)
+    })[0]
+    if (next === undefined) break
+    const mutation = next[1].shift()
+    if (mutation !== undefined) ordered.push(mutation)
+    if (next[1].length === 0) groups.delete(next[0])
+  }
+  return ordered
 }
 
 function toSafeAuditState(
   state: CurrentLifecycleProjection,
   employeeRevision: number,
   organizationRevision: number,
+  includeEmbeddedManager: boolean,
 ) {
   return {
     status: state.status,
     departmentCode: state.departmentCode,
     assignmentType: state.assignmentType,
     positionTitle: state.positionTitle,
-    managerEmployeeCode: state.managerEmployeeCode,
+    ...(includeEmbeddedManager ? { managerEmployeeCode: state.managerEmployeeCode } : {}),
     employeeRevision,
     organizationRevision,
   }
@@ -320,6 +344,7 @@ function preparePersistenceStatements(
   c: CompanyContext,
   props: PersonnelActionPersistenceProps,
   journalStatements: ReadonlyArray<D1PreparedStatement>,
+  publicAssignmentPeriodIds: ReadonlySet<string>,
 ): D1PreparedStatement[] | CompanyOperationError {
   const db = c.env.DB
   const nextEmployeeRevision = props.revisions.employeeRevision + 1
@@ -351,8 +376,14 @@ function preparePersistenceStatements(
       before,
       props.revisions.employeeRevision,
       props.revisions.organizationRevision,
+      publicAssignmentPeriodIds.size === 0,
     ),
-    after: toSafeAuditState(after, nextEmployeeRevision, nextOrganizationRevision),
+    after: toSafeAuditState(
+      after,
+      nextEmployeeRevision,
+      nextOrganizationRevision,
+      publicAssignmentPeriodIds.size === 0,
+    ),
     metadata: { actionKind: props.action.kind, effectiveOn: props.action.eventOn },
     occurredAt: new Date(props.action.recordedAt * 1_000),
     requestAudit: c.var.auditContext,
@@ -463,6 +494,7 @@ function preparePersistenceStatements(
       mutationStatements(db, mutation, {
         businessDate: props.businessDate,
         newEmploymentType: props.projection.newEmploymentType,
+        publicAssignmentPeriodIds,
       }),
     ),
     ...journalStatements,
@@ -514,6 +546,16 @@ export class PersonnelActionPersistenceAdapter {
   async prepare(
     props: PersonnelActionPersistenceProps,
   ): Promise<D1PreparedStatement[] | CompanyOperationError> {
+    const prepared = await this.prepareResult(props)
+    return prepared instanceof CompanyOperationError ? prepared : prepared.statements
+  }
+
+  private async prepareResult(
+    props: PersonnelActionPersistenceProps,
+  ): Promise<
+    | Readonly<{ statements: D1PreparedStatement[]; action: PersonnelActionRecord }>
+    | CompanyOperationError
+  > {
     if (
       props.projection.newEmploymentType === null &&
       props.projection.mutations.some(
@@ -523,12 +565,22 @@ export class PersonnelActionPersistenceAdapter {
       return new CompanyUnexpectedError("新しい雇用の区分が指定されていません")
     const journal = await new CompanyPersonnelResourceJournalAdapter(this.c.env.DB).prepare(props)
     if (journal instanceof CompanyOperationError) return journal
-    return preparePersistenceStatements(this.c, props, journal)
+    const action = { ...props.action, summary: journal.summary }
+    const statements = preparePersistenceStatements(
+      this.c,
+      { ...props, action },
+      journal.statements,
+      journal.assignmentPeriodIds,
+    )
+    return statements instanceof CompanyOperationError ? statements : { statements, action }
   }
 
-  async write(props: PersonnelActionPersistenceProps): Promise<true | CompanyOperationError> {
-    const statements = await this.prepare(props)
-    if (statements instanceof CompanyOperationError) return statements
+  async write(
+    props: PersonnelActionPersistenceProps,
+  ): Promise<PersonnelActionRecord | CompanyOperationError> {
+    const prepared = await this.prepareResult(props)
+    if (prepared instanceof CompanyOperationError) return prepared
+    const { statements, action } = prepared
 
     try {
       const results = await this.c.env.DB.batch(statements)
@@ -537,7 +589,7 @@ export class PersonnelActionPersistenceAdapter {
         throw new Error("employee lifecycle batch did not succeed")
       }
 
-      return true
+      return action
     } catch (cause) {
       if (isAbortedByGuard(cause)) {
         return new CompanyConflictError("人事情報が同時に更新されました", "personnel_action_stale")
