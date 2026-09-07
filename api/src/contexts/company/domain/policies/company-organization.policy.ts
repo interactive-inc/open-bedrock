@@ -1,11 +1,10 @@
 import { periodsContainPeriod } from "@/contexts/company/domain/definitions/periods-contain-period.definition"
-import { hasManagementCycle } from "@/contexts/company/domain/definitions/has-management-cycle.definition"
+import { CompanyReportingRelationTimelineValue } from "@/contexts/company/domain/values/company-reporting-relation-timeline.value"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { OrganizationStructureValue } from "@/contexts/company/domain/values/organization-structure.value"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
-import type { OrganizationRelation } from "@/contexts/company/domain/definitions/organization-relation.definition"
 import { orgAssignmentTypes } from "@/contexts/company/domain/definitions/org-assignment-type.definition"
 import type { CompanyResourceType } from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
 
@@ -44,25 +43,11 @@ function activeResourcesOfType(
   return resources.filter((resource) => resource.type === type && resource.state === "active")
 }
 
-function relationsHaveManagementCycle(
-  relations: ReadonlyArray<OrganizationRelation>,
-  date: string,
-): boolean {
-  const managersByEmployee = new Map<string, string[]>()
-  for (const relation of relations) {
-    if (relation.startsOn <= date && (relation.endsOn === null || date < relation.endsOn)) {
-      const managers = managersByEmployee.get(relation.employeeId) ?? []
-      managers.push(relation.managerEmployeeId)
-      managersByEmployee.set(relation.employeeId, managers)
-    }
-  }
-  return hasManagementCycle(managersByEmployee)
-}
-
 /** Generic Company resourcesの変更後全体を、組織・配属・指揮命令・権限の横断規則で検証する。 */
 export function validateCompanyOrganizationChange(
   currentResources: ReadonlyArray<CompanyResourceEntity>,
   change: CompanyResourceChangeEntity,
+  reportingHistory: ReadonlyArray<CompanyResourceEntity>,
 ): CompanyResourceValidationError | null {
   const merged = new Map(
     currentResources.map((resource) => [`${resource.type}\u0000${resource.id}`, resource]),
@@ -120,7 +105,6 @@ export function validateCompanyOrganizationChange(
     }
   }
 
-  const relations: OrganizationRelation[] = []
   for (const relation of resources.filter(
     (resource) => resource.type === "reporting-relation" && resource.state === "active",
   )) {
@@ -136,23 +120,12 @@ export function validateCompanyOrganizationChange(
     ) {
       return new CompanyResourceValidationError("invalid_organization")
     }
-    relations.push({
-      employeeId,
-      managerEmployeeId,
-      organizationUnitId,
-      startsOn: relation.effectiveFrom,
-      endsOn: relation.effectiveTo,
-    })
   }
-  const boundaries = [
-    ...new Set(
-      relations.flatMap((relation) => [
-        relation.startsOn,
-        ...(relation.endsOn === null ? [] : [relation.endsOn]),
-      ]),
-    ),
-  ]
-  if (boundaries.some((date) => relationsHaveManagementCycle(relations, date))) {
+  const reportingTimeline = CompanyReportingRelationTimelineValue.create([
+    ...reportingHistory,
+    ...change.resources.filter((resource) => resource.type === "reporting-relation"),
+  ])
+  if (reportingTimeline instanceof Error || reportingTimeline.hasManagementCycle()) {
     return new CompanyResourceValidationError("invalid_organization")
   }
 

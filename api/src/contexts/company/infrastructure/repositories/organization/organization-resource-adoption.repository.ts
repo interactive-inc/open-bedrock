@@ -82,7 +82,8 @@ export class OrganizationResourceAdoptionRepository {
     const changes = command.toChanges(snapshot)
     if (changes instanceof Error) return changes
     if (await this.hasResources(command.props.organizationUnitId, changes)) return this.conflict()
-    const current = await new D1CompanyResourceRepository(this.c.env.DB).findMany({
+    const repository = new D1CompanyResourceRepository(this.c.env.DB)
+    const current = await repository.findMany({
       organizationId: "organization:default",
       types: ["organization-unit"],
     })
@@ -110,7 +111,16 @@ export class OrganizationResourceAdoptionRepository {
       return new CompanyValidationError("組織履歴が不正です", "invalid_organization_adoption", {
         cause: validationChange,
       })
-    const invalid = validateCompanyOrganizationChange(current.resources, validationChange)
+    const reportingHistory = await repository.findReportingRelationHistory(
+      "organization:default",
+      current.organizationRevision,
+    )
+    if (reportingHistory instanceof Error) return this.unavailable(reportingHistory)
+    const invalid = validateCompanyOrganizationChange(
+      current.resources,
+      validationChange,
+      reportingHistory,
+    )
     if (invalid !== null)
       return new CompanyValidationError(
         "先に親組織の履歴を接続し、期間と階層を確認してください",

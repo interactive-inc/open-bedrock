@@ -358,9 +358,36 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     if (!snapshot.ok) return { kind: "unavailable", cause: snapshot.cause }
     if (snapshot.organizationRevision !== change.expectedRevision)
       return { kind: "conflict", actualRevision: snapshot.organizationRevision }
-    const error = validateCompanyOrganizationChange(snapshot.resources, change)
+    const reportingHistory = await this.findReportingRelationHistory(
+      organizationId,
+      snapshot.organizationRevision,
+    )
+    if (reportingHistory instanceof Error) return { kind: "unavailable", cause: reportingHistory }
+    const error = validateCompanyOrganizationChange(snapshot.resources, change, reportingHistory)
     if (error !== null) return { kind: "invalid", error }
     return null
+  }
+
+  async findReportingRelationHistory(
+    organizationId: string,
+    revision: number,
+  ): Promise<ReadonlyArray<CompanyResourceEntity> | Error> {
+    const history = await this.c
+      .prepare(`SELECT organization_id, resource_type, resource_id, revision, state,
+                      effective_from, effective_to, attributes_json
+                 FROM company_resource_revisions
+                WHERE organization_id = ? AND resource_type = 'reporting-relation'
+                  AND organization_revision <= ?`)
+      .bind(organizationId, revision)
+      .all<CompanyResourceRow>()
+    if (!history.success) return new Error("Company reporting history is unavailable")
+    const resources: CompanyResourceEntity[] = []
+    for (const row of history.results) {
+      const resource = toCompanyResource(row)
+      if (resource instanceof Error) return resource
+      resources.push(resource)
+    }
+    return resources
   }
 
   private isWorkforceConstraintFailure(cause: unknown): boolean {
