@@ -7,7 +7,7 @@ import { CareerPostingRepository } from "@/contexts/career/infrastructure/reposi
 
 export type Command = {
   session: CompanySessionValue
-  postingId: number
+  postingId: string
   title: string
   deptId: number | null
   deptName: string | null

@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm"
 export class CareerPostingRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(postingId: number): Promise<CareerPosting | null | Error> {
+  async findById(postingId: string): Promise<CareerPosting | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -30,6 +30,7 @@ export class CareerPostingRepository {
       const rows = await this.c.var.database
         .insert(careerPostings)
         .values({
+          id: careerPosting.id,
           title: careerPosting.title,
           deptId: careerPosting.deptId,
           deptName: careerPosting.deptName,
@@ -51,10 +52,6 @@ export class CareerPostingRepository {
   /** 公募の内容と状態を更新し、更新後の行を返す。 */
   async update(careerPosting: CareerPosting): Promise<CareerPosting | null | Error> {
     try {
-      if (careerPosting.id === null) {
-        return new Error("career_posting id is required for update")
-      }
-
       const rows = await this.c.var.database
         .update(careerPostings)
         .set({
@@ -81,8 +78,6 @@ export class CareerPostingRepository {
    * 0 行削除（applied 応募が存在）なら null を返す。
    */
   async deleteIfNoAppliedApplications(posting: CareerPosting): Promise<true | null | Error> {
-    if (posting.id === null) return new Error("cannot delete unsaved career posting")
-
     try {
       const db = this.c.env.DB
 

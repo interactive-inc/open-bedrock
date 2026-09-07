@@ -6,7 +6,7 @@ import type { Context } from "@/env"
 import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
 
 export type Command = {
-  applicationId: number
+  applicationId: string
   applicantId: EmployeeId
   message: string | null
 }

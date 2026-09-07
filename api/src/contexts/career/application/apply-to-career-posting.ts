@@ -7,7 +7,7 @@ import { CareerApplicationRepository } from "@/contexts/career/infrastructure/re
 import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 
 export type Command = {
-  postingId: number
+  postingId: string
   applicantId: EmployeeId
   message: string | null
 }

@@ -9,7 +9,7 @@ import { getCareerPostings } from "@/lib/api/get-career-postings"
 import type { CareerPosting } from "@/lib/api/types/career-types"
 
 type Props = {
-  postingId: number
+  postingId: string
   canManage: boolean
 }
 
@@ -19,7 +19,7 @@ function toPostingStatus(value: string): "open" | "closed" {
 }
 
 /** 1 件の公募を取得する。管理ロールは詳細 API（締切も含む）、それ以外は一覧から id で絞り込む。 */
-async function loadPosting(postingId: number, canManage: boolean): Promise<CareerPosting | Error> {
+async function loadPosting(postingId: string, canManage: boolean): Promise<CareerPosting | Error> {
   if (canManage) {
     return getCareerPosting(postingId)
   }

@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
-  postingId: number
+  postingId: string
   postingTitle: string
 }
 

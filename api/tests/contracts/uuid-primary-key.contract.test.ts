@@ -62,8 +62,6 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "asset_lendings", // 連番
   "assets", // 業務コード/prefix
   "attendance_records", // 連番
-  "career_applications", // 連番
-  "career_postings", // 連番
   "career_sheets", // 連番
   "certification_definitions", // 連番
   "commendations", // 連番

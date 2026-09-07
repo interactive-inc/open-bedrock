@@ -21,8 +21,9 @@ export class CareerApplicationRepository {
   ): Promise<CareerApplication | AlreadyAppliedError | PostingClosedError | Error> {
     try {
       const result = await this.c.var.database.run(
-        sql`INSERT INTO career_applications (posting_id, applicant_id, message, status)
-            SELECT ${careerApplication.postingId}, ${careerApplication.applicantId},
+        sql`INSERT INTO career_applications (id, posting_id, applicant_id, message, status)
+            SELECT ${careerApplication.id}, ${careerApplication.postingId},
+                   ${careerApplication.applicantId},
                    ${careerApplication.message}, ${careerApplication.status}
             WHERE EXISTS (
               SELECT 1 FROM career_postings
@@ -34,11 +35,11 @@ export class CareerApplicationRepository {
         return { reason: "posting_closed" }
       }
 
-      // last_insert_rowid で採番された行を取得する
+      // id は application 側で採番済みなので、そのまま読み直す。
       const rows = await this.c.var.database
         .select()
         .from(careerApplications)
-        .where(eq(careerApplications.id, Number(result.meta.last_row_id)))
+        .where(eq(careerApplications.id, careerApplication.id))
         .limit(1)
 
       const row = rows.at(0)
@@ -76,7 +77,7 @@ export class CareerApplicationRepository {
   }
 
   /** 応募 id で1件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<CareerApplication | null | Error> {
+  async findById(id: string): Promise<CareerApplication | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -99,10 +100,6 @@ export class CareerApplicationRepository {
   async update(
     careerApplication: CareerApplication,
   ): Promise<CareerApplication | ApplicationDecidedError | Error> {
-    if (careerApplication.id === null) {
-      return new Error("cannot update an unsaved career application")
-    }
-
     try {
       const result = await this.c.var.database.run(
         sql`UPDATE career_applications
@@ -125,7 +122,7 @@ export class CareerApplicationRepository {
    * 応募を削除する。status = 'applied' のときだけ削除を許可し、
    * 選考確定済み（accepted/rejected）の応募は application_decided を返す。
    */
-  async delete(id: number): Promise<null | ApplicationDecidedError | Error> {
+  async delete(id: string): Promise<null | ApplicationDecidedError | Error> {
     try {
       const result = await this.c.var.database.run(
         sql`DELETE FROM career_applications
@@ -145,7 +142,7 @@ export class CareerApplicationRepository {
 
   /** 指定した求人に対して指定ステータスの応募件数を返す。 */
   async countByPostingIdAndStatus(
-    postingId: number,
+    postingId: string,
     status: CareerApplication["status"],
   ): Promise<number | Error> {
     try {
@@ -163,7 +160,7 @@ export class CareerApplicationRepository {
   }
 
   async findByPostingAndApplicant(
-    postingId: number,
+    postingId: string,
     applicantId: EmployeeId,
   ): Promise<CareerApplication | null | Error> {
     try {
