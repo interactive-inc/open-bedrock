@@ -57,9 +57,9 @@ const antisocialCheckResponseSchema = z.object({
 
 const jwtSecret = "antisocial-checks-crud-test-secret"
 
-const ownAntisocialCheckId = "20000000-0000-0000-0000-000000000002"
+const ownAntisocialCheckId = "0190000a-0000-7000-8000-000000000002"
 
-const othersAntisocialCheckId = "20000000-0000-0000-0000-000000000001"
+const othersAntisocialCheckId = "0190000a-0000-7000-8000-000000000001"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
