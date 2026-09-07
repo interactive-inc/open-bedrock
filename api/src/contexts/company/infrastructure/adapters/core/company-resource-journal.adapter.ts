@@ -2,7 +2,6 @@ import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/enti
 import { compareCompanyResourcePersistence } from "@/contexts/company/domain/definitions/compare-company-resource-persistence.definition"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
-
 import { and, eq, sql } from "drizzle-orm"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 import type { BatchItem } from "drizzle-orm/batch"
