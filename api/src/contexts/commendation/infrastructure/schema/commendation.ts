@@ -2,7 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { uuidCheckPredicate } from "@/lib/uuid/uuid.schema"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { check, index, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** 表彰の記録（社内公開。判定や評価計算は持たず事実の記録のみ）。 */
 export const commendations = sqliteTable(

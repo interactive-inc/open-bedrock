@@ -5,7 +5,7 @@ import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zAppHealthCheckup } from "@/contexts/health-checkup/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
+import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

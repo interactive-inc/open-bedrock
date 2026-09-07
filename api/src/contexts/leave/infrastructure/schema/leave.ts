@@ -29,7 +29,7 @@ export const leaveRequests = sqliteTable(
     decidedComment: text("decided_comment"),
     createdAt: text("created_at").notNull(),
   },
-  (table) => [check("leave_requests_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+  () => [check("leave_requests_id_uuid", sql.raw(uuidCheckPredicate("id")))],
 )
 
 export type LeaveRequestRow = InferSelectModel<typeof leaveRequests>

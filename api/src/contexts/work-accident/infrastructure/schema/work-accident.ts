@@ -2,7 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { uuidCheckPredicate } from "@/lib/uuid/uuid.schema"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { check, index, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** 労災・事故の発生記録。起きた事実の時系列記録のみ（記録）。対象者不特定の事故もあるため employee_id は NULL 可。 */
 export const workAccidents = sqliteTable(

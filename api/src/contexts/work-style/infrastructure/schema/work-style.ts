@@ -3,7 +3,7 @@ import type { WorkStyle } from "@/contexts/work-style/domain/definitions/work-st
 import { uuidCheckPredicate } from "@/lib/uuid/uuid.schema"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { check, index, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** 従業員の勤務形態の期間つき記録（regular / flextime / discretionary / shift）。制度の適法性判定はしない。事実の記録のみ。 */
 export const employeeWorkStyles = sqliteTable(
