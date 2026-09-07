@@ -1,9 +1,10 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
 
 /** 懲戒の記録 1 件のレスポンス（非公開。本人にも見せない設計）。 */
 export const zAppDisciplinaryAction = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employee_id: zEmployeeId,
   kind: z.string(),
   summary: z.string(),

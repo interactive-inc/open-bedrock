@@ -10,7 +10,7 @@ export type Command = {
   action: "approve" | "reject"
   subjectLabel: string
   sourceDomain: string
-  sourceId: number | null
+  sourceId: string | number | null
   createdAt: string
 }
 

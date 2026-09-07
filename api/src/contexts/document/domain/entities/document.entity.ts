@@ -1,8 +1,10 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import type { DocumentRow } from "@/contexts/document/infrastructure/schema/document"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   title: z.string(),
   category: z.string().nullable(),
   location: z.string(),
@@ -51,7 +53,7 @@ export class Document implements Props {
     createdAt: string
   }): Document {
     return new Document({
-      id: null,
+      id: createUuidV7(),
       title: props.title,
       category: props.category,
       location: props.location,

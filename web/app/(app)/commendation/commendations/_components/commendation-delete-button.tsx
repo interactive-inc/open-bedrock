@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 const initialState: CommendationActionState = { ok: false, error: null }
 
 type Props = {
-  id: number
+  id: string
 }
 
 /**
