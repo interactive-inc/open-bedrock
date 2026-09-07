@@ -8,6 +8,7 @@ import type {
 } from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import { resolveOrganizationalAuthority } from "@/contexts/company/domain/policies/resolve-organizational-authority.policy"
 import { listAssignmentManagementRelations } from "@/contexts/company/domain/policies/list-assignment-management-relations.policy"
+import { resolveWorkforceManagementRelations } from "@/contexts/company/domain/policies/resolve-workforce-management-relations.policy"
 import type { WorkforceStateProps } from "@/contexts/company/domain/values/workforce-state.value"
 import type {
   AccountEmployeeLink,
@@ -164,6 +165,7 @@ function baseProjection(
       source: "lifecycle",
       asOf,
       organizationRevision: 7,
+      companyRevision: 5,
     },
     subjectEmployeeId: subjectId,
     criteria: [],
@@ -200,6 +202,57 @@ function reportingRelation(
 }
 
 describe("resolveOrganizationalAuthority", () => {
+  test("requires the observed Company revision for independent reporting evidence", () => {
+    expectError(
+      baseProjection({
+        snapshot: { ...baseProjection().snapshot, companyRevision: undefined },
+        managementRelations: [reportingRelation("relation", subjectId, managerId)],
+      }),
+      "organizational_authority_snapshot_invalid",
+    )
+  })
+
+  test("rejects overlapping legacy and public ownership even when the managers agree", () => {
+    for (const manager of [managerId, executiveId]) {
+      expect(
+        resolveWorkforceManagementRelations({
+          states: baseProjection().states,
+          reportingRelations: [reportingRelation("relation", subjectId, manager)],
+        }),
+      ).toMatchObject({ code: "organizational_authority_reporting_source_conflict" })
+    }
+  })
+
+  test("combines distinct scopes while checking cycles across both sources", () => {
+    const projection = baseProjection({ criteria: [{ kind: "direct_manager" }] })
+    const combined = resolveWorkforceManagementRelations({
+      states: projection.states,
+      reportingRelations: [
+        { ...reportingRelation("relation", subjectId, executiveId), organizationUnitId: financeId },
+      ],
+    })
+    if (combined instanceof Error) throw combined
+    const resolved = resolveOrganizationalAuthority({
+      ...projection,
+      managementRelations: combined,
+    })
+    if (resolved instanceof Error) throw resolved
+    expect(resolved.candidates.map((candidate) => candidate.employeeId)).toEqual([
+      managerId,
+      executiveId,
+    ])
+
+    const cyclic = resolveWorkforceManagementRelations({
+      states: projection.states,
+      reportingRelations: [reportingRelation("cycle", executiveId, subjectId)],
+    })
+    if (cyclic instanceof Error) throw cyclic
+    expectError(
+      { ...projection, managementRelations: cyclic },
+      "organizational_authority_manager_cycle",
+    )
+  })
+
   test("resolves multiple managers in one unit without creating assignments", () => {
     const relations = [
       reportingRelation("relation-2", subjectId, organizationManagerId),

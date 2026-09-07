@@ -1,3 +1,6 @@
+import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
 import { createExternalIdentityImportTestContext } from "@/contexts/company/test/external-identity-import.test-support"
@@ -17,6 +20,43 @@ describe("Company Taskの判断時点の資格", () => {
         .prepare("SELECT account_id FROM company_account_employee_links")
         .first<string>("account_id"),
     )
+    const changeCode = async (employeeCode: string) => {
+      const asOf = resolveCompanyBusinessDate({
+        now: fixture.clock.at.toISOString(),
+        timeZone: "Asia/Tokyo",
+      })
+      if (asOf instanceof Error) throw asOf
+      const repository = new D1CompanyResourceRepository(database)
+      const snapshot = await repository.findMany({
+        organizationId: "organization:default",
+        types: ["employee"],
+        effectiveOn: asOf,
+      })
+      if (!snapshot.ok) throw new Error("employee snapshot unavailable")
+      const employee = snapshot.resources[0]
+      if (employee === undefined) throw new Error("employee missing")
+      const change = CompanyResourceChangeEntity.create({
+        commandId: crypto.randomUUID(),
+        expectedRevision: snapshot.organizationRevision,
+        actorAccountId: fixture.actor.accountId,
+        reason: "Confirm employee code",
+        recordedAt: fixture.clock.at.getTime(),
+        resources: [
+          {
+            organizationId: employee.organizationId,
+            type: employee.type,
+            id: employee.id,
+            revision: employee.revision + 1,
+            state: employee.state,
+            effectiveFrom: employee.effectiveFrom,
+            effectiveTo: employee.effectiveTo,
+            attributes: { ...employee.attributes, employeeCode },
+          },
+        ],
+      })
+      if (change instanceof Error) throw change
+      expect((await repository.write(change)).kind).toBe("applied")
+    }
     const step: ApplicationWorkflowStep = {
       key: "review",
       name: "Review",
@@ -50,6 +90,9 @@ describe("Company Taskの判断時点の資格", () => {
       dueAt: null,
       decidedAt: fixture.clock.at,
     }
+    // 投影tableだけを書き換えても公開履歴にないcodeでは判断できない。
+    expect(await resolver.revalidate(input)).toBeInstanceOf(Error)
+    await changeCode("REVIEWER")
     expect(await resolver.revalidate(input)).toBe(true)
     const guard = await new CompanyAuthoritySnapshotGuardAdapter({ database }).prepare({
       employeeCodes: ["REVIEWER"],
@@ -57,7 +100,7 @@ describe("Company Taskの判断時点の資格", () => {
     })
     if (guard instanceof Error) throw guard
     expect(await database.batch([guard])).toBeArray()
-    await database.prepare("UPDATE company_employees SET employee_code = 'REPLACED'").run()
+    await changeCode("REPLACED")
     expect(await resolver.revalidate(input)).toBeInstanceOf(Error)
     const failure = await database
       .batch([

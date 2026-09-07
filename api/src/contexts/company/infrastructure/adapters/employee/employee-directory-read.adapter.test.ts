@@ -1,4 +1,6 @@
-import { describe, expect, test } from "bun:test"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { describe, expect, test, spyOn } from "bun:test"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { createEmployeeEmploymentTestDatabase } from "@/contexts/company/infrastructure/adapters/employee/lib/create-employee-employment-test-database.test-support"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -18,6 +20,45 @@ const page = {
 }
 
 describe("Company directoryの在籍時点", () => {
+  test("Employee IDの一括参照は重複を除き、100件を超えても指定した基準日を使う", async () => {
+    const database = createEmployeeEmploymentTestDatabase(`
+      INSERT INTO company_employees VALUES ('employee:200', 'Another Person', NULL, NULL, NULL);
+    `)
+    const employeeId = restoreWorkforceId("employee", "employee:1")
+    const ids = Array.from({ length: 201 }, (_, index) =>
+      restoreWorkforceId("employee", `employee:${index}`),
+    )
+    const result = await new CompanyEmployeeDirectoryReadAdapter({
+      env: { DB: database, NOW: "2026-12-01T00:00:00Z", COMPANY_TIME_ZONE: "Asia/Tokyo" },
+      asOf: restoreCalendarDate("2026-09-01"),
+    }).findForEmployeeIds([...ids, employeeId])
+    expect(result).toMatchObject([
+      { id: employeeId, employment: { status: "ACTIVE" } },
+      { id: "employee:200", employment: null },
+    ])
+    expect(result).toHaveLength(2)
+    expect(await directory(database, "2026-12-01T00:00:00Z").findForEmployeeIds([])).toEqual([])
+  })
+
+  test("Employee ID一括参照の一部が欠けた場合は成功分だけを返さない", async () => {
+    const database = createEmployeeEmploymentTestDatabase()
+    const batch = database.batch.bind(database)
+    const incomplete = spyOn(database, "batch").mockImplementation(
+      async <T>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> =>
+        (await batch<T>(statements)).slice(0, -1),
+    )
+    try {
+      const ids = Array.from({ length: 100 }, (_, index) =>
+        restoreWorkforceId("employee", `employee:${index}`),
+      )
+      expect(
+        await directory(database, "2026-09-01T00:00:00Z").findForEmployeeIds(ids),
+      ).toBeInstanceOf(Error)
+    } finally {
+      incomplete.mockRestore()
+    }
+  })
+
   test("Accountの解決も同じ在籍と所属の終了境界を使う", async () => {
     const database = createEmployeeEmploymentTestDatabase(`
       CREATE TABLE company_account_employee_links (account_id TEXT, employee_id TEXT);

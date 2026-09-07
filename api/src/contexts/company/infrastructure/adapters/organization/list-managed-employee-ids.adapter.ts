@@ -17,6 +17,7 @@ async function listManagedEmployeeIds(
 
   const employeeIds = listManagedWorkforceEmployeeIds({
     states: snapshot.employees,
+    managementRelations: snapshot.managementRelations,
     actorEmployeeId,
   })
   return employeeIds.toSorted((left, right) => left.localeCompare(right))

@@ -1,9 +1,12 @@
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type {
   OrganizationalAuthorityCandidateResolution,
   OrganizationalAuthorityCriterion,
   OrganizationalAuthoritySnapshot,
 } from "@/contexts/company/domain/definitions/organizational-authority-candidate.definition"
 import { ResolveCanonicalOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/workforce/resolve-canonical-organization-authority.adapter"
+import { CompanyReportingRelationsReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-reporting-relations-read.adapter"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import {
@@ -51,6 +54,14 @@ async function resolveSnapshot(
   }
 
   const organizationRevision = await readOrganizationRevision(c)
+  const companyRevision = await new CompanyReportingRelationsReadAdapter(c.env.DB).readRevision()
+  if (!companyRevision.ok) {
+    return new CompanyUnavailableError(
+      "Company revisionを読み出せません",
+      "organization_snapshot_unavailable",
+      { cause: companyRevision.cause },
+    )
+  }
   return organizationRevision instanceof CompanyOperationError
     ? organizationRevision
     : {
@@ -58,6 +69,7 @@ async function resolveSnapshot(
         source: "lifecycle",
         asOf,
         organizationRevision,
+        companyRevision: companyRevision.revision,
       }
 }
 
@@ -80,9 +92,21 @@ async function resolveOrganizationalAuthorityCandidates(props: {
   if (snapshot instanceof CompanyOperationError) return snapshot
 
   try {
-    const employeeRows = await props.c.var.database
-      .select({ id: employees.id, code: employees.employeeCode })
-      .from(employees)
+    const employeeIds = await props.c.var.database.select({ id: employees.id }).from(employees)
+    const directory = await new CompanyEmployeeDirectoryReadAdapter({
+      env: props.c.env,
+      asOf: restoreCalendarDate(snapshot.asOf),
+    }).findForEmployeeIds(employeeIds.map((employee) => employee.id))
+    if (directory instanceof Error)
+      return new CompanyUnavailableError(
+        "従業員情報を読み出せません",
+        "organization_snapshot_unavailable",
+        { cause: directory },
+      )
+    const employeeRows = directory.map((employee) => ({
+      id: employee.id,
+      code: employee.employeeCode,
+    }))
     const resolution = await new ResolveCanonicalOrganizationAuthorityAdapter({
       c: props.c,
       subjectEmployeeId: props.subjectEmployeeId,
@@ -95,7 +119,22 @@ async function resolveOrganizationalAuthorityCandidates(props: {
 
     const finalOrganizationRevision = await readOrganizationRevision(props.c)
     if (finalOrganizationRevision instanceof CompanyOperationError) return finalOrganizationRevision
-    if (finalOrganizationRevision !== resolution.snapshot.organizationRevision) {
+    const finalCompanyRevision = await new CompanyReportingRelationsReadAdapter(
+      props.c.env.DB,
+    ).readRevision()
+    if (!finalCompanyRevision.ok) {
+      return new CompanyUnavailableError(
+        "Company revisionを読み出せません",
+        "organization_snapshot_unavailable",
+        { cause: finalCompanyRevision.cause },
+      )
+    }
+    if (
+      snapshot.organizationRevision !== resolution.snapshot.organizationRevision ||
+      finalOrganizationRevision !== resolution.snapshot.organizationRevision ||
+      snapshot.companyRevision !== resolution.snapshot.companyRevision ||
+      finalCompanyRevision.revision !== resolution.snapshot.companyRevision
+    ) {
       return revisionConflict()
     }
 

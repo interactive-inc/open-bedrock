@@ -69,7 +69,7 @@ canonical履歴の下限はmigrationで確定した`baseline_on`である。そ�
 
 同じ解決で読んだ Employee state の organization revision が一致しない場合、resolver は候補を返さない。異なる revision の所属と責任を混ぜると、現実には存在しなかった組織図を構成できるためである。
 
-resolver は lifecycle 投影を読む前に organization revision を固定し、各 Employee state が同じ revision を参照することを検査し、Account 対応まで解決した後でもう一度 revision を読む。この三点が一致しない場合は途中で組織更新が確定した可能性があるため、候補を返さず conflict にする。呼び出し側は新しい `resolvedAt` を勝手に生成せず、同じ command の値を保ったまま解決全体を再試行する。
+候補解決の入口は、Employeeとその番号の対応を読む前にlifecycleのorganization revisionと公開resourceのCompany revisionを固定する。内部snapshotと解決後にも両方の版を確認し、この三点が一致しない場合は候補を返さずconflictにする。呼び出し側は新しい `resolvedAt` を勝手に生成せず、同じ command の値を保ったまま解決全体を再試行する。
 
 所属由来の指揮命令の証拠には assignment period ID、assignment revision、`asOf` を含め、organization revision は解決結果の snapshot に保持する。独立した指揮命令の証拠は reporting relation ID と revision を持つ。管理系列では各 edge の証拠を順番付き path として保存する。現在の組織図だけから過去の経路を推測しない。
 
@@ -199,7 +199,11 @@ Personnel Action はCompanyへの人事入力adapterであり、所属または�
 
 Workforceの純粋な資格resolverは、所属と別の`managementRelations`を必須入力とする。同じEmployee・OrgUnitに複数の上長を持てるため、上長を追加する目的で所属を増やす必要はない。空の関係を所属の上長で補完せず、関係の日付、両端のEmployeeの存在と在籍、記録の重複、循環を検査する。所属由来の証拠では、所属の所有者、OrgUnit、上長、期間ID、版の一致も検査する。
 
-`ResolveOrganizationAuthority`は現在、既存の所属履歴から明示的に関係を作る。元の期間IDと版、および既存の内部応答形式を維持する。独立した関係の変換形式も用意しているが、公開ReportingRelationの保存からこのresolverへの接続は未完成である。公開履歴の時点選択、既存writerとの統合、保存直前の変更検知を接続してから業務に使う必要がある。Employeeに対する管理範囲の判定も、引き続き既存の所属履歴を参照する。
+`ReadOrganizationWorkforceState`は、公開ReportingRelationを参照APIと同じ有効日・版の選択で読み、Employment、所属、責務、Account対応と同じ時点へ解決する。`ResolveOrganizationAuthority`の承認候補、Employeeに対する管理範囲、配下の一覧、閲覧者との関係判定は、この明示的な指揮命令を使う。公開履歴を読めない場合は空集合で補わず、途中でCompany revisionが変わった場合も候補を返さない。対象は既存の業務台帳と同じ既定organizationである。
+
+未移行の所属に記録された上長関係も、元の期間IDと版を保持する。ただし、同じEmployee・OrgUnitで公開関係と重なる場合は`organizational_authority_reporting_source_conflict`を返す。同じ上長であっても同一の記録と推測しない。範囲が異なる関係は合わせて循環を検査する。公開Assignmentとの接続、既存の上長履歴の移行、両方の更新経路を一つの正本へそろえる作業は未完成である。
+
+従来の組織read modelには上長のEmployee ID配列と、設定済みcodeの配列を持つ。一人を要求する既存欄は上長のEmployee IDが一人で、codeが設定されているときだけ値を返す。複数上長のうち一人だけにcodeがあっても、その一人を選ばない。公開関係の資格証拠にはCompany revisionを必須とし、手続きへ渡す証拠にも`company_revision`を含める。
 
 `api/src/contexts/company/domain/policies/company-governance-authority.policy.ts` は、固定済み Company resource と active な System Account ID の集合から資格候補を解決する。DB、Hono、Worker、暗黙の時計を読まず、criterion、scope、snapshot、candidate、qualification は opaque ID と明示型だけで表す。
 
@@ -215,7 +219,7 @@ resolver は同じ `asOf` と organization revision に属する active resource
 
 汎用申請と人事申請の承認・否認・差戻しでは、固定済みの条件を判断時点の Company 営業日で再評価する。代理判断は委任元 Account の資格を確認する。人事申請は発令対象者を資格解決の対象とし、依頼者と発令対象者の除外を維持する。追加候補は保存済み Task の期限以降だけ評価し、再検査の時刻から期限を計算し直さない。
 
-会社上の資格の参照前に組織版、未確定操作、追記専用の期間・人事・対応・公開履歴の件数、条件で参照する従業員番号を固定する。System の判断 batch は同じ状態を再確認してから証言を保存する。途中で状態が変われば HTTP 409 を返し、証言・Task・Case を変更しない。System はこの検査を opaque な SQL statement として受け取り、Company の条件を解釈しない。公開Companyの資格を使うTaskでは、候補生成前の状態と候補のAccount対応も固定し、初回・後続Taskの保存と同じbatchで確認する。従来の組織条件による初回Task生成、経費・稟議への適用は未完了である。
+会社上の資格の参照前に組織版、未確定操作、追記専用の期間・人事・対応・公開履歴の件数、条件で参照する従業員番号を固定する。System の判断 batch は同じ状態を再確認してから証言を保存する。途中で状態が変われば HTTP 409 を返し、証言・Task・Case を変更しない。System はこの検査を opaque な SQL statement として受け取り、Company の条件を解釈しない。公開Companyの責務条件と従来の組織条件のどちらを使うTaskでも、候補生成前の状態と候補のAccount対応を固定する検査を返す。汎用申請・人事申請の初回・後続Taskは、その検査を保存と同じbatchへ渡す。経費・稟議への汎用Taskの適用は未完了である。
 
 ## 人事発令の実行時の資格
 
@@ -254,3 +258,9 @@ Companyの資格とSystemのAccount・Principal・委任の参照状態を、発
 判断時は同じ責務・申請内容から現在の資格を解決する。Companyの必要参加数・必要賛成数・否決条件・委任・差戻しの規則が保存済みTaskから変わっていれば、そのTaskへの判断を拒否する。過去のTaskと提案は変更しない。
 
 公開責務の設定はAPIまたはworkflowのJSON定義で保存する。基本編集欄はCompanyの合議条件を表示しない。必要人数の正本はCompany規程と保存済みSystem Taskである。
+
+## 指揮命令の参照
+
+直属部下一覧と報告ラインはEmployee IDを基準とし、従業員codeや所属が未設定でも有効な指揮命令を返す。報告ラインは本人から全上長へ幅優先でたどり、各Employeeを一度だけ返す。深さは本人からの最短距離であり、各nodeの`manager_employee_ids`が直接の上長を表す。既存のcodeによる参照も受け付け、Employee IDとの一致を優先する。これらの参照には既定organizationへのアクセスと`company:read`が必要である。
+
+従業員のcode・名称・主務の表示とcodeによる判断候補の解決には、組織snapshotと同じ会社営業日の履歴を使う。将来の改訂を現在の属性として使わない。従業員情報を読む間にCompanyまたは組織のrevisionが変わった場合や、必要なEmployeeが欠落した場合は取得を失敗させる。

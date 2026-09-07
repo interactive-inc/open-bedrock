@@ -1,3 +1,4 @@
+import { CompanyReportingRelationsReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-reporting-relations-read.adapter"
 import { CanonicalOrganizationAuthorityEvidenceAdapter } from "@/contexts/company/infrastructure/adapters/workforce/canonical-organization-authority-evidence.adapter"
 import { ResolveOrganizationAuthority } from "@/contexts/company/lib/workforce/resolve-organization-authority"
 import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/errors"
@@ -97,6 +98,7 @@ async function resolveCanonicalOrganizationAuthority(props: {
   const result = await new ResolveOrganizationAuthority({
     organization: new OrganizationUnitReadAdapter(props.c.var.database),
     workforce: new OrganizationWorkforceSnapshotAdapter(props.c),
+    reporting: new CompanyReportingRelationsReadAdapter(props.c.env.DB),
   }).execute({
     subjectEmployeeId: props.subjectEmployeeId,
     criteria: canonicalCriteria.criteria,
@@ -148,6 +150,7 @@ async function resolveCanonicalOrganizationAuthority(props: {
       source: "lifecycle",
       asOf: result.resolution.snapshot.asOf,
       organizationRevision: result.resolution.snapshot.organizationRevision,
+      companyRevision: result.resolution.snapshot.companyRevision,
     },
     candidates,
   }

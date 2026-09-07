@@ -60,6 +60,8 @@ export const GET = factory.createHandlers(
                   employee_name: employee.name,
                   position: assignment.position,
                   manager_employee_code: assignment.managerEmployeeCode,
+                  manager_employee_codes: assignment.managerEmployeeCodes,
+                  manager_employee_ids: assignment.managerEmployeeIds,
                   is_manager: employee.code === organization.managerByDepartmentCode.get(code),
                 },
               ]

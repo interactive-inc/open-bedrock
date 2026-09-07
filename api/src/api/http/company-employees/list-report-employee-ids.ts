@@ -22,6 +22,7 @@ export async function listReportEmployeeIds(
 
   return listReportWorkforceEmployeeIds({
     states: snapshot.employees,
+    managementRelations: snapshot.managementRelations,
     actorEmployeeId: props.viewerEmployeeId,
   })
 }

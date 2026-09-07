@@ -2,6 +2,7 @@ import { applicableWorkflowSteps } from "@/contexts/company/domain/policies/comp
 import { ResolveCompanyGovernanceTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-governance-task.adapter"
 import { dueAt } from "@/contexts/company/domain/definitions/company-procedure-due-at.definition"
 import { ResolveCompanyProcedureTaskSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task-snapshot.adapter"
+import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import type { CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import type { ApplicationWorkflowStep } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
@@ -94,6 +95,16 @@ async function resolveConfiguredTask(
       ...governance,
     }
   }
+  const employeeCodes = [...step.approvers, ...step.escalation_approvers].flatMap((selector) =>
+    selector.type === "employee" ? [selector.employee_code] : [],
+  )
+  const before = await new CompanyAuthoritySnapshotGuardAdapter({
+    database: input.c.env.DB,
+  }).prepare({
+    employeeCodes,
+    accountIds: [],
+  })
+  if (before instanceof Error) return before
   const snapshot = await new ResolveCompanyProcedureTaskSnapshotAdapter({
     c: input.c,
     applicantEmployeeId:
@@ -106,6 +117,13 @@ async function resolveConfiguredTask(
     targetDepartmentCode: input.targetDepartmentCode ?? null,
   }).resolveWorkflowStepSnapshot()
   if (snapshot instanceof Error) return snapshot
+  const after = await new CompanyAuthoritySnapshotGuardAdapter({
+    database: input.c.env.DB,
+  }).prepare({
+    employeeCodes,
+    accountIds: snapshot.candidates.map((candidate) => candidate.accountId),
+  })
+  if (after instanceof Error) return after
   const candidates: StartSystemProcedureTask["candidates"][number][] = []
   for (const candidate of snapshot.candidates) {
     const evidence = CanonicalSystemJsonValue.create(JSON.parse(candidate.selectorsJson))
@@ -130,7 +148,7 @@ async function resolveConfiguredTask(
     name: step.name,
     rejectionBehavior: step.rejection_behavior,
     allowDelegation: step.allow_delegation,
-    guards: [],
+    guards: [before, after],
     task: {
       key: step.key,
       requiredApprovals: snapshot.requiredApprovals,

@@ -20,6 +20,7 @@ async function resolveOrganizationAuthority(
 
   return resolveEmployeeManagementAuthority({
     states: snapshot.employees,
+    managementRelations: snapshot.managementRelations,
     actorEmployeeId,
     targetEmployeeId,
   })
