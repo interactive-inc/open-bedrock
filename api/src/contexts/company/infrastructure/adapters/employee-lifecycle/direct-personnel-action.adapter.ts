@@ -141,8 +141,8 @@ export class DirectPersonnelActionAdapter {
     const currentWorkforce = new OrganizationWorkforceSnapshotAdapter(this.c)
     const prospectiveEmployee = props.prospectiveEmployee
     const workforce: WorkforceSnapshotReadPort = {
-      async readAllSnapshot() {
-        const current = await currentWorkforce.readAllSnapshot()
+      async readAllSnapshot(asOf) {
+        const current = await currentWorkforce.readAllSnapshot(asOf)
         if (!current.ok) return current
 
         const employeeId = props.employeeId

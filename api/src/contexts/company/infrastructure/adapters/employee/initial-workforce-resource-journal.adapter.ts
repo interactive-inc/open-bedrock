@@ -5,6 +5,7 @@ import type {
 } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import {
   CompanyResourceJournalAdapter,
   type CompanyResourceJournalStatement,
@@ -33,6 +34,7 @@ export type InitialWorkforceResource = Readonly<{
   reason: string
   lifecycleRevision: number
   expectedOrganizationRevision?: number
+  accountLink?: Readonly<{ accountId: string; effectiveOn: CalendarDate }>
 }>
 type Context = Readonly<{
   env: Readonly<{ DB: D1Database }>
@@ -122,6 +124,21 @@ export class InitialWorkforceResourceJournalAdapter {
                 status,
               },
             },
+            ...(input.accountLink === undefined
+              ? []
+              : [
+                  {
+                    ...base,
+                    type: "account-employee-link",
+                    id: `account-link:${input.employeeId}`,
+                    state: "active",
+                    effectiveFrom: input.accountLink.effectiveOn,
+                    attributes: {
+                      accountId: input.accountLink.accountId,
+                      employeeId: input.employeeId,
+                    },
+                  } satisfies CompanyResourceProps,
+                ]),
           ],
         })
         if (change instanceof Error) return change
@@ -158,7 +175,9 @@ export class InitialWorkforceResourceJournalAdapter {
             .from(sql`(SELECT 1)`),
           ...journal.statements,
         )
-        for (const resource of change.resources.filter((resource) => resource.type !== "person")) {
+        for (const resource of change.resources.filter(
+          (resource) => resource.type === "employee" || resource.type === "employment",
+        )) {
           statements.push(
             database.insert(companyWorkforceResourceBindings).values({
               resourceType: resource.type === "employee" ? "employee" : "employment",

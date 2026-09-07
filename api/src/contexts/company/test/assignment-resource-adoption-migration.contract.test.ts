@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
+import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
@@ -21,6 +22,10 @@ describe("所属移行の上長対応を追加するmigration", () => {
         .map((file) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
         .join("\n"),
     )
+    // 旧schemaのfixtureを現行readerで準備する間だけ、当時の対応表を投影する。
+    // Account履歴のmigrationに達したら破棄し、実際のviewへ置き換える。
+    await database.exec(`CREATE VIEW company_account_employee_link_periods AS
+      SELECT account_id, employee_id, NULL AS starts_on, NULL AS ends_on FROM company_account_employee_links`)
     const f = await createCompanyAssignmentResourceTestContext(database)
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
@@ -45,7 +50,13 @@ describe("所属移行の上長対応を追加するmigration", () => {
     expect(before).toHaveLength(1)
     const history = await f.publicReporting("2030-03-01")
     for (const file of files.filter((file) => file >= first)) {
-      await database.exec(readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
+      if (file.endsWith("_create_company_account_employee_link_periods.sql"))
+        await database.exec("DROP VIEW company_account_employee_link_periods")
+      await database.batch(
+        splitSqlStatements(readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8")).map(
+          (sql) => database.prepare(sql),
+        ),
+      )
     }
     expect(
       (

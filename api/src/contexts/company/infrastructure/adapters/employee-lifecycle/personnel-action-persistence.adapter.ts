@@ -337,7 +337,7 @@ export type PersonnelActionPersistenceProps = {
   businessDate: string
   employeeCodes: ReadonlyMap<EmployeeId, string>
   revisions: { employeeRevision: number; organizationRevision: number }
-  prospectiveEmployee?: { code: string; name: string; email?: string | null }
+  prospectiveEmployee?: { code: string; name: string; email?: string | null; accountId?: string }
 }
 
 function preparePersistenceStatements(

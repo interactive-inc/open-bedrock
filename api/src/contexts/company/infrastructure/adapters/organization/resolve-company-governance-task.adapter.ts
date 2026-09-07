@@ -79,6 +79,7 @@ export class ResolveCompanyGovernanceTaskAdapter {
     for (const candidate of candidates) {
       const link = await new AccountEmployeeLinkReadAdapter(this.c).find({
         kind: "by_account",
+        asOf,
         accountId: restoreWorkforceId("system_account", candidate.accountId),
       })
       if (

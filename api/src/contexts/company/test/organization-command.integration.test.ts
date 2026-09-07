@@ -12,10 +12,13 @@ import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/r
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
 
-const schema = readFileSync(
-  new URL("../infrastructure/schema/company.sql", import.meta.url),
-  "utf8",
-)
+const schema =
+  readFileSync(
+    new URL("../../system/infrastructure/schema/system-core.sql", import.meta.url),
+    "utf8",
+  ) +
+  "\n" +
+  readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8")
 const resourceSchema = z.object({
   organizationId: z.string(),
   type: z.literal("organization-unit"),

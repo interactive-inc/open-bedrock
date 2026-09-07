@@ -40,7 +40,7 @@ export class ValidateOrganizationChange {
     let workforce
     try {
       organization = await this.ports.organization.readSnapshot(change.asOf)
-      workforce = await this.ports.workforce.readAllSnapshot()
+      workforce = await this.ports.workforce.readAllSnapshot(change.asOf)
     } catch (cause) {
       return { kind: "unavailable", cause }
     }

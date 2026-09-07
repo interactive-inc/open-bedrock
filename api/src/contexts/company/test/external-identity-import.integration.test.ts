@@ -4,6 +4,7 @@ import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/r
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { ExternalIdentityImportInput } from "@/contexts/company/domain/entities/external-identity-import.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 
 function update(
   input: ExternalIdentityImportInput,
@@ -23,6 +24,32 @@ function update(
 }
 
 describe("外部identityとCompany正本の同期", () => {
+  test("入社前のAccount対応を有効にせず、初期対応は公開履歴へ一緒に保存する", async () => {
+    const c = await createExternalIdentityImportTestContext()
+    const identity = c.input.identities[0]!
+    expect(
+      (
+        await c.application.execute({
+          ...c.input,
+          identities: [
+            { ...identity, newEmployee: { hireDate: "2030-07-01", employmentType: "FULL_TIME" } },
+          ],
+        })
+      ).kind,
+    ).toBe("applied")
+    const reader = new CompanyAccountEmployeeLinksReadAdapter({ env: { DB: c.database } })
+    expect(await reader.findMany({ asOf: restoreCalendarDate("2030-06-30") })).toEqual([])
+    const active = await reader.findMany({ asOf: restoreCalendarDate("2030-07-01") })
+    if (active instanceof Error) throw active
+    expect(active).toHaveLength(1)
+    expect(
+      (
+        await c.database
+          .prepare("SELECT starts_on, source FROM company_account_employee_link_periods")
+          .all()
+      ).results,
+    ).toEqual([{ starts_on: "2030-07-01", source: "public" }])
+  })
   test.each([
     "UPDATE system_role_bindings SET revoked_at = 1 WHERE id = 'import-provider-binding'",
     "UPDATE system_machine_credentials SET status = 'revoked', revoked_at = updated_at",
@@ -131,7 +158,7 @@ describe("外部identityとCompany正本の同期", () => {
       await c.database
         .prepare("SELECT count(*) AS total FROM company_resource_revisions")
         .first<number>("total"),
-    ).toBe(3)
+    ).toBe(4)
     await c.database.exec("DROP TRIGGER reject_import_update")
     expect((await c.application.execute(next)).kind).toBe("applied")
   })
@@ -151,7 +178,7 @@ describe("外部identityとCompany正本の同期", () => {
       await c.database
         .prepare("SELECT count(*) AS total FROM company_resource_revisions")
         .first<number>("total"),
-    ).toBe(4)
+    ).toBe(5)
   })
 
   test("操作主体が持たない権限を新規Accountへ付与しない", async () => {
@@ -227,7 +254,7 @@ describe("外部identityとCompany正本の同期", () => {
       await c.database
         .prepare("SELECT count(*) AS total FROM company_resource_revisions")
         .first<Record<string, unknown>>(),
-    ).toEqual({ total: 3 })
+    ).toEqual({ total: 4 })
     expect(
       await c.database
         .prepare(

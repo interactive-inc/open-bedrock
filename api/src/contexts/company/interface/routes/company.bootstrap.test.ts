@@ -274,7 +274,7 @@ describe("Company bootstrap through System authentication", () => {
     })
     expect(await f.state()).toEqual({
       employees: 1,
-      resources: 8,
+      resources: 9,
       commands: 3,
       bootstraps: 1,
       bindings: 1,

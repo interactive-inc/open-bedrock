@@ -72,6 +72,12 @@ GETは`id` queryを繰り返して最大100件へ絞れる。`effective_on`を�
 
 POSTはendpointが所有するresource種別以外を拒否する。例えば`/people`からEmployeeを書いたり、`/organization-changes`からPositionを書いたりできない。
 
+Account対応はSystem AccountとEmployeeの一対一の同一性を固定し、その対応が有効な期間を改訂する。同じresourceの相手の変更、別resourceによるAccountまたはEmployeeの重複所有、存在しないSystem Accountへの対応を拒否する。対応期間は公開Employeeの存在期間に収まる必要があり、Employee側の訂正でも参照を孤立させない。
+
+対応を終了・取消した後も同一性の記録を削除しない。公開履歴へ接続した対応では、開始前・終了後・期間の空白を旧対応表で補わない。再開は同じresourceへ有効期間を追記する。対応の有効性と、System Accountの認証状態・Employeeの在籍資格はそれぞれ検査する。
+
+公開履歴に未接続の既存対応は期間不明の記録として保全する。既知の過去を推測して公開履歴へ補わず、公開APIで同じAccountとEmployeeの期間を確認して接続する。新規従業員登録、外部identity登録、会社初期化は公開対応も原子的に保存する。新しい対応の開始日は確認日とEmployeeの開始日の遅い方とし、Accountの作成から過去の対応を推定しない。
+
 ## Revision、訂正、取消
 
 organization revisionは一つのcommandにつき必ず1増える。resource revisionも既存値の次でなければならない。staleな`If-Match`は`company_revision_conflict`、staleなresource revisionは`company_resource_conflict`として区別する。

@@ -90,6 +90,15 @@ export class CompanyEmploymentJournalAdapter {
             reason: `personnel_action:${props.action.kind}:${props.action.id}`,
             lifecycleRevision: props.revisions.employeeRevision + 1,
             expectedOrganizationRevision: revision.data?.revision,
+            accountLink:
+              props.prospectiveEmployee.accountId === undefined
+                ? undefined
+                : {
+                    accountId: props.prospectiveEmployee.accountId,
+                    effectiveOn: restoreCalendarDate(
+                      props.businessDate < period.startsOn ? period.startsOn : props.businessDate,
+                    ),
+                  },
           })
           return initial instanceof Error
             ? new CompanyUnexpectedError("公開Companyの初期記録を準備できません", {

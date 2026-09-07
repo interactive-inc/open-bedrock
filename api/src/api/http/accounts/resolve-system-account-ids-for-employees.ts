@@ -1,3 +1,4 @@
+import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -8,18 +9,11 @@ export async function resolveSystemAccountIdsForEmployees(
 ): Promise<ReadonlyArray<AccountId> | Error> {
   if (employeeIds.length === 0) return []
   try {
-    const unique = [...new Set(employeeIds)]
-    const placeholders = unique.map((_, index) => `?${index + 1}`).join(", ")
-    const rows = await c.env.DB.prepare(
-      `SELECT account_id
-       FROM company_account_employee_links
-       WHERE employee_id IN (${placeholders})`,
-    )
-      .bind(...unique)
-      .all<{ account_id: string }>()
+    const links = await new CompanyAccountEmployeeLinksReadAdapter(c).findMany({ employeeIds })
+    if (links instanceof Error) return links
     const accountIds: AccountId[] = []
-    for (const row of rows.results) {
-      const accountId = zAccountId.safeParse(row.account_id)
+    for (const row of links) {
+      const accountId = zAccountId.safeParse(row.accountId)
       if (!accountId.success) return new Error("Company link contains an invalid Account ID")
       accountIds.push(accountId.data)
     }

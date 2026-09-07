@@ -170,6 +170,7 @@ export class RegisterEmployee {
       prospectiveEmployee: {
         ...prepared.persistence.prospectiveEmployee!,
         email: input.email,
+        accountId: system.accountId,
       },
     }
     const companyStatements = await new PersonnelActionPersistenceAdapter(company).prepare(
@@ -184,9 +185,6 @@ export class RegisterEmployee {
       const executions = await this.c.env.DB.batch([
         system.accountStatement,
         ...companyStatements,
-        this.c.env.DB.prepare(
-          "INSERT INTO company_account_employee_links (account_id, employee_id) VALUES (?1, ?2)",
-        ).bind(system.accountId, prepared.action.employeeId),
         this.c.env.DB.prepare(
           `INSERT INTO company_account_profiles
                (organization_id, account_id, display_name, created_at, updated_at)

@@ -2664,3 +2664,181 @@ BEGIN
     )
   );
 END;
+
+-- Account-to-Employee identity and effective public history.
+CREATE TABLE company_account_employee_resource_bindings (
+  resource_id TEXT PRIMARY KEY NOT NULL,
+  organization_id TEXT NOT NULL DEFAULT 'organization:default' CHECK (organization_id = 'organization:default'),
+  resource_type TEXT NOT NULL DEFAULT 'account-employee-link' CHECK (resource_type = 'account-employee-link'),
+  account_id TEXT NOT NULL UNIQUE REFERENCES system_accounts(id) ON DELETE RESTRICT,
+  employee_id TEXT NOT NULL UNIQUE REFERENCES company_employees(id) ON DELETE RESTRICT,
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
+  FOREIGN KEY (organization_id, resource_type, resource_id)
+    REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT
+);
+CREATE TABLE _company_account_link_copy_check (ok INTEGER NOT NULL CHECK (ok = 1));
+INSERT INTO _company_account_link_copy_check (ok)
+SELECT NOT EXISTS (
+  SELECT 1 FROM company_resource_revisions resource
+  JOIN company_resource_heads head ON head.organization_id = resource.organization_id
+    AND head.resource_type = resource.resource_type AND head.resource_id = resource.resource_id
+  WHERE resource.resource_type = 'account-employee-link' AND (
+    resource.organization_id != 'organization:default'
+    OR json_extract(resource.attributes_json, '$.accountId') IS NOT json_extract(head.attributes_json, '$.accountId')
+    OR json_extract(resource.attributes_json, '$.employeeId') IS NOT json_extract(head.attributes_json, '$.employeeId')
+    OR EXISTS (SELECT 1 FROM company_account_employee_links original WHERE
+      (original.account_id = json_extract(resource.attributes_json, '$.accountId')
+        AND original.employee_id IS NOT json_extract(resource.attributes_json, '$.employeeId'))
+      OR (original.employee_id = json_extract(resource.attributes_json, '$.employeeId')
+        AND original.account_id IS NOT json_extract(resource.attributes_json, '$.accountId')))
+  )
+);
+INSERT INTO company_account_employee_links (account_id, employee_id)
+SELECT json_extract(head.attributes_json, '$.accountId'), json_extract(head.attributes_json, '$.employeeId')
+FROM company_resource_heads head WHERE head.resource_type = 'account-employee-link'
+  AND NOT EXISTS (SELECT 1 FROM company_account_employee_links original
+    WHERE original.account_id = json_extract(head.attributes_json, '$.accountId'));
+INSERT INTO company_account_employee_resource_bindings
+  (resource_id, organization_id, account_id, employee_id, recorded_at)
+SELECT resource_id, organization_id, json_extract(attributes_json, '$.accountId'),
+  json_extract(attributes_json, '$.employeeId'), updated_at
+FROM company_resource_heads WHERE resource_type = 'account-employee-link';
+DROP TABLE _company_account_link_copy_check;
+CREATE VIEW company_account_employee_link_periods AS
+WITH effective_versions AS (
+  SELECT resource.*, (
+    SELECT min(later.effective_from) FROM company_resource_revisions later
+    WHERE later.organization_id = resource.organization_id AND later.resource_type = resource.resource_type
+      AND later.resource_id = resource.resource_id AND later.effective_from > resource.effective_from
+  ) AS next_from FROM company_resource_revisions resource
+  WHERE resource.resource_type = 'account-employee-link' AND resource.revision = (
+    SELECT max(latest.revision) FROM company_resource_revisions latest
+    WHERE latest.organization_id = resource.organization_id AND latest.resource_type = resource.resource_type
+      AND latest.resource_id = resource.resource_id AND latest.effective_from = resource.effective_from
+  )
+)
+SELECT binding.account_id, binding.employee_id, resource.effective_from AS starts_on,
+  CASE WHEN resource.next_from IS NULL OR (resource.effective_to IS NOT NULL AND resource.effective_to < resource.next_from)
+    THEN resource.effective_to ELSE resource.next_from END AS ends_on,
+  binding.resource_id, resource.revision, resource.organization_revision, 'public' AS source
+FROM effective_versions resource
+JOIN company_account_employee_resource_bindings binding
+  ON binding.organization_id = resource.organization_id AND binding.resource_id = resource.resource_id
+WHERE resource.state = 'active'
+UNION ALL
+SELECT original.account_id, original.employee_id, NULL, NULL, NULL, NULL, NULL, 'legacy'
+FROM company_account_employee_links original
+WHERE NOT EXISTS (SELECT 1 FROM company_account_employee_resource_bindings binding
+  WHERE binding.account_id = original.account_id OR binding.employee_id = original.employee_id)
+  AND NOT EXISTS (SELECT 1 FROM company_resource_heads resource WHERE resource.resource_type = 'account-employee-link'
+    AND CAST(json_extract(resource.attributes_json, '$.accountId') AS TEXT) = original.account_id)
+  AND NOT EXISTS (SELECT 1 FROM company_resource_heads resource WHERE resource.resource_type = 'account-employee-link'
+    AND CAST(json_extract(resource.attributes_json, '$.employeeId') AS TEXT) = original.employee_id);
+CREATE INDEX company_account_link_head_account_idx ON company_resource_heads
+  (CAST(json_extract(attributes_json, '$.accountId') AS TEXT)) WHERE resource_type = 'account-employee-link';
+CREATE INDEX company_account_link_head_employee_idx ON company_resource_heads
+  (CAST(json_extract(attributes_json, '$.employeeId') AS TEXT)) WHERE resource_type = 'account-employee-link';
+DROP TRIGGER IF EXISTS company_account_employee_resource_bindings_update_guard;
+CREATE TRIGGER company_account_employee_resource_bindings_update_guard
+BEFORE UPDATE ON company_account_employee_resource_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'company account link bindings are immutable');
+END;
+DROP TRIGGER IF EXISTS company_account_employee_resource_bindings_delete_guard;
+CREATE TRIGGER company_account_employee_resource_bindings_delete_guard
+BEFORE DELETE ON company_account_employee_resource_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'company account link bindings are immutable');
+END;
+DROP TRIGGER IF EXISTS company_account_employee_resource_owner_guard;
+CREATE TRIGGER company_account_employee_resource_owner_guard
+BEFORE INSERT ON company_resource_revisions WHEN NEW.resource_type = 'account-employee-link'
+BEGIN
+  SELECT RAISE(ABORT, 'company account link owner is immutable') WHERE
+    NEW.organization_id != 'organization:default'
+    OR EXISTS (SELECT 1 FROM company_resource_heads previous
+      WHERE previous.organization_id = NEW.organization_id AND previous.resource_type = NEW.resource_type
+        AND (previous.resource_id = NEW.resource_id AND (
+          json_extract(previous.attributes_json, '$.accountId') IS NOT json_extract(NEW.attributes_json, '$.accountId')
+          OR json_extract(previous.attributes_json, '$.employeeId') IS NOT json_extract(NEW.attributes_json, '$.employeeId'))
+        OR previous.resource_id != NEW.resource_id AND (
+          json_extract(previous.attributes_json, '$.accountId') = json_extract(NEW.attributes_json, '$.accountId')
+          OR json_extract(previous.attributes_json, '$.employeeId') = json_extract(NEW.attributes_json, '$.employeeId'))))
+    OR EXISTS (SELECT 1 FROM company_account_employee_links original WHERE
+      original.account_id = json_extract(NEW.attributes_json, '$.accountId') AND original.employee_id IS NOT json_extract(NEW.attributes_json, '$.employeeId')
+      OR original.employee_id = json_extract(NEW.attributes_json, '$.employeeId') AND original.account_id IS NOT json_extract(NEW.attributes_json, '$.accountId'));
+  SELECT RAISE(ABORT, 'company account link account is missing') WHERE NOT EXISTS (
+    SELECT 1 FROM system_accounts WHERE id = json_extract(NEW.attributes_json, '$.accountId')
+  );
+END;
+DROP TRIGGER IF EXISTS company_account_employee_resource_commit_guard;
+CREATE TRIGGER company_account_employee_resource_commit_guard
+AFTER UPDATE OF revision ON company_organizations
+BEGIN
+  SELECT RAISE(ABORT, 'company account link employee is not connected') WHERE EXISTS (
+    SELECT 1 FROM company_resource_heads resource
+    WHERE resource.organization_id = NEW.id AND resource.resource_type = 'account-employee-link'
+      AND NOT EXISTS (SELECT 1 FROM company_workforce_resource_bindings employee
+        WHERE employee.organization_id = resource.organization_id AND employee.resource_type = 'employee'
+          AND employee.resource_id = json_extract(resource.attributes_json, '$.employeeId'))
+  );
+  INSERT INTO company_account_employee_links (account_id, employee_id)
+  SELECT json_extract(resource.attributes_json, '$.accountId'), json_extract(resource.attributes_json, '$.employeeId')
+  FROM company_resource_heads resource WHERE resource.organization_id = NEW.id
+    AND resource.resource_type = 'account-employee-link'
+    AND NOT EXISTS (SELECT 1 FROM company_account_employee_links original
+      WHERE original.account_id = json_extract(resource.attributes_json, '$.accountId'));
+  INSERT INTO company_account_employee_resource_bindings
+    (resource_id, organization_id, account_id, employee_id, recorded_at)
+  SELECT resource_id, organization_id, json_extract(attributes_json, '$.accountId'),
+    json_extract(attributes_json, '$.employeeId'), updated_at
+  FROM company_resource_heads resource WHERE resource.organization_id = NEW.id
+    AND resource.resource_type = 'account-employee-link'
+    AND NOT EXISTS (SELECT 1 FROM company_account_employee_resource_bindings binding WHERE binding.resource_id = resource.resource_id);
+  SELECT RAISE(ABORT, 'company account link period is not covered') WHERE EXISTS (
+    SELECT 1 FROM company_account_employee_link_period_violations
+  );
+END;
+CREATE VIEW company_account_employee_link_period_violations AS
+WITH effective_versions AS (
+  SELECT resource.* FROM company_resource_revisions resource
+  WHERE resource.resource_type = 'employee' AND resource.revision = (
+    SELECT max(latest.revision) FROM company_resource_revisions latest
+    WHERE latest.organization_id = resource.organization_id AND latest.resource_type = resource.resource_type
+      AND latest.resource_id = resource.resource_id AND latest.effective_from = resource.effective_from
+  )
+), next_versions AS (
+  SELECT *, lead(effective_from) OVER (PARTITION BY organization_id, resource_id ORDER BY effective_from) AS next_from
+  FROM effective_versions
+), periods AS (
+  SELECT organization_id, resource_id AS employee_id, effective_from AS starts_on,
+    CASE WHEN next_from IS NULL OR (effective_to IS NOT NULL AND effective_to < next_from)
+      THEN effective_to ELSE next_from END AS ends_on
+  FROM next_versions WHERE state = 'active'
+), prior AS (
+  SELECT *, max(coalesce(ends_on, '9999-12-31')) OVER (
+    PARTITION BY organization_id, employee_id ORDER BY starts_on, ends_on
+    ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS covered_until
+  FROM periods
+), groups AS (
+  SELECT *, sum(CASE WHEN covered_until IS NULL OR starts_on > covered_until THEN 1 ELSE 0 END) OVER (
+    PARTITION BY organization_id, employee_id ORDER BY starts_on, ends_on ROWS UNBOUNDED PRECEDING) AS island
+  FROM prior
+), coverage AS (
+  SELECT organization_id, employee_id, min(starts_on) AS starts_on,
+    CASE WHEN max(ends_on IS NULL) = 1 THEN NULL ELSE max(ends_on) END AS ends_on
+  FROM groups GROUP BY organization_id, employee_id, island
+)
+SELECT link.* FROM company_account_employee_link_periods link WHERE link.source = 'public'
+  AND NOT EXISTS (SELECT 1 FROM coverage
+    WHERE coverage.organization_id = 'organization:default' AND coverage.employee_id = link.employee_id
+      AND coverage.starts_on <= link.starts_on
+      AND (coverage.ends_on IS NULL OR (link.ends_on IS NOT NULL AND link.ends_on <= coverage.ends_on)));
+CREATE TABLE _company_account_link_period_check (ok INTEGER NOT NULL CHECK (ok = 1));
+INSERT INTO _company_account_link_period_check (ok)
+SELECT NOT EXISTS (SELECT 1 FROM company_account_employee_link_period_violations)
+  AND NOT EXISTS (SELECT 1 FROM company_account_employee_resource_bindings link
+    WHERE NOT EXISTS (SELECT 1 FROM company_workforce_resource_bindings employee
+      WHERE employee.organization_id = link.organization_id AND employee.resource_type = 'employee'
+        AND employee.resource_id = link.employee_id));
+DROP TABLE _company_account_link_period_check;

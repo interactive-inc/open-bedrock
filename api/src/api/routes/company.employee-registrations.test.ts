@@ -8,6 +8,7 @@ import { createTestToken } from "@tests/api/support/create-test-token"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { loadSchema } from "@tests/api/support/load-schema"
 import { requestWithContext } from "@tests/api/support/request-with-context"
+import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 
 const jwtSecret = "employee-registration-route-test-secret"
 const idempotencyKey = "12345678-1234-4abc-8def-1234567890ab"
@@ -55,6 +56,69 @@ async function count(db: D1Database, table: string, where: string): Promise<numb
 }
 
 describe("POST /company/employee-registrations", () => {
+  test("新規登録のAccount対応を公開し、取消後は同じtokenで従業員情報へアクセスできない", async () => {
+    const db = await createTestDb()
+    expect((await post(db, body)).status).toBe(201)
+    const links = await new D1CompanyResourceRepository(db).findMany({
+      organizationId: "organization:default",
+      types: ["account-employee-link"],
+    })
+    if (!links.ok) throw links.cause
+    expect(links.resources).toHaveLength(1)
+    const link = links.resources[0]!
+    const employeeId = link.readText("employeeId")
+    const accountId = link.readText("accountId")
+    if (employeeId === null || accountId === null)
+      throw new Error("registered Account correspondence missing")
+    const token = await createTestToken(jwtSecret, {
+      employeeId: restoreWorkforceId("employee", employeeId),
+      accountId,
+    })
+    const read = () =>
+      requestWithContext({ db, jwtSecret, path: "/company/current-profile", token })
+    expect((await read()).status).toBe(200)
+    const revision = await db
+      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .first<number>("revision")
+    expect(
+      (
+        await requestWithContext({
+          db,
+          jwtSecret,
+          path: "/company/account-employee-links",
+          method: "POST",
+          token: await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) }),
+          headers: {
+            "x-company-organization-id": "organization:default",
+            "idempotency-key": "account-link:cancel",
+            "if-match": String(revision),
+          },
+          body: {
+            reason: "End the confirmed employee correspondence",
+            resources: [
+              {
+                organizationId: link.organizationId,
+                type: link.type,
+                id: link.id,
+                revision: 2,
+                state: "void",
+                effectiveFrom: link.effectiveFrom,
+                effectiveTo: link.effectiveTo,
+                attributes: link.attributes,
+              },
+            ],
+          },
+        })
+      ).status,
+    ).toBe(201)
+    expect((await read()).status).toBe(401)
+    expect(
+      await db
+        .prepare("SELECT status FROM system_accounts WHERE id = ?1")
+        .bind(accountId)
+        .first<string>("status"),
+    ).toBe("active")
+  })
   test("明示した短時間勤務の契約を台帳と公開雇用へ保存する", async () => {
     const db = await createTestDb()
     const created = await post(db, { ...body, employment_type: "PART_TIME" })

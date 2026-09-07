@@ -59,7 +59,7 @@ export class ReadOrganizationWorkforceState {
       const organizationError = validateOrganizationUnitSnapshot(organization.snapshot)
       if (organizationError !== null) return { kind: "invalid", error: organizationError }
 
-      const workforce = await this.props.workforce.readAllSnapshot()
+      const workforce = await this.props.workforce.readAllSnapshot(asOf)
       if (!workforce.ok) return { kind: "unavailable", cause: workforce.cause }
       const workforceError = validateWorkforceSchedules({
         schedules: workforce.schedules,

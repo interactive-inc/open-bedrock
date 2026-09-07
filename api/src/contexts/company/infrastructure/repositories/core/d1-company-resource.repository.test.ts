@@ -6,7 +6,13 @@ import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/r
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { readFileSync } from "node:fs"
 
-const schema = readFileSync(new URL("../../schema/company.sql", import.meta.url), "utf8")
+const schema =
+  readFileSync(
+    new URL("../../../../system/infrastructure/schema/system-core.sql", import.meta.url),
+    "utf8",
+  ) +
+  "\n" +
+  readFileSync(new URL("../../schema/company.sql", import.meta.url), "utf8")
 const effectiveFrom = restoreCalendarDate("2026-01-01")
 
 const person: CompanyResourceProps = {
@@ -417,7 +423,12 @@ describe("Company workforce resourceの参照整合性", () => {
   })
 
   test("Account対応が残るEmployeeは雇用がなくても取り消せない", async () => {
-    const { repository } = fixture()
+    const { database, repository } = fixture()
+    await database
+      .prepare(
+        "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('account:1', 'active', 0, 0, 0)",
+      )
+      .run()
     const link: CompanyResourceProps = {
       ...person,
       id: "link:1",

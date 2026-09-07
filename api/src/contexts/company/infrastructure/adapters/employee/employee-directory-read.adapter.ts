@@ -108,7 +108,8 @@ export class CompanyEmployeeDirectoryReadAdapter {
         this.c.env.DB.prepare(
           `${companyEmployeeDirectorySql()} ${this.selectSql()}, link.account_id
          ${this.fromSql()}
-         JOIN company_account_employee_links AS link ON link.employee_id = employee.id
+         JOIN company_account_employee_link_periods AS link ON link.employee_id = employee.id
+           AND (link.starts_on IS NULL OR link.starts_on <= ?1) AND (link.ends_on IS NULL OR ?1 < link.ends_on)
          WHERE link.account_id IN (${placeholders}) ORDER BY link.account_id`,
         ).bind(businessDate, ...chunk),
       )

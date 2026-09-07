@@ -1,13 +1,13 @@
 import type { Announcement } from "@/contexts/announcement/domain/entities/announcement.entity"
-import { accountEmployeeLinks } from "@/contexts/company/infrastructure/schema/employee"
-import { employments } from "@/contexts/company/infrastructure/schema/employment"
+import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { Context } from "@/env"
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
 import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
 import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
-import { and, eq, inArray, isNull } from "drizzle-orm"
 
 export class PublishAnnouncementNotificationAdapter {
   constructor(private readonly c: Context) {
@@ -19,16 +19,17 @@ export class PublishAnnouncementNotificationAdapter {
     createdAtValue: string,
   ): Promise<null | Error> {
     try {
-      const recipients = await this.c.var.database
-        .select({ accountId: accountEmployeeLinks.accountId })
-        .from(accountEmployeeLinks)
-        .innerJoin(employments, eq(employments.employeeId, accountEmployeeLinks.employeeId))
-        .where(
-          and(
-            inArray(employments.status, ["ACTIVE", "ON_LEAVE"]),
-            isNull(employments.terminationDate),
-          ),
-        )
+      const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({})
+      if (links instanceof Error) return links
+      const employees = await new CompanyEmployeeDirectoryReadAdapter({
+        env: this.c.env,
+      }).findForAccountIds(links.map((link) => zAccountId.parse(link.accountId)))
+      if (employees instanceof Error) return employees
+      const recipients = employees.filter(
+        (entry) =>
+          entry.employee.employment?.status === "ACTIVE" ||
+          entry.employee.employment?.status === "ON_LEAVE",
+      )
 
       if (recipients.length === 0) return null
 

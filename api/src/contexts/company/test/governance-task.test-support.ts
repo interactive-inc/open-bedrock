@@ -94,15 +94,6 @@ export async function createGovernanceTaskTestContext(databaseOverride?: D1Datab
         delegationAllowed: false,
       },
     },
-    ...people.map(
-      (person, index): CompanyResourceProps => ({
-        ...base,
-        state: "active",
-        type: "account-employee-link",
-        id: `link:${index}`,
-        attributes: { accountId: person.accountId, employeeId: person.employeeId },
-      }),
-    ),
     ...people.slice(1).map(
       (person, index): CompanyResourceProps => ({
         ...base,
@@ -137,6 +128,12 @@ export async function createGovernanceTaskTestContext(databaseOverride?: D1Datab
       throw new Error(`governance setup failed: ${saved.kind}`, { cause: saved })
   }
   await write(resources)
+  const accountLinks = await new D1CompanyResourceRepository(database).findMany({
+    organizationId: "organization:default",
+    types: ["account-employee-link"],
+  })
+  if (!accountLinks.ok) throw accountLinks.cause
+  resources.push(...accountLinks.resources)
   const step: ApplicationWorkflowStep = {
     key: "governance-review",
     name: "Committee review",

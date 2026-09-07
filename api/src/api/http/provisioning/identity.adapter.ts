@@ -1,8 +1,10 @@
+import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@system/domain/schemas/identity/identity-provider.schema"
 import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-subject.schema"
-import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { IdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
 import { SystemIdentityLoginAdapter } from "@system/infrastructure/adapters/auth/system-identity-login.adapter"
@@ -27,12 +29,6 @@ export type AccountAuthState = {
   employeeId: EmployeeId | null
 }
 
-type CompanyIdentityProjection = Readonly<{
-  employee_id: EmployeeId | null
-  employee_name: string | null
-  profile_display_name: string | null
-}>
-
 /** System Identity と Company Employee/Profile の明示的な読み取り合成。 */
 export class IdentityAdapter {
   constructor(private readonly c: Context) {
@@ -56,29 +52,26 @@ export class IdentityAdapter {
     if (identity === null || identity instanceof Error) return identity
 
     try {
-      const company = await this.c.env.DB.prepare(
-        `SELECT link.employee_id, employee.official_name AS employee_name,
-                profile.display_name AS profile_display_name
-         FROM (SELECT ?1 AS account_id) source
-         LEFT JOIN company_account_employee_links link ON link.account_id = source.account_id
-         LEFT JOIN company_employees employee ON employee.id = link.employee_id
-         LEFT JOIN company_account_profiles profile
-           ON profile.organization_id = 'organization:default'
-          AND profile.account_id = source.account_id
-         LIMIT 1`,
+      const employees = await new CompanyEmployeeDirectoryReadAdapter({
+        env: this.c.env,
+      }).findForAccountIds([login.account.id])
+      if (employees instanceof Error) return employees
+      const employee = employees[0]?.employee
+      const profileDisplayName = await this.c.env.DB.prepare(
+        "SELECT display_name FROM company_account_profiles WHERE organization_id = 'organization:default' AND account_id = ?1",
       )
         .bind(login.account.id)
-        .first<CompanyIdentityProjection>()
+        .first<string>("display_name")
 
       return {
         identityId: login.identity.id,
         accountId: login.account.id,
         accountStatus: login.account.status,
         tokenVersion: login.account.tokenVersion,
-        employeeId: company?.employee_id ?? null,
+        employeeId: employee?.id ?? null,
         email: identity.email,
-        employeeName: company?.employee_name ?? null,
-        profileDisplayName: company?.profile_display_name ?? null,
+        employeeName: employee?.officialName ?? null,
+        profileDisplayName: profileDisplayName,
       }
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to compose Company Identity")
@@ -97,11 +90,11 @@ export class IdentityAdapter {
     if (account === null || account instanceof Error) return account
 
     try {
-      const employeeId = await this.c.env.DB.prepare(
-        "SELECT employee_id FROM company_account_employee_links WHERE account_id = ?1 LIMIT 1",
-      )
-        .bind(accountId)
-        .first<EmployeeId>("employee_id")
+      const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({
+        accountIds: [accountId],
+      })
+      if (links instanceof Error) return links
+      const employeeId = links[0]?.employeeId ?? null
 
       return {
         accountId: account.id,
@@ -121,11 +114,11 @@ export class IdentityAdapter {
     if (identity === null || identity instanceof Error) return identity
 
     try {
-      return await this.c.env.DB.prepare(
-        "SELECT employee_id FROM company_account_employee_links WHERE account_id = ?1 LIMIT 1",
-      )
-        .bind(identity.accountId)
-        .first<EmployeeId>("employee_id")
+      const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({
+        accountIds: [identity.accountId],
+      })
+      if (links instanceof Error) return links
+      return links[0]?.employeeId ?? null
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to find Company Employee link")
     }
@@ -137,18 +130,14 @@ export class IdentityAdapter {
     if (employeeIds.length === 0) return new Map()
 
     try {
-      const links = await this.c.env.DB.prepare(
-        `SELECT employee_id, account_id
-         FROM company_account_employee_links
-         WHERE employee_id IN (SELECT CAST(value AS TEXT) FROM json_each(?1))
-         ORDER BY employee_id, account_id`,
-      )
-        .bind(JSON.stringify(employeeIds))
-        .all<{ employee_id: EmployeeId; account_id: AccountId }>()
+      const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({
+        employeeIds,
+      })
+      if (links instanceof Error) return links
       const identities = await Promise.all(
-        links.results.map((link) =>
+        links.map((link) =>
           new SystemIdentityCatalogRepository({ env: { DB: this.c.env.DB } }).findMany(
-            link.account_id,
+            zAccountId.parse(link.accountId),
           ),
         ),
       )
@@ -156,7 +145,7 @@ export class IdentityAdapter {
       if (unavailable instanceof Error) return unavailable
 
       const emails = new Map<EmployeeId, string>()
-      for (const [index, link] of links.results.entries()) {
+      for (const [index, link] of links.entries()) {
         const entries = identities[index]
         if (entries instanceof Error || entries === undefined) continue
         const preferred = entries
@@ -170,7 +159,7 @@ export class IdentityAdapter {
           )
           .at(0)
         if (preferred?.email !== null && preferred?.email !== undefined) {
-          emails.set(link.employee_id, preferred.email)
+          emails.set(link.employeeId, preferred.email)
         }
       }
 

@@ -2,7 +2,13 @@ import { describe, expect, test } from "bun:test"
 import { Database } from "bun:sqlite"
 import { readFileSync } from "node:fs"
 
-const companySql = readFileSync(new URL("./company.sql", import.meta.url), "utf8")
+const companySql =
+  readFileSync(
+    new URL("../../../system/infrastructure/schema/system-core.sql", import.meta.url),
+    "utf8",
+  ) +
+  "\n" +
+  readFileSync(new URL("./company.sql", import.meta.url), "utf8")
 
 describe("canonical Company SQL", () => {
   test("resource revisionとcommand replayをDBでもfail closedにする", () => {

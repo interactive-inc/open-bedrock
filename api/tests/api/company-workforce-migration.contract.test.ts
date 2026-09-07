@@ -8,6 +8,10 @@ import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-dat
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 
 const directory = join(import.meta.dir, "../../migrations")
+const systemSql = readFileSync(
+  join(import.meta.dir, "../../src/contexts/system/infrastructure/schema/system-core.sql"),
+  "utf8",
+)
 const migrationName = "0080_guard_company_workforce_resources.sql"
 const migration = readFileSync(join(directory, migrationName), "utf8")
 const before = readdirSync(directory)
@@ -47,10 +51,12 @@ describe("Company workforce resource migration", () => {
     ).toBeNull()
     expect(await database.prepare("SELECT * FROM company_personnel_actions").first()).toBeNull()
     const shared = createCompanyD1TestDatabase(
-      readFileSync(
-        join(import.meta.dir, "../../src/contexts/company/infrastructure/schema/company.sql"),
-        "utf8",
-      ),
+      systemSql +
+        "\n" +
+        readFileSync(
+          join(import.meta.dir, "../../src/contexts/company/infrastructure/schema/company.sql"),
+          "utf8",
+        ),
     )
     const query =
       "SELECT name, sql FROM sqlite_master WHERE name IN ('company_workforce_resource_bindings', 'company_workforce_projection_guard', 'company_employments_employee_active_unique') ORDER BY name"
@@ -131,10 +137,12 @@ describe("Company workforce resource migration", () => {
     expect(await repository.write(change)).toMatchObject({ kind: "applied", replayed: true })
 
     const shared = createCompanyD1TestDatabase(
-      readFileSync(
-        join(import.meta.dir, "../../src/contexts/company/infrastructure/schema/company.sql"),
-        "utf8",
-      ),
+      systemSql +
+        "\n" +
+        readFileSync(
+          join(import.meta.dir, "../../src/contexts/company/infrastructure/schema/company.sql"),
+          "utf8",
+        ),
     )
     const triggers =
       "SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND name LIKE 'company_workforce_resource_%' ORDER BY name"
