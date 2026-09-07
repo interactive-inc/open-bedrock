@@ -5,7 +5,7 @@ type Props = {
   status: ExpenseStatus
 }
 
-/** 経費ステータスを日本語ラベルと配色付きの Button で表示する。 */
+/** 経費ステータスを日本語ラベルの Button で表示する。却下・失敗だけ destructive にし、他は secondary に揃える。 */
 export function ExpenseStatusBadge(props: Props) {
   if (props.status === "approved") {
     return (

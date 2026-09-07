@@ -6,7 +6,7 @@ type Props = {
   returned?: boolean
 }
 
-/** 申請ステータスを日本語ラベルと配色付きの Button で表示する。 */
+/** 申請ステータスを日本語ラベルの Button で表示する。却下・失敗だけ destructive にし、他は secondary に揃える。 */
 export function ApplicationStatusBadge(props: Props) {
   if (props.returned === true) {
     return (
