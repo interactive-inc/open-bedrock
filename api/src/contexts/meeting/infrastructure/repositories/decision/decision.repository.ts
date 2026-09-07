@@ -53,7 +53,7 @@ export class DecisionRepository {
       const rows = await this.c.var.database
         .insert(decisions)
         .values({
-         id: decision.id,
+          id: decision.id,
           title: decision.title,
           decidedOn: decision.decidedOn,
           context: decision.context,
@@ -76,7 +76,6 @@ export class DecisionRepository {
   /** 決定の表題・決定日・文脈・決定・帰結を更新する。該当行が無ければ null。 */
   async update(decision: Decision): Promise<Decision | null | Error> {
     try {
-
       const rows = await this.c.var.database
         .update(decisions)
         .set({

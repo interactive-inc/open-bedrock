@@ -54,7 +54,6 @@ export class KnowledgeArticleRepository {
    */
   async update(article: KnowledgeArticle): Promise<KnowledgeArticle | null | Error> {
     try {
-
       const rows = await this.c.var.database
         .update(knowledgeArticles)
         .set({

@@ -140,7 +140,11 @@ describe("POST /employee-certifications", () => {
       path: "/certification/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "6", certification_id: "01900010-0000-7000-8000-000000000001", acquired_on: "2025-04-01" },
+      body: {
+        employee_id: "6",
+        certification_id: "01900010-0000-7000-8000-000000000001",
+        acquired_on: "2025-04-01",
+      },
     })
 
     expect(response.status).toBe(201)
@@ -151,7 +155,11 @@ describe("POST /employee-certifications", () => {
       path: "/certification/employee-certifications",
       token: await tokenFor(5),
       method: "POST",
-      body: { employee_id: "5", certification_id: "01900010-0000-7000-8000-000000000001", acquired_on: "2025-04-01" },
+      body: {
+        employee_id: "5",
+        certification_id: "01900010-0000-7000-8000-000000000001",
+        acquired_on: "2025-04-01",
+      },
     })
 
     expect(response.status).toBe(403)
@@ -162,7 +170,11 @@ describe("POST /employee-certifications", () => {
       path: "/certification/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "5", certification_id: "01900010-0000-7000-8000-000000000001", acquired_on: "2024-04-01" },
+      body: {
+        employee_id: "5",
+        certification_id: "01900010-0000-7000-8000-000000000001",
+        acquired_on: "2024-04-01",
+      },
     })
 
     expect(response.status).toBe(409)
@@ -173,7 +185,11 @@ describe("POST /employee-certifications", () => {
       path: "/certification/employee-certifications",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "6", certification_id: "01900010-0000-7000-8000-000000000999", acquired_on: "2025-04-01" },
+      body: {
+        employee_id: "6",
+        certification_id: "01900010-0000-7000-8000-000000000999",
+        acquired_on: "2025-04-01",
+      },
     })
 
     expect(response.status).toBe(404)

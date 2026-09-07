@@ -16,7 +16,9 @@ export const companyCalendarDays = sqliteTable(
   },
   // 同一日の重複登録を DB レベルで防ぐ（1 日 1 行）。
   (table) => [
-    check("company_calendar_days_id_uuid", sql.raw(uuidCheckPredicate("id"))),uniqueIndex("uq_company_calendar_days_date").on(table.calendarDate)],
+    check("company_calendar_days_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    uniqueIndex("uq_company_calendar_days_date").on(table.calendarDate),
+  ],
 )
 
 export type CompanyCalendarDayRow = InferSelectModel<typeof companyCalendarDays>

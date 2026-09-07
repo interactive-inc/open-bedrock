@@ -145,7 +145,10 @@ describe("GET /announcements", () => {
 
 describe("GET /announcements/:id", () => {
   test("member can read a published announcement", async () => {
-    const response = await request(`/announcement/announcements/${publishedAnnouncementId}`, await tokenFor(5))
+    const response = await request(
+      `/announcement/announcements/${publishedAnnouncementId}`,
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(200)
 
@@ -155,13 +158,19 @@ describe("GET /announcements/:id", () => {
   })
 
   test("member gets 404 for a draft announcement", async () => {
-    const response = await request(`/announcement/announcements/${draftAnnouncementId}`, await tokenFor(5))
+    const response = await request(
+      `/announcement/announcements/${draftAnnouncementId}`,
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("admin can read a draft announcement", async () => {
-    const response = await request(`/announcement/announcements/${draftAnnouncementId}`, await tokenFor(1))
+    const response = await request(
+      `/announcement/announcements/${draftAnnouncementId}`,
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
   })
@@ -197,10 +206,15 @@ describe("POST /announcements", () => {
 
 describe("PUT /announcements/:id", () => {
   test("admin updates title and body", async () => {
-    const response = await request(`/announcement/announcements/${draftAnnouncementId}`, await tokenFor(1), "PUT", {
-      title: "Updated Draft",
-      body_md: "updated body",
-    })
+    const response = await request(
+      `/announcement/announcements/${draftAnnouncementId}`,
+      await tokenFor(1),
+      "PUT",
+      {
+        title: "Updated Draft",
+        body_md: "updated body",
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -214,10 +228,15 @@ describe("PUT /announcements/:id", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request(`/announcement/announcements/${draftAnnouncementId}`, await tokenFor(5), "PUT", {
-      title: "x",
-      body_md: "y",
-    })
+    const response = await request(
+      `/announcement/announcements/${draftAnnouncementId}`,
+      await tokenFor(5),
+      "PUT",
+      {
+        title: "x",
+        body_md: "y",
+      },
+    )
 
     expect(response.status).toBe(403)
   })

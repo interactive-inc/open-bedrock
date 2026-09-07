@@ -13,22 +13,22 @@ import { check, integer, primaryKey, real, sqliteTable, text } from "drizzle-orm
 export const leaveRequests = sqliteTable(
   "leave_requests",
   {
-  id: text("id").primaryKey(),
-  employeeId: text("employee_id").$type<EmployeeId>().notNull(),
-  leaveType: text("leave_type").notNull().$type<LeaveType>(),
-  startDate: text("start_date").notNull(),
-  endDate: text("end_date").notNull(),
-  days: integer("days").notNull(),
-  unit: text("unit").notNull().$type<LeaveUnit>(),
-  hours: real("hours"),
-  // 残数消費量（按分計算後）。半休=0.5、時間休=時間数/8、全休=days と同じ。
-  consumedDays: real("consumed_days").notNull(),
-  reason: text("reason"),
-  status: text("status").notNull().$type<LeaveStatus>(),
-  approverId: text("approver_id").$type<EmployeeId>(),
-  decidedComment: text("decided_comment"),
-  createdAt: text("created_at").notNull(),
-},
+    id: text("id").primaryKey(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
+    leaveType: text("leave_type").notNull().$type<LeaveType>(),
+    startDate: text("start_date").notNull(),
+    endDate: text("end_date").notNull(),
+    days: integer("days").notNull(),
+    unit: text("unit").notNull().$type<LeaveUnit>(),
+    hours: real("hours"),
+    // 残数消費量（按分計算後）。半休=0.5、時間休=時間数/8、全休=days と同じ。
+    consumedDays: real("consumed_days").notNull(),
+    reason: text("reason"),
+    status: text("status").notNull().$type<LeaveStatus>(),
+    approverId: text("approver_id").$type<EmployeeId>(),
+    decidedComment: text("decided_comment"),
+    createdAt: text("created_at").notNull(),
+  },
   (table) => [check("leave_requests_id_uuid", sql.raw(uuidCheckPredicate("id")))],
 )
 

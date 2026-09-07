@@ -18,7 +18,9 @@ export const employeeWorkStyles = sqliteTable(
     createdAt: text("created_at").notNull(),
   },
   (table) => [
-    check("employee_work_styles_id_uuid", sql.raw(uuidCheckPredicate("id"))),index("idx_employee_work_styles_employee").on(table.employeeId)],
+    check("employee_work_styles_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    index("idx_employee_work_styles_employee").on(table.employeeId),
+  ],
 )
 
 export type EmployeeWorkStyleRow = InferSelectModel<typeof employeeWorkStyles>

@@ -97,7 +97,9 @@ describe("GET /knowledge-articles", () => {
       expect(parsed.data.data.length).toBe(6)
       expect(parsed.data.total).toBe(6)
 
-      const first = parsed.data.data.find((item) => item.id === "0190001d-0000-7000-8000-000000000001")
+      const first = parsed.data.data.find(
+        (item) => item.id === "0190001d-0000-7000-8000-000000000001",
+      )
 
       expect(first?.title).toBe("リモートワーク規程")
       expect(first?.category).toBe("規程")

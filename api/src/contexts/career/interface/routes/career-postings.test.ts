@@ -99,13 +99,17 @@ describe("GET /career-postings", () => {
     if (parsed.success) {
       expect(parsed.data.data.every((posting) => posting.status === "open")).toBe(true)
 
-      const first = parsed.data.data.find((posting) => posting.id === "0190000d-0000-7000-8000-000000000001")
+      const first = parsed.data.data.find(
+        (posting) => posting.id === "0190000d-0000-7000-8000-000000000001",
+      )
 
       expect(first?.title).toBe("プロダクト開発リード")
       expect(first?.dept_name).toBe("開発部")
       expect(first?.required_skills).toBe("typescript,project_mgmt")
 
-      const closed = parsed.data.data.find((posting) => posting.id === "0190000d-0000-7000-8000-000000000003")
+      const closed = parsed.data.data.find(
+        (posting) => posting.id === "0190000d-0000-7000-8000-000000000003",
+      )
 
       expect(closed).toBeUndefined()
     }

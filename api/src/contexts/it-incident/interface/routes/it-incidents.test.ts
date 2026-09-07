@@ -151,7 +151,11 @@ describe("POST /it-incidents", () => {
 
 describe("POST /it-incidents/:id/resolve", () => {
   test("resolves an open incident as admin", async () => {
-    const response = await request("/it-incident/it-incidents/0190001c-0000-7000-8000-000000000002/resolve", await tokenFor(1), "POST")
+    const response = await request(
+      "/it-incident/it-incidents/0190001c-0000-7000-8000-000000000002/resolve",
+      await tokenFor(1),
+      "POST",
+    )
 
     expect(response.status).toBe(200)
 
@@ -166,13 +170,21 @@ describe("POST /it-incidents/:id/resolve", () => {
   })
 
   test("returns 409 when already resolved", async () => {
-    const response = await request("/it-incident/it-incidents/0190001c-0000-7000-8000-000000000001/resolve", await tokenFor(1), "POST")
+    const response = await request(
+      "/it-incident/it-incidents/0190001c-0000-7000-8000-000000000001/resolve",
+      await tokenFor(1),
+      "POST",
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/it-incident/it-incidents/0190001c-0000-7000-8000-000000000002/resolve", await tokenFor(5), "POST")
+    const response = await request(
+      "/it-incident/it-incidents/0190001c-0000-7000-8000-000000000002/resolve",
+      await tokenFor(5),
+      "POST",
+    )
 
     expect(response.status).toBe(403)
   })

@@ -8,13 +8,13 @@ import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-o
 export const certifications = sqliteTable(
   "certification_definitions",
   {
-  id: text("id").primaryKey(),
-  code: text("code").notNull().unique(),
-  name: text("name").notNull(),
-  issuer: text("issuer"),
-  description: text("description"),
-  createdAt: text("created_at").notNull(),
-},
+    id: text("id").primaryKey(),
+    code: text("code").notNull().unique(),
+    name: text("name").notNull(),
+    issuer: text("issuer"),
+    description: text("description"),
+    createdAt: text("created_at").notNull(),
+  },
   (table) => [check("certification_definitions_id_uuid", sql.raw(uuidCheckPredicate("id")))],
 )
 

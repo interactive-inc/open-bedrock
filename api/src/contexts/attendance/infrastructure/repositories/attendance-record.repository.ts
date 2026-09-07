@@ -64,7 +64,6 @@ export class AttendanceRecordRepository {
 
   async update(attendanceRecord: AttendanceRecord): Promise<AttendanceRecord | null | Error> {
     try {
-
       const rows = await this.c.var.database
         .update(attendanceRecords)
         .set({

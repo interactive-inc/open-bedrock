@@ -247,7 +247,11 @@ describe("POST /leave-requests/:id/approve", () => {
     expect(response.status).toBe(409)
 
     const requestRow = leaveRequestRowSchema.parse(
-      await db.prepare("SELECT status FROM leave_requests WHERE id = '0190001e-0000-7000-8000-000000000001'").first(),
+      await db
+        .prepare(
+          "SELECT status FROM leave_requests WHERE id = '0190001e-0000-7000-8000-000000000001'",
+        )
+        .first(),
     )
 
     const balance = leaveBalanceResponseSchema.parse(
@@ -292,7 +296,11 @@ describe("POST /leave-requests/:id/approve", () => {
     expect(response.status).toBe(409)
 
     const requestRow = leaveRequestRowSchema.parse(
-      await db.prepare("SELECT status FROM leave_requests WHERE id = '0190001e-0000-7000-8000-000000000001'").first(),
+      await db
+        .prepare(
+          "SELECT status FROM leave_requests WHERE id = '0190001e-0000-7000-8000-000000000001'",
+        )
+        .first(),
     )
 
     expect(requestRow.status).toBe("pending")

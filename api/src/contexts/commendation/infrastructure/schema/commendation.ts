@@ -16,7 +16,9 @@ export const commendations = sqliteTable(
     createdAt: text("created_at").notNull(),
   },
   (table) => [
-    check("commendations_id_uuid", sql.raw(uuidCheckPredicate("id"))),index("idx_commendations_employee").on(table.employeeId)],
+    check("commendations_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    index("idx_commendations_employee").on(table.employeeId),
+  ],
 )
 
 export type CommendationRow = InferSelectModel<typeof commendations>

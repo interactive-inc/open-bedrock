@@ -17,7 +17,9 @@ export const documents = sqliteTable(
     createdAt: text("created_at").notNull(),
   },
   (table) => [
-    check("document_ledger_entries_id_uuid", sql.raw(uuidCheckPredicate("id"))),index("idx_documents_expires_on").on(table.expiresOn)],
+    check("document_ledger_entries_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    index("idx_documents_expires_on").on(table.expiresOn),
+  ],
 )
 
 export type DocumentRow = InferSelectModel<typeof documents>

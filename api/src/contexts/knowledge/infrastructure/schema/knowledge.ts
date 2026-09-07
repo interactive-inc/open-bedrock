@@ -8,14 +8,14 @@ import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 export const knowledgeArticles = sqliteTable(
   "knowledge_articles",
   {
-  id: text("id").primaryKey(),
-  title: text("title").notNull(),
-  category: text("category").notNull(),
-  tags: text("tags"),
-  bodyMd: text("body_md").notNull(),
-  authorId: text("author_id").$type<EmployeeId>().notNull(),
-  createdAt: text("created_at").notNull(),
-},
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    category: text("category").notNull(),
+    tags: text("tags"),
+    bodyMd: text("body_md").notNull(),
+    authorId: text("author_id").$type<EmployeeId>().notNull(),
+    createdAt: text("created_at").notNull(),
+  },
   (table) => [check("knowledge_articles_id_uuid", sql.raw(uuidCheckPredicate("id")))],
 )
 
