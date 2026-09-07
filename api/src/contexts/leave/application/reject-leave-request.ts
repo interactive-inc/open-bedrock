@@ -16,7 +16,7 @@ import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastr
 
 export type Command = {
   session: CompanySessionValue
-  leaveRequestId: number
+  leaveRequestId: string
   approverId: EmployeeId
   comment: string | null
   createdAt: string
@@ -29,7 +29,7 @@ type Context = Readonly<{
     action: "approve" | "reject"
     subjectLabel: string
     sourceDomain: string
-    sourceId: number | null
+    sourceId: string | null
     createdAt: string
   }) => Promise<unknown>
 }>

@@ -1,6 +1,6 @@
 /** GET /certification-definitions の要素。api は snake_case で返す。 */
 export type CertificationResponse = {
-  id: number
+  id: string
   code: string
   name: string
   issuer: string | null
@@ -10,9 +10,9 @@ export type CertificationResponse = {
 
 /** GET /employee-certifications の要素。 */
 export type EmployeeCertificationResponse = {
-  id: number
+  id: string
   employee_id: string
-  certification_id: number
+  certification_id: string
   acquired_on: string
   expires_on: string | null
   note: string | null

@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
@@ -26,7 +27,7 @@ const leaveBalanceResponseSchema = z.object({
 })
 
 const leaveDecisionResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employee_id: zEmployeeId,
   leave_type: z.string(),
   start_date: z.string(),
@@ -140,7 +141,7 @@ describe("POST /leave-requests/:id/approve", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave/leave-requests/1/approve",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001/approve",
       token: managerToken,
       method: "POST",
       body: { comment: "approved" },
@@ -188,7 +189,7 @@ describe("POST /leave-requests/:id/approve", () => {
         db,
         jwtSecret,
         now: fiscalNow,
-        path: "/leave/leave-requests/1/approve",
+        path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001/approve",
         token: managerToken,
         method: "POST",
         body: { comment: "approved" },
@@ -237,7 +238,7 @@ describe("POST /leave-requests/:id/approve", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave/leave-requests/1/approve",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "approved" },
@@ -246,7 +247,7 @@ describe("POST /leave-requests/:id/approve", () => {
     expect(response.status).toBe(409)
 
     const requestRow = leaveRequestRowSchema.parse(
-      await db.prepare("SELECT status FROM leave_requests WHERE id = 1").first(),
+      await db.prepare("SELECT status FROM leave_requests WHERE id = '0190001e-0000-7000-8000-000000000001'").first(),
     )
 
     const balance = leaveBalanceResponseSchema.parse(
@@ -282,7 +283,7 @@ describe("POST /leave-requests/:id/approve", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave/leave-requests/1/approve",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "approved" },
@@ -291,7 +292,7 @@ describe("POST /leave-requests/:id/approve", () => {
     expect(response.status).toBe(409)
 
     const requestRow = leaveRequestRowSchema.parse(
-      await db.prepare("SELECT status FROM leave_requests WHERE id = 1").first(),
+      await db.prepare("SELECT status FROM leave_requests WHERE id = '0190001e-0000-7000-8000-000000000001'").first(),
     )
 
     expect(requestRow.status).toBe("pending")
@@ -306,7 +307,7 @@ describe("POST /leave-requests/:id/approve", () => {
         INSERT INTO leave_requests
           (id, employee_id, leave_type, start_date, end_date, days, unit, hours, consumed_days, reason, status, approver_id, decided_comment, created_at)
         VALUES
-          (100, 5, 'compensatory', '2026-06-15', '2026-06-15', 1, 'full_day', NULL, 1, NULL, 'pending', NULL, NULL, '2026-05-22T00:00:00Z')
+          ('0190001e-0000-7000-8000-000000000100', 5, 'compensatory', '2026-06-15', '2026-06-15', 1, 'full_day', NULL, 1, NULL, 'pending', NULL, NULL, '2026-05-22T00:00:00Z')
         `,
       )
       .run()
@@ -315,7 +316,7 @@ describe("POST /leave-requests/:id/approve", () => {
       db,
       jwtSecret,
       now: fiscalNow,
-      path: "/leave/leave-requests/100/approve",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000100/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: "approved" },
@@ -341,7 +342,7 @@ describe("POST /leave-requests/:id/approve", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1/approve",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001/approve",
       token: await tokenFor(5),
       method: "POST",
       body: { comment: null },
@@ -352,7 +353,7 @@ describe("POST /leave-requests/:id/approve", () => {
 
   test("returns 404 when the request does not exist", async () => {
     const response = await request({
-      path: "/leave/leave-requests/9999/approve",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000009999/approve",
       token: await tokenFor(4),
       method: "POST",
       body: { comment: null },
@@ -374,7 +375,7 @@ describe("POST /leave-requests/:id/approve", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1/approve",
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001/approve",
       token: null,
       method: "POST",
       body: { comment: null },

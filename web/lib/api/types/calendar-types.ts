@@ -3,7 +3,7 @@ export type CalendarDayKind = "holiday" | "workday"
 
 /** GET /company-calendar-days のレスポンス要素。api は snake_case で返す。 */
 export type CompanyCalendarDayResponse = {
-  id: number
+  id: string
   calendar_date: string
   kind: CalendarDayKind
   name: string | null

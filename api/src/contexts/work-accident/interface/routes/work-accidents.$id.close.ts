@@ -1,3 +1,4 @@
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { CloseWorkAccident } from "@/contexts/work-accident/application/close-work-accident"
 import { factory } from "@/api/http/factory"
 import { zAppWorkAccident } from "@/contexts/work-accident/interface/http/response-schemas"
@@ -18,11 +19,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const id = Number(c.req.param("id"))
-
-  if (Number.isInteger(id) === false) {
-    throw new BadRequestError("invalid parameter")
-  }
+  const id = validateUuidParam(c.req.param("id"), "id")
 
   const record = await new CloseWorkAccident(c).run({ id })
 

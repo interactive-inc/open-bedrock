@@ -1,3 +1,5 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { describe, expect, test } from "bun:test"
@@ -29,7 +31,7 @@ describe("LeaveRequest.daysBetween", () => {
 })
 
 describe("LeaveRequest.create", () => {
-  test("builds a LeaveRequest with pending status and null id", () => {
+  test("採番済みの id と pending 状態で組み立てる", () => {
     const request = LeaveRequest.create({
       employeeId: toWorkforceEmployeeId(7),
       leaveType: "annual",
@@ -44,7 +46,7 @@ describe("LeaveRequest.create", () => {
     })
 
     expect(request).toBeInstanceOf(LeaveRequest)
-    expect(request.id).toBeNull()
+    expect(uuidSchema.safeParse(request.id).success).toBe(true)
     expect(request.status).toBe("pending")
     expect(request.approverId).toBeNull()
     expect(request.decidedComment).toBeNull()
@@ -77,7 +79,7 @@ describe("LeaveRequest.isModifiable", () => {
 
   test("is false for approved", () => {
     const approved = new LeaveRequest({
-      id: null,
+      id: createUuidV7(),
       employeeId: toWorkforceEmployeeId(7),
       leaveType: "annual",
       startDate: "2026-07-01",
@@ -98,7 +100,7 @@ describe("LeaveRequest.isModifiable", () => {
 
   test("is false for rejected", () => {
     const rejected = new LeaveRequest({
-      id: null,
+      id: createUuidV7(),
       employeeId: toWorkforceEmployeeId(7),
       leaveType: "annual",
       startDate: "2026-07-01",

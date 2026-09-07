@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { ConflictError } from "@/lib/errors"
 import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 import {
@@ -39,15 +40,11 @@ function toResponseBody(leaveRequest: LeaveRequest) {
   })
 }
 
-/** path の :id を数値へ。不正値は null。 */
-function toLeaveRequestId(value: string): number | null {
-  const parsed = Number(value)
+/** path の :id を UUID として受け取る。不正値は null。 */
+function toLeaveRequestId(value: string): string | null {
+  const parsed = uuidSchema.safeParse(value)
 
-  if (Number.isInteger(parsed) === false) {
-    return null
-  }
-
-  return parsed
+  return parsed.success ? parsed.data : null
 }
 
 // @authorization service - session を application service に渡して判定する

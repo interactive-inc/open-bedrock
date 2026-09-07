@@ -4,7 +4,7 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppLeaveRequest } from "@/contexts/leave/interface/http/response-schemas"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
@@ -31,7 +31,7 @@ export const POST = factory.createHandlers(
       throw new ForbiddenError()
     }
 
-    const leaveRequestId = validateIntParam(c.req.param("id"), "leave request")
+    const leaveRequestId = validateUuidParam(c.req.param("id"), "leave request")
 
     const body = c.req.valid("json")
 

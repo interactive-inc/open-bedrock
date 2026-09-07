@@ -1,9 +1,11 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import type { CompanyCalendarDayRow } from "@/contexts/company-calendar/infrastructure/schema/company-calendar"
 import { calendarDayKindSchema } from "@/contexts/company-calendar/domain/definitions/calendar-day-kind.definition"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   calendarDate: z.string(),
   kind: calendarDayKindSchema,
   name: z.string().nullable(),
@@ -41,7 +43,7 @@ export class CompanyCalendarDay implements Props {
     createdAt: string
   }): CompanyCalendarDay {
     return new CompanyCalendarDay({
-      id: null,
+      id: createUuidV7(),
       calendarDate: props.calendarDate,
       kind: props.kind,
       name: props.name,

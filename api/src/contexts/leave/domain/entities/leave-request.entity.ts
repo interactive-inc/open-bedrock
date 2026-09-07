@@ -1,3 +1,5 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import {
@@ -14,7 +16,7 @@ import { z } from "zod"
 
 /** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const leaveRequestRowSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employeeId: zEmployeeId,
   leaveType: leaveTypeSchema,
   startDate: z.string(),
@@ -31,7 +33,7 @@ export const leaveRequestRowSchema = z.object({
 })
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   employeeId: zEmployeeId,
   leaveType: leaveTypeSchema,
   startDate: z.string(),
@@ -104,7 +106,7 @@ export class LeaveRequest implements Props {
     createdAt: string
   }): LeaveRequest {
     return new LeaveRequest({
-      id: null,
+      id: createUuidV7(),
       employeeId: props.employeeId,
       leaveType: props.leaveType,
       startDate: props.startDate,
