@@ -10,7 +10,6 @@ import type {
   LifecycleSchedule,
 } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 import { normalizeLifecycleSchedule } from "@/contexts/company/domain/definitions/normalize-lifecycle-schedule.definition"
-import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 
 function periodVersion(period: LifecyclePeriodBase): WorkforcePeriodVersion {
   return {
@@ -65,7 +64,7 @@ export function toWorkforceLifecycleSchedules(
               ...periodVersion(period),
               employmentId: period.employmentPeriodId,
               employeeId: sourceEmployeeId,
-              organizationUnitId: toWorkforceOrganizationUnitId(period.departmentCode),
+              organizationUnitId: period.organizationUnitId,
               assignmentType:
                 period.assignmentType === "primary"
                   ? ("PRIMARY" as const)
@@ -81,7 +80,7 @@ export function toWorkforceLifecycleSchedules(
                 ...periodVersion(period),
                 employmentId: period.employmentId,
                 employeeId: sourceEmployeeId,
-                organizationUnitId: toWorkforceOrganizationUnitId(period.departmentCode),
+                organizationUnitId: period.organizationUnitId,
                 responsibilityType: restoreOrgResponsibilityType("MANAGER"),
               }
             }),

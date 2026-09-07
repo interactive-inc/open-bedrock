@@ -1,6 +1,7 @@
 import type {
   EmployeeId,
   EmploymentId,
+  OrganizationUnitId,
 } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 /** 有効日と訂正revisionを持つCompany従業員ライフサイクルの共通期間。 */
@@ -28,6 +29,7 @@ export type EmployeeStatusPeriod = LifecyclePeriodBase & {
 export type OrgAssignmentPeriod = LifecyclePeriodBase & {
   employmentPeriodId: EmploymentId
   employeeId: EmployeeId
+  organizationUnitId: OrganizationUnitId
   departmentCode: string
   assignmentType: "primary" | "concurrent"
   positionTitle: string | null
@@ -36,6 +38,7 @@ export type OrgAssignmentPeriod = LifecyclePeriodBase & {
 
 export type OrgResponsibilityPeriod = LifecyclePeriodBase & {
   employmentId: EmploymentId
+  organizationUnitId: OrganizationUnitId
   departmentCode: string
   responsibilityType: "department_manager"
   employeeId: EmployeeId

@@ -1,3 +1,5 @@
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
+import { OrganizationUnitReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/organization-unit-read.adapter"
 import type {
   EmployeeStatusPeriod,
   EmploymentPeriod,
@@ -36,6 +38,7 @@ type StatusRow = EmploymentRow & {
 
 type AssignmentRow = EmploymentRow & {
   employment_id: EmploymentId
+  organization_unit_id: string
   organization_unit_code: string
   assignment_type: "PRIMARY" | "CONCURRENT"
   position_title: string | null
@@ -44,6 +47,7 @@ type AssignmentRow = EmploymentRow & {
 
 type ResponsibilityRow = Omit<EmploymentRow, "employee_id"> & {
   employment_id: EmploymentId
+  organization_unit_id: string
   organization_unit_code: string
   responsibility_type: "MANAGER"
   employee_id: EmployeeId
@@ -75,6 +79,7 @@ function toAssignment(row: AssignmentRow): OrgAssignmentPeriod {
   return {
     ...toEmployment(row),
     employmentPeriodId: row.employment_id,
+    organizationUnitId: restoreWorkforceId("organization_unit", row.organization_unit_id),
     departmentCode: row.organization_unit_code,
     assignmentType: row.assignment_type === "PRIMARY" ? "primary" : "concurrent",
     positionTitle: row.position_title,
@@ -87,6 +92,7 @@ function toResponsibility(row: ResponsibilityRow): OrgResponsibilityPeriod {
     periodId: row.period_id,
     revision: row.revision,
     employmentId: row.employment_id,
+    organizationUnitId: restoreWorkforceId("organization_unit", row.organization_unit_id),
     departmentCode: row.organization_unit_code,
     responsibilityType: "department_manager",
     employeeId: row.employee_id,
@@ -123,7 +129,7 @@ const statusSelect = `
   ) AND current.is_void = 0`
 
 const assignmentSelect = `
-  SELECT period_id, revision, employment_id, employee_id,
+  SELECT period_id, revision, employment_id, employee_id, organization_unit_id,
          (
            SELECT unit.code
            FROM company_organization_unit_period_versions AS unit
@@ -149,7 +155,7 @@ const assignmentSelect = `
   ) AND current.is_void = 0`
 
 const responsibilitySelect = `
-  SELECT period_id, revision, employment_id, employee_id,
+  SELECT period_id, revision, employment_id, employee_id, organization_unit_id,
          (
            SELECT unit.code
            FROM company_organization_unit_period_versions AS unit
@@ -283,7 +289,7 @@ export class EmployeeLifecycleAdapter {
     }
   }
 
-  async loadReferences(): Promise<
+  async loadReferences(asOf: CalendarDate): Promise<
     | {
         departments: ReadonlyArray<LifecycleDepartmentReference>
         employees: ReadonlyArray<LifecycleEmployeeReference>
@@ -292,29 +298,7 @@ export class EmployeeLifecycleAdapter {
   > {
     try {
       const [departments, employees] = await Promise.all([
-        this.c.env.DB.prepare(
-          `WITH latest_revisions AS (
-             SELECT unit.*
-             FROM company_organization_unit_period_versions AS unit
-             WHERE unit.revision = (
-               SELECT MAX(candidate.revision)
-               FROM company_organization_unit_period_versions AS candidate
-               WHERE candidate.period_id = unit.period_id
-             )
-           ), latest_units AS (
-             SELECT unit.*,
-                    ROW_NUMBER() OVER (
-                      PARTITION BY unit.organization_unit_id
-                      ORDER BY unit.starts_on DESC, unit.period_id DESC
-                    ) AS unit_rank
-             FROM latest_revisions AS unit
-           )
-           SELECT code, official_name AS name,
-                  CASE WHEN is_void = 1 OR ends_on IS NOT NULL THEN 1 ELSE NULL END AS archived_at
-           FROM latest_units
-           WHERE unit_rank = 1 AND kind != 'COMPANY'
-           ORDER BY code`,
-        ).all<{ code: string; name: string; archived_at: number | null }>(),
+        OrganizationUnitReadAdapter.fromContext(this.c).readSnapshot(asOf),
         this.c.env.DB.prepare(
           `SELECT id, employee_code AS code
            FROM company_employees
@@ -326,12 +310,10 @@ export class EmployeeLifecycleAdapter {
         }>(),
       ])
 
+      if (!departments.ok) return repositoryError(departments.cause)
+      if (!employees.success) return repositoryError(new Error("employee references unavailable"))
       return {
-        departments: departments.results.map((row) => ({
-          code: row.code,
-          name: row.name,
-          archived: row.archived_at !== null,
-        })),
+        departments: departments.snapshot.units,
         employees: employees.results,
       }
     } catch (cause) {

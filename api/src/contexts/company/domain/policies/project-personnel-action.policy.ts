@@ -1,3 +1,4 @@
+import type { OrganizationUnitPeriod } from "@/contexts/company/domain/definitions/organization-unit.definition"
 import { applyLifecycleMutations } from "@/contexts/company/domain/policies/apply-lifecycle-mutations.policy"
 import { containsDate } from "@/contexts/company/domain/definitions/contains-date.definition"
 import type {
@@ -24,7 +25,10 @@ import {
   CompanyConflictError,
   CompanyValidationError,
 } from "@/contexts/company/domain/errors"
-import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import type {
+  EmployeeId,
+  OrganizationUnitId,
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
 
@@ -36,11 +40,7 @@ export type PersonnelActionProjection = {
   affectsOrganization: boolean
 }
 
-export type LifecycleDepartmentReference = {
-  code: string
-  name: string
-  archived: boolean
-}
+export type LifecycleDepartmentReference = OrganizationUnitPeriod
 
 export type LifecycleEmployeeReference = {
   id: EmployeeId
@@ -124,13 +124,23 @@ function department(
   code: string,
   requireActive = true,
 ): LifecycleDepartmentReference | CompanyOperationError {
-  const reference = context.departments.find((candidate) => candidate.code === code)
-
-  if (reference === undefined || (requireActive && reference.archived)) {
+  const input =
+    context.command.input.kind === "corrected"
+      ? context.command.input.replacementAction
+      : context.command.input
+  const date = input.kind === "retired" ? input.retirementOn : input.eventOn
+  const references = context.departments.filter(
+    (candidate) =>
+      candidate.code === code &&
+      !candidate.isVoid &&
+      candidate.startsOn <= date &&
+      (candidate.endsOn === null ||
+        date < candidate.endsOn ||
+        (!requireActive && date === candidate.endsOn)),
+  )
+  if (references.length !== 1 || references[0] === undefined)
     return new CompanyConflictError("利用できない部署が指定されています", "department_not_active")
-  }
-
-  return reference
+  return references[0]
 }
 
 function employeeId(
@@ -226,7 +236,9 @@ function addAssignment(
   props: {
     employment: EmploymentPeriod
     startsOn: string
+    endsOn: string | null
     departmentCode: string
+    organizationUnitId: OrganizationUnitId
     assignmentType: "primary" | "concurrent"
     positionTitle: string | null
     managerEmployeeId: EmployeeId | null
@@ -237,12 +249,13 @@ function addAssignment(
     revision: 1,
     employmentPeriodId: props.employment.employmentId,
     employeeId: context.command.employeeId,
+    organizationUnitId: props.organizationUnitId,
     departmentCode: props.departmentCode,
     assignmentType: props.assignmentType,
     positionTitle: props.positionTitle,
     managerEmployeeId: props.managerEmployeeId,
     startsOn: props.startsOn,
-    endsOn: props.employment.endsOn,
+    endsOn: props.endsOn,
     isVoid: false,
     recordedByActionId: context.command.actionId,
     recordedAt: context.command.recordedAt,
@@ -277,12 +290,14 @@ function projectHireOrRehire(
     addAssignment(context, {
       employment,
       startsOn: input.eventOn,
+      endsOn: employment.endsOn,
       departmentCode,
+      organizationUnitId: departmentReference.organizationUnitId,
       assignmentType: "primary",
       positionTitle: input.positionTitle ?? null,
       managerEmployeeId: managerId,
     })
-    snapshot = { code: departmentReference.code, name: departmentReference.name }
+    snapshot = { code: departmentReference.code, name: departmentReference.officialName }
   }
 
   return personnelActionSummarySchema.parse({
@@ -323,14 +338,17 @@ function projectAssignmentStart(
 
   const assignmentType = input.kind === "concurrent_assignment_started" ? "concurrent" : "primary"
 
-  if (input.kind === "transferred") {
-    const current = context.schedule.assignments.find(
-      (period) =>
-        period.employeeId === context.command.employeeId &&
-        period.assignmentType === "primary" &&
-        containsDate(period, input.eventOn),
-    )
+  const current =
+    input.kind === "transferred"
+      ? context.schedule.assignments.find(
+          (period) =>
+            period.employeeId === context.command.employeeId &&
+            period.assignmentType === "primary" &&
+            containsDate(period, input.eventOn),
+        )
+      : undefined
 
+  if (input.kind === "transferred") {
     if (current === undefined) {
       return transitionError("異動元の主所属がありません")
     }
@@ -341,7 +359,9 @@ function projectAssignmentStart(
   addAssignment(context, {
     employment,
     startsOn: input.eventOn,
+    endsOn: current?.endsOn ?? employment.endsOn,
     departmentCode: input.departmentCode,
+    organizationUnitId: departmentReference.organizationUnitId,
     assignmentType,
     positionTitle: input.positionTitle,
     managerEmployeeId: managerId,
@@ -350,7 +370,7 @@ function projectAssignmentStart(
   return personnelActionSummarySchema.parse({
     kind: input.kind,
     eventOn: input.eventOn,
-    department: { code: departmentReference.code, name: departmentReference.name },
+    department: { code: departmentReference.code, name: departmentReference.officialName },
     assignmentType,
     positionTitle: input.positionTitle,
     managerEmployeeCode: input.managerEmployeeCode,
@@ -377,7 +397,7 @@ function projectAssignmentEnd(
   return personnelActionSummarySchema.parse({
     kind: input.kind,
     eventOn: input.eventOn,
-    department: { code: departmentReference.code, name: departmentReference.name },
+    department: { code: departmentReference.code, name: departmentReference.officialName },
     assignmentType: input.assignmentType,
   })
 }
@@ -417,7 +437,9 @@ function projectAssignmentAttributeChange(
   addAssignment(context, {
     employment,
     startsOn: input.eventOn,
+    endsOn: current.endsOn,
     departmentCode: current.departmentCode,
+    organizationUnitId: current.organizationUnitId,
     assignmentType: current.assignmentType,
     positionTitle: input.kind === "position_changed" ? input.positionTitle : current.positionTitle,
     managerEmployeeId: nextManagerId,
@@ -427,7 +449,7 @@ function projectAssignmentAttributeChange(
     return personnelActionSummarySchema.parse({
       kind: input.kind,
       eventOn: input.eventOn,
-      department: { code: departmentReference.code, name: departmentReference.name },
+      department: { code: departmentReference.code, name: departmentReference.officialName },
       assignmentType: input.assignmentType,
       previousPositionTitle: current.positionTitle,
       positionTitle: input.positionTitle,
@@ -438,7 +460,7 @@ function projectAssignmentAttributeChange(
   return personnelActionSummarySchema.parse({
     kind: input.kind,
     eventOn: input.eventOn,
-    department: { code: departmentReference.code, name: departmentReference.name },
+    department: { code: departmentReference.code, name: departmentReference.officialName },
     assignmentType: input.assignmentType,
     previousManagerEmployeeCode: employeeCode(context, current.managerEmployeeId),
     managerEmployeeCode: input.managerEmployeeCode,
@@ -504,6 +526,7 @@ function projectResponsibility(
       revision: 1,
       employmentId: employment.employmentId,
       departmentCode: input.departmentCode,
+      organizationUnitId: departmentReference.organizationUnitId,
       responsibilityType: "department_manager",
       employeeId: context.command.employeeId,
       startsOn: input.eventOn,
@@ -531,7 +554,7 @@ function projectResponsibility(
   return personnelActionSummarySchema.parse({
     kind: input.kind,
     eventOn: input.eventOn,
-    department: { code: departmentReference.code, name: departmentReference.name },
+    department: { code: departmentReference.code, name: departmentReference.officialName },
   })
 }
 
@@ -662,12 +685,14 @@ function projectInitialState(
       addAssignment(context, {
         employment,
         startsOn: input.eventOn,
+        endsOn: employment.endsOn,
         departmentCode: input.departmentCode,
+        organizationUnitId: departmentReference.organizationUnitId,
         assignmentType: "primary",
         positionTitle: input.positionTitle,
         managerEmployeeId: managerId,
       })
-      snapshot = { code: departmentReference.code, name: departmentReference.name }
+      snapshot = { code: departmentReference.code, name: departmentReference.officialName }
     }
   }
 
@@ -776,7 +801,7 @@ export function projectPersonnelAction(
 
   const validationError = validateLifecycleSchedules({
     schedules: organizationWithTarget(context),
-    departments: props.departments.map((item) => item.code),
+    departments: props.departments,
   })
 
   if (validationError !== undefined) {

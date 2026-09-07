@@ -76,10 +76,7 @@ export class DirectPersonnelActionAdapter {
             revision: period.revision,
             employmentId: period.employmentPeriodId,
             employeeId: period.employeeId,
-            organizationUnitId: restoreWorkforceId(
-              "organization_unit",
-              `department:${period.departmentCode}`,
-            ),
+            organizationUnitId: period.organizationUnitId,
             assignmentType: period.assignmentType === "primary" ? "PRIMARY" : "CONCURRENT",
             positionTitle: period.positionTitle,
             managerEmployeeId: period.managerEmployeeId,
@@ -99,10 +96,7 @@ export class DirectPersonnelActionAdapter {
           revision: period.revision,
           employmentId: period.employmentId,
           employeeId: period.employeeId,
-          organizationUnitId: restoreWorkforceId(
-            "organization_unit",
-            `department:${period.departmentCode}`,
-          ),
+          organizationUnitId: period.organizationUnitId,
           responsibilityType: restoreOrgResponsibilityType("MANAGER"),
           startsOn: restoreCalendarDate(period.startsOn),
           endsOn: period.endsOn === null ? null : restoreCalendarDate(period.endsOn),
@@ -282,7 +276,7 @@ export class DirectPersonnelActionAdapter {
     const [schedule, organizationSchedules, references, revisions] = await Promise.all([
       lifecycleRepository.loadSchedule(command.employeeId),
       lifecycleRepository.loadOrganizationSchedules(),
-      lifecycleRepository.loadReferences(),
+      lifecycleRepository.loadReferences(businessDate),
       lifecycleRepository.loadRevisions(command.employeeId),
     ])
 

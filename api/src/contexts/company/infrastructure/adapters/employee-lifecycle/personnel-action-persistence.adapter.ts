@@ -7,7 +7,6 @@ import type {
 } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 import type { PersonnelActionProjection } from "@/contexts/company/domain/policies/project-personnel-action.policy"
 import { stableLifecycleJson } from "@/contexts/company/domain/definitions/stable-lifecycle-json.definition"
-import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import type { PersonnelActionRecord } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action.adapter"
@@ -22,7 +21,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
 import type { ProposalDigest } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import { SystemD1AuthorizedExecutionAdapter } from "@system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter"
-import { CompanyEmploymentJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/company-employment-journal.adapter"
+import { CompanyPersonnelResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/company-personnel-resource-journal.adapter"
 
 type CurrentLifecycleProjection = {
   status: "active" | "leave" | "retired"
@@ -202,7 +201,7 @@ function mutationStatements(
             period.revision,
             period.employmentPeriodId,
             period.employeeId,
-            toWorkforceOrganizationUnitId(period.departmentCode),
+            period.organizationUnitId,
             period.assignmentType === "primary" ? "PRIMARY" : "CONCURRENT",
             period.positionTitle,
             period.managerEmployeeId,
@@ -230,7 +229,7 @@ function mutationStatements(
             period.revision,
             period.employmentId,
             period.employeeId,
-            toWorkforceOrganizationUnitId(period.departmentCode),
+            period.organizationUnitId,
             period.startsOn,
             period.endsOn,
             period.isVoid ? 1 : 0,
@@ -320,6 +319,7 @@ export type PersonnelActionPersistenceProps = {
 function preparePersistenceStatements(
   c: CompanyContext,
   props: PersonnelActionPersistenceProps,
+  journalStatements: ReadonlyArray<D1PreparedStatement>,
 ): D1PreparedStatement[] | CompanyOperationError {
   const db = c.env.DB
   const nextEmployeeRevision = props.revisions.employeeRevision + 1
@@ -465,6 +465,7 @@ function preparePersistenceStatements(
         newEmploymentType: props.projection.newEmploymentType,
       }),
     ),
+    ...journalStatements,
   )
 
   if (props.projection.affectsOrganization) {
@@ -520,11 +521,9 @@ export class PersonnelActionPersistenceAdapter {
       )
     )
       return new CompanyUnexpectedError("新しい雇用の区分が指定されていません")
-    const statements = preparePersistenceStatements(this.c, props)
-    if (statements instanceof CompanyOperationError) return statements
-    const journal = await new CompanyEmploymentJournalAdapter(this.c.env.DB).prepare(props)
+    const journal = await new CompanyPersonnelResourceJournalAdapter(this.c.env.DB).prepare(props)
     if (journal instanceof CompanyOperationError) return journal
-    return [...statements, ...journal]
+    return preparePersistenceStatements(this.c, props, journal)
   }
 
   async write(props: PersonnelActionPersistenceProps): Promise<true | CompanyOperationError> {

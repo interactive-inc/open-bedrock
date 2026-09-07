@@ -105,7 +105,17 @@ export class CompanyAssignmentResourceProjectionAdapter {
         { period: OrgAssignmentPeriod; sourceRevision: number }
       >()
       for (const segment of timeline.segments) {
-        const periodId = await this.periodId(resource.id, segment)
+        const matching = [...current.values()]
+          .filter(
+            (period) =>
+              period.startsOn === segment.startsOn &&
+              period.employeeId === segment.employeeId &&
+              period.employmentId === segment.employmentId &&
+              period.organizationUnitId === segment.organizationUnitId &&
+              period.assignmentType === segment.assignmentType,
+          )
+          .toSorted((left, right) => Number(left.isVoid) - Number(right.isVoid))
+        const periodId = matching[0]?.periodId ?? (await this.periodId(resource.id, segment))
         const previous = current.get(periodId)
         target.set(periodId, {
           sourceRevision: segment.resourceRevision,

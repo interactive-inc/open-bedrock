@@ -16,6 +16,12 @@ import { PersonnelActionPersistenceAdapter } from "@/contexts/company/infrastruc
 import { CompanyConflictError } from "@/contexts/company/domain/errors"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
+import { ApplyOrganizationResourceAdoption } from "@/contexts/company/application/organization/apply-organization-resource-adoption"
+import { OrganizationResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/organization-resource-adoption-snapshot.adapter"
+import { OrganizationResourceAdoptionRepository } from "@/contexts/company/infrastructure/repositories/organization/organization-resource-adoption.repository"
+import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
+import { PositionRepository } from "@/contexts/company/infrastructure/repositories/definitions/position.repository"
+import { PositionEntity } from "@/contexts/company/domain/entities/position.entity"
 
 async function createFixture() {
   const c = await createGovernanceTaskTestContext()
@@ -136,6 +142,151 @@ async function createFixture() {
 }
 
 describe("Company公開責務による人事発令", () => {
+  test("承認された役職変更を公開所属と期間台帳へ一回だけ反映する", async () => {
+    const c = await createFixture()
+    const rootId = await c.database
+      .prepare(
+        "SELECT organization_unit_id FROM company_organization_unit_period_versions WHERE kind = 'COMPANY' LIMIT 1",
+      )
+      .first<string>("organization_unit_id")
+    if (rootId === null) throw new Error("root missing")
+    const snapshot = await new OrganizationResourceAdoptionSnapshotAdapter(c.database).find(rootId)
+    if (snapshot === null || snapshot instanceof Error) throw new Error("root history missing")
+    const adopted = await new ApplyOrganizationResourceAdoption({
+      actor: CompanyActorValue.restore({
+        ...c.creator,
+        organizationIds: ["organization:default"],
+        capabilities: ["company:admin"],
+      }),
+      repository: new OrganizationResourceAdoptionRepository({ env: c.context.env }),
+      now: c.at,
+    }).execute({
+      organizationUnitId: rootId,
+      expectedRevision: snapshot.props.value.organizationRevision ?? 0,
+      snapshotDigest: snapshot.props.digest,
+      observedOn: c.input.action.eventOn,
+      reason: "Confirm root history",
+      commandId: "approved-assignment-root",
+    })
+    expect(adopted).toMatchObject({ replayed: false })
+    const employmentId = await c.database
+      .prepare("SELECT id FROM company_employments WHERE employee_id = ?1")
+      .bind(c.target.employeeId)
+      .first<string>("id")
+    if (employmentId === null) throw new Error("employment missing")
+    const base = {
+      organizationId: "organization:default",
+      revision: 1,
+      state: "active",
+      effectiveFrom: c.input.action.eventOn,
+      effectiveTo: null,
+    } satisfies Pick<
+      Parameters<typeof c.write>[0][number],
+      "organizationId" | "revision" | "state" | "effectiveFrom" | "effectiveTo"
+    >
+    await c.write([
+      {
+        ...base,
+        type: "organization-unit",
+        id: "period:approval-team",
+        attributes: {
+          organizationUnitId: "unit:approval-team",
+          code: "APPROVAL-TEAM",
+          officialName: "Example Team",
+          kind: "TEAM",
+          parentOrganizationUnitId: rootId,
+        },
+      },
+      {
+        ...base,
+        type: "assignment",
+        id: "assignment:approved",
+        attributes: {
+          employeeId: c.target.employeeId,
+          employmentId,
+          organizationUnitId: "unit:approval-team",
+          assignmentType: "PRIMARY",
+          positionTitle: "Coordinator",
+        },
+      },
+    ])
+    const organizationRevision = await c.database
+      .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
+      .first<number>("revision")
+    expect(
+      await new PositionRepository(c.context).create(
+        PositionEntity.create({
+          code: "APPROVED-LEAD",
+          name: "Approved Lead",
+          rank: 1,
+          description: null,
+          createdAt: c.at.toISOString(),
+        }),
+      ),
+    ).not.toBeInstanceOf(Error)
+    const submitted = await c.request(
+      0,
+      "/company/personnel-action-requests",
+      {
+        ...c.input,
+        base_organization_revision: organizationRevision,
+        action: {
+          kind: "position_changed",
+          employeeCode: "MEMBER-1",
+          eventOn: c.input.action.eventOn,
+          departmentCode: "APPROVAL-TEAM",
+          assignmentType: "primary",
+          positionCode: "APPROVED-LEAD",
+          changeType: "promotion",
+        },
+      },
+      crypto.randomUUID(),
+    )
+    expect({ status: submitted.status, body: await submitted.clone().json() }).toMatchObject({
+      status: 201,
+    })
+    const number = z
+      .object({ application_id: z.number() })
+      .parse(await submitted.json()).application_id
+    for (const index of [2, 3])
+      expect(
+        (
+          await c.request(index, `/company/application-requests/${number}/approve`, {
+            comment: null,
+          })
+        ).status,
+      ).toBe(200)
+    expect(
+      await c.database.prepare("SELECT status FROM system_cases").first<string>("status"),
+    ).toBe("executed")
+    const publicAssignments = await new D1CompanyResourceRepository(c.database).findMany({
+      organizationId: "organization:default",
+      types: ["assignment"],
+      effectiveOn: c.input.action.eventOn,
+    })
+    if (!publicAssignments.ok) throw publicAssignments.cause
+    expect(
+      publicAssignments.resources.map((resource) => resource.readText("positionTitle")),
+    ).toEqual(["Approved Lead"])
+    const native = await c.database
+      .prepare(`SELECT organization_unit_id, position_title FROM company_organization_assignment_period_versions period
+      WHERE employee_id = ?1 AND is_void = 0 AND revision = (SELECT max(newer.revision) FROM company_organization_assignment_period_versions newer WHERE newer.period_id = period.period_id)`)
+      .bind(c.target.employeeId)
+      .all()
+    expect(native.results).toEqual([
+      { organization_unit_id: "unit:approval-team", position_title: "Approved Lead" },
+    ])
+    expect(
+      (await c.request(3, `/company/application-requests/${number}/approve`, { comment: null }))
+        .status,
+    ).toBe(200)
+    expect(
+      await c.database
+        .prepare("SELECT count(*) FROM company_personnel_actions WHERE source_application_id = ?1")
+        .bind(number)
+        .first<number>("count(*)"),
+    ).toBe(1)
+  })
   test("区分を含まない旧提案は本文を改変せず承認前に409で止める", async () => {
     const c = await createFixture()
     const action = {
