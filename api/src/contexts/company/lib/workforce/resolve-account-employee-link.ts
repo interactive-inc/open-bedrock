@@ -4,10 +4,11 @@ import type {
   SystemAccountId,
 } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { AccountEmployeeLinkResolutionError } from "@/contexts/company/domain/errors"
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 
 export type AccountEmployeeLinkQuery =
-  | Readonly<{ kind: "by_account"; accountId: SystemAccountId }>
-  | Readonly<{ kind: "by_employee"; employeeId: EmployeeId }>
+  | Readonly<{ kind: "by_account"; accountId: SystemAccountId; asOf?: CalendarDate }>
+  | Readonly<{ kind: "by_employee"; employeeId: EmployeeId; asOf?: CalendarDate }>
 
 export type AccountEmployeeLinkRecord = Readonly<{
   link: AccountEmployeeLink

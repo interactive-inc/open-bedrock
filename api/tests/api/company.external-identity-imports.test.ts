@@ -157,7 +157,7 @@ describe("POST /company/external-identity-imports", () => {
       await c.database
         .prepare("SELECT count(*) AS total FROM company_resource_revisions")
         .first<Record<string, unknown>>(),
-    ).toEqual({ total: 6 })
+    ).toEqual({ total: 8 })
   })
 
   test("旧共有キー・未認証・人のtokenで機械同期を実行できない", async () => {

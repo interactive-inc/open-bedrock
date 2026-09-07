@@ -184,7 +184,10 @@ export class RevalidatePersonnelActionExecutionAdapter {
     accountId: AccountId,
     executedAt: Date,
   ): Promise<EmployeeId | null | Error> {
-    const links = await new AccountEmployeeLinkReadAdapter(this.c).find({
+    const links = await new AccountEmployeeLinkReadAdapter({
+      ...this.c,
+      env: { ...this.c.env, NOW: executedAt.toISOString() },
+    }).find({
       kind: "by_account",
       accountId: restoreWorkforceId("system_account", accountId),
     })

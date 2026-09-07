@@ -1,3 +1,5 @@
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
+import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import type {
   WorkforceSnapshotReadPort,
   WorkforceSnapshotReadResult,
@@ -26,11 +28,6 @@ type EmployeeRow = Readonly<{
   phone: string | null
 }>
 
-type LinkRow = Readonly<{
-  account_id: string
-  employee_id: EmployeeId
-}>
-
 type AssignmentRow = Omit<OrgAssignmentProjectionRow, "isVoid"> & Readonly<{ isVoid: number }>
 type ResponsibilityRow = Omit<OrgResponsibilityProjectionRow, "isVoid"> &
   Readonly<{ isVoid: number }>
@@ -46,7 +43,7 @@ export class OrganizationWorkforceSnapshotAdapter implements WorkforceSnapshotRe
     Object.freeze(this)
   }
 
-  async readAllSnapshot(): Promise<WorkforceSnapshotReadResult> {
+  async readAllSnapshot(asOf?: CalendarDate): Promise<WorkforceSnapshotReadResult> {
     try {
       const [sourceSchedules, employees, links, assignments, responsibilities, baselineStates] =
         await Promise.all([
@@ -56,11 +53,7 @@ export class OrganizationWorkforceSnapshotAdapter implements WorkforceSnapshotRe
              FROM company_employees
              ORDER BY id`,
           ).all<EmployeeRow>(),
-          this.c.env.DB.prepare(
-            `SELECT account_id, employee_id
-             FROM company_account_employee_links
-             ORDER BY employee_id, account_id`,
-          ).all<LinkRow>(),
+          new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({ asOf }),
           this.c.env.DB.prepare(
             `SELECT period_id AS periodId, revision, employment_id AS employmentId,
                   employee_id AS employeeId, organization_unit_id AS organizationUnitId,
@@ -86,6 +79,8 @@ export class OrganizationWorkforceSnapshotAdapter implements WorkforceSnapshotRe
         return { ok: false, cause: sourceSchedules }
       }
 
+      if (links instanceof Error) return { ok: false, cause: links }
+
       const canonicalSchedules = attachOrganizationPeriods({
         schedules: toWorkforceLifecycleSchedules(sourceSchedules),
         assignmentRows: assignments.results.map((row) => ({ ...row, isVoid: row.isVoid === 1 })),
@@ -98,8 +93,8 @@ export class OrganizationWorkforceSnapshotAdapter implements WorkforceSnapshotRe
         canonicalSchedules.map((schedule) => [schedule.employeeId, schedule]),
       )
       const accountRows = await Promise.all(
-        links.results.map(async (link) => {
-          const accountId = zAccountId.safeParse(link.account_id)
+        links.map(async (link) => {
+          const accountId = zAccountId.safeParse(link.accountId)
           return accountId.success
             ? new SystemAccountRepository({ database: this.c.env.DB }).find(accountId.data)
             : null
@@ -108,9 +103,9 @@ export class OrganizationWorkforceSnapshotAdapter implements WorkforceSnapshotRe
       const unavailableAccount = accountRows.find((account) => account instanceof Error)
       if (unavailableAccount instanceof Error) return { ok: false, cause: unavailableAccount }
       const linksByEmployee = new Map(
-        links.results.flatMap((link, index) =>
+        links.flatMap((link, index) =>
           !(accountRows[index] instanceof Error) && accountRows[index]?.status === "active"
-            ? [[link.employee_id, link] as const]
+            ? [[link.employeeId, link] as const]
             : [],
         ),
       )
@@ -139,7 +134,7 @@ export class OrganizationWorkforceSnapshotAdapter implements WorkforceSnapshotRe
               link === undefined
                 ? null
                 : {
-                    accountId: restoreWorkforceId("system_account", link.account_id),
+                    accountId: restoreWorkforceId("system_account", link.accountId),
                     employeeId,
                   },
           }

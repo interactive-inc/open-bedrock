@@ -45,7 +45,7 @@ export type WorkforceSnapshotReadResult =
   | Readonly<{ ok: false; cause: unknown }>
 
 export type WorkforceSnapshotReadPort = {
-  readAllSnapshot(): Promise<WorkforceSnapshotReadResult>
+  readAllSnapshot(asOf?: CalendarDate): Promise<WorkforceSnapshotReadResult>
 }
 
 export type OrganizationUnitSnapshotReadResult =

@@ -18,10 +18,13 @@ import { Hono } from "hono"
 import { hc } from "hono/client"
 import { readFileSync } from "node:fs"
 
-const companySql = readFileSync(
-  new URL("../infrastructure/schema/company.sql", import.meta.url),
-  "utf8",
-)
+const companySql =
+  readFileSync(
+    new URL("../../system/infrastructure/schema/system-core.sql", import.meta.url),
+    "utf8",
+  ) +
+  "\n" +
+  readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8")
 
 type TestEnv = {
   Bindings: { DB: D1Database; COMPANY_TIME_ZONE: string }

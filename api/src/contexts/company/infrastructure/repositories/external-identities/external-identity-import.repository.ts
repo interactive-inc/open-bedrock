@@ -1,3 +1,4 @@
+import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import type {
   ExternalIdentityImportEntity,
   ExternalIdentityImportItem,
@@ -255,14 +256,19 @@ export class ExternalIdentityImportRepository {
     const principal = await new SystemPrincipalRepository(this.c).find({ accountId })
     if (principal instanceof Error) return { kind: "unavailable", cause: principal }
     if (principal !== null && principal.kind !== "human") return { kind: "forbidden" }
+    const links = await new CompanyAccountEmployeeLinksReadAdapter({
+      env: { ...this.c.env, NOW: context.now.toISOString() },
+    }).findMany({ accountIds: [accountId] })
+    if (links instanceof Error) return { kind: "unavailable", cause: links }
+    const currentLink = links[0]
+    if (currentLink === undefined) return { kind: "conflict", reason: "unbound_workforce" }
     const link = await this.c.env.DB.prepare(`SELECT binding.resource_id AS employee_id,
       json_extract(employee.attributes_json, '$.personId') AS person_id
-      FROM company_account_employee_links link
-      JOIN company_workforce_resource_bindings binding ON binding.employee_id = link.employee_id AND binding.resource_type = 'employee'
+      FROM company_workforce_resource_bindings binding
       JOIN company_resource_heads employee ON employee.organization_id = binding.organization_id
         AND employee.resource_type = 'employee' AND employee.resource_id = binding.resource_id AND employee.state = 'active'
-      WHERE link.account_id = ?1 AND binding.organization_id = ?2`)
-      .bind(accountId, organizationId)
+      WHERE binding.resource_type = 'employee' AND binding.employee_id = ?1 AND binding.organization_id = ?2`)
+      .bind(currentLink.employeeId, organizationId)
       .first<{ employee_id: string; person_id: string }>()
     if (link === null) return { kind: "conflict", reason: "unbound_workforce" }
     const people = await new D1CompanyResourceRepository(this.c.env.DB).findMany({
@@ -408,6 +414,16 @@ export class ExternalIdentityImportRepository {
           employmentType: input.newEmployee.employmentType,
           status: "ACTIVE",
         },
+      },
+      {
+        organizationId,
+        type: "account-employee-link",
+        id: `account-link:${employeeId}`,
+        revision: 1,
+        state: "active",
+        effectiveFrom: context.effectiveOn < effectiveFrom ? effectiveFrom : context.effectiveOn,
+        effectiveTo: null,
+        attributes: { accountId: account.accountId, employeeId },
       },
     ]
     const audit = this.audit(context, account.identityId, null)

@@ -95,6 +95,16 @@ export class InitialCompanyResourceJournalAdapter {
         currentRoot,
         {
           organizationId: "organization:default",
+          type: "account-employee-link",
+          id: `account-link:${workforce.employeeId}`,
+          revision: 1,
+          state: "active",
+          effectiveFrom: restoreCalendarDate(write.observedOn),
+          effectiveTo: null,
+          attributes: { accountId: write.accountId, employeeId: workforce.employeeId },
+        },
+        {
+          organizationId: "organization:default",
           type: "assignment",
           id: `assignment:${workforce.assignmentPeriodId}`,
           revision: 1,

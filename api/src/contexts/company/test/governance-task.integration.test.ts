@@ -131,11 +131,20 @@ describe("公開Companyから業務Taskへの接続", () => {
     },
   )
 
-  test("公開Account対応が業務台帳と違う場合はTaskを作らない", async () => {
+  test("保存制約を迂回して公開Account対応が破損した場合もTaskを作らない", async () => {
     const c = await createGovernanceTaskTestContext()
-    const first = c.resources.find((resource) => resource.id === "link:1")
-    const second = c.resources.find((resource) => resource.id === "link:2")
+    const first = c.resources.find(
+      (resource) =>
+        resource.type === "account-employee-link" &&
+        resource.attributes.accountId === c.people[1]?.accountId,
+    )
+    const second = c.resources.find(
+      (resource) =>
+        resource.type === "account-employee-link" &&
+        resource.attributes.accountId === c.people[2]?.accountId,
+    )
     if (first === undefined || second === undefined) throw new Error("link fixtures are missing")
+    await c.database.exec("DROP TRIGGER company_account_employee_resource_owner_guard")
     await c.write([
       {
         ...first,

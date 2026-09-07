@@ -53,7 +53,9 @@ describe("Company authority resolution HTTP", () => {
       },
     })
 
+    await database.exec("PRAGMA foreign_keys = OFF")
     await database.exec("DROP TABLE system_accounts")
+    await database.exec("PRAGMA foreign_keys = ON")
     const unavailable = await client.company["authority-resolutions"].$post({
       header: { "x-company-organization-id": organizationId },
       json: {

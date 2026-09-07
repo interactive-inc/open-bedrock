@@ -81,6 +81,8 @@ organization revisionを持たないsnapshotは完全な履歴証拠として受
 
 Company は Account と Employee の一対一対応を所有する。候補 Employee に対応がない、Account が無効、対応先が別 Employee、Employee が対象時点で在籍していない場合、その候補を返さない。
 
+対応の期間は資格を評価する同じ会社営業日で解決する。公開対応の終了・取消・将来開始を従業員名簿と資格snapshotへ反映し、接続済みの履歴の空白を旧対応表で補わない。同一性、履歴の接続と訂正の規則は [Company API](./company-api.md) に従う。
+
 Account の認証状態や session は System の正本であり、Company snapshot だけで判断を許可しない。候補 snapshot 作成後に Account が停止された場合、System は HumanAttestation の書込み境界で再検査して拒否する。Company snapshot は資格を固定し、System の live guard を置き換えない。
 
 resolver は対応する active な `system_accounts` を同じ解決内で確認し、opaque string の canonical System Account ID を返す。System workflow の候補、actor、更新者、委任作成者はこの canonical ID を使う。Company は Account と Employee の対応を検証するが、System は Employee ID を解釈しない。接続規則とlive guardは [Workflow Account identity](./workflow-account-identity.md) に定める。

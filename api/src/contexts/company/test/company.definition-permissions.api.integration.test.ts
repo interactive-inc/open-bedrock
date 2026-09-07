@@ -12,10 +12,13 @@ import { drizzle } from "drizzle-orm/d1"
 import { Hono } from "hono"
 import { readFileSync } from "node:fs"
 
-const companySql = readFileSync(
-  new URL("../infrastructure/schema/company.sql", import.meta.url),
-  "utf8",
-)
+const companySql =
+  readFileSync(
+    new URL("../../system/infrastructure/schema/system-core.sql", import.meta.url),
+    "utf8",
+  ) +
+  "\n" +
+  readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8")
 const gradeDefinitionSql = `${companySql}
 CREATE TABLE company_grade_definitions (
   id INTEGER PRIMARY KEY,
