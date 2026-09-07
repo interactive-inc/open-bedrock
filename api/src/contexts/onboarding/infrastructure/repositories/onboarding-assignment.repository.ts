@@ -345,7 +345,7 @@ export class OnboardingAssignmentRepository {
   }
 
   /**
-   * 割り当てとその配下タスクを削除する。status が completed のときは削除せず null を返す。
+   * 割り当てとその配下タスクを削除する。完了済みまたは人事発令から生成した割り当ては削除せず null を返す。
    * assignment を先に DELETE し、ガード文で 0 行なら後続の tasks DELETE を abort する。
    */
   async delete(assignment: OnboardingAssignment): Promise<true | null | Error> {
@@ -354,7 +354,9 @@ export class OnboardingAssignmentRepository {
       const db = this.c.env.DB
       await db.batch([
         db
-          .prepare("DELETE FROM onboarding_assignments WHERE id = ?1 AND status != 'completed'")
+          .prepare(
+            "DELETE FROM onboarding_assignments WHERE id = ?1 AND status != 'completed' AND lifecycle_action_id IS NULL",
+          )
           .bind(assignment.id),
         abortWhenPreviousStatementChangedNoRows(db),
         db.prepare("DELETE FROM onboarding_tasks WHERE assignment_id = ?1").bind(assignment.id),

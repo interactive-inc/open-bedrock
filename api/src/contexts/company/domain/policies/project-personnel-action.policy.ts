@@ -798,6 +798,7 @@ export function projectPersonnelAction(
       eventOn: parsed.data.eventOn,
       correctsActionId: parsed.data.correctsActionId,
       replacementKind: parsed.data.replacementAction.kind,
+      replacementEventOn: replacementSummary.eventOn,
     })
   } else {
     summary = projectNonCorrection(context, parsed.data)

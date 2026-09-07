@@ -67,6 +67,7 @@ JSON envelopeはCompany coreの版・期間・原子性を一つに揃えるた�
 - `GET|POST /company/definitions`: Position、Grade、Responsibility、CollectiveBody
 - `GET|POST /company/account-employee-links`: System AccountとEmployeeの対応
 - `GET|POST /company/personnel-actions`: 人事発令
+- `GET /company/personnel-action-events`: 追記された人事発令の配送元
 
 GETは`id` queryを繰り返して最大100件へ絞れる。`effective_on`を指定したreadはappend-only revisionからその日に有効な最新訂正を選び、将来発効の変更を過去へ混ぜない。`void`が発効した後はresourceを返さない。日付を省略したreadはcurrent headだけを返す。
 
@@ -230,3 +231,13 @@ CLIは `departments adoption --organization-unit-id <id>` で確認内容を取�
 接続後の上長変更・訂正・退職は、通常の公開履歴と人事発令の保存処理を使う。移行自体も組織と所属期間の版を進めるため、移行前の版を確認した未実行の変更は再確認が必要になる。
 
 CLIは`bedrock employees assignment-adoption --employee-id <id>`で確認し、`--data <confirmed-history.json> --idempotency-key <uuid>`で保存する。JSONにはPOSTの五項目を指定し、競合時に自動再送しない。
+
+## 人事発令の配送元
+
+`GET /company/personnel-action-events`は、既定organizationへのアクセスと`employee:read`を要求する。版付きresourceの一覧とは別に、確定した人事発令を追記順で返す。
+
+`after_sequence`は前回の`next_sequence`を渡す非負整数で、既定は0である。`limit`は1から100で既定25、`recorded_since`は記録時刻の下限となるoffset付きISO日時である。空の結果では`next_sequence`を進めない。
+
+各行はsequence、発令ID、従業員ID、種類、発効日、記録時刻、内容fingerprint、訂正元と訂正先、要約を持つ。入社・再入社・退職には`employment_effect`として`kind`、`eventOn`、`effectiveOn`を返す。退職の`effectiveOn`は最終在籍日の翌日である。訂正発令の要約には置換後の`replacementEventOn`を保持する。過去の訂正にこの日付がない場合は`employment_effect_unresolved`をtrueにし、効果をnullで返す。
+
+この一覧は現在の雇用に対する実行許可や消費済みの記録ではない。受領先は発令の重複を排除し、訂正と現在の雇用を保存直前に再検査する。Companyの配送元Repositoryは、この照合に使う履歴snapshotと保存時のDB guardを提供する。

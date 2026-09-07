@@ -83,6 +83,7 @@ export const personnelActionSummarySchema = z.discriminatedUnion("kind", [
         "initial_state",
         "employment_revised",
       ]),
+      replacementEventOn: z.string().date().optional(),
     })
     .strict(),
   z

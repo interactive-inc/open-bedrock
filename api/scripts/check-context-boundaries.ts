@@ -14,7 +14,7 @@ const OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "context-ownership.json")
 const RETIRED_CONTEXT_NAMES = new Set(["request"])
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
-const API_ROOT_DIRECTORIES = new Set(["error-response", "http", "routes"])
+const API_ROOT_DIRECTORIES = new Set(["error-response", "http", "routes", "scheduled"])
 const API_ROOT_FILES = new Set([
   "api-route-module.ts",
   "app-base.ts",
@@ -362,7 +362,7 @@ export function inspectOwnershipManifest(): ContextBoundaryViolation[] {
   return violations
 }
 
-/** API rootをHTTP runtimeと、明示されたcontext横断compositionだけに限定する。 */
+/** API rootをHTTP・定期起動のruntimeと、明示されたcontext横断compositionだけに限定する。 */
 export function inspectApiRootPath(file: string): ContextBoundaryViolation[] {
   const normalized = file.replaceAll("\\", "/")
   const match = normalized.match(/(?:^|\/)src\/api\/(.+)$/)

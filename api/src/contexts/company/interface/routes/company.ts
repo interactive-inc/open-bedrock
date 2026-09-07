@@ -30,6 +30,7 @@ import * as organizationUnits from "@/contexts/company/interface/routes/company.
 import * as organizationUnitsCode from "@/contexts/company/interface/routes/company.organization-units.$code"
 import * as organizationUnitsCodeMembers from "@/contexts/company/interface/routes/company.organization-units.$code.members"
 import * as people from "@/contexts/company/interface/routes/company.people"
+import * as personnelActionEvents from "@/contexts/company/interface/routes/company.personnel-action-events"
 import * as personnelActionExecutions from "@/contexts/company/interface/routes/company.personnel-action-executions"
 import * as personnelActions from "@/contexts/company/interface/routes/company.personnel-actions"
 import * as positionDefinitions from "@/contexts/company/interface/routes/company.position-definitions"
@@ -71,6 +72,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/organization-units/:code", ...organizationUnitsCode.GET)
   .get("/organization-units/:code/members", ...organizationUnitsCodeMembers.GET)
   .get("/people", ...people.GET)
+  .get("/personnel-action-events", ...personnelActionEvents.GET)
   .get("/personnel-actions", ...personnelActions.GET)
   .get("/position-definitions", ...positionDefinitions.GET)
   .get("/profile", ...profile.GET)

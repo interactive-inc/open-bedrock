@@ -73,7 +73,7 @@ Systemの添付証拠の準備処理は、所有Account、状態、作成時刻�
 
 現行実装には batch、通知、冪等な Job 登録、lease、heartbeat、成功、retry、dead letter、step-up 付き再投入、outbox、重複排除する inbox がある。lease token と lease Account の両方を検査し、別主体による完了、期限外完了、二重再投入を拒否する。
 
-登録処理に束縛したJobは、Serviceの現在の権限を検査する実行adapterが業務変更・完了・監査を同じtransactionへ保存する。失敗は待機時間を置いて再試行し、上限到達時はdead letterへ残す。汎用HTTP APIからのclaim・完了・再投入を拒否し、再投入でも登録処理と操作を保持する。定期起動、人事発令からの配送、業務ごとの受領処理と再投入APIは未接続であり、自動配送が運用可能な状態とは扱わない。
+登録処理に束縛したJobは、Serviceの現在の権限を検査する実行adapterが業務変更・完了・監査を同じtransactionへ保存する。失敗は待機時間を置いて再試行し、上限到達時はdead letterへ残す。汎用HTTP APIからのclaim・完了・再投入を拒否し、再投入でも登録処理と操作を保持する。[入退社の自動配送](onboarding-automation.md)には、定期起動の入口、人事発令からのチェックリスト生成、受領結果、状態確認と再投入APIがある。配備先の定期実行設定、他のAppへの配送、生成後の訂正に伴うタスクの取消・置換は、この接続だけでは完了しない。
 
 ### 外部接続
 
