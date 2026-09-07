@@ -48,7 +48,6 @@ export class DocumentRepository {
 
   async update(document: Document): Promise<Document | null | Error> {
     try {
-
       const rows = await this.c.var.database
         .update(documents)
         .set({

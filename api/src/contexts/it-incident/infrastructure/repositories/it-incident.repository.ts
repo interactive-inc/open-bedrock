@@ -83,7 +83,6 @@ export class ItIncidentRepository {
 
   async update(incident: ItIncident): Promise<ItIncident | null | Error> {
     try {
-
       const rows = await this.c.var.database
         .update(itIncidents)
         .set({

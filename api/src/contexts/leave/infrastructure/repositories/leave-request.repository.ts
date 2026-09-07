@@ -113,7 +113,6 @@ export class LeaveRequestRepository {
 
   async update(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
     try {
-
       const rows = await this.c.var.database
         .update(leaveRequests)
         .set({
@@ -295,7 +294,6 @@ export class LeaveRequestRepository {
     leaveRequest: LeaveRequest,
   ): Promise<LeaveRequest | "already_decided" | "overlapping" | Error> {
     try {
-
       const result = await this.c.var.database.run(
         sql`UPDATE leave_requests
             SET leave_type    = ${leaveRequest.leaveType},

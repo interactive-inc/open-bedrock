@@ -7,15 +7,15 @@ import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 export const itIncidents = sqliteTable(
   "it_incidents",
   {
-  id: text("id").primaryKey(),
-  occurredAt: text("occurred_at").notNull(),
-  title: text("title").notNull(),
-  summary: text("summary").notNull(),
-  severity: text("severity"),
-  status: text("status").notNull(),
-  resolvedAt: text("resolved_at"),
-  createdAt: text("created_at").notNull(),
-},
+    id: text("id").primaryKey(),
+    occurredAt: text("occurred_at").notNull(),
+    title: text("title").notNull(),
+    summary: text("summary").notNull(),
+    severity: text("severity"),
+    status: text("status").notNull(),
+    resolvedAt: text("resolved_at"),
+    createdAt: text("created_at").notNull(),
+  },
   (table) => [check("it_incidents_id_uuid", sql.raw(uuidCheckPredicate("id")))],
 )
 

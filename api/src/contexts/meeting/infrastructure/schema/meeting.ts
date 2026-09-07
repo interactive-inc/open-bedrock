@@ -58,7 +58,9 @@ export const decisions = sqliteTable(
     check(
       "decision_records_superseded_by_id_uuid",
       sql.raw(`superseded_by_id IS NULL OR (${uuidCheckPredicate("superseded_by_id")})`),
-    ),index("idx_decisions_status").on(table.status)],
+    ),
+    index("idx_decisions_status").on(table.status),
+  ],
 )
 
 export type DecisionRow = InferSelectModel<typeof decisions>

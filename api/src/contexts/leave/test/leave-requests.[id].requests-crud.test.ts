@@ -295,7 +295,10 @@ describe("GET /leave-requests/:id", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001", token: null })
+    const response = await request({
+      path: "/leave/leave-requests/0190001e-0000-7000-8000-000000000001",
+      token: null,
+    })
 
     expect(response.status).toBe(401)
   })

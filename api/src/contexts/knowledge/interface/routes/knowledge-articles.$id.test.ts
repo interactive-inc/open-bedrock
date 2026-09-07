@@ -73,7 +73,10 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /knowledge-articles/:id", () => {
   test("returns 200 with the article in CLI detail shape", async () => {
-    const response = await request("/knowledge/knowledge-articles/0190001d-0000-7000-8000-000000000004", await memberToken())
+    const response = await request(
+      "/knowledge/knowledge-articles/0190001d-0000-7000-8000-000000000004",
+      await memberToken(),
+    )
 
     expect(response.status).toBe(200)
 
@@ -91,7 +94,10 @@ describe("GET /knowledge-articles/:id", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/knowledge/knowledge-articles/0190001d-0000-7000-8000-000000000004", null)
+    const response = await request(
+      "/knowledge/knowledge-articles/0190001d-0000-7000-8000-000000000004",
+      null,
+    )
 
     expect(response.status).toBe(401)
   })
@@ -103,7 +109,10 @@ describe("GET /knowledge-articles/:id", () => {
   })
 
   test("returns 404 when the article does not exist", async () => {
-    const response = await request("/knowledge/knowledge-articles/0190001d-0000-7000-8000-000000009999", await memberToken())
+    const response = await request(
+      "/knowledge/knowledge-articles/0190001d-0000-7000-8000-000000009999",
+      await memberToken(),
+    )
 
     expect(response.status).toBe(404)
   })

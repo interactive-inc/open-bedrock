@@ -16,7 +16,9 @@ export const disciplinaryActions = sqliteTable(
     createdAt: text("created_at").notNull(),
   },
   (table) => [
-    check("disciplinary_actions_id_uuid", sql.raw(uuidCheckPredicate("id"))),index("idx_disciplinary_actions_employee").on(table.employeeId)],
+    check("disciplinary_actions_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    index("idx_disciplinary_actions_employee").on(table.employeeId),
+  ],
 )
 
 export type DisciplinaryActionRow = InferSelectModel<typeof disciplinaryActions>

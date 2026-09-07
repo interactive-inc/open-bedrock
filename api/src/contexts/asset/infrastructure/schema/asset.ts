@@ -23,12 +23,12 @@ export type AssetRow = InferSelectModel<typeof assets>
 export const assetLendings = sqliteTable(
   "asset_lendings",
   {
-  id: text("id").primaryKey(),
-  assetCode: text("asset_code").notNull(),
-  employeeId: text("employee_id").$type<EmployeeId>().notNull(),
-  lentAt: text("lent_at").notNull(),
-  returnedAt: text("returned_at"),
-},
+    id: text("id").primaryKey(),
+    assetCode: text("asset_code").notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
+    lentAt: text("lent_at").notNull(),
+    returnedAt: text("returned_at"),
+  },
   (table) => [check("asset_lendings_id_uuid", sql.raw(uuidCheckPredicate("id")))],
 )
 
