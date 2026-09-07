@@ -1,38 +1,22 @@
-import { compareOrganizationalAuthorityAssignments } from "@/contexts/company/domain/policies/compare-organizational-authority-assignments.policy"
-import { listWorkforceStateAssignments } from "@/contexts/company/domain/definitions/list-workforce-state-assignments.definition"
+import { compareOrganizationalAuthorityManagementRelations } from "@/contexts/company/domain/policies/compare-organizational-authority-management-relations.policy"
 import type { OrganizationalAuthorityCandidateEvidence } from "@/contexts/company/domain/definitions/organizational-authority-candidate-evidence.definition"
 import type {
   OrganizationalAuthorityManagementEdgeEvidence,
   OrganizationalAuthorityProjection,
 } from "@/contexts/company/domain/definitions/organizational-authority.definition"
-import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
-import { toOrganizationalAuthorityManagementEdgeEvidence } from "@/contexts/company/domain/policies/to-organizational-authority-management-edge-evidence.policy"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function listOrganizationalAuthorityManagementChainCandidates(props: {
-  statesByEmployee: ReadonlyMap<EmployeeId, WorkforceStateAt>
+  managementRelations: OrganizationalAuthorityProjection["managementRelations"]
   subjectEmployeeId: EmployeeId
-  asOf: OrganizationalAuthorityProjection["snapshot"]["asOf"]
 }): ReadonlyArray<OrganizationalAuthorityCandidateEvidence> {
-  const edgesByEmployee = new Map<
-    EmployeeId,
-    ReadonlyArray<OrganizationalAuthorityManagementEdgeEvidence>
-  >()
-  for (const state of props.statesByEmployee.values()) {
-    const managementEdges: OrganizationalAuthorityManagementEdgeEvidence[] = []
-    for (const assignment of listWorkforceStateAssignments(state).toSorted(
-      compareOrganizationalAuthorityAssignments,
-    )) {
-      if (assignment.managerEmployeeId === null) continue
-      managementEdges.push(
-        toOrganizationalAuthorityManagementEdgeEvidence(
-          assignment,
-          assignment.managerEmployeeId,
-          props.asOf,
-        ),
-      )
-    }
-    edgesByEmployee.set(state.employeeId, managementEdges)
+  const edgesByEmployee = new Map<EmployeeId, OrganizationalAuthorityManagementEdgeEvidence[]>()
+  for (const relation of props.managementRelations.toSorted(
+    compareOrganizationalAuthorityManagementRelations,
+  )) {
+    const edges = edgesByEmployee.get(relation.employeeId)
+    if (edges === undefined) edgesByEmployee.set(relation.employeeId, [relation])
+    else edges.push(relation)
   }
 
   const pending = (edgesByEmployee.get(props.subjectEmployeeId) ?? []).map((edge) => ({
@@ -42,9 +26,9 @@ export function listOrganizationalAuthorityManagementChainCandidates(props: {
   const visited = new Set<EmployeeId>([props.subjectEmployeeId])
   const candidates: OrganizationalAuthorityCandidateEvidence[] = []
 
-  while (pending.length > 0) {
-    const current = pending.shift()
-    if (current === undefined) break
+  for (let index = 0; index < pending.length; index += 1) {
+    const current = pending[index]
+    if (current === undefined) continue
     if (visited.has(current.employeeId)) continue
     visited.add(current.employeeId)
     candidates.push({

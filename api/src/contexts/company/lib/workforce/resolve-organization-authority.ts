@@ -8,6 +8,7 @@ import type {
 } from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import { OrganizationalAuthorityError } from "@/contexts/company/domain/errors"
 import { resolveOrganizationalAuthority } from "@/contexts/company/domain/policies/resolve-organizational-authority.policy"
+import { listAssignmentManagementRelations } from "@/contexts/company/domain/policies/list-assignment-management-relations.policy"
 import {
   resolveWorkforceStateAt,
   type WorkforceStateAt,
@@ -96,6 +97,7 @@ export class ResolveOrganizationAuthority {
         subjectEmployeeId: props.subjectEmployeeId,
         criteria: props.criteria,
         states,
+        managementRelations: listAssignmentManagementRelations(states),
         accountLinks: workforce.schedules.flatMap((schedule) =>
           schedule.accountLink === null ? [] : [schedule.accountLink],
         ),

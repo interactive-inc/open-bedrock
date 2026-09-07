@@ -1,13 +1,11 @@
+import { CanonicalOrganizationAuthorityEvidenceAdapter } from "@/contexts/company/infrastructure/adapters/workforce/canonical-organization-authority-evidence.adapter"
 import { ResolveOrganizationAuthority } from "@/contexts/company/lib/workforce/resolve-organization-authority"
 import { WorkforceSnapshotChangedError } from "@/contexts/company/domain/errors"
 import type {
   OrganizationalAuthorityCandidateResolution,
   OrganizationalAuthorityCriterion as ProcedureCriterion,
 } from "@/contexts/company/domain/definitions/organizational-authority-candidate.definition"
-import type {
-  OrganizationalAuthorityCriterion,
-  OrganizationalAuthorityEvidence,
-} from "@/contexts/company/domain/definitions/organizational-authority.definition"
+import type { OrganizationalAuthorityCriterion } from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
@@ -84,57 +82,6 @@ function toCriteria(props: {
   return { criteria, indexes }
 }
 
-function evidence(value: OrganizationalAuthorityEvidence): Readonly<Record<string, unknown>> {
-  if (value.kind === "employee") {
-    return { type: "employee", employee_id: value.employeeId }
-  }
-  if (value.kind === "direct_manager") {
-    return {
-      type: "lifecycle_assignment",
-      employee_id: value.assignment.employeeId,
-      manager_employee_id: value.assignment.managerEmployeeId,
-      organization_unit_id: value.assignment.organizationUnitId,
-      assignment_period_id: value.assignment.assignmentPeriodId,
-      assignment_revision: value.assignment.assignmentRevision,
-      as_of: value.assignment.asOf,
-    }
-  }
-  if (value.kind === "organization_manager") {
-    return {
-      type: "lifecycle_responsibility",
-      scope: value.scope,
-      subject_assignment: value.subjectAssignment,
-      employee_id: value.responsibility.employeeId,
-      organization_unit_id: value.responsibility.organizationUnitId,
-      responsibility_period_id: value.responsibility.responsibilityPeriodId,
-      responsibility_revision: value.responsibility.responsibilityRevision,
-      as_of: value.responsibility.asOf,
-    }
-  }
-  if (value.kind === "responsibility") {
-    return {
-      type: "responsibility",
-      employee_id: value.responsibility.employeeId,
-      organization_unit_id: value.responsibility.organizationUnitId,
-      responsibility_type: value.responsibility.responsibilityType,
-      responsibility_period_id: value.responsibility.responsibilityPeriodId,
-      responsibility_revision: value.responsibility.responsibilityRevision,
-      as_of: value.responsibility.asOf,
-    }
-  }
-  return {
-    type: "management_chain",
-    path: value.path.map((edge) => ({
-      employee_id: edge.employeeId,
-      manager_employee_id: edge.managerEmployeeId,
-      organization_unit_id: edge.organizationUnitId,
-      assignment_period_id: edge.assignmentPeriodId,
-      assignment_revision: edge.assignmentRevision,
-      as_of: edge.asOf,
-    })),
-  }
-}
-
 /** canonical Company snapshotと共通Application serviceから既存内部wireを構成する。 */
 async function resolveCanonicalOrganizationAuthority(props: {
   c: CompanyContext
@@ -186,7 +133,9 @@ async function resolveCanonicalOrganizationAuthority(props: {
       qualification: {
         criterionIndex,
         evidence: {
-          ...evidence(candidate.qualification.evidence),
+          ...new CanonicalOrganizationAuthorityEvidenceAdapter(
+            candidate.qualification.evidence,
+          ).serialize(),
           system_account_id: candidate.accountId,
         },
       },

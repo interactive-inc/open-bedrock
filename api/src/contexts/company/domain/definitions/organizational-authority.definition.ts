@@ -41,11 +41,21 @@ export type OrganizationalAuthorityAssignmentEvidence = Readonly<{
   asOf: CalendarDate
 }>
 
+export type OrganizationalAuthorityAssignmentManagementEvidence =
+  OrganizationalAuthorityAssignmentEvidence & Readonly<{ managerEmployeeId: EmployeeId }>
+
+export type OrganizationalAuthorityReportingRelationEvidence = Readonly<{
+  employeeId: EmployeeId
+  managerEmployeeId: EmployeeId
+  organizationUnitId: OrganizationUnitId
+  reportingRelationId: string
+  reportingRelationRevision: number
+  asOf: CalendarDate
+}>
+
 export type OrganizationalAuthorityManagementEdgeEvidence =
-  OrganizationalAuthorityAssignmentEvidence &
-    Readonly<{
-      managerEmployeeId: EmployeeId
-    }>
+  | OrganizationalAuthorityAssignmentManagementEvidence
+  | OrganizationalAuthorityReportingRelationEvidence
 
 export type OrganizationalAuthorityResponsibilityEvidence = Readonly<{
   employeeId: EmployeeId
@@ -61,7 +71,11 @@ export type OrganizationalAuthorityEvidence =
   | Readonly<{ kind: "employee"; employeeId: EmployeeId }>
   | Readonly<{
       kind: "direct_manager"
-      assignment: OrganizationalAuthorityManagementEdgeEvidence
+      assignment: OrganizationalAuthorityAssignmentManagementEvidence
+    }>
+  | Readonly<{
+      kind: "direct_manager"
+      reportingRelation: OrganizationalAuthorityReportingRelationEvidence
     }>
   | Readonly<{
       kind: "organization_manager"
@@ -100,5 +114,7 @@ export type OrganizationalAuthorityProjection = Readonly<{
   subjectEmployeeId: EmployeeId | null
   criteria: ReadonlyArray<OrganizationalAuthorityCriterion>
   states: ReadonlyArray<WorkforceStateAt>
+  /** 同じ時点で解決した指揮命令。所属からの暗黙の補完は行わない。 */
+  managementRelations: ReadonlyArray<OrganizationalAuthorityManagementEdgeEvidence>
   accountLinks: ReadonlyArray<AccountEmployeeLink>
 }>

@@ -1,4 +1,5 @@
 import { compareOrganizationalAuthorityAssignments } from "@/contexts/company/domain/policies/compare-organizational-authority-assignments.policy"
+import { compareOrganizationalAuthorityManagementRelations } from "@/contexts/company/domain/policies/compare-organizational-authority-management-relations.policy"
 import { compareOrganizationalAuthorityResponsibilities } from "@/contexts/company/domain/policies/compare-organizational-authority-responsibilities.policy"
 import { listOrganizationalAuthorityManagementChainCandidates } from "@/contexts/company/domain/policies/list-organizational-authority-management-chain-candidates.policy"
 import { listWorkforceStateAssignments } from "@/contexts/company/domain/definitions/list-workforce-state-assignments.definition"
@@ -10,13 +11,13 @@ import type {
 } from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import type { WorkforceStateAt } from "@/contexts/company/domain/policies/resolve-workforce-state.policy"
 import { toOrganizationalAuthorityAssignmentEvidence } from "@/contexts/company/domain/policies/to-organizational-authority-assignment-evidence.policy"
-import { toOrganizationalAuthorityManagementEdgeEvidence } from "@/contexts/company/domain/policies/to-organizational-authority-management-edge-evidence.policy"
 import { toOrganizationalAuthorityResponsibilityEvidence } from "@/contexts/company/domain/policies/to-organizational-authority-responsibility-evidence.policy"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export function resolveOrganizationalAuthorityCriterion(props: {
   criterion: OrganizationalAuthorityCriterion
   statesByEmployee: ReadonlyMap<EmployeeId, WorkforceStateAt>
+  managementRelations: OrganizationalAuthorityProjection["managementRelations"]
   subjectEmployeeId: EmployeeId | null
   asOf: OrganizationalAuthorityProjection["snapshot"]["asOf"]
 }): ReadonlyArray<OrganizationalAuthorityCandidateEvidence> {
@@ -46,19 +47,16 @@ export function resolveOrganizationalAuthorityCriterion(props: {
       : listWorkforceStateAssignments(subject).toSorted(compareOrganizationalAuthorityAssignments)
 
   if (props.criterion.kind === "direct_manager") {
-    return subjectAssignments.flatMap((assignment) => {
-      const managerEmployeeId = assignment.managerEmployeeId
-      if (managerEmployeeId === null) return []
-      const evidence: OrganizationalAuthorityEvidence = {
-        kind: "direct_manager",
-        assignment: toOrganizationalAuthorityManagementEdgeEvidence(
-          assignment,
-          managerEmployeeId,
-          props.asOf,
-        ),
-      }
-      return [{ employeeId: managerEmployeeId, evidence }]
-    })
+    return props.managementRelations
+      .filter((relation) => relation.employeeId === props.subjectEmployeeId)
+      .toSorted(compareOrganizationalAuthorityManagementRelations)
+      .map((relation) => {
+        const evidence: OrganizationalAuthorityEvidence =
+          "assignmentPeriodId" in relation
+            ? { kind: "direct_manager", assignment: relation }
+            : { kind: "direct_manager", reportingRelation: relation }
+        return { employeeId: relation.managerEmployeeId, evidence }
+      })
   }
 
   const responsibilities = [...props.statesByEmployee.values()]
@@ -139,8 +137,7 @@ export function resolveOrganizationalAuthorityCriterion(props: {
   if (props.subjectEmployeeId === null) return []
 
   return listOrganizationalAuthorityManagementChainCandidates({
-    statesByEmployee: props.statesByEmployee,
+    managementRelations: props.managementRelations,
     subjectEmployeeId: props.subjectEmployeeId,
-    asOf: props.asOf,
   })
 }
