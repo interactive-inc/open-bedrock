@@ -111,6 +111,8 @@ HumanAttestation は追記専用とする。訂正は既存行の更新または
 
 HumanAttestation という名前だけでは人間性を保証しない。API は HumanPrincipal の認証、Account の有効状態、必要な step-up、session の失効、TechnicalPermission を確認してから作成する。System は Principal kind と短期 step-up grant を独立して保持し、Company または App の composition は HumanPrincipal 以外を human quorum へ入れてはならない。
 
+判断候補と証言の保存には、明示した `kind: human` のPrincipalを必須にする。PrincipalがないAccountを人と推定しない。候補の解決時点・証言時点にAccountとPrincipalが存在することを、Applicationからの保存とDBへの直接保存の両方で検査する。実行時も本人と委任元のPrincipalを照合し、欠落や機械主体への変更、証言後に作られたPrincipalへの置換を有効な承認として数えない。既存のAccount・候補・証言はmigrationで書き換えない。
+
 ## 自己判断と除外
 
 独立判断が必要な Task では、Case 作成者を候補へ含めず、actor としても受理しない。対象本人、利益相反者、方針上の除外者は、Company または App が解決して除外 snapshot として渡す。

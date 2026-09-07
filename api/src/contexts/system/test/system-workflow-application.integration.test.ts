@@ -15,6 +15,7 @@ import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-d
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { RevalidateSystemExecutionAttestationsAdapter } from "@system/infrastructure/adapters/workflow/revalidate-system-execution-attestations.adapter"
 import { readFileSync } from "node:fs"
+import { readReleasedSystemMigration } from "@system/test/read-released-system-migration.test-support"
 
 const schema = [
   readFileSync(new URL("../infrastructure/schema/system-principal.sql", import.meta.url), "utf8"),
@@ -45,6 +46,12 @@ async function createFixture(): Promise<{
          VALUES (?1, ?2, 0, 100, 100)`,
       )
       .bind(accountId, accountId === "inactive" ? "suspended" : "active")
+      .run()
+    await database
+      .prepare(`INSERT INTO system_principals
+      (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
+      VALUES (?1, ?2, 'human', ?2, NULL, 1, 100, 100)`)
+      .bind(`principal:${accountId}`, accountId)
       .run()
   }
   await database
@@ -124,106 +131,276 @@ function nextTask(
 }
 
 describe("System workflow application", () => {
-  test.each(["delegation", "account", "principal"])(
-    "実行時の証言再検査は失効と確認後の競合を検出する: %s",
-    async (change) => {
-      const fixture = await createFixture()
-      const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
-        seriesId: "execution-series",
-        version: 1,
-        procedureKey: "change",
-        procedureRevision: 1,
-        body: { reason: "Execution evidence" },
-        createdByAccountId: zAccountId.parse("creator"),
-        supersedesProposalId: null,
-        createdAt: new Date(200),
-        firstTask: {
-          key: "review",
-          requiredApprovals: 1,
-          openedAt: new Date(200),
-          dueAt: null,
-          candidates: [candidate("reviewer-1", new Date(200))],
-          excludedAccountIds: [],
-        },
-      })
-      if (started instanceof Error) throw started
-      await fixture.database
-        .prepare(`INSERT INTO system_delegations
+  test.each(["canonical", "released"])(
+    "DBも候補・本人判断・代理判断のPrincipalを必須にする: %s",
+    async (source) => {
+      const guards =
+        source === "canonical"
+          ? readFileSync(
+              new URL("../infrastructure/schema/system-human-decision.sql", import.meta.url),
+              "utf8",
+            )
+          : ["require_system_human_decision_candidates", "require_system_human_attestations"]
+              .map(readReleasedSystemMigration)
+              .join("\n")
+      for (const phase of ["candidate", "actor", "represented"]) {
+        for (const kind of ["valid", "missing", "future", "machine"]) {
+          const fixture = await createFixture()
+          await fixture.database.exec(guards)
+          const at = new Date(200)
+          const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
+            seriesId: "direct-human-check",
+            version: 1,
+            procedureKey: "change",
+            procedureRevision: 1,
+            body: { reason: "Direct persistence boundary" },
+            createdByAccountId: zAccountId.parse("creator"),
+            supersedesProposalId: null,
+            createdAt: at,
+            firstTask: {
+              key: "review",
+              requiredApprovals: 1,
+              openedAt: at,
+              dueAt: null,
+              candidates: [candidate("reviewer-1", at)],
+              excludedAccountIds: [],
+            },
+          })
+          if (started instanceof Error) throw started
+          if (phase === "represented")
+            await fixture.database.exec(`INSERT INTO system_delegations
+          (id, delegator_account_id, delegate_account_id, starts_at, ends_at, created_at)
+          VALUES ('direct-delegation', 'reviewer-1', 'reviewer-2', 100, 300, 100)`)
+          const accountId = phase === "candidate" ? "reviewer-2" : "reviewer-1"
+          if (kind === "missing")
+            await fixture.database
+              .prepare("DELETE FROM system_principals WHERE account_id = ?1")
+              .bind(accountId)
+              .run()
+          if (kind === "machine")
+            await fixture.database
+              .prepare(
+                "UPDATE system_principals SET kind = 'agent', revision = revision + 1 WHERE account_id = ?1",
+              )
+              .bind(accountId)
+              .run()
+          if (kind === "future")
+            await fixture.database
+              .prepare(
+                "UPDATE system_principals SET created_at = 220, updated_at = 220, revision = revision + 1 WHERE account_id = ?1",
+              )
+              .bind(accountId)
+              .run()
+          const operation =
+            phase === "candidate"
+              ? fixture.database
+                  .prepare(`INSERT INTO system_decision_task_candidates
+          (case_id, task_key, round, candidate_account_id, source, evidence_context, evidence_kind, evidence_id, evidence_version, eligibility_digest, eligible_from, resolved_at)
+          VALUES (?1, 'review', 1, 'reviewer-2', 'primary', 'authority', 'qualification', 'evidence:2', '1', ?2, NULL, 200)`)
+                  .bind(started.workflowCase.id, evidenceDigest)
+              : fixture.database
+                  .prepare(`INSERT INTO system_human_attestations
+          (id, case_id, task_key, round, actor_account_id, represented_account_id, delegation_id, action, proposal_digest, comment, decided_at)
+          VALUES ('direct-attestation', ?1, 'review', 1, ?2, 'reviewer-1', ?3, 'approve', ?4, NULL, 210)`)
+                  .bind(
+                    started.workflowCase.id,
+                    phase === "represented" ? "reviewer-2" : "reviewer-1",
+                    phase === "represented" ? "direct-delegation" : null,
+                    started.proposal.digest,
+                  )
+          const result = await operation.run().then(
+            () => null,
+            (cause: unknown) => cause,
+          )
+          if (kind === "valid") expect(result).toBeNull()
+          else {
+            expect(result).toBeInstanceOf(Error)
+            if (!(result instanceof Error)) throw new Error("expected human decision rejection")
+            expect(result.message).toContain(
+              phase === "candidate"
+                ? "system_decision_candidate_requires_human"
+                : "system_attestation_requires_human",
+            )
+          }
+        }
+      }
+    },
+  )
+  test.each([
+    "delegation",
+    "account",
+    "principal",
+    "missing_actor",
+    "missing_represented",
+    "recreated_actor",
+  ])("実行時の証言再検査は失効と確認後の競合を検出する: %s", async (change) => {
+    const fixture = await createFixture()
+    const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
+      seriesId: "execution-series",
+      version: 1,
+      procedureKey: "change",
+      procedureRevision: 1,
+      body: { reason: "Execution evidence" },
+      createdByAccountId: zAccountId.parse("creator"),
+      supersedesProposalId: null,
+      createdAt: new Date(200),
+      firstTask: {
+        key: "review",
+        requiredApprovals: 1,
+        openedAt: new Date(200),
+        dueAt: null,
+        candidates: [candidate("reviewer-1", new Date(200))],
+        excludedAccountIds: [],
+      },
+    })
+    if (started instanceof Error) throw started
+    await fixture.database
+      .prepare(`INSERT INTO system_delegations
         (id, delegator_account_id, delegate_account_id, scope_context, scope_kind, scope_id, scope_version,
          starts_at, ends_at, created_at, revoked_at)
         VALUES ('execution-delegation', 'reviewer-1', 'reviewer-2', NULL, NULL, NULL, NULL, 100, 500, 100, NULL)`)
+      .run()
+    const approved = await new ApproveSystemTask(fixture.writer).execute({
+      caseId: started.workflowCase.id,
+      taskKey: "review",
+      round: 1,
+      actorAccountId: zAccountId.parse("reviewer-2"),
+      representedAccountId: zAccountId.parse("reviewer-1"),
+      delegationId: "execution-delegation",
+      proposalDigest: started.proposal.digest,
+      comment: null,
+      decidedAt: new Date(210),
+      nextTask: null,
+    })
+    expect(approved).toEqual({ caseStatus: "approved", taskOutcome: "approved" })
+    const validator = new RevalidateSystemExecutionAttestationsAdapter({
+      env: { DB: fixture.database },
+    })
+    const input = { caseId: started.workflowCase.id, executedAt: new Date(300) }
+    const before = await validator.prepare(input)
+    if (before instanceof Error) throw before
+    expect(before.attestations).toHaveLength(1)
+    expect(before.tasks[0]?.outcome).toBe("approved")
+    await fixture.database.batch([before.guard])
+    const expired = await validator.prepare({ ...input, executedAt: new Date(500) })
+    if (expired instanceof Error) throw expired
+    expect(expired.attestations).toHaveLength(0)
+    if (change === "delegation") {
+      await fixture.database.exec(
+        "UPDATE system_delegations SET revoked_at = 250 WHERE id = 'execution-delegation'",
+      )
+      await fixture.database.exec(`INSERT INTO system_delegations
+          (id, delegator_account_id, delegate_account_id, scope_context, scope_kind, scope_id, scope_version,
+           starts_at, ends_at, created_at, revoked_at)
+          VALUES ('replacement-delegation', 'reviewer-1', 'reviewer-2', NULL, NULL, NULL, NULL, 260, 500, 260, NULL)`)
+    } else if (change === "account") {
+      await fixture.database.exec(
+        "UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1 WHERE id = 'reviewer-1'",
+      )
+    } else if (change === "principal") {
+      await fixture.database.exec(
+        "UPDATE system_principals SET kind = 'agent', revision = revision + 1, updated_at = 250 WHERE account_id = 'reviewer-2'",
+      )
+    } else {
+      const account = change === "missing_represented" ? "reviewer-1" : "reviewer-2"
+      await fixture.database
+        .prepare("DELETE FROM system_principals WHERE account_id = ?1")
+        .bind(account)
         .run()
-      const approved = await new ApproveSystemTask(fixture.writer).execute({
+      if (change === "recreated_actor")
+        await fixture.database.exec(`INSERT INTO system_principals
+          (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
+          VALUES ('replacement-human', 'reviewer-2', 'human', 'Replacement', NULL, 1, 250, 250)`)
+    }
+    const conflict = await fixture.database.batch([before.guard]).then(
+      () => null,
+      (cause: unknown) => cause,
+    )
+    expect(conflict).toBeInstanceOf(Error)
+    const after = await validator.prepare(input)
+    if (after instanceof Error) throw after
+    expect(after.attestations).toHaveLength(0)
+  })
+
+  test.each(
+    ["candidate", "attestation"].flatMap((phase) =>
+      ["machine", "missing", "future"].map((kind) => [phase, kind] as const),
+    ),
+  )("人と確認できないPrincipalは候補・証言に使えない: %s %s", async (phase, kind) => {
+    const fixture = await createFixture()
+    const machine = () =>
+      fixture.database
+        .prepare(
+          kind === "missing"
+            ? "DELETE FROM system_principals WHERE account_id = 'reviewer-1'"
+            : kind === "future"
+              ? "UPDATE system_principals SET created_at = 220, updated_at = 220, revision = revision + 1 WHERE account_id = 'reviewer-1'"
+              : "UPDATE system_principals SET kind = 'agent', revision = revision + 1 WHERE account_id = 'reviewer-1'",
+        )
+        .run()
+    if (phase === "candidate") await machine()
+    const at = new Date(200)
+    const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
+      seriesId: "machine-series",
+      version: 1,
+      procedureKey: "change",
+      procedureRevision: 1,
+      body: { reason: "Human decision required" },
+      createdByAccountId: zAccountId.parse("creator"),
+      supersedesProposalId: null,
+      createdAt: at,
+      firstTask: {
+        key: "review",
+        requiredApprovals: 1,
+        openedAt: at,
+        dueAt: null,
+        candidates: [candidate("reviewer-1", at)],
+        excludedAccountIds: [],
+      },
+    })
+    if (phase === "candidate") {
+      expect(started).toBeInstanceOf(Error)
+      expect(
+        await fixture.database
+          .prepare("SELECT count(*) AS total FROM system_proposals")
+          .first<number>("total"),
+      ).toBe(0)
+      return
+    }
+    if (started instanceof Error) throw started
+    await machine()
+    expect(
+      await new ApproveSystemTask(fixture.writer).execute({
         caseId: started.workflowCase.id,
         taskKey: "review",
         round: 1,
-        actorAccountId: zAccountId.parse("reviewer-2"),
+        actorAccountId: zAccountId.parse("reviewer-1"),
         representedAccountId: zAccountId.parse("reviewer-1"),
-        delegationId: "execution-delegation",
+        delegationId: null,
         proposalDigest: started.proposal.digest,
         comment: null,
         decidedAt: new Date(210),
         nextTask: null,
-      })
-      expect(approved).toEqual({ caseStatus: "approved", taskOutcome: "approved" })
-      const validator = new RevalidateSystemExecutionAttestationsAdapter({
-        env: { DB: fixture.database },
-      })
-      const input = { caseId: started.workflowCase.id, executedAt: new Date(300) }
-      const before = await validator.prepare(input)
-      if (before instanceof Error) throw before
-      expect(before.attestations).toHaveLength(1)
-      expect(before.tasks[0]?.outcome).toBe("approved")
-      await fixture.database.batch([before.guard])
-      const expired = await validator.prepare({ ...input, executedAt: new Date(500) })
-      if (expired instanceof Error) throw expired
-      expect(expired.attestations).toHaveLength(0)
-      if (change === "delegation") {
-        await fixture.database.exec(
-          "UPDATE system_delegations SET revoked_at = 250 WHERE id = 'execution-delegation'",
-        )
-        await fixture.database.exec(`INSERT INTO system_delegations
-          (id, delegator_account_id, delegate_account_id, scope_context, scope_kind, scope_id, scope_version,
-           starts_at, ends_at, created_at, revoked_at)
-          VALUES ('replacement-delegation', 'reviewer-1', 'reviewer-2', NULL, NULL, NULL, NULL, 260, 500, 260, NULL)`)
-      } else if (change === "account") {
-        await fixture.database.exec(
-          "UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1 WHERE id = 'reviewer-1'",
-        )
-      } else {
-        await fixture.database.exec(`INSERT INTO system_principals
-          (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-          VALUES ('machine-witness', 'reviewer-2', 'agent', 'Reviewer', NULL, 1, 250, 250)`)
-      }
-      const conflict = await fixture.database.batch([before.guard]).then(
-        () => null,
-        (cause: unknown) => cause,
-      )
-      expect(conflict).toBeInstanceOf(Error)
-      const after = await validator.prepare(input)
-      if (after instanceof Error) throw after
-      expect(after.attestations).toHaveLength(0)
-    },
-  )
+      }),
+    ).toBeInstanceOf(Error)
+    expect(
+      await fixture.database
+        .prepare("SELECT count(*) AS total FROM system_human_attestations")
+        .first<number>("total"),
+    ).toBe(0)
+  })
 
-  test.each(["candidate", "attestation"])(
-    "機械Principalは人の候補・証言に使えない: %s",
-    async (phase) => {
+  test.each(["missing", "future", "machine"])(
+    "次段階の候補が人と確認できなければ、現在段階の承認も確定しない: %s",
+    async (kind) => {
       const fixture = await createFixture()
-      const machine = () =>
-        fixture.database
-          .prepare(`INSERT INTO system_principals
-      (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-      VALUES ('machine-reviewer', 'reviewer-1', 'agent', 'Reviewer', NULL, 1, 100, 100)`)
-          .run()
-      if (phase === "candidate") await machine()
       const at = new Date(200)
       const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
-        seriesId: "machine-series",
+        seriesId: "next-human-review",
         version: 1,
         procedureKey: "change",
         procedureRevision: 1,
-        body: { reason: "Human decision required" },
+        body: { reason: "Two human decisions" },
         createdByAccountId: zAccountId.parse("creator"),
         supersedesProposalId: null,
         createdAt: at,
@@ -236,36 +413,45 @@ describe("System workflow application", () => {
           excludedAccountIds: [],
         },
       })
-      if (phase === "candidate") {
-        expect(started).toBeInstanceOf(Error)
-        expect(
-          await fixture.database
-            .prepare("SELECT count(*) AS total FROM system_proposals")
-            .first<number>("total"),
-        ).toBe(0)
-        return
-      }
       if (started instanceof Error) throw started
-      await machine()
-      expect(
-        await new ApproveSystemTask(fixture.writer).execute({
-          caseId: started.workflowCase.id,
-          taskKey: "review",
-          round: 1,
-          actorAccountId: zAccountId.parse("reviewer-1"),
-          representedAccountId: zAccountId.parse("reviewer-1"),
-          delegationId: null,
-          proposalDigest: started.proposal.digest,
-          comment: null,
-          decidedAt: new Date(210),
-          nextTask: null,
-        }),
-      ).toBeInstanceOf(Error)
+      if (kind === "missing")
+        await fixture.database.exec(
+          "DELETE FROM system_principals WHERE account_id = 'final-reviewer'",
+        )
+      if (kind === "machine")
+        await fixture.database.exec(
+          "UPDATE system_principals SET kind = 'agent', revision = revision + 1 WHERE account_id = 'final-reviewer'",
+        )
+      if (kind === "future")
+        await fixture.database.exec(
+          "UPDATE system_principals SET created_at = 220, updated_at = 220, revision = revision + 1 WHERE account_id = 'final-reviewer'",
+        )
+      const result = await new ApproveSystemTask(fixture.writer).execute({
+        caseId: started.workflowCase.id,
+        taskKey: "review",
+        round: 1,
+        actorAccountId: zAccountId.parse("reviewer-1"),
+        representedAccountId: zAccountId.parse("reviewer-1"),
+        delegationId: null,
+        proposalDigest: started.proposal.digest,
+        comment: null,
+        decidedAt: new Date(210),
+        nextTask: nextTask(started.workflowCase.id, started.proposal.digest, new Date(210)),
+      })
+      expect(result).toBeInstanceOf(Error)
       expect(
         await fixture.database
           .prepare("SELECT count(*) AS total FROM system_human_attestations")
           .first<number>("total"),
       ).toBe(0)
+      expect(
+        await fixture.database
+          .prepare(
+            "SELECT outcome FROM system_decision_tasks WHERE case_id = ?1 AND task_key = 'review'",
+          )
+          .bind(started.workflowCase.id)
+          .first<string | null>("outcome"),
+      ).toBeNull()
     },
   )
 

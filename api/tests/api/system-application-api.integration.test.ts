@@ -446,6 +446,77 @@ describe("System application API composition", () => {
     })
   })
 
+  test.each([
+    { accountId: "1", change: "missing" },
+    { accountId: "2", change: "missing" },
+    { accountId: "1", change: "future" },
+    { accountId: "2", change: "future" },
+  ])(
+    "代理判断の保存直前に人のPrincipalが変わった場合は全体を取り消す: %j",
+    async ({ accountId, change }) => {
+      const db = await createDb(undefined, {
+        approvers: [{ type: "employee", employee_code: "E001" }],
+      })
+      const delegation = await request(
+        db,
+        toWorkforceEmployeeId(1),
+        "/company/approval-delegations",
+        {
+          method: "POST",
+          body: {
+            delegate_employee_code: "E002",
+            template_code: "system_test_request",
+            starts_at: now,
+            ends_at: "2026-01-03T00:00:00.000Z",
+          },
+        },
+      )
+      expect(delegation.status).toBe(201)
+      const number = await submit(db, "Human identity must remain valid until persistence")
+      const interception = spyOn(
+        SystemD1WorkflowAdapter.prototype,
+        "decide",
+      ).mockImplementationOnce(async function (this: SystemD1WorkflowAdapter, input) {
+        interception.mockRestore()
+        if (change === "missing") {
+          await db
+            .prepare("DELETE FROM system_principals WHERE account_id = ?1")
+            .bind(accountId)
+            .run()
+        } else {
+          await db
+            .prepare(`UPDATE system_principals SET created_at = ?2, updated_at = ?2,
+              revision = revision + 1 WHERE account_id = ?1`)
+            .bind(accountId, new Date(now).getTime() + 1)
+            .run()
+        }
+        return this.decide(input)
+      })
+      try {
+        const response = await request(
+          db,
+          toWorkforceEmployeeId(2),
+          `/company/application-requests/${number}/approve`,
+          { method: "POST", body: { comment: null } },
+        )
+        expect(response.status).toBe(409)
+      } finally {
+        interception.mockRestore()
+      }
+      expect(
+        await db
+          .prepare("SELECT count(*) AS total FROM system_human_attestations")
+          .first<number>("total"),
+      ).toBe(0)
+      expect(await db.prepare("SELECT status FROM system_cases").first<string>("status")).toBe(
+        "pending",
+      )
+      expect(
+        await db.prepare("SELECT outcome FROM system_decision_tasks").first<string>("outcome"),
+      ).toBeNull()
+    },
+  )
+
   test("再検査時も提出時の期限を保ち、期限後の追加候補だけを許可する", async () => {
     const db = await createDb(undefined, {
       due_days: 1,

@@ -31,6 +31,16 @@ export async function seedIamForEmployees(
 
     await db
       .prepare(
+        `INSERT INTO system_principals
+           (id, account_id, kind, name, revision, created_at, updated_at)
+         VALUES ('test:human:' || ?1, ?1, 'human', ?1, 1, 0, 0)
+         ON CONFLICT(account_id) DO NOTHING`,
+      )
+      .bind(String(employee.id))
+      .run()
+
+    await db
+      .prepare(
         `INSERT OR IGNORE INTO company_account_employee_links (account_id, employee_id)
          VALUES (?1, ?2)`,
       )

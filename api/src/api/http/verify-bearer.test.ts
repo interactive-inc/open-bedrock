@@ -87,6 +87,7 @@ describe("verifyBearer", () => {
     const issuedAt = new Date()
     const rawSecretHash = await new SystemPrincipalSecretService().hashRawSecret("1".repeat(64))
     if (rawSecretHash instanceof Error) throw rawSecretHash
+    await db.prepare("DELETE FROM system_principals WHERE account_id = '5'").run()
     await db
       .prepare(`INSERT INTO system_principals
       (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
