@@ -8,7 +8,7 @@ type Props = {
 export function AssetStatusBadge(props: Props) {
   if (props.status === "lent") {
     return (
-      <Button type="button" size="sm">
+      <Button type="button" variant="secondary" size="sm">
         貸与中
       </Button>
     )
@@ -16,7 +16,7 @@ export function AssetStatusBadge(props: Props) {
 
   if (props.status === "in_stock") {
     return (
-      <Button type="button" size="sm">
+      <Button type="button" variant="secondary" size="sm">
         在庫
       </Button>
     )

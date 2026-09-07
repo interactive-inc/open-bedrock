@@ -24,7 +24,7 @@ type Props = {
 }
 
 const outcomeVariant = {
-  succeeded: "default",
+  succeeded: "secondary",
   denied: "secondary",
   failed: "destructive",
 } as const

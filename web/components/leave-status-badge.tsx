@@ -9,7 +9,7 @@ type Props = {
 export function LeaveStatusBadge(props: Props) {
   if (props.status === "approved") {
     return (
-      <Button type="button" size="sm">
+      <Button type="button" variant="secondary" size="sm">
         承認済み
       </Button>
     )

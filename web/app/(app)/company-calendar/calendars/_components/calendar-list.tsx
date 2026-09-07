@@ -54,11 +54,7 @@ export async function CalendarList(props: Props) {
               <TableCell>{day.calendar_date}</TableCell>
 
               <TableCell>
-                <Button
-                  type="button"
-                  variant={day.kind === "holiday" ? "default" : "secondary"}
-                  size="sm"
-                >
+                <Button type="button" variant="secondary" size="sm">
                   {toCalendarDayKindLabel(day.kind)}
                 </Button>
               </TableCell>

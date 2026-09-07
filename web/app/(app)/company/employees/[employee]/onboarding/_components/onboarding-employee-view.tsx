@@ -49,11 +49,7 @@ export async function OnboardingEmployeeView(props: Props) {
             <CardTitle className="flex items-center gap-2">
               {assignment.template_name}
 
-              <Button
-                type="button"
-                variant={assignment.kind === "join" ? "default" : "secondary"}
-                size="sm"
-              >
+              <Button type="button" variant="secondary" size="sm">
                 {assignment.kind === "join" ? "入社" : "退社"}
               </Button>
 

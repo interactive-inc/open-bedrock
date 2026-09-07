@@ -60,11 +60,7 @@ export function HealthCheckupsTable(props: Props) {
               </TableCell>
 
               <TableCell>
-                <Button
-                  type="button"
-                  variant={row.status === "completed" ? "default" : "secondary"}
-                  size="sm"
-                >
+                <Button type="button" variant="secondary" size="sm">
                   {STATUS_LABELS[row.status] ?? row.status}
                 </Button>
               </TableCell>
