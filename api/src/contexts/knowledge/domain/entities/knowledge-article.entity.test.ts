@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import { describe, expect, test } from "bun:test"
@@ -14,7 +15,7 @@ describe("KnowledgeArticle.create", () => {
     })
 
     expect(article).toBeInstanceOf(KnowledgeArticle)
-    expect(article.id).toBe(null)
+    expect(uuidSchema.safeParse(article.id).success).toBe(true)
     expect(article.title).toBe("How to deploy")
     expect(article.category).toBe("engineering")
   })

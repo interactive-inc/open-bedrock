@@ -1,8 +1,9 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { z } from "zod"
 
 /** 人員計画 1 件のレスポンス。actual_count は同部署の active 在籍数。 */
 export const zAppHeadcountPlan = z.object({
-  id: z.number(),
+  id: uuidSchema,
   fiscal_year: z.number(),
   department_code: z.string().nullable(),
   planned_count: z.number(),

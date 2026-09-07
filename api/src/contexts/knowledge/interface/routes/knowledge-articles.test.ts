@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
@@ -14,7 +15,7 @@ import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const knowledgeSearchResultResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   category: z.string(),
   title: z.string(),
   snippet: z.string(),
@@ -22,7 +23,7 @@ const knowledgeSearchResultResponseSchema = z.object({
 })
 
 const knowledgeCreatedResponseSchema = z.object({
-  id: z.number(),
+  id: uuidSchema,
   title: z.string(),
   category: z.string(),
   tags: z.string().nullable(),
@@ -96,7 +97,7 @@ describe("GET /knowledge-articles", () => {
       expect(parsed.data.data.length).toBe(6)
       expect(parsed.data.total).toBe(6)
 
-      const first = parsed.data.data.find((item) => item.id === 1)
+      const first = parsed.data.data.find((item) => item.id === "0190001d-0000-7000-8000-000000000001")
 
       expect(first?.title).toBe("リモートワーク規程")
       expect(first?.category).toBe("規程")
@@ -119,7 +120,7 @@ describe("GET /knowledge-articles", () => {
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
       expect(parsed.data.total).toBe(1)
-      expect(parsed.data.data[0]?.id).toBe(2)
+      expect(parsed.data.data[0]?.id).toBe("0190001d-0000-7000-8000-000000000002")
     }
   })
 
@@ -138,7 +139,7 @@ describe("GET /knowledge-articles", () => {
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
       expect(parsed.data.total).toBe(1)
-      expect(parsed.data.data[0]?.id).toBe(1)
+      expect(parsed.data.data[0]?.id).toBe("0190001d-0000-7000-8000-000000000001")
     }
   })
 

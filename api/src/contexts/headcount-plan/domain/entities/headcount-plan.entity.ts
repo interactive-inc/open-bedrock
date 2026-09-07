@@ -1,8 +1,10 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import type { HeadcountPlanRow } from "@/contexts/headcount-plan/infrastructure/schema/headcount-plan"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   fiscalYear: z.number(),
   departmentCode: z.string().nullable(),
   plannedCount: z.number(),
@@ -42,7 +44,7 @@ export class HeadcountPlan implements Props {
     createdAt: string
   }): HeadcountPlan {
     return new HeadcountPlan({
-      id: null,
+      id: createUuidV7(),
       fiscalYear: props.fiscalYear,
       departmentCode: props.departmentCode,
       plannedCount: props.plannedCount,

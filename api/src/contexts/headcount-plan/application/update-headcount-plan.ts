@@ -7,7 +7,7 @@ import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructur
 
 export type Command = {
   session: CompanySessionValue
-  id: number
+  id: string
   plannedCount: number
   note: string | null
 }

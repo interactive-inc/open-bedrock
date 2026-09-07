@@ -1,3 +1,5 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { EmployeeWorkStyleRow } from "@/contexts/work-style/infrastructure/schema/work-style"
@@ -5,7 +7,7 @@ import { workStyleSchema } from "@/contexts/work-style/domain/definitions/work-s
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   employeeId: zEmployeeId,
   style: workStyleSchema,
   startsOn: z.string(),
@@ -51,7 +53,7 @@ export class EmployeeWorkStyle implements Props {
     createdAt: string
   }): EmployeeWorkStyle {
     return new EmployeeWorkStyle({
-      id: null,
+      id: createUuidV7(),
       employeeId: props.employeeId,
       style: props.style,
       startsOn: props.startsOn,

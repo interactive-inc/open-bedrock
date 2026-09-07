@@ -104,7 +104,7 @@ function EditKnowledgeDialog(props: { article: KnowledgeDetailResponse }) {
 }
 
 /** 記事削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。 */
-function DeleteKnowledgeButton(props: { articleId: number }) {
+function DeleteKnowledgeButton(props: { articleId: string }) {
   const [state, formAction, pending] = useFormAction(
     deleteKnowledgeAction,
     {

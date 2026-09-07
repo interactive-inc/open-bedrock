@@ -1,3 +1,4 @@
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { CompleteHealthCheckup } from "@/contexts/health-checkup/application/complete-health-checkup"
 import { factory } from "@/api/http/factory"
 import { isoDate } from "@/lib/validation/iso-date.schema"
@@ -24,11 +25,7 @@ export const POST = factory.createHandlers(
       throw new ForbiddenError()
     }
 
-    const id = Number(c.req.param("id"))
-
-    if (Number.isInteger(id) === false) {
-      throw new BadRequestError("invalid parameter")
-    }
+    const id = validateUuidParam(c.req.param("id"), "id")
 
     const json = c.req.valid("json")
 

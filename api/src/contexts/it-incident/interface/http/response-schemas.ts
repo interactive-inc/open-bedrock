@@ -1,8 +1,9 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { z } from "zod"
 
 /** インシデント記録 1 件のレスポンス。 */
 export const zAppItIncident = z.object({
-  id: z.number(),
+  id: uuidSchema,
   occurred_at: z.string(),
   title: z.string(),
   summary: z.string(),
