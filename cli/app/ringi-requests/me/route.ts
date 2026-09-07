@@ -10,7 +10,9 @@ export default factory.createHandlers(
     "json",
     z.object({
       help: z.string().optional(),
-      status: z.enum(["pending", "approved", "rejected"]).optional(),
+      status: z
+        .enum(["pending", "approved", "rejected", "returned", "cancelled", "awaiting_execution"])
+        .optional(),
     }),
   ),
   async (c) => {

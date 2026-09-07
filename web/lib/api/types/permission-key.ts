@@ -105,6 +105,7 @@ export const permissionKeys = [
   "ringi:read:all",
   "ringi:approve",
   "ringi:submit",
+  "ringi:procedure:manage",
   "room:manage",
   "salary_revision:manage",
   "salary_revision:read:all",

@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 
+import type { RingiDecisionTarget } from "@/lib/api/types/ringi-types"
+
 type Props = {
+  decisionTarget: RingiDecisionTarget
   ringiId: number
 }
 
@@ -33,7 +36,7 @@ export function RingiDecisionForm(props: Props) {
       const next = await approveRingiAction(previousState, formData)
 
       if (next.ok) {
-        toast.success("稟議を承認しました")
+        toast.success("承認を記録しました")
       } else if (next.error !== null) {
         toast.error(next.error)
       }
@@ -55,7 +58,7 @@ export function RingiDecisionForm(props: Props) {
       const next = await rejectRingiAction(previousState, formData)
 
       if (next.ok) {
-        toast.success("稟議を却下しました")
+        toast.success("否認を記録しました")
       } else if (next.error !== null) {
         toast.error(next.error)
       }
@@ -76,7 +79,7 @@ export function RingiDecisionForm(props: Props) {
   if (isDecided) {
     return (
       <p className="text-sm text-muted-foreground">
-        {approveState.ok ? "この稟議を承認しました" : "この稟議を却下しました"}
+        {approveState.ok ? "この承認を記録しました" : "この否認を記録しました"}
       </p>
     )
   }
@@ -86,6 +89,11 @@ export function RingiDecisionForm(props: Props) {
       <form action={dispatchApprove}>
         <FieldGroup>
           <input type="hidden" name="ringi_id" value={props.ringiId} />
+          <input
+            type="hidden"
+            name="decision_target"
+            value={JSON.stringify(props.decisionTarget)}
+          />
 
           <Field>
             <FieldLabel htmlFor={`ringi-approve-comment-${props.ringiId}`}>
@@ -108,10 +116,15 @@ export function RingiDecisionForm(props: Props) {
       <form action={dispatchReject}>
         <FieldGroup>
           <input type="hidden" name="ringi_id" value={props.ringiId} />
+          <input
+            type="hidden"
+            name="decision_target"
+            value={JSON.stringify(props.decisionTarget)}
+          />
 
           <Field>
             <FieldLabel htmlFor={`ringi-reject-comment-${props.ringiId}`}>
-              却下コメント（任意）
+              否認コメント（任意）
             </FieldLabel>
 
             <Textarea id={`ringi-reject-comment-${props.ringiId}`} name="comment" rows={2} />
@@ -121,7 +134,7 @@ export function RingiDecisionForm(props: Props) {
 
           <Field orientation="horizontal">
             <Button type="submit" variant="destructive" disabled={isApproving || isRejecting}>
-              {isRejecting ? "却下中..." : "却下する"}
+              {isRejecting ? "却下中..." : "否認する"}
             </Button>
           </Field>
         </FieldGroup>

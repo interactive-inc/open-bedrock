@@ -28,6 +28,8 @@ import {
 type Context = CompanyContext
 type Command = Readonly<{
   requestKey: string
+  existingRingiId?: number | null
+  previousRingiId?: number | null
   session: CompanyPersonnelSession
   tokenVersion: number
   approverId: EmployeeId
@@ -81,7 +83,7 @@ export class SubmitRingiProcedure {
       applicant.employment?.status !== "ACTIVE"
     )
       return new ForbiddenError("在籍中の申請者を確認できません", "forbidden")
-    const ringi = RingiRequest.create({
+    const requested = RingiRequest.create({
       applicantId: applicant.id,
       approverId: command.approverId,
       title: command.title,
@@ -89,11 +91,34 @@ export class SubmitRingiProcedure {
       reason: command.reason,
       createdAt: command.createdAt.toISOString(),
     })
+    const original =
+      command.existingRingiId == null ? null : await repository.findById(command.existingRingiId)
+    if (original instanceof Error)
+      return new UnexpectedError("既存稟議を取得できません", { cause: original })
+    if (command.existingRingiId != null && original === null)
+      return new ValidationError("既存稟議が見つかりません", "ringi_not_found")
+    if (
+      original !== null &&
+      (original.applicantId !== applicant.id ||
+        JSON.stringify(original.toProposalBody()) !== JSON.stringify(requested.toProposalBody()))
+    )
+      return new ConflictError("確認した既存稟議の内容が変わっています", "legacy_ringi_changed")
+    if (command.existingRingiId != null && command.previousRingiId != null)
+      return new ValidationError("既存提出と差戻し再申請を同時に指定できません", "invalid_ringi")
+    const ringi = original ?? requested
     const existing = await repository.findByRequestKey(command.requestKey)
     if (existing instanceof Error)
       return new UnexpectedError("稟議の再送結果を確認できません", { cause: existing })
     const guards = [...human.assertions, guard]
-    if (existing !== null)
+    if (existing !== null) {
+      const binding = existing.id === null ? null : await repository.findProcedure(existing.id)
+      if (
+        binding instanceof Error ||
+        binding === null ||
+        binding.previousRingiId !== (command.previousRingiId ?? null) ||
+        (command.existingRingiId != null && existing.id !== command.existingRingiId)
+      )
+        return new ConflictError("再送キーの提出元が一致しません", "idempotency_conflict")
       return this.replay({
         existing,
         ringi,
@@ -101,9 +126,14 @@ export class SubmitRingiProcedure {
           repository.readSubmissionReceipt({
             ringiId: existing.id,
             actorAccountId: command.session.accountId,
+            existingRingiId: command.existingRingiId ?? null,
+            previousRingiId: command.previousRingiId ?? null,
             guards,
           }),
       })
+    }
+    if (original !== null && original.status !== "pending")
+      return new ConflictError("決裁済みの稟議は提出できません", "already_decided")
     const definition = await new SystemD1ProcedureRepository(this.c).find(
       procedureKeySchema.parse("ringi_request"),
     )
@@ -187,7 +217,11 @@ export class SubmitRingiProcedure {
         procedureRevision: definition.revision,
       }),
       beforeJson: null,
-      afterJson: JSON.stringify({ proposalDigest: proposal.digest }),
+      afterJson: JSON.stringify({
+        proposalDigest: proposal.digest,
+        existingRingiId: command.existingRingiId ?? null,
+        previousRingiId: command.previousRingiId ?? null,
+      }),
       metadataJson: JSON.stringify({ ...this.c.var.auditContext, actorEmployeeId: applicant.id }),
       occurredAt: command.createdAt,
     })
@@ -195,6 +229,8 @@ export class SubmitRingiProcedure {
       return new UnexpectedError("稟議の提出監査を作成できません", { cause: audit })
     const created = await repository.createWithProcedure({
       requestKey: command.requestKey,
+      existingRingiId: command.existingRingiId ?? null,
+      previousRingiId: command.previousRingiId ?? null,
       ringi,
       workflow: { proposal, workflowCase, firstTask },
       guards: [...guards, ...resolved.guards],
@@ -210,6 +246,8 @@ export class SubmitRingiProcedure {
           repository.readSubmissionReceipt({
             ringiId: concurrent.id,
             actorAccountId: command.session.accountId,
+            existingRingiId: command.existingRingiId ?? null,
+            previousRingiId: command.previousRingiId ?? null,
             guards,
           }),
       })

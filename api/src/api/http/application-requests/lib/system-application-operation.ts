@@ -61,7 +61,10 @@ export type SystemApplicationResult = Readonly<{
 }>
 
 export function systemProposalQuery(c: Context): SystemD1ProposalAdapter {
-  return new SystemD1ProposalAdapter({ env: { DB: c.env.DB } })
+  return new SystemD1ProposalAdapter({
+    env: { DB: c.env.DB },
+    visibleCompletionOperationKeys: [null, "company.personnel-action.apply"],
+  })
 }
 
 export async function submitSystemApplication(

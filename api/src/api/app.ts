@@ -246,8 +246,12 @@ import * as resignationsIdAcceptRoute from "@/contexts/resignation/interface/rou
 import * as resignationsIdRejectRoute from "@/contexts/resignation/interface/routes/resignations.$id.reject"
 import * as resignationsAdminRoute from "@/contexts/resignation/interface/routes/resignations.admin"
 import * as resignationsMeRoute from "@/contexts/resignation/interface/routes/resignations.me"
+import * as ringiProceduresRoute from "@/contexts/ringi/interface/routes/ringi-procedures"
 import * as ringiRequestsRoute from "@/contexts/ringi/interface/routes/ringi-requests"
+import * as ringiRequestsIdRoute from "@/contexts/ringi/interface/routes/ringi-requests.$id"
 import * as ringiRequestsIdApproveRoute from "@/contexts/ringi/interface/routes/ringi-requests.$id.approve"
+import * as ringiRequestsIdCancelRoute from "@/contexts/ringi/interface/routes/ringi-requests.$id.cancel"
+import * as ringiRequestsIdExecuteRoute from "@/contexts/ringi/interface/routes/ringi-requests.$id.execute"
 import * as ringiRequestsIdRejectRoute from "@/contexts/ringi/interface/routes/ringi-requests.$id.reject"
 import * as ringiRequestsAdminRoute from "@/contexts/ringi/interface/routes/ringi-requests.admin"
 import * as ringiRequestsInboxRoute from "@/contexts/ringi/interface/routes/ringi-requests.inbox"
@@ -901,11 +905,16 @@ const routePart33 = createRouteApp()
   .delete("/resignation/resignations/:id", ...resignationsIdRoute.DELETE)
   .post("/resignation/resignations/:id/accept", ...resignationsIdAcceptRoute.POST)
   .post("/resignation/resignations/:id/reject", ...resignationsIdRejectRoute.POST)
+  .get("/ringi/ringi-procedures", ...ringiProceduresRoute.GET)
+  .put("/ringi/ringi-procedures", ...ringiProceduresRoute.PUT)
   .post("/ringi/ringi-requests", ...ringiRequestsRoute.POST)
   .get("/ringi/ringi-requests/admin", ...ringiRequestsAdminRoute.GET)
   .get("/ringi/ringi-requests/inbox", ...ringiRequestsInboxRoute.GET)
   .get("/ringi/ringi-requests/me", ...ringiRequestsMeRoute.GET)
+  .get("/ringi/ringi-requests/:id", ...ringiRequestsIdRoute.GET)
   .post("/ringi/ringi-requests/:id/approve", ...ringiRequestsIdApproveRoute.POST)
+  .post("/ringi/ringi-requests/:id/cancel", ...ringiRequestsIdCancelRoute.POST)
+  .post("/ringi/ringi-requests/:id/execute", ...ringiRequestsIdExecuteRoute.POST)
   .post("/ringi/ringi-requests/:id/reject", ...ringiRequestsIdRejectRoute.POST)
   .get("/room/rooms", ...roomsRoute.GET)
   .post("/room/rooms", ...roomsRoute.POST)
@@ -940,13 +949,13 @@ const routePart33 = createRouteApp()
   .get("/skill/employee-skills/me", ...employeeSkillsMeRoute.GET)
   .put("/skill/employee-skills/me", ...employeeSkillsMeRoute.PUT)
   .get("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.GET)
+
+const routePart34 = createRouteApp()
   .delete("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.DELETE)
   .get("/skill/skill-definitions", ...skillDefinitionsRoute.GET)
   .get("/software-license/software-licenses", ...softwareLicensesRoute.GET)
   .post("/software-license/software-licenses", ...softwareLicensesRoute.POST)
   .put("/software-license/software-licenses/:id", ...softwareLicensesIdRoute.PUT)
-
-const routePart34 = createRouteApp()
   .post("/software-license/software-licenses/:id/cancel", ...softwareLicensesIdCancelRoute.POST)
   .get("/survey/surveys", ...surveysRoute.GET)
   .post("/survey/surveys", ...surveysRoute.POST)
@@ -1008,13 +1017,13 @@ const routePart34 = createRouteApp()
     "/system/dead-letters/:deadLetterId/requeue",
     ...systemDeadLettersDeadLetterIdRequeueRoute.POST,
   )
+
+const routePart35 = createRouteApp()
   .get("/system/deliveries", ...systemDeliveriesRoute.GET)
   .post("/system/deliveries", ...systemDeliveriesRoute.POST)
   .patch("/system/deliveries/:deliveryId", ...systemDeliveriesDeliveryIdRoute.PATCH)
   .get("/system/health", ...systemHealthRoute.GET)
   .post("/system/identity-sessions", ...systemIdentitySessionsRoute.POST)
-
-const routePart35 = createRouteApp()
   .patch("/system/inbox-messages/:messageId", ...systemInboxMessagesMessageIdRoute.PATCH)
   .get("/system/integration-exchanges", ...systemIntegrationExchangesRoute.GET)
   .post("/system/integration-exchanges", ...systemIntegrationExchangesRoute.POST)
@@ -1079,13 +1088,13 @@ const routePart35 = createRouteApp()
   .get("/thanks/thanks-point-balances/me", ...thanksPointBalancesMeRoute.GET)
   .get("/thanks/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
   .post("/thanks/thanks-redemptions", ...thanksRedemptionsRoute.POST)
+
+const routePart36 = createRouteApp()
   .get("/thanks/thanks-redemptions/admin", ...thanksRedemptionsAdminRoute.GET)
   .get("/thanks/thanks-redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)
   .get("/thanks/thanks-redemptions/me", ...thanksRedemptionsMeRoute.GET)
   .post("/thanks/thanks-redemptions/:id/approve", ...thanksRedemptionsIdApproveRoute.POST)
   .post("/thanks/thanks-redemptions/:id/reject", ...thanksRedemptionsIdRejectRoute.POST)
-
-const routePart36 = createRouteApp()
   .get("/thanks/thanks-rewards", ...thanksRewardsRoute.GET)
   .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
   .patch("/thanks/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)

@@ -2,7 +2,7 @@ import { FetchError } from "@/components/fetch-error"
 import { Inbox, Plus } from "lucide-react"
 import Link from "next/link"
 import { Suspense } from "react"
-import { ApplicationStatusBadge } from "@/components/application-status-badge"
+import { RingiStatusBadge } from "@/components/ringi-status-badge"
 import { EmptyState } from "@/components/empty-state"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
@@ -82,7 +82,7 @@ async function MyRingiTable() {
         <TableHeader>
           <TableRow>
             <TableHead>件名</TableHead>
-            <TableHead>承認者</TableHead>
+            <TableHead>起案時の提出先</TableHead>
             <TableHead>金額</TableHead>
             <TableHead>ステータス</TableHead>
           </TableRow>
@@ -91,7 +91,9 @@ async function MyRingiTable() {
         <TableBody>
           {ringiList.map((ringi) => (
             <TableRow key={ringi.id}>
-              <TableCell>{ringi.title}</TableCell>
+              <TableCell>
+                <Link href={`/my/ringis/${ringi.id}`}>{ringi.title}</Link>
+              </TableCell>
 
               <TableCell>{ringi.approver_name}</TableCell>
 
@@ -100,7 +102,7 @@ async function MyRingiTable() {
               </TableCell>
 
               <TableCell>
-                <ApplicationStatusBadge status={ringi.status} />
+                <RingiStatusBadge status={ringi.status} />
               </TableCell>
             </TableRow>
           ))}

@@ -1,53 +1,63 @@
-import { RejectRingi } from "@/contexts/ringi/application/reject-ringi"
-import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result"
 import { factory } from "@/api/http/factory"
-import { ApplicationError } from "@/lib/errors"
-import { zAppRingiDecision } from "@/contexts/ringi/interface/http/response-schemas"
-import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { validateIntParam } from "@/lib/http/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
-import { UnauthorizedError } from "@/lib/http/errors"
 import { z } from "zod"
+import { validateIntParam } from "@/lib/http/validate-int-param"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { RecordRingiDecision } from "@/contexts/ringi/application/record-ringi-decision"
+import { CompleteApprovedRingiProcedure } from "@/contexts/ringi/application/complete-approved-ringi-procedure"
 
-// @authorization service - session を application service に渡して判定する
-/** POST /ringi-requests/:id/reject — 稟議を却下する（指名された承認者本人のみ。コメント任意） */
+// @authorization service - 表示した判断対象と現在の会社資格・技術権限を照合する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
-      comment: z.string().max(3_000).nullable().optional(),
-    }),
+    z
+      .object({
+        decision_target: z
+          .object({
+            proposal_version: z.number().int().positive(),
+            proposal_digest: z.string().regex(/^[a-f0-9]{64}$/),
+            task_key: z.string().min(1).max(100),
+            task_round: z.number().int().positive(),
+          })
+          .strict(),
+        comment: z.string().max(3000).nullable().optional(),
+      })
+      .strict(),
   ),
   async (c) => {
     const session = c.var.session
-
-    if (session === null) {
-      throw new UnauthorizedError()
-    }
-
-    const ringiId = validateIntParam(c.req.param("id"), "ringi")
-
+    if (session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
     const body = c.req.valid("json")
-
-    const updated = await new RejectRingi({
-      context: c,
-      notifyApprovalResult: (command) => new NotifyApprovalResult(c).run(command),
-    }).execute({
-      session: session,
+    const ringiId = validateIntParam(c.req.param("id"), "ringi")
+    const at = new Date(c.env.NOW ?? Date.now())
+    const saved = await new RecordRingiDecision(c).run({
       ringiId,
-      approverId: session.employeeId,
+      session,
+      tokenVersion: c.var.accountTokenVersion,
+      decisionTarget: {
+        proposalVersion: body.decision_target.proposal_version,
+        proposalDigest: body.decision_target.proposal_digest,
+        taskKey: body.decision_target.task_key,
+        taskRound: body.decision_target.task_round,
+      },
+      action: "reject",
       comment: body.comment ?? null,
-      createdAt: c.env.NOW ?? new Date().toISOString(),
+      decidedAt: at,
     })
-
-    if (updated instanceof ApplicationError) {
-      throw toHttpException(updated)
+    if (saved instanceof ApplicationError) throw toHttpException(saved)
+    if (saved.needsExecution) {
+      const completed = await new CompleteApprovedRingiProcedure(c).run({
+        ringiId,
+        session,
+        tokenVersion: c.var.accountTokenVersion,
+        completedAt: at,
+      })
+      if (completed instanceof ApplicationError) throw toHttpException(completed)
     }
-
-    const responseBody = zAppRingiDecision.parse({ status: updated.status })
-
-    return c.json(responseBody, 200)
+    return c.json({ status: saved.status, replayed: saved.replayed }, 200)
   },
 )

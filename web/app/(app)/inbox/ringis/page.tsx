@@ -1,3 +1,4 @@
+import { RingiProcedureActionForm } from "@/app/(app)/my/ringis/_components/ringi-procedure-action-form"
 import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { Suspense } from "react"
@@ -22,9 +23,13 @@ const amountFormatter = new Intl.NumberFormat("ja-JP")
 
 /**
  * 稟議承認 inbox 画面。承認者向けに承認待ちの稟議を RSC で取得し一覧表示する。
- * 稟議には詳細ページが無いため、承認・却下フォームを各行に直接埋め込む。
+ * 判断対象と必要人数を表示し、内容と履歴は詳細ページでも確認できる。
  */
-export default function RingiInboxPage() {
+export default async function RingiInboxPage(props: {
+  searchParams: Promise<{ offset?: string }>
+}) {
+  const params = await props.searchParams
+  const offset = Math.max(0, Number.parseInt(params.offset ?? "0", 10) || 0)
   return (
     <div className="flex flex-col gap-8">
       <SubPageHeader
@@ -37,22 +42,32 @@ export default function RingiInboxPage() {
       />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
-        <RingiInboxTable />
+        <RingiInboxTable offset={offset} />
       </Suspense>
     </div>
   )
 }
 
 /** /ringi/inbox を認証付きで取得して承認待ち一覧テーブルを描画する非同期 RSC。 */
-async function RingiInboxTable() {
-  const ringiList = await getRingiInbox()
+async function RingiInboxTable(props: { offset: number }) {
+  const result = await getRingiInbox(props.offset)
 
-  if (ringiList instanceof Error) {
+  if (result instanceof Error) {
     return <FetchError message="承認 inbox の取得に失敗しました（権限がない可能性があります）" />
   }
 
+  const ringiList = result.data
+
   if (ringiList.length === 0) {
-    return <EmptyState title="承認待ちの稟議はありません" />
+    return (
+      <div className="flex flex-col gap-4">
+        <EmptyState title="このページに承認待ちの稟議はありません" />
+        <Link href="/inbox/ringis">先頭に戻る</Link>
+        {result.next_offset !== null ? (
+          <Link href={`/inbox/ringis?offset=${result.next_offset}`}>次のページ</Link>
+        ) : null}
+      </div>
+    )
   }
 
   return (
@@ -73,7 +88,12 @@ async function RingiInboxTable() {
             <TableRow key={ringi.id}>
               <TableCell>{ringi.applicant_name}</TableCell>
 
-              <TableCell>{ringi.title}</TableCell>
+              <TableCell>
+                <Link href={`/my/ringis/${ringi.id}`}>{ringi.title}</Link>
+                <p>
+                  {ringi.approvals} / {ringi.required_approvals ?? "—"} 名の承認
+                </p>
+              </TableCell>
 
               <TableCell className="tabular-nums">
                 {amountFormatter.format(ringi.amount)} 円
@@ -82,12 +102,31 @@ async function RingiInboxTable() {
               <TableCell>{ringi.reason}</TableCell>
 
               <TableCell className="text-right">
-                <RingiDecisionForm ringiId={ringi.id} />
+                {ringi.can_decide && ringi.decision_target !== null ? (
+                  <RingiDecisionForm
+                    key={JSON.stringify(ringi.decision_target)}
+                    ringiId={ringi.id}
+                    decisionTarget={ringi.decision_target}
+                  />
+                ) : null}
+                {ringi.can_execute && ringi.decision_target !== null ? (
+                  <RingiProcedureActionForm
+                    ringiId={ringi.id}
+                    decisionTarget={ringi.decision_target}
+                    operation="execute"
+                  />
+                ) : null}
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+      <nav aria-label="稟議のページ">
+        <Link href="/inbox/ringis">先頭に戻る</Link>
+        {result.next_offset !== null ? (
+          <Link href={`/inbox/ringis?offset=${result.next_offset}`}>次のページ</Link>
+        ) : null}
+      </nav>
     </div>
   )
 }

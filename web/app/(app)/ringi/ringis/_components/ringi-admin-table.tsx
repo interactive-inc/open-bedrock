@@ -1,6 +1,6 @@
 import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
-import { ApplicationStatusBadge } from "@/components/application-status-badge"
+import { RingiStatusBadge } from "@/components/ringi-status-badge"
 import { EmptyState } from "@/components/empty-state"
 import { SortableTableHead } from "@/components/sortable-table-head"
 import {
@@ -98,7 +98,7 @@ export function RingiAdminTable(props: Props) {
               </TableCell>
 
               <TableCell>
-                <ApplicationStatusBadge status={row.status} />
+                <RingiStatusBadge status={row.status} />
               </TableCell>
 
               <TableCell className="hidden md:table-cell">

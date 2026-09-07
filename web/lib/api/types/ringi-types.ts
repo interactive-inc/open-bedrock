@@ -1,4 +1,10 @@
-export type RingiStatus = "pending" | "approved" | "rejected"
+export type RingiStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "returned"
+  | "cancelled"
+  | "awaiting_execution"
 
 /** GET /ringi-requests/me の各要素（自分の起案一覧）。 */
 export type RingiMineResponse = {
@@ -46,8 +52,18 @@ export type RingiDecisionResponse = {
 
 /** POST /ringi-requests のリクエスト body。 */
 export type RingiSubmitRequest = {
+  request_key: string
+  existing_ringi_id?: number | null
+  previous_ringi_id?: number | null
   approver_id: string
   title: string
   amount: number
   reason: string
+}
+
+export type RingiDecisionTarget = {
+  proposal_version: number
+  proposal_digest: string
+  task_key: string
+  task_round: number
 }

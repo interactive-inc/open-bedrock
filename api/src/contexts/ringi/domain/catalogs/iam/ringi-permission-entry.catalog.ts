@@ -31,4 +31,10 @@ export const RINGI_PERMISSION_ENTRIES = [
     featureKey: "ringi",
     description: "会社の承認規程へ稟議を提出する",
   },
+  {
+    key: "ringi:procedure:manage",
+    category: "ringi",
+    featureKey: "ringi",
+    description: "稟議の承認規程を設定する",
+  },
 ] satisfies ReadonlyArray<PermissionEntry>

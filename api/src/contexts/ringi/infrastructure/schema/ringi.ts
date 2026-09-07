@@ -26,6 +26,9 @@ export type RingiRequestRow = InferSelectModel<typeof ringiRequests>
 
 /** 業務稟議と、確認対象を固定したSystem案件の不変な対応。 */
 export const ringiProcedureBindings = sqliteTable("ringi_procedure_bindings", {
+  previousRingiId: integer("previous_ringi_id")
+    .unique()
+    .references(() => ringiRequests.id, { onDelete: "restrict" }),
   requestKey: text("request_key").primaryKey(),
   ringiId: integer("ringi_id")
     .notNull()

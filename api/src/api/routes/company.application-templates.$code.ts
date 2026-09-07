@@ -70,6 +70,8 @@ export const PUT = factory.createHandlers(
     if (current instanceof Error) throw new InternalError("failed to load template")
     if (current === null) throw new NotFoundError("template not found")
     const currentSchema = parseSystemProcedureInputSchema(current)
+    if (current.completionOperationKey === "ringi.request.authorize")
+      throw new ForbiddenError("稟議専用の規程設定を使用してください")
     const currentPolicy = parseSystemProcedurePolicy(current)
     if (currentSchema instanceof Error || currentPolicy instanceof Error) {
       throw new InternalError("invalid template data")
