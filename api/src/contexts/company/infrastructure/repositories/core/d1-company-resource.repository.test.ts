@@ -42,6 +42,18 @@ const assignment: CompanyResourceProps = {
     assignmentType: "PRIMARY",
   },
 }
+const organizationUnit: CompanyResourceProps = {
+  ...person,
+  type: "organization-unit",
+  id: "unit:1",
+  attributes: {
+    organizationUnitId: "unit:1",
+    code: "ROOT",
+    officialName: "Example Organization",
+    kind: "COMPANY",
+    parentOrganizationUnitId: null,
+  },
+}
 
 function command(
   resources: ReadonlyArray<CompanyResourceProps>,
@@ -244,7 +256,9 @@ describe("Company workforce resourceの参照整合性", () => {
     async (resource) => {
       const { database, repository } = fixture()
       expect(
-        await repository.write(command([person, employee, employment, assignment])),
+        await repository.write(
+          command([person, employee, employment, organizationUnit, assignment]),
+        ),
       ).toMatchObject({ kind: "applied" })
       const before = await counts(database)
       expect(
@@ -257,7 +271,9 @@ describe("Company workforce resourceの参照整合性", () => {
   test("参照する側も同一commandで取り消せば全体を取り消せる", async () => {
     const { database, repository } = fixture()
     const resources = [person, employee, employment, assignment]
-    expect(await repository.write(command(resources))).toMatchObject({ kind: "applied" })
+    expect(await repository.write(command([...resources, organizationUnit]))).toMatchObject({
+      kind: "applied",
+    })
     expect(
       await repository.write(
         command(
@@ -272,12 +288,14 @@ describe("Company workforce resourceの参照整合性", () => {
     ).toMatchObject({ kind: "applied", organizationRevision: 2 })
     expect(
       await database
-        .prepare("SELECT count(*) AS count FROM company_resource_heads WHERE state = 'active'")
+        .prepare(
+          "SELECT count(*) AS count FROM company_resource_heads WHERE state = 'active' AND resource_type <> 'organization-unit'",
+        )
         .first<{ count: number }>(),
     ).toEqual({ count: 0 })
     expect(await counts(database)).toEqual({
-      heads: 4,
-      revisions: 8,
+      heads: 5,
+      revisions: 9,
       receipts: 2,
       organization_revision: 2,
     })

@@ -1,3 +1,4 @@
+import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 import type { OrganizationWorkforceChangeEntity } from "@/contexts/company/domain/entities/organization-workforce-change.entity"
 
 type Context = D1Database
@@ -31,6 +32,9 @@ export class OrganizationUnitChangeStatementAdapter {
           requestFingerprint,
         ),
     ]
+    for (const period of change.assignments.filter((period) => period.isVoid)) {
+      statements.push(this.assignmentStatement(period))
+    }
     for (const identity of change.organizationUnits) {
       statements.push(
         this.c
@@ -64,6 +68,9 @@ export class OrganizationUnitChangeStatementAdapter {
           ),
       )
     }
+    for (const period of change.assignments.filter((period) => !period.isVoid)) {
+      statements.push(this.assignmentStatement(period))
+    }
     statements.push(
       this.c
         .prepare(
@@ -72,5 +79,28 @@ export class OrganizationUnitChangeStatementAdapter {
         .bind(change.operationId),
     )
     return statements
+  }
+
+  private assignmentStatement(period: OrgAssignmentPeriod): D1PreparedStatement {
+    return this.c
+      .prepare(`INSERT INTO company_organization_assignment_period_versions
+      (period_id, revision, employment_id, employee_id, organization_unit_id, assignment_type,
+       position_title, manager_employee_id, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)`)
+      .bind(
+        period.periodId,
+        period.revision,
+        period.employmentId,
+        period.employeeId,
+        period.organizationUnitId,
+        period.assignmentType,
+        period.positionTitle,
+        period.managerEmployeeId,
+        period.startsOn,
+        period.endsOn,
+        period.isVoid ? 1 : 0,
+        period.recordedByActionId,
+        period.recordedAt,
+      )
   }
 }

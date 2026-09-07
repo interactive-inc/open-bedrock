@@ -1,3 +1,4 @@
+import { CompanyAssignmentResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-assignment-resource-projection.adapter"
 import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { OrganizationWorkforceChangeEntity } from "@/contexts/company/domain/entities/organization-workforce-change.entity"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
@@ -24,10 +25,21 @@ export class CompanyOrganizationResourceProjectionAdapter {
       (resource) =>
         resource.type === "organization-unit" && resource.organizationId === "organization:default",
     )
-    if (resources.length === 0) return []
-    const first = resources[0]
+    if (
+      resources.length === 0 &&
+      !change.resources.some((resource) => resource.type === "assignment")
+    )
+      return []
+    const first =
+      resources[0] ?? change.resources.find((resource) => resource.type === "assignment")
     if (first === undefined) return new CompanyResourceValidationError("invalid_organization")
     const operationId = restoreWorkforceId("personnel_action", `org-resource:${fingerprint}`)
+    const assignmentProjection = await new CompanyAssignmentResourceProjectionAdapter(
+      this.c,
+    ).prepare(change, operationId)
+    if (assignmentProjection instanceof Error) return assignmentProjection
+    if (resources.length === 0 && assignmentProjection.assignments.length === 0)
+      return assignmentProjection.bindings
     const snapshot = await new OrganizationUnitReadAdapter(drizzle(this.c)).readSnapshot(
       first.effectiveFrom,
     )
@@ -46,6 +58,7 @@ export class CompanyOrganizationResourceProjectionAdapter {
       WHERE unit.id IN (SELECT value FROM json_each(?1))`)
       .bind(JSON.stringify(ids))
       .all<{ id: string; organization_id: string | null }>()
+    if (!existing.success) return new Error("organization bindings unavailable")
     if (existing.results.some((unit) => unit.organization_id !== "organization:default"))
       return new CompanyResourceValidationError("invalid_organization")
     const newIds = ids.filter((id) => !existing.results.some((unit) => unit.id === id))
@@ -61,7 +74,8 @@ export class CompanyOrganizationResourceProjectionAdapter {
       (unit) => !periods.some((period) => period.periodId === unit.periodId),
     )
     const structure = OrganizationStructureValue.restore({
-      revision: snapshot.snapshot.revision + periods.length,
+      revision:
+        snapshot.snapshot.revision + periods.length + assignmentProjection.assignments.length,
       asOf: first.effectiveFrom,
       units: [...units, ...periods],
     })
@@ -89,7 +103,7 @@ export class CompanyOrganizationResourceProjectionAdapter {
             Number(!right.isVoid && right.endsOn === null) ||
           left.startsOn.localeCompare(right.startsOn),
       ),
-      assignments: [],
+      assignments: assignmentProjection.assignments,
       responsibilities: [],
     })
     if (typed instanceof Error) return new CompanyResourceValidationError("invalid_organization")
@@ -107,6 +121,7 @@ export class CompanyOrganizationResourceProjectionAdapter {
       (organization_unit_id, organization_id, recorded_at) VALUES (?1, 'organization:default', ?2)`)
           .bind(id, change.recordedAt),
       ),
+      ...assignmentProjection.bindings,
       completed,
     ]
   }
