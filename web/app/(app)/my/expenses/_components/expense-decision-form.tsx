@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 
+import type { ExpenseDecisionTarget } from "@/lib/api/types/expense-types"
+
 type Props = {
+  decisionTarget: ExpenseDecisionTarget
   expenseId: number
 }
 
@@ -23,7 +26,7 @@ const initialRejectState: ExpenseDecisionFormState = {
 }
 
 /**
- * 1 件の経費に対する承認・却下フォーム。承認はコメント任意、却下は理由必須。
+ * 1 件の経費に対する承認・却下フォーム。承認・却下どちらもコメントは任意。
  * 承認と却下で別フォーム・別 action を持ち、結果を toast() で通知する。
  */
 export function ExpenseDecisionForm(props: Props) {
@@ -33,7 +36,7 @@ export function ExpenseDecisionForm(props: Props) {
       const next = await approveExpenseAction(previousState, formData)
 
       if (next.ok) {
-        toast.success("経費を承認しました")
+        toast.success("承認を記録しました")
       } else if (next.error !== null) {
         toast.error(next.error)
       }
@@ -55,7 +58,7 @@ export function ExpenseDecisionForm(props: Props) {
       const next = await rejectExpenseAction(previousState, formData)
 
       if (next.ok) {
-        toast.success("経費を却下しました")
+        toast.success("否認を記録しました")
       } else if (next.error !== null) {
         toast.error(next.error)
       }
@@ -76,7 +79,7 @@ export function ExpenseDecisionForm(props: Props) {
   if (isDecided) {
     return (
       <p className="text-sm text-muted-foreground">
-        {approveState.ok ? "この経費を承認しました" : "この経費を却下しました"}
+        {approveState.ok ? "この承認を記録しました" : "この否認を記録しました"}
       </p>
     )
   }
@@ -86,13 +89,18 @@ export function ExpenseDecisionForm(props: Props) {
       <form action={dispatchApprove}>
         <FieldGroup>
           <input type="hidden" name="expense_id" value={props.expenseId} />
+          <input
+            type="hidden"
+            name="decision_target"
+            value={JSON.stringify(props.decisionTarget)}
+          />
 
           <Field>
-            <FieldLabel htmlFor={`approve-comment-${props.expenseId}`}>
+            <FieldLabel htmlFor={`expense-approve-comment-${props.expenseId}`}>
               承認コメント（任意）
             </FieldLabel>
 
-            <Textarea id={`approve-comment-${props.expenseId}`} name="comment" rows={2} />
+            <Textarea id={`expense-approve-comment-${props.expenseId}`} name="comment" rows={2} />
           </Field>
 
           {approveState.error !== null ? <FieldError>{approveState.error}</FieldError> : null}
@@ -108,23 +116,25 @@ export function ExpenseDecisionForm(props: Props) {
       <form action={dispatchReject}>
         <FieldGroup>
           <input type="hidden" name="expense_id" value={props.expenseId} />
+          <input
+            type="hidden"
+            name="decision_target"
+            value={JSON.stringify(props.decisionTarget)}
+          />
 
           <Field>
-            <FieldLabel htmlFor={`reject-comment-${props.expenseId}`}>却下理由（必須）</FieldLabel>
+            <FieldLabel htmlFor={`expense-reject-comment-${props.expenseId}`}>
+              否認コメント（任意）
+            </FieldLabel>
 
-            <Textarea
-              id={`reject-comment-${props.expenseId}`}
-              name="comment"
-              rows={2}
-              placeholder="却下の理由を入力してください"
-            />
+            <Textarea id={`expense-reject-comment-${props.expenseId}`} name="comment" rows={2} />
           </Field>
 
           {rejectState.error !== null ? <FieldError>{rejectState.error}</FieldError> : null}
 
           <Field orientation="horizontal">
             <Button type="submit" variant="destructive" disabled={isApproving || isRejecting}>
-              {isRejecting ? "却下中..." : "却下する"}
+              {isRejecting ? "却下中..." : "否認する"}
             </Button>
           </Field>
         </FieldGroup>

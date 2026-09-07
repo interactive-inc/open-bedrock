@@ -1,57 +1,63 @@
-import { ApproveExpense } from "@/contexts/expense/application/approve-expense"
-import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result"
 import { factory } from "@/api/http/factory"
-import { ApplicationError } from "@/lib/errors"
-import { zAppExpenseDecision } from "@/contexts/expense/interface/http/response-schemas"
-import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { validateIntParam } from "@/lib/http/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
-import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { z } from "zod"
+import { validateIntParam } from "@/lib/http/validate-int-param"
+import { UnauthorizedError } from "@/lib/http/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
+import { RecordExpenseDecision } from "@/contexts/expense/application/record-expense-decision"
+import { CompleteApprovedExpenseProcedure } from "@/contexts/expense/application/complete-approved-expense-procedure"
 
-// @authorization permission - 権限キーで判定する
-/** POST /expenses/:id/approve — 経費を承認する（承認権限が必要） */
+// @authorization service - 表示した判断対象と現在の会社資格・技術権限を照合する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
-      comment: z.string().max(3_000).nullable(),
-    }),
+    z
+      .object({
+        decision_target: z
+          .object({
+            proposal_version: z.number().int().positive(),
+            proposal_digest: z.string().regex(/^[a-f0-9]{64}$/),
+            task_key: z.string().min(1).max(100),
+            task_round: z.number().int().positive(),
+          })
+          .strict(),
+        comment: z.string().max(3000).nullable().optional(),
+      })
+      .strict(),
   ),
   async (c) => {
     const session = c.var.session
-
-    if (session === null) {
-      throw new UnauthorizedError()
-    }
-
-    const expenseId = validateIntParam(c.req.param("id"), "expense")
-
-    if (session.hasPermission("expense:approve") === false) {
-      throw new ForbiddenError()
-    }
-
+    if (session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
     const body = c.req.valid("json")
-
-    const updated = await new ApproveExpense({
-      context: c,
-      notifyApprovalResult: (command) => new NotifyApprovalResult(c).run(command),
-    }).execute({
-      session: session,
+    const expenseId = validateIntParam(c.req.param("id"), "expense")
+    const at = new Date(c.env.NOW ?? Date.now())
+    const saved = await new RecordExpenseDecision(c).run({
       expenseId,
-      approverId: session.employeeId,
-      comment: body.comment,
-      createdAt: c.env.NOW ?? new Date().toISOString(),
+      session,
+      tokenVersion: c.var.accountTokenVersion,
+      decisionTarget: {
+        proposalVersion: body.decision_target.proposal_version,
+        proposalDigest: body.decision_target.proposal_digest,
+        taskKey: body.decision_target.task_key,
+        taskRound: body.decision_target.task_round,
+      },
+      action: "approve",
+      comment: body.comment ?? null,
+      decidedAt: at,
     })
-
-    if (updated instanceof ApplicationError) {
-      throw toHttpException(updated)
+    if (saved instanceof ApplicationError) throw toHttpException(saved)
+    if (saved.needsExecution) {
+      const completed = await new CompleteApprovedExpenseProcedure(c).run({
+        expenseId,
+        session,
+        tokenVersion: c.var.accountTokenVersion,
+        completedAt: at,
+      })
+      if (completed instanceof ApplicationError) throw toHttpException(completed)
     }
-
-    const responseBody = zAppExpenseDecision.parse({ status: updated.status })
-
-    return c.json(responseBody, 200)
+    return c.json({ status: saved.status, replayed: saved.replayed }, 200)
   },
 )

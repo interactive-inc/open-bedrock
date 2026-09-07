@@ -1,86 +1,75 @@
+import { expenseCategorySchema } from "@/contexts/expense/domain/definitions/expense.definition"
+import { isoDate } from "@/lib/validation/iso-date.schema"
+import { zExpenseProcedureView } from "@/contexts/expense/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
-import { zAppExpenseMineList } from "@/contexts/expense/interface/http/response-schemas"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import { ExpenseProcedureListAdapter } from "@/contexts/expense/infrastructure/adapters/expense-procedure-list.adapter"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { expenseStatusSchema } from "@/contexts/expense/domain/definitions/expense.definition"
-import { verifyBearer } from "@/api/http/verify-bearer"
-import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
-import { zValidator } from "@hono/zod-validator"
-import { and, count, desc, eq } from "drizzle-orm"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { z } from "zod"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 
-// @authorization owner - 本人のリソースに限定する
-/** GET /expenses/me — 本人の経費一覧（status で絞り込み可能） */
+// @authorization service - 本人の申請だけを参照する
 export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(
     "query",
     z.object({
-      status: expenseStatusSchema.optional(),
+      status: z
+        .enum([
+          "pending",
+          "approved",
+          "rejected",
+          "returned",
+          "cancelled",
+          "awaiting_execution",
+          "settled",
+        ])
+        .optional(),
+      category: expenseCategorySchema.optional(),
+      from: isoDate.optional(),
+      to: isoDate.optional(),
+      applicant_id: zEmployeeId.optional(),
+      sort: z.enum(["created_at_desc", "created_at_asc", "amount_desc", "amount_asc"]).optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
     }),
   ),
   async (c) => {
     const session = c.var.session
-
-    if (session === null) {
-      throw new UnauthorizedError()
-    }
-
+    if (session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
     const query = c.req.valid("query")
-
-    const limit = toBoundedInt({
-      raw: query.limit,
-      fallback: DEFAULT_LIST_LIMIT,
-      min: 1,
-      max: MAX_LIST_LIMIT,
+    const result = await new ExpenseProcedureListAdapter(c).list({
+      session,
+      tokenVersion: c.var.accountTokenVersion,
+      at: new Date(c.env.NOW ?? Date.now()),
+      mode: "mine",
+      status: query.status ?? null,
+      category: query.category ?? null,
+      from: query.from ?? null,
+      to: query.to ?? null,
+      applicantId: query.applicant_id ?? null,
+      sort: query.sort ?? "created_at_desc",
+      limit: toBoundedInt({
+        raw: query.limit,
+        fallback: DEFAULT_LIST_LIMIT,
+        min: 1,
+        max: MAX_LIST_LIMIT,
+      }),
+      offset: toBoundedInt({ raw: query.offset, fallback: 0, min: 0, max: MAX_LIST_OFFSET }),
     })
-
-    const offset = toBoundedInt({
-      raw: query.offset,
-      fallback: 0,
-      min: 0,
-      max: MAX_LIST_OFFSET,
-    })
-
-    const conditions = [eq(expenses.employeeId, session.employeeId)]
-
-    if (query.status !== undefined) {
-      conditions.push(eq(expenses.status, query.status))
-    }
-
-    const [rows, totalRows] = await Promise.all([
-      c.var.database
-        .select()
-        .from(expenses)
-        .where(and(...conditions))
-        .orderBy(desc(expenses.id))
-        .limit(limit)
-        .offset(offset),
-      c.var.database
-        .select({ total: count() })
-        .from(expenses)
-        .where(and(...conditions)),
-    ])
-
-    const responseBody = zAppExpenseMineList.parse({
-      data: rows.map((row) => ({
-        id: row.id,
-        category: row.category,
-        amount: row.amount,
-        spent_at: row.spentAt,
-        status: row.status,
-        created_at: row.createdAt,
-      })),
-      total: totalRows.at(0)?.total ?? 0,
-    })
-
-    return c.json(responseBody, 200)
+    if (result instanceof ApplicationError) throw toHttpException(result)
+    return c.json(
+      { data: result.data.map((view) => zExpenseProcedureView.parse(view)), total: result.total },
+      200,
+    )
   },
 )

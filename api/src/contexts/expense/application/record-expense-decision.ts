@@ -1,3 +1,4 @@
+import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import {
@@ -110,6 +111,14 @@ export class RecordExpenseDecision {
         replayed: true,
       }
     }
+    const scope = await new PrepareExpenseApprovalScopeAdapter(this.c).prepare({
+      organizationUnitId: request.organizationUnitId,
+      at: command.decidedAt,
+    })
+    if (scope instanceof Error)
+      return new ConflictError("負担組織を確認できません", "organization_scope_changed", {
+        cause: scope,
+      })
     const prepared = await new PrepareCompanyProcedureDecisionAdapter(this.c).prepare({
       proposal,
       decisionTarget: command.decisionTarget,
@@ -117,7 +126,7 @@ export class RecordExpenseDecision {
       actorEmployeeId: command.session.employeeId,
       subjectEmployeeId: request.employeeId,
       excludedEmployeeIds: new Set([request.employeeId]),
-      targetDepartmentCode: null,
+      targetDepartmentCode: scope.targetDepartmentCode,
       action: command.action,
       decidedAt: command.decidedAt,
     })
@@ -168,7 +177,7 @@ export class RecordExpenseDecision {
       binding,
       attestation,
       nextTask: prepared.nextTask,
-      guards: [...human.assertions, ...prepared.guards, ...evidenceGuards],
+      guards: [...human.assertions, scope.guard, ...prepared.guards, ...evidenceGuards],
       audit,
     })
     if (saved instanceof Error) {

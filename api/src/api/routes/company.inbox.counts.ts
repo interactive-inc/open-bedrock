@@ -1,3 +1,5 @@
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 import { InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -13,7 +15,7 @@ import { readInboxBusinessCounts } from "@/api/http/inbox/read-inbox-business-co
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
-  if (session === null) {
+  if (session === null || c.var.accountTokenVersion === null) {
     throw new UnauthorizedError()
   }
 
@@ -41,17 +43,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const counts = await readInboxBusinessCounts(c, {
-    employeeId: session.employeeId,
-    canApproveExpenses: session.hasPermission("expense:approve"),
+    session,
+    tokenVersion: c.var.accountTokenVersion,
     canApproveLeaves: session.hasPermission("leave:approve"),
     canApproveShiftSwaps: session.hasPermission("shift_swap:approve"),
     canApproveThanksRedemptions: session.hasPermission("thanks_redemption:approve"),
   })
 
+  if (counts instanceof ApplicationError) throw toHttpException(counts)
+
   return c.json(
     {
       applications: applicationInbox.total,
       expenses: counts.expenses,
+      expenses_has_more: counts.expenses_has_more,
       leaves: counts.leaves,
       shifts: counts.shifts,
       thanks: counts.thanks,

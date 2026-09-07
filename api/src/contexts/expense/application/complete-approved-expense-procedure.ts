@@ -1,3 +1,4 @@
+import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { RevalidateCompanyProcedureExecutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter"
@@ -73,6 +74,14 @@ export class CompleteApprovedExpenseProcedure {
       return new ConflictError("確認した添付を利用できません", "attachment_evidence_changed", {
         cause: evidenceGuards,
       })
+    const scope = await new PrepareExpenseApprovalScopeAdapter(this.c).prepare({
+      organizationUnitId: request.organizationUnitId,
+      at: command.completedAt,
+    })
+    if (scope instanceof Error)
+      return new ConflictError("負担組織を確認できません", "organization_scope_changed", {
+        cause: scope,
+      })
     const guards = await new RevalidateCompanyProcedureExecutionAdapter(this.c).prepare({
       applicationId: binding.applicationId,
       expectedCaseId: binding.caseId,
@@ -81,7 +90,7 @@ export class CompleteApprovedExpenseProcedure {
       expectedPayload: request.toProposalBody(binding.attachments),
       completionOperationKey: "expense.request.authorize",
       subjectEmployeeId: request.employeeId,
-      targetDepartmentCode: null,
+      targetDepartmentCode: scope.targetDepartmentCode,
       excludedEmployeeIds: new Set([request.employeeId]),
       executorAccountId: command.session.accountId,
       executorEmployeeId: command.session.employeeId,
@@ -128,7 +137,7 @@ export class CompleteApprovedExpenseProcedure {
     const executed = await repository.executeAuthorized({
       binding,
       authorization,
-      guards: [...human.assertions, ...guards, ...evidenceGuards],
+      guards: [...human.assertions, scope.guard, ...guards, ...evidenceGuards],
       audit,
       decidedAt: command.completedAt,
       comment: null,

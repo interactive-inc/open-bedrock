@@ -1,16 +1,14 @@
 "use server"
 
+import { toExpenseDecisionTarget } from "@/lib/expense/to-expense-decision-target"
+import { cancelExpense } from "@/lib/api/cancel-expense"
+import { executeExpense } from "@/lib/api/execute-expense"
 import { revalidatePath } from "next/cache"
 import { approveExpense } from "@/lib/api/approve-expense"
-import { deleteExpense } from "@/lib/api/delete-expense"
-import { getMe } from "@/lib/api/get-me"
 import { rejectExpense } from "@/lib/api/reject-expense"
 import { submitExpense } from "@/lib/api/submit-expense"
-import { uploadAttachment } from "@/lib/api/upload-attachment"
 import type { ExpenseCategory } from "@/lib/api/types/expense-types"
-import { updateExpense } from "@/lib/api/update-expense"
 import { requireAuth } from "@/lib/auth/require-auth"
-import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type ExpenseSubmitFormState = {
@@ -19,16 +17,6 @@ export type ExpenseSubmitFormState = {
 }
 
 export type ExpenseDecisionFormState = {
-  ok: boolean
-  error: string | null
-}
-
-export type ExpenseUpdateFormState = {
-  ok: boolean
-  error: string | null
-}
-
-export type ExpenseDeleteFormState = {
   ok: boolean
   error: string | null
 }
@@ -76,7 +64,7 @@ export async function submitExpenseAction(
 
   const amount = Number(amountValue)
 
-  if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
+  if (!Number.isSafeInteger(amount) || amount <= 0) {
     return { ok: false, error: "金額は正の整数で入力してください" }
   }
 
@@ -92,25 +80,17 @@ export async function submitExpenseAction(
 
   const note = typeof noteValue === "string" && noteValue !== "" ? noteValue : undefined
 
-  const files: File[] = []
-
-  for (const entry of formData.getAll("files")) {
-    if (entry instanceof File && entry.size > 0) files.push(entry)
-  }
-
-  const attachmentIds: string[] = []
-
-  for (const file of files) {
-    const uploaded = await uploadAttachment(file)
-
-    if (uploaded instanceof Error) {
-      return { ok: false, error: uploaded.message }
-    }
-
-    attachmentIds.push(uploaded.id)
-  }
-
+  const requestKey = formData.get("request_key")
+  if (typeof requestKey !== "string" || requestKey.length === 0)
+    return { ok: false, error: "提出の識別子がありません。画面を読み直してください" }
+  const attachmentIds = formData
+    .getAll("attachment_id")
+    .filter((id): id is string => typeof id === "string")
+  if (attachmentIds.length > 10) return { ok: false, error: "添付は10件までです" }
   const created = await submitExpense({
+    request_key: requestKey,
+    existing_expense_id: toPositiveIntId(formData.get("existing_expense_id")),
+    previous_expense_id: toPositiveIntId(formData.get("previous_expense_id")),
     category: category,
     amount: amount,
     spent_at: spentAt,
@@ -129,17 +109,14 @@ export async function submitExpenseAction(
   return { ok: true, error: null }
 }
 
-/** 経費承認の Server Action。expense_id は hidden フィールドから受け取る。 */
+/**
+ * 経費承認の Server Action。expense_id は hidden フィールドから受け取る。
+ * 承認者本人かどうかの判定は api 側の権限判定に委ね、ここでは事前チェックしない。
+ */
 export async function approveExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
 ): Promise<ExpenseDecisionFormState> {
-  const currentUser = await getMe()
-
-  if (currentUser instanceof Error || canDecideExpense(currentUser.permissions) === false) {
-    return { ok: false, error: "経費を承認・却下する権限がありません" }
-  }
-
   const expenseId = toPositiveIntId(formData.get("expense_id"))
 
   if (expenseId === null) {
@@ -150,7 +127,9 @@ export async function approveExpenseAction(
 
   const comment = typeof commentValue === "string" && commentValue !== "" ? commentValue : null
 
-  const decided = await approveExpense(expenseId, comment)
+  const target = toExpenseDecisionTarget(formData.get("decision_target"))
+  if (target instanceof Error) return { ok: false, error: target.message }
+  const decided = await approveExpense(expenseId, comment, target)
 
   if (decided instanceof Error) {
     return { ok: false, error: decided.message }
@@ -158,24 +137,21 @@ export async function approveExpenseAction(
 
   revalidatePath("/inbox/expenses")
 
-  revalidatePath(`/expense/expenses/${expenseId}`)
-
   revalidatePath("/my/expenses")
+
+  revalidatePath(`/expense/expenses/${expenseId}`)
 
   return { ok: true, error: null }
 }
 
-/** 経費却下の Server Action。理由コメントは必須。 */
+/**
+ * 経費却下の Server Action。expense_id は hidden フィールドから受け取る。
+ * 承認者本人かどうかの判定は api 側の権限判定に委ね、ここでは事前チェックしない。
+ */
 export async function rejectExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
 ): Promise<ExpenseDecisionFormState> {
-  const currentUser = await getMe()
-
-  if (currentUser instanceof Error || canDecideExpense(currentUser.permissions) === false) {
-    return { ok: false, error: "経費を承認・却下する権限がありません" }
-  }
-
   const expenseId = toPositiveIntId(formData.get("expense_id"))
 
   if (expenseId === null) {
@@ -184,13 +160,11 @@ export async function rejectExpenseAction(
 
   const commentValue = formData.get("comment")
 
-  const comment = typeof commentValue === "string" ? commentValue : ""
+  const comment = typeof commentValue === "string" && commentValue !== "" ? commentValue : null
 
-  if (comment === "") {
-    return { ok: false, error: "却下理由を入力してください" }
-  }
-
-  const decided = await rejectExpense(expenseId, comment)
+  const target = toExpenseDecisionTarget(formData.get("decision_target"))
+  if (target instanceof Error) return { ok: false, error: target.message }
+  const decided = await rejectExpense(expenseId, comment, target)
 
   if (decided instanceof Error) {
     return { ok: false, error: decided.message }
@@ -198,99 +172,32 @@ export async function rejectExpenseAction(
 
   revalidatePath("/inbox/expenses")
 
-  revalidatePath(`/expense/expenses/${expenseId}`)
-
   revalidatePath("/my/expenses")
+
+  revalidatePath(`/expense/expenses/${expenseId}`)
 
   return { ok: true, error: null }
 }
 
-/**
- * 経費変更の Server Action。pending の経費のみ本人が編集できる。
- * note の空文字は値なし扱いで null を送る。
- */
-export async function updateExpenseAction(
-  previousState: ExpenseUpdateFormState,
+/** 表示した経費の取消または承認済み決裁の確定を行う。 */
+export async function advanceExpenseAction(
+  _previous: ExpenseDecisionFormState,
   formData: FormData,
-): Promise<ExpenseUpdateFormState> {
-  await requireAuth()
-
-  const expenseId = toPositiveIntId(formData.get("expense_id"))
-
-  if (expenseId === null) {
-    return { ok: false, error: "経費が不正です" }
-  }
-
-  const category = toCategory(formData.get("category"))
-
-  if (category === null) {
-    return { ok: false, error: "カテゴリを選択してください" }
-  }
-
-  const amountValue = formData.get("amount")
-
-  const amount = Number(amountValue)
-
-  if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
-    return { ok: false, error: "金額は正の整数で入力してください" }
-  }
-
-  const spentAtValue = formData.get("spent_at")
-
-  const spentAt = typeof spentAtValue === "string" ? spentAtValue : ""
-
-  if (spentAt === "") {
-    return { ok: false, error: "利用日を入力してください" }
-  }
-
-  const noteValue = formData.get("note")
-
-  const note = typeof noteValue === "string" && noteValue !== "" ? noteValue : null
-
-  const updated = await updateExpense(expenseId, {
-    category: category,
-    amount: amount,
-    spent_at: spentAt,
-    note: note,
-  })
-
-  if (updated instanceof Error) {
-    return { ok: false, error: updated.message }
-  }
-
+): Promise<ExpenseDecisionFormState> {
+  const id = toPositiveIntId(formData.get("expense_id"))
+  const target = toExpenseDecisionTarget(formData.get("decision_target"))
+  if (id === null || target instanceof Error)
+    return { ok: false, error: "経費の判断対象を確認してください" }
+  const operation = formData.get("operation")
+  if (operation === "cancel") {
+    const result = await cancelExpense(id, target)
+    if (result instanceof Error) return { ok: false, error: result.message }
+  } else if (operation === "execute") {
+    const result = await executeExpense(id, target)
+    if (result instanceof Error) return { ok: false, error: result.message }
+  } else return { ok: false, error: "経費の操作が不正です" }
+  revalidatePath(`/expense/expenses/${id}`)
   revalidatePath("/my/expenses")
-
-  revalidatePath(`/expense/expenses/${expenseId}`)
-
   revalidatePath("/inbox/expenses")
-
-  return { ok: true, error: null }
-}
-
-/** 経費取り下げの Server Action。pending の経費のみ本人が取り下げできる。 */
-export async function deleteExpenseAction(
-  previousState: ExpenseDeleteFormState,
-  formData: FormData,
-): Promise<ExpenseDeleteFormState> {
-  await requireAuth()
-
-  const expenseId = toPositiveIntId(formData.get("expense_id"))
-
-  if (expenseId === null) {
-    return { ok: false, error: "経費が不正です" }
-  }
-
-  const deleted = await deleteExpense(expenseId)
-
-  if (deleted instanceof Error) {
-    return { ok: false, error: deleted.message }
-  }
-
-  revalidatePath("/my/expenses")
-
-  revalidatePath(`/expense/expenses/${expenseId}`)
-
-  revalidatePath("/inbox/expenses")
-
   return { ok: true, error: null }
 }

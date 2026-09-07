@@ -134,7 +134,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - CollectiveBody、構成員、定足数、決議方式
 - 委任可能性と継続責任主体
 
-現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。版付きresourceを参照するCompany resolverは、在籍、System Account、対象本人の除外、scope、合議規則を同一revisionと時点で評価する。汎用申請、人事変更申請、稟議では、Companyの公開責務・役職・合議体をSystem DecisionTaskへ接続している。経費などの独自承認経路には接続が残り、技術的権限と会社上の判断資格の合成を全業務では保証していない。
+現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。版付きresourceを参照するCompany resolverは、在籍、System Account、対象本人の除外、scope、合議規則を同一revisionと時点で評価する。汎用申請、人事変更申請、稟議、経費では、Companyの公開責務・役職・合議体をSystem DecisionTaskへ接続している。休暇などの独自承認経路には接続が残り、技術的権限と会社上の判断資格の合成を全業務では保証していない。
 
 稟議のHTTP・Web・CLIは共通の提出・判断・実行Applicationを使用する。規程設定には`ringi:procedure:manage`、提出と本人の取消には`ringi:submit`、判断と決裁確定には`ringi:approve`を要求し、判断者には現在の会社資格も要求する。既存roleへの自動付与はしない。規程がない場合は提出を拒否する。規程の候補から起案時の提出先を選んでも、合議の必要人数は減らない。
 
@@ -209,7 +209,9 @@ template に基づく汎用手続きは App ではなく System の ProcedureDef
 
 経費をCompany資格とSystem案件へ接続する提出・判断・取消・決裁確定のApplicationとDB制約を実装している。金額・費目・負担組織・使用日・備考・添付証拠を提案digestへ固定し、表示した判断対象、複数名の判断、資格失効、再送、一回実行を検査する。既存経費の接続では番号・日付・内容・添付を保全し、過去の承認を新しい判断として作らない。差戻し後は旧経費を保持し、新しい番号で修正版を作る。
 
-この経費手続きはHTTPの承認・受信箱・詳細とWeb・CLIへの接続が未完了であり、経費機能全体を完成済みとは扱わない。専用の規程設定入口、既存経路の切替、負担組織と判断権限範囲の受入確認が残る。社内の決裁確定は支払済みを意味せず、外部への引渡しと結果の受領・照合は未実装である。
+経費のHTTP・Web・CLIは、専用の規程設定、提出、表示した提案への判断、取消、差戻し後の再提出、確定の再試行へ接続した。旧経路の直接更新・削除は受け付けない。受信箱と件数は現在の判断資格で絞り、候補が続く場合は続きがあると表示する。申請者の異動後も提出済み経費の負担組織を保持し、判断保存前の会社変更を拒否する。
+
+添付はSystemへアップロードし、返されたIDを提出の再送でも使う。領収書の取得は現在の経費閲覧権限、証拠の内容、消去状態と閲覧監査を検査する。社内の決裁確定は支払済みを意味せず、外部への引渡しと結果の受領・照合、保持・hold・開示制御は未完成である。経費機能全体を完成済みとは扱わない。
 
 ### 資源と施設
 

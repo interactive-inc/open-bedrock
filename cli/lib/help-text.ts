@@ -75,10 +75,12 @@ commands:
   leave-requests approve <id>                 休暇申請を承認
   leave-requests reject <id>                  休暇申請を却下
   leave-balances list                         休暇残数
-  expenses submit                             経費申請 (--category --amount --spent-at [--note --file])
+  expenses submit                             経費申請 (--request-key --category --amount --spent-at [--note --attachment-id])
   expenses mine                               自分の経費申請一覧
-  expenses update <id>                        経費申請を変更
-  expenses delete <id>                        経費申請を取り下げ
+  expenses upload-attachment <path>           領収書を預けて再利用するIDを取得
+  expenses cancel <id>                        経費を取り消す (--decision-target)
+  expenses execute <id>                       承認済みの経費を確定 (--decision-target)
+  expense-procedures                         経費規程の参照・設定 ([--definition --expected-revision])
   ringi-procedures                            稟議規程の参照・設定 ([--definition --expected-revision])
   ringi-requests submit                       稟議提出 (--request-key --approver-id --title --amount --reason)
   ringi-requests show <id>                    稟議の内容・履歴・判断対象を確認

@@ -62,6 +62,10 @@ import expenseInboxHandler from "@/app/expenses/inbox/route"
 import expenseMineHandler from "@/app/expenses/mine/route"
 import expenseRejectHandler from "@/app/expenses/reject/[expense_id]/route"
 import expenseShowHandler from "@/app/expenses/show/[expense_id]/route"
+import expenseCancelHandler from "@/app/expenses/cancel/[expense_id]/route"
+import expenseExecuteHandler from "@/app/expenses/execute/[expense_id]/route"
+import expenseProcedureHandler from "@/app/expense-procedures/route"
+import expenseAttachmentHandler from "@/app/expenses/upload-attachment/[path]/route"
 import expenseSubmitHandler from "@/app/expenses/submit/route"
 import ringiShowHandler from "@/app/ringi-requests/show/[ringi_id]/route"
 import ringiCancelHandler from "@/app/ringi-requests/cancel/[ringi_id]/route"
@@ -349,8 +353,6 @@ import employeeStateHandler from "@/app/employees/state/route"
 import personnelActionRequestHandler from "@/app/personnel-actions/request/route"
 import personnelActionApplyHandler from "@/app/personnel-actions/apply/route"
 import personnelActionCorrectHandler from "@/app/personnel-actions/correct/route"
-import expenseDeleteHandler from "@/app/expenses/delete/[expense_id]/route"
-import expenseUpdateHandler from "@/app/expenses/update/[expense_id]/route"
 import goalDeleteHandler from "@/app/performance-goals/delete/route"
 import goalMineHandler from "@/app/performance-goals/mine/route"
 import goalShowHandler from "@/app/performance-goals/show/route"
@@ -895,8 +897,6 @@ routes.post("/employees/state", ...employeeStateHandler)
 routes.post("/personnel-actions/request", ...personnelActionRequestHandler)
 routes.post("/personnel-actions/apply", ...personnelActionApplyHandler)
 routes.post("/personnel-actions/correct", ...personnelActionCorrectHandler)
-routes.post("/expenses/delete/:expense_id?", ...expenseDeleteHandler)
-routes.post("/expenses/update/:expense_id?", ...expenseUpdateHandler)
 routes.post("/performance-goals/delete", ...goalDeleteHandler)
 routes.post("/performance-goals/mine", ...goalMineHandler)
 routes.post("/performance-goals/show", ...goalShowHandler)
@@ -1011,5 +1011,10 @@ routes.post("/it-incidents/resolve/:incident_id?", ...itIncidentsResolveHandler)
 routes.post("/salary-revisions", ...salaryRevisionsHandler)
 routes.post("/salary-revisions/list", ...salaryRevisionsListHandler)
 routes.post("/salary-revisions/create", ...salaryRevisionsCreateHandler)
+
+routes.post("/expenses/cancel/:expense_id?", ...expenseCancelHandler)
+routes.post("/expenses/execute/:expense_id?", ...expenseExecuteHandler)
+routes.post("/expenses/upload-attachment/:path?", ...expenseAttachmentHandler)
+routes.post("/expense-procedures", ...expenseProcedureHandler)
 
 export const app = routes

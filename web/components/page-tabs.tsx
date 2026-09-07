@@ -9,6 +9,7 @@ type Tab = {
   label: string
   href: string
   badge?: number
+  badgeSuffix?: string
 }
 
 type Props = {
@@ -69,9 +70,13 @@ export function PageTabs(props: Props) {
           >
             <span>{tab.label}</span>
 
-            {tab.badge !== undefined && tab.badge > 0 ? (
-              <Badge variant="secondary" aria-label={`未処理 ${tab.badge} 件`}>
+            {tab.badge !== undefined && (tab.badge > 0 || tab.badgeSuffix !== undefined) ? (
+              <Badge
+                variant="secondary"
+                aria-label={`未処理 ${tab.badge}${tab.badgeSuffix ?? ""} 件`}
+              >
                 {tab.badge}
+                {tab.badgeSuffix}
               </Badge>
             ) : null}
           </Link>

@@ -6,11 +6,17 @@ import type { ExpenseSubmitRequest } from "@/lib/api/types/expense-types"
 export async function submitExpense(request: ExpenseSubmitRequest) {
   const client = await createClient()
 
-  const response = await client["expense"]["expenses"].$post({ json: request })
+  try {
+    const response = await client["expense"]["expenses"].$post({ json: request })
 
-  if (response.status >= 400) {
-    return toResponseError(response, { fallback: "経費申請の作成に失敗しました" })
+    if (response.status >= 400) {
+      return toResponseError(response, { fallback: "経費申請の作成に失敗しました" })
+    }
+
+    return await response.json()
+  } catch {
+    return new Error(
+      "提出結果を確認できません。一覧で結果を確認するか、同じ内容で再試行してください",
+    )
   }
-
-  return response.json()
 }

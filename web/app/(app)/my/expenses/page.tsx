@@ -1,3 +1,4 @@
+import { TablePagination } from "@/components/table-pagination"
 import { FetchError } from "@/components/fetch-error"
 import { formatDate } from "@/lib/format-date"
 import { Inbox, Plus } from "lucide-react"
@@ -29,8 +30,11 @@ const amountFormatter = new Intl.NumberFormat("ja-JP")
  * 自分の経費一覧画面。「経費」というオブジェクト一覧に集中させ、
  * 新規作成は /expense/new、承認受信箱は /expense/inbox に分離する。
  */
-export default async function MyExpensesPage() {
+export default async function MyExpensesPage(props: { searchParams: Promise<{ page?: string }> }) {
   const currentUser = await getMe()
+  const query = await props.searchParams
+  const parsedPage = Number(query.page ?? 1)
+  const offset = (Number.isSafeInteger(parsedPage) && parsedPage > 0 ? parsedPage - 1 : 0) * 20
 
   const canViewAll =
     currentUser instanceof Error ? false : canViewAllExpenses(currentUser.permissions)
@@ -58,6 +62,10 @@ export default async function MyExpensesPage() {
           </Button>
         ) : null}
 
+        {!(currentUser instanceof Error) &&
+        currentUser.permissions.includes("expense:procedure:manage") ? (
+          <Link href="/expense/procedure">承認規程</Link>
+        ) : null}
         <Button nativeButton={false} render={<Link href="/my/expenses/new" />}>
           <Plus />
           新しい経費
@@ -65,21 +73,22 @@ export default async function MyExpensesPage() {
       </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
-        <MyExpensesTable />
+        <MyExpensesTable offset={offset} />
       </Suspense>
     </div>
   )
 }
 
 /** /expenses/me を認証付きで取得して一覧テーブルを描画する非同期 RSC。 */
-async function MyExpensesTable() {
-  const expenses = await getMyExpenses(null)
+async function MyExpensesTable(props: { offset: number }) {
+  const page = await getMyExpenses(null, props.offset)
 
-  if (expenses instanceof Error) {
+  if (page instanceof Error) {
     return <FetchError message="経費一覧の取得に失敗しました" />
   }
 
-  if (expenses.length === 0) {
+  const expenses = page.data
+  if (expenses.length === 0 && props.offset === 0) {
     return (
       <EmptyState
         title="申請済みの経費はまだありません"
@@ -89,42 +98,50 @@ async function MyExpensesTable() {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <Table aria-label="一覧">
-        <TableHeader>
-          <TableRow>
-            <TableHead>カテゴリ</TableHead>
-            <TableHead>金額</TableHead>
-            <TableHead>利用日</TableHead>
-            <TableHead>ステータス</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {expenses.map((expense) => (
-            <TableRow key={expense.id}>
-              <TableCell>
-                <Link
-                  href={`/expense/expenses/${expense.id}`}
-                  className="font-medium underline-offset-4 hover:underline"
-                >
-                  {toExpenseCategoryLabel(expense.category)}
-                </Link>
-              </TableCell>
-
-              <TableCell className="tabular-nums">
-                {amountFormatter.format(expense.amount)} 円
-              </TableCell>
-
-              <TableCell>{formatDate(expense.spent_at)}</TableCell>
-
-              <TableCell>
-                <ExpenseStatusBadge status={expense.status} />
-              </TableCell>
+    <div className="flex flex-col gap-4">
+      <div className="overflow-x-auto">
+        <Table aria-label="一覧">
+          <TableHeader>
+            <TableRow>
+              <TableHead>カテゴリ</TableHead>
+              <TableHead>金額</TableHead>
+              <TableHead>利用日</TableHead>
+              <TableHead>ステータス</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+
+          <TableBody>
+            {expenses.map((expense) => (
+              <TableRow key={expense.id}>
+                <TableCell>
+                  <Link
+                    href={`/expense/expenses/${expense.id}`}
+                    className="font-medium underline-offset-4 hover:underline"
+                  >
+                    {toExpenseCategoryLabel(expense.category)}
+                  </Link>
+                </TableCell>
+
+                <TableCell className="tabular-nums">
+                  {amountFormatter.format(expense.amount)} 円
+                </TableCell>
+
+                <TableCell>{formatDate(expense.spent_at)}</TableCell>
+
+                <TableCell>
+                  <ExpenseStatusBadge status={expense.status} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <TablePagination
+        pathname="/my/expenses"
+        total={page.total}
+        offset={props.offset}
+        limit={20}
+      />
     </div>
   )
 }

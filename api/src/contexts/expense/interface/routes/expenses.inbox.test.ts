@@ -115,11 +115,11 @@ async function request(props: RequestProps): Promise<Response> {
 
 const expenseInboxListResponseSchema = z.object({
   data: z.array(expenseInboxResponseSchema),
-  total: z.number(),
+  next_offset: z.number().nullable(),
 })
 
 describe("GET /expenses/inbox", () => {
-  test("returns 200 with joined applicant names for a manager", async () => {
+  test("旧台帳のpending経費を会社案件の受信箱へ混ぜない", async () => {
     const response = await request({ path: "/expense/expenses/inbox", token: await tokenFor(2) })
 
     expect(response.status).toBe(200)
@@ -129,12 +129,8 @@ describe("GET /expenses/inbox", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data.length).toBe(2)
-      expect(parsed.data.total).toBe(2)
-
-      const first = parsed.data.data.find((item) => item.id === 1)
-
-      expect(first?.applicant_name).toBe("Emery Lane")
+      expect(parsed.data.data).toEqual([])
+      expect(parsed.data.next_offset).toBeNull()
     }
   })
 

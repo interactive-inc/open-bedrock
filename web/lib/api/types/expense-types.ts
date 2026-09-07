@@ -1,6 +1,13 @@
 export type ExpenseCategory = "transport" | "supplies" | "entertainment" | "books" | "other"
 
-export type ExpenseStatus = "pending" | "approved" | "rejected" | "settled"
+export type ExpenseStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "settled"
+  | "returned"
+  | "cancelled"
+  | "awaiting_execution"
 
 /** GET /expenses/me の各要素（自分の経費一覧）。 */
 export type ExpenseMineResponse = {
@@ -69,6 +76,9 @@ export type ExpenseDecisionResponse = {
 
 /** POST /expenses のリクエスト body。 */
 export type ExpenseSubmitRequest = {
+  request_key: string
+  existing_expense_id?: number | null
+  previous_expense_id?: number | null
   category: ExpenseCategory
   amount: number
   spent_at: string
@@ -76,25 +86,9 @@ export type ExpenseSubmitRequest = {
   attachment_ids?: string[]
 }
 
-/** PUT /expenses/:id のリクエスト body。 */
-export type ExpenseUpdateRequest = {
-  category: ExpenseCategory
-  amount: number
-  spent_at: string
-  note: string | null
-}
-
-/**
- * PUT /expenses/:id のレスポンス（更新後の経費。api は snake_case で返す）。
- * id は api の整形結果として number | null になりうる。
- */
-export type ExpenseUpdatedResponse = {
-  id: number | null
-  employee_id: string
-  category: ExpenseCategory
-  amount: number
-  spent_at: string
-  note: string | null
-  status: ExpenseStatus
-  created_at: string
+export type ExpenseDecisionTarget = {
+  proposal_version: number
+  proposal_digest: string
+  task_key: string
+  task_round: number
 }

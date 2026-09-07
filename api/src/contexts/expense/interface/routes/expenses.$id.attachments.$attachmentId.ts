@@ -4,7 +4,7 @@ import { AttachmentKekRegistry } from "@system/application/attachments/lib/attac
 import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
 import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
 import { NotFoundError as ApplicationNotFoundError, UnprocessableError } from "@/lib/errors"
-import { CanReadExpenseAdapter } from "@/contexts/expense/infrastructure/adapters/can-read-expense.adapter"
+import { ExpenseProcedureReadAdapter } from "@/contexts/expense/infrastructure/adapters/expense-procedure-read.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import { expenseAttachments, expenses } from "@/contexts/expense/infrastructure/schema/expense"
@@ -14,14 +14,14 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { and, eq } from "drizzle-orm"
-import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 
 // @authorization service - 親の経費の閲覧可否をそのまま添付へ継承する
 /** GET /expenses/:id/attachments/:attachmentId — 経費に紐づいた添付を取り出す */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
-  if (session === null) {
+  if (session === null || c.var.accountTokenVersion === null) {
     throw new UnauthorizedError()
   }
 
@@ -47,18 +47,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("attachment not found")
   }
 
-  const readable = await new CanReadExpenseAdapter(c).canReadExpense({
+  const reader = new ExpenseProcedureReadAdapter(c)
+  const view = await reader.find({
+    expenseId,
     session,
-    applicantEmployeeId: row.applicantId,
+    tokenVersion: c.var.accountTokenVersion,
+    at: new Date(c.env.NOW ?? Date.now()),
   })
-
-  if (readable instanceof Error) {
-    throw new InternalError("failed to resolve organization scope")
-  }
-
-  if (readable === false) {
-    throw new ForbiddenError()
-  }
+  if (view instanceof ApplicationError) throw toHttpException(view)
+  const evidence = view.attachments.find((attachment) => attachment.id === attachmentId)
+  if (evidence === undefined) throw new NotFoundError("attachment not found")
 
   const content = await (async () => {
     const row = await new AttachmentAdapter(c).findById(attachmentId)
@@ -100,7 +98,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
     const digest = await toSha256Hex(plaintext)
 
-    if (digest !== row.plaintextSha256) {
+    if (
+      digest !== row.plaintextSha256 ||
+      (evidence.sha256 !== null && digest !== evidence.sha256)
+    ) {
       return new UnprocessableError(
         "添付の内容がメタデータと一致しません",
         "attachment_integrity_mismatch",
@@ -138,9 +139,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     occurredAt: c.var.now(),
   })
 
-  if (!(audit instanceof Error)) {
-    await new SystemAuditEventRepository({ env: { DB: c.env.DB } }).append(audit)
-  }
+  const current = await reader.find({
+    expenseId,
+    session,
+    tokenVersion: c.var.accountTokenVersion,
+    at: new Date(c.env.NOW ?? Date.now()),
+  })
+  if (current instanceof ApplicationError) throw toHttpException(current)
+  if (!current.evidence_available)
+    throw toHttpException(
+      new UnprocessableError("確認した添付を利用できません", "attachment_evidence_changed"),
+    )
+  if (audit instanceof Error) throw new InternalError("閲覧監査を作成できません")
+  const savedAudit = await new SystemAuditEventRepository({ env: { DB: c.env.DB } }).append(audit)
+  if (savedAudit instanceof Error) throw new InternalError("閲覧監査を保存できません")
 
   return new Response(content.content, {
     status: 200,

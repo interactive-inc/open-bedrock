@@ -175,7 +175,15 @@ function toSingleValue(value: string | Array<string> | undefined): string | null
 }
 
 function toStatus(value: string | null): ExpenseStatus | null {
-  if (value === "pending" || value === "approved" || value === "rejected" || value === "settled") {
+  if (
+    value === "pending" ||
+    value === "approved" ||
+    value === "rejected" ||
+    value === "settled" ||
+    value === "returned" ||
+    value === "cancelled" ||
+    value === "awaiting_execution"
+  ) {
     return value
   }
 
