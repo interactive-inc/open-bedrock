@@ -72,6 +72,7 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "company_account_profiles", // 複合PK
   "company_audit_append_guard", // 連番
   "company_audit_batch_decisions", // 連番
+  "company_bootstrap_receipts", // command_id (冪等性キー)。UUID 強制の可否は Company の設計判断
   "company_audit_event_appends", // 連番
   "company_audit_event_employee_contexts", // 連番
   "company_audit_events", // 連番
@@ -79,19 +80,25 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "company_command_receipts", // 複合PK
   "company_employee_events", // 連番
   "company_employee_grades", // 連番
+  "company_employee_resource_adoptions", // command_id (冪等性キー)
   "company_employee_lifecycle_revisions", // 連番
   "company_employee_status_period_versions", // 複合PK
   "company_employees", // 連番
   "company_employment_attributes", // 連番
+  "company_external_identity_imports", // 複合PK (organization_id + command_id)
+  "company_external_identity_sources", // PKが system_identity_bindings への FK。親を継承する
   "company_employment_period_versions", // 複合PK
   "company_employments", // 業務コード/prefix
   "company_grade_definitions", // 連番
   "company_lifecycle_outbox_entries", // 連番
   "company_organization_assignment_period_versions", // 複合PK
   "company_organization_change_operations", // 業務コード/prefix
+  "company_organization_resource_adoptions", // command_id (冪等性キー)
+  "company_organization_resource_bindings", // PKが company_organization_units への FK。親を継承する
   "company_organization_responsibility_period_versions", // 複合PK
   "company_organization_unit_period_versions", // 複合PK
   "company_organization_units", // 業務コード/prefix
+  "company_workforce_resource_bindings", // 複合PK (resource_type + resource_id)
   "company_organizations", // 業務コード/prefix
   "company_personnel_actions", // 連番
   "company_position_definitions", // 連番

@@ -29,10 +29,11 @@ export const uuidSchema = z
  * Drizzle schema の `check()` と migration の両方がこの 1 か所を参照する。SQLite に
  * 正規表現が無いため GLOB で桁と文字種を検査する。
  *
- * 桁と文字種だけでなく version (13 文字目) と variant (17 文字目) まで見る。ここを
- * `[0-9a-f]` のままにすると `11111111-1111-1111-1111-111111111111` のような RFC 非準拠の
- * 「形だけ UUID」が DB には入るのに API の入口では弾かれる。CHECK が通っている分だけ
- * 正当な行に見えてしまい、発覚が遅れる。
+ * 桁と文字種だけでなく version と variant まで見る。区切りを含めた位置で言えば
+ * 15 文字目と 20 文字目。ここを任意の 16 進のままにすると
+ * `11111111-1111-1111-1111-111111111111` のような RFC 非準拠の「形だけ UUID」が
+ * DB には入るのに API の入口では弾かれる。CHECK が通っている分だけ正当な行に
+ * 見えてしまい、発覚が遅れる。
  *
  * version は RFC 9562 が定義する v1〜v8、variant は 0b10 に固定する。nil UUID (version 0)
  * と max UUID (version f) はこの範囲から外れるので、Zod 側の明示的な拒否と結果が揃う。
@@ -40,11 +41,22 @@ export const uuidSchema = z
  * @param column 検査対象の列名（SQL 識別子としてそのまま埋め込む）
  */
 export function uuidCheckPredicate(column: string): string {
-  const hex = "[0-9a-f]"
-
+  // 36 個の文字クラスを並べた GLOB は D1 (miniflare) が
+  // "LIKE or GLOB pattern too complex" で拒否する。bun:sqlite は通してしまうため
+  // in-memory の test では気づけない。否定クラス 1 つと位置指定に分けて短く保つ。
   return (
     `length(${column}) = 36 ` +
-    `AND ${column} GLOB '${hex.repeat(8)}-${hex.repeat(4)}-` +
-    `[1-8]${hex.repeat(3)}-[89ab]${hex.repeat(3)}-${hex.repeat(12)}'`
+    // 16 進と区切り以外の文字が 1 つも無いこと。
+    `AND ${column} NOT GLOB '*[^0-9a-f-]*' ` +
+    // 区切りは定位置の 4 か所だけ。全体 36 文字で区切り以外が 32 文字なら
+    // 区切りはちょうど 4 個で、その 4 個が下の位置に固定される。
+    `AND substr(${column}, 9, 1) = '-' ` +
+    `AND substr(${column}, 14, 1) = '-' ` +
+    `AND substr(${column}, 19, 1) = '-' ` +
+    `AND substr(${column}, 24, 1) = '-' ` +
+    `AND length(replace(${column}, '-', '')) = 32 ` +
+    // version は RFC 9562 の v1〜v8、variant は 0b10。
+    `AND substr(${column}, 15, 1) GLOB '[1-8]' ` +
+    `AND substr(${column}, 20, 1) GLOB '[89ab]'`
   )
 }
