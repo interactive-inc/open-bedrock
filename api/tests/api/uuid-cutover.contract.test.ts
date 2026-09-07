@@ -39,12 +39,27 @@ const seedOrder = [
   "company",
 ]
 
-/** 指定した migration より前までを適用し、seed も入れた DB を作る。 */
+/**
+ * 指定した migration より前までを適用し、seed も入れた DB を作る。
+ *
+ * 対象が1つも見つからなければ即座に落とす。ここを黙って通すと「何も除外しない DB」が
+ * できあがり、対象 migration まで先に適用されてしまう。実際に採番し直しで
+ * `0080_uuid_announcements` が `0116_` へ変わったとき、番号で照合していたこの関数が
+ * 何も除外せず、test が別のことを検証している状態になった。
+ */
 function createDatabaseBefore(migrationName: string, skipSeeds: readonly string[]): Database {
   const database = new Database(":memory:")
   const files = readdirSync(migrationsDir)
     .filter((name) => name.endsWith(".sql"))
     .sort()
+  const excluded = files.filter((name) => name.includes(migrationName))
+
+  if (excluded.length !== 1) {
+    throw new Error(
+      `${migrationName} を含む migration が ${excluded.length} 件です。1 件でなければ` +
+        "「対象より前の状態」を作れません",
+    )
+  }
 
   for (const file of files.filter((name) => name.includes(migrationName) === false)) {
     executeSql(database, readFileSync(resolve(migrationsDir, file), "utf8"), `migration ${file}`)
