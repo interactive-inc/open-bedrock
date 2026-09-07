@@ -1,5 +1,4 @@
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -10,6 +9,7 @@ import {
 } from "@/components/ui/table"
 import { formatDate } from "@/lib/format-date"
 import type { HealthCheckupResponse } from "@/lib/api/types/health-checkup-types"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   rows: ReadonlyArray<HealthCheckupResponse>
@@ -60,9 +60,13 @@ export function HealthCheckupsTable(props: Props) {
               </TableCell>
 
               <TableCell>
-                <Badge variant={row.status === "completed" ? "default" : "outline"}>
+                <Button
+                  type="button"
+                  variant={row.status === "completed" ? "default" : "secondary"}
+                  size="sm"
+                >
                   {STATUS_LABELS[row.status] ?? row.status}
-                </Badge>
+                </Button>
               </TableCell>
 
               <TableCell className="hidden md:table-cell">{row.note ?? "—"}</TableCell>

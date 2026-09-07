@@ -3,7 +3,6 @@ import { formatDate } from "@/lib/format-date"
 import { formatDateTime } from "@/lib/format-date-time"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
 import { getOnboardingEmployee } from "@/lib/api/get-onboarding-employee"
 import {
   Card,
@@ -21,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   code: string
@@ -49,13 +49,17 @@ export async function OnboardingEmployeeView(props: Props) {
             <CardTitle className="flex items-center gap-2">
               {assignment.template_name}
 
-              <Badge variant={assignment.kind === "join" ? "default" : "secondary"}>
+              <Button
+                type="button"
+                variant={assignment.kind === "join" ? "default" : "secondary"}
+                size="sm"
+              >
                 {assignment.kind === "join" ? "入社" : "退社"}
-              </Badge>
+              </Button>
 
-              <Badge variant={assignment.status === "completed" ? "secondary" : "outline"}>
+              <Button type="button" variant="secondary" size="sm">
                 {assignment.status === "completed" ? "完了" : "進行中"}
-              </Badge>
+              </Button>
             </CardTitle>
 
             <CardDescription>
@@ -84,9 +88,9 @@ export async function OnboardingEmployeeView(props: Props) {
                       <TableCell>{task.title}</TableCell>
 
                       <TableCell>
-                        <Badge variant={task.status === "done" ? "secondary" : "outline"}>
+                        <Button type="button" variant="secondary" size="sm">
                           {task.status === "done" ? "完了" : "未完了"}
-                        </Badge>
+                        </Button>
                       </TableCell>
 
                       <TableCell className="text-right">
