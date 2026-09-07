@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
 
@@ -38,14 +39,14 @@ export const zAppMeetingMinutesList = z.object({
 
 /** 意思決定記録 1 件のレスポンス（詳細・作成・更新・supersede）。 */
 export const zAppDecision = z.object({
-  id: z.number(),
+  id: uuidSchema,
   title: z.string(),
   decided_on: z.string(),
   context: z.string(),
   decision: z.string(),
   consequences: z.string().nullable(),
   status: z.enum(["active", "superseded"]),
-  superseded_by_id: z.number().nullable(),
+  superseded_by_id: uuidSchema.nullable(),
   created_at: z.string(),
 })
 

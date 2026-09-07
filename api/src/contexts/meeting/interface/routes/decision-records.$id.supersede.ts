@@ -1,8 +1,9 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { SupersedeDecision } from "@/contexts/meeting/application/decision/supersede-decision"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppDecision } from "@/contexts/meeting/interface/http/response-schemas"
@@ -16,7 +17,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      superseded_by_id: z.number().int().positive(),
+      superseded_by_id: uuidSchema,
     }),
   ),
   async (c) => {
@@ -26,7 +27,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const decisionId = validateIntParam(c.req.param("id"), "decision")
+    const decisionId = validateUuidParam(c.req.param("id"), "decision")
 
     const json = c.req.valid("json")
 
