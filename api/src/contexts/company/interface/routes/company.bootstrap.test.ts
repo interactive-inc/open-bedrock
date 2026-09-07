@@ -1,3 +1,5 @@
+import { PersonnelActionCompletionPreparationAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-completion-preparation.adapter"
+import { fingerprintPersonnelAction } from "@/contexts/company/domain/definitions/fingerprint-personnel-action.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
@@ -582,4 +584,265 @@ describe("Company bootstrap through System authentication", () => {
       periods: kind === "organization" ? 2 : 1,
     })
   })
+})
+
+async function responsibilityLifecycleFixture() {
+  const f = await fixture()
+  const response = await f.post({ ...declaration, initial_responsibilities: ["PEOPLE_OPERATIONS"] })
+  expect(Number(response.status)).toBe(201)
+  const created = responseSchema.parse(await response.json())
+  const employeeId = restoreWorkforceId("employee", created.employee_id)
+  const context: CompanyContext = {
+    env: { ...f.environment, NOW: f.clock.now.toISOString() },
+    var: {
+      database: drizzle(f.database),
+      auditContext: {
+        requestId: "responsibility-lifecycle",
+        clientName: "api",
+        clientIp: null,
+        externalRequestId: null,
+      },
+    },
+  }
+  const code = await f.database
+    .prepare(
+      "SELECT code FROM company_organization_unit_period_versions WHERE kind = 'COMPANY' LIMIT 1",
+    )
+    .first<string>("code")
+  if (code === null) throw new Error("root code missing")
+  const apply = async (
+    input: Parameters<DirectPersonnelActionAdapter["apply"]>[0]["input"],
+    key: string,
+  ) => {
+    const revisions = await new EmployeeLifecycleAdapter(context).loadRevisions(employeeId)
+    if (revisions instanceof Error) throw revisions
+    return new DirectPersonnelActionAdapter(context).apply({
+      session: {
+        accountId: zAccountId.parse(created.account_id),
+        employeeId,
+        hasPermission: (permission: string) => permission === "employee:lifecycle:apply",
+      },
+      employeeId,
+      idempotencyKey: key,
+      expectedEmployeeRevision: revisions.employeeRevision,
+      expectedOrganizationRevision: revisions.organizationRevision,
+      input,
+    })
+  }
+  const responsibilities = async () =>
+    (
+      await f.database
+        .prepare(`SELECT responsibility_type, starts_on, ends_on, is_void, revision
+    FROM company_organization_responsibility_period_versions current WHERE revision = (
+      SELECT max(revision) FROM company_organization_responsibility_period_versions latest WHERE latest.period_id = current.period_id)
+    ORDER BY responsibility_type`)
+        .all()
+    ).results
+  return { ...f, apply, responsibilities, code, context, employeeId, accountId: created.account_id }
+}
+
+test("人事担当の退職と訂正で責務の種類と終了日を保持する", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const before = await f.state()
+  const responsibilitiesBefore = await f.responsibilities()
+  await f.database.exec(
+    "CREATE TRIGGER fail_responsibility_close BEFORE INSERT ON company_organization_responsibility_period_versions WHEN NEW.revision > 1 BEGIN SELECT RAISE(ABORT, 'responsibility unavailable'); END",
+  )
+  expect(
+    await f.apply(
+      {
+        kind: "retired",
+        employeeCode: declaration.code,
+        retirementOn: restoreCalendarDate(f.observedOn),
+      },
+      "responsibility:retire",
+    ),
+  ).toBeInstanceOf(Error)
+  expect(await f.state()).toEqual(before)
+  expect(await f.responsibilities()).toEqual(responsibilitiesBefore)
+  await f.database.exec("DROP TRIGGER fail_responsibility_close")
+  const retired = await f.apply(
+    {
+      kind: "retired",
+      employeeCode: declaration.code,
+      retirementOn: restoreCalendarDate(f.observedOn),
+    },
+    "responsibility:retire",
+  )
+  expect(retired).toMatchObject({ replayed: false })
+  if (retired instanceof Error) throw retired
+  const tomorrow = new Date(`${f.observedOn}T00:00:00Z`)
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+  const replacementOn = tomorrow.toISOString().slice(0, 10)
+  expect(await f.responsibilities()).toMatchObject([
+    { responsibility_type: "PEOPLE_OPERATIONS", ends_on: replacementOn, is_void: 0 },
+  ])
+  const corrected = await f.apply(
+    {
+      kind: "corrected",
+      eventOn: restoreCalendarDate(f.observedOn),
+      correctsActionId: retired.action.id,
+      reason: "Confirm retirement date",
+      replacementAction: {
+        kind: "retired",
+        employeeCode: declaration.code,
+        retirementOn: restoreCalendarDate(replacementOn),
+      },
+    },
+    "responsibility:correct",
+  )
+  if (corrected instanceof Error) throw corrected
+  expect(corrected).toMatchObject({ replayed: false })
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+  expect(await f.responsibilities()).toMatchObject([
+    {
+      responsibility_type: "PEOPLE_OPERATIONS",
+      ends_on: tomorrow.toISOString().slice(0, 10),
+      is_void: 0,
+    },
+  ])
+})
+
+test("部署責任者の終了は同じ部署の人事担当を終了しない", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const before = await f.responsibilities()
+  expect(
+    await f.apply(
+      {
+        kind: "department_responsibility_ended",
+        employeeCode: declaration.code,
+        departmentCode: f.code,
+        eventOn: restoreCalendarDate(f.observedOn),
+      },
+      "responsibility:missing-manager",
+    ),
+  ).toBeInstanceOf(Error)
+  expect(await f.responsibilities()).toEqual(before)
+})
+
+test("退職では在籍終了後の責任者予約も取消し、別種の責務を終了する", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const future = new Date(`${f.observedOn}T00:00:00Z`)
+  future.setUTCDate(future.getUTCDate() + 1)
+  const futureOn = restoreCalendarDate(future.toISOString().slice(0, 10))
+  expect(
+    await f.apply(
+      {
+        kind: "department_responsibility_started",
+        employeeCode: declaration.code,
+        departmentCode: f.code,
+        eventOn: futureOn,
+      },
+      "responsibility:future-manager",
+    ),
+  ).toMatchObject({ replayed: false })
+  const retired = await f.apply(
+    {
+      kind: "retired",
+      employeeCode: declaration.code,
+      retirementOn: restoreCalendarDate(f.observedOn),
+    },
+    "responsibility:retire-future",
+  )
+  expect(retired).toMatchObject({ replayed: false })
+  if (retired instanceof Error) throw retired
+  expect(await f.responsibilities()).toMatchObject([
+    { responsibility_type: "MANAGER", starts_on: futureOn, is_void: 1 },
+    { responsibility_type: "PEOPLE_OPERATIONS", ends_on: futureOn, is_void: 0 },
+  ])
+  expect(
+    await f.apply(
+      {
+        kind: "corrected",
+        eventOn: restoreCalendarDate(f.observedOn),
+        correctsActionId: retired.action.id,
+        reason: "Restore a confirmed appointment",
+        replacementAction: {
+          kind: "retired",
+          employeeCode: declaration.code,
+          retirementOn: futureOn,
+        },
+      },
+      "responsibility:restore-future",
+    ),
+  ).toMatchObject({ replayed: false })
+  future.setUTCDate(future.getUTCDate() + 1)
+  expect(await f.responsibilities()).toMatchObject([
+    {
+      responsibility_type: "MANAGER",
+      starts_on: futureOn,
+      ends_on: future.toISOString().slice(0, 10),
+      is_void: 0,
+    },
+    {
+      responsibility_type: "PEOPLE_OPERATIONS",
+      ends_on: future.toISOString().slice(0, 10),
+      is_void: 0,
+    },
+  ])
+})
+
+test("部署責任者を終了しても先に任用された別種の責務を保つ", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const date = new Date(`${f.observedOn}T00:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + 1)
+  const startsOn = restoreCalendarDate(date.toISOString().slice(0, 10))
+  expect(
+    await f.apply(
+      {
+        kind: "department_responsibility_started",
+        employeeCode: declaration.code,
+        departmentCode: f.code,
+        eventOn: startsOn,
+      },
+      "responsibility:manager-start",
+    ),
+  ).toMatchObject({ replayed: false })
+  date.setUTCDate(date.getUTCDate() + 1)
+  const endsOn = restoreCalendarDate(date.toISOString().slice(0, 10))
+  expect(
+    await f.apply(
+      {
+        kind: "department_responsibility_ended",
+        employeeCode: declaration.code,
+        departmentCode: f.code,
+        eventOn: endsOn,
+      },
+      "responsibility:manager-end",
+    ),
+  ).toMatchObject({ replayed: false })
+  expect(await f.responsibilities()).toMatchObject([
+    { responsibility_type: "MANAGER", starts_on: startsOn, ends_on: endsOn, is_void: 0 },
+    { responsibility_type: "PEOPLE_OPERATIONS", ends_on: null, is_void: 0 },
+  ])
+})
+
+test("申請の実行準備も人事担当の責務を正しい種類で終了する", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const revisions = await new EmployeeLifecycleAdapter(f.context).loadRevisions(f.employeeId)
+  if (revisions instanceof Error) throw revisions
+  const input = {
+    kind: "retired",
+    employeeCode: declaration.code,
+    retirementOn: restoreCalendarDate(f.observedOn),
+  } satisfies Parameters<DirectPersonnelActionAdapter["apply"]>[0]["input"]
+  const prepared = await new PersonnelActionCompletionPreparationAdapter(f.context).prepare({
+    session: {
+      accountId: zAccountId.parse(f.accountId),
+      employeeId: f.employeeId,
+      hasPermission: () => true,
+    },
+    employeeId: f.employeeId,
+    input,
+    sourceApplicationId: 1,
+    requestedByEmployeeId: f.employeeId,
+    expectedEmployeeRevision: revisions.employeeRevision,
+    expectedOrganizationRevision: revisions.organizationRevision,
+    expectedPayloadFingerprint: await fingerprintPersonnelAction(f.employeeId, input),
+  })
+  expect(prepared).not.toBeInstanceOf(Error)
+  if (prepared instanceof Error) throw prepared
+  expect(prepared.persistence.projection.schedule.responsibilities).toMatchObject([
+    { responsibilityType: "PEOPLE_OPERATIONS" },
+  ])
 })

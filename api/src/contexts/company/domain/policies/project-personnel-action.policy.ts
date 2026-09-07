@@ -1,3 +1,4 @@
+import { toWorkforceResponsibilityType } from "@/contexts/company/domain/definitions/to-workforce-responsibility-type.definition"
 import type { OrganizationUnitPeriod } from "@/contexts/company/domain/definitions/organization-unit.definition"
 import { applyLifecycleMutations } from "@/contexts/company/domain/policies/apply-lifecycle-mutations.policy"
 import { containsDate } from "@/contexts/company/domain/definitions/contains-date.definition"
@@ -36,6 +37,7 @@ export type PersonnelActionProjection = {
   newEmploymentType: EmploymentType | null
   schedule: LifecycleSchedule
   mutations: ReadonlyArray<LifecycleVersionMutation>
+  restorationMutationCount: number
   summary: PersonnelActionSummary
   affectsOrganization: boolean
 }
@@ -548,6 +550,7 @@ function projectResponsibility(
     const current = context.schedule.responsibilities.find(
       (period) =>
         period.employeeId === context.command.employeeId &&
+        toWorkforceResponsibilityType(period.responsibilityType) === "MANAGER" &&
         period.organizationUnitId === departmentReference.organizationUnitId &&
         containsDate(period, input.eventOn),
     )
@@ -607,7 +610,8 @@ function projectRetirement(
   for (const responsibility of context.schedule.responsibilities) {
     if (
       responsibility.employeeId === context.command.employeeId &&
-      containsDate(responsibility, input.retirementOn)
+      responsibility.employmentId === employment.employmentId &&
+      (responsibility.endsOn === null || responsibility.endsOn > endsOn)
     ) {
       closePeriod(context, "responsibility", responsibility, endsOn)
     }
@@ -643,10 +647,21 @@ function reverseCorrectionMutations(context: ProjectionContext): CompanyOperatio
           : mutation.periodType === "assignment"
             ? context.schedule.assignments
             : context.schedule.responsibilities
-    const current = collection.find((period) => period.periodId === mutation.after.periodId)
+    // void期間は表示用scheduleから除かれるが、訂正時には元の版を使って復元する。
+    // その後に別の版が保存されていれば、追記時のrevision制約が復元を拒否する。
+    const current =
+      collection.find((period) => period.periodId === mutation.after.periodId) ??
+      (mutation.after.isVoid ? mutation.after : undefined)
 
-    if (current === undefined) {
-      continue
+    if (
+      current === undefined ||
+      (current.recordedByActionId !== context.command.actionId &&
+        current.revision !== mutation.after.revision)
+    ) {
+      return new CompanyConflictError(
+        "訂正対象の期間は後続の発令で更新されています",
+        "personnel_action_stale",
+      )
     }
 
     const after =
@@ -654,7 +669,7 @@ function reverseCorrectionMutations(context: ProjectionContext): CompanyOperatio
         ? revisedPeriod(context, current, { isVoid: true })
         : revisedPeriod(context, current, {
             ...mutation.before,
-            isVoid: false,
+            isVoid: mutation.before.isVoid,
           })
     recordMutation(context, {
       periodType: mutation.periodType,
@@ -779,6 +794,7 @@ export function projectPersonnelAction(
   }
 
   let summary: PersonnelActionSummary | CompanyOperationError
+  let restorationMutationCount = 0
 
   if (parsed.data.kind === "corrected") {
     const correctionError = reverseCorrectionMutations(context)
@@ -787,6 +803,7 @@ export function projectPersonnelAction(
       return correctionError
     }
 
+    restorationMutationCount = context.mutations.length
     const replacementSummary = projectNonCorrection(context, parsed.data.replacementAction)
 
     if (replacementSummary instanceof CompanyOperationError) {
@@ -823,6 +840,7 @@ export function projectPersonnelAction(
     newEmploymentType: "employmentType" in effectiveInput ? effectiveInput.employmentType : null,
     schedule: context.schedule,
     mutations: context.mutations,
+    restorationMutationCount,
     summary,
     affectsOrganization: context.mutations.some(
       (mutation) =>
