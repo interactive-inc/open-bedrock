@@ -42,4 +42,29 @@ export const SYSTEM_FEATURE_PERMISSION_ENTRIES = [
     featureKey: null,
     description: "通知を送信する",
   },
+  {
+    key: "system:work:read",
+    category: "work",
+    featureKey: null,
+    description: "参加する作業と成果を閲覧する",
+  },
+  { key: "system:work:create", category: "work", featureKey: null, description: "作業を依頼する" },
+  {
+    key: "system:work:perform",
+    category: "work",
+    featureKey: null,
+    description: "作業を受領し成果を提出する",
+  },
+  {
+    key: "system:work:review",
+    category: "work",
+    featureKey: null,
+    description: "人が成果を確認し承認・差戻しする",
+  },
+  {
+    key: "system:work:manage",
+    category: "work",
+    featureKey: null,
+    description: "責任を引き継ぎ作業を中止する",
+  },
 ] satisfies ReadonlyArray<PermissionEntry>

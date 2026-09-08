@@ -5,6 +5,11 @@ export const SYSTEM_FEATURE_PERMISSION_KEYS = [
   "audit:export",
   "notification:send",
   "batch:view",
+  "system:work:read",
+  "system:work:create",
+  "system:work:perform",
+  "system:work:review",
+  "system:work:manage",
 ] as const
 
 export type SystemFeaturePermissionKey = (typeof SYSTEM_FEATURE_PERMISSION_KEYS)[number]

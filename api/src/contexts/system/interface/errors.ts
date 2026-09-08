@@ -1,4 +1,5 @@
 import { HTTPException } from "hono/http-exception"
+import type { SystemWorkItemError } from "@system/domain/errors"
 
 export type HTTPErrorBodyInput = Readonly<
   { error: string; message?: string } & Record<string, unknown>
@@ -71,6 +72,24 @@ export class SystemAttachmentPreservationHttpError extends SystemHTTPException {
 export class SystemAuditDisclosureHttpError extends SystemHTTPException {
   constructor(props: SystemHTTPExceptionProps) {
     super(props)
+  }
+}
+
+export class SystemWorkItemHttpError extends SystemHTTPException {
+  constructor(error: SystemWorkItemError) {
+    const statuses = {
+      invalid: 400,
+      forbidden: 403,
+      not_found: 404,
+      conflict: 409,
+      unavailable: 503,
+    } as const
+    super({
+      status: statuses[error.kind],
+      code: error.message,
+      detail: error.message,
+      cause: error,
+    })
   }
 }
 

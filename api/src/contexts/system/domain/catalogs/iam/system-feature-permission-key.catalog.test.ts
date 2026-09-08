@@ -8,6 +8,11 @@ test("System feature permission keys are exactly the non-core System vocabulary,
     "audit:export",
     "notification:send",
     "batch:view",
+    "system:work:read",
+    "system:work:create",
+    "system:work:perform",
+    "system:work:review",
+    "system:work:manage",
   ])
   expect(new Set(SYSTEM_FEATURE_PERMISSION_KEYS).size).toBe(SYSTEM_FEATURE_PERMISSION_KEYS.length)
 })

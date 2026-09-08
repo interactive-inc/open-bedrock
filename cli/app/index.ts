@@ -1,3 +1,4 @@
+import workItemHandler from "@/app/work-items/route"
 import assignmentAdoptionHandler from "@/app/employees/assignment-adoption/route"
 import organizationAdoptionHandler from "@/app/departments/adoption/route"
 import { HTTPException } from "hono/http-exception"
@@ -576,6 +577,7 @@ routes.post("/department-budgets/show/:budget_id?", ...budgetShowHandler)
 routes.post("/department-budgets/update/:budget_id?", ...budgetUpdateHandler)
 routes.post("/department-budgets/delete/:budget_id?", ...budgetDeleteHandler)
 
+routes.post("/work-items/:operation?/:id?", ...workItemHandler)
 routes.post("/ringi-procedures", ...ringiProcedureHandler)
 routes.post("/ringi-requests/show/:ringi_id?", ...ringiShowHandler)
 routes.post("/ringi-requests/cancel/:ringi_id?", ...ringiCancelHandler)

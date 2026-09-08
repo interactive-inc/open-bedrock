@@ -14,7 +14,7 @@ Claude などの AI から CLI で呼ばれることを前提に設計。
 
 ## 会社の解体図
 
-会社に必要なシステム全体を System、Company、Apps、外部連携に分ける。会社の正本は `company` と呼び、App の既定有効状態を所有境界と混同しない。詳細と実装状態は `.docs/feature-tiers.md` と `.docs/capability-map.md` に記録する。
+製品内は System、会社コア、会社共通モジュール、業務アプリに分ける。詳細は `.docs/company-foundation.md` に従う。会社コアの正本は `company` と呼び、知識・台帳・勤怠・採用などの会社共通モジュールは削除可能な App context とする。業種・事業・製品固有のアプリは、この会社基盤の公開契約を利用する。App の既定有効状態を所有境界と混同しない。詳細と実装状態は `.docs/feature-tiers.md` と `.docs/capability-map.md` に記録する。
 
 依存方向は `業務コンテキスト -> company -> system` の一方向とする。すべてを `api/src/contexts/<context>/` 直下へ対等に置き、`apps/` という親ディレクトリは作らない。System は Company と業務語彙を知らず、業務コンテキスト同士も直接依存しない。
 

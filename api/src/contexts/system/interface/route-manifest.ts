@@ -1,6 +1,137 @@
 /** 公開routeの宣言的な正本。API rootの生成器だけが合成する。 */
 export const systemRouteManifest = [
   {
+    method: "POST",
+    path: "/system/work-items/:id/accept",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items.$id.accept",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/work-items/:id/approve",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items.$id.approve",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/work-items/:id/cancel",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items.$id.cancel",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/work-items/:id/evidence/:attachmentId",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items.$id.evidence.$attachmentId",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/work-items/:id/handovers/accept",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items.$id.handovers.accept",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/work-items/:id/handovers/decline",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items.$id.handovers.decline",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/work-items/:id/handovers",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items.$id.handovers",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/work-items/:id/history",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items.$id.history",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/work-items/:id/results",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items.$id.results",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/work-items/:id/return",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items.$id.return",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/work-items/:id",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items.$id",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/work-items",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/system/work-items",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.work-items",
+      exportName: "GET",
+    },
+  },
+
+  {
     method: "GET",
     path: "/system/audit-disclosure-policies",
     phase: "public",

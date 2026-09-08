@@ -6,6 +6,7 @@ type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE"
   query?: Record<string, string | number | boolean | null | undefined>
   json?: unknown
+  stepUpToken?: string
 }
 
 export async function api<T = unknown>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -76,6 +77,10 @@ async function request<T = unknown>(
 
   if (token) {
     headers.Authorization = `Bearer ${token}`
+  }
+
+  if (options.stepUpToken !== undefined) {
+    headers["x-system-step-up"] = options.stepUpToken
   }
 
   if (options.json !== undefined) {

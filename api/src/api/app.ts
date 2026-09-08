@@ -367,6 +367,18 @@ import * as systemRolesRoute from "@system/interface/routes/system.roles"
 import * as systemRolesRoleIdRoute from "@system/interface/routes/system.roles.$roleId"
 import * as systemSessionsRoute from "@system/interface/routes/system.sessions"
 import * as systemStepUpGrantsRoute from "@system/interface/routes/system.step-up-grants"
+import * as systemWorkItemsRoute from "@system/interface/routes/system.work-items"
+import * as systemWorkItemsIdRoute from "@system/interface/routes/system.work-items.$id"
+import * as systemWorkItemsIdAcceptRoute from "@system/interface/routes/system.work-items.$id.accept"
+import * as systemWorkItemsIdApproveRoute from "@system/interface/routes/system.work-items.$id.approve"
+import * as systemWorkItemsIdCancelRoute from "@system/interface/routes/system.work-items.$id.cancel"
+import * as systemWorkItemsIdEvidenceAttachmentIdRoute from "@system/interface/routes/system.work-items.$id.evidence.$attachmentId"
+import * as systemWorkItemsIdHandoversRoute from "@system/interface/routes/system.work-items.$id.handovers"
+import * as systemWorkItemsIdHandoversAcceptRoute from "@system/interface/routes/system.work-items.$id.handovers.accept"
+import * as systemWorkItemsIdHandoversDeclineRoute from "@system/interface/routes/system.work-items.$id.handovers.decline"
+import * as systemWorkItemsIdHistoryRoute from "@system/interface/routes/system.work-items.$id.history"
+import * as systemWorkItemsIdResultsRoute from "@system/interface/routes/system.work-items.$id.results"
+import * as systemWorkItemsIdReturnRoute from "@system/interface/routes/system.work-items.$id.return"
 
 const routePart0 = createRouteApp()
   .get("/announcement/announcements", ...announcementsRoute.GET)
@@ -1139,6 +1151,22 @@ const routePart36 = createRouteApp()
   .patch("/system/sessions", ...systemSessionsRoute.PATCH)
   .delete("/system/sessions", ...systemSessionsRoute.DELETE)
   .post("/system/step-up-grants", ...systemStepUpGrantsRoute.POST)
+  .get("/system/work-items", ...systemWorkItemsRoute.GET)
+  .post("/system/work-items", ...systemWorkItemsRoute.POST)
+  .get("/system/work-items/:id", ...systemWorkItemsIdRoute.GET)
+  .post("/system/work-items/:id/accept", ...systemWorkItemsIdAcceptRoute.POST)
+  .post("/system/work-items/:id/approve", ...systemWorkItemsIdApproveRoute.POST)
+  .post("/system/work-items/:id/cancel", ...systemWorkItemsIdCancelRoute.POST)
+  .get(
+    "/system/work-items/:id/evidence/:attachmentId",
+    ...systemWorkItemsIdEvidenceAttachmentIdRoute.GET,
+  )
+  .post("/system/work-items/:id/handovers", ...systemWorkItemsIdHandoversRoute.POST)
+  .post("/system/work-items/:id/handovers/accept", ...systemWorkItemsIdHandoversAcceptRoute.POST)
+  .post("/system/work-items/:id/handovers/decline", ...systemWorkItemsIdHandoversDeclineRoute.POST)
+  .get("/system/work-items/:id/history", ...systemWorkItemsIdHistoryRoute.GET)
+  .post("/system/work-items/:id/results", ...systemWorkItemsIdResultsRoute.POST)
+  .post("/system/work-items/:id/return", ...systemWorkItemsIdReturnRoute.POST)
   .get("/thanks/thanks-messages", ...thanksMessagesRoute.GET)
   .post("/thanks/thanks-messages", ...thanksMessagesRoute.POST)
   .get("/thanks/thanks-messages/me", ...thanksMessagesMeRoute.GET)
@@ -1166,6 +1194,8 @@ const routePart36 = createRouteApp()
   .delete("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.DELETE)
   .post("/training/training-enrollments/:id/complete", ...trainingEnrollmentsIdCompleteRoute.POST)
   .get("/work-accident/work-accidents", ...workAccidentsRoute.GET)
+
+const routePart37 = createRouteApp()
   .post("/work-accident/work-accidents", ...workAccidentsRoute.POST)
   .post("/work-accident/work-accidents/:id/close", ...workAccidentsIdCloseRoute.POST)
   .get("/work-style/employee-work-styles", ...employeeWorkStylesRoute.GET)
@@ -1209,6 +1239,7 @@ export const app = appBase
   .route("/", routePart34)
   .route("/", routePart35)
   .route("/", routePart36)
+  .route("/", routePart37)
 
 export type AppType = typeof app
 
@@ -1254,6 +1285,7 @@ type ApiClientPart33 = ReturnType<typeof hc<typeof routePart33>>
 type ApiClientPart34 = ReturnType<typeof hc<typeof routePart34>>
 type ApiClientPart35 = ReturnType<typeof hc<typeof routePart35>>
 type ApiClientPart36 = ReturnType<typeof hc<typeof routePart36>>
+type ApiClientPart37 = ReturnType<typeof hc<typeof routePart37>>
 export type ApiClient = ApiClientPart0 &
   ApiClientPart1 &
   ApiClientPart2 &
@@ -1290,4 +1322,5 @@ export type ApiClient = ApiClientPart0 &
   ApiClientPart33 &
   ApiClientPart34 &
   ApiClientPart35 &
-  ApiClientPart36
+  ApiClientPart36 &
+  ApiClientPart37

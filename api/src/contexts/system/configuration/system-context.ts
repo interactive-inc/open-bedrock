@@ -1,3 +1,4 @@
+import { systemWorkItemSchema } from "@system/infrastructure/schema/system-work-item"
 import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import type { AccessTokenClaims } from "@system/domain/schemas/auth/access-token-claims.schema"
@@ -16,6 +17,7 @@ import type { DrizzleD1Database } from "drizzle-orm/d1"
 const systemSchema = {
   ...systemAttachmentSchema,
   ...systemCoreSchema,
+  ...systemWorkItemSchema,
   ...systemDeliverySchema,
   ...systemIntegrationSchema,
   ...systemOperationReceiptSchema,

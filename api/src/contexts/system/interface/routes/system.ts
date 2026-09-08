@@ -51,6 +51,18 @@ import * as roles from "@system/interface/routes/system.roles"
 import * as rolesRoleId from "@system/interface/routes/system.roles.$roleId"
 import * as sessions from "@system/interface/routes/system.sessions"
 import * as stepUpGrants from "@system/interface/routes/system.step-up-grants"
+import * as workItems from "@system/interface/routes/system.work-items"
+import * as workItemsId from "@system/interface/routes/system.work-items.$id"
+import * as workItemsIdAccept from "@system/interface/routes/system.work-items.$id.accept"
+import * as workItemsIdApprove from "@system/interface/routes/system.work-items.$id.approve"
+import * as workItemsIdCancel from "@system/interface/routes/system.work-items.$id.cancel"
+import * as workItemsIdEvidenceAttachmentId from "@system/interface/routes/system.work-items.$id.evidence.$attachmentId"
+import * as workItemsIdHandovers from "@system/interface/routes/system.work-items.$id.handovers"
+import * as workItemsIdHandoversAccept from "@system/interface/routes/system.work-items.$id.handovers.accept"
+import * as workItemsIdHandoversDecline from "@system/interface/routes/system.work-items.$id.handovers.decline"
+import * as workItemsIdHistory from "@system/interface/routes/system.work-items.$id.history"
+import * as workItemsIdResults from "@system/interface/routes/system.work-items.$id.results"
+import * as workItemsIdReturn from "@system/interface/routes/system.work-items.$id.return"
 
 // `bun run gen:app` の生成物。手で編集せず、routeは所有contextのinterface/route-manifest.tsへ足す。
 export const systemPreDatabaseRoutes = new Hono<SystemHonoEnv>().get("/health", ...health.GET)
@@ -154,6 +166,19 @@ export const systemPublicRoutes = new Hono<SystemHonoEnv>()
   .patch("/sessions", ...sessions.PATCH)
   .delete("/sessions", ...sessions.DELETE)
   .post("/step-up-grants", ...stepUpGrants.POST)
+  .get("/work-items", ...workItems.GET)
+  .post("/work-items", ...workItems.POST)
+  .get("/work-items/:id", ...workItemsId.GET)
+  .post("/work-items/:id/accept", ...workItemsIdAccept.POST)
+  .post("/work-items/:id/approve", ...workItemsIdApprove.POST)
+  .post("/work-items/:id/cancel", ...workItemsIdCancel.POST)
+  .get("/work-items/:id/evidence/:attachmentId", ...workItemsIdEvidenceAttachmentId.GET)
+  .post("/work-items/:id/handovers", ...workItemsIdHandovers.POST)
+  .post("/work-items/:id/handovers/accept", ...workItemsIdHandoversAccept.POST)
+  .post("/work-items/:id/handovers/decline", ...workItemsIdHandoversDecline.POST)
+  .get("/work-items/:id/history", ...workItemsIdHistory.GET)
+  .post("/work-items/:id/results", ...workItemsIdResults.POST)
+  .post("/work-items/:id/return", ...workItemsIdReturn.POST)
 
 export const systemAuthenticatedRoutes = new Hono<SystemHonoEnv>().post(
   "/oauth/authorizations",
