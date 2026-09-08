@@ -324,6 +324,7 @@ import * as systemAttachmentsAttachmentIdRoute from "@system/interface/routes/sy
 import * as systemAttachmentsAttachmentIdPreservationsRoute from "@system/interface/routes/system.attachments.$attachmentId.preservations"
 import * as systemAttachmentsAttachmentIdPreservationsPreservationIdReleaseRoute from "@system/interface/routes/system.attachments.$attachmentId.preservations.$preservationId.release"
 import * as systemAttachmentsPurgeUnlinkedRoute from "@system/interface/routes/system.attachments.purge-unlinked"
+import * as systemAuditDisclosurePoliciesRoute from "@system/interface/routes/system.audit-disclosure-policies"
 import * as systemAuditEventsRoute from "@system/interface/routes/system.audit-events"
 import * as systemAuditEventsEventIdRoute from "@system/interface/routes/system.audit-events.$eventId"
 import * as systemAuthPasswordResetRoute from "@system/interface/routes/system.auth.password.reset"
@@ -1026,6 +1027,8 @@ const routePart34 = createRouteApp()
     "/system/attachments/:attachmentId/preservations/:preservationId/release",
     ...systemAttachmentsAttachmentIdPreservationsPreservationIdReleaseRoute.POST,
   )
+  .get("/system/audit-disclosure-policies", ...systemAuditDisclosurePoliciesRoute.GET)
+  .post("/system/audit-disclosure-policies", ...systemAuditDisclosurePoliciesRoute.POST)
   .get("/system/audit-events", ...systemAuditEventsRoute.GET)
   .get("/system/audit-events/:eventId", ...systemAuditEventsEventIdRoute.GET)
   .post("/system/auth/password/reset", ...systemAuthPasswordResetRoute.POST)
@@ -1033,10 +1036,10 @@ const routePart34 = createRouteApp()
   .get("/system/batch-jobs", ...systemBatchJobsRoute.GET)
   .post("/system/bootstrap", ...systemBootstrapRoute.POST)
   .post("/system/browser-login-codes", ...systemBrowserLoginCodesRoute.POST)
-  .post("/system/browser-sessions", ...systemBrowserSessionsRoute.POST)
-  .get("/system/cli-authorization-callback", ...systemCliAuthorizationCallbackRoute.GET)
 
 const routePart35 = createRouteApp()
+  .post("/system/browser-sessions", ...systemBrowserSessionsRoute.POST)
+  .get("/system/cli-authorization-callback", ...systemCliAuthorizationCallbackRoute.GET)
   .get("/system/cli-authorizations", ...systemCliAuthorizationsRoute.GET)
   .post("/system/cli-sessions", ...systemCliSessionsRoute.POST)
   .get("/system/connectors", ...systemConnectorsRoute.GET)
@@ -1107,10 +1110,10 @@ const routePart35 = createRouteApp()
   .delete("/system/roles/:roleId", ...systemRolesRoleIdRoute.DELETE)
   .get("/system/sessions", ...systemSessionsRoute.GET)
   .post("/system/sessions", ...systemSessionsRoute.POST)
-  .patch("/system/sessions", ...systemSessionsRoute.PATCH)
-  .delete("/system/sessions", ...systemSessionsRoute.DELETE)
 
 const routePart36 = createRouteApp()
+  .patch("/system/sessions", ...systemSessionsRoute.PATCH)
+  .delete("/system/sessions", ...systemSessionsRoute.DELETE)
   .post("/system/step-up-grants", ...systemStepUpGrantsRoute.POST)
   .get("/thanks/thanks-messages", ...thanksMessagesRoute.GET)
   .post("/thanks/thanks-messages", ...thanksMessagesRoute.POST)

@@ -77,6 +77,7 @@ describe("canonical System core schema", () => {
     expect(declaredTables.map(({ name }) => name)).toEqual([
       "system_account_invitations",
       "system_accounts",
+      "system_audit_disclosure_policy_revisions",
       "system_audit_events",
       "system_authentication_attempts",
       "system_batch_jobs",

@@ -280,6 +280,12 @@ export class SystemSessionTestContext {
 
   constructor() {
     this.sqlite.exec(schema)
+    this.sqlite.exec(
+      readFileSync(
+        new URL("../infrastructure/schema/system-audit-disclosure.sql", import.meta.url),
+        "utf8",
+      ),
+    )
     this.sqlite.exec(integrationSchema)
     this.sqlite.exec(principalSchema)
     this.sqlite.exec(deliverySchema)
