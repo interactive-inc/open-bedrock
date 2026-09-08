@@ -6,6 +6,7 @@ export type CompanyHTTPExceptionStatus =
   | 403
   | 404
   | 409
+  | 410
   | 413
   | 415
   | 422
@@ -386,6 +387,20 @@ export class CompanyExternalIdentityImportError extends CompanyHTTPException {
         kind === "invalid" ? 400 : kind === "conflict" ? 409 : kind === "forbidden" ? 403 : 503,
       code: `company_external_identity_import_${kind}`,
       detail: reason,
+    })
+  }
+}
+
+export class CompanyLegacyPersonnelActionWriteRetiredError extends CompanyHTTPException {
+  constructor() {
+    super({
+      status: 410,
+      code: "legacy_personnel_action_write_retired",
+      detail: "種別だけの人事発令記録は書き込めません。人事発令の実行 API を使用してください",
+      metadata: {
+        execution_path: "/company/personnel-action-executions",
+        legacy_records_path: "/company/legacy-personnel-action-records",
+      },
     })
   }
 }

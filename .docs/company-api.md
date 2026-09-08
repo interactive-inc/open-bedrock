@@ -1,6 +1,6 @@
 # Company API
 
-`/company` 配下のresource APIは、会社の同一性、人、雇用、組織、責務、Account対応、人事発令を版付きresourceとして公開する。保存table、Drizzle型、旧整数ID、画面名、個別Appの語彙は契約へ含めない。実装は `api/src/contexts/company` に閉じ、HTTP runtimeとの接続だけを `api/src/api` が持つ。
+`/company` 配下のresource APIは、会社の同一性、人、雇用、組織、責務、Account対応を版付きresourceとして、人事発令を追記専用の履歴として公開する。保存table、Drizzle型、旧整数ID、画面名、個別Appの語彙は契約へ含めない。実装は `api/src/contexts/company` に閉じ、HTTP runtimeとの接続だけを `api/src/api` が持つ。
 
 ## 共通前提
 
@@ -66,7 +66,9 @@ JSON envelopeはCompany coreの版・期間・原子性を一つに揃えるた�
 - `POST /company/organization-changes`: 組織・雇用・任用・法人・拠点・勤務場所の関連変更を一つのcommandとして適用
 - `GET|POST /company/definitions`: Position、Grade、Responsibility、CollectiveBody
 - `GET|POST /company/account-employee-links`: System AccountとEmployeeの対応
-- `GET|POST /company/personnel-actions`: 人事発令
+- `GET /company/personnel-actions`: 確定した人事発令の履歴
+- `POST /company/personnel-actions`: 旧台帳への書込は廃止し、権限確認後に410を返す
+- `GET /company/legacy-personnel-action-records`: 種別だけを保存した旧台帳の読取
 - `GET|POST /company/responsibility-resource-adoptions`: 確認した既存責務履歴の接続
 - `GET /company/personnel-action-events`: 追記された人事発令の配送元
 
@@ -294,3 +296,13 @@ OrganizationalOfficeと組織対象のAuthorityScopeは、組織の期間resourc
 不足する履歴、所有者の不一致、定義の期間外、任用期間の重複は422で拒否する。確認後の変更、確認営業日の違い、同じキーの別内容は409になる。同じ主体・内容・キーの再送は現在の管理資格を検査し、元の結果を返す。参照・保存の障害は503とし、部分的な移行結果を返さない。
 
 CLIの`employees responsibility-adoption`も同じ確認・保存APIを使う。`--employee-id`は確認内容の参照、`--data`と`--idempotency-key`は確認済みJSONの送信を表す。競合時に会社版や確認内容を自動更新して再送しない。独立して登録された公開ResponsibilityAssignmentへの統合は行わず、接続先の一致を推測しない。
+
+## 人事発令の公開履歴
+
+`GET /company/personnel-actions`は、既定organizationへのアクセスと`employee:read`を要求し、確定した入社・異動・退職・訂正・初期状態・雇用改訂を記録の新しい順に返す。会社台帳の`company:read`だけでは閲覧できない。会社管理者はCompanyの共通権限規則に従う。
+
+`employee_id`、発令`id`、発効日の`from`・`to`（訂正記録では訂正日）で絞り込み、`limit`は1から100、既定25とする。`next_cursor`を`cursor`に渡して続きへ進む。カーソルは初回の追記範囲と検索条件を固定し、条件を変えた再利用は400で拒否する。閲覧開始後の新しい発令と訂正は、最新の履歴を取得し直すと表示する。期間の両端は含む。
+
+各記録には対象Employee ID、発令種別、発効日、記録日時、記録者Account ID、申請者Employee ID、発生元、申請ID、訂正元と訂正先、型付き要約がある。`current_employee`の氏名・コードは現在の会社台帳から取得し、発令当時の氏名を推測しない。該当する現在の台帳がない場合も、発令と対象IDを保持する。履歴の応答はキャッシュしない。
+
+種別だけを保存する旧台帳は実際の人事発令へ変換しない。既存の版と有効期間は`GET /company/legacy-personnel-action-records`で従来のorganization指定と台帳読取権限により参照できる。`POST /company/personnel-actions`は書込権限を確認したうえで410を返し、実行APIと旧記録の参照先を示す。DBも旧台帳への新しいrevisionを拒否する。実際の発令は`POST /company/personnel-action-executions`または承認申請の既存契約で確定する。

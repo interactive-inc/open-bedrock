@@ -511,7 +511,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
       {
         label: "人事発令",
         href: "/company/personnel-actions",
-        visibility: companyReadVisibility,
+        visibility: { kind: "any-permission", permissions: ["employee:read", "system:admin"] },
       },
     ],
   },

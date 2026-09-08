@@ -199,7 +199,6 @@ describe("Company file responsibility contract", () => {
       ["employees", "Employees"],
       ["employments", "Employments"],
       ["people", "People"],
-      ["personnel-actions", "PersonnelActions"],
       ["profile", "CompanyProfile"],
     ] as const
     const violations = operations.flatMap(([route, subject]) => {
@@ -240,7 +239,6 @@ describe("Company file responsibility contract", () => {
       "employees",
       "employments",
       "people",
-      "personnel-actions",
       "profile",
     ]
     const violations = pairedRoutes.flatMap((route) => {

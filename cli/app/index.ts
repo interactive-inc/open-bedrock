@@ -352,6 +352,7 @@ import employeeUpdateHandler from "@/app/employees/update/[employee_code]/route"
 import employeeAdoptionHandler from "@/app/employees/adoption/route"
 import employeeTimelineHandler from "@/app/employees/timeline/route"
 import employeeStateHandler from "@/app/employees/state/route"
+import personnelActionListHandler from "@/app/personnel-actions/list/route"
 import personnelActionRequestHandler from "@/app/personnel-actions/request/route"
 import personnelActionApplyHandler from "@/app/personnel-actions/apply/route"
 import personnelActionCorrectHandler from "@/app/personnel-actions/correct/route"
@@ -898,6 +899,7 @@ routes.post("/employees/assignment-adoption", ...assignmentAdoptionHandler)
 routes.post("/employees/responsibility-adoption", ...responsibilityAdoptionHandler)
 routes.post("/employees/timeline", ...employeeTimelineHandler)
 routes.post("/employees/state", ...employeeStateHandler)
+routes.post("/personnel-actions/list", ...personnelActionListHandler)
 routes.post("/personnel-actions/request", ...personnelActionRequestHandler)
 routes.post("/personnel-actions/apply", ...personnelActionApplyHandler)
 routes.post("/personnel-actions/correct", ...personnelActionCorrectHandler)

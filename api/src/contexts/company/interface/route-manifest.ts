@@ -583,6 +583,16 @@ export const companyRouteManifest = [
   },
   {
     method: "GET",
+    path: "/company/legacy-personnel-action-records",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.legacy-personnel-action-records",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
     path: "/company/personnel-actions",
     phase: "authenticated",
     handler: {

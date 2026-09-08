@@ -26,6 +26,7 @@ const previouslyUnregistered: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/employees/register", help: "employees register" },
   { path: "/employees/timeline", help: "employees timeline" },
   { path: "/employees/state", help: "employees state" },
+  { path: "/personnel-actions/list", help: "personnel-actions list" },
   { path: "/personnel-actions/request", help: "personnel-actions request" },
   { path: "/personnel-actions/apply", help: "personnel-actions apply" },
   { path: "/personnel-actions/correct", help: "personnel-actions correct" },

@@ -134,7 +134,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 
 公開Assignmentの変更は所属期間へ原子的に反映し、公開ReportingRelationは業務の管理範囲と判断候補へ接続する。[公開所属と期間台帳](company-organizational-authority.md#公開所属と期間台帳)に接続の制約を記載する。接続済み所属の役職変更・異動・終了・訂正・退職は、人事発令から公開履歴と期間対応を一括更新する。会社初期化時の所属と、公開Employee・接続済みOrgUnitへの新規配属も公開履歴を作る。上長付きの配属・上長変更は対応するReportingRelationを記録し、独立した複数上長と将来予約を保全する。既存所属と上長の履歴は確認済みの移行で接続できる。上長本人の退職では部下側の関係を終了し、後任は明示して再割当する。公開OfficeAssignmentとOrganizationalAuthorityの雇用・所属終了との連動は[退職と組織責務](company-api.md#退職と組織責務)に従う。既存責務は全改訂・定義・scopeを確認して公開履歴へ接続できる。独立した公開割当との統合と既存編集画面の版照合は未完成である。
 
-`/company` は LegalEntity、CompanyProfile、Site、Workplace、Person、Employee、Employment、OrgUnit、Assignment、ReportingRelation、Job、Position、Grade、OrganizationalOffice、OfficeAssignment、Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody、CollectiveBodyMembership、OrganizationalAuthority、AccountEmployeeLink、PersonnelAction を同じ resource、revision、半開期間、command 契約で公開する。read は D1 atomic batch で一つの organization revision へ固定し、write は expected revision、resource revision、SHA-256 fingerprint 付き idempotency receipt、append-only 履歴を強制する。契約と失敗条件は [Company API](./company-api.md) に定める。
+`/company` は LegalEntity、CompanyProfile、Site、Workplace、Person、Employee、Employment、OrgUnit、Assignment、ReportingRelation、Job、Position、Grade、OrganizationalOffice、OfficeAssignment、Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody、CollectiveBodyMembership、OrganizationalAuthority、AccountEmployeeLink を同じ resource、revision、半開期間、command 契約で公開する。read は D1 atomic batch で一つの organization revision へ固定し、write は expected revision、resource revision、SHA-256 fingerprint 付き idempotency receipt、append-only 履歴を強制する。契約と失敗条件は [Company API](./company-api.md) に定める。
 
 公開上長関係の本人・上司・組織は、[終了済みの関係を含む全参照期間](company-api.md#上長関係の参照期間)を会社版の確定時にも検査する。組織の訂正で過去の関係を期間外へ残す変更は全体を拒否する。確認した関係の訂正と組織変更は同じcommandで保存できる。
 
@@ -171,7 +171,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - 発令日、発効日、記録日、理由、根拠
 - 訂正、取消、競合検出、projection rebuild
 
-現行実装には personnel action と lifecycle revision がある。所属と責務を変える発令は共通 `OrganizationChangeSet` validator を通り、発令、organization operation、period version、current projection、監査を一つの batch で確定する。訂正は同じ period の連続 revision として検証し、expected Employee revision と expected organization revision のどちらが stale でも全体を拒否する。onboarding task、退職申請、証明書依頼などの手続きは Company の事実ではなく App と System workflow へ分離する。
+現行実装には personnel action と lifecycle revision がある。公開一覧は確定した発令の履歴を読み、対象・発効日・記録者・訂正関係を返す。種別だけを保存する旧台帳は読取専用とし、発令履歴へ混ぜない。検索・ページング・権限の契約は[人事発令の公開履歴](company-api.md#人事発令の公開履歴)に従う。所属と責務を変える発令は共通 `OrganizationChangeSet` validator を通り、発令、organization operation、period version、current projection、監査を一つの batch で確定する。訂正は同じ period の連続 revision として検証し、expected Employee revision と expected organization revision のどちらが stale でも全体を拒否する。onboarding task、退職申請、証明書依頼などの手続きは Company の事実ではなく App と System workflow へ分離する。
 
 ## 会社共通モジュール
 

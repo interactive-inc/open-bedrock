@@ -19,6 +19,7 @@ commands:
   employees timeline                          入社・配属・異動・退職の履歴
   employees state                             基準日現在の人事状態
   employees archive                           退職者を履歴保持してアーカイブ
+  personnel-actions list                      人事発令の確定履歴を参照
   personnel-actions request                   人事変更を承認申請
   personnel-actions apply                     人事発令を直接確定
   personnel-actions correct                   確定済み発令を追記訂正

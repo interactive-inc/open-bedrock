@@ -18,6 +18,7 @@ import * as employments from "@/contexts/company/interface/routes/company.employ
 import * as externalIdentityImports from "@/contexts/company/interface/routes/company.external-identity-imports"
 import * as gradeDefinitions from "@/contexts/company/interface/routes/company.grade-definitions"
 import * as gradeDefinitionsId from "@/contexts/company/interface/routes/company.grade-definitions.$id"
+import * as legacyPersonnelActionRecords from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
 import * as myDirectReports from "@/contexts/company/interface/routes/company.my-direct-reports"
 import * as myOrganizationUnits from "@/contexts/company/interface/routes/company.my-organization-units"
 import * as myProfile from "@/contexts/company/interface/routes/company.my-profile"
@@ -62,6 +63,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/employees", ...employees.GET)
   .get("/employments", ...employments.GET)
   .get("/grade-definitions", ...gradeDefinitions.GET)
+  .get("/legacy-personnel-action-records", ...legacyPersonnelActionRecords.GET)
   .get("/my-direct-reports", ...myDirectReports.GET)
   .get("/my-organization-units", ...myOrganizationUnits.GET)
   .get("/my-profile", ...myProfile.GET)
