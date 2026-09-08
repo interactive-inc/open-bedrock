@@ -1,16 +1,18 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
-import type { License } from "@/contexts/software-license/domain/entities/license.entity"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
+import type { LicenseEntity } from "@/contexts/software-license/domain/entities/license.entity"
+import { LicenseError } from "@/contexts/software-license/domain/errors"
+import { LicenseActorReadAdapter } from "@/contexts/software-license/infrastructure/adapters/license-actor-read.adapter"
+import type { SoftwareLicenseContext as Context } from "@/contexts/software-license/configuration/software-license-context"
 import { LicenseRepository } from "@/contexts/software-license/infrastructure/repositories/license/license.repository"
 
 export type Command = {
   session: CompanySessionValue
   id: number
+  expectedRevision?: number
   details: {
     name: string
+    planName?: string | null
     vendor: string | null
     category: string | null
     seats: number | null
@@ -28,31 +30,61 @@ export class UpdateLicense {
     Object.freeze(this)
   }
 
-  async run(command: Command): Promise<License | ApplicationError> {
+  async run(command: Command): Promise<LicenseEntity | LicenseError> {
     const repository = new LicenseRepository(this.c)
 
-    if (command.session.hasPermission("license:manage") === false) {
-      return new ForbiddenError("cannot manage licenses", "forbidden")
+    if (
+      !command.session.hasPermission("license:manage") &&
+      !command.session.hasPermission("system:admin")
+    ) {
+      return new LicenseError("forbidden", "cannot manage licenses")
     }
 
-    const license = await repository.findById(command.id)
+    const authorization = await new LicenseActorReadAdapter(this.c).prepare(
+      command.details.ownerEmployeeId === null ? [] : [command.details.ownerEmployeeId],
+    )
+    if (authorization instanceof LicenseError) return authorization
+    if (
+      authorization.actor?.employment === null ||
+      authorization.actor?.employment === undefined ||
+      authorization.actor.employment.status === "TERMINATED"
+    )
+      return new LicenseError("forbidden", "current employee is required")
+    if (
+      command.details.ownerEmployeeId !== null &&
+      !authorization.employees.some(
+        (employee) =>
+          employee.id === command.details.ownerEmployeeId &&
+          employee.employment !== null &&
+          employee.employment.status !== "TERMINATED",
+      )
+    )
+      return new LicenseError("invalid_license", "owner must be a current employee")
+
+    const license = await repository.find(command.id)
 
     if (license instanceof Error) {
-      return new UnexpectedError("failed to find license", { cause: license })
+      return new LicenseError("license_unavailable", "failed to find license", { cause: license })
     }
 
     if (license === null) {
-      return new NotFoundError("license not found", "license_not_found")
+      return new LicenseError("license_not_found", "license not found")
     }
 
-    const updated = await repository.update(license.withDetails(command.details))
+    if (command.expectedRevision !== undefined && command.expectedRevision !== license.revision)
+      return new LicenseError("license_conflict", "license revision changed")
 
-    if (updated instanceof Error) {
-      return new UnexpectedError("failed to update license", { cause: updated })
-    }
+    const updated = await repository.write(license.withDetails(command.details), {
+      previous: license,
+      accountId: authorization.accountId,
+      recordedAt: authorization.now.getTime(),
+      assertions: authorization.assertions,
+    })
+
+    if (updated instanceof LicenseError) return updated
 
     if (updated === null) {
-      return new NotFoundError("license not found", "license_not_found")
+      return new LicenseError("license_not_found", "license not found")
     }
 
     return updated

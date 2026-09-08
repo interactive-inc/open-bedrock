@@ -3,6 +3,7 @@ import type { SoftwareLicensePermissionKey } from "@/contexts/software-license/d
 type PermissionEntry = {
   key: SoftwareLicensePermissionKey
   category: string
+  name: string
   featureKey: string | null
   description: string
 }
@@ -17,12 +18,14 @@ export const SOFTWARE_LICENSE_PERMISSION_ENTRIES = [
     key: "license:manage",
     category: "license",
     featureKey: "software-licenses",
-    description: "ライセンス・SaaS台帳を管理する",
+    name: "サービス利用台帳の管理",
+    description: "サービスの契約・プランと利用者の割当を管理できます。",
   },
   {
     key: "license:read:all",
     category: "license",
     featureKey: "software-licenses",
-    description: "ライセンス・SaaS台帳を閲覧する",
+    name: "サービス利用台帳の閲覧",
+    description: "サービスの契約・プランと利用者の割当を閲覧できます。",
   },
 ] satisfies ReadonlyArray<PermissionEntry>

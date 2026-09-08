@@ -126,7 +126,7 @@
     "shift-patterns": "shift",
     "shift-swap-requests": "shift",
     "skill-definitions": "skill",
-    "software-licenses": "software-license",
+    "software-license.software-licenses": "software-license",
     "stocktakes": "asset",
     "surveys": "survey",
     "thanks-messages": "thanks",

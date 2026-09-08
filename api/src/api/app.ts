@@ -282,9 +282,13 @@ import * as shiftSwapRequestsMeRoute from "@/contexts/shift/interface/routes/shi
 import * as employeeSkillsMeRoute from "@/contexts/skill/interface/routes/employee-skills.me"
 import * as employeeSkillsMeSkillCodeRoute from "@/contexts/skill/interface/routes/employee-skills.me.$skillCode"
 import * as skillDefinitionsRoute from "@/contexts/skill/interface/routes/skill-definitions"
-import * as softwareLicensesRoute from "@/contexts/software-license/interface/routes/software-licenses"
-import * as softwareLicensesIdRoute from "@/contexts/software-license/interface/routes/software-licenses.$id"
-import * as softwareLicensesIdCancelRoute from "@/contexts/software-license/interface/routes/software-licenses.$id.cancel"
+import * as softwareLicenseSoftwareLicensesRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses"
+import * as softwareLicenseSoftwareLicensesIdRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id"
+import * as softwareLicenseSoftwareLicensesIdAssignmentsRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.assignments"
+import * as softwareLicenseSoftwareLicensesIdCancelRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.cancel"
+import * as softwareLicenseSoftwareLicensesIdHistoryRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.history"
+import * as softwareLicenseSoftwareLicensesAssignmentsRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.assignments"
+import * as softwareLicenseSoftwareLicensesAssignmentsAssignmentIdReleaseRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.assignments.$assignmentId.release"
 import * as surveysRoute from "@/contexts/survey/interface/routes/surveys"
 import * as surveysSurveyIdRoute from "@/contexts/survey/interface/routes/surveys.$surveyId"
 import * as surveysSurveyIdResponsesRoute from "@/contexts/survey/interface/routes/surveys.$surveyId.responses"
@@ -970,10 +974,30 @@ const routePart34 = createRouteApp()
   .get("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.GET)
   .delete("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.DELETE)
   .get("/skill/skill-definitions", ...skillDefinitionsRoute.GET)
-  .get("/software-license/software-licenses", ...softwareLicensesRoute.GET)
-  .post("/software-license/software-licenses", ...softwareLicensesRoute.POST)
-  .put("/software-license/software-licenses/:id", ...softwareLicensesIdRoute.PUT)
-  .post("/software-license/software-licenses/:id/cancel", ...softwareLicensesIdCancelRoute.POST)
+  .get("/software-license/software-licenses", ...softwareLicenseSoftwareLicensesRoute.GET)
+  .post("/software-license/software-licenses", ...softwareLicenseSoftwareLicensesRoute.POST)
+  .get(
+    "/software-license/software-licenses/assignments",
+    ...softwareLicenseSoftwareLicensesAssignmentsRoute.GET,
+  )
+  .post(
+    "/software-license/software-licenses/assignments/:assignmentId/release",
+    ...softwareLicenseSoftwareLicensesAssignmentsAssignmentIdReleaseRoute.POST,
+  )
+  .get("/software-license/software-licenses/:id", ...softwareLicenseSoftwareLicensesIdRoute.GET)
+  .put("/software-license/software-licenses/:id", ...softwareLicenseSoftwareLicensesIdRoute.PUT)
+  .post(
+    "/software-license/software-licenses/:id/assignments",
+    ...softwareLicenseSoftwareLicensesIdAssignmentsRoute.POST,
+  )
+  .post(
+    "/software-license/software-licenses/:id/cancel",
+    ...softwareLicenseSoftwareLicensesIdCancelRoute.POST,
+  )
+  .get(
+    "/software-license/software-licenses/:id/history",
+    ...softwareLicenseSoftwareLicensesIdHistoryRoute.GET,
+  )
   .get("/survey/surveys", ...surveysRoute.GET)
   .post("/survey/surveys", ...surveysRoute.POST)
   .get("/survey/surveys/responses/me", ...surveysResponsesMeRoute.GET)
@@ -1031,13 +1055,13 @@ const routePart34 = createRouteApp()
   .post("/system/audit-disclosure-policies", ...systemAuditDisclosurePoliciesRoute.POST)
   .get("/system/audit-events", ...systemAuditEventsRoute.GET)
   .get("/system/audit-events/:eventId", ...systemAuditEventsEventIdRoute.GET)
+
+const routePart35 = createRouteApp()
   .post("/system/auth/password/reset", ...systemAuthPasswordResetRoute.POST)
   .patch("/system/auth/password/reset", ...systemAuthPasswordResetRoute.PATCH)
   .get("/system/batch-jobs", ...systemBatchJobsRoute.GET)
   .post("/system/bootstrap", ...systemBootstrapRoute.POST)
   .post("/system/browser-login-codes", ...systemBrowserLoginCodesRoute.POST)
-
-const routePart35 = createRouteApp()
   .post("/system/browser-sessions", ...systemBrowserSessionsRoute.POST)
   .get("/system/cli-authorization-callback", ...systemCliAuthorizationCallbackRoute.GET)
   .get("/system/cli-authorizations", ...systemCliAuthorizationsRoute.GET)
@@ -1105,13 +1129,13 @@ const routePart35 = createRouteApp()
   )
   .get("/system/roles", ...systemRolesRoute.GET)
   .post("/system/roles", ...systemRolesRoute.POST)
+
+const routePart36 = createRouteApp()
   .get("/system/roles/:roleId", ...systemRolesRoleIdRoute.GET)
   .patch("/system/roles/:roleId", ...systemRolesRoleIdRoute.PATCH)
   .delete("/system/roles/:roleId", ...systemRolesRoleIdRoute.DELETE)
   .get("/system/sessions", ...systemSessionsRoute.GET)
   .post("/system/sessions", ...systemSessionsRoute.POST)
-
-const routePart36 = createRouteApp()
   .patch("/system/sessions", ...systemSessionsRoute.PATCH)
   .delete("/system/sessions", ...systemSessionsRoute.DELETE)
   .post("/system/step-up-grants", ...systemStepUpGrantsRoute.POST)
