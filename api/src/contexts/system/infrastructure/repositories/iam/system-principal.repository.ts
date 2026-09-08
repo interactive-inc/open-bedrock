@@ -24,13 +24,19 @@ export class SystemPrincipalRepository {
     Object.freeze(this)
   }
 
-  async findMany(): Promise<ReadonlyArray<SystemPrincipalEntity> | Error> {
+  async findMany(
+    query?: Readonly<{ accountIds: ReadonlyArray<string> }>,
+  ): Promise<ReadonlyArray<SystemPrincipalEntity> | Error> {
+    if (query?.accountIds.length === 0) return []
     try {
       const result = await this.c.env.DB.prepare(
         `SELECT id, account_id, kind, name, connector_id, revision, created_at, updated_at
          FROM system_principals
+         ${query === undefined ? "" : "WHERE account_id IN (SELECT value FROM json_each(?1))"}
          ORDER BY kind, id`,
-      ).all<PrincipalRow>()
+      )
+        .bind(...(query === undefined ? [] : [JSON.stringify([...new Set(query.accountIds)])]))
+        .all<PrincipalRow>()
       if (!result.success) return new Error("failed to list System Principals")
 
       const principals: Array<SystemPrincipalEntity> = []

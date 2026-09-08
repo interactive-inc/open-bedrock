@@ -12,6 +12,36 @@ function resolve(database: D1Database, now: string, timeZone: string | undefined
 }
 
 describe("Companyの在籍期間に基づくアクセス判定", () => {
+  test("一括参照でも在籍・休職・未在籍を人ごとに区別し、重複した状態で部分結果を返さない", async () => {
+    const database = createEmployeeEmploymentTestDatabase(`
+      INSERT INTO company_employees VALUES ('employee:2', 'Second Person', 'E002', NULL, NULL);
+      INSERT INTO company_employment_period_versions VALUES ('employment:2', 1, 'employee:2', '2026-01-01', NULL, 0);
+      INSERT INTO company_employee_status_period_versions VALUES ('status:2', 1, 'employment:2', 'employee:2', 'leave', '2026-01-01', NULL, 0);
+    `)
+    const second = restoreWorkforceId("employee", "employee:2")
+    const missing = restoreWorkforceId("employee", "employee:missing")
+    const adapter = new ResolveLiveEmployeeAccessAdapter({
+      env: { DB: database, NOW: "2026-08-01T00:00:00Z", COMPANY_TIME_ZONE: "UTC" },
+    })
+    const result = await adapter.resolveMany([employeeId, second, employeeId, missing])
+    if (result instanceof Error) throw result
+    expect(result.size).toBe(3)
+    expect(result.get(employeeId)).toMatchObject({ status: "ACTIVE" })
+    expect(result.get(second)).toMatchObject({ status: "ON_LEAVE" })
+    expect(result.get(missing)).toBeNull()
+    await database.exec(
+      `INSERT INTO company_employee_status_period_versions VALUES ('status:overlap', 1, 'employment:2', 'employee:2', 'active', '2026-07-01', NULL, 0)`,
+    )
+    expect(await adapter.resolveMany([employeeId, second])).toMatchObject({
+      code: "lifecycle_projection_mismatch",
+    })
+    await database.exec("DROP TABLE company_employment_period_versions")
+    expect(await adapter.resolveMany([])).toEqual(new Map())
+    expect(await adapter.resolveMany([employeeId])).toMatchObject({
+      code: "lifecycle_projection_mismatch",
+    })
+  })
+
   test("将来退職の予約で表示用statusがTERMINATEDになっても、退職日中は在籍している", async () => {
     const database = createEmployeeEmploymentTestDatabase()
     expect(await resolve(database, "2026-09-30T14:59:59Z")).toEqual({

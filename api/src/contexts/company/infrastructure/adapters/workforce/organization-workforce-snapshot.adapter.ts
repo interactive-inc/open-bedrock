@@ -92,21 +92,21 @@ export class OrganizationWorkforceSnapshotAdapter implements WorkforceSnapshotRe
       const schedules = new Map(
         canonicalSchedules.map((schedule) => [schedule.employeeId, schedule]),
       )
-      const accountRows = await Promise.all(
-        links.map(async (link) => {
+      const accountRows = await new SystemAccountRepository({ database: this.c.env.DB }).findMany(
+        links.flatMap((link) => {
           const accountId = zAccountId.safeParse(link.accountId)
-          return accountId.success
-            ? new SystemAccountRepository({ database: this.c.env.DB }).find(accountId.data)
-            : null
+          return accountId.success ? [accountId.data] : []
         }),
       )
-      const unavailableAccount = accountRows.find((account) => account instanceof Error)
-      if (unavailableAccount instanceof Error) return { ok: false, cause: unavailableAccount }
+      if (accountRows instanceof Error) return { ok: false, cause: accountRows }
+      const activeAccountIds = new Set(
+        accountRows
+          .filter((account) => account.status === "active")
+          .map((account) => String(account.id)),
+      )
       const linksByEmployee = new Map(
-        links.flatMap((link, index) =>
-          !(accountRows[index] instanceof Error) && accountRows[index]?.status === "active"
-            ? [[link.employeeId, link] as const]
-            : [],
+        links.flatMap((link) =>
+          activeAccountIds.has(link.accountId) ? [[link.employeeId, link] as const] : [],
         ),
       )
 

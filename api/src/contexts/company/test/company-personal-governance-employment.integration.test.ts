@@ -48,8 +48,12 @@ async function fixture(type: "responsibility-assignment" | "collective-body-memb
   const resolve = async (date: string) => {
     const resolved = await new CompanyGovernanceAuthorityResolutionAdapter({
       repository,
-      isAccountActive: async (accountId) =>
-        f.people.some((person) => person.accountId === accountId),
+      readActiveAccountIds: async (accountIds) =>
+        new Set(
+          accountIds.filter((accountId) =>
+            f.people.some((person) => person.accountId === accountId),
+          ),
+        ),
     }).resolve({
       organizationId: "organization:default",
       asOf: restoreCalendarDate(date),

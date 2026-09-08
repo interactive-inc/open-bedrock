@@ -8,7 +8,7 @@ import type { CompanyResourceProps } from "@/contexts/company/domain/entities/co
 import { zApplicationWorkflowStep } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 
 describe("公開Companyから業務Taskへの接続", () => {
-  test.each(["missing", "future"])(
+  test.each(["missing", "future", "agent", "locked"])(
     "会社の責務があっても、人のPrincipalを確認できない候補を採用しない: %s",
     async (kind) => {
       const c = await createGovernanceTaskTestContext()
@@ -47,6 +47,20 @@ describe("公開Companyから業務Taskへの接続", () => {
       if (kind === "missing")
         await c.database
           .prepare("DELETE FROM system_principals WHERE account_id = ?1")
+          .bind(person.accountId)
+          .run()
+      else if (kind === "locked")
+        await c.database
+          .prepare(
+            "UPDATE system_accounts SET status = 'locked', token_version = token_version + 1 WHERE id = ?1",
+          )
+          .bind(person.accountId)
+          .run()
+      else if (kind === "agent")
+        await c.database
+          .prepare(
+            "UPDATE system_principals SET kind = 'agent', revision = revision + 1 WHERE account_id = ?1",
+          )
           .bind(person.accountId)
           .run()
       else
