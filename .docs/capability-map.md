@@ -223,7 +223,7 @@ template に基づく汎用手続きは App ではなく System の ProcedureDef
 - `stocktake`: 棚卸しと差異記録
 - `room`: 会議室と排他予約
 - `rental`: 貸与依頼と返却
-- `software-license`: software entitlement と割当
+- `software-license`: [サービスの契約・プラン・利用者割当と解除履歴](service-usage.md)
 
 ### 対外管理
 

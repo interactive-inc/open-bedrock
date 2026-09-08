@@ -7,6 +7,8 @@ export const licenses = sqliteTable("software_licenses", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   vendor: text("vendor"),
+  planName: text("plan_name"),
+  revision: integer("revision").notNull().default(0),
   category: text("category"),
   seats: integer("seats"),
   renewalDeadline: text("renewal_deadline"),
