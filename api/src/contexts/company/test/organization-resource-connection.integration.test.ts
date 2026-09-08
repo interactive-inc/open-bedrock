@@ -87,9 +87,20 @@ async function fixture() {
       { json: { code, name: code, parent_code: null } },
       { headers: { "idempotency-key": key } },
     )
-  const rename = (code: string, name: string, key = `rename:${crypto.randomUUID()}`) =>
+  const observe = async (code: string) => {
+    const response = await reads["organization-units"][":code"].$get({ param: { code } })
+    expect(Number(response.status)).toBe(200)
+    const body = z
+      .object({ organization_revision: z.number(), as_of: z.string() })
+      .parse(await response.json())
+    return {
+      expected_organization_revision: body.organization_revision,
+      expected_as_of: body.as_of,
+    }
+  }
+  const rename = async (code: string, name: string, key = `rename:${crypto.randomUUID()}`) =>
     writes["organization-units"][":code"].$put(
-      { param: { code }, json: { name, parent_code: null } },
+      { param: { code }, json: { name, parent_code: null, ...(await observe(code)) } },
       { headers: { "idempotency-key": key } },
     )
   const snapshot = async (asOf = "2026-09-07") => {
@@ -135,6 +146,7 @@ async function fixture() {
     connect,
     create,
     rename,
+    observe,
     snapshot,
     change,
     legacy,
@@ -501,12 +513,28 @@ describe("organization resources and the company period ledger", () => {
     expect(
       (await f.snapshot("2026-09-10")).resources.find((candidate) => candidate.id === future.id),
     ).toMatchObject({ revision: 1, attributes: { officialName: "Future Name" } })
+    const beforeDateChange = await f.observe("PERIODS")
     f.clock.now = new Date("2026-09-10T00:00:00Z")
     expect(
       await (
         await f.reads["organization-units"][":code"].$get({ param: { code: "PERIODS" } })
       ).json(),
     ).toMatchObject({ name: "Future Name" })
+    const beforeStaleEdit = await f.state()
+    expect(
+      Number(
+        (
+          await f.writes["organization-units"][":code"].$put(
+            {
+              param: { code: "PERIODS" },
+              json: { name: "Old screen", parent_code: null, ...beforeDateChange },
+            },
+            { headers: { "idempotency-key": "stale-future-period" } },
+          )
+        ).status,
+      ),
+    ).toBe(409)
+    expect(await f.state()).toEqual(beforeStaleEdit)
     expect(
       Number((await f.rename("PERIODS", "Future Corrected", "future-period-update")).status),
     ).toBe(200)
@@ -517,7 +545,7 @@ describe("organization resources and the company period ledger", () => {
       Number(
         (
           await f.writes["organization-units"][":code"].$delete(
-            { param: { code: "PERIODS" } },
+            { param: { code: "PERIODS" }, json: await f.observe("PERIODS") },
             { headers: { "idempotency-key": "cancel-future-period" } },
           )
         ).status,

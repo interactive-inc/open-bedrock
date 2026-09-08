@@ -1,3 +1,4 @@
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import { periodContainsDate } from "@/contexts/company/domain/definitions/period-contains-date.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { fingerprintOrganizationUnitCommand } from "@/contexts/company/domain/definitions/fingerprint-organization-unit-command.definition"
@@ -34,6 +35,8 @@ export class DeleteOrganizationUnit {
   async execute(input: {
     operationId: string
     code: string
+    expectedOrganizationRevision: number
+    expectedAsOf: string
     now: Date
   }): Promise<{ replayed: boolean } | CompanyOperationError> {
     if (
@@ -41,6 +44,13 @@ export class DeleteOrganizationUnit {
       !this.c.actor.hasPermission("org:write")
     )
       return new CompanyForbiddenError()
+    if (
+      !Number.isSafeInteger(input.expectedOrganizationRevision) ||
+      input.expectedOrganizationRevision < 0 ||
+      !isCalendarDate(input.expectedAsOf)
+    ) {
+      return new CompanyValidationError("確認した組織版と日付が必要です", "invalid_change")
+    }
     let operationId
     try {
       operationId = restoreWorkforceId("personnel_action", input.operationId)
@@ -49,6 +59,8 @@ export class DeleteOrganizationUnit {
     }
     const requestFingerprint = await fingerprintOrganizationUnitCommand({
       kind: "delete",
+      expectedOrganizationRevision: input.expectedOrganizationRevision,
+      expectedAsOf: input.expectedAsOf,
       actorAccountId: this.c.actor.accountId,
       code: input.code,
     })
@@ -56,7 +68,7 @@ export class DeleteOrganizationUnit {
     if (completed instanceof CompanyOperationError) return completed
     if (completed !== null) return { replayed: true }
     const resolvedDate = resolveCompanyBusinessDate({
-      now: input.now.toISOString(),
+      now: Number.isFinite(input.now.getTime()) ? input.now.toISOString() : "",
       timeZone: this.c.company.env.COMPANY_TIME_ZONE,
     })
     if (typeof resolvedDate !== "string") {
@@ -75,6 +87,18 @@ export class DeleteOrganizationUnit {
         { cause: snapshot.cause },
       )
     }
+    if (
+      snapshot.snapshot.revision !== input.expectedOrganizationRevision ||
+      asOf !== input.expectedAsOf
+    ) {
+      const replay = await this.c.repository.find({ operationId, requestFingerprint })
+      if (replay instanceof CompanyOperationError) return replay
+      if (replay !== null) return { replayed: true }
+      return new CompanyConflictError(
+        "組織情報または基準日が変わっています。一覧を再読み込みして内容を確認してください",
+        "personnel_action_stale",
+      )
+    }
     const currentUnits = snapshot.snapshot.units.filter(
       (unit) => !unit.isVoid && periodContainsDate(unit, asOf),
     )
@@ -88,7 +112,7 @@ export class DeleteOrganizationUnit {
     const recordedAt = input.now.getTime()
     const change = OrganizationWorkforceChangeEntity.restore({
       operationId,
-      expectedRevision: snapshot.snapshot.revision,
+      expectedRevision: input.expectedOrganizationRevision,
       asOf,
       recordedAt,
       actorAccountId: this.c.actor.accountId,
@@ -124,6 +148,9 @@ export class DeleteOrganizationUnit {
       workforce: new OrganizationWorkforceSnapshotAdapter(this.c.company),
     }).execute(change)
     if (validation.kind === "conflict" || validation.kind === "operation_conflict") {
+      const replay = await this.c.repository.find({ operationId, requestFingerprint })
+      if (replay instanceof CompanyOperationError) return replay
+      if (replay !== null) return { replayed: true }
       return new CompanyConflictError("組織情報が更新されています", "personnel_action_stale")
     }
     if (validation.kind === "invalid") {

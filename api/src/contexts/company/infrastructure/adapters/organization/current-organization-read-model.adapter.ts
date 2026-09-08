@@ -47,7 +47,8 @@ export type CurrentOrganizationDepartment = {
 
 export type CurrentOrganizationReadModel = {
   source: "lifecycle"
-  asOf: string | null
+  asOf: string
+  organizationRevision: number
   departments: ReadonlyArray<CurrentOrganizationDepartment>
   employeesByCode: ReadonlyMap<string, CurrentOrganizationEmployee>
   managerByDepartmentCode: ReadonlyMap<string, string>
@@ -208,6 +209,7 @@ async function loadCurrentOrganization(c: Context): Promise<CurrentOrganizationR
     return {
       source: "lifecycle",
       asOf: businessDate,
+      organizationRevision: snapshot.organization.revision,
       departments: currentDepartments,
       employeesByCode,
       managerByDepartmentCode: new Map(

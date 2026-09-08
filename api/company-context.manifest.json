@@ -514,6 +514,7 @@
     "src/contexts/company/test/management-relations.integration.test.ts",
     "src/contexts/company/test/migrations-directory.test-support.ts",
     "src/contexts/company/test/organization-command.integration.test.ts",
+    "src/contexts/company/test/organization-observed-edit.integration.test.ts",
     "src/contexts/company/test/organization-period-coverage.integration.test.ts",
     "src/contexts/company/test/organization-profile.integration.test.ts",
     "src/contexts/company/test/organization-profile.test-support.ts",

@@ -1,6 +1,15 @@
 type OrganizationUnitCommand =
   | Readonly<{
-      kind: "create" | "update"
+      kind: "create"
+      actorAccountId: string
+      code: string
+      officialName: string
+      parentCode: string | null
+    }>
+  | Readonly<{
+      kind: "update"
+      expectedOrganizationRevision: number
+      expectedAsOf: string
       actorAccountId: string
       code: string
       officialName: string
@@ -8,6 +17,8 @@ type OrganizationUnitCommand =
     }>
   | Readonly<{
       kind: "delete"
+      expectedOrganizationRevision: number
+      expectedAsOf: string
       actorAccountId: string
       code: string
     }>

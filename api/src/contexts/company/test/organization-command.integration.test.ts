@@ -376,6 +376,13 @@ describe("legacy organization routes stay inside their Company scope", () => {
       )
     const body = { code: "SCOPE-UNIT", name: "Scoped Unit", parent_code: null }
     expect((await request("/company/organization-units", "POST", body)).status).toBe(201)
+    const observed = z
+      .object({ organization_revision: z.number(), as_of: z.string() })
+      .parse(await (await request("/company/organization-units/SCOPE-UNIT")).json())
+    const expectation = {
+      expected_organization_revision: observed.organization_revision,
+      expected_as_of: observed.as_of,
+    }
     f.actors.current = CompanyActorValue.restore({
       accountId: f.actor.accountId,
       employeeId: f.actor.employeeId,
@@ -396,9 +403,12 @@ describe("legacy organization routes stay inside their Company scope", () => {
         await request("/company/organization-units/SCOPE-UNIT", "PUT", {
           name: "Changed",
           parent_code: null,
+          ...expectation,
         })
       ).status,
     ).toBe(403)
-    expect((await request("/company/organization-units/SCOPE-UNIT", "DELETE")).status).toBe(403)
+    expect(
+      (await request("/company/organization-units/SCOPE-UNIT", "DELETE", expectation)).status,
+    ).toBe(403)
   })
 })

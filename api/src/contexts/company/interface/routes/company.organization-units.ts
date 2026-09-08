@@ -46,6 +46,8 @@ export const GET = factory.createHandlers(async (context) => {
       name: unit.name,
       parent_code: unit.parentCode,
       manager_employee_code: organization.managerByDepartmentCode.get(unit.code) ?? null,
+      organization_revision: organization.organizationRevision,
+      as_of: organization.asOf,
     })),
     200,
   )

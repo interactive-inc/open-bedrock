@@ -32,11 +32,23 @@ export type OrgDepartmentResponse = {
   name: string
   parent_code: string | null
   manager_employee_code: string | null
+  organization_revision: number
+  as_of: string
+}
+
+export type OrgDepartmentMutationResponse = Omit<
+  OrgDepartmentResponse,
+  "organization_revision" | "as_of"
+>
+
+export type OrgDepartmentEditExpectation = {
+  expected_organization_revision: number
+  expected_as_of: string
 }
 
 /**
- * POST /departments のリクエスト本体。
- * parent_code / manager_employee_code は api 側 zValidator が .nullable().optional()
+ * POST /company/organization-units のリクエスト本体。
+ * parent_code は api 側 zValidator が .nullable().optional()
  * のため省略可・null 可（departments/route.ts）。
  */
 export type OrgDepartmentCreateRequest = {
@@ -46,11 +58,11 @@ export type OrgDepartmentCreateRequest = {
 }
 
 /**
- * PUT /departments/:code のリクエスト本体。
- * parent_code / manager_employee_code は api 側 zValidator が .nullable().optional()
+ * PUT /company/organization-units/:code のリクエスト本体。
+ * parent_code は api 側 zValidator が .nullable().optional()
  * のため省略可・null 可（departments/[code]/route.ts）。
  */
-export type OrgDepartmentUpdateRequest = {
+export type OrgDepartmentUpdateRequest = OrgDepartmentEditExpectation & {
   name: string
   parent_code?: string | null
 }
