@@ -1,5 +1,6 @@
 "use server"
 
+import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { createOrgDepartment } from "@/lib/api/create-org-department"
 import { deleteOrgDepartment } from "@/lib/api/delete-org-department"
@@ -82,7 +83,12 @@ export async function updateOrgDepartmentAction(
     return { ok: false, error: "部署名を入力してください" }
   }
 
+  const expectation = readExpectation(formData)
+  if (expectation === null)
+    return { ok: false, error: "一覧を再読み込みして部署を確認してください" }
+
   const updated = await updateOrgDepartment(code, {
+    ...expectation,
     name,
     parent_code: toText(formData.get("parent_code")),
   })
@@ -113,7 +119,11 @@ export async function deleteOrgDepartmentAction(
     return { ok: false, error: "部署を特定できませんでした" }
   }
 
-  const deleted = await deleteOrgDepartment(code)
+  const expectation = readExpectation(formData)
+  if (expectation === null)
+    return { ok: false, error: "一覧を再読み込みして部署を確認してください" }
+
+  const deleted = await deleteOrgDepartment(code, expectation)
 
   if (deleted instanceof Error) {
     return { ok: false, error: deleted.message }
@@ -131,4 +141,22 @@ function toText(value: FormDataEntryValue | null): string | null {
   }
 
   return value.trim()
+}
+
+/** フォームに表示した組織版を検証し、送信時の最新版で補完しない。 */
+function readExpectation(formData: FormData) {
+  const expectation = z
+    .object({
+      expected_organization_revision: z
+        .string()
+        .regex(/^\d+$/)
+        .transform(Number)
+        .pipe(z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)),
+      expected_as_of: z.string().date(),
+    })
+    .safeParse({
+      expected_organization_revision: formData.get("expected_organization_revision"),
+      expected_as_of: formData.get("expected_as_of"),
+    })
+  return expectation.success ? expectation.data : null
 }

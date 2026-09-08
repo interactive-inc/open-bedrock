@@ -59,7 +59,9 @@ export function OrgDepartmentManagerList(props: Props) {
 
           <TableBody>
             {props.departments.map((department) => (
-              <TableRow key={department.code}>
+              <TableRow
+                key={`${department.id}:${department.organization_revision}:${department.as_of}`}
+              >
                 <TableCell>{department.code}</TableCell>
 
                 <TableCell>{department.name}</TableCell>
@@ -72,7 +74,7 @@ export function OrgDepartmentManagerList(props: Props) {
                   <TableRowActions>
                     <UpdateDepartmentDialog department={department} />
 
-                    <DeleteDepartmentButton code={department.code} />
+                    <DeleteDepartmentButton department={department} />
                   </TableRowActions>
                 </TableCell>
               </TableRow>
@@ -123,6 +125,12 @@ function UpdateDepartmentDialog(props: { department: OrgDepartmentResponse }) {
 
         <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="code" value={props.department.code} />
+          <input
+            type="hidden"
+            name="expected_organization_revision"
+            value={props.department.organization_revision}
+          />
+          <input type="hidden" name="expected_as_of" value={props.department.as_of} />
 
           <FieldGroup>
             <Field>
@@ -155,7 +163,7 @@ function UpdateDepartmentDialog(props: { department: OrgDepartmentResponse }) {
 }
 
 /** 部署ノード削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。 */
-function DeleteDepartmentButton(props: { code: string }) {
+function DeleteDepartmentButton(props: { department: OrgDepartmentResponse }) {
   async function reduce(
     previousState: OrgDepartmentActionState,
     formData: FormData,
@@ -181,12 +189,18 @@ function DeleteDepartmentButton(props: { code: string }) {
       <ConfirmActionDialog
         action={formAction}
         triggerLabel="削除"
-        title={`部署 ${props.code} を削除しますか？`}
+        title={`部署 ${props.department.name}（${props.department.code}）を削除しますか？`}
         description="部署ノードの削除は元に戻せません。配下の部署がある場合は削除できません。"
         confirmLabel="部署を削除"
         pending={pending}
       >
-        <input type="hidden" name="code" value={props.code} />
+        <input type="hidden" name="code" value={props.department.code} />
+        <input
+          type="hidden"
+          name="expected_organization_revision"
+          value={props.department.organization_revision}
+        />
+        <input type="hidden" name="expected_as_of" value={props.department.as_of} />
       </ConfirmActionDialog>
 
       {state.error === null ? null : <p className="text-xs text-destructive">{state.error}</p>}

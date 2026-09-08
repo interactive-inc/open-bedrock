@@ -1,3 +1,4 @@
+import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import { periodContainsDate } from "@/contexts/company/domain/definitions/period-contains-date.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { fingerprintOrganizationUnitCommand } from "@/contexts/company/domain/definitions/fingerprint-organization-unit-command.definition"
@@ -36,6 +37,8 @@ export class UpdateOrganizationUnit {
     code: string
     officialName: string
     parentCode: string | null
+    expectedOrganizationRevision: number
+    expectedAsOf: string
     now: Date
   }): Promise<
     | { id: string; code: string; name: string; parentCode: string | null; replayed: boolean }
@@ -46,6 +49,13 @@ export class UpdateOrganizationUnit {
       !this.c.actor.hasPermission("org:write")
     )
       return new CompanyForbiddenError()
+    if (
+      !Number.isSafeInteger(input.expectedOrganizationRevision) ||
+      input.expectedOrganizationRevision < 0 ||
+      !isCalendarDate(input.expectedAsOf)
+    ) {
+      return new CompanyValidationError("確認した組織版と日付が必要です", "invalid_change")
+    }
     let operationId
     try {
       operationId = restoreWorkforceId("personnel_action", input.operationId)
@@ -54,6 +64,8 @@ export class UpdateOrganizationUnit {
     }
     const requestFingerprint = await fingerprintOrganizationUnitCommand({
       kind: "update",
+      expectedOrganizationRevision: input.expectedOrganizationRevision,
+      expectedAsOf: input.expectedAsOf,
       actorAccountId: this.c.actor.accountId,
       code: input.code,
       officialName: input.officialName,
@@ -71,7 +83,7 @@ export class UpdateOrganizationUnit {
       }
     }
     const resolvedDate = resolveCompanyBusinessDate({
-      now: input.now.toISOString(),
+      now: Number.isFinite(input.now.getTime()) ? input.now.toISOString() : "",
       timeZone: this.c.company.env.COMPANY_TIME_ZONE,
     })
     if (typeof resolvedDate !== "string") {
@@ -88,6 +100,25 @@ export class UpdateOrganizationUnit {
         "組織情報を取得できません",
         "organization_change_unavailable",
         { cause: snapshot.cause },
+      )
+    }
+    if (
+      snapshot.snapshot.revision !== input.expectedOrganizationRevision ||
+      asOf !== input.expectedAsOf
+    ) {
+      const replay = await this.c.repository.find({ operationId, requestFingerprint })
+      if (replay instanceof CompanyOperationError) return replay
+      if (replay !== null)
+        return {
+          id: replay.organizationUnitId,
+          code: input.code,
+          name: input.officialName,
+          parentCode: input.parentCode,
+          replayed: true,
+        }
+      return new CompanyConflictError(
+        "組織情報または基準日が変わっています。一覧を再読み込みして内容を確認してください",
+        "personnel_action_stale",
       )
     }
     const currentUnits = snapshot.snapshot.units.filter(
@@ -111,7 +142,7 @@ export class UpdateOrganizationUnit {
     const recordedAt = input.now.getTime()
     const change = OrganizationWorkforceChangeEntity.restore({
       operationId,
-      expectedRevision: snapshot.snapshot.revision,
+      expectedRevision: input.expectedOrganizationRevision,
       asOf,
       recordedAt,
       actorAccountId: this.c.actor.accountId,
@@ -148,6 +179,16 @@ export class UpdateOrganizationUnit {
       workforce: new OrganizationWorkforceSnapshotAdapter(this.c.company),
     }).execute(change)
     if (validation.kind === "conflict" || validation.kind === "operation_conflict") {
+      const replay = await this.c.repository.find({ operationId, requestFingerprint })
+      if (replay instanceof CompanyOperationError) return replay
+      if (replay !== null)
+        return {
+          id: replay.organizationUnitId,
+          code: input.code,
+          name: input.officialName,
+          parentCode: input.parentCode,
+          replayed: true,
+        }
       return new CompanyConflictError("組織情報が更新されています", "personnel_action_stale")
     }
     if (validation.kind === "invalid") {

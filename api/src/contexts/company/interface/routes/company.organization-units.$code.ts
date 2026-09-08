@@ -62,6 +62,8 @@ export const GET = factory.createHandlers(
         name: unit.name,
         parent_code: unit.parentCode,
         manager_employee_code: organization.managerByDepartmentCode.get(unit.code) ?? null,
+        organization_revision: organization.organizationRevision,
+        as_of: organization.asOf,
       },
       200,
     )
@@ -76,6 +78,8 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
+      expected_organization_revision: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+      expected_as_of: z.iso.date(),
       name: z.string().trim().min(1).max(200),
       parent_code: z.string().trim().min(1).max(64).nullable().optional(),
     }),
@@ -107,6 +111,8 @@ export const PUT = factory.createHandlers(
     }).execute({
       operationId,
       code: context.req.valid("param").code,
+      expectedOrganizationRevision: body.expected_organization_revision,
+      expectedAsOf: body.expected_as_of,
       officialName: body.name,
       parentCode: body.parent_code ?? null,
       now: context.var.companyClock?.() ?? new Date(),
@@ -130,6 +136,16 @@ export const DELETE = factory.createHandlers(
   zValidator("param", z.object({ code: z.string().trim().min(1).max(64) }), (validation) => {
     if (!validation.success) throw new CompanyQueryInvalidError(validation.error)
   }),
+  zValidator(
+    "json",
+    z.object({
+      expected_organization_revision: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+      expected_as_of: z.iso.date(),
+    }),
+    (validation) => {
+      if (!validation.success) throw new CompanyBodyInvalidError(validation.error)
+    },
+  ),
   async (context) => {
     const actor = context.var.companyActor
     if (actor === undefined) throw new CompanyAuthenticationRequiredError()
@@ -146,12 +162,15 @@ export const DELETE = factory.createHandlers(
       },
       var: { database: context.var.database, auditContext: context.var.auditContext },
     }
+    const body = context.req.valid("json")
     const result = await new DeleteOrganizationUnit({
       actor,
       company,
       repository: new OrganizationWorkforceChangeRepository(company),
     }).execute({
       operationId,
+      expectedOrganizationRevision: body.expected_organization_revision,
+      expectedAsOf: body.expected_as_of,
       code: context.req.valid("param").code,
       now: context.var.companyClock?.() ?? new Date(),
     })

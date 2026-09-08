@@ -1,6 +1,6 @@
 /**
  * 失敗レスポンスからユーザー向け Error を組み立てる。
- * api の onError は `{ error: message }` の JSON を返す（app.ts 参照）。
+ * api の onError は `{ error: message }` または Company の `{ detail: message }` を返す。
  * 従来の各ミューテーション関数は status もボディも読まず汎用文言で潰していたため、
  * 409 Conflict の具体的な理由（期間重複・残日数不足など）がユーザーに届かなかった。
  *
@@ -11,7 +11,7 @@
  * - 409 以外 → fallback のみ（従来挙動）
  *
  * body の読み取りは try/catch + 形状チェックで安全に行い、
- * `{ error: string }` 以外の形は無視する。
+ * error / detail が文字列でなければ無視する。
  */
 export async function toResponseError(
   response: { status: number; json(): Promise<unknown> },
@@ -40,14 +40,11 @@ async function readApiErrorMessage(response: { json(): Promise<unknown> }): Prom
   try {
     const body = await response.json()
 
-    if (
-      typeof body === "object" &&
-      body !== null &&
-      "error" in body &&
-      typeof body.error === "string"
-    ) {
-      return body.error
-    }
+    if (typeof body !== "object" || body === null) return null
+
+    if ("error" in body && typeof body.error === "string") return body.error
+
+    if ("detail" in body && typeof body.detail === "string") return body.detail
 
     return null
   } catch {

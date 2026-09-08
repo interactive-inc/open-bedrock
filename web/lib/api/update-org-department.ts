@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
-import type { OrgDepartmentResponse, OrgDepartmentUpdateRequest } from "@/lib/api/types/org-types"
+import type {
+  OrgDepartmentMutationResponse,
+  OrgDepartmentUpdateRequest,
+} from "@/lib/api/types/org-types"
 
 /**
  * PUT /departments/:code。部署ノードの親・責任者・表示順を変更する。
@@ -9,7 +12,7 @@ import type { OrgDepartmentResponse, OrgDepartmentUpdateRequest } from "@/lib/ap
 export async function updateOrgDepartment(
   code: string,
   request: OrgDepartmentUpdateRequest,
-): Promise<OrgDepartmentResponse | Error> {
+): Promise<OrgDepartmentMutationResponse | Error> {
   const client = await createClient()
 
   const response = await client.company["organization-units"][":code"].$put(

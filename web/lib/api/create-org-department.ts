@@ -1,11 +1,14 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
-import type { OrgDepartmentCreateRequest, OrgDepartmentResponse } from "@/lib/api/types/org-types"
+import type {
+  OrgDepartmentCreateRequest,
+  OrgDepartmentMutationResponse,
+} from "@/lib/api/types/org-types"
 
 /** POST /departments。部署ノードを作成する。権限不足は 403、コード重複は 409 で Error。 */
 export async function createOrgDepartment(
   request: OrgDepartmentCreateRequest,
-): Promise<OrgDepartmentResponse | Error> {
+): Promise<OrgDepartmentMutationResponse | Error> {
   const client = await createClient()
 
   const response = await client.company["organization-units"].$post(

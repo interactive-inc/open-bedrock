@@ -221,7 +221,7 @@ CLIの `employees adoption --employee-id <id>` で照合対象を参照し、`em
 
 履歴の欠落、未完了の変更、既存の公開IDとの衝突、部分接続を拒否する。確認後の会社版・組織履歴の変更と営業日の変更は409になり、保存直前にも同じsnapshotを検査する。保存済みの同じ依頼は翌日以降も元の結果を返す。接続・公開履歴・会社版・移行記録の保存失敗では全体を取り消す。
 
-接続後は会社版と組織操作の確定時にDBでも両方の最新期間を照合し、片側だけの更新を拒否する。将来の期間や取消済み期間は現在の組織一覧・詳細に混ぜない。既定organization以外の公開OrgUnitは単一Companyの既存台帳へ接続しない。所属・責務の統合、既存組織編集画面が表示した版の照合は未完成である。
+接続後は会社版と組織操作の確定時にDBでも両方の最新期間を照合し、片側だけの更新を拒否する。将来の期間や取消済み期間は現在の組織一覧・詳細に混ぜない。既定organization以外の公開OrgUnitは単一Companyの既存台帳へ接続しない。所属・責務の統合は未完成である。
 
 CLIは `departments adoption --organization-unit-id <id>` で確認内容を取得し、`departments adoption --data <confirmed-history.json> --idempotency-key <key>` で確認済みの依頼を送る。会社版を自動取得して変更を再送する処理は持たない。
 
@@ -306,3 +306,13 @@ CLIの`employees responsibility-adoption`も同じ確認・保存APIを使う。
 各記録には対象Employee ID、発令種別、発効日、記録日時、記録者Account ID、申請者Employee ID、発生元、申請ID、訂正元と訂正先、型付き要約がある。`current_employee`の氏名・コードは現在の会社台帳から取得し、発令当時の氏名を推測しない。該当する現在の台帳がない場合も、発令と対象IDを保持する。履歴の応答はキャッシュしない。
 
 種別だけを保存する旧台帳は実際の人事発令へ変換しない。既存の版と有効期間は`GET /company/legacy-personnel-action-records`で従来のorganization指定と台帳読取権限により参照できる。`POST /company/personnel-actions`は書込権限を確認したうえで410を返し、実行APIと旧記録の参照先を示す。DBも旧台帳への新しいrevisionを拒否する。実際の発令は`POST /company/personnel-action-executions`または承認申請の既存契約で確定する。
+
+## 組織編集時の確認条件
+
+`GET /company/organization-units` と個別取得は、表示内容と同じsnapshotの `organization_revision` と会社営業日 `as_of` を返す。更新・削除は、その値を `expected_organization_revision` と `expected_as_of` としてJSON本文へ指定し、`Idempotency-Key` を必須とする。
+
+確認後に組織の版または会社営業日が変わった未成功の依頼は409で拒否し、履歴と操作記録を増やさない。未来の組織期間が日付の切り替わりで有効になる場合も、最新内容の再確認を必要とする。保存直前の競合は既存のDB版制約でも検査する。
+
+成功済みの同一依頼は、現在の会社範囲と変更権限を再検査して保存済みの結果を返す。同じキーで確認した版・日付や変更内容を変えた依頼は拒否する。確認条件を省略する旧形式の更新・削除は400となり、新しい変更を実行しない。
+
+Webは表示内容と確認条件を同じ組織行に保持し、再読み込みで版が変わると開いている編集・削除ダイアログも更新する。CLIは `departments show` で確認した値を `--organization-revision` と `--as-of` に指定する。送信時に最新版を自動取得して入力内容と組み合わせない。

@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { z } from "zod"
 import { describe, expect, test } from "bun:test"
 import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
 import { createTestToken } from "@tests/api/support/create-test-token"
@@ -19,7 +20,7 @@ async function createTestDb(): Promise<D1Database> {
 
 async function request(
   db: D1Database,
-  method: "POST" | "PUT" | "DELETE",
+  method: "GET" | "POST" | "PUT" | "DELETE",
   path: string,
   key: string,
   body?: unknown,
@@ -91,8 +92,21 @@ describe("Company organization unit idempotency", () => {
       parent_code: null,
     })
 
+    const observe = async () => {
+      const response = await request(db, "GET", "/company/organization-units/LEGAL", "read")
+      expect(response.status).toBe(200)
+      const body = z
+        .object({ organization_revision: z.number(), as_of: z.string() })
+        .parse(await response.json())
+      return {
+        expected_organization_revision: body.organization_revision,
+        expected_as_of: body.as_of,
+      }
+    }
+    const updateExpectation = await observe()
     const update = () =>
       request(db, "PUT", "/company/organization-units/LEGAL", updateKey, {
+        ...updateExpectation,
         name: "Legal and Compliance",
         parent_code: null,
       })
@@ -100,7 +114,9 @@ describe("Company organization unit idempotency", () => {
     expect((await update()).status).toBe(200)
     expect(await unitPeriodCount(db, "LEGAL")).toBe(2)
 
-    const remove = () => request(db, "DELETE", "/company/organization-units/LEGAL", deleteKey)
+    const deleteExpectation = await observe()
+    const remove = () =>
+      request(db, "DELETE", "/company/organization-units/LEGAL", deleteKey, deleteExpectation)
     expect((await remove()).status).toBe(204)
     expect((await remove()).status).toBe(204)
     expect(await unitPeriodCount(db, "LEGAL")).toBe(3)
