@@ -221,7 +221,7 @@ test.each(["approve", "reject"])(
         jwtSecret: secret,
         path: `/leave/leave-requests/${f.request.id}/${action}`,
         method: "POST",
-        body: { comment: "Confirmed coverage" },
+        body: { comment: "Confirmed coverage", decision_target: f.command.decisionTarget },
         now: f.context.env.NOW,
         token: await createTestToken(secret, { employeeId: toWorkforceEmployeeId(employee) }),
       })

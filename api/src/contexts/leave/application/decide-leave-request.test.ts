@@ -1,3 +1,4 @@
+import { reviewLeaveRequest } from "@/contexts/leave/test/review-leave-request.test-support"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
@@ -73,6 +74,7 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
         session: makeTestSession("root", 1),
         tokenVersion: 0,
         leaveRequestId: request.id ?? 0,
+        decisionTarget: await reviewLeaveRequest(request),
         approverId: toWorkforceEmployeeId(kind === "different-employee" ? 2 : 1),
         comment: "Review",
         createdAt: "2026-06-15T00:00:00.000Z",
@@ -103,6 +105,7 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
       session: makeTestSession("member"),
       tokenVersion: 0,
       leaveRequestId: request.id ?? 0,
+      decisionTarget: await reviewLeaveRequest(request),
       approverId: toWorkforceEmployeeId(2),
       comment: null,
       createdAt: "2026-06-15T00:00:00.000Z",
@@ -124,6 +127,7 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
       session: makeTestSession("manager", 2),
       tokenVersion: 0,
       leaveRequestId: request.id ?? 0,
+      decisionTarget: await reviewLeaveRequest(request),
       approverId: toWorkforceEmployeeId(2),
       comment: "insufficient coverage",
       createdAt: "2026-06-15T00:00:00.000Z",
@@ -162,6 +166,7 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
       session: makeTestSession("root", 5),
       tokenVersion: 0,
       leaveRequestId: request.id ?? 0,
+      decisionTarget: await reviewLeaveRequest(request),
       approverId: toWorkforceEmployeeId(5),
       comment: null,
       createdAt: "2026-06-15T00:00:00.000Z",
@@ -182,6 +187,7 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
       session: makeTestSession("hr", 2),
       tokenVersion: 0,
       leaveRequestId: request.id ?? 0,
+      decisionTarget: await reviewLeaveRequest(request),
       approverId: toWorkforceEmployeeId(2),
       comment: "policy violation",
       createdAt: "2026-06-15T00:00:00.000Z",
@@ -229,6 +235,7 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
       session: makeTestSession("manager", 2),
       tokenVersion: 0,
       leaveRequestId: created.id ?? 0,
+      decisionTarget: await reviewLeaveRequest(created),
       approverId: toWorkforceEmployeeId(2),
       comment: null,
       createdAt: "2026-06-15T00:00:00.000Z",
@@ -279,6 +286,7 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
       session: makeTestSession("manager", 2),
       tokenVersion: 0,
       leaveRequestId: created.id ?? 0,
+      decisionTarget: await reviewLeaveRequest(created),
       approverId: toWorkforceEmployeeId(2),
       comment: "no coverage",
       createdAt: "2026-06-15T00:00:00.000Z",

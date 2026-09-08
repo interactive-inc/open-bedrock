@@ -1,3 +1,4 @@
+import { readLeaveDecisionTarget } from "@/contexts/leave/test/read-leave-decision-target.test-support"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
@@ -301,7 +302,16 @@ describe("POST /leave-requests", () => {
       path: `/leave/leave-requests/${createdBody.id}/approve`,
       token: await tokenFor(4),
       method: "POST",
-      body: { comment: null },
+      body: {
+        comment: null,
+        decision_target: await readLeaveDecisionTarget(
+          db,
+          jwtSecret,
+          "2026-01-01T00:00:00.000Z",
+          createdBody.id,
+          await tokenFor(4),
+        ),
+      },
     })
 
     expect(approveResponse.status).toBe(200)

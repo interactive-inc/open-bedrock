@@ -1,3 +1,4 @@
+import { reviewLeaveRequest } from "@/contexts/leave/test/review-leave-request.test-support"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { DirectPersonnelActionAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/direct-personnel-action.adapter"
 import { EmployeeLifecycleAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle.adapter"
@@ -116,6 +117,7 @@ export async function createLeaveDecisionTestContext(leaveType: LeaveType = "ann
   const command = {
     session: makeTestSession("manager", 2),
     tokenVersion: 0,
+    decisionTarget: await reviewLeaveRequest(request),
     leaveRequestId: request.id,
     approverId: toWorkforceEmployeeId(2),
     comment: "Confirmed coverage",

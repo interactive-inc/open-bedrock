@@ -1,3 +1,5 @@
+import { LeaveDecisionTargetValue } from "@/contexts/leave/domain/values/leave-decision-target.value"
+import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -36,23 +38,21 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const managedEmployeeIds = session.hasPermission("org:manage")
-    ? null
-    : await new ListManagedEmployeeIdsAdapter(c).listManagedEmployeeIds(session.employeeId)
+  const managedEmployeeIds = await new ListManagedEmployeeIdsAdapter(c).listManagedEmployeeIds(
+    session.employeeId,
+  )
 
   if (managedEmployeeIds instanceof Error) {
     throw new InternalError("failed to resolve organization scope")
   }
 
   const pendingInScope =
-    managedEmployeeIds === null
-      ? eq(leaveRequests.status, "pending")
-      : managedEmployeeIds.length === 0
-        ? and(eq(leaveRequests.status, "pending"), sql`0 = 1`)
-        : and(
-            eq(leaveRequests.status, "pending"),
-            inArray(leaveRequests.employeeId, [...managedEmployeeIds]),
-          )
+    managedEmployeeIds.length === 0
+      ? and(eq(leaveRequests.status, "pending"), sql`0 = 1`)
+      : and(
+          eq(leaveRequests.status, "pending"),
+          inArray(leaveRequests.employeeId, [...managedEmployeeIds]),
+        )
 
   const limit = toBoundedInt({
     raw: c.req.query("limit"),
@@ -88,20 +88,33 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(leaveRequests)
     .where(pendingInScope)
 
+  const targets = await Promise.all(
+    rows.map(async (row) => {
+      const target = await LeaveDecisionTargetValue.create(LeaveRequest.fromRow(row.leaveRequest))
+      if (target instanceof Error || target === null)
+        return new Error("cannot identify leave decision target")
+      return {
+        decision_target: target.toJSON(),
+        employee_id: row.leaveRequest.employeeId,
+        consumed_days: row.leaveRequest.consumedDays,
+        id: row.leaveRequest.id,
+        applicant_name: row.applicantName ?? "",
+        leave_type: row.leaveRequest.leaveType,
+        start_date: row.leaveRequest.startDate,
+        end_date: row.leaveRequest.endDate,
+        days: row.leaveRequest.days,
+        unit: row.leaveRequest.unit,
+        hours: row.leaveRequest.hours,
+        reason: row.leaveRequest.reason,
+        status: row.leaveRequest.status,
+        created_at: row.leaveRequest.createdAt,
+      }
+    }),
+  )
+  if (targets.some((target) => target instanceof Error))
+    throw new InternalError("cannot identify leave decision targets")
   const responseBody = zAppLeaveRequestInboxList.parse({
-    data: rows.map((row) => ({
-      id: row.leaveRequest.id,
-      applicant_name: row.applicantName ?? "",
-      leave_type: row.leaveRequest.leaveType,
-      start_date: row.leaveRequest.startDate,
-      end_date: row.leaveRequest.endDate,
-      days: row.leaveRequest.days,
-      unit: row.leaveRequest.unit,
-      hours: row.leaveRequest.hours,
-      reason: row.leaveRequest.reason,
-      status: row.leaveRequest.status,
-      created_at: row.leaveRequest.createdAt,
-    })),
+    data: targets,
     total: totalRows.at(0)?.total ?? 0,
   })
 
