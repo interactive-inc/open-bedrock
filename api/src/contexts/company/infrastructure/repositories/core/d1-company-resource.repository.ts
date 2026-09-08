@@ -432,7 +432,9 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         cause.message.endsWith(
           "UNIQUE constraint failed: company_resource_heads.organization_id",
         ) ||
-        /\borganization (?:unit|root|change|resource|assignment)\b/.test(cause.message) ||
+        /\borganization (?:unit|root|change|resource|assignment|responsibility)\b/.test(
+          cause.message,
+        ) ||
         /\bemployment change would (?:orphan an organization (?:assignment|responsibility)|leave an assigned employee without manager)\b/.test(
           cause.message,
         ) ||

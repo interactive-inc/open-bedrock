@@ -248,7 +248,16 @@ function resolveScope(
     scopeType === "workplace"
   ) {
     const targetId = text(scope, "scopeId")
-    if (targetId === null || !resources.has(resourceKey(scopeType, targetId))) {
+    if (targetId === null) return error("governance_authority_reference_missing")
+    if (scopeType === "organization-unit") {
+      const units = [...resources.values()].filter(
+        (resource) =>
+          resource.type === "organization-unit" &&
+          text(resource, "organizationUnitId") === targetId,
+      )
+      if (units.length === 0) return error("governance_authority_reference_missing")
+      if (units.length !== 1) return error("governance_authority_resource_ambiguous")
+    } else if (!resources.has(resourceKey(scopeType, targetId))) {
       return error("governance_authority_reference_missing")
     }
     return {

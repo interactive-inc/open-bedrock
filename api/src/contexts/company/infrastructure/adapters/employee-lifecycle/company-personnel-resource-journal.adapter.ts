@@ -1,3 +1,9 @@
+import { CompanyResponsibilityJournalAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-responsibility-journal.adapter"
+import type { OrgResponsibilityPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
+import type { OrgResponsibilityPeriod as LifecycleResponsibilityPeriod } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { toWorkforceResponsibilityType } from "@/contexts/company/domain/definitions/to-workforce-responsibility-type.definition"
 import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props"
 import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
@@ -9,6 +15,7 @@ import { CompanyPersonnelReportingJournalAdapter } from "@/contexts/company/infr
 import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
 import {
   CompanyConflictError,
+  CompanyResourceValidationError,
   CompanyOperationError,
   CompanyUnexpectedError,
   CompanyValidationError,
@@ -43,7 +50,35 @@ export class CompanyPersonnelResourceJournalAdapter {
         employment.organizationRevision,
       )
       if (reporting instanceof CompanyOperationError) return reporting
-      const authority = await this.prepareAuthority(props, employment.organizationRevision)
+      const responsibilities = await new CompanyResponsibilityJournalAdapter(this.c).prepare({
+        employeeId: props.action.employeeId,
+        recordedAt: props.action.recordedAt * 1000,
+        correctsActionId: props.action.correctsActionId,
+        connectNew: employment.organizationRevision !== null,
+        newOrganizationUnitIds: new Set(),
+        changes: props.projection.mutations
+          .filter((mutation) => mutation.periodType === "responsibility")
+          .map((mutation) => ({
+            before: mutation.before === null ? null : this.responsibilityPeriod(mutation.before),
+            after: this.responsibilityPeriod(mutation.after),
+          })),
+      })
+      if (responsibilities instanceof CompanyOperationError) return responsibilities
+      if (responsibilities instanceof CompanyResourceValidationError)
+        return new CompanyValidationError(
+          "公開責務の履歴を準備できません",
+          "lifecycle_projection_mismatch",
+          { cause: responsibilities },
+        )
+      if (responsibilities instanceof Error)
+        return new CompanyUnexpectedError("公開責務の履歴を参照できません", {
+          cause: responsibilities,
+        })
+      const authority = await this.prepareAuthority(
+        props,
+        employment.organizationRevision,
+        responsibilities.resourceIds,
+      )
       if (authority instanceof CompanyOperationError) return authority
       const groups = new Map<string, CompanyResourceEntity[]>()
       for (const resource of [
@@ -51,6 +86,7 @@ export class CompanyPersonnelResourceJournalAdapter {
         ...assignment.resources,
         ...reporting.resources,
         ...authority,
+        ...responsibilities.resources,
       ]) {
         const key = `${resource.type}:${resource.id}`
         const versions = groups.get(key) ?? []
@@ -95,6 +131,7 @@ export class CompanyPersonnelResourceJournalAdapter {
       return {
         statements: [
           ...statements,
+          ...responsibilities.bindings,
           ...employment.bindings,
           ...assignment.bindings,
           ...reporting.bindings,
@@ -110,6 +147,7 @@ export class CompanyPersonnelResourceJournalAdapter {
   private async prepareAuthority(
     props: PersonnelActionPersistenceProps,
     organizationRevision: number | null,
+    connectedResponsibilities: ReadonlySet<string>,
   ): Promise<ReadonlyArray<CompanyResourceEntity> | CompanyOperationError> {
     if (
       organizationRevision === null ||
@@ -127,6 +165,11 @@ export class CompanyPersonnelResourceJournalAdapter {
     const resources: CompanyResourceEntity[] = []
     const identities = new Set(
       history
+        .filter(
+          (resource) =>
+            resource.type !== "responsibility-assignment" ||
+            !connectedResponsibilities.has(resource.id),
+        )
         .filter(
           (resource) =>
             resource.readText("employeeId") === props.action.employeeId ||
@@ -177,5 +220,20 @@ export class CompanyPersonnelResourceJournalAdapter {
       resources.push(...change.resources)
     }
     return resources
+  }
+  private responsibilityPeriod(period: LifecycleResponsibilityPeriod): OrgResponsibilityPeriod {
+    return {
+      periodId: restoreWorkforceId("period", period.periodId),
+      revision: period.revision,
+      employeeId: period.employeeId,
+      employmentId: period.employmentId,
+      organizationUnitId: period.organizationUnitId,
+      responsibilityType: toWorkforceResponsibilityType(period.responsibilityType),
+      startsOn: restoreCalendarDate(period.startsOn),
+      endsOn: period.endsOn === null ? null : restoreCalendarDate(period.endsOn),
+      isVoid: period.isVoid,
+      recordedByActionId: restoreWorkforceId("personnel_action", period.recordedByActionId),
+      recordedAt: period.recordedAt * 1000,
+    }
   }
 }

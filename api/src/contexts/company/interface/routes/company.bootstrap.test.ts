@@ -1,3 +1,9 @@
+import { POST as definitionsPOST } from "@/contexts/company/interface/routes/company.definitions"
+import { CompanyResponsibilityJournalAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-responsibility-journal.adapter"
+import { POST as organizationChangesPOST } from "@/contexts/company/interface/routes/company.organization-changes"
+import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { CompanyResponsibilityResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-responsibility-resource-projection.adapter"
+import { CompanyGovernanceAuthorityResolutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter"
 import { PersonnelActionCompletionPreparationAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-completion-preparation.adapter"
 import { fingerprintPersonnelAction } from "@/contexts/company/domain/definitions/fingerprint-personnel-action.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
@@ -138,6 +144,8 @@ async function fixture() {
       await next()
     })
     .post("/company/bootstrap", ...companyBootstrapPOST)
+    .post("/company/organization-changes", ...organizationChangesPOST)
+    .post("/company/definitions", ...definitionsPOST)
     .get("/company/profile", ...profileGET)
     .get("/company/organization-snapshots", ...snapshotsGET)
     .get("/company/organization-units", ...unitsGET)
@@ -638,7 +646,83 @@ async function responsibilityLifecycleFixture() {
     ORDER BY responsibility_type`)
         .all()
     ).results
-  return { ...f, apply, responsibilities, code, context, employeeId, accountId: created.account_id }
+  const repository = new D1CompanyResourceRepository(f.database)
+  const publicResource = async (responsibilityType = "PEOPLE_OPERATIONS") => {
+    const id = await f.database
+      .prepare(
+        "SELECT resource_id FROM company_responsibility_resource_bindings WHERE employee_id = ?1 AND responsibility_type = ?2 ORDER BY recorded_at DESC LIMIT 1",
+      )
+      .bind(employeeId, responsibilityType)
+      .first<string>("resource_id")
+    if (id === null) throw new Error("public responsibility missing")
+    const history = await repository.findEmploymentAuthorityHistory(
+      "organization:default",
+      (await f.state())?.revision ?? 0,
+    )
+    if (history instanceof Error) throw history
+    const resource = history
+      .filter((resource) => resource.type === "responsibility-assignment" && resource.id === id)
+      .toSorted((left, right) => right.revision - left.revision)[0]
+    if (resource === undefined) throw new Error("public responsibility history missing")
+    return {
+      organizationId: resource.organizationId,
+      type: "responsibility-assignment" as const,
+      id: resource.id,
+      revision: resource.revision,
+      state: resource.state,
+      effectiveFrom: resource.effectiveFrom,
+      effectiveTo: resource.effectiveTo,
+      attributes: z
+        .object({
+          responsibilityId: z.string(),
+          holderType: z.enum(["employee", "organizational-office", "collective-body"]),
+          holderId: z.string(),
+          authorityScopeId: z.string().nullable(),
+          delegationAllowed: z.boolean(),
+        })
+        .parse(resource.attributes),
+    }
+  }
+  const writePublic = async (
+    resources: Parameters<
+      (typeof f.client.company)["organization-changes"]["$post"]
+    >[0]["json"]["resources"],
+    key: string,
+    revision?: number,
+  ) =>
+    f.client.company["organization-changes"].$post(
+      {
+        header: {
+          "idempotency-key": key,
+          "if-match": String(revision ?? (await f.state())?.revision),
+          "x-company-organization-id": "organization:default",
+        },
+        json: { reason: "Confirm responsibility change", resources },
+      },
+      { headers: f.headers },
+    )
+  const publicOn = async (date: string) => {
+    const snapshot = await repository.findMany({
+      organizationId: "organization:default",
+      types: ["responsibility-assignment"],
+      effectiveOn: restoreCalendarDate(date),
+    })
+    if (!snapshot.ok) throw snapshot.cause
+    return snapshot.resources
+  }
+  return {
+    ...f,
+    apply,
+    responsibilities,
+    code,
+    context,
+    employeeId,
+    accountId: created.account_id,
+    publicResource,
+    writePublic,
+    publicOn,
+    repository,
+  }
 }
 
 test("人事担当の退職と訂正で責務の種類と終了日を保持する", async () => {
@@ -846,3 +930,439 @@ test("申請の実行準備も人事担当の責務を正しい種類で終了�
     { responsibilityType: "PEOPLE_OPERATIONS" },
   ])
 })
+
+test("初期化した責務を公開資格として解決し、確認前の資格は作らない", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const resource = await f.publicResource()
+  const binding = await f.database
+    .prepare(
+      "SELECT organization_unit_id FROM company_responsibility_resource_bindings WHERE resource_id = ?1",
+    )
+    .bind(resource.id)
+    .first<string>("organization_unit_id")
+  if (binding === null) throw new Error("organization missing")
+  const resolved = await new CompanyGovernanceAuthorityResolutionAdapter({
+    repository: f.repository,
+    isAccountActive: async (id) => id === f.accountId,
+  }).resolve({
+    organizationId: "organization:default",
+    asOf: restoreCalendarDate(f.observedOn),
+    subjectEmployeeId: null,
+    criteria: [
+      {
+        responsibilityCode: "PEOPLE_OPERATIONS",
+        scope: { scopeType: "organization-unit", scopeId: binding },
+      },
+    ],
+  })
+  expect(resolved).toMatchObject({
+    kind: "resolved",
+    resolution: { candidates: [{ employeeId: f.employeeId, accountId: f.accountId }] },
+  })
+  const prior = new Date(Date.parse(`${f.observedOn}T00:00:00Z`) - 86400000)
+    .toISOString()
+    .slice(0, 10)
+  expect(await f.publicOn(prior)).toEqual([])
+})
+
+test("公開責務の終了と再送が同じ期間台帳へ反映され、以後の人事発令とも一致する", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const endsOn = new Date(Date.parse(`${f.observedOn}T00:00:00Z`) + 86400000)
+    .toISOString()
+    .slice(0, 10)
+  const source = await f.publicResource()
+  const revision = (await f.state())?.revision
+  const resources = [{ ...source, revision: source.revision + 1, effectiveTo: endsOn }]
+  expect(
+    Number((await f.writePublic(resources, "responsibility:public-end", revision)).status),
+  ).toBe(201)
+  const saved = await f.state()
+  expect(
+    Number((await f.writePublic(resources, "responsibility:public-end", revision)).status),
+  ).toBe(200)
+  expect(await f.state()).toEqual(saved)
+  expect(await f.responsibilities()).toMatchObject([
+    { responsibility_type: "PEOPLE_OPERATIONS", ends_on: endsOn, is_void: 0 },
+  ])
+  expect(await f.publicOn(endsOn)).toEqual([])
+  const started = await f.apply(
+    {
+      kind: "department_responsibility_started",
+      employeeCode: declaration.code,
+      eventOn: restoreCalendarDate(f.observedOn),
+      departmentCode: f.code,
+    },
+    "responsibility:public-manager",
+  )
+  if (started instanceof Error) throw started
+  const manager = await f.publicResource("MANAGER")
+  expect(manager.state).toBe("active")
+  expect(await f.publicOn(f.observedOn)).toHaveLength(2)
+  expect(
+    await f.apply(
+      {
+        kind: "department_responsibility_ended",
+        employeeCode: declaration.code,
+        eventOn: restoreCalendarDate(endsOn),
+        departmentCode: f.code,
+      },
+      "responsibility:manager-ended",
+    ),
+  ).toMatchObject({ replayed: false })
+  expect(await f.publicOn(endsOn)).toEqual([])
+})
+
+test("退職・訂正で公開責務と期間台帳を一緒に変更し、再入社だけでは復活させない", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const retirementOn = restoreCalendarDate(f.observedOn)
+  const correctedOn = restoreCalendarDate(
+    new Date(Date.parse(`${f.observedOn}T00:00:00Z`) + 86400000).toISOString().slice(0, 10),
+  )
+  const after = restoreCalendarDate(
+    new Date(Date.parse(`${f.observedOn}T00:00:00Z`) + 2 * 86400000).toISOString().slice(0, 10),
+  )
+  const retired = await f.apply(
+    { kind: "retired", employeeCode: declaration.code, retirementOn },
+    "responsibility:public-retire",
+  )
+  if (retired instanceof Error) throw retired
+  expect(await f.publicOn(retirementOn)).toHaveLength(1)
+  expect(await f.publicOn(correctedOn)).toEqual([])
+  expect(
+    await f.apply(
+      {
+        kind: "corrected",
+        correctsActionId: retired.action.id,
+        eventOn: retirementOn,
+        reason: "Correct retirement date",
+        replacementAction: {
+          kind: "retired",
+          employeeCode: declaration.code,
+          retirementOn: correctedOn,
+        },
+      },
+      "responsibility:public-correct",
+    ),
+  ).toMatchObject({ replayed: false })
+  expect(await f.publicOn(correctedOn)).toHaveLength(1)
+  expect(await f.publicOn(after)).toEqual([])
+  expect(
+    await f.apply(
+      {
+        kind: "rehire",
+        employeeCode: declaration.code,
+        eventOn: after,
+        employmentType: "FULL_TIME",
+      },
+      "responsibility:public-rehire",
+    ),
+  ).toMatchObject({ replayed: false })
+  expect(await f.publicOn(after)).toEqual([])
+})
+
+test("公開責務の片側保存と所有者変更を拒否し、履歴と再送結果を保全する", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const source = await f.publicResource()
+  const before = await f.state()
+  const end = new Date(Date.parse(`${f.observedOn}T00:00:00Z`) + 86400000)
+    .toISOString()
+    .slice(0, 10)
+  const interception = spyOn(
+    CompanyResponsibilityResourceProjectionAdapter.prototype,
+    "prepare",
+  ).mockResolvedValueOnce({ responsibilities: [], bindings: [] })
+  try {
+    expect(
+      Number(
+        (
+          await f.writePublic(
+            [{ ...source, revision: source.revision + 1, effectiveTo: end }],
+            "responsibility:half-write",
+          )
+        ).status,
+      ),
+    ).toBe(422)
+  } finally {
+    interception.mockRestore()
+  }
+  expect(await f.state()).toEqual(before)
+  expect(
+    Number(
+      (
+        await f.writePublic(
+          [
+            {
+              ...source,
+              revision: source.revision + 1,
+              attributes: { ...source.attributes, authorityScopeId: null },
+            },
+          ],
+          "responsibility:scope-change",
+        )
+      ).status,
+    ),
+  ).toBe(422)
+  expect(await f.state()).toEqual(before)
+  const deleted = await f.database
+    .prepare("DELETE FROM company_responsibility_period_bindings")
+    .run()
+    .catch((cause: unknown) => cause)
+  expect(deleted).toBeInstanceOf(Error)
+  expect(await f.state()).toEqual(before)
+  expect(
+    Number(
+      (
+        await f.writePublic(
+          [{ ...source, revision: source.revision + 1, effectiveTo: end }],
+          "responsibility:half-write",
+        )
+      ).status,
+    ),
+  ).toBe(201)
+})
+
+test("責務の公開保存失敗では初期化を全取消し、同じ依頼で再試行できる", async () => {
+  const f = await fixture()
+  const before = await f.state()
+  await f.database.exec(
+    "CREATE TRIGGER reject_initial_responsibility BEFORE INSERT ON company_responsibility_period_bindings BEGIN SELECT RAISE(ABORT, 'injected responsibility binding failure'); END;",
+  )
+  const input = { ...declaration, initial_responsibilities: ["PEOPLE_OPERATIONS" as const] }
+  expect(Number((await f.post(input, "responsibility:bootstrap-failure")).status)).toBe(503)
+  expect(await f.state()).toEqual(before)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) FROM company_responsibility_resource_bindings")
+      .first<number>("count(*)"),
+  ).toBe(0)
+  await f.database.exec("DROP TRIGGER reject_initial_responsibility")
+  expect(Number((await f.post(input, "responsibility:bootstrap-failure")).status)).toBe(201)
+})
+
+test("将来の責務予約に空白を残し、人事発令の終了で予約を失わない", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const date = (days: number) =>
+    restoreCalendarDate(
+      new Date(Date.parse(`${f.observedOn}T00:00:00Z`) + days * 86400000)
+        .toISOString()
+        .slice(0, 10),
+    )
+  const source = await f.publicResource()
+  expect(
+    Number(
+      (
+        await f.writePublic(
+          [{ ...source, revision: 2, effectiveTo: date(1) }],
+          "responsibility:gap-start",
+        )
+      ).status,
+    ),
+  ).toBe(201)
+  expect(
+    Number(
+      (
+        await f.writePublic(
+          [{ ...source, revision: 3, effectiveFrom: date(3), effectiveTo: date(5) }],
+          "responsibility:future",
+        )
+      ).status,
+    ),
+  ).toBe(201)
+  expect(await f.publicOn(date(2))).toEqual([])
+  expect(await f.publicOn(date(3))).toHaveLength(1)
+  expect(
+    await f.apply(
+      {
+        kind: "department_responsibility_started",
+        employeeCode: declaration.code,
+        eventOn: date(0),
+        departmentCode: f.code,
+      },
+      "responsibility:gap-manager",
+    ),
+  ).toMatchObject({ replayed: false })
+  expect(
+    await f.apply(
+      {
+        kind: "department_responsibility_ended",
+        employeeCode: declaration.code,
+        eventOn: date(1),
+        departmentCode: f.code,
+      },
+      "responsibility:gap-manager-end",
+    ),
+  ).toMatchObject({ replayed: false })
+  expect(await f.publicOn(date(2))).toEqual([])
+  expect(await f.publicOn(date(3))).toHaveLength(1)
+  expect(await f.publicOn(date(5))).toEqual([])
+  expect(
+    await f.database
+      .prepare("SELECT count(*) FROM company_responsibility_source_mismatches")
+      .first<number>("count(*)"),
+  ).toBe(0)
+})
+
+test("人事発令の後で公開責務を編集した場合、過去発令の訂正で上書きしない", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const date = (days: number) =>
+    restoreCalendarDate(
+      new Date(Date.parse(`${f.observedOn}T00:00:00Z`) + days * 86400000)
+        .toISOString()
+        .slice(0, 10),
+    )
+  const started = await f.apply(
+    {
+      kind: "department_responsibility_started",
+      employeeCode: declaration.code,
+      eventOn: date(0),
+      departmentCode: f.code,
+    },
+    "responsibility:correct-basis",
+  )
+  if (started instanceof Error) throw started
+  const source = await f.publicResource("MANAGER")
+  expect(
+    Number(
+      (
+        await f.writePublic(
+          [
+            {
+              ...source,
+              revision: source.revision + 1,
+              attributes: { ...source.attributes, delegationAllowed: true },
+            },
+          ],
+          "responsibility:later-edit",
+        )
+      ).status,
+    ),
+  ).toBe(201)
+  const before = await f.state()
+  expect(
+    await f.apply(
+      {
+        kind: "corrected",
+        correctsActionId: started.action.id,
+        eventOn: date(0),
+        reason: "Confirm appointment date",
+        replacementAction: {
+          kind: "department_responsibility_started",
+          employeeCode: declaration.code,
+          eventOn: date(1),
+          departmentCode: f.code,
+        },
+      },
+      "responsibility:stale-correction",
+    ),
+  ).toMatchObject({ code: "personnel_action_stale" })
+  expect(await f.state()).toEqual(before)
+  expect(await f.publicResource("MANAGER")).toEqual({
+    ...source,
+    revision: source.revision + 1,
+    attributes: { ...source.attributes, delegationAllowed: true },
+  })
+})
+
+test("期間台帳だけを変える人事発令を拒否し、復旧後に同じ依頼を保存できる", async () => {
+  const f = await responsibilityLifecycleFixture()
+  const before = await f.state()
+  const journal = new CompanyResponsibilityJournalAdapter(f.database)
+  const prepare = journal.prepare.bind(journal)
+  const interception = spyOn(
+    CompanyResponsibilityJournalAdapter.prototype,
+    "prepare",
+  ).mockImplementationOnce(async (props) => {
+    const prepared = await prepare(props)
+    if (prepared instanceof Error) return prepared
+    return { ...prepared, resources: [], bindings: [] }
+  })
+  const input = {
+    kind: "retired" as const,
+    employeeCode: declaration.code,
+    retirementOn: restoreCalendarDate(f.observedOn),
+  }
+  try {
+    expect(await f.apply(input, "responsibility:private-half-write")).toBeInstanceOf(Error)
+  } finally {
+    interception.mockRestore()
+  }
+  expect(await f.state()).toEqual(before)
+  expect(await f.apply(input, "responsibility:private-half-write")).toMatchObject({
+    replayed: false,
+  })
+})
+
+test.each(["responsibility", "authority-scope"] as const)(
+  "終了済み責務の過去を孤立させる定義変更を拒否する: %s",
+  async (type) => {
+    const f = await responsibilityLifecycleFixture()
+    const source = await f.publicResource()
+    const end = restoreCalendarDate(
+      new Date(Date.parse(`${f.observedOn}T00:00:00Z`) + 86400000).toISOString().slice(0, 10),
+    )
+    expect(
+      Number(
+        (
+          await f.writePublic(
+            [{ ...source, revision: source.revision + 1, state: "void", effectiveFrom: end }],
+            "responsibility:definition-basis",
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    const definitions = await f.repository.findMany({
+      organizationId: "organization:default",
+      types: [type],
+      effectiveOn: restoreCalendarDate(f.observedOn),
+    })
+    if (!definitions.ok) throw definitions.cause
+    const id =
+      type === "responsibility"
+        ? source.attributes.responsibilityId
+        : source.attributes.authorityScopeId
+    const definition = definitions.resources.find((resource) => resource.id === id)
+    if (definition === undefined) throw new Error("definition missing")
+    const before = await f.state()
+    const envelope = {
+      organizationId: definition.organizationId,
+      id: definition.id,
+      revision: definition.revision + 1,
+      state: "void" as const,
+      effectiveFrom: f.observedOn,
+      effectiveTo: null,
+    }
+    const resource =
+      type === "responsibility"
+        ? {
+            ...envelope,
+            type,
+            attributes: z
+              .object({ code: z.string(), officialName: z.string() })
+              .parse(definition.attributes),
+          }
+        : {
+            ...envelope,
+            type,
+            attributes: z
+              .object({ scopeType: z.literal("organization-unit"), scopeId: z.string() })
+              .parse(definition.attributes),
+          }
+    const response = await f.client.company.definitions.$post(
+      {
+        header: {
+          "x-company-organization-id": "organization:default",
+          "idempotency-key": `responsibility:definition-void:${type}`,
+          "if-match": String(before?.revision),
+        },
+        json: {
+          reason: "Confirm definition cancellation",
+          resources: [resource],
+        },
+      },
+      { headers: f.headers },
+    )
+    expect(Number(response.status)).toBe(422)
+    expect(await f.state()).toEqual(before)
+    expect(await f.publicOn(f.observedOn)).toHaveLength(1)
+  },
+)

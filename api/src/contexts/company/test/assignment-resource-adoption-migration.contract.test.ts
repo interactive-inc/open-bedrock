@@ -26,6 +26,14 @@ describe("所属移行の上長対応を追加するmigration", () => {
     // Account履歴のmigrationに達したら破棄し、実際のviewへ置き換える。
     await database.exec(`CREATE VIEW company_account_employee_link_periods AS
       SELECT account_id, employee_id, NULL AS starts_on, NULL AS ends_on FROM company_account_employee_links`)
+    // 責務の公開接続がまだ存在しない旧schemaでは、現行writerの参照結果を空に固定する。
+    // 対象のmigrationを適用する直前に破棄し、実際のtableを作る。
+    await database.exec(`CREATE VIEW company_responsibility_resource_bindings AS SELECT
+      NULL AS resource_id, NULL AS organization_id, NULL AS employee_id, NULL AS employment_id,
+      NULL AS organization_unit_id, NULL AS responsibility_type, NULL AS responsibility_id,
+      NULL AS authority_scope_id, NULL AS resource_revision WHERE 0`)
+    await database.exec(`CREATE VIEW company_responsibility_period_bindings AS SELECT
+      NULL AS period_id, NULL AS resource_id, NULL AS period_revision, NULL AS source_revision WHERE 0`)
     const f = await createCompanyAssignmentResourceTestContext(database)
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
@@ -52,6 +60,10 @@ describe("所属移行の上長対応を追加するmigration", () => {
     for (const file of files.filter((file) => file >= first)) {
       if (file.endsWith("_create_company_account_employee_link_periods.sql"))
         await database.exec("DROP VIEW company_account_employee_link_periods")
+      if (file.endsWith("_connect_company_responsibility_resources.sql")) {
+        await database.exec("DROP VIEW company_responsibility_period_bindings")
+        await database.exec("DROP VIEW company_responsibility_resource_bindings")
+      }
       await database.batch(
         splitSqlStatements(readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8")).map(
           (sql) => database.prepare(sql),

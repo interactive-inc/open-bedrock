@@ -274,3 +274,68 @@ function resource(
   if (value instanceof Error) throw value
   return value
 }
+
+test.each(["identity", "period-id", "ambiguous"])(
+  "組織scopeは期間IDではなく一意なOrgUnitで解決する: %s",
+  (kind) => {
+    const unit = {
+      organizationUnitId: "unit:1",
+      code: "ROOT",
+      officialName: "Company",
+      kind: "COMPANY",
+      parentOrganizationUnitId: null,
+    }
+    const resolved = resolveCompanyGovernanceAuthority({
+      asOf,
+      organizationRevision: 1,
+      subjectEmployeeId: null,
+      criteria: [
+        {
+          responsibilityCode: "APPROVE",
+          scope: { scopeType: "organization-unit", scopeId: "unit:1" },
+        },
+      ],
+      activeAccountIds: new Set(["account:1"]),
+      resources: [
+        resource("organization-unit", "period:1", unit),
+        ...(kind === "ambiguous" ? [resource("organization-unit", "period:2", unit)] : []),
+        resource("authority-scope", "scope:1", {
+          scopeType: "organization-unit",
+          scopeId: kind === "period-id" ? "period:1" : "unit:1",
+        }),
+        resource("responsibility", "responsibility:1", {
+          code: "APPROVE",
+          officialName: "Approval",
+        }),
+        resource("responsibility-assignment", "responsibility-assignment:1", {
+          responsibilityId: "responsibility:1",
+          holderType: "employee",
+          holderId: "employee:1",
+          authorityScopeId: "scope:1",
+          delegationAllowed: false,
+        }),
+        resource("employee", "employee:1", { personId: "person:1", employeeCode: "E1" }),
+        resource("employment", "employment:1", {
+          employeeId: "employee:1",
+          status: "ACTIVE",
+          employmentType: "FULL_TIME",
+        }),
+        resource("account-employee-link", "link:1", {
+          employeeId: "employee:1",
+          accountId: "account:1",
+        }),
+      ],
+    })
+    if (kind === "identity")
+      expect(resolved).toMatchObject({
+        candidates: [{ employeeId: "employee:1", accountId: "account:1" }],
+      })
+    else
+      expect(resolved).toMatchObject({
+        code:
+          kind === "period-id"
+            ? "governance_authority_reference_missing"
+            : "governance_authority_resource_ambiguous",
+      })
+  },
+)
