@@ -2,19 +2,16 @@ import { decryptAttachment } from "@system/application/attachments/lib/decrypt-a
 import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 import { AttachmentKekRegistry } from "@system/application/attachments/lib/attachment-kek-registry"
 import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
-import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
-import { NotFoundError as ApplicationNotFoundError, UnprocessableError } from "@/lib/errors"
-import { ExpenseProcedureReadAdapter } from "@/contexts/expense/infrastructure/adapters/expense-procedure-read.adapter"
+import { UnprocessableError } from "@/lib/errors"
+import { PrepareExpenseAttachmentReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-attachment-read.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
-import { expenseAttachments, expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { factory } from "@/api/http/factory"
-import { ApplicationError } from "@/lib/errors"
+import { ApplicationError, ForbiddenError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { and, eq } from "drizzle-orm"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
+import { InternalError, UnauthorizedError } from "@/lib/http/errors"
 
 // @authorization service - 親の経費の閲覧可否をそのまま添付へ継承する
 /** GET /expenses/:id/attachments/:attachmentId — 経費に紐づいた添付を取り出す */
@@ -29,47 +26,35 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const attachmentId = c.req.param("attachmentId") ?? ""
 
-  const rows = await c.var.database
-    .select({ applicantId: expenses.employeeId })
-    .from(expenseAttachments)
-    .innerJoin(expenses, eq(expenses.id, expenseAttachments.expenseId))
-    .where(
-      and(
-        eq(expenseAttachments.expenseId, expenseId),
-        eq(expenseAttachments.attachmentId, attachmentId),
-      ),
-    )
-    .limit(1)
-
-  const row = rows.at(0)
-
-  if (row === undefined) {
-    throw new NotFoundError("attachment not found")
-  }
-
-  const reader = new ExpenseProcedureReadAdapter(c)
-  const view = await reader.find({
+  const authentication = c.var.bearerReadAuthentication
+  if (authentication === undefined) throw new UnauthorizedError()
+  const prepared = await new PrepareExpenseAttachmentReadAdapter(c).prepare({
     expenseId,
+    attachmentId,
+    authentication,
     session,
-    tokenVersion: c.var.accountTokenVersion,
-    at: new Date(c.env.NOW ?? Date.now()),
+    at: c.var.now(),
   })
-  if (view instanceof ApplicationError) throw toHttpException(view)
-  const evidence = view.attachments.find((attachment) => attachment.id === attachmentId)
-  if (evidence === undefined) throw new NotFoundError("attachment not found")
-
+  if (prepared instanceof ApplicationError) throw toHttpException(prepared)
+  if (prepared instanceof Error) throw new InternalError("failed to prepare attachment read")
+  const initial = prepared.assertions(c.var.now())
+  if (initial instanceof Error)
+    throw toHttpException(
+      new ForbiddenError("閲覧資格が変わりました", "read_authorization_changed"),
+    )
+  try {
+    const checked = await c.env.DB.batch([...initial])
+    if (checked.length !== initial.length || checked.some((item) => !item.success))
+      throw new Error("attachment read validation failed")
+  } catch {
+    throw toHttpException(
+      new ForbiddenError("閲覧資格または添付が変わりました", "read_authorization_changed"),
+    )
+  }
   const content = await (async () => {
-    const row = await new AttachmentAdapter(c).findById(attachmentId)
-
-    if (row instanceof Error) return row
-
-    if (row === null) {
-      return new ApplicationNotFoundError("添付が見つかりません", "attachment_not_found")
-    }
-
-    if (row.status === "erased" || row.wrappedDek === null || row.wrappedDekIv === null) {
-      return new ApplicationNotFoundError("この添付は消去済みです", "attachment_erased")
-    }
+    const row = prepared.attachment
+    if (row.wrappedDek === null || row.wrappedDekIv === null)
+      return new UnprocessableError("この添付は消去済みです", "attachment_erased")
 
     const registry = AttachmentKekRegistry.fromEnv(c.env.ATTACHMENT_KEKS)
 
@@ -98,10 +83,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
     const digest = await toSha256Hex(plaintext)
 
-    if (
-      digest !== row.plaintextSha256 ||
-      (evidence.sha256 !== null && digest !== evidence.sha256)
-    ) {
+    if (digest !== row.plaintextSha256 || plaintext.byteLength !== row.byteSize) {
       return new UnprocessableError(
         "添付の内容がメタデータと一致しません",
         "attachment_integrity_mismatch",
@@ -132,27 +114,57 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     targetId: attachmentId,
     outcome: "succeeded",
     reasonCode: null,
-    authorizationJson: null,
+    authorizationJson: JSON.stringify({
+      policy: "expense-current-reader",
+      accountId: session.accountId,
+      tokenVersion: authentication.tokenVersion,
+      machineCredentialId: authentication.machineCredentialId,
+      identityBindingId: authentication.identityBindingId,
+    }),
     beforeJson: null,
     afterJson: null,
-    metadataJson: null,
+    metadataJson: JSON.stringify({
+      expenseId,
+      sha256: prepared.attachment.plaintextSha256,
+      byteSize: prepared.attachment.byteSize,
+    }),
     occurredAt: c.var.now(),
   })
 
-  const current = await reader.find({
-    expenseId,
-    session,
-    tokenVersion: c.var.accountTokenVersion,
-    at: new Date(c.env.NOW ?? Date.now()),
-  })
-  if (current instanceof ApplicationError) throw toHttpException(current)
-  if (!current.evidence_available)
-    throw toHttpException(
-      new UnprocessableError("確認した添付を利用できません", "attachment_evidence_changed"),
-    )
   if (audit instanceof Error) throw new InternalError("閲覧監査を作成できません")
-  const savedAudit = await new SystemAuditEventRepository({ env: { DB: c.env.DB } }).append(audit)
-  if (savedAudit instanceof Error) throw new InternalError("閲覧監査を保存できません")
+  const assertions = prepared.assertions(c.var.now())
+  if (assertions instanceof Error)
+    throw toHttpException(
+      new ForbiddenError("閲覧資格が変わりました", "read_authorization_changed"),
+    )
+  const savedAudit = await new SystemAuditEventRepository({ env: { DB: c.env.DB } }).append(
+    audit,
+    assertions,
+    assertions,
+  )
+  if (savedAudit instanceof Error) {
+    const visited = new Set<Error>()
+    for (
+      let cause: unknown = savedAudit;
+      cause instanceof Error && !visited.has(cause);
+      cause = cause.cause
+    ) {
+      visited.add(cause)
+      if (cause.message.includes("attachment_read_content_changed"))
+        throw toHttpException(
+          new UnprocessableError("確認した添付を利用できません", "attachment_evidence_changed"),
+        )
+      if (
+        /system_read_authorization_changed|system_case_read_changed|expense_attachment_read_changed|malformed JSON/.test(
+          cause.message,
+        )
+      )
+        throw toHttpException(
+          new ForbiddenError("閲覧資格または案件が変わりました", "read_authorization_changed"),
+        )
+    }
+    throw new InternalError("閲覧監査を保存できません")
+  }
 
   return new Response(content.content, {
     status: 200,
@@ -161,6 +173,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       "content-length": String(content.byteSize),
       "content-disposition": `attachment; filename*=UTF-8''${encodeURIComponent(content.fileName)}`,
       "cache-control": "no-store",
+      "x-content-type-options": "nosniff",
     },
   })
 })

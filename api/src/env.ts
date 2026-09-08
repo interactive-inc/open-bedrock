@@ -12,6 +12,7 @@ import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-c
 import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 import type { AccessTokenClaims } from "@system/domain/schemas/auth/access-token-claims.schema"
+import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 
 /** Workers のバインディング（wrangler の vars / secrets / D1）。 */
 export type Bindings = {
@@ -82,6 +83,7 @@ export type RequestAuditContext = SystemRequestAudit
 
 /** リクエストスコープの変数。database に Drizzle、session に本人（CompanySessionValue。認可判定は session.hasPermission）を載せる。 */
 export type Variables = {
+  bearerReadAuthentication?: SystemReadAuthentication
   systemAccessToken?: AccessTokenClaims
   companyActor?: CompanyActorValue
   companyClock?: () => Date
