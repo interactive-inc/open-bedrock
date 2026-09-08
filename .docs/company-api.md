@@ -16,7 +16,7 @@ writeは次のheaderを必須とする。
 - `Idempotency-Key`: commandのopaque ID
 - `If-Match`: 直前に読んだorganization revision
 
-bodyは`reason`と1件以上100件以下の`resources`を持つ。Actor Account IDと記録時刻はbodyから受け取らずserverが設定する。全resourceは同じorganizationに属し、同じcommand内で`type + id`を重複させない。
+bodyは`reason`と1件以上100件以下の`resources`を持つ。Actor Account IDと記録時刻はbodyから受け取らずserverが設定する。記録時刻はCompanyの時計を使い、時計が未指定の場合だけサーバーの実時計を使う。不正な時計では503を返して履歴・receiptを保存せず、時計が復旧した後に同じ依頼を再試行できる。成功済みの再送は当初の記録時刻を保つ。全resourceは同じorganizationに属し、同じcommand内で`type + id`を重複させない。
 
 ## 会社の初期化
 

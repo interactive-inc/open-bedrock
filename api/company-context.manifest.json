@@ -399,6 +399,7 @@
     "src/contexts/company/interface/operations/to-http-exception.ts",
     "src/contexts/company/interface/operations/to-lifecycle-assignment-response.ts",
     "src/contexts/company/interface/request-environment/company-request-environment.ts",
+    "src/contexts/company/interface/request-environment/resolve-company-recorded-at.ts",
     "src/contexts/company/interface/route-manifest.ts",
     "src/contexts/company/interface/routes/company.account-employee-links.ts",
     "src/contexts/company/interface/routes/company.assignment-resource-adoptions.ts",

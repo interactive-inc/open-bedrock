@@ -8,7 +8,10 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import { POST } from "@/contexts/company/interface/routes/company.organization-changes"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
-import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import {
+  D1CompanyResourceRepository,
+  type CompanyResourceWriteResult,
+} from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
 
@@ -66,6 +69,7 @@ const child: Resource = {
 
 function fixture() {
   const database = createCompanyD1TestDatabase(schema)
+  const clock = { now: new Date("2026-09-07T00:00:00Z") }
   const actors = {
     current: CompanyActorValue.restore({
       accountId: "account:operator",
@@ -77,11 +81,12 @@ function fixture() {
   const app = new Hono<CompanyHttpEnvironment>()
   app.use("*", async (context, next) => {
     context.set("companyActor", actors.current)
-    context.set("companyClock", () => new Date("2026-09-07T00:00:00Z"))
+    context.set("companyClock", () => clock.now)
     await next()
   })
   app.onError((error, context) => {
     if (!(error instanceof CompanyHTTPException)) throw error
+    if (error.etag !== null) context.header("etag", error.etag)
     return context.json({ code: error.code }, error.status)
   })
   app.post("/company/organization-changes", ...POST)
@@ -111,7 +116,7 @@ function fixture() {
         `SELECT (SELECT revision FROM company_organizations WHERE id = 'organization:default') AS revision, (SELECT count(*) FROM company_command_receipts) AS receipts, (SELECT count(*) FROM company_resource_revisions) AS resources`,
       )
       .first()
-  return { database, actors, post, state }
+  return { database, actors, post, state, clock }
 }
 
 describe("organization command receipts and boundaries", () => {
@@ -284,20 +289,75 @@ describe("organization command receipts and boundaries", () => {
       ],
     })
     if (competing instanceof Error) throw competing
+    const competingResults: CompanyResourceWriteResult[] = []
     const interception = spyOn(
       D1CompanyResourceRepository.prototype,
       "findMany",
     ).mockImplementationOnce(async (query) => {
       const snapshot = await findMany(query)
-      expect(await repository.write(competing)).toMatchObject({ kind: "applied" })
+      competingResults.push(await repository.write(competing))
       return snapshot
     })
     try {
-      expect((await f.post([child], 1, "racing-child")).status).toBe(409)
+      const response = await f.post([child], 1, "racing-child")
+      expect(competingResults).toMatchObject([{ kind: "applied" }])
+      expect(response.status).toBe(409)
+      expect(response.headers.get("etag")).toBe('"2"')
     } finally {
       interception.mockRestore()
     }
     expect(await f.state()).toEqual({ revision: 2, receipts: 2, resources: 2 })
+    f.clock.now = new Date("2026-09-09T00:00:00Z")
+    expect((await f.post([child], 2, "racing-child")).status).toBe(201)
+    expect((await f.post([child], 2, "racing-child")).status).toBe(200)
+    expect(await f.state()).toEqual({ revision: 3, receipts: 3, resources: 3 })
+  })
+
+  test("Companyの時計で履歴とreceiptを記録し、後日の再送で記録時刻を変えない", async () => {
+    const f = fixture()
+    const recordedAt = f.clock.now.getTime()
+    expect((await f.post([root], 0, "clocked-root")).status).toBe(201)
+    const readTimes = () =>
+      f.database
+        .prepare(`SELECT
+      (SELECT recorded_at FROM company_command_receipts WHERE command_id = 'clocked-root') AS receipt,
+      (SELECT recorded_at FROM company_resource_revisions WHERE command_id = 'clocked-root') AS resource,
+      (SELECT updated_at FROM company_resource_heads WHERE resource_id = 'period:root') AS head,
+      (SELECT created_at FROM company_organizations WHERE id = 'organization:default') AS created,
+      (SELECT updated_at FROM company_organizations WHERE id = 'organization:default') AS updated`)
+        .first<{
+          receipt: number
+          resource: number
+          head: number
+          created: number
+          updated: number
+        }>()
+    const expected = {
+      receipt: recordedAt,
+      resource: recordedAt,
+      head: recordedAt,
+      created: recordedAt,
+      updated: recordedAt,
+    }
+    expect(await readTimes()).toEqual(expected)
+    f.clock.now = new Date(recordedAt + 86400000)
+    expect((await f.post([root], 0, "clocked-root")).status).toBe(200)
+    expect(await readTimes()).toEqual(expected)
+    expect(await f.state()).toEqual({ revision: 1, receipts: 1, resources: 1 })
+  })
+
+  test("不正なCompany時計では履歴を保存せず、時計の復旧後に同じ依頼で再試行できる", async () => {
+    for (const invalid of [new Date(Number.NaN), new Date(-1)]) {
+      const f = fixture()
+      const valid = f.clock.now
+      f.clock.now = invalid
+      const response = await f.post([root], 0, "invalid-clock")
+      expect(response.status).toBe(503)
+      expect(await response.json()).toMatchObject({ code: "company_write_unavailable" })
+      expect(await f.state()).toEqual({ revision: null, receipts: 0, resources: 0 })
+      f.clock.now = valid
+      expect((await f.post([root], 0, "invalid-clock")).status).toBe(201)
+    }
   })
 })
 
