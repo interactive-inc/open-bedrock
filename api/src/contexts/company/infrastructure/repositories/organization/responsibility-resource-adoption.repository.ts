@@ -55,7 +55,7 @@ export class ResponsibilityResourceAdoptionRepository {
       const applied = await this.apply(command, fingerprint).catch((cause: unknown) => {
         if (
           cause instanceof Error &&
-          /organization responsibility|company_(?:responsibility_assignment_reference_not_found|employment_authority_invalid|governance_organization_reference_invalid)/.test(
+          /organization responsibility|company_(?:responsibility_assignment_reference_not_found|employment_authority_invalid|governance_organization_reference_invalid|governance_reference_period_not_covered)/.test(
             cause.message,
           )
         )
