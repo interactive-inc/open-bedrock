@@ -290,6 +290,7 @@
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/lib/create-company-system-audit-event.ts",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-aborted-by-guard.test.ts",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-aborted-by-guard.ts",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props.ts",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-completion-preparation.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action.adapter.ts",

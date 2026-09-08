@@ -1,5 +1,5 @@
-import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter"
 import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
+import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props"
 import { CompanyEmploymentJournalChangeValue } from "@/contexts/company/domain/values/company-employment-journal-change.value"
 import {
   CompanyConflictError,

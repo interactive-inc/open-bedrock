@@ -1,6 +1,6 @@
-import { SystemHTTPException } from "@system/interface/errors"
+import { SystemAttachmentPreservationHttpError } from "@system/interface/errors"
 import { CreateAttachmentPreservation } from "@system/application/attachments/create-attachment-preservation"
-import { attachmentPreservationCommandSchema } from "@system/domain/entities/attachment-preservation.entity"
+import { attachmentPreservationCommandSchema } from "@system/domain/schemas/attachments/attachment-preservation.schema"
 import { AttachmentPreservationRepository } from "@system/infrastructure/repositories/attachments/attachment-preservation.repository"
 import { prepareAttachmentPreservationAuthorization } from "@system/interface/authorization/prepare-attachment-preservation-authorization"
 import { toAttachmentPreservationHttpFailure } from "@system/interface/attachments/to-attachment-preservation-http-failure"
@@ -33,14 +33,14 @@ export const GET = systemFactory.createHandlers(
       stepUpToken: null,
     })
     if (proof instanceof Error || proof === "forbidden")
-      throw new SystemHTTPException(toAttachmentPreservationHttpFailure(proof))
+      throw new SystemAttachmentPreservationHttpError(toAttachmentPreservationHttpFailure(proof))
     const query = context.req.valid("query")
     const records = await new AttachmentPreservationRepository({
       env: { DB: context.env.DB },
       assertions: proof,
     }).findMany(context.req.valid("param").attachmentId, query.cursor ?? "", query.limit + 1)
     if (records instanceof Error)
-      throw new SystemHTTPException(toAttachmentPreservationHttpFailure(records))
+      throw new SystemAttachmentPreservationHttpError(toAttachmentPreservationHttpFailure(records))
     const page = records.slice(0, query.limit).map((record) => record.snapshot)
     return context.json(
       attachmentPreservationListResponseSchema.parse({
@@ -68,7 +68,7 @@ export const POST = systemFactory.createHandlers(
       stepUpToken: context.req.header("x-system-step-up") ?? "",
     })
     if (proof instanceof Error || proof === "forbidden")
-      throw new SystemHTTPException(toAttachmentPreservationHttpFailure(proof))
+      throw new SystemAttachmentPreservationHttpError(toAttachmentPreservationHttpFailure(proof))
     const service = new CreateAttachmentPreservation({
       repository: new AttachmentPreservationRepository({
         env: { DB: context.env.DB },
@@ -84,7 +84,7 @@ export const POST = systemFactory.createHandlers(
       now,
     )
     if (result instanceof Error || typeof result === "string")
-      throw new SystemHTTPException(toAttachmentPreservationHttpFailure(result))
+      throw new SystemAttachmentPreservationHttpError(toAttachmentPreservationHttpFailure(result))
     return context.json(
       attachmentPreservationResponseSchema.parse({
         preservation: result.preservation.snapshot,

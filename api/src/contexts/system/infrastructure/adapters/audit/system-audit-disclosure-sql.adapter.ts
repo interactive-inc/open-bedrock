@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm"
-import { auditDisclosureFieldSchema } from "@system/domain/entities/system-audit-disclosure-policy.entity"
+import { auditDisclosureFieldSchema } from "@system/domain/schemas/audit/system-audit-disclosure-policy.schema"
 import type { SystemAuditDisclosureValue } from "@system/domain/values/audit/system-audit-disclosure.value"
 import type { z } from "zod"
 

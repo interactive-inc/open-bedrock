@@ -1,7 +1,5 @@
-import {
-  auditDisclosureCommandSchema,
-  SystemAuditDisclosurePolicyEntity,
-} from "@system/domain/entities/system-audit-disclosure-policy.entity"
+import { SystemAuditDisclosurePolicyEntity } from "@system/domain/entities/system-audit-disclosure-policy.entity"
+import { auditDisclosureCommandSchema } from "@system/domain/schemas/audit/system-audit-disclosure-policy.schema"
 import { SystemAuditDisclosureError } from "@system/domain/errors"
 import type { SystemAuditDisclosurePolicyRepository } from "@system/infrastructure/repositories/audit/system-audit-disclosure-policy.repository"
 

@@ -1,8 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import {
-  auditDisclosureFieldSchema,
-  SystemAuditDisclosurePolicyEntity,
-} from "@system/domain/entities/system-audit-disclosure-policy.entity"
+import { SystemAuditDisclosurePolicyEntity } from "@system/domain/entities/system-audit-disclosure-policy.entity"
+import { auditDisclosureFieldSchema } from "@system/domain/schemas/audit/system-audit-disclosure-policy.schema"
 import { SystemAuditDisclosureValue } from "@system/domain/values/audit/system-audit-disclosure.value"
 import { SystemAuditDisclosureError } from "@system/domain/errors"
 

@@ -1,7 +1,7 @@
 import { toWorkforceResponsibilityType } from "@/contexts/company/domain/definitions/to-workforce-responsibility-type.definition"
+import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props"
 import { createCompanySystemAuditEvent } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/create-company-system-audit-event"
 import { containsDate } from "@/contexts/company/domain/definitions/contains-date.definition"
-import type { DirectPersonnelActionCommand } from "@/contexts/company/domain/definitions/direct-personnel-action-command.definition"
 import type {
   LifecycleSchedule,
   LifecycleVersionMutation,
@@ -337,17 +337,6 @@ function unexpected(cause: unknown): CompanyOperationError {
   }
 
   return new CompanyUnexpectedError("人事発令の確定に失敗しました", { cause })
-}
-
-export type PersonnelActionPersistenceProps = {
-  command: DirectPersonnelActionCommand
-  action: PersonnelActionRecord
-  projection: PersonnelActionProjection
-  scheduleBefore: LifecycleSchedule
-  businessDate: string
-  employeeCodes: ReadonlyMap<EmployeeId, string>
-  revisions: { employeeRevision: number; organizationRevision: number }
-  prospectiveEmployee?: { code: string; name: string; email?: string | null; accountId?: string }
 }
 
 function preparePersistenceStatements(

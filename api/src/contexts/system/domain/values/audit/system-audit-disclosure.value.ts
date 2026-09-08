@@ -1,7 +1,5 @@
-import {
-  auditDisclosureFieldSchema,
-  type SystemAuditDisclosurePolicyEntity,
-} from "@system/domain/entities/system-audit-disclosure-policy.entity"
+import { type SystemAuditDisclosurePolicyEntity } from "@system/domain/entities/system-audit-disclosure-policy.entity"
+import { auditDisclosureFieldSchema } from "@system/domain/schemas/audit/system-audit-disclosure-policy.schema"
 import { SystemAuditDisclosureError } from "@system/domain/errors"
 import type { z } from "zod"
 

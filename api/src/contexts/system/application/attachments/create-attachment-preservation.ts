@@ -1,7 +1,5 @@
-import {
-  AttachmentPreservationEntity,
-  attachmentPreservationCommandSchema,
-} from "@system/domain/entities/attachment-preservation.entity"
+import { AttachmentPreservationEntity } from "@system/domain/entities/attachment-preservation.entity"
+import { attachmentPreservationCommandSchema } from "@system/domain/schemas/attachments/attachment-preservation.schema"
 import type { AttachmentPreservationRepository } from "@system/infrastructure/repositories/attachments/attachment-preservation.repository"
 import { SystemAttachmentError } from "@system/domain/errors"
 

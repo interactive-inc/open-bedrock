@@ -1,6 +1,6 @@
 import type { AttachmentPreservationRepository } from "@system/infrastructure/repositories/attachments/attachment-preservation.repository"
 import { SystemAttachmentError } from "@system/domain/errors"
-import { attachmentPreservationReleaseCommandSchema } from "@system/domain/entities/attachment-preservation.entity"
+import { attachmentPreservationReleaseCommandSchema } from "@system/domain/schemas/attachments/attachment-preservation.schema"
 
 type Context = Readonly<{ repository: AttachmentPreservationRepository }>
 

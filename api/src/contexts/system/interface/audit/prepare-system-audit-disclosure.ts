@@ -5,7 +5,7 @@ import type {
 import { SystemAuditDisclosureReadAdapter } from "@system/infrastructure/adapters/audit/system-audit-disclosure-read.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
-import { SystemHTTPException } from "@system/interface/errors"
+import { SystemAuditDisclosureHttpError } from "@system/interface/errors"
 
 /** HTTPの読取目的と現在の資格を開示条件へ渡し、拒否も監査する。 */
 export async function prepareSystemAuditDisclosure(
@@ -47,18 +47,18 @@ export async function prepareSystemAuditDisclosure(
       audit instanceof Error ||
       (await new SystemAuditEventRepository(context).append(audit)) instanceof Error
     )
-      throw new SystemHTTPException({
+      throw new SystemAuditDisclosureHttpError({
         status: 503,
         code: "audit_unavailable",
         detail: "監査を記録できません",
       })
-    throw new SystemHTTPException({
+    throw new SystemAuditDisclosureHttpError({
       status: 403,
       code: "forbidden",
       detail: "監査の開示条件を満たしていません",
     })
   }
-  throw new SystemHTTPException({
+  throw new SystemAuditDisclosureHttpError({
     status: 503,
     code: "audit_unavailable",
     detail: "監査の開示条件を確認できません",
