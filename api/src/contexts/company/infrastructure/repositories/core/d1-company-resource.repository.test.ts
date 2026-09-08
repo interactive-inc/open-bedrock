@@ -1,10 +1,12 @@
 import { describe, expect, test } from "bun:test"
+import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { readFileSync } from "node:fs"
+import { validateCompanyOrganizationChange } from "@/contexts/company/domain/policies/company-organization.policy"
 
 const schema =
   readFileSync(
@@ -82,6 +84,146 @@ function fixture() {
   const database = createCompanyD1TestDatabase(schema)
   return { database, repository: new D1CompanyResourceRepository(database) }
 }
+
+test.each(["organization-reference", "employment-authority"] as const)(
+  "%sの不整合をmigrationが検出しても既存の履歴を削除・補完しない",
+  async (kind) => {
+    const { database, repository } = fixture()
+    expect(
+      await repository.write(command([person, employee, employment, organizationUnit])),
+    ).toMatchObject({ kind: "applied" })
+    await database.exec("DROP TRIGGER company_authority_scope_reference_guard")
+    await database.exec("DROP TRIGGER company_governance_organization_revision_guard")
+    await database.exec("DROP TRIGGER company_employment_authority_commit_guard")
+    const invalid: CompanyResourceProps =
+      kind === "organization-reference"
+        ? {
+            ...person,
+            type: "authority-scope",
+            id: "scope:unconfirmed",
+            attributes: { scopeType: "organization-unit", scopeId: "unit:unconfirmed" },
+          }
+        : {
+            ...person,
+            type: "organizational-authority",
+            id: "authority:unconfirmed",
+            attributes: {
+              employeeId: employee.id,
+              employmentId: employment.id,
+              scopeType: "organization-unit",
+              scopeId: organizationUnit.id,
+              authority: "approve",
+            },
+          }
+    expect(await repository.write(command([invalid], 1))).toMatchObject({ kind: "applied" })
+    const before = await database
+      .prepare(
+        "SELECT * FROM company_resource_revisions ORDER BY organization_revision, resource_type, resource_id",
+      )
+      .all()
+    expect(
+      (
+        await database
+          .prepare(
+            kind === "organization-reference"
+              ? "SELECT * FROM company_governance_organization_reference_violations"
+              : "SELECT * FROM company_employment_authority_violations",
+          )
+          .all()
+      ).results,
+    ).toHaveLength(1)
+    const marker = "DROP VIEW IF EXISTS company_governance_organization_reference_violations;"
+    expect(schema.includes(marker)).toBe(true)
+    const attempted = await database
+      .batch(
+        splitSqlStatements(schema.slice(schema.indexOf(marker))).map((statement) =>
+          database.prepare(statement),
+        ),
+      )
+      .catch((cause: unknown) => cause)
+    expect(attempted).toBeInstanceOf(Error)
+    if (!(attempted instanceof Error)) throw new Error("Invalid existing history was accepted")
+    expect(attempted.message).toContain(
+      kind === "organization-reference"
+        ? "company_governance_organization_reference_invalid"
+        : "company_employment_authority_period_not_covered",
+    )
+    expect(
+      await database
+        .prepare(
+          "SELECT * FROM company_resource_revisions ORDER BY organization_revision, resource_type, resource_id",
+        )
+        .all(),
+    ).toEqual(before)
+  },
+)
+
+test.each(["organizational-office", "authority-scope"] as const)(
+  "%sは組織IDと連続期間を参照し、期間ID・空白・参照中の組織短縮を拒否する",
+  async (type) => {
+    const { repository, database } = fixture()
+    const unit = {
+      ...organizationUnit,
+      id: "period:root:first",
+      effectiveTo: restoreCalendarDate("2026-07-01"),
+    }
+    const continuation = {
+      ...organizationUnit,
+      id: "period:root:next",
+      effectiveFrom: restoreCalendarDate("2026-07-01"),
+    }
+    const position: CompanyResourceProps = {
+      ...person,
+      type: "position",
+      id: "position:scope",
+      attributes: { code: "LEAD", officialName: "Lead" },
+    }
+    const target: CompanyResourceProps =
+      type === "organizational-office"
+        ? {
+            ...person,
+            type,
+            id: "target:scope",
+            attributes: {
+              code: "LEAD",
+              officialName: "Lead",
+              organizationUnitId: "unit:1",
+              positionId: position.id,
+            },
+          }
+        : {
+            ...person,
+            type,
+            id: "target:scope",
+            attributes: { scopeType: "organization-unit", scopeId: "unit:1" },
+          }
+    const valid = command([unit, continuation, position, target])
+    expect(validateCompanyOrganizationChange([], valid, [])).toBeNull()
+    const gap = command([
+      { ...unit, effectiveTo: restoreCalendarDate("2026-06-30") },
+      continuation,
+      position,
+      target,
+    ])
+    expect(validateCompanyOrganizationChange([], gap, [])).toBeInstanceOf(Error)
+    expect(await repository.write(gap)).toMatchObject({ kind: "invalid" })
+    expect((await counts(database))?.heads).toBe(0)
+    expect(await repository.write(valid)).toMatchObject({ kind: "applied" })
+    const before = await counts(database)
+    const falseId =
+      type === "organizational-office"
+        ? { ...target.attributes, organizationUnitId: unit.id }
+        : { ...target.attributes, scopeId: unit.id }
+    expect(
+      await repository.write(command([{ ...target, revision: 2, attributes: falseId }], 1)),
+    ).toMatchObject({ kind: "invalid" })
+    expect(await counts(database)).toEqual(before)
+    expect(
+      await repository.write(command([{ ...continuation, revision: 2, state: "void" }], 1)),
+    ).toMatchObject({ kind: "invalid" })
+    expect(await counts(database)).toEqual(before)
+  },
+)
 
 async function counts(database: D1Database) {
   return database
@@ -347,7 +489,18 @@ describe("Company workforce resourceの参照整合性", () => {
       }
       expect(
         await repository.write(
-          command([person, employee, otherEmployee, employment, unit, position, office]),
+          command([
+            person,
+            employee,
+            otherEmployee,
+            employment,
+            unit,
+            position,
+            office,
+            ...(type === "organizational-authority"
+              ? [{ ...assignment, id: "assignment:authority-basis" }]
+              : []),
+          ]),
         ),
       ).toMatchObject({ kind: "applied" })
       const attributes: CompanyResourceProps["attributes"] =

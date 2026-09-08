@@ -129,6 +129,19 @@ export function validateCompanyOrganizationChange(
     return new CompanyResourceValidationError("invalid_organization")
   }
 
+  for (const office of activeResourcesOfType(resources, "organizational-office")) {
+    const organizationUnitId = office.readText("organizationUnitId")
+    const positionId = office.readText("positionId")
+    if (
+      organizationUnitId === null ||
+      positionId === null ||
+      !hasContainingOrganizationUnit(office, organizationUnitId, activeUnits) ||
+      !hasContainingResource(office, "position", positionId, resources)
+    ) {
+      return new CompanyResourceValidationError("invalid_organization")
+    }
+  }
+
   const officeAssignments = activeResourcesOfType(resources, "office-assignment")
   for (const assignment of officeAssignments) {
     const employeeId = assignment.readText("employeeId")
@@ -165,7 +178,12 @@ export function validateCompanyOrganizationChange(
       scopeType === "workplace"
     ) {
       const scopeId = scope.readText("scopeId")
-      if (scopeId === null || !hasContainingResource(scope, scopeType, scopeId, resources)) {
+      const contained =
+        scopeId !== null &&
+        (scopeType === "organization-unit"
+          ? hasContainingOrganizationUnit(scope, scopeId, activeUnits)
+          : hasContainingResource(scope, scopeType, scopeId, resources))
+      if (!contained) {
         return new CompanyResourceValidationError("invalid_organization")
       }
     }

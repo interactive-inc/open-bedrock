@@ -381,15 +381,34 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     organizationId: string,
     revision: number,
   ): Promise<ReadonlyArray<CompanyResourceEntity> | Error> {
+    return this.findResourceHistory(organizationId, ["reporting-relation"], revision)
+  }
+
+  async findEmploymentAuthorityHistory(
+    organizationId: string,
+    revision: number,
+  ): Promise<ReadonlyArray<CompanyResourceEntity> | Error> {
+    return this.findResourceHistory(
+      organizationId,
+      ["office-assignment", "organizational-authority"],
+      revision,
+    )
+  }
+
+  private async findResourceHistory(
+    organizationId: string,
+    types: ReadonlyArray<CompanyResourceType>,
+    revision: number,
+  ): Promise<ReadonlyArray<CompanyResourceEntity> | Error> {
     const history = await this.c
       .prepare(`SELECT organization_id, resource_type, resource_id, revision, state,
                       effective_from, effective_to, attributes_json
                  FROM company_resource_revisions
-                WHERE organization_id = ? AND resource_type = 'reporting-relation'
+                WHERE organization_id = ? AND resource_type IN (${placeholders(types)})
                   AND organization_revision <= ?`)
-      .bind(organizationId, revision)
+      .bind(organizationId, ...types, revision)
       .all<CompanyResourceRow>()
-    if (!history.success) return new Error("Company reporting history is unavailable")
+    if (!history.success) return new Error("Company resource history is unavailable")
     const resources: CompanyResourceEntity[] = []
     for (const row of history.results) {
       const resource = toCompanyResource(row)
@@ -411,6 +430,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         /\bcompany personnel reporting (?:owner|assignment)\b/.test(cause.message) ||
         /\bcompany reporting employment\b/.test(cause.message) ||
         /\bcompany account link\b/.test(cause.message) ||
+        /\bcompany_governance_organization_reference_invalid\b/.test(cause.message) ||
+        /\bcompany_employment_authority_period_not_covered\b/.test(cause.message) ||
         /\bcompany_workforce_(?:reference_not_found|owner_immutable|resource_is_in_use|period_conflict|reference_period_conflict)\b/.test(
           cause.message,
         ) ||
