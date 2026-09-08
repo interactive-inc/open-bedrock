@@ -1,22 +1,16 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
-import { hasLeaveBalanceTracking } from "@/contexts/leave/domain/policies/has-balance-tracking.policy"
-import { toFiscalYear } from "@/contexts/leave/domain/definitions/fiscal-year.definition"
 import type { Context as HonoContext } from "@/env"
-import {
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-  UnexpectedError,
-  ValidationError,
-} from "@/lib/errors"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
-import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
+import { LeaveDecisionRepository } from "@/contexts/leave/infrastructure/repositories/leave-decision.repository"
+import { PrepareLeaveDecisionAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-decision.adapter"
 
 export type Command = {
   session: CompanySessionValue
+  tokenVersion: number
   leaveRequestId: number
   approverId: EmployeeId
   comment: string | null
@@ -42,147 +36,46 @@ export class ApproveLeaveRequest {
   }
 
   async execute(command: Command): Promise<LeaveRequest | ApplicationError> {
-    if (command.session.hasPermission("leave:approve") === false) {
+    if (
+      !command.session.hasPermission("leave:approve") ||
+      command.session.employeeId !== command.approverId
+    )
       return new ForbiddenError("cannot decide leave requests", "forbidden")
-    }
 
-    const leaveRequestRepository = new LeaveRequestRepository(this.c.context)
-
-    const existing = await leaveRequestRepository.findById(command.leaveRequestId)
-
-    if (existing instanceof Error) {
+    const existing = await new LeaveRequestRepository(this.c.context).findById(
+      command.leaveRequestId,
+    )
+    if (existing instanceof Error)
       return new UnexpectedError("failed to find leave request", { cause: existing })
-    }
-
-    if (existing === null) {
+    if (existing === null)
       return new NotFoundError("leave request not found", "leave_request_not_found")
-    }
 
-    if (existing.employeeId === command.approverId) {
-      return new ForbiddenError("cannot decide own leave request", "self_approval")
-    }
+    const prepared = await new PrepareLeaveDecisionAdapter(this.c.context).prepare({
+      session: command.session,
+      tokenVersion: command.tokenVersion,
+      existing,
+      approverId: command.approverId,
+      status: "approved",
+      comment: command.comment,
+    })
+    if (prepared instanceof Error) return prepared
+    const decided = await new LeaveDecisionRepository(this.c.context).commit(prepared)
+    if (decided instanceof Error) return decided
 
-    const organizationAuthority = await new ResolveOrganizationAuthorityAdapter(
-      this.c.context,
-    ).resolveOrganizationAuthority(command.approverId, existing.employeeId)
-
-    if (organizationAuthority instanceof Error) {
-      return new UnexpectedError("failed to resolve organization authority", {
-        cause: organizationAuthority,
+    try {
+      await this.c.notifyApprovalResult?.({
+        recipientEmployeeId: existing.employeeId,
+        action: "approve",
+        subjectLabel: "休暇申請",
+        sourceDomain: "leave",
+        sourceId: command.leaveRequestId,
+        createdAt: this.c.context.env.NOW ?? new Date().toISOString(),
+      })
+    } catch {
+      console.error("leave decision notification failed", {
+        requestId: this.c.context.var.auditContext.requestId,
       })
     }
-
-    const isInScope =
-      organizationAuthority.managementChain ||
-      organizationAuthority.departmentManager ||
-      command.session.hasPermission("org:manage")
-
-    if (isInScope === false) {
-      return new ForbiddenError(
-        "cannot decide leave request outside organization scope",
-        "forbidden",
-      )
-    }
-
-    const fiscalYear = toFiscalYear(existing.startDate)
-
-    if (fiscalYear === null) {
-      return new ValidationError("invalid leave request start date", "invalid_start_date")
-    }
-
-    const endFiscalYear = toFiscalYear(existing.endDate)
-
-    if (endFiscalYear === null) {
-      return new ValidationError("invalid leave request end date", "invalid_end_date")
-    }
-
-    if (fiscalYear !== endFiscalYear) {
-      return new ValidationError(
-        "leave request spans multiple fiscal years; please split into separate requests",
-        "cross_fiscal_year",
-      )
-    }
-
-    if (hasLeaveBalanceTracking(existing.leaveType)) {
-      return this.approveWithBalance(command, existing, leaveRequestRepository, fiscalYear)
-    }
-
-    const nextStatus = "approved" as const
-
-    return this.finalizeWithoutBalance(command, existing, leaveRequestRepository, nextStatus)
-  }
-
-  /** 残高管理対象の種別のみ通る経路。承認と残数消費を D1 batch で確定する。 */
-  private async approveWithBalance(
-    command: Command,
-    existing: LeaveRequest,
-    repository: LeaveRequestRepository,
-    fiscalYear: string,
-  ): Promise<LeaveRequest | ApplicationError> {
-    const approved = await repository.approveFromPendingAndConsumeBalance({
-      leaveRequestId: command.leaveRequestId,
-      approverId: command.approverId,
-      decidedComment: command.comment,
-      fiscalYear,
-    })
-
-    if (approved instanceof Error) {
-      return new UnexpectedError("failed to approve leave request", { cause: approved })
-    }
-
-    if (approved === "already_decided") {
-      return new ConflictError("the leave request is already decided", "already_decided")
-    }
-
-    if (approved === "balance_not_found") {
-      return new ConflictError("leave balance record not found", "balance_not_found")
-    }
-
-    if (approved === "insufficient_balance") {
-      return new ConflictError("insufficient leave balance", "insufficient_balance")
-    }
-
-    await this.notify(command, existing)
-
-    return approved
-  }
-
-  /** 却下、および残高管理なし種別の承認が通る経路。残高テーブルは一切触らない。 */
-  private async finalizeWithoutBalance(
-    command: Command,
-    existing: LeaveRequest,
-    repository: LeaveRequestRepository,
-    nextStatus: "approved",
-  ): Promise<LeaveRequest | ApplicationError> {
-    const decided = await repository.decideFromPending({
-      leaveRequestId: command.leaveRequestId,
-      status: nextStatus,
-      approverId: command.approverId,
-      decidedComment: command.comment,
-    })
-
-    if (decided instanceof Error) {
-      return new UnexpectedError("failed to decide leave request", { cause: decided })
-    }
-
-    if (decided === null) {
-      return new ConflictError("the leave request is already decided", "already_decided")
-    }
-
-    await this.notify(command, existing)
-
     return decided
-  }
-
-  /** 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。 */
-  private async notify(command: Command, existing: LeaveRequest): Promise<void> {
-    await this.c.notifyApprovalResult?.({
-      recipientEmployeeId: existing.employeeId,
-      action: "approve",
-      subjectLabel: "休暇申請",
-      sourceDomain: "leave",
-      sourceId: command.leaveRequestId,
-      createdAt: command.createdAt,
-    })
   }
 }

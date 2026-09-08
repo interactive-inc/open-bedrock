@@ -343,6 +343,7 @@
     "src/contexts/company/infrastructure/adapters/organization/organization-resource-adoption-snapshot.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/organization-unit-change-statement.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/organization/prepare-employee-management-authority.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/read-active-headcount.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/read-company-snapshot-employees.adapter.ts",
