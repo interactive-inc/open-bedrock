@@ -123,3 +123,32 @@ describe("CLIの雇用区分", () => {
     }
   })
 })
+
+test("発令一覧は対象・期間・カーソルをGETへ渡す", async () => {
+  const c = capture()
+  try {
+    const response = await request("/personnel-actions/list", {
+      "employee-id": "employee:1",
+      from: "2030-01-01",
+      to: "2030-12-31",
+      limit: "10",
+      cursor: "opaque+/=",
+    })
+    expect(response.status).toBe(200)
+    expect(c.requests).toHaveLength(1)
+    const sent = c.requests[0]
+    if (sent === undefined) throw new Error("request missing")
+    expect(sent.method).toBe("GET")
+    const url = new URL(sent.url)
+    expect(url.pathname).toBe("/company/personnel-actions")
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      employee_id: "employee:1",
+      from: "2030-01-01",
+      to: "2030-12-31",
+      limit: "10",
+      cursor: "opaque+/=",
+    })
+  } finally {
+    c.interception.mockRestore()
+  }
+})

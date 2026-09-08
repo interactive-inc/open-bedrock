@@ -1,7 +1,7 @@
 import { formatLifecycleDate } from "@/app/(app)/company/employees/[employee]/_lib/format-lifecycle-date"
 import { formatLifecycleDisplayStatus } from "@/app/(app)/company/employees/[employee]/_lib/format-lifecycle-display-status"
-import { formatLifecycleKind } from "@/app/(app)/company/employees/[employee]/_lib/format-lifecycle-kind"
-import { summarizeLifecycleEvent } from "@/app/(app)/company/employees/[employee]/_lib/summarize-lifecycle-event"
+import { formatLifecycleKind } from "@/app/(app)/company/_lib/format-lifecycle-kind"
+import { summarizeLifecycleEvent } from "@/app/(app)/company/_lib/summarize-lifecycle-event"
 import { describe, expect, test } from "vite-plus/test"
 
 describe("format lifecycle event", () => {

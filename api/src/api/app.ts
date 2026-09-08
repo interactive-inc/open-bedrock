@@ -103,6 +103,7 @@ import * as companyEmploymentsRoute from "@/contexts/company/interface/routes/co
 import * as companyExternalIdentityImportsRoute from "@/contexts/company/interface/routes/company.external-identity-imports"
 import * as companyGradeDefinitionsRoute from "@/contexts/company/interface/routes/company.grade-definitions"
 import * as companyGradeDefinitionsIdRoute from "@/contexts/company/interface/routes/company.grade-definitions.$id"
+import * as companyLegacyPersonnelActionRecordsRoute from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
 import * as companyMyDirectReportsRoute from "@/contexts/company/interface/routes/company.my-direct-reports"
 import * as companyMyOrganizationUnitsRoute from "@/contexts/company/interface/routes/company.my-organization-units"
 import * as companyMyProfileRoute from "@/contexts/company/interface/routes/company.my-profile"
@@ -620,6 +621,7 @@ const routePart25 = createRouteApp()
   .put("/company/grade-definitions/:id", ...companyGradeDefinitionsIdRoute.PUT)
   .delete("/company/grade-definitions/:id", ...companyGradeDefinitionsIdRoute.DELETE)
   .get("/company/inbox/counts", ...companyInboxCountsRoute.GET)
+  .get("/company/legacy-personnel-action-records", ...companyLegacyPersonnelActionRecordsRoute.GET)
   .get("/company/my-direct-reports", ...companyMyDirectReportsRoute.GET)
   .get("/company/my-organization-units", ...companyMyOrganizationUnitsRoute.GET)
   .get("/company/my-profile", ...companyMyProfileRoute.GET)
@@ -634,9 +636,9 @@ const routePart25 = createRouteApp()
     ...companyOrganizationResourceAdoptionsRoute.POST,
   )
   .get("/company/organization-snapshots", ...companyOrganizationSnapshotsRoute.GET)
-  .get("/company/organization-tree", ...companyOrganizationTreeRoute.GET)
 
 const routePart26 = createRouteApp()
+  .get("/company/organization-tree", ...companyOrganizationTreeRoute.GET)
   .get("/company/organization-units", ...companyOrganizationUnitsRoute.GET)
   .post("/company/organization-units", ...companyOrganizationUnitsRoute.POST)
   .get("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.GET)

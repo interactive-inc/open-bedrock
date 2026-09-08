@@ -1,4 +1,4 @@
-import { formatLifecycleKind } from "@/app/(app)/company/employees/[employee]/_lib/format-lifecycle-kind"
+import { formatLifecycleKind } from "@/app/(app)/company/_lib/format-lifecycle-kind"
 import { TextLink } from "@/components/text-link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
