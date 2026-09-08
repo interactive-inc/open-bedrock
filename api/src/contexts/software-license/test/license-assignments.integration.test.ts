@@ -6,6 +6,24 @@ import { LicenseAssignmentRepository } from "@/contexts/software-license/infrast
 afterEach(() => mock.restore())
 
 describe("software license usage ledger", () => {
+  test("uses non-enumerable runtime bindings for registration and employee names", async () => {
+    const f = await createLicenseFixture()
+    f.settings.hiddenBindings = true
+    const created = await f.request("/software-licenses", {
+      method: "POST",
+      body: { name: "Additional Service", seats: 1 },
+    })
+    expect(created.status).toBe(201)
+    const assigned = await f.request(`/software-licenses/${f.license.id}/assignments`, {
+      method: "POST",
+      body: { id: crypto.randomUUID(), employee_id: "employee:member", reason: "Work" },
+    })
+    expect(assigned.status).toBe(201)
+    const response = await f.request("/software-licenses/assignments")
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({ data: [{ employee_name: "member" }] })
+  })
+
   test("deduplicates concurrent contract registrations and rejects changed retry content", async () => {
     const f = await createLicenseFixture()
     const command = {

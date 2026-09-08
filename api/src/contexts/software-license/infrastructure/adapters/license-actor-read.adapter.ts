@@ -42,7 +42,11 @@ export class LicenseActorReadAdapter {
         cause: guard,
       })
     const directory = new CompanyEmployeeDirectoryReadAdapter({
-      env: { ...this.c.env, NOW: now.toISOString() },
+      env: {
+        DB: this.c.env.DB,
+        COMPANY_TIME_ZONE: this.c.env.COMPANY_TIME_ZONE,
+        NOW: now.toISOString(),
+      },
     })
     const actors = await directory.findForAccountIds([account.data])
     const employees = await directory.findForEmployeeIds(employeeIds)

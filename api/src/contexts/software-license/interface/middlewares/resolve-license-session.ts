@@ -9,7 +9,8 @@ export const resolveLicenseSession = softwareLicenseFactory.createMiddleware(asy
   const accountId = zAccountId.parse(c.var.userId)
   const directory = await new CompanyEmployeeDirectoryReadAdapter({
     env: {
-      ...c.env,
+      DB: c.env.DB,
+      COMPANY_TIME_ZONE: c.env.COMPANY_TIME_ZONE,
       NOW: c.var.now().toISOString(),
     },
   }).findForAccountIds([accountId])
