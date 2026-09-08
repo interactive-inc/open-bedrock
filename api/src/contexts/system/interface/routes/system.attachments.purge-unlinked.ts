@@ -1,6 +1,7 @@
 import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
 import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
 import { UNLINKED_ATTACHMENT_RETENTION_MILLISECONDS } from "@system/domain/catalogs/attachments/unlinked-attachment-retention.catalog"
+import { SystemAttachmentError } from "@system/domain/errors"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import {
   SystemAttachmentPurgeUnavailableError,
@@ -16,6 +17,15 @@ import { systemFactory } from "@system/interface/request-environment/system-fact
 export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, async (context) => {
   if (!context.var.permissions.has("system:admin")) {
     throw new SystemForbiddenError()
+  }
+  if (context.env.ATTACHMENTS === undefined) {
+    throw new SystemAttachmentPurgeUnavailableError(
+      new SystemAttachmentError(
+        "unavailable",
+        "attachment_storage_unconfigured",
+        "添付機能が設定されていません",
+      ),
+    )
   }
 
   const result = await (async () => {
@@ -36,15 +46,20 @@ export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, 
     let purgedCount = 0
 
     for (const row of stale) {
-      const deleted = await store.delete(row.objectKey)
+      const claimed = await repository.claimUnlinkedPurge(row.id, threshold, command.now)
+
+      if (claimed instanceof Error) return claimed
+      if (claimed === null) continue
+
+      const deleted = await store.delete(claimed.objectKey)
 
       if (deleted instanceof Error) return deleted
 
-      const removed = await repository.deleteUnlinked(row.id)
+      const removed = await repository.deleteUnlinked(claimed.id)
 
       if (removed instanceof Error) return removed
 
-      purgedCount += 1
+      if (removed) purgedCount += 1
     }
 
     return { purgedCount }
