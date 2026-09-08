@@ -2,6 +2,26 @@
 export const companyRouteManifest = [
   {
     method: "GET",
+    path: "/company/responsibility-resource-adoptions",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.responsibility-resource-adoptions",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/responsibility-resource-adoptions",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.responsibility-resource-adoptions",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
     path: "/company/personnel-action-events",
     phase: "authenticated",
     handler: {

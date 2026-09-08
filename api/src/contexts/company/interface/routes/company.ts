@@ -37,6 +37,7 @@ import * as positionDefinitions from "@/contexts/company/interface/routes/compan
 import * as positionDefinitionsId from "@/contexts/company/interface/routes/company.position-definitions.$id"
 import * as profile from "@/contexts/company/interface/routes/company.profile"
 import * as reportingLinesEmployeeCode from "@/contexts/company/interface/routes/company.reporting-lines.$employeeCode"
+import * as responsibilityResourceAdoptions from "@/contexts/company/interface/routes/company.responsibility-resource-adoptions"
 
 // `bun run gen:app` の生成物。手で編集せず、routeは所有contextのinterface/route-manifest.tsへ足す。
 export const companyPublicRoutes = new Hono<CompanyHttpEnvironment>().post(
@@ -105,3 +106,5 @@ export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .put("/position-definitions/:id", ...positionDefinitionsId.PUT)
   .delete("/position-definitions/:id", ...positionDefinitionsId.DELETE)
   .post("/profile", ...profile.POST)
+  .get("/responsibility-resource-adoptions", ...responsibilityResourceAdoptions.GET)
+  .post("/responsibility-resource-adoptions", ...responsibilityResourceAdoptions.POST)
