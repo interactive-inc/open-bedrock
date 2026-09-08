@@ -35,6 +35,7 @@ export async function authenticateSystemBearer(c: Context<HonoEnv>): Promise<voi
 
   c.set("userId", bearerAccount.accountId)
   c.set("accountTokenVersion", bearerAccount.tokenVersion)
+  c.set("bearerReadAuthentication", bearerAccount.readAuthentication)
   c.set("permissions", accountAuthorization.permissionKeys)
   c.set("scopedPermissions", accountAuthorization.scopedPermissionKeys)
   c.set("role", accountAuthorization.roleKeys[0] ?? "authenticated")

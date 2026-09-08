@@ -19,7 +19,14 @@ const claimsSchema = z.object({
 
 export type ExternalAccessTokenAccountResolution =
   | Readonly<{ kind: "not_external" }>
-  | Readonly<{ kind: "accepted"; accountId: string; tokenVersion: number }>
+  | Readonly<{
+      kind: "accepted"
+      accountId: string
+      tokenVersion: number
+      identityBindingId: string
+      issuedAtMs: number
+      expiresAtMs: number
+    }>
   | Readonly<{ kind: "rejected" }>
   | Readonly<{ kind: "unavailable" }>
 
@@ -87,6 +94,9 @@ export async function resolveExternalAccessTokenAccount(props: {
       kind: "accepted",
       accountId: login.account.id,
       tokenVersion: login.account.tokenVersion,
+      identityBindingId: login.identity.id,
+      issuedAtMs: claims.data.iat * 1000,
+      expiresAtMs: claims.data.exp * 1000,
     }
   } catch {
     return { kind: "rejected" }

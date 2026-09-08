@@ -5,12 +5,14 @@ import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-
 import { SystemAccessTokenStateAdapter } from "@system/infrastructure/adapters/auth/system-access-token-state.adapter"
 import { AccessTokenService } from "@system/lib/auth/access-token-service"
 import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/lib/auth/system-access-token-profile"
+import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 
 export type BearerAccountResolution =
   | Readonly<{
       kind: "accepted"
       accountId: ReturnType<typeof zAccountId.parse>
       tokenVersion: number
+      readAuthentication: SystemReadAuthentication
     }>
   | Readonly<{ kind: "rejected"; reason: string }>
   | Readonly<{ kind: "unavailable" }>
@@ -48,6 +50,14 @@ async function resolveSystemSession(props: {
       kind: "accepted",
       accountId: accountId.data,
       tokenVersion: authentication.account.tokenVersion,
+      readAuthentication: {
+        accountId: accountId.data,
+        tokenVersion: authentication.account.tokenVersion,
+        issuedAtMs: claims.issuedAtMs,
+        expiresAtMs: claims.exp * 1000,
+        machineCredentialId: claims.machineCredentialId ?? null,
+        identityBindingId: null,
+      },
     }
   }
   if (authentication.reason === "account_not_found") {
@@ -88,6 +98,14 @@ export async function resolveBearerAccount(props: {
       kind: "accepted",
       accountId: accountId.data,
       tokenVersion: external.tokenVersion,
+      readAuthentication: {
+        accountId: accountId.data,
+        tokenVersion: external.tokenVersion,
+        issuedAtMs: external.issuedAtMs,
+        expiresAtMs: external.expiresAtMs,
+        machineCredentialId: null,
+        identityBindingId: external.identityBindingId,
+      },
     }
   }
   if (external.kind === "rejected") return { kind: "rejected", reason: "invalid token" }
