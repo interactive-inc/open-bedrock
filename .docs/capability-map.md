@@ -136,6 +136,8 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 
 `/company` は LegalEntity、CompanyProfile、Site、Workplace、Person、Employee、Employment、OrgUnit、Assignment、ReportingRelation、Job、Position、Grade、OrganizationalOffice、OfficeAssignment、Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody、CollectiveBodyMembership、OrganizationalAuthority、AccountEmployeeLink、PersonnelAction を同じ resource、revision、半開期間、command 契約で公開する。read は D1 atomic batch で一つの organization revision へ固定し、write は expected revision、resource revision、SHA-256 fingerprint 付き idempotency receipt、append-only 履歴を強制する。契約と失敗条件は [Company API](./company-api.md) に定める。
 
+公開上長関係の本人・上司・組織は、[終了済みの関係を含む全参照期間](company-api.md#上長関係の参照期間)を会社版の確定時にも検査する。組織の訂正で過去の関係を期間外へ残す変更は全体を拒否する。確認した関係の訂正と組織変更は同じcommandで保存できる。
+
 ### 職務と責任
 
 - Job、Position、Grade、OrganizationalOffice

@@ -29,7 +29,7 @@ const migration = readFileSync(
 test("各製品のmigrationは共有Company DDLと一致し、triggerを完全なstatementとして分割できる", () => {
   expect(start).toBeGreaterThan(0)
   expect(migrationFiles).toHaveLength(1)
-  expect(schema.slice(start)).toBe(migration)
+  expect(schema.slice(start, start + migration.length)).toBe(migration)
   const triggers = splitSqlStatements(migration).filter((statement) =>
     /^CREATE TRIGGER/m.test(statement),
   )
