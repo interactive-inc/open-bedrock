@@ -175,6 +175,12 @@ describe("canonical Company API", () => {
         })
       ).status,
     ).toBe(201)
+    const receipts = await database
+      .prepare("SELECT recorded_at FROM company_command_receipts ORDER BY organization_revision")
+      .all<{ recorded_at: number }>()
+    expect(receipts.results).toEqual(
+      Array.from({ length: 3 }, () => ({ recorded_at: Date.parse("2026-09-07T03:00:00.000Z") })),
+    )
   })
 
   test("会社情報のないorganizationは404を返す", async () => {

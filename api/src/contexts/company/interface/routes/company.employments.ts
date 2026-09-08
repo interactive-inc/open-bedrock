@@ -1,3 +1,4 @@
+import { resolveCompanyRecordedAt } from "@/contexts/company/interface/request-environment/resolve-company-recorded-at"
 /** /company/employments */
 import { CreateEmployments } from "@/contexts/company/application/employments/create-employments"
 import { DeleteEmployments } from "@/contexts/company/application/employments/delete-employments"
@@ -204,7 +205,7 @@ export const POST = factory.createHandlers(
       commandId: headers["idempotency-key"],
       expectedRevision: Number(headers["if-match"].replace(/^W\//, "").replace(/^"|"$/g, "")),
       reason: body.reason,
-      recordedAt: Date.now(),
+      recordedAt: resolveCompanyRecordedAt(context.var.companyClock),
       resources: body.resources.map((resource) => ({
         ...resource,
         effectiveFrom: restoreCalendarDate(resource.effectiveFrom),
