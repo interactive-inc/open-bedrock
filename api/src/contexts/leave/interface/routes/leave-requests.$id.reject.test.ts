@@ -1,3 +1,4 @@
+import { readLeaveDecisionTarget } from "@/contexts/leave/test/read-leave-decision-target.test-support"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
@@ -122,7 +123,10 @@ async function request(props: {
     path: props.path,
     token: props.token,
     method: props.method,
-    body: props.body,
+    body: {
+      decision_target: { request_id: 1, request_digest: "a".repeat(64) },
+      ...Object(props.body),
+    },
   })
 }
 
@@ -131,6 +135,7 @@ describe("POST /leave-requests/:id/reject", () => {
     const db = await createTestDb()
 
     const managerToken = await tokenFor(4)
+    const decisionTarget = await readLeaveDecisionTarget(db, jwtSecret, fiscalNow, 1, managerToken)
 
     const rejectResponse = await requestWithContext({
       db,
@@ -139,7 +144,7 @@ describe("POST /leave-requests/:id/reject", () => {
       path: "/leave/leave-requests/1/reject",
       token: managerToken,
       method: "POST",
-      body: { comment: "not this time" },
+      body: { comment: "not this time", decision_target: decisionTarget },
     })
 
     expect(rejectResponse.status).toBe(200)

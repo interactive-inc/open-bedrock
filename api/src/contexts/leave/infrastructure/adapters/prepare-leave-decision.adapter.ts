@@ -1,3 +1,8 @@
+import {
+  leaveDecisionTargetSchema,
+  type LeaveDecisionTarget,
+} from "@/contexts/leave/domain/definitions/leave-decision-target.definition"
+import { LeaveDecisionTargetValue } from "@/contexts/leave/domain/values/leave-decision-target.value"
 import type { Context } from "@/env"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
@@ -31,6 +36,7 @@ export class PrepareLeaveDecisionAdapter {
     input: Readonly<{
       session: CompanySessionValue
       tokenVersion: number
+      decisionTarget: LeaveDecisionTarget
       existing: LeaveRequest
       approverId: EmployeeId
       status: "approved" | "rejected"
@@ -86,6 +92,16 @@ export class PrepareLeaveDecisionAdapter {
     if (fiscalYear !== endFiscalYear)
       return new ValidationError("leave request spans multiple fiscal years", "cross_fiscal_year")
 
+    const expected = leaveDecisionTargetSchema.safeParse(input.decisionTarget)
+    const target = await LeaveDecisionTargetValue.create(input.existing)
+    if (target instanceof Error)
+      return new UnexpectedError("cannot identify leave decision target", { cause: target })
+    if (!expected.success || target === null || !target.matches(expected.data))
+      return new ConflictError(
+        "the leave request changed; review it again",
+        "leave_request_changed",
+      )
+
     const before = toLeaveDecisionSnapshot(input.existing)
     const audit = SystemAuditEventEntity.create({
       actorAccountId: input.session.accountId,
@@ -95,6 +111,7 @@ export class PrepareLeaveDecisionAdapter {
       outcome: "succeeded",
       reasonCode: null,
       authorizationJson: JSON.stringify({
+        decisionTarget: target.toJSON(),
         principalId: human.principalId,
         permission: "leave:approve",
         employeeId: input.approverId,

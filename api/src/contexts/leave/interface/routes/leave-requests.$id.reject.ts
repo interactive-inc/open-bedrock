@@ -1,3 +1,4 @@
+import { leaveDecisionTargetSchema } from "@/contexts/leave/domain/definitions/leave-decision-target.definition"
 import { RejectLeaveRequest } from "@/contexts/leave/application/reject-leave-request"
 import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result"
 import { ApplicationError } from "@/lib/errors"
@@ -17,6 +18,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
+      decision_target: leaveDecisionTargetSchema,
       comment: z.string().min(1).max(3_000),
     }),
   ),
@@ -41,6 +43,7 @@ export const POST = factory.createHandlers(
     }).execute({
       session,
       tokenVersion: c.var.accountTokenVersion,
+      decisionTarget: body.decision_target,
       leaveRequestId,
       approverId: session.employeeId,
       comment: body.comment,

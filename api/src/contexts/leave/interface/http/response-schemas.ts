@@ -1,3 +1,4 @@
+import { leaveDecisionTargetSchema } from "@/contexts/leave/domain/definitions/leave-decision-target.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import {
   leaveTypeSchema,
@@ -24,6 +25,8 @@ export const zAppLeaveRequest = z.object({
 
 /** 休暇申請の詳細レスポンス（GET/PUT /requests/:id）。approver_id と decided_comment を含まない。 */
 export const zAppLeaveRequestDetail = z.object({
+  consumed_days: z.number(),
+  decision_target: leaveDecisionTargetSchema.nullable(),
   id: z.number(),
   employee_id: zEmployeeId,
   leave_type: leaveTypeSchema,
@@ -58,6 +61,9 @@ export const zAppLeaveRequestSummaryList = z.object({
 
 /** 承認待ち休暇申請一覧 1 件（GET /requests/inbox）。applicant_name を含む。 */
 export const zAppLeaveRequestInbox = z.object({
+  employee_id: zEmployeeId,
+  consumed_days: z.number(),
+  decision_target: leaveDecisionTargetSchema,
   id: z.number(),
   applicant_name: z.string(),
   leave_type: leaveTypeSchema,

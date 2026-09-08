@@ -137,7 +137,7 @@ async function LeaveInboxTable(props: { offset: number; pageSize: number; sort: 
                 </TableCell>
 
                 <TableCell>
-                  <LeaveInboxDecisionForm leaveRequestId={leaveRequest.id} />
+                  <LeaveInboxDecisionForm request={leaveRequest} />
                 </TableCell>
               </TableRow>
             ))}

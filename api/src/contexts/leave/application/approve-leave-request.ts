@@ -1,3 +1,4 @@
+import type { LeaveDecisionTarget } from "@/contexts/leave/domain/definitions/leave-decision-target.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
@@ -11,6 +12,7 @@ import { PrepareLeaveDecisionAdapter } from "@/contexts/leave/infrastructure/ada
 export type Command = {
   session: CompanySessionValue
   tokenVersion: number
+  decisionTarget: LeaveDecisionTarget
   leaveRequestId: number
   approverId: EmployeeId
   comment: string | null
@@ -53,6 +55,7 @@ export class ApproveLeaveRequest {
     const prepared = await new PrepareLeaveDecisionAdapter(this.c.context).prepare({
       session: command.session,
       tokenVersion: command.tokenVersion,
+      decisionTarget: command.decisionTarget,
       existing,
       approverId: command.approverId,
       status: "approved",
