@@ -12,6 +12,7 @@ export type LiveEmployeeAccess = {
 
 type Context = Readonly<{ env: CompanyContext["env"] }>
 type EmploymentStateRow = Readonly<{
+  employee_id: EmployeeId
   status: unknown
   employment_starts_on: string
   employment_ends_on: string | null
@@ -28,6 +29,14 @@ export class ResolveLiveEmployeeAccessAdapter {
   async resolveLiveEmployeeAccess(
     employeeId: EmployeeId,
   ): Promise<LiveEmployeeAccess | null | CompanyOperationError> {
+    const result = await this.resolveMany([employeeId])
+    return result instanceof Error ? result : (result.get(employeeId) ?? null)
+  }
+
+  async resolveMany(
+    employeeIds: ReadonlyArray<EmployeeId>,
+  ): Promise<ReadonlyMap<EmployeeId, LiveEmployeeAccess | null> | CompanyOperationError> {
+    if (employeeIds.length === 0) return new Map()
     const businessDate = resolveCompanyBusinessDate({
       now: this.c.env.NOW ?? new Date().toISOString(),
       timeZone: this.c.env.COMPANY_TIME_ZONE,
@@ -43,27 +52,32 @@ export class ResolveLiveEmployeeAccessAdapter {
     try {
       const states = await this.c.env.DB.prepare(
         `${companyEmploymentStateSql()}
-         SELECT status, employment_starts_on, employment_ends_on,
+         SELECT employee_id, status, employment_starts_on, employment_ends_on,
                 status_starts_on, status_ends_on
          FROM current_employment_states
-         WHERE employee_id = ?2
-         ORDER BY employment_id, status_period_id
-         LIMIT 2`,
+         WHERE employee_id IN (SELECT value FROM json_each(?2))
+         ORDER BY employee_id, employment_id, status_period_id`,
       )
-        .bind(businessDate, employeeId)
+        .bind(businessDate, JSON.stringify([...new Set(employeeIds)]))
         .all<EmploymentStateRow>()
       if (!states.success) return this.unavailable()
-      if (states.results.length === 0) return null
-      if (states.results.length !== 1) return this.unavailable()
-
-      const state = states.results[0]
-      if (state === undefined || !this.isValidState(state)) return this.unavailable()
-
-      return {
-        status: state.status === "active" ? "ACTIVE" : "ON_LEAVE",
-        source: "employment",
-        businessDate,
+      const results = new Map<EmployeeId, LiveEmployeeAccess | null>(
+        employeeIds.map((id) => [id, null]),
+      )
+      for (const state of states.results) {
+        if (
+          !results.has(state.employee_id) ||
+          results.get(state.employee_id) !== null ||
+          !this.isValidState(state)
+        )
+          return this.unavailable()
+        results.set(state.employee_id, {
+          status: state.status === "active" ? "ACTIVE" : "ON_LEAVE",
+          source: "employment",
+          businessDate,
+        })
       }
+      return results
     } catch (cause) {
       return this.unavailable(cause)
     }

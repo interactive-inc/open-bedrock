@@ -943,7 +943,7 @@ test("初期化した責務を公開資格として解決し、確認前の資�
   if (binding === null) throw new Error("organization missing")
   const resolved = await new CompanyGovernanceAuthorityResolutionAdapter({
     repository: f.repository,
-    isAccountActive: async (id) => id === f.accountId,
+    readActiveAccountIds: async (ids) => new Set(ids.filter((id) => id === f.accountId)),
   }).resolve({
     organizationId: "organization:default",
     asOf: restoreCalendarDate(f.observedOn),

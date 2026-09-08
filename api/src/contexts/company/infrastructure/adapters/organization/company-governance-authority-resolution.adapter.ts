@@ -14,8 +14,8 @@ type Result =
   | Readonly<{ kind: "unavailable"; cause: unknown }>
 
 type Context = Readonly<{
-  repository: CompanyResourceRepository
-  isAccountActive: (accountId: string) => Promise<boolean | Error>
+  repository: Pick<CompanyResourceRepository, "findMany">
+  readActiveAccountIds: (accountIds: ReadonlyArray<string>) => Promise<ReadonlySet<string> | Error>
 }>
 
 /** Company resource snapshotとliveなSystem Accountを合成し、会社上の判断資格を固定する。 */
@@ -68,12 +68,13 @@ export class CompanyGovernanceAuthorityResolutionAdapter {
       }
       accountIds.add(accountId)
     }
-    const activeAccountIds = new Set<string>()
-    for (const accountId of [...accountIds].toSorted()) {
-      const active = await this.c.isAccountActive(accountId)
-      if (active instanceof Error) return { kind: "unavailable", cause: active }
-      if (active) activeAccountIds.add(accountId)
-    }
+    const activeAccountIds = await this.c.readActiveAccountIds([...accountIds].toSorted())
+    if (activeAccountIds instanceof Error) return { kind: "unavailable", cause: activeAccountIds }
+    if ([...activeAccountIds].some((accountId) => !accountIds.has(accountId)))
+      return {
+        kind: "unavailable",
+        cause: new Error("active Account response contains an unexpected identity"),
+      }
     const resolution = resolveCompanyGovernanceAuthority({
       asOf: input.asOf,
       organizationRevision: read.organizationRevision,

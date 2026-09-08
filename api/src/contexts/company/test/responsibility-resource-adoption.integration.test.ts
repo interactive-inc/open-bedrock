@@ -301,7 +301,7 @@ describe("確認済みの既存責務を公開履歴へ接続する", () => {
     expect(await f.publicOn("2030-10-01")).toHaveLength(1)
     const resolver = new CompanyGovernanceAuthorityResolutionAdapter({
       repository: f.repository,
-      isAccountActive: async () => true,
+      readActiveAccountIds: async (ids) => new Set(ids),
     })
     expect(
       await resolver.resolve({

@@ -91,7 +91,7 @@ export const POST = factory.createHandlers(
     const body = context.req.valid("json")
     const result = await new CompanyGovernanceAuthorityResolutionAdapter({
       repository: new D1CompanyResourceRepository(database),
-      isAccountActive: async (accountId) => {
+      readActiveAccountIds: async (accountIds) => {
         return new ResolveActiveSystemAccountIdAdapter({
           env: {
             DB: database,
@@ -104,7 +104,7 @@ export const POST = factory.createHandlers(
             database: context.var.database,
             auditContext: context.var.auditContext,
           },
-        }).isActiveSystemAccount(accountId)
+        }).findActiveSystemAccountIds(accountIds)
       },
     }).resolve({
       organizationId,

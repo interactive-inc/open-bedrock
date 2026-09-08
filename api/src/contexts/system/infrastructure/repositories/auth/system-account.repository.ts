@@ -5,7 +5,7 @@ import {
   type AccountSessionRejection,
 } from "@system/domain/policies/account-session.policy"
 import { systemAccounts } from "@system/infrastructure/schema/system-core"
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"
 
 function createDatabase(database: D1Database) {
@@ -38,6 +38,33 @@ export class SystemAccountRepository {
       return row === undefined ? null : AccountEntity.create(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to read System AccountEntity")
+    }
+  }
+
+  /** 指定されたAccountを一括復元し、欠損と停止状態を呼び出し元へそのまま返す。 */
+  async findMany(
+    accountIds: ReadonlyArray<AccountId>,
+  ): Promise<ReadonlyArray<AccountEntity> | Error> {
+    if (accountIds.length === 0) return []
+    try {
+      const database =
+        "select" in this.c.database ? this.c.database : createDatabase(this.c.database)
+      const rows = await database
+        .select()
+        .from(systemAccounts)
+        .where(
+          sql`${systemAccounts.id} IN (SELECT value FROM json_each(${JSON.stringify([...new Set(accountIds)])}))`,
+        )
+        .orderBy(systemAccounts.id)
+      const accounts: AccountEntity[] = []
+      for (const row of rows) {
+        const account = AccountEntity.create(row)
+        if (account instanceof Error) return account
+        accounts.push(account)
+      }
+      return Object.freeze(accounts)
+    } catch (cause) {
+      return cause instanceof Error ? cause : new Error("failed to read System Accounts")
     }
   }
 

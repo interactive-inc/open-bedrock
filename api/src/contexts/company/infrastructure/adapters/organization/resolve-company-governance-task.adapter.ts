@@ -9,7 +9,7 @@ import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrast
 import { CompanyGovernanceAuthorityResolutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter"
 import { CompanyGovernanceProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
-import { AccountEmployeeLinkReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/account-employee-link-read.adapter"
+import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import { ResolveLiveEmployeeAccessAdapter } from "@/contexts/company/infrastructure/adapters/employee/resolve-live-employee-access.adapter"
 import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
 import { SystemPrincipalRepository } from "@system/infrastructure/repositories/iam/system-principal.repository"
@@ -55,7 +55,7 @@ export class ResolveCompanyGovernanceTaskAdapter {
     if (before instanceof Error) return before
     const resolved = await new CompanyGovernanceAuthorityResolutionAdapter({
       repository: new D1CompanyResourceRepository(this.c.env.DB),
-      isAccountActive: (accountId) => this.isHumanAccount(accountId, input.resolvedAt),
+      readActiveAccountIds: (accountIds) => this.readHumanAccountIds(accountIds, input.resolvedAt),
     }).resolve({
       organizationId: authority.organization_id,
       asOf: restoreCalendarDate(asOf),
@@ -76,24 +76,26 @@ export class ResolveCompanyGovernanceTaskAdapter {
       accountIds: candidates.map((candidate) => zAccountId.parse(candidate.accountId)),
     })
     if (after instanceof Error) return after
+    const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({
+      asOf,
+      accountIds: candidates.map((candidate) => candidate.accountId),
+    })
+    if (links instanceof Error) return links
+    const linksByAccount = new Map(
+      links.map((link) => [String(link.accountId), String(link.employeeId)]),
+    )
+    const accesses = await new ResolveLiveEmployeeAccessAdapter({
+      env: { ...this.c.env, NOW: input.resolvedAt.toISOString() },
+    }).resolveMany(
+      candidates.map((candidate) => restoreWorkforceId("employee", candidate.employeeId)),
+    )
+    if (accesses instanceof Error) return accesses
     for (const candidate of candidates) {
-      const link = await new AccountEmployeeLinkReadAdapter(this.c).find({
-        kind: "by_account",
-        asOf,
-        accountId: restoreWorkforceId("system_account", candidate.accountId),
-      })
-      if (
-        !link.ok ||
-        link.records.length !== 1 ||
-        String(link.records[0]?.link.employeeId) !== candidate.employeeId
-      ) {
+      if (linksByAccount.get(candidate.accountId) !== candidate.employeeId) {
         return new Error("public Company authority does not match the canonical Account link")
       }
-      const access = await new ResolveLiveEmployeeAccessAdapter({
-        env: { ...this.c.env, NOW: input.resolvedAt.toISOString() },
-      }).resolveLiveEmployeeAccess(restoreWorkforceId("employee", candidate.employeeId))
-      if (access instanceof Error) return access
-      if (access === null || access.status !== "ACTIVE")
+      const access = accesses.get(restoreWorkforceId("employee", candidate.employeeId))
+      if (access === undefined || access === null || access.status !== "ACTIVE")
         return new Error("Company decision participant is inactive")
     }
     const task = await new CompanyGovernanceProcedureTaskAdapter().prepare({
@@ -120,18 +122,27 @@ export class ResolveCompanyGovernanceTaskAdapter {
     }
   }
 
-  private async isHumanAccount(accountId: string, resolvedAt: Date): Promise<boolean | Error> {
-    const account = await new SystemAccountRepository({ database: this.c.env.DB }).find(
-      zAccountId.parse(accountId),
+  private async readHumanAccountIds(
+    accountIds: ReadonlyArray<string>,
+    resolvedAt: Date,
+  ): Promise<ReadonlySet<string> | Error> {
+    const accounts = await new SystemAccountRepository({ database: this.c.env.DB }).findMany(
+      accountIds.map((id) => zAccountId.parse(id)),
     )
-    if (account instanceof Error) return account
-    if (account?.status !== "active" || account.closedAt !== null || account.createdAt > resolvedAt)
-      return false
-    const principal = await new SystemPrincipalRepository({ env: { DB: this.c.env.DB } }).find({
-      accountId,
-    })
-    if (principal instanceof Error) return principal
-    return principal !== null && principal.kind === "human" && principal.createdAt <= resolvedAt
+    if (accounts instanceof Error) return accounts
+    const active = accounts.filter(
+      (account) =>
+        account.status === "active" && account.closedAt === null && account.createdAt <= resolvedAt,
+    )
+    const principals = await new SystemPrincipalRepository({ env: { DB: this.c.env.DB } }).findMany(
+      { accountIds: active.map((account) => account.id) },
+    )
+    if (principals instanceof Error) return principals
+    return new Set(
+      principals
+        .filter((principal) => principal.kind === "human" && principal.createdAt <= resolvedAt)
+        .map((principal) => String(principal.accountId)),
+    )
   }
 
   private scope(input: Input): CompanyGovernanceScope | null | Error {
