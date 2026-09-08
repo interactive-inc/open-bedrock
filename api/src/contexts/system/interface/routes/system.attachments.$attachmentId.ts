@@ -3,6 +3,7 @@ import { SystemAttachmentError } from "@system/domain/errors"
 import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 import { AttachmentKekRegistry } from "@system/application/attachments/lib/attachment-kek-registry"
 import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
+import { PrepareAttachmentReadGuardAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-read-guard.adapter"
 /** /attachments/:attachmentId */
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
@@ -13,6 +14,7 @@ import {
   SystemAttachmentNotPendingError,
   SystemAttachmentReadError,
   SystemAttachmentUnavailableError,
+  SystemInvalidSessionError,
 } from "@system/interface/errors"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
@@ -44,15 +46,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
   }
 
   const content = await (async () => {
-    const row = await new AttachmentAdapter(context).findById(attachmentId)
-
-    if (row instanceof Error) return row
-
-    if (row === null) {
-      return new SystemAttachmentError("not_found", "attachment_not_found", "添付が見つかりません")
-    }
-
-    if (row.status === "erased" || row.wrappedDek === null || row.wrappedDekIv === null) {
+    if (row.wrappedDek === null || row.wrappedDekIv === null) {
       return new SystemAttachmentError("not_found", "attachment_erased", "この添付は消去済みです")
     }
 
@@ -83,7 +77,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
 
     const digest = await toSha256Hex(plaintext)
 
-    if (digest !== row.plaintextSha256) {
+    if (digest !== row.plaintextSha256 || plaintext.byteLength !== row.byteSize) {
       return new SystemAttachmentError(
         "unprocessable",
         "attachment_integrity_mismatch",
@@ -117,6 +111,17 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
     })
   }
 
+  const claims = context.var.systemAccessToken
+  const at = context.var.now()
+
+  if (
+    claims === undefined ||
+    claims.sub !== context.var.userId ||
+    claims.exp * 1000 <= Date.now()
+  ) {
+    throw new SystemInvalidSessionError()
+  }
+
   const audit = SystemAuditEventEntity.create({
     actorAccountId: context.var.userId,
     action: "attachment.read",
@@ -124,15 +129,35 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
     targetId: attachmentId,
     outcome: "succeeded",
     reasonCode: null,
-    authorizationJson: null,
+    authorizationJson: JSON.stringify({
+      policy: "owner-unlinked",
+      accountId: claims.sub,
+      tokenVersion: claims.ver,
+      machineCredentialId: claims.machineCredentialId ?? null,
+    }),
     beforeJson: null,
     afterJson: null,
-    metadataJson: null,
-    occurredAt: context.var.now(),
+    metadataJson: JSON.stringify({ sha256: row.plaintextSha256, byteSize: row.byteSize }),
+    occurredAt: at,
   })
 
-  if (!(audit instanceof Error)) {
-    await new SystemAuditEventRepository({ env: { DB: context.env.DB } }).append(audit)
+  if (audit instanceof Error) {
+    throw new SystemAttachmentUnavailableError({ cause: audit })
+  }
+
+  const assertions = new PrepareAttachmentReadGuardAdapter(context).prepare({
+    attachment: row,
+    claims,
+    at,
+  })
+  const savedAudit = await new SystemAuditEventRepository(context).append(audit, [], assertions)
+
+  if (savedAudit instanceof Error) {
+    const rejection = PrepareAttachmentReadGuardAdapter.rejection(savedAudit)
+
+    if (rejection === "actor") throw new SystemInvalidSessionError()
+    if (rejection === "target") throw new SystemAttachmentNotFoundError()
+    throw new SystemAttachmentUnavailableError({ cause: savedAudit })
   }
 
   return new Response(content.content, {

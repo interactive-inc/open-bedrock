@@ -46,12 +46,18 @@ export class SystemAuditEventRepository {
   async append(
     record: SystemAuditEventEntity,
     assertions: ReadonlyArray<D1PreparedStatement> = [],
+    completionAssertions: ReadonlyArray<D1PreparedStatement> = [],
   ): Promise<void | Error> {
     try {
       const statements = this.prepareAppend(record)
-      const results = await this.c.env.DB.batch([...assertions, ...statements])
+      const results = await this.c.env.DB.batch([
+        ...assertions,
+        ...statements,
+        ...completionAssertions,
+      ])
 
-      return results.length === assertions.length + 2 && results.every((result) => result.success)
+      return results.length === assertions.length + 2 + completionAssertions.length &&
+        results.every((result) => result.success)
         ? undefined
         : new Error("audit append did not succeed")
     } catch (caught) {
