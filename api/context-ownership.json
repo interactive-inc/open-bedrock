@@ -12,7 +12,6 @@
       "external-identities",
       "organization",
       "people",
-      "personnel-actions",
       "profile"
     ],
     "infrastructure": ["adapters", "repositories", "schema"],
