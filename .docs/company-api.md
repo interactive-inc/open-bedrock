@@ -106,6 +106,16 @@ SiteはLegalEntity、WorkplaceはSiteの有効期間内に存在しなければ�
 
 参照整合性のmigrationは、既存の期間不整合を制約の置換前に検出して停止する。履歴、rowid、記録者、理由、再送記録を保全し、参照先や有効期間を自動で推測・修正しない。
 
+## 上長関係の参照期間
+
+ReportingRelationの本人・上司・組織は、同じorganizationの有効期間を参照する。組織は`organizationUnitId`による安定した同一性を使い、期間resourceのIDや他のorganizationの同名IDで補わない。
+
+上長関係の全改訂から、組織変更前後、将来の終了、取消までの有効期間を再構成する。終了済みのheadだけを見て過去の関係を検査から外さない。組織の連続した期間を合わせて参照できるが、空白、開始前、終了後を含む関係は会社版の確定時にもDBで拒否する。
+
+`/company/organization-changes`は、不整合な組織訂正を422で拒否し、会社版、resource履歴、head、再送記録を取り消す。確認した上長関係の訂正と組織変更を同じcommandで送ることはできる。人の判断で確認した訂正だけを追記し、組織変更に合わせて上長関係の過去を自動で短縮しない。
+
+移行時に既存の期間不整合があれば、制約の追加前に移行を停止する。正常な履歴、rowid、記録者、理由とcommandの再送結果は変更しない。在籍・所属との連動は[組織上の判断資格](company-organizational-authority.md)の制約も満たす必要がある。
+
 ## 人と雇用の参照整合性
 
 Employeeは同じorganizationのactiveなPersonを参照し、Employmentは同じorganizationのactiveなEmployeeを参照する。EmployeeのpersonId、EmploymentのemployeeIdは初回登録後に変更できず、取消時にも付け替えを拒否する。
