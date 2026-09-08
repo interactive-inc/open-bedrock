@@ -504,7 +504,7 @@
     "src/contexts/company/test/governance-task.test-support.ts": "980f071d0f4024c1dd2abd378e1f82ea9f4ba34ae0eae95906e5515de70b41cc",
     "src/contexts/company/test/management-relations.integration.test.ts": "4f7589b5d5598d91876520cf4bdd0801a98415eaf840f49e508a9c3f32ced690",
     "src/contexts/company/test/migrations-directory.test-support.ts": "d240e87177cc36b5284bfccdc524487782d58a467a5a7c31ec2cddaee57b8cb3",
-    "src/contexts/company/test/organization-command.integration.test.ts": "aeb0672dd313cbde0e6c099638dd6d810f2d653829b63c2ab4a1a3ec32130b5a",
+    "src/contexts/company/test/organization-command.integration.test.ts": "cdd5e571130df30b233a84af2e208f908b807cbb5e77d83ed449aeb4497420a0",
     "src/contexts/company/test/organization-period-coverage.integration.test.ts": "3c01579386fb3d4f88f9ed0684f41a04d0b750c1e49fd9576fb3584f9a5cdb57",
     "src/contexts/company/test/organization-profile.integration.test.ts": "69c3d703e332e3e501a233e199fa12c56fb1e8467f9c80dbc8f6663e8aecb3f1",
     "src/contexts/company/test/organization-profile.test-support.ts": "b3d57cbb942b8f7da3b60dba4415b5d6104869cccca02842fb7004df532b2336",
