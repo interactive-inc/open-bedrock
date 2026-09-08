@@ -41,7 +41,11 @@ export const GET = softwareLicenseFactory.createHandlers(
     if (assignments instanceof Error) throw new SoftwareLicenseUnavailableError()
     const page = assignments.slice(0, query.limit)
     const employees = await new CompanyEmployeeDirectoryReadAdapter({
-      env: { ...c.env, NOW: c.var.now().toISOString() },
+      env: {
+        DB: c.env.DB,
+        COMPANY_TIME_ZONE: c.env.COMPANY_TIME_ZONE,
+        NOW: c.var.now().toISOString(),
+      },
     }).findForEmployeeIds(page.map((assignment) => assignment.props.employee_id))
     if (employees instanceof Error) throw new SoftwareLicenseUnavailableError()
     return c.json(

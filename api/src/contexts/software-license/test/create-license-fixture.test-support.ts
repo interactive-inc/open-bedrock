@@ -36,7 +36,7 @@ const secret = "software-license-integration-test-secret"
 /** 両製品のmigrationと実認証・Company履歴を使う台帳fixture。 */
 export async function createLicenseFixture() {
   const database = createSystemD1TestDatabase(schema)
-  const settings: { enabled?: string } = {}
+  const settings: { enabled?: string; hiddenBindings?: boolean } = {}
   const clock = { now: new Date("2026-09-08T01:00:00Z") }
   const env = { DB: database, JWT_SECRET: secret, COMPANY_TIME_ZONE: "Asia/Tokyo" }
   await database.exec(`PRAGMA foreign_keys=ON;
@@ -126,6 +126,11 @@ export async function createLicenseFixture() {
             now: new Date(),
           })
     if (token instanceof Error) throw token
+    const requestEnvironment = { ...env, SOFTWARE_LICENSE_ENABLED: settings.enabled }
+    if (settings.hiddenBindings) {
+      for (const key of ["DB", "COMPANY_TIME_ZONE"] as const)
+        Object.defineProperty(requestEnvironment, key, { value: env[key], enumerable: false })
+    }
     return app.request(
       path,
       {
@@ -137,7 +142,7 @@ export async function createLicenseFixture() {
         },
         body: options.body === undefined ? undefined : JSON.stringify(options.body),
       },
-      { ...env, SOFTWARE_LICENSE_ENABLED: settings.enabled },
+      requestEnvironment,
     )
   }
   const created = await request("/software-licenses", {
