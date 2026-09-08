@@ -95,6 +95,7 @@ test.each(["organization-reference", "employment-authority"] as const)(
     await database.exec("DROP TRIGGER company_authority_scope_reference_guard")
     await database.exec("DROP TRIGGER company_governance_organization_revision_guard")
     await database.exec("DROP TRIGGER company_employment_authority_commit_guard")
+    await database.exec("DROP TRIGGER company_governance_reference_period_commit_guard")
     const invalid: CompanyResourceProps =
       kind === "organization-reference"
         ? {

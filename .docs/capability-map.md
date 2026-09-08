@@ -146,6 +146,8 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 
 現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。版付きresourceを参照するCompany resolverは、在籍、System Account、対象本人の除外、scope、合議規則を同一revisionと時点で評価する。汎用申請、人事変更申請、稟議、経費では、Companyの公開責務・役職・合議体をSystem DecisionTaskへ接続している。休暇などの独自承認経路には接続が残り、技術的権限と会社上の判断資格の合成を全業務では保証していない。
 
+職務・役職・責務・合議体・決裁資格の定義と任用は、[過去から将来までの参照期間](company-organizational-authority.md#公開責務と期間台帳)をDBでも検査する。定義の短縮や将来取消によって、期間外の任用を残す変更は確定しない。
+
 稟議のHTTP・Web・CLIは共通の提出・判断・実行Applicationを使用する。規程設定には`ringi:procedure:manage`、提出と本人の取消には`ringi:submit`、判断と決裁確定には`ringi:approve`を要求し、判断者には現在の会社資格も要求する。既存roleへの自動付与はしない。規程がない場合は提出を拒否する。規程の候補から起案時の提出先を選んでも、合議の必要人数は減らない。
 
 稟議は表示した提案版・digest・Task key・roundに判断を記録し、複数段階、差戻し、否認、取消、承認後の確定待ちを区別する。判断・業務状態・監査・判断通知を同じtransactionへ保存する。決裁確定では、人事と共通のCompany資格再検査とSystemの実行許可を使い、稟議の更新・実行監査・結果通知を同時に保存する。確定に失敗した場合は確定待ちを表示し、受信箱から同じ対象を再試行できる。汎用案件APIから稟議の参照・変更・修復を迂回できない。
