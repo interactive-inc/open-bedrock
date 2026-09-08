@@ -67,11 +67,12 @@ JSON envelopeはCompany coreの版・期間・原子性を一つに揃えるた�
 - `GET|POST /company/definitions`: Position、Grade、Responsibility、CollectiveBody
 - `GET|POST /company/account-employee-links`: System AccountとEmployeeの対応
 - `GET|POST /company/personnel-actions`: 人事発令
+- `GET|POST /company/responsibility-resource-adoptions`: 確認した既存責務履歴の接続
 - `GET /company/personnel-action-events`: 追記された人事発令の配送元
 
-GETは`id` queryを繰り返して最大100件へ絞れる。`effective_on`を指定したreadはappend-only revisionからその日に有効な最新訂正を選び、将来発効の変更を過去へ混ぜない。`void`が発効した後はresourceを返さない。日付を省略したreadはcurrent headだけを返す。
+resource参照用のGETは`id` queryを繰り返して最大100件へ絞れる。`effective_on`を指定したreadはappend-only revisionからその日に有効な最新訂正を選び、将来発効の変更を過去へ混ぜない。`void`が発効した後はresourceを返さない。日付を省略したreadはcurrent headだけを返す。
 
-POSTはendpointが所有するresource種別以外を拒否する。例えば`/people`からEmployeeを書いたり、`/organization-changes`からPositionを書いたりできない。
+resource更新用のPOSTはendpointが所有するresource種別以外を拒否する。例えば`/people`からEmployeeを書いたり、`/organization-changes`からPositionを書いたりできない。
 
 Account対応はSystem AccountとEmployeeの一対一の同一性を固定し、その対応が有効な期間を改訂する。同じresourceの相手の変更、別resourceによるAccountまたはEmployeeの重複所有、存在しないSystem Accountへの対応を拒否する。対応期間は公開Employeeの存在期間に収まる必要があり、Employee側の訂正でも参照を孤立させない。
 
@@ -142,7 +143,7 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 
 新規Accountの作成・発行と一括登録を合成する製品向けには、同じ初期resourceを既存の登録batchへ組み込むadapterを提供する。一括登録は準備時に会社の版を一度だけ読み、各登録のcommandへ連続した版を割り当てる。別のCompany変更と競合した場合は全登録を取り消し、再試行の際に版を読み直す。
 
-会社profileは初期化時から公開resourceを正本とする。接続前の会社名・代表者名は変更せず保全し、接続後は公開APIと既存の会社情報APIが同じ履歴を参照・変更する。初期化が作る所属は公開Assignmentと同じ期間対応を保持し、人事発令と公開APIから更新できる。初期化と公開Employeeへの新しい責務発令も、責務定義・組織scope・公開ResponsibilityAssignmentへ接続する。未接続の既存責務・所属の全保存経路の統合は未完成である。Account対応は公開履歴へ接続し、同じ営業日で本人対応を参照する。
+会社profileは初期化時から公開resourceを正本とする。接続前の会社名・代表者名は変更せず保全し、接続後は公開APIと既存の会社情報APIが同じ履歴を参照・変更する。初期化が作る所属は公開Assignmentと同じ期間対応を保持し、人事発令と公開APIから更新できる。初期化と公開Employeeへの新しい責務発令も、責務定義・組織scope・公開ResponsibilityAssignmentへ接続する。既存責務は[確認した責務履歴の接続](#既存責務の公開履歴への接続)で公開履歴へ接続できる。未接続の既存所属の全保存経路の統合は未完成である。Account対応は公開履歴へ接続し、同じ営業日で本人対応を参照する。
 
 公開Employeeへの上長付き配属・上長変更はReportingRelationへ記録し、人事発令が管理する直属上長をEmployee・Employment・OrgUnit・所属種別へ対応させる。役職変更では関係を維持し、所属終了・異動・退職では対応する期間を閉じる。独立したReportingRelationの追加と編集は引き続き可能である。対応する所属範囲外の関係や所有者変更は拒否し、公開APIでの所属終了には関係の同時終了を要求する。上長本人の退職時は部下側の公開関係も終了し、再入社だけでは復活させない。組織変更APIは雇用と上長関係の同時変更を受け付ける。将来予約、訂正時の後続編集の競合、複数上長の扱いは[公開所属と期間台帳](company-organizational-authority.md#公開所属と期間台帳)に記載する。
 
@@ -261,3 +262,15 @@ OrganizationalOfficeと組織対象のAuthorityScopeは、組織の期間resourc
 個人責務と構成員の全有効期間は、そのEmployeeの連続した雇用期間に含まれなければならない。公開APIの雇用短縮、将来取消、同時変更でもDBで検査し、非在籍の空白をまたぐ割当を拒否する。既存の期間外の割当を検出したmigrationは、制約の置換前に停止して記録を保全する。
 
 汎用のResponsibilityAssignment、OrganizationalOfficeの定義、合議体へ従来の任用を対応付ける処理は、未接続の履歴を自動推定しない。
+
+## 既存責務の公開履歴への接続
+
+`GET /company/responsibility-resource-adoptions?employee_id=<id>`は、既定Companyの管理者に、対象従業員の責務の全改訂、変更主体、理由、証拠、接続状況と`expectedRevision`・`snapshotDigest`・`observedOn`を返す。取消と過去の訂正も確認対象に含める。
+
+`POST /company/responsibility-resource-adoptions`は`Idempotency-Key`と、確認した`employeeId`・`expectedRevision`・`snapshotDigest`・`observedOn`・`reason`・`mappings`を受け付ける。`mappings`は未接続の各期間の`periodId`と、接続先の`responsibilityId`・`authorityScopeId`を明示する。未接続の全期間を重複なく指定し、件数は一回につき一件から千件とする。Employee・Employment・OrgUnitの公開対応と、責務code・対象OrgUnitが一致する公開定義を必要とする。
+
+現在有効な訂正内容からResponsibilityAssignmentを作り、元の期間ID・全改訂・記録者・記録時刻を保全する。接続の事実は期間の次版として追記し、確認した全履歴と定義の対応を変更不能な証跡へ保存する。新しい公開割当は委任不可で作る。公開責務、期間対応、組織操作、会社版、変更主体・理由、移行証跡は一つのtransactionで確定する。百件を超える公開変更も途中結果を確定しない。
+
+不足する履歴、所有者の不一致、定義の期間外、任用期間の重複は422で拒否する。確認後の変更、確認営業日の違い、同じキーの別内容は409になる。同じ主体・内容・キーの再送は現在の管理資格を検査し、元の結果を返す。参照・保存の障害は503とし、部分的な移行結果を返さない。
+
+CLIの`employees responsibility-adoption`も同じ確認・保存APIを使う。`--employee-id`は確認内容の参照、`--data`と`--idempotency-key`は確認済みJSONの送信を表す。競合時に会社版や確認内容を自動更新して再送しない。独立して登録された公開ResponsibilityAssignmentへの統合は行わず、接続先の一致を推測しない。
