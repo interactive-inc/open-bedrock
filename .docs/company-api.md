@@ -63,7 +63,7 @@ JSON envelopeはCompany coreの版・期間・原子性を一つに揃えるた�
 - `GET|POST /company/employees`: Employee
 - `GET|POST /company/employments`: Employment
 - `GET /company/organization-snapshots`: OrgUnit、Assignment、ReportingRelation、OrganizationalAuthority
-- `POST /company/organization-changes`: 組織変更を一つのcommandとして適用
+- `POST /company/organization-changes`: 組織・雇用・任用・法人・拠点・勤務場所の関連変更を一つのcommandとして適用
 - `GET|POST /company/definitions`: Position、Grade、Responsibility、CollectiveBody
 - `GET|POST /company/account-employee-links`: System AccountとEmployeeの対応
 - `GET|POST /company/personnel-actions`: 人事発令
@@ -95,6 +95,16 @@ OrgUnitの`id`は期間IDで、`attributes.organizationUnitId`が改組後も変
 組織変更でも現在のscopeと操作資格を確認した後、保存済みcommandを現在の会社版や親組織の状態より先に照合する。成功後に親組織が取り消されても、再送は保存済みの結果を返し、組織を復活させない。初回照会の後に同じcommandが確定した場合も、検査・保存の失敗を返す前に保存済み結果を再確認する。未成功のcommandには現在の組織構造と版の検査を適用する。
 
 resource revision、current head、command receipt、organization revisionは一つのD1 atomic batchで保存する。DB triggerもexpected revision、resource revisionの連続性、append-only、receipt不変性を再検査する。
+
+## 法人・拠点・勤務場所の参照整合性
+
+SiteはLegalEntity、WorkplaceはSiteの有効期間内に存在しなければならない。Workplaceが`organizationUnitId`を持つ場合は、同じorganizationの安定したOrgUnitのIDを参照する。組織の期間resourceのIDは使わず、組織との関連を持たない勤務場所では未指定または`null`とする。
+
+参照は全改訂から過去・現在・将来の有効期間を組み立てて検査する。連続する版や同じOrgUnitの連続する期間は合わせて参照できるが、途中の空白、別organizationの記録、参照先の開始前・終了後では補えない。将来取消した記録の過去も検査し、現在のheadが取消状態であることだけを理由に過去の勤務場所の訂正を拒否しない。
+
+`POST /company/organization-changes`はLegalEntity・Site・Workplaceも受け付ける。法人・拠点・勤務場所と関連する組織を同じcommandで短縮・延長・取消できる。参照元を期間外へ残す変更は、会社版を確定するDB処理でも拒否する。失敗時は全resourceの版・head・command receiptを一緒に取り消す。拠点の運営法人を変更した場合も、変更前後それぞれの参照先と期間を検査する。
+
+参照整合性のmigrationは、既存の期間不整合を制約の置換前に検出して停止する。履歴、rowid、記録者、理由、再送記録を保全し、参照先や有効期間を自動で推測・修正しない。
 
 ## 人と雇用の参照整合性
 
