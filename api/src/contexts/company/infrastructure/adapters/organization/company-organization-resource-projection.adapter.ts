@@ -11,6 +11,10 @@ import {
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { drizzle } from "drizzle-orm/d1"
 type Context = D1Database
+export type PreparedCompanyOrganizationProjection = Readonly<{
+  beforeWorkforce: ReadonlyArray<D1PreparedStatement>
+  statements: ReadonlyArray<D1PreparedStatement>
+}>
 
 /** 既定Companyの公開組織変更を、既存の期間台帳と同じtransactionへ接続する。 */
 export class CompanyOrganizationResourceProjectionAdapter {
@@ -20,7 +24,7 @@ export class CompanyOrganizationResourceProjectionAdapter {
   async prepare(
     change: CompanyResourceChangeEntity,
     fingerprint: string,
-  ): Promise<ReadonlyArray<D1PreparedStatement> | Error> {
+  ): Promise<PreparedCompanyOrganizationProjection | Error> {
     const resources = change.resources.filter(
       (resource) =>
         resource.type === "organization-unit" && resource.organizationId === "organization:default",
@@ -29,7 +33,7 @@ export class CompanyOrganizationResourceProjectionAdapter {
       resources.length === 0 &&
       !change.resources.some((resource) => resource.type === "assignment")
     )
-      return []
+      return { beforeWorkforce: [], statements: [] }
     const first =
       resources[0] ?? change.resources.find((resource) => resource.type === "assignment")
     if (first === undefined) return new CompanyResourceValidationError("invalid_organization")
@@ -39,7 +43,7 @@ export class CompanyOrganizationResourceProjectionAdapter {
     ).prepare(change, operationId)
     if (assignmentProjection instanceof Error) return assignmentProjection
     if (resources.length === 0 && assignmentProjection.assignments.length === 0)
-      return assignmentProjection.bindings
+      return { beforeWorkforce: [], statements: assignmentProjection.bindings }
     const snapshot = await new OrganizationUnitReadAdapter(drizzle(this.c)).readSnapshot(
       first.effectiveFrom,
     )
@@ -113,16 +117,22 @@ export class CompanyOrganizationResourceProjectionAdapter {
     )
     const completed = statements.at(-1)
     if (completed === undefined) return new Error("organization completion statement missing")
-    return [
-      ...statements.slice(0, -1),
-      ...newIds.map((id) =>
-        this.c
-          .prepare(`INSERT INTO company_organization_resource_bindings
+    const withdrawalCount = assignmentProjection.assignments.filter(
+      (period) => period.isVoid,
+    ).length
+    return {
+      beforeWorkforce: statements.slice(0, withdrawalCount + 1),
+      statements: [
+        ...statements.slice(withdrawalCount + 1, -1),
+        ...newIds.map((id) =>
+          this.c
+            .prepare(`INSERT INTO company_organization_resource_bindings
       (organization_unit_id, organization_id, recorded_at) VALUES (?1, 'organization:default', ?2)`)
-          .bind(id, change.recordedAt),
-      ),
-      ...assignmentProjection.bindings,
-      completed,
-    ]
+            .bind(id, change.recordedAt),
+        ),
+        ...assignmentProjection.bindings,
+        completed,
+      ],
+    }
   }
 }

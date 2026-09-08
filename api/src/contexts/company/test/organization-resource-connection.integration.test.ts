@@ -548,7 +548,7 @@ describe("organization resources and the company period ledger", () => {
     const interception = spyOn(
       CompanyOrganizationResourceProjectionAdapter.prototype,
       "prepare",
-    ).mockResolvedValueOnce([])
+    ).mockResolvedValueOnce({ beforeWorkforce: [], statements: [] })
     try {
       expect(
         Number(
