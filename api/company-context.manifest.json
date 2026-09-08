@@ -476,6 +476,7 @@
     "src/contexts/company/test/company-personnel-event.integration.test.ts",
     "src/contexts/company/test/company-procedure-authority.integration.test.ts",
     "src/contexts/company/test/company-procedure-decision.integration.test.ts",
+    "src/contexts/company/test/company-workforce-organization-command.integration.test.ts",
     "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts",
     "src/contexts/company/test/company.definition-permissions.api.integration.test.ts",
     "src/contexts/company/test/d1-test-database.test-support.ts",

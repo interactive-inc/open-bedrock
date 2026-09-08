@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "a63ecbe1800b3cd261f5d7c0d45280bd180c465eee335e62989fb35701063744",
+    "company-context.manifest.json": "9d650fa3da124932135a10b72b1c1eafae0c141b0eb8e035d489de7ea72ca561",
     "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -325,7 +325,7 @@
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.test.ts": "022eb1640b91741666678f61981f1e4947fcca4f52c96fb9ec310090116c60f9",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.ts": "bd80bdc8319e40a795f9042770a7fa0d2d3db9a465259c445370c76f88c3234a",
     "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter.ts": "a3500b82cbcb3d22b22ea6e3820a527d3ea66f91a65283e3bcb3284bb690bf6c",
-    "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-projection.adapter.ts": "a0352c5bd1a620ee85ac1e8a607f8c053038562b5ce304babd2c15fa4629550b",
+    "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-projection.adapter.ts": "09b5671d568bfde180f909c78b821bd2422565224588bb196e26cf04adf6767e",
     "src/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter.ts": "1ad020c26a0c47a46c570da182c867d1d1074b5b3c0e9e5a19c8fef1bf6ab49a",
     "src/contexts/company/infrastructure/adapters/organization/d1-organization-profile.adapter.ts": "f6125612b74022329b619cb8c975a4252411c2e37b9bb41c356de4e164445e3c",
     "src/contexts/company/infrastructure/adapters/organization/initial-company-resource-journal.adapter.ts": "0229a0f92450c3b8e1f25abb991af7881e68d4ae0e0920cf0946d6e0e432e82b",
@@ -363,7 +363,7 @@
     "src/contexts/company/infrastructure/adapters/workforce/resolve-canonical-organization-authority.adapter.ts": "938228e1957dba0ec74fac00f2fb7dabb53b4bb70f2514d2c23a350e9890cbfc",
     "src/contexts/company/infrastructure/repositories/account-profile/d1-company-account-profile.repository.ts": "99cf6a686b4e32a2b52649badb30e8fed45d4d9c8d8e74359d8bb6ea2ca5108b",
     "src/contexts/company/infrastructure/repositories/core/d1-company-resource.repository.test.ts": "66c70b57a52548cd88aa38a6760aeed1a273074328d1a32573b658dab04d145e",
-    "src/contexts/company/infrastructure/repositories/core/d1-company-resource.repository.ts": "76128602326f3b0747aa52435d99e2fcca4026180cdc300ac826366cbec088d7",
+    "src/contexts/company/infrastructure/repositories/core/d1-company-resource.repository.ts": "67168185f567693820dfe748c5fa45f0cf3fea6f09f38ff1f850bf7ebc29c736",
     "src/contexts/company/infrastructure/repositories/definitions/grade.repository.ts": "d6a480c7b7c5e02b1081e218eaf9340e7d78c2487436e28c6ea912825a5a3f05",
     "src/contexts/company/infrastructure/repositories/definitions/position.repository.ts": "039300c133f4260dd43a7786506e446d6e2d4797f0174c6c3f3dacb89b8e2f0e",
     "src/contexts/company/infrastructure/repositories/employee-history/employee-event.repository.ts": "939b6506d272e9062abad1407b7d78da7f6167956c389e9b0c1a55fdb2a84bcb",
@@ -383,7 +383,7 @@
     "src/contexts/company/infrastructure/schema/company-database.ts": "442b36a6c74a3f86cfab23dd83fad937d6a99c3dea18f4a815ceb7a1cf15c18d",
     "src/contexts/company/infrastructure/schema/company-relations.ts": "5a4e53200f4e936f7143af14c4733f24a592cc6b4b35269747f3650f37217379",
     "src/contexts/company/infrastructure/schema/company-sql.contract.test.ts": "ce33392d976c100cd36fad3310ccdaa8f0010a41affc05c6bad2d57bf4e405f0",
-    "src/contexts/company/infrastructure/schema/company.sql": "e4f2f212bb4ec0dab304b2eb5c0b7dc441976e13391b74ce525416bbfc284e8d",
+    "src/contexts/company/infrastructure/schema/company.sql": "da896d92c7f9212eb2ac7ed5fc5b90d49eed53ffb69e6961ee3e9cebeeb1600e",
     "src/contexts/company/infrastructure/schema/company.ts": "fb3e57ce93c3dfbc59b8d4d4d222f793e31f9d8e6ddc2f68cbe3ac115b9a3d04",
     "src/contexts/company/infrastructure/schema/employee-event.ts": "a4f430829433504ed38f855bfeed986409c04174f9ccbc4ebfde8063378334e5",
     "src/contexts/company/infrastructure/schema/employee-lifecycle.ts": "7b180bf2a73acf9497c056472b3160dcf99ec33d506d7e17d83c146832d4d751",
@@ -476,6 +476,7 @@
     "src/contexts/company/test/company-personnel-event.integration.test.ts": "f1f9d1c040a8685c871084f3832061d381148f23820f9d6bc9fdeef7f4082bc8",
     "src/contexts/company/test/company-procedure-authority.integration.test.ts": "6bd6194e8faa0dff64b30d2dc947f9cf9f0c6ce297e54bcf3cad0d1fbab0c39d",
     "src/contexts/company/test/company-procedure-decision.integration.test.ts": "2432ff4bc647606c7aaebc96aaadb6b0d54606bc4d0dc75597b985816646bf23",
+    "src/contexts/company/test/company-workforce-organization-command.integration.test.ts": "66f844d57142f962fed1411b7208306803bdd994ed53bcf45fcc1093a264612a",
     "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts": "70c0ec3b388826bb4fceb9d441c1dc95ced28d2ffc028efa4e71cda1a3dc3ff4",
     "src/contexts/company/test/company.definition-permissions.api.integration.test.ts": "a8695ceb13afafa967bd18f10d7a08b6eaa59a0751a609a873dd92d68474d632",
     "src/contexts/company/test/d1-test-database.test-support.ts": "160ffda7e0f331adf5fe95c705ce0d45f0716c4388827cf223e0aab9dc852135",
@@ -492,7 +493,7 @@
     "src/contexts/company/test/organization-period-coverage.integration.test.ts": "3c01579386fb3d4f88f9ed0684f41a04d0b750c1e49fd9576fb3584f9a5cdb57",
     "src/contexts/company/test/organization-profile.integration.test.ts": "69c3d703e332e3e501a233e199fa12c56fb1e8467f9c80dbc8f6663e8aecb3f1",
     "src/contexts/company/test/organization-profile.test-support.ts": "b3d57cbb942b8f7da3b60dba4415b5d6104869cccca02842fb7004df532b2336",
-    "src/contexts/company/test/organization-resource-connection.integration.test.ts": "6acfb4ac66bbf624b2d78205f65f00546312e725404bf495e9dd4f7018ff6ae3",
+    "src/contexts/company/test/organization-resource-connection.integration.test.ts": "f8bd79222e0aa86666b36d5bcbf42fdd46345183d6fd1831bc437916e56f85de",
     "src/contexts/company/test/personnel-execution.integration.test.ts": "51db94c6d8f64c51cafa7c6977bd0965ea04ce153f445e174143ae09079dbea0"
   }
 }
