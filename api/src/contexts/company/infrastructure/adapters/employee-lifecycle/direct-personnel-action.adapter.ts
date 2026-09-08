@@ -36,10 +36,8 @@ import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definition
 import { z } from "zod"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { DirectPersonnelActionCommand } from "@/contexts/company/domain/definitions/direct-personnel-action-command.definition"
-import {
-  PersonnelActionPersistenceAdapter,
-  type PersonnelActionPersistenceProps,
-} from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter"
+import { PersonnelActionPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter"
+import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props"
 
 type Context = CompanyContext
 

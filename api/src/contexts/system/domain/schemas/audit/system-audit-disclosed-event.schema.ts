@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { auditDisclosureFieldSchema } from "@system/domain/entities/system-audit-disclosure-policy.entity"
+import { auditDisclosureFieldSchema } from "@system/domain/schemas/audit/system-audit-disclosure-policy.schema"
 
 /** 開示条件を適用した読取結果。変更不能な監査事実そのものとは区別する。 */
 export const systemAuditDisclosedEventSchema = z

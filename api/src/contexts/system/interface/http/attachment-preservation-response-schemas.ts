@@ -1,4 +1,4 @@
-import { attachmentPreservationSnapshotSchema } from "@system/domain/entities/attachment-preservation.entity"
+import { attachmentPreservationSnapshotSchema } from "@system/domain/schemas/attachments/attachment-preservation.schema"
 import { z } from "zod"
 
 export const attachmentPreservationResponseSchema = z.strictObject({

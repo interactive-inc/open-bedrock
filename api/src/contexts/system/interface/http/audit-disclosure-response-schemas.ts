@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { auditDisclosurePolicySchema } from "@system/domain/entities/system-audit-disclosure-policy.entity"
+import { auditDisclosurePolicySchema } from "@system/domain/schemas/audit/system-audit-disclosure-policy.schema"
 import { systemAuditDisclosedEventSchema } from "@system/domain/schemas/audit/system-audit-disclosed-event.schema"
 
 export const auditDisclosurePolicyResponseSchema = z.strictObject({

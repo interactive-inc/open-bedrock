@@ -62,6 +62,18 @@ export class SystemHTTPException extends HTTPException {
   }
 }
 
+export class SystemAttachmentPreservationHttpError extends SystemHTTPException {
+  constructor(props: SystemHTTPExceptionProps) {
+    super(props)
+  }
+}
+
+export class SystemAuditDisclosureHttpError extends SystemHTTPException {
+  constructor(props: SystemHTTPExceptionProps) {
+    super(props)
+  }
+}
+
 export abstract class OIDCHTTPException extends SystemHTTPException {
   readonly allow: string | null
   readonly authenticate: string | null

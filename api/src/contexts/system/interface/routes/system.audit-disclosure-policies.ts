@@ -1,5 +1,5 @@
 import { PublishSystemAuditDisclosurePolicy } from "@system/application/audit/publish-system-audit-disclosure-policy"
-import { auditDisclosureCommandSchema } from "@system/domain/entities/system-audit-disclosure-policy.entity"
+import { auditDisclosureCommandSchema } from "@system/domain/schemas/audit/system-audit-disclosure-policy.schema"
 import { SystemAuditDisclosurePolicyRepository } from "@system/infrastructure/repositories/audit/system-audit-disclosure-policy.repository"
 import { prepareAuditDisclosureAuthorization } from "@system/interface/authorization/prepare-audit-disclosure-authorization"
 import { toAuditDisclosureHttpFailure } from "@system/interface/audit/to-audit-disclosure-http-failure"
@@ -7,7 +7,7 @@ import {
   auditDisclosurePolicyResponseSchema,
   auditDisclosureCurrentPolicyResponseSchema,
 } from "@system/interface/http/audit-disclosure-response-schemas"
-import { SystemHTTPException } from "@system/interface/errors"
+import { SystemAuditDisclosureHttpError } from "@system/interface/errors"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { requireSystemStepUp } from "@system/interface/middlewares/require-system-step-up"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
@@ -25,12 +25,13 @@ export const GET = systemFactory.createHandlers(
       stepUpToken: null,
     })
     if (proof instanceof Error || proof === "forbidden")
-      throw new SystemHTTPException(toAuditDisclosureHttpFailure(proof))
+      throw new SystemAuditDisclosureHttpError(toAuditDisclosureHttpFailure(proof))
     const result = await new SystemAuditDisclosurePolicyRepository({
       env: { DB: context.env.DB },
       assertions: proof,
     }).findCurrent(context.req.valid("query").scope)
-    if (result instanceof Error) throw new SystemHTTPException(toAuditDisclosureHttpFailure(result))
+    if (result instanceof Error)
+      throw new SystemAuditDisclosureHttpError(toAuditDisclosureHttpFailure(result))
     return context.json(
       auditDisclosureCurrentPolicyResponseSchema.parse({ policy: result?.snapshot ?? null }),
       200,
@@ -51,14 +52,15 @@ export const POST = systemFactory.createHandlers(
       stepUpToken: context.req.header("x-system-step-up") ?? "",
     })
     if (proof instanceof Error || proof === "forbidden")
-      throw new SystemHTTPException(toAuditDisclosureHttpFailure(proof))
+      throw new SystemAuditDisclosureHttpError(toAuditDisclosureHttpFailure(proof))
     const result = await new PublishSystemAuditDisclosurePolicy({
       repository: new SystemAuditDisclosurePolicyRepository({
         env: { DB: context.env.DB },
         assertions: proof,
       }),
     }).execute({ ...context.req.valid("json"), actorAccountId: context.var.userId }, now)
-    if (result instanceof Error) throw new SystemHTTPException(toAuditDisclosureHttpFailure(result))
+    if (result instanceof Error)
+      throw new SystemAuditDisclosureHttpError(toAuditDisclosureHttpFailure(result))
     return context.json(
       auditDisclosurePolicyResponseSchema.parse({
         policy: result.policy.snapshot,

@@ -1,4 +1,4 @@
-import { SystemHTTPException } from "@system/interface/errors"
+import { SystemAttachmentPreservationHttpError } from "@system/interface/errors"
 import { ReleaseAttachmentPreservation } from "@system/application/attachments/release-attachment-preservation"
 import { AttachmentPreservationRepository } from "@system/infrastructure/repositories/attachments/attachment-preservation.repository"
 import { prepareAttachmentPreservationAuthorization } from "@system/interface/authorization/prepare-attachment-preservation-authorization"
@@ -33,7 +33,7 @@ export const POST = systemFactory.createHandlers(
       stepUpToken: context.req.header("x-system-step-up") ?? "",
     })
     if (proof instanceof Error || proof === "forbidden")
-      throw new SystemHTTPException(toAttachmentPreservationHttpFailure(proof))
+      throw new SystemAttachmentPreservationHttpError(toAttachmentPreservationHttpFailure(proof))
     const service = new ReleaseAttachmentPreservation({
       repository: new AttachmentPreservationRepository({
         env: { DB: context.env.DB },
@@ -51,7 +51,7 @@ export const POST = systemFactory.createHandlers(
       now,
     )
     if (result instanceof Error || typeof result === "string")
-      throw new SystemHTTPException(toAttachmentPreservationHttpFailure(result))
+      throw new SystemAttachmentPreservationHttpError(toAttachmentPreservationHttpFailure(result))
     return context.json(
       attachmentPreservationResponseSchema.parse({
         preservation: result.preservation.snapshot,

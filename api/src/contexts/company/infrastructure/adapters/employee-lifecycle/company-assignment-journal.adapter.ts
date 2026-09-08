@@ -1,4 +1,4 @@
-import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter"
+import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props"
 import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 import { CompanyAssignmentJournalChangeValue } from "@/contexts/company/domain/values/company-assignment-journal-change.value"
