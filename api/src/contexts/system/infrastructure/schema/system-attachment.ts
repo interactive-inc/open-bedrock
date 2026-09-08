@@ -1,4 +1,5 @@
 import type { AttachmentStatus } from "@system/domain/definitions/attachments/attachment-status.definition"
+import { systemAuditEvents } from "@system/infrastructure/schema/system-core"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
@@ -8,7 +9,7 @@ import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-cor
  *
  * owner は accountId（System は Employee を知らない）。ファイル名はそれ自体が個人情報に
  * なり得るため object key には含めず、この行だけが保持する。wrappedDek を NULL にすると
- * 原本・レプリカ・全バックアップ世代の暗号文が復号不能になる（crypto-shredding）。
+ * 現在の行からは復号できなくなる。破棄前の鍵を含むバックアップの失効は別途必要になる。
  */
 export const systemAttachments = sqliteTable(
   "system_attachments",
@@ -51,6 +52,57 @@ export const systemAttachments = sqliteTable(
 
 export type SystemAttachmentRow = InferSelectModel<typeof systemAttachments>
 
+export const systemAttachmentPreservations = sqliteTable(
+  "system_attachment_preservations",
+  {
+    id: text("id").primaryKey(),
+    attachmentId: text("attachment_id").notNull(),
+    plaintextSha256: text("plaintext_sha256").notNull(),
+    kind: text("kind").notNull().$type<"hold" | "retention">(),
+    retainUntil: integer("retain_until", { mode: "timestamp_ms" }),
+    reason: text("reason").notNull(),
+    createdByAccountId: text("created_by_account_id").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    createdAuditEventId: text("created_audit_event_id")
+      .notNull()
+      .unique()
+      .references(() => systemAuditEvents.eventId),
+    revision: integer("revision").notNull(),
+    releaseOperationId: text("release_operation_id").unique(),
+    releasedByAccountId: text("released_by_account_id"),
+    releasedAt: integer("released_at", { mode: "timestamp_ms" }),
+    releaseReason: text("release_reason"),
+    releaseAuditEventId: text("release_audit_event_id")
+      .unique()
+      .references(() => systemAuditEvents.eventId),
+  },
+  (table) => [
+    index("system_attachment_preservations_target_idx").on(table.attachmentId, table.id),
+    check("system_attachment_preservations_digest", sql`length(${table.plaintextSha256}) = 64`),
+    check("system_attachment_preservations_kind", sql`${table.kind} IN ('hold', 'retention')`),
+    check(
+      "system_attachment_preservations_reason",
+      sql`length(trim(${table.reason})) BETWEEN 1 AND 1000`,
+    ),
+    check("system_attachment_preservations_created_at", sql`${table.createdAt} >= 0`),
+    check("system_attachment_preservations_revision", sql`${table.revision} IN (1, 2)`),
+    check(
+      "system_attachment_preservations_period",
+      sql`(${table.kind} = 'hold' AND ${table.retainUntil} IS NULL)
+    OR (${table.kind} = 'retention' AND ${table.retainUntil} IS NOT NULL AND ${table.retainUntil} > ${table.createdAt})`,
+    ),
+    check(
+      "system_attachment_preservations_release",
+      sql`(${table.revision} = 1 AND ${table.releaseOperationId} IS NULL
+    AND ${table.releasedByAccountId} IS NULL AND ${table.releasedAt} IS NULL AND ${table.releaseReason} IS NULL AND ${table.releaseAuditEventId} IS NULL)
+    OR (${table.revision} = 2 AND ${table.kind} = 'hold' AND ${table.releaseOperationId} IS NOT NULL
+    AND ${table.releasedByAccountId} IS NOT NULL AND ${table.releasedAt} IS NOT NULL AND ${table.releasedAt} >= ${table.createdAt}
+    AND ${table.releaseReason} IS NOT NULL AND length(trim(${table.releaseReason})) BETWEEN 1 AND 1000 AND ${table.releaseAuditEventId} IS NOT NULL)`,
+    ),
+  ],
+)
+
 export const systemAttachmentSchema = {
   systemAttachments,
+  systemAttachmentPreservations,
 }

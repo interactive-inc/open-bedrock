@@ -1,6 +1,38 @@
 /** 公開routeの宣言的な正本。API rootの生成器だけが合成する。 */
 export const systemRouteManifest = [
   {
+    method: "GET",
+    path: "/system/attachments/:attachmentId/preservations",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.attachments.$attachmentId.preservations",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/attachments/:attachmentId/preservations",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.attachments.$attachmentId.preservations",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/attachments/:attachmentId/preservations/:preservationId/release",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module:
+        "@system/interface/routes/system.attachments.$attachmentId.preservations.$preservationId.release",
+      exportName: "POST",
+    },
+  },
+
+  {
     method: "POST",
     path: "/system/dead-letters/:deadLetterId/requeue",
     phase: "public",

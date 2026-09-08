@@ -9,6 +9,8 @@ import * as accountsAccountIdRoleBindings from "@system/interface/routes/system.
 import * as accountsAccountIdRoleBindingsBindingId from "@system/interface/routes/system.accounts.$accountId.role-bindings.$bindingId"
 import * as attachments from "@system/interface/routes/system.attachments"
 import * as attachmentsAttachmentId from "@system/interface/routes/system.attachments.$attachmentId"
+import * as attachmentsAttachmentIdPreservations from "@system/interface/routes/system.attachments.$attachmentId.preservations"
+import * as attachmentsAttachmentIdPreservationsPreservationIdRelease from "@system/interface/routes/system.attachments.$attachmentId.preservations.$preservationId.release"
 import * as attachmentsPurgeUnlinked from "@system/interface/routes/system.attachments.purge-unlinked"
 import * as auditEvents from "@system/interface/routes/system.audit-events"
 import * as auditEventsEventId from "@system/interface/routes/system.audit-events.$eventId"
@@ -74,6 +76,12 @@ export const systemPublicRoutes = new Hono<SystemHonoEnv>()
   .post("/attachments", ...attachments.POST)
   .post("/attachments/purge-unlinked", ...attachmentsPurgeUnlinked.POST)
   .get("/attachments/:attachmentId", ...attachmentsAttachmentId.GET)
+  .get("/attachments/:attachmentId/preservations", ...attachmentsAttachmentIdPreservations.GET)
+  .post("/attachments/:attachmentId/preservations", ...attachmentsAttachmentIdPreservations.POST)
+  .post(
+    "/attachments/:attachmentId/preservations/:preservationId/release",
+    ...attachmentsAttachmentIdPreservationsPreservationIdRelease.POST,
+  )
   .get("/audit-events", ...auditEvents.GET)
   .get("/audit-events/:eventId", ...auditEventsEventId.GET)
   .post("/auth/password/reset", ...authPasswordReset.POST)

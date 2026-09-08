@@ -60,9 +60,9 @@ System には版付き ProcedureDefinition と Proposal、Case、DecisionTask、
 - revision、supersession、correction、retention、legal hold、開示制御
 - 外部 Assertion と社内での acceptance、dispute
 
-現行実装には追記監査、安定 JSON、request correlation、actor、対象、変更前後を保持する監査 event がある。Principal、machine credential、connector、外部交換、照合、dead letter 再投入の重要変更は状態更新と同じ D1 batch で監査される。保持、legal hold、開示制御を運用設定として強制する機構は未実装である。
+現行実装には追記監査、安定 JSON、request correlation、actor、対象、変更前後を保持する監査 event がある。Principal、machine credential、connector、外部交換、照合、dead letter 再投入の重要変更は状態更新と同じ D1 batch で監査される。System添付には[期限付き保持と削除停止](system-attachment-preservation.md)があり、設定・解除を監査し、掃除処理とDBの直接変更でも保全を強制する。監査台帳自体の保持設定、開示制御、バックアップを含む失効の運用機構は未実装である。
 
-Systemの添付証拠の準備処理は、所有Account、状態、作成時刻、内容digest、名前、型、容量を検査し、業務保存と同じtransactionで再照合する。証拠として渡すのは公開metadataだけであり、暗号鍵や保存先を含めない。添付の紐付けと業務保存は一緒に確定し、後続の失敗では両方を巻き戻す。これは保持期限やholdの運用設定を強制する機構とは別であり、削除・開示制御の完成を意味しない。
+Systemの添付証拠の準備処理は、所有Account、状態、作成時刻、内容digest、名前、型、容量を検査し、業務保存と同じtransactionで再照合する。証拠として渡すのは公開metadataだけであり、暗号鍵や保存先を含めない。添付の紐付けと業務保存は一緒に確定し、後続の失敗では両方を巻き戻す。保全中でも業務への紐付けを許可するが、内容の差し替えは許可しない。
 
 未紐付け添付の掃除は、作成から24時間を超えた予約・未紐付け行を対象とする。本体の削除前にDBで状態を再検査し、鍵を破棄して紐付けを禁止する。先に業務への紐付けが確定した場合は本体を残し、先に削除が始まった場合は準備済みの証拠を含む業務保存を拒否する。本体またはDB行の削除に失敗した場合は消去済み行を残し、次回の掃除で再試行する。重複実行時は実際に行を回収した処理だけが回収数へ加算する。
 

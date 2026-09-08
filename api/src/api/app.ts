@@ -321,6 +321,8 @@ import * as systemAccountsAccountIdRoleBindingsRoute from "@system/interface/rou
 import * as systemAccountsAccountIdRoleBindingsBindingIdRoute from "@system/interface/routes/system.accounts.$accountId.role-bindings.$bindingId"
 import * as systemAttachmentsRoute from "@system/interface/routes/system.attachments"
 import * as systemAttachmentsAttachmentIdRoute from "@system/interface/routes/system.attachments.$attachmentId"
+import * as systemAttachmentsAttachmentIdPreservationsRoute from "@system/interface/routes/system.attachments.$attachmentId.preservations"
+import * as systemAttachmentsAttachmentIdPreservationsPreservationIdReleaseRoute from "@system/interface/routes/system.attachments.$attachmentId.preservations.$preservationId.release"
 import * as systemAttachmentsPurgeUnlinkedRoute from "@system/interface/routes/system.attachments.purge-unlinked"
 import * as systemAuditEventsRoute from "@system/interface/routes/system.audit-events"
 import * as systemAuditEventsEventIdRoute from "@system/interface/routes/system.audit-events.$eventId"
@@ -1012,6 +1014,18 @@ const routePart34 = createRouteApp()
   .post("/system/attachments", ...systemAttachmentsRoute.POST)
   .post("/system/attachments/purge-unlinked", ...systemAttachmentsPurgeUnlinkedRoute.POST)
   .get("/system/attachments/:attachmentId", ...systemAttachmentsAttachmentIdRoute.GET)
+  .get(
+    "/system/attachments/:attachmentId/preservations",
+    ...systemAttachmentsAttachmentIdPreservationsRoute.GET,
+  )
+  .post(
+    "/system/attachments/:attachmentId/preservations",
+    ...systemAttachmentsAttachmentIdPreservationsRoute.POST,
+  )
+  .post(
+    "/system/attachments/:attachmentId/preservations/:preservationId/release",
+    ...systemAttachmentsAttachmentIdPreservationsPreservationIdReleaseRoute.POST,
+  )
   .get("/system/audit-events", ...systemAuditEventsRoute.GET)
   .get("/system/audit-events/:eventId", ...systemAuditEventsEventIdRoute.GET)
   .post("/system/auth/password/reset", ...systemAuthPasswordResetRoute.POST)
@@ -1021,11 +1035,11 @@ const routePart34 = createRouteApp()
   .post("/system/browser-login-codes", ...systemBrowserLoginCodesRoute.POST)
   .post("/system/browser-sessions", ...systemBrowserSessionsRoute.POST)
   .get("/system/cli-authorization-callback", ...systemCliAuthorizationCallbackRoute.GET)
+
+const routePart35 = createRouteApp()
   .get("/system/cli-authorizations", ...systemCliAuthorizationsRoute.GET)
   .post("/system/cli-sessions", ...systemCliSessionsRoute.POST)
   .get("/system/connectors", ...systemConnectorsRoute.GET)
-
-const routePart35 = createRouteApp()
   .post("/system/connectors", ...systemConnectorsRoute.POST)
   .patch("/system/connectors/:connectorId", ...systemConnectorsConnectorIdRoute.PATCH)
   .get("/system/dead-letters", ...systemDeadLettersRoute.GET)
@@ -1095,11 +1109,11 @@ const routePart35 = createRouteApp()
   .post("/system/sessions", ...systemSessionsRoute.POST)
   .patch("/system/sessions", ...systemSessionsRoute.PATCH)
   .delete("/system/sessions", ...systemSessionsRoute.DELETE)
+
+const routePart36 = createRouteApp()
   .post("/system/step-up-grants", ...systemStepUpGrantsRoute.POST)
   .get("/thanks/thanks-messages", ...thanksMessagesRoute.GET)
   .post("/thanks/thanks-messages", ...thanksMessagesRoute.POST)
-
-const routePart36 = createRouteApp()
   .get("/thanks/thanks-messages/me", ...thanksMessagesMeRoute.GET)
   .get("/thanks/thanks-point-balances/me", ...thanksPointBalancesMeRoute.GET)
   .get("/thanks/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
