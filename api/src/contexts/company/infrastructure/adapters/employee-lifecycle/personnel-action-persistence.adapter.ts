@@ -1,6 +1,6 @@
+import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props"
 import { createCompanySystemAuditEvent } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/create-company-system-audit-event"
 import { containsDate } from "@/contexts/company/domain/definitions/contains-date.definition"
-import type { DirectPersonnelActionCommand } from "@/contexts/company/domain/definitions/direct-personnel-action-command.definition"
 import type {
   LifecycleSchedule,
   LifecycleVersionMutation,
@@ -10,7 +10,6 @@ import { stableLifecycleJson } from "@/contexts/company/domain/definitions/stabl
 import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
-import type { PersonnelActionRecord } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action.adapter"
 import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/company/infrastructure/adapters/database/abort-when-previous-statement-changed-no-rows.adapter"
 import { isAbortedByGuard } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-aborted-by-guard"
 import {
@@ -304,17 +303,6 @@ function unexpected(cause: unknown): CompanyOperationError {
   }
 
   return new CompanyUnexpectedError("人事発令の確定に失敗しました", { cause })
-}
-
-export type PersonnelActionPersistenceProps = {
-  command: DirectPersonnelActionCommand
-  action: PersonnelActionRecord
-  projection: PersonnelActionProjection
-  scheduleBefore: LifecycleSchedule
-  businessDate: string
-  employeeCodes: ReadonlyMap<EmployeeId, string>
-  revisions: { employeeRevision: number; organizationRevision: number }
-  prospectiveEmployee?: { code: string; name: string; email?: string | null }
 }
 
 function preparePersistenceStatements(

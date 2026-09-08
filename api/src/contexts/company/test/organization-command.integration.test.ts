@@ -268,7 +268,7 @@ describe("organization command receipts and boundaries", () => {
       commandId: "competing-root",
       expectedRevision: 1,
       actorAccountId: "account:other",
-      recordedAt: Date.parse("2026-09-08T00:00:00Z"),
+      recordedAt: Date.now(),
       reason: "Confirmed rename",
       resources: [
         {
