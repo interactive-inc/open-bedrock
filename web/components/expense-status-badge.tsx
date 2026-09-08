@@ -1,23 +1,39 @@
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import type { ExpenseStatus } from "@/lib/api/types/expense-types"
 
 type Props = {
   status: ExpenseStatus
 }
 
-/** 経費ステータスを日本語ラベルと配色付きの Badge で表示する。 */
+/** 経費ステータスを日本語ラベルの Button で表示する。却下・失敗だけ destructive にし、他は secondary に揃える。 */
 export function ExpenseStatusBadge(props: Props) {
   if (props.status === "approved") {
-    return <Badge>承認済み</Badge>
+    return (
+      <Button type="button" variant="secondary" size="sm">
+        承認済み
+      </Button>
+    )
   }
 
   if (props.status === "settled") {
-    return <Badge>精算済み</Badge>
+    return (
+      <Button type="button" variant="secondary" size="sm">
+        精算済み
+      </Button>
+    )
   }
 
   if (props.status === "rejected") {
-    return <Badge variant="destructive">却下</Badge>
+    return (
+      <Button type="button" variant="destructive" size="sm">
+        却下
+      </Button>
+    )
   }
 
-  return <Badge variant="secondary">承認待ち</Badge>
+  return (
+    <Button type="button" variant="secondary" size="sm">
+      承認待ち
+    </Button>
+  )
 }

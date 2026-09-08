@@ -1,5 +1,4 @@
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -10,6 +9,7 @@ import {
 } from "@/components/ui/table"
 import { formatDate } from "@/lib/format-date"
 import type { WorkAccidentResponse } from "@/lib/api/types/work-accident-types"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   rows: ReadonlyArray<WorkAccidentResponse>
@@ -62,9 +62,9 @@ export function WorkAccidentsTable(props: Props) {
               </TableCell>
 
               <TableCell>
-                <Badge variant={row.status === "closed" ? "secondary" : "outline"}>
+                <Button type="button" variant="secondary" size="sm">
                   {STATUS_LABELS[row.status] ?? row.status}
-                </Badge>
+                </Button>
               </TableCell>
             </TableRow>
           ))}

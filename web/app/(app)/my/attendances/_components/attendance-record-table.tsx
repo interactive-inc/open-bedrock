@@ -1,6 +1,5 @@
 import { toDurationLabel } from "@/app/(app)/my/attendances/_lib/to-duration-label"
 import { formatDateTime } from "@/lib/format-date-time"
-import { Badge } from "@/components/ui/badge"
 import { statusLabel } from "@/lib/status-label"
 import {
   Table,
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 
 /** api の実レスポンス（snake_case）と同形の表示用レコード型。 */
 type AttendanceRecord = {
@@ -63,9 +63,9 @@ export function AttendanceRecordTable(props: Props) {
               <TableCell className="text-right">{toDurationLabel(record.work_minutes)}</TableCell>
 
               <TableCell>
-                <Badge variant={record.status === "closed" ? "secondary" : "outline"}>
+                <Button type="button" variant="secondary" size="sm">
                   {statusLabel(record.status)}
-                </Badge>
+                </Button>
               </TableCell>
             </TableRow>
           ))}

@@ -1,7 +1,6 @@
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { TablePagination } from "@/components/table-pagination"
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/table"
 import { getLicenseList } from "@/lib/api/get-license-list"
 import { LicenseCancelButton } from "@/app/(app)/software-license/licenses/_components/license-cancel-button"
+import { Button } from "@/components/ui/button"
 
 const PAGE_SIZE = 20
 
@@ -68,9 +68,13 @@ export async function LicenseList(props: Props) {
 
                 <TableCell>
                   {license.status === "cancelled" ? (
-                    <Badge variant="outline">解約済み</Badge>
+                    <Button type="button" variant="secondary" size="sm">
+                      解約済み
+                    </Button>
                   ) : (
-                    <Badge variant="secondary">利用中</Badge>
+                    <Button type="button" variant="secondary" size="sm">
+                      利用中
+                    </Button>
                   )}
                 </TableCell>
 

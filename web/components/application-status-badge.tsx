@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import type { ApplicationStatus } from "@/lib/api/types/application-types"
 
 type Props = {
@@ -6,19 +6,35 @@ type Props = {
   returned?: boolean
 }
 
-/** 申請ステータスを日本語ラベルと配色付きの Badge で表示する。 */
+/** 申請ステータスを日本語ラベルの Button で表示する。却下・失敗だけ destructive にし、他は secondary に揃える。 */
 export function ApplicationStatusBadge(props: Props) {
   if (props.returned === true) {
-    return <Badge variant="outline">差戻し</Badge>
+    return (
+      <Button type="button" variant="secondary" size="sm">
+        差戻し
+      </Button>
+    )
   }
 
   if (props.status === "approved") {
-    return <Badge>承認済み</Badge>
+    return (
+      <Button type="button" variant="secondary" size="sm">
+        承認済み
+      </Button>
+    )
   }
 
   if (props.status === "rejected") {
-    return <Badge variant="destructive">却下</Badge>
+    return (
+      <Button type="button" variant="destructive" size="sm">
+        却下
+      </Button>
+    )
   }
 
-  return <Badge variant="secondary">承認待ち</Badge>
+  return (
+    <Button type="button" variant="secondary" size="sm">
+      承認待ち
+    </Button>
+  )
 }

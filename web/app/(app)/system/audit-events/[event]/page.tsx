@@ -9,13 +9,13 @@ import { formatAuditDateTime } from "@/app/(app)/system/audit-events/_lib/format
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 import { AuthError } from "@/lib/api/auth-error"
 import { getAuditEvent } from "@/lib/api/get-audit-event"
 import type { AuditEventDetail } from "@/lib/api/types/audit-types"
 import { requirePermission } from "@/lib/auth/require-permission"
+import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "監査イベント" }
 
@@ -24,8 +24,8 @@ type Props = {
 }
 
 const outcomeVariant = {
-  succeeded: "default",
-  denied: "outline",
+  succeeded: "secondary",
+  denied: "secondary",
   failed: "destructive",
 } as const
 
@@ -104,9 +104,9 @@ export default async function AuditEventDetailPage(props: Props) {
               </DetailField>
               <DetailField label="操作">{auditActionLabel(event.action)}</DetailField>
               <DetailField label="結果">
-                <Badge variant={outcomeVariant[event.outcome]}>
+                <Button type="button" variant={outcomeVariant[event.outcome]} size="sm">
                   {auditOutcomeLabel(event.outcome)}
-                </Badge>
+                </Button>
               </DetailField>
               <DetailField label="理由">{auditReasonLabel(event.reason_code)}</DetailField>
               <DetailField label="実行者" mono>

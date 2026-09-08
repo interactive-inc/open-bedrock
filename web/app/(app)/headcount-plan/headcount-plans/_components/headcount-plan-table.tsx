@@ -1,6 +1,5 @@
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -10,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getHeadcountPlanList } from "@/lib/api/get-headcount-plan-list"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   fiscalYear?: number
@@ -66,7 +66,7 @@ export async function HeadcountPlanTable(props: Props) {
                 <TableCell className="text-right tabular-nums">{plan.actual_count}</TableCell>
 
                 <TableCell className="text-right">
-                  <GapBadge gap={gap} />
+                  <GapLabel gap={gap} />
                 </TableCell>
 
                 <TableCell>{plan.note ?? ""}</TableCell>
@@ -79,15 +79,27 @@ export async function HeadcountPlanTable(props: Props) {
   )
 }
 
-/** 実在籍数と計画人数の差分バッジ。過不足の向きを色で示す。 */
-function GapBadge(props: { gap: number }) {
+/** 実在籍数と計画人数の差分表示。過不足の向きを色で示す。 */
+function GapLabel(props: { gap: number }) {
   if (props.gap === 0) {
-    return <Badge variant="secondary">±0</Badge>
+    return (
+      <Button type="button" variant="secondary" size="sm">
+        ±0
+      </Button>
+    )
   }
 
   if (props.gap > 0) {
-    return <Badge variant="outline">+{props.gap}（超過）</Badge>
+    return (
+      <Button type="button" variant="secondary" size="sm">
+        +{props.gap}（超過）
+      </Button>
+    )
   }
 
-  return <Badge variant="destructive">{props.gap}（不足）</Badge>
+  return (
+    <Button type="button" variant="destructive" size="sm">
+      {props.gap}（不足）
+    </Button>
+  )
 }

@@ -3,10 +3,10 @@ import { TextLink } from "@/components/text-link"
 import { formatLifecycleDisplayStatus } from "@/app/(app)/company/employees/[employee]/_lib/format-lifecycle-display-status"
 import { formatLifecycleKind } from "@/app/(app)/company/employees/[employee]/_lib/format-lifecycle-kind"
 import { summarizeLifecycleEvent } from "@/app/(app)/company/employees/[employee]/_lib/summarize-lifecycle-event"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import type { EmployeeLifecycleEvents } from "@/lib/api/get-employee-lifecycle-events"
+import { Button } from "@/components/ui/button"
 
 export function EmployeeLifecycleTimeline(props: {
   code: string
@@ -39,9 +39,9 @@ export function EmployeeLifecycleTimeline(props: {
                         <time dateTime={event.event_on}>{formatLifecycleDate(event.event_on)}</time>
                       </p>
                     </div>
-                    <Badge variant="outline">
+                    <Button type="button" variant="secondary" size="sm">
                       {formatLifecycleDisplayStatus(event.display_status)}
-                    </Badge>
+                    </Button>
                   </div>
                   {details.length > 0 ? (
                     <ul className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">

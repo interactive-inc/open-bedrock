@@ -3,7 +3,6 @@ import { statusLabel } from "@/lib/status-label"
 import Link from "next/link"
 import { getGoalList } from "@/lib/api/get-goal-list"
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -12,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   period: string | null
@@ -73,9 +73,9 @@ export async function GoalList(props: Props) {
               <TableCell className="text-right">{goal.weight}</TableCell>
 
               <TableCell>
-                <Badge variant={goal.status === "done" ? "secondary" : "outline"}>
+                <Button type="button" variant="secondary" size="sm">
                   {statusLabel(goal.status)}
-                </Badge>
+                </Button>
               </TableCell>
             </TableRow>
           ))}

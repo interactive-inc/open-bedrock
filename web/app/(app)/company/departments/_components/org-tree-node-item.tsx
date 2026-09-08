@@ -1,6 +1,6 @@
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
 import type { OrgTreeNode } from "@/lib/api/types/org-types"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   node: OrgTreeNode
@@ -26,7 +26,9 @@ export function OrgTreeNodeItem(props: Props) {
 
         <span className="text-xs text-muted-foreground">{props.node.code}</span>
 
-        <Badge variant="secondary">{props.node.member_count}名</Badge>
+        <Button type="button" variant="secondary" size="sm">
+          {props.node.member_count}名
+        </Button>
 
         {props.node.manager_employee_code !== null && (
           <Link

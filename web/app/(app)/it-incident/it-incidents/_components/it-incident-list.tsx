@@ -1,7 +1,6 @@
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { TablePagination } from "@/components/table-pagination"
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/table"
 import { getItIncidentList } from "@/lib/api/get-it-incident-list"
 import { ItIncidentResolveButton } from "@/app/(app)/it-incident/it-incidents/_components/it-incident-resolve-button"
+import { Button } from "@/components/ui/button"
 
 const PAGE_SIZE = 20
 
@@ -63,9 +63,13 @@ export async function ItIncidentList(props: Props) {
 
                 <TableCell>
                   {incident.status === "resolved" ? (
-                    <Badge variant="outline">解消済み</Badge>
+                    <Button type="button" variant="secondary" size="sm">
+                      解消済み
+                    </Button>
                   ) : (
-                    <Badge variant="secondary">対応中</Badge>
+                    <Button type="button" variant="secondary" size="sm">
+                      対応中
+                    </Button>
                   )}
                 </TableCell>
 

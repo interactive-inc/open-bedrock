@@ -4,13 +4,13 @@ import { GoalEvaluationForm } from "@/app/(app)/performance-review/goals/[goal]/
 import { GoalEvaluationList } from "@/app/(app)/performance-review/goals/[goal]/_components/goal-evaluation-list"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { getGoal } from "@/lib/api/get-goal"
 import { getGoalEvaluations } from "@/lib/api/get-goal-evaluations"
 import { statusLabel } from "@/lib/status-label"
 import { getMe } from "@/lib/api/get-me"
 import type { GoalEvaluationKind } from "@/lib/api/types/goal-types"
+import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "目標詳細" }
 
@@ -90,9 +90,9 @@ export default async function GoalDetailPage(props: Props) {
 
           <div className="flex items-center gap-2">
             <span className="w-24 text-muted-foreground">ステータス</span>
-            <Badge variant={goal.status === "done" ? "secondary" : "outline"}>
+            <Button type="button" variant="secondary" size="sm">
               {statusLabel(goal.status)}
-            </Badge>
+            </Button>
           </div>
         </CardContent>
       </Card>

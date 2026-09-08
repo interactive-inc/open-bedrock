@@ -6,7 +6,6 @@ import { auditOutcomeLabel } from "@/app/(app)/system/audit-events/_lib/audit-ou
 import { auditReasonLabel } from "@/app/(app)/system/audit-events/_lib/audit-reason-label"
 import { auditTargetTypeLabel } from "@/app/(app)/system/audit-events/_lib/audit-target-type-label"
 import { formatAuditDateTime } from "@/app/(app)/system/audit-events/_lib/format-audit-date-time"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import {
@@ -29,8 +28,8 @@ function actorLabel(event: AuditEventSummary): string {
 }
 
 const outcomeVariant = {
-  succeeded: "default",
-  denied: "outline",
+  succeeded: "secondary",
+  denied: "secondary",
   failed: "destructive",
 } as const
 
@@ -80,9 +79,9 @@ export function AuditEventTable(props: Props) {
               </div>
             </TableCell>
             <TableCell>
-              <Badge variant={outcomeVariant[event.outcome]}>
+              <Button type="button" variant={outcomeVariant[event.outcome]} size="sm">
                 {auditOutcomeLabel(event.outcome)}
-              </Badge>
+              </Button>
             </TableCell>
             <TableCell translate="no">{actorLabel(event)}</TableCell>
             <TableCell className="whitespace-normal">
