@@ -192,8 +192,8 @@ describe("POST /system/attachments/purge-unlinked", () => {
     const id = await fixture.storePending()
     const original = fixture.attachments.listStaleUnlinked.bind(fixture.attachments)
     const scan = spyOn(AttachmentAdapter.prototype, "listStaleUnlinked").mockImplementation(
-      async (threshold, limit) => {
-        const rows = await original(threshold, limit)
+      async (threshold, limit, now) => {
+        const rows = await original(threshold, limit, now)
         const linked = await fixture.attachments.markLinked(id, purgeAt)
         if (linked instanceof Error) throw linked
         return rows

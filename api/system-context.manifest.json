@@ -18,6 +18,7 @@
   "schemaTables": [
     "systemAccountInvitations",
     "systemAccounts",
+    "systemAttachmentPreservations",
     "systemAttachments",
     "systemAuditEvents",
     "systemAuthenticationAttempts",

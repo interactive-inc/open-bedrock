@@ -37,7 +37,7 @@ export const POST = systemFactory.createHandlers(authenticateSystemAccessToken, 
 
     const repository = new AttachmentAdapter(context)
 
-    const stale = await repository.listStaleUnlinked(threshold, 100)
+    const stale = await repository.listStaleUnlinked(threshold, 100, command.now)
 
     if (stale instanceof Error) return stale
 

@@ -3,7 +3,7 @@ import { SystemAttachmentError } from "@system/domain/errors"
 import type { SystemAttachmentRow } from "@system/infrastructure/schema/system-attachment"
 import { systemAttachments } from "@system/infrastructure/schema/system-attachment"
 import type { SystemDatabaseContext } from "@system/configuration/system-context"
-import { and, eq, inArray, isNull, lt } from "drizzle-orm"
+import { and, eq, inArray, isNull, lt, sql } from "drizzle-orm"
 
 export type NewAttachment = Readonly<{
   id: string
@@ -146,6 +146,7 @@ export class AttachmentAdapter {
   async listStaleUnlinked(
     threshold: Date,
     limit: number,
+    now: Date,
   ): Promise<ReadonlyArray<SystemAttachmentRow> | Error> {
     try {
       return await this.c.var.database
@@ -156,6 +157,10 @@ export class AttachmentAdapter {
             inArray(systemAttachments.status, ["uploading", "pending", "erased"]),
             isNull(systemAttachments.linkedAt),
             lt(systemAttachments.createdAt, threshold),
+            sql`NOT EXISTS (SELECT 1 FROM system_attachment_preservations preservation
+              WHERE preservation.attachment_id = ${systemAttachments.id}
+                AND ((preservation.kind = 'hold' AND preservation.released_at IS NULL)
+                  OR (preservation.kind = 'retention' AND preservation.retain_until > ${now.getTime()})))`,
           ),
         )
         .limit(limit)
@@ -185,6 +190,10 @@ export class AttachmentAdapter {
             inArray(systemAttachments.status, ["uploading", "pending", "erased"]),
             isNull(systemAttachments.linkedAt),
             lt(systemAttachments.createdAt, threshold),
+            sql`NOT EXISTS (SELECT 1 FROM system_attachment_preservations preservation
+              WHERE preservation.attachment_id = ${systemAttachments.id}
+                AND ((preservation.kind = 'hold' AND preservation.released_at IS NULL)
+                  OR (preservation.kind = 'retention' AND preservation.retain_until > ${erasedAt.getTime()})))`,
           ),
         )
         .returning()
