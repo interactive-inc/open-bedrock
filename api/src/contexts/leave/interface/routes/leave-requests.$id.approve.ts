@@ -39,7 +39,8 @@ export const POST = factory.createHandlers(
       context: c,
       notifyApprovalResult: (command) => new NotifyApprovalResult(c).run(command),
     }).execute({
-      session: session,
+      session,
+      tokenVersion: c.var.accountTokenVersion,
       leaveRequestId,
       approverId: session.employeeId,
       comment: body.comment,

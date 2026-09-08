@@ -9,6 +9,7 @@ import { createTestContext } from "@tests/api/support/create-test-context"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { initializeCompanyTestFixture } from "@tests/api/support/initialize-company-test-fixture"
 import { describe, expect, test } from "bun:test"
 
@@ -39,6 +40,10 @@ async function seedPendingRequest(
 }
 
 async function seedManagerRelationship(db: D1Database): Promise<void> {
+  await seedIamForEmployees(db, [
+    { id: 2, email: "you+manager@example.com", passwordHash: "unused", role: "manager" },
+    { id: 5, email: "you+member@example.com", passwordHash: "unused", role: "member" },
+  ])
   const employees = [
     { id: 2, code: "E002", name: "Manager", dept_id: 3, status: "active" },
     { id: 5, code: "E005", name: "Member", dept_id: 3, status: "active" },
@@ -57,6 +62,25 @@ async function seedManagerRelationship(db: D1Database): Promise<void> {
 }
 
 describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
+  test.each(["technical-admin", "different-employee"])(
+    "判断資格を持たない主体を拒否する: %s",
+    async (kind) => {
+      const { context, db } = await createTestContext()
+      await seedManagerRelationship(db)
+      const repository = new LeaveRequestRepository(context)
+      const request = await seedPendingRequest(repository, toWorkforceEmployeeId(5))
+      const result = await new RejectLeaveRequest({ context }).execute({
+        session: makeTestSession("root", 1),
+        tokenVersion: 0,
+        leaveRequestId: request.id ?? 0,
+        approverId: toWorkforceEmployeeId(kind === "different-employee" ? 2 : 1),
+        comment: "Review",
+        createdAt: "2026-06-15T00:00:00.000Z",
+      })
+      expect(result).toBeInstanceOf(ForbiddenError)
+      expect(await repository.findById(request.id ?? 0)).toMatchObject({ status: "pending" })
+    },
+  )
   test("returns forbidden for a member role", async () => {
     const { context, db } = await createTestContext()
 
@@ -77,6 +101,7 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
 
     const result = await new ApproveLeaveRequest({ context }).execute({
       session: makeTestSession("member"),
+      tokenVersion: 0,
       leaveRequestId: request.id ?? 0,
       approverId: toWorkforceEmployeeId(2),
       comment: null,
@@ -96,7 +121,8 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
     const request = await seedPendingRequest(repository, toWorkforceEmployeeId(5))
 
     const result = await new RejectLeaveRequest({ context }).execute({
-      session: makeTestSession("manager"),
+      session: makeTestSession("manager", 2),
+      tokenVersion: 0,
       leaveRequestId: request.id ?? 0,
       approverId: toWorkforceEmployeeId(2),
       comment: "insufficient coverage",
@@ -133,7 +159,8 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
     const request = await seedPendingRequest(repository, toWorkforceEmployeeId(5))
 
     const result = await new ApproveLeaveRequest({ context }).execute({
-      session: makeTestSession("root"),
+      session: makeTestSession("root", 5),
+      tokenVersion: 0,
       leaveRequestId: request.id ?? 0,
       approverId: toWorkforceEmployeeId(5),
       comment: null,
@@ -152,7 +179,8 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
     const request = await seedPendingRequest(repository, toWorkforceEmployeeId(5))
 
     const result = await new RejectLeaveRequest({ context }).execute({
-      session: makeTestSession("hr"),
+      session: makeTestSession("hr", 2),
+      tokenVersion: 0,
       leaveRequestId: request.id ?? 0,
       approverId: toWorkforceEmployeeId(2),
       comment: "policy violation",
@@ -198,7 +226,8 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
     }
 
     const result = await new ApproveLeaveRequest({ context }).execute({
-      session: makeTestSession("manager"),
+      session: makeTestSession("manager", 2),
+      tokenVersion: 0,
       leaveRequestId: created.id ?? 0,
       approverId: toWorkforceEmployeeId(2),
       comment: null,
@@ -247,7 +276,8 @@ describe("ApproveLeaveRequest / RejectLeaveRequest", () => {
     }
 
     const result = await new RejectLeaveRequest({ context }).execute({
-      session: makeTestSession("manager"),
+      session: makeTestSession("manager", 2),
+      tokenVersion: 0,
       leaveRequestId: created.id ?? 0,
       approverId: toWorkforceEmployeeId(2),
       comment: "no coverage",

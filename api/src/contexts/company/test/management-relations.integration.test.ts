@@ -9,6 +9,7 @@ import { hc } from "hono/client"
 import { z } from "zod"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
+import { PrepareEmployeeManagementAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-employee-management-authority.adapter"
 import { ResolveCanonicalOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/workforce/resolve-canonical-organization-authority.adapter"
 import { ResolveOrganizationalAuthorityCandidatesAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organizational-authority-candidates.adapter"
 import { CompanyReportingRelationsReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-reporting-relations-read.adapter"
@@ -178,6 +179,77 @@ async function fixture() {
 }
 
 describe("Company reporting graph through organization changes", () => {
+  test("管理資格の準備は本人対応を確認し、確認後の上長関係の終了を保存時に拒否する", async () => {
+    const f = await fixture()
+    const subject = f.people[0]!
+    const manager = f.people[1]!
+    const outsider = f.people[2]!
+    const relation = f.relation("report:decision", 0, 1)
+    expect(Number((await f.write([relation], "decision-manager")).status)).toBe(201)
+    const adapter = new PrepareEmployeeManagementAuthorityAdapter(f.context)
+    const command = {
+      accountId: manager.accountId,
+      actorEmployeeId: manager.employeeId,
+      subjectEmployeeId: subject.employeeId,
+    }
+    const prepared = await adapter.prepare(command)
+    if (prepared instanceof Error || prepared === null)
+      throw new Error("manager authority missing", { cause: prepared })
+    expect(prepared.snapshot).toMatchObject({ asOf: "2030-06-01" })
+    expect((await prepared.guard.run()).success).toBe(true)
+    expect(await adapter.prepare({ ...command, accountId: outsider.accountId })).toBeNull()
+    expect(
+      await adapter.prepare({
+        ...command,
+        accountId: outsider.accountId,
+        actorEmployeeId: outsider.employeeId,
+      }),
+    ).toBeNull()
+    expect(await adapter.prepare({ ...command, subjectEmployeeId: manager.employeeId })).toBeNull()
+    await f.writeResources([
+      {
+        ...relation,
+        revision: 2,
+        effectiveFrom: restoreCalendarDate(relation.effectiveFrom),
+        effectiveTo: restoreCalendarDate("2030-06-01"),
+      },
+    ])
+    expect(await prepared.guard.run().catch((cause: unknown) => cause)).toBeInstanceOf(Error)
+    expect(await adapter.prepare(command)).toBeNull()
+  })
+
+  test("管理資格の準備は将来の関係を先取りせず、有効開始日に解決する", async () => {
+    const f = await fixture()
+    const subject = f.people[0]!
+    const manager = f.people[1]!
+    expect(
+      Number(
+        (
+          await f.write(
+            [{ ...f.relation("report:future-decision", 0, 1), effectiveFrom: "2030-06-02" }],
+            "future-decision-manager",
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    const command = {
+      accountId: manager.accountId,
+      actorEmployeeId: manager.employeeId,
+      subjectEmployeeId: subject.employeeId,
+    }
+    expect(
+      await new PrepareEmployeeManagementAuthorityAdapter(f.context).prepare(command),
+    ).toBeNull()
+    const prepared = await new PrepareEmployeeManagementAuthorityAdapter({
+      ...f.context,
+      env: { ...f.context.env, NOW: "2030-06-02T00:00:00Z" },
+    }).prepare(command)
+    if (prepared instanceof Error || prepared === null)
+      throw new Error("effective manager authority missing", { cause: prepared })
+    expect(prepared.snapshot).toMatchObject({ asOf: "2030-06-02" })
+    expect((await prepared.guard.run()).success).toBe(true)
+  })
+
   test("parallel managers and uncoded employees appear in owner reports and the complete reporting graph", async () => {
     const f = await fixture()
     const relations = [
