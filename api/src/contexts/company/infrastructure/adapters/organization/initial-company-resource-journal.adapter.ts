@@ -1,3 +1,6 @@
+import { CompanyResponsibilityJournalAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-responsibility-journal.adapter"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import type { CompanyBootstrapEntity } from "@/contexts/company/domain/entities/company-bootstrap.entity"
@@ -84,6 +87,36 @@ export class InitialCompanyResourceJournalAdapter {
       effectiveFrom: restoreCalendarDate(write.observedOn),
       attributes: { ...originalRoot.attributes, officialName: write.organizationName },
     }
+    const responsibilities = await new CompanyResponsibilityJournalAdapter(this.c).prepare({
+      employeeId: restoreWorkforceId("employee", workforce.employeeId),
+      recordedAt: write.recordedAt,
+      correctsActionId: null,
+      connectNew: true,
+      newOrganizationUnitIds: new Set([root.organizationUnitId]),
+      changes: write.initialResponsibilities.map((code) => ({
+        before: null,
+        after: {
+          periodId: restoreWorkforceId(
+            "period",
+            `bootstrap-responsibility:${code.toLowerCase()}:${workforce.employeeId}`,
+          ),
+          revision: 1,
+          employeeId: restoreWorkforceId("employee", workforce.employeeId),
+          employmentId: restoreWorkforceId("employment", workforce.employmentId),
+          organizationUnitId: restoreWorkforceId("organization_unit", root.organizationUnitId),
+          responsibilityType: restoreOrgResponsibilityType(code),
+          startsOn: restoreCalendarDate(write.observedOn),
+          endsOn: null,
+          isVoid: false,
+          recordedByActionId: restoreWorkforceId(
+            "personnel_action",
+            `bootstrap:organization:${workforce.employeeId}`,
+          ),
+          recordedAt: write.recordedAt,
+        },
+      })),
+    })
+    if (responsibilities instanceof Error) return responsibilities
     const final = CompanyResourceChangeEntity.create({
       commandId: `bootstrap-company:${write.commandId}`,
       expectedRevision: 2,
@@ -91,6 +124,7 @@ export class InitialCompanyResourceJournalAdapter {
       reason: write.reason,
       recordedAt: write.recordedAt,
       resources: [
+        ...responsibilities.resources,
         closedRoot,
         currentRoot,
         {
@@ -171,6 +205,7 @@ export class InitialCompanyResourceJournalAdapter {
           .prepare(`INSERT INTO company_assignment_period_bindings
           (period_id, resource_id, period_revision, source_revision) VALUES (?1, ?2, 1, 1)`)
           .bind(workforce.assignmentPeriodId, `assignment:${workforce.assignmentPeriodId}`),
+        ...responsibilities.bindings,
         completion.commit,
       ],
     }

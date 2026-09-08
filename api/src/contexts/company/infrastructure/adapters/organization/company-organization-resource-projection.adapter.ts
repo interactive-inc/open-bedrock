@@ -1,3 +1,4 @@
+import { CompanyResponsibilityResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-responsibility-resource-projection.adapter"
 import { CompanyAssignmentResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-assignment-resource-projection.adapter"
 import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { OrganizationWorkforceChangeEntity } from "@/contexts/company/domain/entities/organization-workforce-change.entity"
@@ -31,19 +32,37 @@ export class CompanyOrganizationResourceProjectionAdapter {
     )
     if (
       resources.length === 0 &&
-      !change.resources.some((resource) => resource.type === "assignment")
+      !change.resources.some(
+        (resource) =>
+          resource.type === "assignment" || resource.type === "responsibility-assignment",
+      )
     )
       return { beforeWorkforce: [], statements: [] }
     const first =
-      resources[0] ?? change.resources.find((resource) => resource.type === "assignment")
+      resources[0] ??
+      change.resources.find(
+        (resource) =>
+          resource.type === "assignment" || resource.type === "responsibility-assignment",
+      )
     if (first === undefined) return new CompanyResourceValidationError("invalid_organization")
     const operationId = restoreWorkforceId("personnel_action", `org-resource:${fingerprint}`)
     const assignmentProjection = await new CompanyAssignmentResourceProjectionAdapter(
       this.c,
     ).prepare(change, operationId)
     if (assignmentProjection instanceof Error) return assignmentProjection
-    if (resources.length === 0 && assignmentProjection.assignments.length === 0)
-      return { beforeWorkforce: [], statements: assignmentProjection.bindings }
+    const responsibilityProjection = await new CompanyResponsibilityResourceProjectionAdapter(
+      this.c,
+    ).prepare(change, operationId)
+    if (responsibilityProjection instanceof Error) return responsibilityProjection
+    if (
+      resources.length === 0 &&
+      assignmentProjection.assignments.length === 0 &&
+      responsibilityProjection.responsibilities.length === 0
+    )
+      return {
+        beforeWorkforce: [],
+        statements: [...assignmentProjection.bindings, ...responsibilityProjection.bindings],
+      }
     const snapshot = await new OrganizationUnitReadAdapter(drizzle(this.c)).readSnapshot(
       first.effectiveFrom,
     )
@@ -79,7 +98,10 @@ export class CompanyOrganizationResourceProjectionAdapter {
     )
     const structure = OrganizationStructureValue.restore({
       revision:
-        snapshot.snapshot.revision + periods.length + assignmentProjection.assignments.length,
+        snapshot.snapshot.revision +
+        periods.length +
+        assignmentProjection.assignments.length +
+        responsibilityProjection.responsibilities.length,
       asOf: first.effectiveFrom,
       units: [...units, ...periods],
     })
@@ -108,7 +130,7 @@ export class CompanyOrganizationResourceProjectionAdapter {
           left.startsOn.localeCompare(right.startsOn),
       ),
       assignments: assignmentProjection.assignments,
-      responsibilities: [],
+      responsibilities: responsibilityProjection.responsibilities,
     })
     if (typed instanceof Error) return new CompanyResourceValidationError("invalid_organization")
     const statements = new OrganizationUnitChangeStatementAdapter(this.c).prepare(
@@ -117,9 +139,10 @@ export class CompanyOrganizationResourceProjectionAdapter {
     )
     const completed = statements.at(-1)
     if (completed === undefined) return new Error("organization completion statement missing")
-    const withdrawalCount = assignmentProjection.assignments.filter(
-      (period) => period.isVoid,
-    ).length
+    const withdrawalCount = [
+      ...assignmentProjection.assignments,
+      ...responsibilityProjection.responsibilities,
+    ].filter((period) => period.isVoid).length
     return {
       beforeWorkforce: statements.slice(0, withdrawalCount + 1),
       statements: [
@@ -131,6 +154,7 @@ export class CompanyOrganizationResourceProjectionAdapter {
             .bind(id, change.recordedAt),
         ),
         ...assignmentProjection.bindings,
+        ...responsibilityProjection.bindings,
         completed,
       ],
     }
