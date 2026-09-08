@@ -26,7 +26,10 @@ export class CompanyEmploymentAuthorityChangeValue {
     const first = history[0]
     if (
       first === undefined ||
-      (first.type !== "office-assignment" && first.type !== "organizational-authority") ||
+      (first.type !== "office-assignment" &&
+        first.type !== "organizational-authority" &&
+        first.type !== "responsibility-assignment" &&
+        first.type !== "collective-body-membership") ||
       history.some(
         (resource, index) =>
           resource.type !== first.type ||
@@ -65,12 +68,18 @@ export class CompanyEmploymentAuthorityChangeValue {
       const reference = source ?? current
       if (reference === undefined) continue
       const employmentId = source?.readText("employmentId")
-      const involved = source?.readText("employeeId") === props.employeeId
+      const involved =
+        source?.readText("employeeId") === props.employeeId ||
+        (source?.type === "responsibility-assignment" &&
+          source.readText("holderType") === "employee" &&
+          source.readText("holderId") === props.employeeId)
+      const employmentBound =
+        source?.type === "office-assignment" || source?.type === "organizational-authority"
       const employed = props.schedule.employments.some(
         (period) =>
           !period.isVoid &&
           period.employeeId === props.employeeId &&
-          period.employmentId === employmentId &&
+          (!employmentBound || period.employmentId === employmentId) &&
           period.startsOn <= date &&
           (period.endsOn === null || date < period.endsOn),
       )
@@ -92,15 +101,14 @@ export class CompanyEmploymentAuthorityChangeValue {
       const end = dates[index + 1] ?? null
       const wasActive = current?.state === "active" && current.contains(date)
       if (!active && !wasActive) continue
-      const keys =
-        first.type === "office-assignment"
-          ? ["employeeId", "employmentId", "organizationalOfficeId"]
-          : ["employeeId", "employmentId", "scopeType", "scopeId", "authority"]
       if (
         active &&
         wasActive &&
         (current.effectiveTo === null || (end !== null && end <= current.effectiveTo)) &&
-        keys.every((key) => current.readText(key) === reference.readText(key))
+        Object.keys(current.attributes).length === Object.keys(reference.attributes).length &&
+        Object.keys(reference.attributes).every(
+          (key) => current.attributes[key] === reference.attributes[key],
+        )
       )
         continue
       const resource = CompanyResourceEntity.create({

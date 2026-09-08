@@ -386,13 +386,13 @@ function findEligibleEmployment(
     return error("governance_authority_reference_missing")
   }
   const employments = allResources.filter(
-    (resource) => resource.type === "employment" && text(resource, "employeeId") === employeeId,
+    (resource) =>
+      resource.type === "employment" &&
+      text(resource, "employeeId") === employeeId &&
+      (text(resource, "status") === "ACTIVE" || text(resource, "status") === "ON_LEAVE"),
   )
   if (employments.length > 1) return error("governance_authority_resource_ambiguous")
-  const employment = employments[0]
-  if (employment === undefined) return null
-  const status = text(employment, "status")
-  return status === "ACTIVE" || status === "ON_LEAVE" ? employment : null
+  return employments[0] ?? null
 }
 
 function resourceKey(type: string, id: string): string {

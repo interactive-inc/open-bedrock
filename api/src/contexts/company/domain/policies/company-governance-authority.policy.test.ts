@@ -206,6 +206,56 @@ describe("Company governance authority", () => {
   })
 })
 
+test.each(["TERMINATED", "ACTIVE", "ON_LEAVE"] as const)(
+  "再任用では終了済み雇用を候補資格から除き、併存する%s雇用を評価する",
+  (previousStatus) => {
+    const resolved = resolveCompanyGovernanceAuthority({
+      asOf,
+      organizationRevision: 1,
+      subjectEmployeeId: null,
+      criteria: [{ responsibilityCode: "APPROVE", scope: null }],
+      activeAccountIds: new Set(["account:1"]),
+      resources: [
+        resource("employee", "employee:1", { personId: "person:1", employeeCode: "E1" }),
+        resource("employment", "employment:previous", {
+          employeeId: "employee:1",
+          status: previousStatus,
+          employmentType: "FULL_TIME",
+        }),
+        resource("employment", "employment:current", {
+          employeeId: "employee:1",
+          status: "ACTIVE",
+          employmentType: "PART_TIME",
+        }),
+        resource("account-employee-link", "link:1", {
+          employeeId: "employee:1",
+          accountId: "account:1",
+        }),
+        resource("responsibility", "responsibility:approve", {
+          code: "APPROVE",
+          officialName: "Approval",
+        }),
+        resource("responsibility-assignment", "appointment:1", {
+          responsibilityId: "responsibility:approve",
+          holderType: "employee",
+          holderId: "employee:1",
+          authorityScopeId: null,
+          delegationAllowed: false,
+        }),
+      ],
+    })
+    if (previousStatus !== "TERMINATED") {
+      expect(resolved).toMatchObject({ code: "governance_authority_resource_ambiguous" })
+      return
+    }
+    if (resolved instanceof Error) throw resolved
+    expect(resolved.candidates).toHaveLength(1)
+    expect(resolved.candidates[0]?.qualifications[0]).toMatchObject({
+      employmentId: "employment:current",
+    })
+  },
+)
+
 function resource(
   type: Parameters<typeof CompanyResourceEntity.create>[0]["type"],
   id: string,

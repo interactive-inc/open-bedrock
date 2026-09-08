@@ -209,7 +209,7 @@ Workforceの純粋な資格resolverは、所属と別の`managementRelations`を
 
 `api/src/contexts/company/domain/policies/company-governance-authority.policy.ts` は、固定済み Company resource と active な System Account ID の集合から資格候補を解決する。DB、Hono、Worker、暗黙の時計を読まず、criterion、scope、snapshot、candidate、qualification は opaque ID と明示型だけで表す。
 
-resolver は同じ `asOf` と organization revision に属する active resource だけを受理する。Account と Employee の一対一対応、Employment、Responsibility、ResponsibilityAssignment、OrganizationalOffice、OfficeAssignment、CollectiveBodyMembership、AuthorityScope の参照を検査し、候補が存在しない正常結果と、安全に評価できない `CompanyGovernanceAuthorityError` を区別する。候補探索と qualification は criterion、assignment、Account の順で決定的に並べる。
+resolver は同じ `asOf` と organization revision に属する active resource だけを受理する。Account と Employee の一対一対応、Employment、Responsibility、ResponsibilityAssignment、OrganizationalOffice、OfficeAssignment、CollectiveBodyMembership、AuthorityScope の参照を検査し、候補が存在しない正常結果と、安全に評価できない `CompanyGovernanceAuthorityError` を区別する。候補探索と qualification は criterion、assignment、Account の順で決定的に並べる。 終了済み雇用の履歴は候補資格へ含めず、再任用時は同じEmployeeの現在の有効な雇用を使う。有効な雇用を一つに決められない場合は評価不能として拒否する。
 
 `D1CompanyResourceRepository` は LegalEntity、Site、Workplace、Employee、Employment、OrgUnit、OrganizationalOffice、OfficeAssignment、Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody、CollectiveBodyMembership、AccountEmployeeLink を一つの `asOf` と organization revision へ固定して読む。System Account の状態を読めない場合は候補ゼロへ畳まず unavailable として停止し、Account role を候補資格として読まない。
 
@@ -289,4 +289,4 @@ Companyの資格とSystemのAccount・Principal・委任の参照状態を、発
 
 公開ReportingRelationの全期間は、部下と上長の雇用期間に含まれる必要がある。会社版の確定と従業員の公開対応の更新でDB検査を行い、最新の関係が終了済みでも過去の不整合を許容しない。雇用だけを短縮して関係を残す公開変更は422で拒否する。`POST /company/organization-changes`はEmploymentとReportingRelationの同時変更を受け付け、既存の雇用APIと同じ属性・Company capability・organizationのアクセス条件を使う。
 
-既存の未接続Employeeや所属期間を発令時に自動移行しない。公開Employeeの新しい所属には接続済みのOrgUnitが必要であり、既存の上長履歴は[所属と上長履歴の接続](company-api.md#既存の所属と上長履歴の接続)で明示的に確認して移行する。未接続の所属に残る上長履歴の終了・再割当、責務の公開履歴との接続、公開APIで雇用短縮と所属終了を組み合わせる保存順序も追加の確認が必要になる。
+既存の未接続Employeeや所属期間を発令時に自動移行しない。公開Employeeの新しい所属には接続済みのOrgUnitが必要であり、既存の上長履歴は[所属と上長履歴の接続](company-api.md#既存の所属と上長履歴の接続)で明示的に確認して移行する。未接続の所属に残る上長履歴の終了・再割当、責務の公開履歴との接続は未完成である。公開APIで雇用・所属・任用を同時に変更する場合の整合性は、[退職と組織責務](company-api.md#退職と組織責務)に従う。

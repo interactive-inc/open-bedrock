@@ -396,11 +396,11 @@ describe("公開Assignmentと業務の所属期間", () => {
     ).toBe(201)
     const snapshot = await new D1CompanyResourceRepository(f.database).findMany({
       organizationId: "organization:default",
-      types: ["employment"],
+      types: ["employment", "collective-body-membership"],
     })
     if (!snapshot.ok) throw snapshot.cause
     const employment = snapshot.resources.find(
-      (resource) => resource.readText("employeeId") === managerId,
+      (resource) => resource.type === "employment" && resource.readText("employeeId") === managerId,
     )
     if (employment === undefined) throw new Error("manager employment missing")
     const shortened = {
@@ -415,6 +415,29 @@ describe("公開Assignmentと業務の所属期間", () => {
         .parse(employment.attributes),
       revision: employment.revision + 1,
       effectiveTo: "2030-07-01",
+    } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
+    const membership = snapshot.resources.find(
+      (resource) =>
+        resource.type === "collective-body-membership" &&
+        resource.readText("employeeId") === managerId,
+    )
+    if (membership === undefined) throw new Error("manager membership missing")
+    const endedMembership = {
+      organizationId: membership.organizationId,
+      type: "collective-body-membership",
+      id: membership.id,
+      revision: membership.revision + 1,
+      state: "active",
+      effectiveFrom: membership.effectiveFrom,
+      effectiveTo: "2030-07-01",
+      attributes: z
+        .object({
+          collectiveBodyId: z.string(),
+          employeeId: z.string(),
+          role: z.enum(["chair", "member", "secretary"]),
+          voting: z.boolean(),
+        })
+        .parse(membership.attributes),
     } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
     const before = await f.persisted()
     expect(
@@ -437,6 +460,18 @@ describe("公開Assignmentと業務の所属期間", () => {
         (
           await f.write(
             [shortened, { ...relation, revision: 2, effectiveTo: "2030-07-01" }],
+            await f.companyRevision(),
+            "reporting:membership-missing",
+          )
+        ).status,
+      ),
+    ).toBe(422)
+    expect(await f.persisted()).toEqual(before)
+    expect(
+      Number(
+        (
+          await f.write(
+            [shortened, endedMembership, { ...relation, revision: 2, effectiveTo: "2030-07-01" }],
             await f.companyRevision(),
             "reporting:shorten-together",
           )
