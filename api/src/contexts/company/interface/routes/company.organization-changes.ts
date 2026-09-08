@@ -48,6 +48,64 @@ export const POST = factory.createHandlers(
           z.discriminatedUnion("type", [
             z.object({
               organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("legal-entity"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  officialName: z.string().trim().min(1).max(2_000),
+                  jurisdictionCountryCode: z.string().regex(/^[A-Z]{2}$/),
+                  registrationNumber: z.string().trim().min(1).max(255).nullable(),
+                  defaultCurrencyCode: z.string().regex(/^[A-Z]{3}$/),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("site"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  code: z.string().regex(/^[A-Z0-9][A-Z0-9._-]{0,63}$/),
+                  officialName: z.string().trim().min(1).max(2_000),
+                  legalEntityId: z.string().regex(/^\S{1,255}$/),
+                  kind: z.enum(["physical", "virtual"]),
+                  timeZone: z.string().regex(/^(?:UTC|[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)+)$/),
+                  countryCode: z.string().regex(/^[A-Z]{2}$/),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("workplace"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  code: z.string().regex(/^[A-Z0-9][A-Z0-9._-]{0,63}$/),
+                  officialName: z.string().trim().min(1).max(2_000),
+                  siteId: z.string().regex(/^\S{1,255}$/),
+                  kind: z.enum(["office", "store", "plant", "warehouse", "remote", "other"]),
+                  organizationUnitId: z
+                    .string()
+                    .regex(/^\S{1,255}$/)
+                    .nullable()
+                    .optional(),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
               type: z.literal("employment"),
               id: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
               revision: z.number().int().min(1),

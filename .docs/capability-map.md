@@ -112,7 +112,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - 事業所、勤務場所、法人、拠点、組織単位の区別
 - 外部 master との識別子対応と source
 
-現行実装には LegalEntity、CompanyProfile、Site、Workplace があり、法域、locale、timezone、通貨、会計年度開始月と外部識別子を版付き Company resource として保持する。CompanyProfile を未設定の組織は profile 読取を存在しない状態へ閉じる。
+現行実装には LegalEntity、CompanyProfile、Site、Workplace があり、法域、locale、timezone、通貨、会計年度開始月と外部識別子を版付き Company resource として保持する。CompanyProfile を未設定の組織は profile 読取を存在しない状態へ閉じる。 法人・拠点・勤務場所と勤務場所が参照する組織の全有効期間をDBでも検査する。関連する記録の短縮・延長・取消は、同じ組織変更commandで確定できる。参照先の空白や期間外を残す変更は全体を拒否し、過去の記録を保全する。
 
 ### 人と雇用
 

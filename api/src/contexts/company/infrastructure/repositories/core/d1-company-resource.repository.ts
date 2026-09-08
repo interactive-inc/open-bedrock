@@ -443,6 +443,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         /\bcompany account link\b/.test(cause.message) ||
         /\bcompany_governance_organization_reference_invalid\b/.test(cause.message) ||
         /\bcompany_governance_reference_period_not_covered\b/.test(cause.message) ||
+        /\bcompany_place_reference_period_not_covered\b/.test(cause.message) ||
+        /\bcompany_(?:site_legal_entity|workplace_site)_not_found\b/.test(cause.message) ||
         /\bcompany_(?:position_job|organizational_office_reference|office_assignment_reference|authority_scope_reference|responsibility_assignment_reference|collective_body_membership_reference|organizational_authority_scope)_not_found\b/.test(
           cause.message,
         ) ||
