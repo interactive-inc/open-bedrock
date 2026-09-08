@@ -5,7 +5,7 @@ import {
   integer,
   sqliteTable,
   text,
-  uniqueIndex,
+  unique,
   type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core"
 import { systemAccounts, systemAuditEvents } from "@system/infrastructure/schema/system-core"
@@ -101,7 +101,7 @@ export const systemWorkItemRevisions = sqliteTable(
       .references(() => systemAuditEvents.eventId, { onDelete: "restrict" }),
   },
   (table) => [
-    uniqueIndex("system_work_item_revisions_revision_uniq").on(table.workItemId, table.revision),
+    unique().on(table.workItemId, table.revision),
     index("system_work_items_accountable_idx").on(
       table.accountableAccountId,
       table.workItemId,
