@@ -12,6 +12,7 @@
     "identity",
     "integration",
     "notifications",
+    "work",
     "workflow"
   ],
   "forbiddenProductMarkers": ["bedrock", "cclcc", "cocolococo", "hiract", "inta"],
@@ -69,7 +70,10 @@
     "systemReconciliationRuns",
     "systemRoleBindings",
     "systemSessions",
-    "systemStepUpGrants"
+    "systemStepUpGrants",
+    "systemWorkEvidence",
+    "systemWorkItemRevisions",
+    "systemWorkItems"
   ],
   "targetCapabilities": [
     "attachments",
@@ -85,6 +89,7 @@
     "integration",
     "notifications",
     "oauth",
+    "work",
     "workflow"
   ]
 }

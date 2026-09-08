@@ -477,6 +477,17 @@ export class SystemAuditDisclosureError extends DomainError {
   }
 }
 
+export class SystemWorkItemError extends DomainError {
+  constructor(
+    readonly kind: "invalid" | "conflict" | "forbidden" | "not_found" | "unavailable",
+    cause?: unknown,
+  ) {
+    super(`work_item_${kind}`, { cause })
+    this.name = "SystemWorkItemError"
+    Object.freeze(this)
+  }
+}
+
 export class SystemAuditJsonError extends DomainError {
   readonly code: SystemAuditJsonErrorCode
 

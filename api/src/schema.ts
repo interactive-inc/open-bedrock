@@ -1,3 +1,4 @@
+import { systemWorkItemSchema } from "@/contexts/system/infrastructure/schema/system-work-item"
 import { systemAttachmentSchema } from "@/contexts/system/infrastructure/schema/system-attachment"
 import { systemCoreSchema } from "@/contexts/system/infrastructure/schema/system-core"
 import { systemDeliverySchema } from "@/contexts/system/infrastructure/schema/system-delivery"
@@ -63,6 +64,7 @@ import * as ownedSchema50 from "@/contexts/work-style/infrastructure/schema/work
 export const schema = {
   ...systemAttachmentSchema,
   ...systemCoreSchema,
+  ...systemWorkItemSchema,
   ...systemDeliverySchema,
   ...systemIntegrationSchema,
   ...systemOperationReceiptSchema,

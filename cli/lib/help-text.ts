@@ -331,6 +331,7 @@ commands:
   it-incidents resolve <id>                   インシデントを解消済みにする
   salary-revisions list                       給与改定履歴 (--employee-id) ※最機微・salary_revision 権限のみ
   salary-revisions create                     給与改定を記録 (--employee-id --effective-date --previous-base-salary --new-base-salary [--reason])
+  work-items                                  作業の依頼・受領・成果確認・責任の引き継ぎ
   batch                                       バッチ状況
   roles                                       ロール一覧（iam:read）
   accounts                                    アカウント一覧（iam:read）

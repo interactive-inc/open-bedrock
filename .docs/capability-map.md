@@ -1,10 +1,12 @@
 # 会社の解体図
 
-会社に必要なシステム全体を System、Company、Apps、外部連携に分ける。会社運営に必要であることと、この製品が内部実装することを同一視しない。
+製品内を[System、会社コア、会社共通モジュール、業務アプリ](company-foundation.md)に分ける。会社運営に必要であることと、この製品が内部実装することを同一視しない。
 
 ```mermaid
 flowchart TD
-  Apps["業務コンテキスト"] --> Company["Company"]
+  Modules["会社共通モジュール"] --> Company["会社コア"]
+  Modules --> System
+  Apps["業務アプリ"] --> Company
   Company --> System["System"]
   Apps --> System
   Apps --> Connectors["外部 connector"]
@@ -17,6 +19,8 @@ flowchart TD
 ## System
 
 System は業務内容と会社組織から独立した、停止不能な実行基盤である。
+
+[作業の依頼・成果確認・責任の引き継ぎ](system-work-items.md)は、担当者の受領、成果の版、人の再認証付き確認、受領を伴う責任の移管を保持する。作業の完了と、Appの実行許可・外部処理の成功は別の記録になる。
 
 ### 主体と認証
 
@@ -165,9 +169,9 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 
 現行実装には personnel action と lifecycle revision がある。所属と責務を変える発令は共通 `OrganizationChangeSet` validator を通り、発令、organization operation、period version、current projection、監査を一つの batch で確定する。訂正は同じ period の連続 revision として検証し、expected Employee revision と expected organization revision のどちらが stale でも全体を拒否する。onboarding task、退職申請、証明書依頼などの手続きは Company の事実ではなく App と System workflow へ分離する。
 
-## Apps
+## 会社共通モジュール
 
-App は業務目的と業務上の不変条件を所有する。すべて `api/src/contexts/` 直下へ独立して置き、削除または無効化できる。
+会社共通モジュールは、コード上では削除可能なAppとして業務目的と業務上の不変条件を所有する。すべて `api/src/contexts/` 直下へ独立して置き、削除または無効化できる。
 
 ### 社内情報
 
