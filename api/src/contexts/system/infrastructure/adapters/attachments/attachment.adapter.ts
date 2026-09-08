@@ -3,7 +3,7 @@ import { SystemAttachmentError } from "@system/domain/errors"
 import type { SystemAttachmentRow } from "@system/infrastructure/schema/system-attachment"
 import { systemAttachments } from "@system/infrastructure/schema/system-attachment"
 import type { SystemDatabaseContext } from "@system/configuration/system-context"
-import { and, eq, inArray, lt } from "drizzle-orm"
+import { and, eq, inArray, isNull, lt } from "drizzle-orm"
 
 export type NewAttachment = Readonly<{
   id: string
@@ -153,7 +153,8 @@ export class AttachmentAdapter {
         .from(systemAttachments)
         .where(
           and(
-            inArray(systemAttachments.status, ["uploading", "pending"]),
+            inArray(systemAttachments.status, ["uploading", "pending", "erased"]),
+            isNull(systemAttachments.linkedAt),
             lt(systemAttachments.createdAt, threshold),
           ),
         )
@@ -168,19 +169,51 @@ export class AttachmentAdapter {
     }
   }
 
-  /** 掃除バッチ用。本体を消した行を落とす。業務へ紐づいた行は対象にしない。 */
-  async deleteUnlinked(id: string): Promise<void | Error> {
+  /** 本体削除より先に紐付けを禁止する。失敗した本体削除は erased 行から再試行する。 */
+  async claimUnlinkedPurge(
+    id: string,
+    threshold: Date,
+    erasedAt: Date,
+  ): Promise<SystemAttachmentRow | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
+        .update(systemAttachments)
+        .set({ status: "erased", wrappedDek: null, wrappedDekIv: null, erasedAt })
+        .where(
+          and(
+            eq(systemAttachments.id, id),
+            inArray(systemAttachments.status, ["uploading", "pending", "erased"]),
+            isNull(systemAttachments.linkedAt),
+            lt(systemAttachments.createdAt, threshold),
+          ),
+        )
+        .returning()
+      return rows.at(0) ?? null
+    } catch (cause) {
+      return new SystemAttachmentError(
+        "unexpected",
+        "attachment_purge_claim_failed",
+        "添付の削除開始に失敗しました",
+        { cause },
+      )
+    }
+  }
+
+  /** 本体削除に成功した消去済み行だけを落とし、実際に削除したかを返す。 */
+  async deleteUnlinked(id: string): Promise<boolean | Error> {
+    try {
+      const rows = await this.c.var.database
         .delete(systemAttachments)
         .where(
           and(
             eq(systemAttachments.id, id),
-            inArray(systemAttachments.status, ["uploading", "pending"]),
+            eq(systemAttachments.status, "erased"),
+            isNull(systemAttachments.linkedAt),
           ),
         )
+        .returning({ id: systemAttachments.id })
 
-      return undefined
+      return rows.length > 0
     } catch (error) {
       return new SystemAttachmentError(
         "unexpected",
