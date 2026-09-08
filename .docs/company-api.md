@@ -256,4 +256,8 @@ CLIは`bedrock employees assignment-adoption --employee-id <id>`で確認し、`
 
 OrganizationalOfficeと組織対象のAuthorityScopeは、組織の期間resourceのIDではなく安定したOrgUnitのIDを参照する。連続した組織期間を許可し、参照中の期間の欠落・短縮を拒否する。参照整合性のmigrationは既存の不整合を検出した場合に停止し、履歴を削除・補完しない。
 
+個人を保持者とするResponsibilityAssignmentとCollectiveBodyMembershipも、退職に合わせて有効期間を閉じる。過去の責務と参加記録、別の人の割当、役職や合議体を保持者とする責務規程を保全する。退職日の訂正は元の有効期間を新しい退職日まで復元し、後続の手動編集がある場合は409で拒否する。再入社だけでは以前の責務・構成員資格を復活させず、再任用を明示する。
+
+個人責務と構成員の全有効期間は、そのEmployeeの連続した雇用期間に含まれなければならない。公開APIの雇用短縮、将来取消、同時変更でもDBで検査し、非在籍の空白をまたぐ割当を拒否する。既存の期間外の割当を検出したmigrationは、制約の置換前に停止して記録を保全する。
+
 汎用のResponsibilityAssignment、OrganizationalOfficeの定義、合議体へ従来の任用を対応付ける処理は、未接続の履歴を自動推定しない。

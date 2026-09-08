@@ -127,7 +127,13 @@ export class CompanyPersonnelResourceJournalAdapter {
     const resources: CompanyResourceEntity[] = []
     const identities = new Set(
       history
-        .filter((resource) => resource.readText("employeeId") === props.action.employeeId)
+        .filter(
+          (resource) =>
+            resource.readText("employeeId") === props.action.employeeId ||
+            (resource.type === "responsibility-assignment" &&
+              resource.readText("holderType") === "employee" &&
+              resource.readText("holderId") === props.action.employeeId),
+        )
         .map((resource) => `${resource.type}:${resource.id}`),
     )
     for (const identity of identities) {

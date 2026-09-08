@@ -391,7 +391,12 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
   ): Promise<ReadonlyArray<CompanyResourceEntity> | Error> {
     return this.findResourceHistory(
       organizationId,
-      ["office-assignment", "organizational-authority"],
+      [
+        "office-assignment",
+        "organizational-authority",
+        "responsibility-assignment",
+        "collective-body-membership",
+      ],
       revision,
     )
   }
