@@ -82,7 +82,7 @@ describe("canonical Company SQL", () => {
             '{"code":"OFFICE","officialName":"Office","organizationUnitId":"unit:missing","positionId":"position:missing"}',
             'command:office', 'account:1', 'create', 1)`,
       ),
-    ).toThrow("company_organizational_office_reference_not_found")
+    ).toThrow("company_governance_organization_reference_invalid")
 
     expect(() =>
       database.exec(

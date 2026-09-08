@@ -808,7 +808,7 @@ describe("Company reporting graph through organization changes", () => {
     const prepare = f.database.prepare.bind(f.database)
     const failure = spyOn(f.database, "prepare").mockImplementation((sql) => {
       if (
-        sql.includes("resource_type = 'reporting-relation'") &&
+        sql.includes("FROM company_resource_revisions") &&
         sql.includes("organization_revision <= ?")
       )
         throw new Error("Reporting history unavailable")
