@@ -2,6 +2,27 @@
 export const systemRouteManifest = [
   {
     method: "GET",
+    path: "/system/audit-disclosure-policies",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.audit-disclosure-policies",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/system/audit-disclosure-policies",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.audit-disclosure-policies",
+      exportName: "POST",
+    },
+  },
+
+  {
+    method: "GET",
     path: "/system/attachments/:attachmentId/preservations",
     phase: "public",
     handler: {

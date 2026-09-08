@@ -1,3 +1,5 @@
+import { prepareSystemAuditDisclosure } from "@system/interface/audit/prepare-system-audit-disclosure"
+import { systemAuditEventResponseSchema } from "@system/interface/http/audit-disclosure-response-schemas"
 import {
   SystemAuditEventNotFoundError,
   SystemAuditUnavailableError,
@@ -14,11 +16,13 @@ import { systemFactory } from "@system/interface/request-environment/system-fact
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// @authorization permission audit:read - 一つのSystem監査イベントを完全な固定列で読む
+// @authorization permission audit:read - 一つのSystem監査イベントを開示条件に従って読む
 export const GET = systemFactory.createHandlers(
   authenticateSystemAccessToken,
   zValidator("param", z.object({ eventId: z.string().uuid() })),
+  zValidator("query", z.object({ purpose: z.string().trim().min(1).max(100).optional() })),
   async (context) => {
+    context.header("Cache-Control", "no-store")
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
       throw new SystemAuditUnavailableError()
@@ -27,6 +31,7 @@ export const GET = systemFactory.createHandlers(
     const auditRepository = new SystemAuditEventRepository({ env: { DB: context.env.DB } })
     const authorizationJson = StableSystemAuditJsonValue.create({
       required_permission_keys: [SystemFeaturePermission.AUDIT_READ.key],
+      purpose: context.req.valid("query").purpose ?? null,
     })
     if (authorizationJson instanceof Error) {
       throw new SystemAuditUnavailableError()
@@ -57,9 +62,16 @@ export const GET = systemFactory.createHandlers(
       throw new SystemForbiddenError()
     }
 
+    const disclosure = await prepareSystemAuditDisclosure(context, {
+      permission: SystemFeaturePermission.AUDIT_READ.key,
+      purpose: context.req.valid("query").purpose ?? null,
+      now,
+      action: "system.audit.detail",
+      targetId: eventId,
+    })
     const event = await new SystemAuditEventQueryAdapter({
       env: { DB: context.env.DB },
-    }).findById(eventId)
+    }).findById(eventId, disclosure)
     if (event instanceof Error) {
       throw new SystemAuditUnavailableError()
     }
@@ -77,29 +89,16 @@ export const GET = systemFactory.createHandlers(
       metadataJson: null,
       occurredAt: now,
     })
-    if (readAudit instanceof Error || (await auditRepository.append(readAudit)) instanceof Error) {
+    if (
+      readAudit instanceof Error ||
+      (await auditRepository.append(readAudit, disclosure.assertions)) instanceof Error
+    ) {
       throw new SystemAuditUnavailableError()
     }
     if (event === null) {
       throw new SystemAuditEventNotFoundError()
     }
 
-    return context.json(
-      {
-        event_id: event.eventId,
-        actor_account_id: event.actorAccountId,
-        action: event.action,
-        target_type: event.targetType,
-        target_id: event.targetId,
-        outcome: event.outcome,
-        reason_code: event.reasonCode,
-        authorization_json: event.authorizationJson,
-        before_json: event.beforeJson,
-        after_json: event.afterJson,
-        metadata_json: event.metadataJson,
-        occurred_at: new Date(event.occurredAtEpochMilliseconds).toISOString(),
-      },
-      200,
-    )
+    return context.json(systemAuditEventResponseSchema.parse(event), 200)
   },
 )

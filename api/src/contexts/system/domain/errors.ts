@@ -466,6 +466,17 @@ export class SystemAttachmentError extends DomainError {
   }
 }
 
+export class SystemAuditDisclosureError extends DomainError {
+  constructor(
+    readonly kind: "invalid" | "conflict" | "forbidden" | "unavailable",
+    cause?: unknown,
+  ) {
+    super(`audit_disclosure_${kind}`, { cause })
+    this.name = "SystemAuditDisclosureError"
+    Object.freeze(this)
+  }
+}
+
 export class SystemAuditJsonError extends DomainError {
   readonly code: SystemAuditJsonErrorCode
 

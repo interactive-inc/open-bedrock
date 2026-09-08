@@ -3,6 +3,7 @@ import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { IdentityProvider } from "@system/domain/schemas/identity/identity-provider.schema"
 import type { SystemAuditOutcome } from "@system/domain/entities/system-audit-event.entity"
 import type { SystemBatchJobStatus } from "@system/domain/schemas/batch/system-batch-job-status.schema"
+import type { SystemAuditDisclosurePolicyEntity } from "@system/domain/entities/system-audit-disclosure-policy.entity"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import {
@@ -711,6 +712,43 @@ export const systemBootstrapState = sqliteTable(
 
 export type SystemBootstrapStateRow = InferSelectModel<typeof systemBootstrapState>
 
+/** 監査の開示条件はscopeごとの変更不能な版を正本とする。 */
+export const systemAuditDisclosurePolicyRevisions = sqliteTable(
+  "system_audit_disclosure_policy_revisions",
+  {
+    sequence: integer("sequence").primaryKey({ autoIncrement: true }),
+    scope: text("scope").notNull(),
+    revision: integer("revision").notNull(),
+    commandId: text("command_id").notNull().unique(),
+    enabled: integer("enabled", { mode: "boolean" }).notNull(),
+    allowedFields: text("allowed_fields_json", { mode: "json" })
+      .notNull()
+      .$type<SystemAuditDisclosurePolicyEntity["snapshot"]["allowedFields"]>(),
+    allowedTargetTypes: text("allowed_target_types_json", { mode: "json" }).$type<
+      ReadonlyArray<string>
+    >(),
+    allowedPurposes: text("allowed_purposes_json", { mode: "json" }).$type<ReadonlyArray<string>>(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
+    reason: text("reason").notNull(),
+    actorAccountId: text("actor_account_id")
+      .notNull()
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
+    recordedAt: integer("recorded_at", { mode: "timestamp_ms" }).notNull(),
+    auditEventId: text("audit_event_id")
+      .notNull()
+      .unique()
+      .references(() => systemAuditEvents.eventId, { onDelete: "restrict" }),
+  },
+  (table) => [
+    uniqueIndex("system_audit_disclosure_scope_revision_uniq").on(table.scope, table.revision),
+    check("system_audit_disclosure_revision", sql`${table.revision} > 0`),
+    check(
+      "system_audit_disclosure_expiry",
+      sql`${table.expiresAt} IS NULL OR ${table.expiresAt} > ${table.recordedAt}`,
+    ),
+  ],
+)
+
 export const systemCoreSchema = {
   systemAccounts,
   systemIdentityBindings,
@@ -733,5 +771,6 @@ export const systemCoreSchema = {
   systemAccountInvitations,
   systemBatchJobs,
   systemAuditEvents,
+  systemAuditDisclosurePolicyRevisions,
   systemBootstrapState,
 }

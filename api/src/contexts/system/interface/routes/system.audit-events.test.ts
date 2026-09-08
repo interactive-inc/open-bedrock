@@ -126,6 +126,7 @@ describe("System Audit HTTP", () => {
     expect(listedBody.events.some((event) => event.event_id === seedEvent.eventId)).toBe(true)
 
     const detailed = await reader.system["audit-events"][":eventId"].$get({
+      query: {},
       param: { eventId: seedEvent.eventId },
     })
     expect(detailed.status).toBe(200)

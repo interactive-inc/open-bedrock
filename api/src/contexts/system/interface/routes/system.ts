@@ -12,6 +12,7 @@ import * as attachmentsAttachmentId from "@system/interface/routes/system.attach
 import * as attachmentsAttachmentIdPreservations from "@system/interface/routes/system.attachments.$attachmentId.preservations"
 import * as attachmentsAttachmentIdPreservationsPreservationIdRelease from "@system/interface/routes/system.attachments.$attachmentId.preservations.$preservationId.release"
 import * as attachmentsPurgeUnlinked from "@system/interface/routes/system.attachments.purge-unlinked"
+import * as auditDisclosurePolicies from "@system/interface/routes/system.audit-disclosure-policies"
 import * as auditEvents from "@system/interface/routes/system.audit-events"
 import * as auditEventsEventId from "@system/interface/routes/system.audit-events.$eventId"
 import * as authPasswordReset from "@system/interface/routes/system.auth.password.reset"
@@ -82,6 +83,8 @@ export const systemPublicRoutes = new Hono<SystemHonoEnv>()
     "/attachments/:attachmentId/preservations/:preservationId/release",
     ...attachmentsAttachmentIdPreservationsPreservationIdRelease.POST,
   )
+  .get("/audit-disclosure-policies", ...auditDisclosurePolicies.GET)
+  .post("/audit-disclosure-policies", ...auditDisclosurePolicies.POST)
   .get("/audit-events", ...auditEvents.GET)
   .get("/audit-events/:eventId", ...auditEventsEventId.GET)
   .post("/auth/password/reset", ...authPasswordReset.POST)

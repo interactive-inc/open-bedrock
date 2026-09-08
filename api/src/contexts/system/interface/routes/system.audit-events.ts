@@ -1,3 +1,5 @@
+import { prepareSystemAuditDisclosure } from "@system/interface/audit/prepare-system-audit-disclosure"
+import { systemAuditEventResponseSchema } from "@system/interface/http/audit-disclosure-response-schemas"
 import { SystemAuditUnavailableError, SystemForbiddenError } from "@system/interface/errors"
 /** /system/audit-events */
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -16,6 +18,7 @@ export const GET = systemFactory.createHandlers(
   zValidator(
     "query",
     z.object({
+      purpose: z.string().trim().min(1).max(100).optional(),
       action: z.string().min(3).max(200).optional(),
       actor_account_id: z.string().min(1).max(255).optional(),
       outcome: z.enum(["succeeded", "denied", "failed"]).optional(),
@@ -28,6 +31,7 @@ export const GET = systemFactory.createHandlers(
     }),
   ),
   async (context) => {
+    context.header("Cache-Control", "no-store")
     const now = context.var.now()
     if (!Number.isSafeInteger(now.getTime())) {
       throw new SystemAuditUnavailableError()
@@ -66,21 +70,32 @@ export const GET = systemFactory.createHandlers(
     }
 
     const query = context.req.valid("query")
-    const page = await new SystemAuditEventQueryAdapter({ env: { DB: context.env.DB } }).list({
-      action: query.action ?? null,
-      actorAccountId: query.actor_account_id ?? null,
-      outcome: query.outcome ?? null,
-      targetType: query.target_type ?? null,
-      targetId: query.target_id ?? null,
-      occurredFrom: query.occurred_from === undefined ? null : new Date(query.occurred_from),
-      occurredTo: query.occurred_to === undefined ? null : new Date(query.occurred_to),
-      limit: query.limit,
-      offset: query.offset,
+    const disclosure = await prepareSystemAuditDisclosure(context, {
+      permission: SystemFeaturePermission.AUDIT_READ.key,
+      purpose: query.purpose ?? null,
+      now,
+      action: "system.audit.list",
+      targetId: null,
     })
+    const page = await new SystemAuditEventQueryAdapter({ env: { DB: context.env.DB } }).list(
+      {
+        action: query.action ?? null,
+        actorAccountId: query.actor_account_id ?? null,
+        outcome: query.outcome ?? null,
+        targetType: query.target_type ?? null,
+        targetId: query.target_id ?? null,
+        occurredFrom: query.occurred_from === undefined ? null : new Date(query.occurred_from),
+        occurredTo: query.occurred_to === undefined ? null : new Date(query.occurred_to),
+        limit: query.limit,
+        offset: query.offset,
+      },
+      disclosure,
+    )
     if (page instanceof Error) {
       throw new SystemAuditUnavailableError()
     }
     const metadataJson = StableSystemAuditJsonValue.create({
+      purpose: query.purpose ?? null,
       action: query.action ?? null,
       actor_account_id: query.actor_account_id ?? null,
       limit: query.limit,
@@ -107,27 +122,14 @@ export const GET = systemFactory.createHandlers(
     })
     if (
       succeededAudit instanceof Error ||
-      (await auditRepository.append(succeededAudit)) instanceof Error
+      (await auditRepository.append(succeededAudit, disclosure.assertions)) instanceof Error
     ) {
       throw new SystemAuditUnavailableError()
     }
 
     return context.json(
       {
-        events: page.events.map((event) => ({
-          event_id: event.eventId,
-          actor_account_id: event.actorAccountId,
-          action: event.action,
-          target_type: event.targetType,
-          target_id: event.targetId,
-          outcome: event.outcome,
-          reason_code: event.reasonCode,
-          authorization_json: event.authorizationJson,
-          before_json: event.beforeJson,
-          after_json: event.afterJson,
-          metadata_json: event.metadataJson,
-          occurred_at: new Date(event.occurredAtEpochMilliseconds).toISOString(),
-        })),
+        events: page.events.map((event) => systemAuditEventResponseSchema.parse(event)),
         total: page.total,
         limit: query.limit,
         offset: query.offset,
