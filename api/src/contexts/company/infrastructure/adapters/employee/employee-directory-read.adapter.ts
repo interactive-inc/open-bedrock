@@ -43,8 +43,11 @@ export type CompanyAccountEmployeeDirectoryEntry = Readonly<{
 }>
 
 type Context = Readonly<{ env: CompanyContext["env"]; asOf?: CalendarDate }>
+type DateQuery =
+  | Readonly<{ asOf: CalendarDate }>
+  | Readonly<{ now: string; timeZone: string | undefined }>
 
-/** 会社営業日の期間履歴を使い、一覧と単体参照の在籍判定を揃える。 */
+/** 指定された暦日または会社営業日の期間履歴で、一覧と単体参照を揃える。 */
 export class CompanyEmployeeDirectoryReadAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -52,13 +55,13 @@ export class CompanyEmployeeDirectoryReadAdapter {
 
   /** 検索・並べ替え・表示で同じ会社営業日の人物名を使う。 */
   static employeeName(
-    c: Readonly<{
-      now: string
-      timeZone: string | undefined
-      employeeId: SQLiteColumn
-    }>,
+    c: DateQuery &
+      Readonly<{
+        employeeId: SQLiteColumn
+      }>,
   ): SQL<string | null> {
-    const asOf = resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
+    const asOf =
+      "asOf" in c ? c.asOf : resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
     if (asOf instanceof Error) throw asOf
     const employeeId = sql`${sql.identifier(getTableName(c.employeeId.table))}.${sql.identifier(c.employeeId.name)}`
     const history = sql.join(companyEmploymentStateSql().split("?1").map(sql.raw), sql`${asOf}`)
@@ -70,14 +73,14 @@ export class CompanyEmployeeDirectoryReadAdapter {
 
   /** 有効な版の雇用区分を読み、終了した契約には最終在籍日の区分を使う。 */
   static employmentType(
-    c: Readonly<{
-      now: string
-      timeZone: string | undefined
-      employmentId: SQLiteColumn
-      employeeId: SQLiteColumn
-    }>,
+    c: DateQuery &
+      Readonly<{
+        employmentId: SQLiteColumn
+        employeeId: SQLiteColumn
+      }>,
   ): SQL<EmploymentType | null> {
-    const asOf = resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
+    const asOf =
+      "asOf" in c ? c.asOf : resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
     if (asOf instanceof Error) throw asOf
     const employeeId = sql`${sql.identifier(getTableName(c.employeeId.table))}.${sql.identifier(c.employeeId.name)}`
     const employmentId = sql`${sql.identifier(getTableName(c.employmentId.table))}.${sql.identifier(c.employmentId.name)}`
@@ -118,14 +121,14 @@ export class CompanyEmployeeDirectoryReadAdapter {
 
   /** 雇用IDごとの在籍状態を期間で判定し、開始前や曖昧な履歴を表示用statusで補わない。 */
   static employmentStatus(
-    c: Readonly<{
-      now: string
-      timeZone: string | undefined
-      employmentId: SQLiteColumn
-      employeeId: SQLiteColumn
-    }>,
+    c: DateQuery &
+      Readonly<{
+        employmentId: SQLiteColumn
+        employeeId: SQLiteColumn
+      }>,
   ): SQL<PersistedEmploymentStatus | null> {
-    const asOf = resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
+    const asOf =
+      "asOf" in c ? c.asOf : resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
     if (asOf instanceof Error) throw asOf
     const employeeId = sql`${sql.identifier(getTableName(c.employeeId.table))}.${sql.identifier(c.employeeId.name)}`
     const employmentId = sql`${sql.identifier(getTableName(c.employmentId.table))}.${sql.identifier(c.employmentId.name)}`
