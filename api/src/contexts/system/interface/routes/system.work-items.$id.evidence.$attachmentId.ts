@@ -40,22 +40,16 @@ export const GET = systemFactory.createHandlers(
     )
       throw new SystemWorkItemHttpError(new SystemWorkItemError("not_found"))
     const workGuard = prepared.repository.prepareReadAssertion(workItem.snapshot.commandId)
-    const evidenceGuard = new SystemWorkEvidenceGuardAdapter(context).prepare({
+    const evidence = new SystemWorkEvidenceGuardAdapter(context)
+    const evidenceGuard = evidence.prepare({
       workItemId: parameters.id,
       attachment,
       now: context.var.now(),
     })
     const initial = prepared.authorization.assertions()
     if (initial instanceof Error) throw new SystemWorkItemHttpError(initial)
-    try {
-      const checked = await context.env.DB.batch([...initial, workGuard, evidenceGuard])
-      if (checked.length !== initial.length + 2 || checked.some((item) => !item.success))
-        throw new SystemWorkItemHttpError(new SystemWorkItemError("unavailable"))
-    } catch (cause) {
-      if (cause instanceof Error && /work_item_(read|evidence)_changed/.test(cause.message))
-        throw new SystemWorkItemHttpError(new SystemWorkItemError("not_found", cause))
-      throw new SystemWorkItemHttpError(new SystemWorkItemError("unavailable", cause))
-    }
+    const verified = await evidence.verify([...initial, workGuard, evidenceGuard])
+    if (verified instanceof Error) throw new SystemWorkItemHttpError(verified)
     const registry = AttachmentKekRegistry.fromEnv(context.env.ATTACHMENT_KEKS)
     if (registry instanceof Error)
       throw new SystemWorkItemHttpError(new SystemWorkItemError("unavailable", registry))

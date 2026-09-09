@@ -1,5 +1,6 @@
 import type { SystemD1Context } from "@system/configuration/system-context"
 import type { SystemAttachmentRow } from "@system/infrastructure/schema/system-attachment"
+import { SystemWorkItemError } from "@system/domain/errors"
 
 type Context = SystemD1Context
 
@@ -7,6 +8,21 @@ type Context = SystemD1Context
 export class SystemWorkEvidenceGuardAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
+  }
+
+  async verify(
+    statements: ReadonlyArray<D1PreparedStatement>,
+  ): Promise<SystemWorkItemError | null> {
+    try {
+      const checked = await this.c.env.DB.batch([...statements])
+      if (checked.length !== statements.length || checked.some((item) => !item.success))
+        return new SystemWorkItemError("unavailable")
+      return null
+    } catch (cause) {
+      if (cause instanceof Error && /work_item_(read|evidence)_changed/.test(cause.message))
+        return new SystemWorkItemError("not_found", cause)
+      return new SystemWorkItemError("unavailable", cause)
+    }
   }
 
   prepare(
